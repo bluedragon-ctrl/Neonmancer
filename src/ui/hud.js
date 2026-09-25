@@ -3,9 +3,10 @@
  * banner, terminal messages and the fullscreen hint. It only shows state;
  * main.js feeds it every frame. Sizes use --u (one pixel at 1080p), so it
  * scales with the stage. All text comes from data/strings.json; terminal
- * messages arrive through say() (core/messages.js) from any module.
+ * messages and banners arrive through say() and announce()
+ * (core/messages.js) from any module.
  */
-import { takeMessages } from '../core/messages.js';
+import { takeAnnouncements, takeMessages } from '../core/messages.js';
 import { GAME_VERSION } from '../core/version.js';
 import { HINT_SECONDS } from './fullscreen.js';
 import { Terminal, bannerState } from './terminal.js';
@@ -25,7 +26,7 @@ export class Hud {
       'beforeend',
       `<div class="hud-integrity"><div class="hud-label"></div><div class="hud-cells"></div></div>
       <div class="brand"><span class="brand-title"></span> <span class="brand-version"></span></div>
-      <div class="hud-banner"><div class="hud-banner-name"></div><div class="hud-banner-biome"></div></div>
+      <div class="hud-banner"><div class="hud-banner-title"></div><div class="hud-banner-sub"></div></div>
       <div class="hud-terminal"></div>
       <div class="hud-hint"></div>`,
     );
@@ -37,8 +38,8 @@ export class Hud {
     this.integrityBox = find('.hud-integrity');
     this.cellBox = find('.hud-cells');
     this.banner = find('.hud-banner');
-    this.bannerName = find('.hud-banner-name');
-    this.bannerBiome = find('.hud-banner-biome');
+    this.bannerTitle = find('.hud-banner-title');
+    this.bannerSub = find('.hud-banner-sub');
     this.terminalBox = find('.hud-terminal');
     this.hint = find('.hud-hint');
 
@@ -57,7 +58,6 @@ export class Hud {
   text(key, values) {
     return formatText(this.strings, key, values);
   }
-
 
   /**
    * Show integrity as a row of cells; lost cells flash as they empty.
@@ -87,15 +87,14 @@ export class Hud {
   }
 
   /**
-   * Show the room name banner (on entering a room).
-   * @param {string} name room name
-   * @param {string} biome biome name
-   * @param {string} color biome color (#rrggbb)
+   * Show a banner (see announce() in core/messages.js), replacing the one showing.
+   * @param {{ key: string, values?: object, sub?: string, subValues?: object, color?: string }} banner
    */
-  showRoom(name, biome, color) {
-    this.bannerText = name.toUpperCase();
-    this.bannerBiome.textContent = biome.toUpperCase();
-    this.banner.style.setProperty('--room', color);
+  showBanner({ key, values, sub, subValues, color }) {
+    this.bannerText = this.text(key, values).toUpperCase();
+    this.bannerSub.textContent = sub ? this.text(sub, subValues).toUpperCase() : '';
+    if (color) this.banner.style.setProperty('--banner', color);
+    else this.banner.style.removeProperty('--banner');
     this.bannerTime = 0;
   }
 
@@ -115,6 +114,8 @@ export class Hud {
 
     for (const { key, values } of takeMessages()) this.terminal.push(this.text(key, values));
     this.terminal.update(dt);
+    const banner = takeAnnouncements().at(-1);
+    if (banner) this.showBanner(banner);
     const lines = this.terminal.lines();
     while (this.terminalBox.children.length < lines.length) this.terminalBox.append(document.createElement('div'));
     while (this.terminalBox.children.length > lines.length) this.terminalBox.firstChild.remove();
@@ -130,8 +131,8 @@ export class Hud {
       const { decoded, opacity } = bannerState(this.bannerTime);
       // New glyphs every other frame, so the decoding flickers but stays readable.
       const shown = Math.floor(decoded * this.bannerText.length);
-      this.bannerName.textContent = scrambleText(this.bannerText, shown, this.frame >> 1);
-      this.bannerBiome.style.opacity = String(decoded);
+      this.bannerTitle.textContent = scrambleText(this.bannerText, shown, this.frame >> 1);
+      this.bannerSub.style.opacity = String(decoded);
       this.banner.style.opacity = String(opacity);
       if (opacity === 0) this.bannerTime = null;
     }

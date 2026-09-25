@@ -6,6 +6,8 @@
     "game.version": "v{version}",
     "hud.integrity": "INTEGRITY",
     "hint.fullscreen": "PRESS F FOR FULLSCREEN",
+    "banner.room": "{room}",
+    "banner.biome": "{biome}",
     "msg.boot": "> GRID LINK ESTABLISHED",
     "msg.welcome": "> WELCOME, WIZARD. MIND THE GAPS.",
     "msg.die": "> FATAL: WIZARD FELL OUT OF BOUNDS",

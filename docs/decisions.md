@@ -294,15 +294,16 @@ Integrity top left, room banner top center, game name top right, terminal
 messages bottom left, fullscreen hint bottom center. Labels, banner and
 hint use Orbitron, terminal lines Share Tech Mono; both are bundled through
 Fontsource (Latin) instead of loaded from a font CDN. Pixel fonts (Press
-Start 2P, VT323) were tried first. Terminal messages go through one
-function, `say(key, values)`, that any module can call.
+Start 2P, VT323) were tried first. Terminal messages and banners go through
+two functions any module can call: `say(key, values)` and
+`announce(key, values, options)`; room names use the banner.
 Every UI text comes from `data/strings.json` by dotted key; the schema
 lists the keys the game uses. The startup error screen keeps its own
 English text, since it must work when the data does not. F toggles
 fullscreen (an action, so it can be rebound later).
 **Why:** CLAUDE.md asks for a retro font and a big clear HUD; the author
 preferred smoother fonts to the pixel ones. Bundling keeps the game
-self-contained on GitHub Pages and working offline. A single `say()` lets
+self-contained on GitHub Pages and working offline. `say()` and `announce()` let
 game logic, spells or pickups print messages without knowing the HUD.
 The corners keep the room area (center) clear in every room size.
 

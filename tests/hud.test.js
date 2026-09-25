@@ -11,7 +11,7 @@ import { withExitDefaults } from '../src/data/room-data.js';
 import { formatText, scrambleText } from '../src/ui/text.js';
 import { BANNER, TERMINAL, Terminal, bannerState } from '../src/ui/terminal.js';
 import { wantsFullscreenHint } from '../src/ui/fullscreen.js';
-import { say, takeMessages } from '../src/core/messages.js';
+import { announce, say, takeAnnouncements, takeMessages } from '../src/core/messages.js';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const shipped = () => loadGameData(readDataFiles(root).files);
@@ -34,12 +34,34 @@ test('say() queues messages until they are taken', () => {
   assert.deepEqual(takeMessages(), []);
 });
 
-test('every string key passed to say() in src/ exists in the shipped strings', () => {
+test('announce() queues banners with an optional line and color', () => {
+  takeAnnouncements();
+  announce('banner.room', { room: 'Cache Hall' }, { sub: 'banner.biome', subValues: { biome: 'Home' }, color: '#ffb020' });
+  announce('msg.plug');
+  assert.deepEqual(takeAnnouncements(), [
+    { key: 'banner.room', values: { room: 'Cache Hall' }, sub: 'banner.biome', subValues: { biome: 'Home' }, color: '#ffb020' },
+    { key: 'msg.plug', values: undefined, sub: undefined, subValues: undefined, color: undefined },
+  ]);
+});
+
+test('rooms are announced on start and on entering another room, not on respawn', () => {
+  takeAnnouncements();
+  const game = new Game(shipped());
+  const start = takeAnnouncements();
+  assert.equal(start.length, 1);
+  assert.deepEqual(start[0].values, { room: game.room.name });
+  game.enterRoom(game.room.id, game.player.spawn); // what a respawn does
+  assert.deepEqual(takeAnnouncements(), []);
+  game.travel(withExitDefaults(game.room.exits[0]));
+  assert.deepEqual(takeAnnouncements()[0].values, { room: game.room.name });
+});
+
+test('every string key passed to say() or announce() in src/ exists in the shipped strings', () => {
   const { strings } = shipped();
   const src = fileURLToPath(new URL('../src', import.meta.url));
   const keys = readdirSync(src, { recursive: true })
     .filter((file) => file.endsWith('.js'))
-    .flatMap((file) => [...readFileSync(join(src, file), 'utf8').matchAll(/\bsay\('([^']+)'/g)].map((m) => m[1]));
+    .flatMap((file) => [...readFileSync(join(src, file), 'utf8').matchAll(/\b(?:say\(|announce\(|sub: )'([^']+)'/g)].map((m) => m[1]));
   assert.ok(keys.length > 0);
   for (const key of keys) assert.ok(key in strings, `missing string "${key}"`);
 });

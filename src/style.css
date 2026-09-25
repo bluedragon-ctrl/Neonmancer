@@ -142,8 +142,8 @@ body {
   text-shadow: 0 0 calc(6 * var(--u)) var(--magenta);
 }
 
-/* Room name banner: top center, decodes in, then fades. --room is the
-   biome color, set from JS. */
+/* Banner (room names, later pickups): top center, decodes in, then fades.
+   --banner is its color, set from JS (the biome color for rooms). */
 .hud-banner {
   position: absolute;
   top: calc(96 * var(--u));
@@ -151,26 +151,26 @@ body {
   right: 0;
   text-align: center;
   opacity: 0;
-  --room: var(--amber);
+  --banner: var(--amber);
 }
 
-.hud-banner-name {
+.hud-banner-title {
   font-weight: 700;
   font-size: calc(52 * var(--u));
   letter-spacing: 0.12em;
   color: #fff;
   white-space: pre;
   text-shadow:
-    0 0 calc(6 * var(--u)) var(--room),
-    0 0 calc(22 * var(--u)) var(--room);
+    0 0 calc(6 * var(--u)) var(--banner),
+    0 0 calc(22 * var(--u)) var(--banner);
 }
 
-.hud-banner-biome {
+.hud-banner-sub {
   margin-top: calc(16 * var(--u));
   font-size: calc(18 * var(--u));
   letter-spacing: 0.3em;
-  color: var(--room);
-  text-shadow: 0 0 calc(8 * var(--u)) var(--room);
+  color: var(--banner);
+  text-shadow: 0 0 calc(8 * var(--u)) var(--banner);
 }
 
 /* Terminal messages: bottom left, newest at the bottom. */

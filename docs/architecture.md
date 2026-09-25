@@ -46,7 +46,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `core/input.js` | Raw keys → action states once per tick |
 | `core/bindings.js` | Default key → action map (the only place raw key codes appear) |
 | `core/events.js` | Small pub/sub between simulation, HUD and debug *(planned)* |
-| `core/messages.js` | `say(key, values)`: terminal messages from any module, queued until the HUD takes them |
+| `core/messages.js` | `say(key, values)` terminal messages and `announce(key, values, options)` banners from any module, queued until the HUD takes them |
 | `core/rules.js` | Shared rule constants (player hitbox, max room footprint) |
 | `data/bundle.js` | The only Vite-specific module: bundles `data/**/*.json`, imports dev schema errors |
 | `data/room-data.js` | Shared reading of room data: block boxes → cells, exit defaults, sides, exit cells |
@@ -198,12 +198,12 @@ simulation; views only read `fadeLevel()`.
 ```
 content.strings (data/strings.json) ──► Hud(renderer.hud, strings)   all text via formatText(key, values)
 any module: say(key, values) ──► queue (core/messages.js)   e.g. game.js on die, respawn, plug
-tick:  'room' with a new room id ──► hud.showRoom(name, biome, color)   (not on respawn)
+            announce(key, values, { sub, subValues, color }) ──► queue   e.g. enterRoom() for a new room
        input.pressed('fullscreen') ──► toggleFullscreen()   within the key press's user activation
 frame: hud.setIntegrity(game.integrity, game.maxIntegrity)   cells rebuilt only on change
        hud.setHintWanted(wantsFullscreenHint(stage height, DPR, fullscreen?))
-       hud.update(dt)   takeMessages() → Terminal.push(); Terminal.update / lines(),
-                        bannerState(t), scrambleText()
+       hud.update(dt)   takeMessages() → Terminal.push(); takeAnnouncements() → last one shown;
+                        Terminal.update / lines(), bannerState(t), scrambleText()
 ```
 
 The HUD is visual only and runs on frame time; it never feeds back into the
@@ -212,7 +212,7 @@ with made-up times; `hud.js` only moves the results into the DOM. Integrity
 lives on `Game` (not the per-room `Player`), so it carries over between
 rooms. A missing string shows as `[key]`; the schema lists every key the
 game uses, so the data check catches missing ones first, and a test checks
-that every key passed to `say()` in `src/` exists.
+that every key passed to `say()` or `announce()` in `src/` exists.
 
 ## Data loading and validation
 

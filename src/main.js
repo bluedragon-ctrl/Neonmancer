@@ -44,10 +44,8 @@ function boot() {
   renderer.hud.insertAdjacentHTML('beforeend', '<pre class="readout"></pre>');
   const readout = renderer.hud.querySelector('.readout');
 
-  // The room's views are rebuilt whenever the game rebuilds the room; the
-  // banner shows only when it is a different room (not on a respawn).
+  // The room's views are rebuilt whenever the game rebuilds the room.
   let roomScene = new Group();
-  let bannerRoom = null;
   let pushableViews = [];
   let exitViews = [];
   function showRoom() {
@@ -65,12 +63,6 @@ function boot() {
     );
     renderer.scene.add(roomScene);
     frameRoom(renderer.camera, room.size);
-
-    if (room.id !== bannerRoom) {
-      const biome = content.biomes[room.biome];
-      hud.showRoom(room.name, biome.name, biome.color);
-      bannerRoom = room.id;
-    }
   }
   showRoom();
   const playerView = new PlayerView(game);

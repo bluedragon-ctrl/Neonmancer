@@ -62,8 +62,8 @@ and the project uses [Semantic Versioning](https://semver.org/).
   hint while the game is drawn below 1080 pixels high. F toggles
   fullscreen. Bundled fonts (Orbitron, Share Tech Mono).
 - `data/strings.json` with its schema: every UI text by key.
-- `say(key, values)` (`src/core/messages.js`): any module can print a
-  terminal message.
+- `say()` and `announce()` (`src/core/messages.js`): any module can print a
+  terminal message or show a banner (used for room names).
 - Integrity: falling into a hole drains it, respawning restores it; it
   carries over between rooms.
 

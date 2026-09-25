@@ -3,7 +3,7 @@
  * the state, they never change it.
  */
 import { DT } from './core/loop.js';
-import { say } from './core/messages.js';
+import { announce, say } from './core/messages.js';
 import { sideAxes, withExitDefaults } from './data/room-data.js';
 import { PLAYER, Player } from './entities/player.js';
 import { Pushable } from './entities/pushable.js';
@@ -42,6 +42,12 @@ export class Game {
    * @param {number[]} [spawn] feet center; the room's own spawn by default
    */
   enterRoom(id, spawn) {
+    // Announce the room when it is a different one (not on a respawn).
+    if (id !== this.room?.id) {
+      const data = this.content.rooms.get(id);
+      const biome = this.content.biomes[data.biome];
+      announce('banner.room', { room: data.name }, { sub: 'banner.biome', subValues: { biome: biome.name }, color: biome.color });
+    }
     this.room = buildRoom(this.content.rooms.get(id), this.content);
     this.grid = new Grid(this.room);
     this.pushables = this.room.objects.filter((o) => o.kind === 'pushable').map((o) => new Pushable(o));
