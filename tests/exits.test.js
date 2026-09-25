@@ -6,7 +6,7 @@ import { Pushable } from '../src/entities/pushable.js';
 import { Game, TRANSITION } from '../src/game.js';
 import { mergeUnitSegments } from '../src/render/edges.js';
 import { TUNNEL_DEPTH, doorwayTunnels, frontChevrons, wallLayout } from '../src/render/walls.js';
-import { exitFrameLayout, glideState } from '../src/render/exit-view.js';
+import { exitFrameLayout, exitStreamLayout, glideState } from '../src/render/exit-view.js';
 import { arrival, exitAt } from '../src/world/exits.js';
 import { Grid } from '../src/world/grid.js';
 
@@ -268,4 +268,14 @@ test('doorways lead into dark tunnels; front exits get none', () => {
   const [from, to] = lines[0];
   assert.deepEqual(from, [1, 1, 0]);
   assert.ok(to[2] < 0);
+});
+
+test('exit stream (doorway style under review): tunnel edges and floor lanes, flowing in', () => {
+  const segments = exitStreamLayout(withExitDefaults({ id: 'n', side: '-z', at: 1 }));
+  assert.equal(segments.length, 6); // four corner edges, two floor lanes
+  for (const [from, to] of segments) {
+    assert.equal(from[2], 0); // starts at a doorway corner
+    assert.ok(to[2] < 0 && from[0] === to[0] && from[1] === to[1]); // runs straight into the tunnel
+  }
+  assert.deepEqual(exitStreamLayout(withExitDefaults({ id: 'e', side: '+x', at: 1 })), []);
 });
