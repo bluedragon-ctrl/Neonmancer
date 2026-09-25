@@ -206,6 +206,7 @@ test('mergeUnitSegments joins runs and drops duplicates', () => {
 test('a room transition fades out with the world frozen, then fades in while running', () => {
   const game = new Game(content());
   game.player.pos = [7.95, 0, 4.25];
+  game.player.grounded = true; // air steering is slower (D34)
   assert.deepEqual(game.update(hold('down')), ['exit']);
   assert.equal(game.room.id, 'alpha');
   assert.ok(game.fadeLevel(0) < 0.1);

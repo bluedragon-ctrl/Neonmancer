@@ -10,6 +10,11 @@ import { bodyBox, moveAxis } from '../physics/collision.js';
 export const PLAYER = {
   /** Walking speed in units per second. */
   speed: 4.5,
+  /**
+   * Share of the walking speed kept in the air. A full jump lasts ~0.57 s, so
+   * it covers ~1.65 units: over a 1-tile gap, never a 2-tile one (D34).
+   */
+  airSpeed: 0.65,
   gravity: 30,
   /**
    * Apex of every jump above the take-off height: clears 1 block, never 2
@@ -120,7 +125,8 @@ export class Player {
     }
     this.moving = dx !== 0 || dz !== 0;
     if (this.moving) {
-      const step = (PLAYER.speed * DT) / Math.hypot(dx, dz);
+      const speed = this.grounded ? PLAYER.speed : PLAYER.speed * PLAYER.airSpeed;
+      const step = (speed * DT) / Math.hypot(dx, dz);
       const hitX = moveAxis(this.pos, this.size, 0, dx * step, grid, bodies, this);
       const hitZ = moveAxis(this.pos, this.size, 2, dz * step, grid, bodies, this);
       this.targetFacing = Math.atan2(dx, dz);
