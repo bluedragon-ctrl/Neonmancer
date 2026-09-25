@@ -26,6 +26,7 @@ const vertexShader = /* glsl */ `
 `;
 
 // Rim glow: surfaces seen edge-on (view normal across the view) light up.
+// Scanlines drift up slowly (0.2 units per second).
 const fragmentShader = /* glsl */ `
   uniform vec3 uColor;
   uniform float uTime;
@@ -33,7 +34,7 @@ const fragmentShader = /* glsl */ `
   varying float vWorldY;
   void main() {
     float rim = pow(1.0 - abs(normalize(vViewNormal).z), 4.0);
-    float scan = 0.5 + 0.5 * sin((vWorldY - uTime * 0.6) * 60.0);
+    float scan = 0.5 + 0.5 * sin((vWorldY - uTime * 0.2) * 60.0);
     gl_FragColor = vec4(uColor * (0.05 + rim * 1.3 + scan * 0.06), 1.0);
   }
 `;
