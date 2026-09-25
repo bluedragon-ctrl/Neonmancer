@@ -124,12 +124,12 @@ world. A dead-end opening can be modelled as blocks instead.
 
 ### D17 — 2026-09-25 — Object types differ by shape, not only color
 Each object type in `defs.json` can set a style: `edges` (solid / dashed),
-`mark` (none / inset / cross / brackets: a line pattern on every face) and
+`mark` (none / inset / cross / brackets: a line pattern on every face),
 `faces` (dark / tinted: faces shaded in the object color, top lighter) and
 `tint` (0–1, how much color the tinted top face gets; default 0.1).
-Objects can override the style like any other type property. Crates use an
-inset square with tinted faces; the author picked four more looks as named box
-types (`crate_plain`, `crate_inset_dark`, `crate_cross`, `crate_dashed`) for
+Objects can override the style like any other type property. The default
+`crate` has an inset square with dark faces; the author kept three more looks
+as named box types (`crate_plain`, `crate_cross`, `crate_dashed`) for
 rooms to use. Static blocks stay plain. The `brackets` mark and dashed +
 tinted combination stay available through `overrides` but have no type.
 **Why:** color alone is not enough for color-blind players and gets washed

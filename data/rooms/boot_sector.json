@@ -25,7 +25,7 @@
     { "id": "crate_a", "type": "crate", "at": [2, 0, 5] },
     { "id": "crate_b", "type": "crate", "at": [7, 0, 3] },
     { "id": "look_plain", "type": "crate_plain", "at": [1, 0, 11] },
-    { "id": "look_inset_dark", "type": "crate_inset_dark", "at": [3, 0, 11] },
+    { "id": "look_crate", "type": "crate", "at": [3, 0, 11] },
     { "id": "look_cross", "type": "crate_cross", "at": [5, 0, 11] },
     { "id": "look_dashed", "type": "crate_dashed", "at": [7, 0, 11] }
   ]

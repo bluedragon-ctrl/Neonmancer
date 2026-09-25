@@ -2,9 +2,8 @@
   "$schema": "../schemas/defs.schema.json",
   "schemaVersion": 1,
   "objects": {
-    "crate": { "kind": "pushable", "color": "#b6ff3c", "mark": "inset", "faces": "tinted" },
+    "crate": { "kind": "pushable", "color": "#b6ff3c", "mark": "inset" },
     "crate_plain": { "kind": "pushable", "color": "#b6ff3c" },
-    "crate_inset_dark": { "kind": "pushable", "color": "#b6ff3c", "mark": "inset" },
     "crate_cross": { "kind": "pushable", "color": "#b6ff3c", "mark": "cross", "faces": "tinted" },
     "crate_dashed": { "kind": "pushable", "color": "#b6ff3c", "edges": "dashed" }
   }
