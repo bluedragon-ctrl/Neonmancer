@@ -98,7 +98,7 @@ tried with `?scale=0.5` until the settings menu exists (Phase 4).
 **Why:** smooth neon lines and a controllable glow at a fixed cost; one
 effect pass keeps the post-processing cheap.
 
-### D14 — 2026-09-25 — Amber is the default room color; outer floor grid is faint
+### D14 — 2026-09-25 — Amber is the default room color; outer floor grid is dark gray
 Rooms and the floor grid inside them default to amber. Outside the room the
 floor grid is a neutral dark gray and fades out within 5 units.
 **Why:** author's preference; a colorless surrounding makes it obvious to the
