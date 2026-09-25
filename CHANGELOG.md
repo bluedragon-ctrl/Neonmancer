@@ -18,5 +18,9 @@ and the project uses [Semantic Versioning](https://semver.org/).
 - Isometric neon renderer: letterboxed 16:9 stage, capped pixel ratio and
   render scale (`?scale=0.5`), fixed isometric camera, thick neon edges
   scaled with render height, bloom, amber room grid on a fading dark-gray
-  infinite floor grid, back walls
-  and a hand-made demo room with dark occluding block faces.
+  infinite floor grid, back walls and dark occluding block faces.
+- Game data in `data/` (rooms, object types, biomes, world) with JSON
+  Schemas in `schemas/`; Ajv check in the dev server, the build and
+  `npm run validate:data` (CI); semantic checks at load time; the start
+  room is built from JSON; error screen listing every data problem.
+- First room "Boot Sector" with two crates (not pushable yet).

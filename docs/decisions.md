@@ -105,3 +105,19 @@ floor grid is a neutral dark gray and fades out within 5 units.
 player what is part of the room. Biome palettes (step 3) can still override
 the room color. Home Lattice, the default safe biome, is amber (was cyan
 in CLAUDE.md §5); other biomes use their own colors.
+
+### D15 — 2026-09-25 — Data errors: build fails, dev server shows them in the game
+Any data error (schema or semantic) fails `npm run build`, so invalid data
+never deploys. In the dev server the schema errors reach the game through
+the virtual module `virtual:data-schema-errors`; the game adds its own
+semantic check and lists every problem on an error screen. Rooms are keyed
+by file name while validating, so a wrong `id` gives one clear error instead
+of a cascade.
+**Why:** one place (the game window) to see what is wrong while editing
+data, with all problems at once; no chance of shipping broken rooms.
+
+### D16 — 2026-09-25 — Every exit must be connected
+An exit that no `world.json` connection uses is an error, as is an exit used
+twice.
+**Why:** an opening that leads nowhere would let the player walk out of the
+world. A dead-end opening can be modelled as blocks instead.

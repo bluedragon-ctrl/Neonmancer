@@ -34,6 +34,8 @@ made-up frame times.
 
 ## Modules
 
+Paths are under `src/`, except `tools/` (dev tooling at the repo root).
+
 | Module | Responsibility |
 |---|---|
 | `main.js` | Bootstrap: load and validate data, build systems, start the loop, error screen |
@@ -43,10 +45,13 @@ made-up frame times.
 | `core/input.js` | Raw keys → action states once per tick |
 | `core/bindings.js` | Default key → action map (the only place raw key codes appear) |
 | `core/events.js` | Small pub/sub between simulation, HUD and debug |
+| `core/rules.js` | Shared rule constants (player hitbox, max room footprint) |
+| `data/bundle.js` | The only Vite-specific module: bundles `data/**/*.json`, imports dev schema errors |
+| `data/room-data.js` | Shared reading of room data: block boxes → cells, exit defaults, sides |
 | `data/validate.js` | Semantic checks and readable error messages (Ajv schema pass is dev/CI) |
-| `data/load.js` | Collect JSON, validate, merge type defaults with room overrides |
+| `data/load.js` | Validate the data files and build the content tables; throws `DataError` |
 | `world/grid.js` | 3D occupancy grid (static cells + resting pushables) |
-| `world/room.js` | Runtime room built fresh from data on every entry |
+| `world/room.js` | Runtime room built fresh from data on every entry (type defaults + overrides) |
 | `world/exits.js` | Exit openings, boundary walls with gaps, transition triggers |
 | `physics/collision.js` | Axis-separated AABB movement against grid, walls, moving bodies |
 | `entities/player.js` | Movement, jump, gravity, integrity, push intent |
@@ -61,6 +66,10 @@ made-up frame times.
 | `render/room-view.js` | Merged edges + instanced occluder faces for static blocks; back walls |
 | `render/entity-view.js` | Player / pushable meshes, interpolation, drop shadows |
 | `ui/hud.js` | DOM overlay: integrity, room name, terminal messages |
+| `ui/error-screen.js` | Startup error screen listing every data problem |
+| `tools/check-data.js` | Dev only: Ajv schema check + semantic checks over `data/` |
+| `tools/vite-plugin-data.js` | Dev only: runs the check in the dev server and fails the build on errors |
+| `tools/validate-data.js` | Dev only: `npm run validate:data` for CI |
 | `debug/debug.js` | Collision boxes, FPS, room jump, invincibility |
 
 ## Input
@@ -115,14 +124,38 @@ support it falls with gravity and snaps to the grid on landing.
 - Composer: half-float buffers, 4× MSAA, render pass + one effect pass
   (bloom with mipmap blur, which scales with resolution by itself) (D13).
 
-## Data validation *(planned)*
+## Data loading and validation
 
-1. JSON Schema (Ajv) — Vite plugin in dev/build and `npm run validate:data` in CI (D8).
-2. Semantic checks at runtime — width + depth ≤ 32, bounds, overlaps, known
-   types/biomes, exits on their edge, connections valid, spawn not inside a solid.
+```
+data/**/*.json ──import.meta.glob──► data/bundle.js ──► loadGameData(files)
+                                                          ├─ validateData()  semantic checks
+                                                          └─ content tables  (types, biomes, world, rooms)
+enter room ──► buildRoom(roomData, content)   fresh runtime room: block cells,
+                                              objects (type defaults + overrides), exits with defaults
+```
 
-Errors name the file and path, e.g.
+Validation has two layers:
+
+1. **JSON Schema** (Ajv, dev only, D8) in `tools/check-data.js`, used by
+   - the Vite plugin: a build with *any* data error fails; the dev server prints
+     errors and hands the schema errors to the game through the virtual module
+     `virtual:data-schema-errors`, so the error screen can show them (D15);
+     editing `data/` or `schemas/` reloads the page;
+   - `npm run validate:data` in CI and before deploys.
+2. **Semantic checks** (`src/data/validate.js`), also at runtime: file present,
+   schemaVersion, room id = file name, width + depth ≤ 32, known biome and
+   object types, overrides only of existing type properties, blocks/objects
+   inside the room and not overlapping, exits fit their side, the player
+   hitbox fits at the spawn, start room exists, connections join existing
+   exits on opposite sides with equal width, every exit connected once.
+
+Semantic checks run only when the schema pass is clean. Every problem is
+reported (not just the first), naming the file and path, e.g.
 `rooms/cache_hall.json › blocks[3]: cell [12,0,4] is outside size [12,4,12]`.
+If the game cannot start, `ui/error-screen.js` lists them.
+
+Data files start with a `"$schema"` pointing to their schema, so editors like
+VS Code offer completion and inline errors.
 
 ## Testing
 

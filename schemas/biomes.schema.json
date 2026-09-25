@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "biomes.schema.json",
+  "title": "Biomes (data/biomes.json)",
+  "description": "Look of each Grid sector. Floor patterns and environmental effects join in later phases.",
+  "type": "object",
+  "required": ["schemaVersion", "biomes"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+    "biomes": {
+      "type": "object",
+      "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/$defs/biome" }
+    }
+  },
+  "$defs": {
+    "biome": {
+      "type": "object",
+      "required": ["name", "color"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "color": {
+          "$ref": "common.schema.json#/$defs/color",
+          "description": "Room color: block edges, walls and the floor grid inside the room."
+        }
+      }
+    }
+  }
+}

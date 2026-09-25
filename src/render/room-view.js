@@ -23,16 +23,21 @@ import { PALETTE, faceMaterial, lineMaterial } from './neon.js';
  * @param {object} room
  * @param {number[]} room.size [x, y, z]
  * @param {number[][]} room.cells filled block cells as [x, y, z]
- * @param {number} [room.color] palette color of the room
+ * @param {number|string} [room.color] room color (biome), amber by default
  */
 export function createRoomView({ size, cells, color = PALETTE.amber }) {
   const group = new Group();
   group.add(createWalls(size, color));
-  if (cells.length > 0) group.add(createBlocks(cells, color));
+  if (cells.length > 0) group.add(createBlockView(cells, color));
   return group;
 }
 
-function createBlocks(cells, color) {
+/**
+ * Dark occluding cubes with merged neon edges.
+ * @param {number[][]} cells [x, y, z] cells
+ * @param {number|string} color
+ */
+export function createBlockView(cells, color) {
   const group = new Group();
 
   const faces = new InstancedMesh(new BoxGeometry(1, 1, 1), faceMaterial(), cells.length);
@@ -92,4 +97,13 @@ function lines(segments, material) {
   const geometry = new LineSegmentsGeometry();
   geometry.setPositions(flattenSegments(segments));
   return new LineSegments2(geometry, material);
+}
+
+/**
+ * View of one typed object (a single cell in its own color). Kept separate
+ * from the static blocks because objects move (pushables, step 5).
+ * @param {{ at: number[], color: string }} object
+ */
+export function createObjectView(object) {
+  return createBlockView([object.at], object.color);
 }

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "defs.schema.json",
+  "title": "Type definitions (data/defs.json)",
+  "description": "Object types with their defaults. Enemy types and spells join in later phases.",
+  "type": "object",
+  "required": ["schemaVersion", "objects"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+    "objects": {
+      "type": "object",
+      "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
+      "additionalProperties": { "$ref": "#/$defs/objectType" }
+    }
+  },
+  "$defs": {
+    "objectType": {
+      "type": "object",
+      "required": ["kind", "color"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "enum": ["pushable"], "description": "Which engine behavior the object uses." },
+        "color": { "$ref": "common.schema.json#/$defs/color" }
+      }
+    }
+  }
+}

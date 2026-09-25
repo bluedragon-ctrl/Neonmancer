@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "world.schema.json",
+  "title": "World (data/world.json)",
+  "description": "How rooms connect. Fragments and the core join in Phase 3.",
+  "type": "object",
+  "required": ["schemaVersion", "start", "connections"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+    "start": { "$ref": "common.schema.json#/$defs/id", "description": "Room the game starts in." },
+    "connections": {
+      "description": "Pairs of connected exits as \"room.exit\". Exits must be on opposite sides and equally wide.",
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": { "type": "string", "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$" },
+        "minItems": 2,
+        "maxItems": 2
+      }
+    }
+  }
+}

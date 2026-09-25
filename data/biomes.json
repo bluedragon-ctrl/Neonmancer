@@ -1,0 +1,8 @@
+{
+  "$schema": "../schemas/biomes.schema.json",
+  "schemaVersion": 1,
+  "biomes": {
+    "home_lattice": { "name": "Home Lattice", "color": "#ffb020" },
+    "glitch_zone": { "name": "Glitch Zone", "color": "#ff2bd6" }
+  }
+}

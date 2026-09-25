@@ -1,0 +1,239 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { fileURLToPath } from 'node:url';
+import { checkData, checkFiles, readSchemas } from '../tools/check-data.js';
+import { validateData } from '../src/data/validate.js';
+import { DataError, loadGameData } from '../src/data/load.js';
+import { buildRoom } from '../src/world/room.js';
+
+const root = fileURLToPath(new URL('..', import.meta.url));
+const schemas = readSchemas(root);
+
+/** A small valid game: two connected rooms. Fresh copy on every call. */
+function validFiles() {
+  return {
+    'defs.json': { schemaVersion: 1, objects: { crate: { kind: 'pushable', color: '#b6ff3c' } } },
+    'biomes.json': { schemaVersion: 1, biomes: { home: { name: 'Home', color: '#ffb020' } } },
+    'world.json': { schemaVersion: 1, start: 'alpha', connections: [['alpha.east', 'beta.west']] },
+    'rooms/alpha.json': {
+      schemaVersion: 1,
+      id: 'alpha',
+      name: 'Alpha',
+      biome: 'home',
+      size: [8, 4, 8],
+      spawn: [1.5, 0, 1.5],
+      exits: [{ id: 'east', side: '+x', at: 3 }],
+      blocks: [{ at: [4, 0, 4], to: [5, 1, 4] }],
+      objects: [{ id: 'box', type: 'crate', at: [2, 0, 5], overrides: { color: '#00f0ff' } }],
+    },
+    'rooms/beta.json': {
+      schemaVersion: 1,
+      id: 'beta',
+      name: 'Beta',
+      biome: 'home',
+      size: [12, 4, 8],
+      spawn: [2, 0, 2],
+      exits: [{ id: 'west', side: '-x', at: 3, width: 2 }],
+    },
+  };
+}
+
+/** Errors for the valid game after `change` has modified it. */
+function errorsAfter(change) {
+  const files = validFiles();
+  change(files);
+  return checkFiles(files, schemas);
+}
+
+/** Assert exactly one error that contains every expected piece. */
+function assertError(errors, ...pieces) {
+  assert.equal(errors.length, 1, `expected 1 error, got:\n${errors.join('\n')}`);
+  for (const piece of pieces) assert.ok(errors[0].includes(piece), `"${errors[0]}" lacks "${piece}"`);
+}
+
+test('the shipped data in data/ is valid', () => {
+  assert.deepEqual(checkData(root).errors, []);
+});
+
+test('the test fixture is valid', () => {
+  assert.deepEqual(checkFiles(validFiles(), schemas), []);
+});
+
+test('schema: unknown properties and bad values are reported with paths', () => {
+  assertError(
+    errorsAfter((f) => (f['rooms/alpha.json'].blocks[0].colour = 'red')),
+    'rooms/alpha.json › blocks[0]',
+    'unknown property "colour"',
+  );
+  assertError(
+    errorsAfter((f) => (f['rooms/alpha.json'].exits[0].side = 'north')),
+    'rooms/alpha.json › exits[0].side',
+    'must be one of',
+  );
+  assertError(
+    errorsAfter((f) => (f['rooms/alpha.json'].size = [8, 9, 8])),
+    'rooms/alpha.json › size[1]',
+  );
+});
+
+test('schema: files without a schema are reported', () => {
+  assertError(
+    errorsAfter((f) => (f['notes.json'] = {})),
+    'notes.json',
+    'no schema',
+  );
+});
+
+test('room: id must match the file name', () => {
+  assertError(
+    errorsAfter((f) => (f['rooms/alpha.json'].id = 'gamma')),
+    'rooms/alpha.json › id',
+    'must match the file name',
+  );
+});
+
+test('room: width + depth is limited', () => {
+  assertError(
+    errorsAfter((f) => (f['rooms/beta.json'].size = [24, 4, 12])),
+    'rooms/beta.json › size',
+    'width + depth is 36',
+  );
+});
+
+test('room: unknown biome and object type', () => {
+  assertError(errorsAfter((f) => (f['rooms/alpha.json'].biome = 'lava')), 'unknown biome "lava"');
+  assertError(
+    errorsAfter((f) => (f['rooms/alpha.json'].objects[0].type = 'barrel')),
+    'objects[0]',
+    'unknown object type "barrel"',
+  );
+});
+
+test('room: blocks outside the room or overlapping are reported', () => {
+  assertError(
+    errorsAfter((f) => f['rooms/alpha.json'].blocks.push({ at: [8, 0, 0] })),
+    'rooms/alpha.json › blocks[1]',
+    'cell [8,0,0] is outside size [8,4,8]',
+  );
+  assertError(
+    errorsAfter((f) => f['rooms/alpha.json'].blocks.push({ at: [5, 1, 4] })),
+    'blocks[1]',
+    'already filled by blocks[0]',
+  );
+  assertError(
+    errorsAfter((f) => (f['rooms/alpha.json'].blocks[0].to = [3, 1, 4])),
+    'blocks[0]',
+    'must not be below',
+  );
+});
+
+test('room: objects must not overlap blocks and overrides must match the type', () => {
+  assertError(
+    errorsAfter((f) => (f['rooms/alpha.json'].objects[0].at = [4, 1, 4])),
+    'objects[0]',
+    'already filled by blocks[0]',
+  );
+  assertError(
+    errorsAfter((f) => (f['rooms/alpha.json'].objects[0].overrides = { weight: 3 })),
+    'objects[0].overrides',
+    '"weight" is not a property',
+  );
+});
+
+test('room: the player must fit at the spawn point', () => {
+  assertError(
+    errorsAfter((f) => (f['rooms/alpha.json'].spawn = [0.1, 0, 1.5])),
+    'rooms/alpha.json › spawn',
+    'does not fit',
+  );
+  assertError(
+    errorsAfter((f) => (f['rooms/alpha.json'].spawn = [4.9, 0, 4.5])),
+    'spawn',
+    'overlaps blocks[0]',
+  );
+  assertError(
+    errorsAfter((f) => (f['rooms/alpha.json'].spawn = [1.5, 3, 1.5])),
+    'spawn',
+    'does not fit',
+  );
+});
+
+test('room: exits must fit their side', () => {
+  assertError(
+    errorsAfter((f) => (f['rooms/alpha.json'].exits[0].at = 7)),
+    'exits[0]',
+    'run past the side',
+  );
+});
+
+test('world: unknown start room', () => {
+  assertError(errorsAfter((f) => (f['world.json'].start = 'nowhere')), 'world.json › start');
+});
+
+test('world: connections must name known exits', () => {
+  const errors = errorsAfter((f) => (f['world.json'].connections[0][1] = 'beta.south'));
+  assert.deepEqual(errors, [
+    'world.json › connections[0]: unknown exit "beta.south"',
+    'world.json › connections: exit "beta.west" is not connected',
+  ]);
+});
+
+test('world: connected exits must be opposite, equally wide and used once', () => {
+  let errors = errorsAfter((f) => (f['rooms/beta.json'].exits[0].side = '+z'));
+  assertError(errors, 'world.json › connections[0]', 'opposite sides');
+
+  errors = errorsAfter((f) => (f['rooms/beta.json'].exits[0].width = 3));
+  assertError(errors, 'equally wide');
+
+  errors = errorsAfter((f) => (f['world.json'].connections = []));
+  assert.equal(errors.length, 2);
+  assert.ok(errors.every((e) => e.includes('is not connected')));
+
+  errors = errorsAfter((f) => f['world.json'].connections.push(['alpha.east', 'beta.west']));
+  assert.ok(errors.some((e) => e.includes('already connected')));
+});
+
+test('a wrong schemaVersion is reported', () => {
+  const files = validFiles();
+  files['defs.json'].schemaVersion = 2;
+  assertError(validateData(files), 'defs.json › schemaVersion', 'expects 1');
+});
+
+test('loadGameData throws a DataError listing every problem', () => {
+  const files = validFiles();
+  files['world.json'].start = 'nowhere';
+  files['rooms/alpha.json'].biome = 'lava';
+  assert.throws(
+    () => loadGameData(files),
+    (err) => err instanceof DataError && err.errors.length === 2,
+  );
+});
+
+test('buildRoom expands blocks, merges type defaults and applies exit defaults', () => {
+  const content = loadGameData(validFiles());
+  const room = buildRoom(content.rooms.get('alpha'), content);
+
+  assert.equal(room.color, '#ffb020');
+  assert.deepEqual(room.cells, [
+    [4, 0, 4],
+    [4, 1, 4],
+    [5, 0, 4],
+    [5, 1, 4],
+  ]);
+  assert.deepEqual(room.objects, [
+    { id: 'box', type: 'crate', at: [2, 0, 5], kind: 'pushable', color: '#00f0ff' },
+  ]);
+  assert.deepEqual(room.exits, [{ id: 'east', side: '+x', at: 3, width: 2, y: 0, height: 2 }]);
+});
+
+test('buildRoom gives a fresh copy every time (rooms reset on entry)', () => {
+  const content = loadGameData(validFiles());
+  const data = content.rooms.get('alpha');
+  const first = buildRoom(data, content);
+  first.objects[0].at[0] = 7;
+  first.spawn[0] = 5;
+  const second = buildRoom(data, content);
+  assert.equal(second.objects[0].at[0], 2);
+  assert.equal(second.spawn[0], 1.5);
+  assert.equal(data.objects[0].at[0], 2);
+});

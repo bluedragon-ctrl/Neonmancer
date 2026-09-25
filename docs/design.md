@@ -60,33 +60,49 @@ Each step is one branch and one PR; the game runs after every step.
 | 8 | `feat/debug-mode` | Collision boxes, FPS, room jump, invincibility, test damage key |
 | 9 | `chore/release-0.1.0` | Docs pass, CHANGELOG, `v0.1.0` tag and GitHub Release |
 
-### Data formats (draft)
+## Data formats
 
-Schemas land in `schemas/` in step 3. Example room (8×8):
+The schemas in `schemas/` are the reference; this is an overview. Every file
+has `"schemaVersion": 1` and a `"$schema"` link for editor support.
+
+| File | Contents |
+|---|---|
+| `data/rooms/<id>.json` | One room (id = file name) |
+| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime) |
+| `data/biomes.json` | Biome name and room color (`home_lattice`: amber) |
+| `data/world.json` | Start room and exit connections |
+
+Example room (12×12):
 
 ```json
 {
+  "$schema": "../../schemas/room.schema.json",
   "schemaVersion": 1,
-  "id": "boot_sector",
-  "name": "Boot Sector",
+  "id": "cache_hall",
+  "name": "Cache Hall",
   "biome": "home_lattice",
-  "size": [8, 4, 8],
-  "spawn": [2.5, 0, 2.5],
+  "size": [12, 4, 12],
+  "spawn": [2.5, 0, 5.5],
   "exits": [
-    { "id": "east",  "side": "+x", "at": 3 },
-    { "id": "north", "side": "-z", "at": 5, "y": 1 }
+    { "id": "west", "side": "-x", "at": 5 },
+    { "id": "north", "side": "-z", "at": 3, "width": 3, "y": 1 }
   ],
   "blocks": [
-    { "type": "block", "at": [0, 0, 4], "to": [2, 0, 7] },
-    { "type": "block", "at": [0, 1, 7] },
-    { "type": "block", "at": [5, 0, 0], "to": [7, 0, 1] }
+    { "at": [0, 0, 0], "to": [2, 0, 3] },
+    { "at": [3, 0, 0], "to": [5, 0, 0] }
   ],
   "objects": [
-    { "id": "crate_a", "type": "crate", "at": [4, 0, 4] }
+    { "id": "crate_a", "type": "crate", "at": [6, 0, 6] },
+    { "id": "crate_b", "type": "crate", "at": [7, 0, 6], "overrides": { "color": "#00f0ff" } }
   ]
 }
 ```
 
+- `spawn` — player feet center; where the game starts if this is the start room.
+- `exits` — `side` is `-x`, `+x`, `-z` or `+z`; `at` is the first cell along
+  that side; `width` (default 2), `y` floor level (default 0), `height`
+  (default 2).
 - `blocks` — anonymous static geometry; `to` fills a box (inclusive).
-- `objects` — typed things with stable ids; optional `overrides` of type defaults.
-- `world.json` pairs exits: `["boot_sector.east", "cache_hall.west"]`.
+- `objects` — typed things with stable ids; `overrides` replace type defaults.
+- `world.json` pairs exits: `"connections": [["boot_sector.east", "cache_hall.west"]]`.
+  Paired exits are on opposite sides and equally wide; every exit is connected.
