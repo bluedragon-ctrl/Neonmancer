@@ -32,7 +32,8 @@ and the project uses [Semantic Versioning](https://semver.org/).
   spawn not above one). Fillable in the next step.
 - The wizard, drawn as a hologram (dark core, glowing silhouette,
   scanlines, neon outline, glowing eyes): magenta cone body and tilted
-  pointy hat, cyan ball head and floating hands; walks along the grid axes, jumps exactly one block high
+  pointy hat, cyan ball head and floating hands; walks along the grid axes
+  (Right ↗, Up ↖, Left ↙, Down ↘), jumps exactly one block high
   (with coyote time and a jump buffer), falls with gravity and collides
   with blocks, objects and the room sides. Motion is interpolated between
   logic ticks; a glowing drop shadow shows where he will land.

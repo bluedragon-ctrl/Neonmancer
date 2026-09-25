@@ -8,7 +8,7 @@ for the current phase. Locked decisions live in CLAUDE.md; their reasons in
 
 | Action | Keys |
 |---|---|
-| Move | WASD / arrow keys (along grid axes) |
+| Move | WASD / arrow keys along the grid axes: Right ↗, Up ↖, Left ↙, Down ↘ |
 | Jump | Space |
 | Cast | J |
 | Cycle spell | Q / E |

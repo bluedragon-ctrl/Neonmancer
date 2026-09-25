@@ -31,8 +31,11 @@ export const PLAYER = {
 /** Take-off speed that reaches exactly jumpHeight: v = √(2gh). */
 export const JUMP_SPEED = Math.sqrt(2 * PLAYER.gravity * PLAYER.jumpHeight);
 
-/** Movement per action along the grid axes: Up = −z, Right = +x. */
-const DIRECTIONS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
+/**
+ * Movement [dx, dz] per action along the grid axes (D23): Right = −z (screen
+ * up-right), Up = −x (screen up-left), Left = +z, Down = +x.
+ */
+const DIRECTIONS = { up: [-1, 0], down: [1, 0], left: [0, 1], right: [0, -1] };
 
 /** Feet this close to y = 0 count as standing on the floor. */
 const FLOOR_EPS = 1e-4;

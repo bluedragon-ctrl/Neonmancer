@@ -95,8 +95,8 @@ physical key position, so WASD works on QWERTZ/AZERTY too). Once per tick
 
 Game code never reads raw keys.
 
-Movement follows grid axes: Up = −z (screen up-right), Right = +x,
-Down = +z, Left = −x.
+Movement follows grid axes (D23): Right = −z (screen up-right),
+Up = −x (screen up-left), Left = +z (down-left), Down = +x (down-right).
 
 ## Collision
 

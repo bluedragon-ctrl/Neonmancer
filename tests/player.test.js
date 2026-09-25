@@ -93,14 +93,17 @@ test('groundBelow finds the highest surface under the footprint', () => {
   assert.equal(groundBelow([5.5, 1.5, 5.5], HITBOX, g), 0);
 });
 
-test('player walks along grid axes: Up = −z, Right = +x', () => {
+test('player walks along grid axes: Right = −z (up-right), Up = −x (up-left)', () => {
   const g = grid();
   const player = standing(g, [4, 0, 4]);
-  run(player, g, input(['up']), 30);
+  run(player, g, input(['right']), 30);
   assert.ok(Math.abs(player.pos[2] - (4 - PLAYER.speed / 2)) < 1e-6);
   assert.equal(player.pos[0], 4);
-  run(player, g, input(['right']), 10);
-  assert.ok(player.pos[0] > 4);
+  run(player, g, input(['up']), 10);
+  assert.ok(player.pos[0] < 4);
+  run(player, g, input(['down']), 20);
+  run(player, g, input(['left']), 20);
+  assert.ok(player.pos[0] > 4 && player.pos[2] > 4 - PLAYER.speed / 2);
 });
 
 test('diagonal movement is not faster than straight movement', () => {
@@ -131,13 +134,13 @@ test('the player jumps onto a 1-high block but not onto a 2-high one', () => {
   // A wide step, so the wizard doesn't walk off the far side.
   const low = grid({ cells: [3, 4, 5, 6].flatMap((x) => [[x, 0, 1], [x, 0, 2], [x, 0, 3]]) });
   const a = standing(low, [2, 0, 2.5]);
-  run(a, low, input(['right'], ['jump']), 40);
+  run(a, low, input(['down'], ['jump']), 40);
   assert.equal(a.pos[1], 1);
   assert.ok(a.pos[0] > 3);
 
   const high = grid({ cells: [[3, 0, 2], [3, 1, 2]] });
   const b = standing(high, [2, 0, 2.5]);
-  run(b, high, input(['right'], ['jump']), 60);
+  run(b, high, input(['down'], ['jump']), 60);
   assert.equal(b.pos[1], 0);
   assert.ok(Math.abs(b.pos[0] - 2.7) < 1e-9);
 });
@@ -152,7 +155,7 @@ test('a jump pressed just before landing still happens (buffer)', () => {
 test('standing on a hole kills the player, who respawns at the spawn', () => {
   const g = grid({ holes: [[5, 4]] });
   const player = standing(g, [3.5, 0, 4.5]);
-  const events = run(player, g, input(['right']), 40);
+  const events = run(player, g, input(['down']), 40); // Down = +x
   assert.ok(events.includes('die'));
   assert.equal(player.dead, true);
 
@@ -170,7 +173,7 @@ test('grazing a hole edge is safe, and jumping over one is too', () => {
   assert.equal(edge.dead, false);
 
   const jumper = standing(g, [4.6, 0, 4.5]);
-  const events = run(jumper, g, input(['right'], ['jump']), 40);
+  const events = run(jumper, g, input(['down'], ['jump']), 40);
   assert.ok(!events.includes('die'), events.join());
   assert.ok(jumper.pos[0] > 6);
 });

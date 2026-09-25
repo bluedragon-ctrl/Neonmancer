@@ -184,3 +184,11 @@ fixed (D2). Rooms and objects stay wireframe.
 in the asset showcase. Wireframe globe lines made the ball head and face hard
 to read; the hologram reads as a figure, fits "programs in the Grid", and
 gives monsters a shared look (color + silhouette + eyes).
+
+### D23 — 2026-09-25 — Direction keys: Right goes up-right on screen
+Movement keys follow the grid axes rotated so that Right = −z (screen
+up-right), Up = −x (up-left), Left = +z (down-left), Down = +x (down-right).
+Replaces the step 1 mapping (Up = up-right, Right = down-right).
+**Why:** author's preference after playing: "right" should head to the
+upper right corner. Neither isometric mapping is standard; a setting with
+both (and the planned screen-relative mode) can come with the settings menu.
