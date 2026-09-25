@@ -271,3 +271,12 @@ dark tunnel, fading in and out, half a glide apart: the same pattern as the
 arrows on front exits.
 **Why:** author's choice; one pattern for every exit, and frames receding
 into the dark read as a passage.
+
+### D32 — 2026-09-25 — Doorways: a dashed stream into the tunnel
+Replaces the gliding frames of D31. Dashes in the destination color flow
+from the doorway into the dark tunnel along its four corner edges and two
+lanes on its floor, fading to black. Front exits keep the gliding arrows.
+The two styles were compared side by side in the asset showcase.
+**Why:** author's choice. It merges the first stream idea (D28) with the
+tunnel: the motion stays inside the doorway instead of spreading over the
+room floor, and the fade into the dark adds depth.

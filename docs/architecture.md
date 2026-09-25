@@ -63,7 +63,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/post.js` | pmndrs postprocessing composer (bloom) |
 | `render/floor.js` | Infinite grid floor fading into darkness; hole tiles cut out via a mask texture |
 | `render/edges.js` | Visible block edges from grid occupancy; merging unit segments into runs (pure, tested) |
-| `render/exit-view.js` | Exit effect in the destination color: doorway frames gliding into the tunnel, arrows gliding out of front exits (layout and timing pure, tested) |
+| `render/exit-view.js` | Exit effect in the destination color: dashed stream into doorway tunnels, arrows gliding out of front exits (layout and timing pure, tested) |
 | `render/walls.js` | Back walls with doorways and dark tunnels behind them, front edges with gaps, arrow shape for front exits (pure, tested) |
 | `render/marks.js` | Face-mark line patterns for object styles (pure, tested) |
 | `render/hole-view.js` | Hole pits: walls fading to black, rim, short fading corner lines; outline math (tested) |
@@ -171,13 +171,14 @@ game.update: player moved ──► exitAt(room, pos)   feet center past a side,
                                 └─ transition 'in' (TRANSITION.inTicks): game runs, veil lifts
 main.js: 'room' event ──► showRoom()              views rebuilt, camera reframed
          every frame  ──► renderer.setFade(game.fadeLevel(alpha))   black veil under the HUD
-                      ──► exitView.update(dt)                      frames and arrows glide
+                      ──► exitView.update(dt)                      stream flows, arrows glide
 ```
 
 Exit effects take their color from `game.destinationColor(exit)` (the biome
-of the room behind the exit). Each effect is two copies of one shape (the
-doorway frame, or a chevron on front exits), moved outwards and faded per
-frame (`glideState`), half a glide apart. They are purely
+of the room behind the exit). The doorway stream is a dashed `LineMaterial`
+whose `dashOffset` moves every frame, faded towards black with vertex
+colors; front-exit arrows are two copies of one chevron, moved outwards and
+faded per frame (`glideState`), half a glide apart. They are purely
 visual and never touch the simulation.
 
 `content.links` (built in `data/load.js`) maps every `"room.exit"` to the

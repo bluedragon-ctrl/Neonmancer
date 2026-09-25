@@ -6,7 +6,7 @@ import { Pushable } from '../src/entities/pushable.js';
 import { Game, TRANSITION } from '../src/game.js';
 import { mergeUnitSegments } from '../src/render/edges.js';
 import { TUNNEL_DEPTH, doorwayTunnels, frontChevrons, wallLayout } from '../src/render/walls.js';
-import { exitFrameLayout, exitStreamLayout, glideState } from '../src/render/exit-view.js';
+import { exitStreamLayout, glideState } from '../src/render/exit-view.js';
 import { arrival, exitAt } from '../src/world/exits.js';
 import { Grid } from '../src/world/grid.js';
 
@@ -224,18 +224,7 @@ test('a room transition fades out with the world frozen, then fades in while run
   assert.equal(game.fadeLevel(0.5), 0);
 });
 
-test('exit frame: the doorway outline of back exits only', () => {
-  const exit = withExitDefaults({ id: 'n', side: '-z', at: 1 });
-  assert.deepEqual(exitFrameLayout(exit), [
-    [[1, 0, 0], [1, 2, 0]],
-    [[1, 2, 0], [3, 2, 0]],
-    [[3, 2, 0], [3, 0, 0]],
-    [[3, 0, 0], [1, 0, 0]],
-  ]);
-  assert.deepEqual(exitFrameLayout(withExitDefaults({ id: 'e', side: '+x', at: 1 })), []);
-});
-
-test('exit effect copies glide out of the room, fading in and out', () => {
+test('front-exit arrows glide out of the room, fading in and out', () => {
   assert.deepEqual(glideState(0, 0.6), { out: 0, brightness: 0 });
   assert.equal(glideState(0.5, 0.6).brightness, 1);
   assert.ok(glideState(0.75, 0.6).out > glideState(0.25, 0.6).out);
@@ -270,7 +259,7 @@ test('doorways lead into dark tunnels; front exits get none', () => {
   assert.ok(to[2] < 0);
 });
 
-test('exit stream (doorway style under review): tunnel edges and floor lanes, flowing in', () => {
+test('doorway stream: tunnel edges and floor lanes, flowing in; front exits have none', () => {
   const segments = exitStreamLayout(withExitDefaults({ id: 'n', side: '-z', at: 1 }));
   assert.equal(segments.length, 6); // four corner edges, two floor lanes
   for (const [from, to] of segments) {

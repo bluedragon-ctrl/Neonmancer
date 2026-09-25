@@ -5,7 +5,7 @@
  *
  * Open /tools/showcase.html in the dev server (or on the deployed site).
  * Space pauses the turning; ←/→ turn by hand. `?asset=wizard` shows one
- * asset close up, `?asset=exits,exits-stream` a few side by side.
+ * asset close up, `?asset=wizard,crate` a few side by side.
  * New assets (monsters, pickups) are added to ASSETS below. Assets can take
  * more room (`span`) and animate (`update(dt, time)`, called every frame).
  */
@@ -43,23 +43,20 @@ const ALL_ASSETS = [
       return new Group().add(view);
     },
   })),
-  { label: 'exits', span: 5.5, build: () => buildExits('frames') },
-  // Under review: the stream doorway style, next to the frames above.
-  { label: 'exits-stream', span: 5.5, build: () => buildExits('stream') },
+  { label: 'exits', span: 5.5, build: buildExits },
 ];
 
 /**
  * A 3×3 room corner with a back doorway leading to a magenta room and a
  * front exit leading to a cyan one.
- * @param {'frames' | 'stream'} style doorway style
  */
-function buildExits(style) {
+function buildExits() {
   const size = [3, 3, 3];
   const exits = [
     withExitDefaults({ id: 'back', side: '-z', at: 0 }),
     withExitDefaults({ id: 'front', side: '+x', at: 1 }),
   ];
-  const views = [new ExitView(exits[0], size, PALETTE.magenta, { style }), new ExitView(exits[1], size, PALETTE.cyan)];
+  const views = [new ExitView(exits[0], size, PALETTE.magenta), new ExitView(exits[1], size, PALETTE.cyan)];
   const room = new Group().add(createRoomView({ size, cells: [], exits, color: PALETTE.amber }), ...views.map((v) => v.group));
   room.position.set(-1.5, 0, -1.5);
   const asset = new Group().add(room);
