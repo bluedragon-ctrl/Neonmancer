@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "strings.schema.json",
+  "title": "UI text (data/strings.json)",
+  "description": "Every text the game shows, by key. {name} marks a value filled in by the game, e.g. \"v{version}\". Room and biome names live in their own files.",
+  "type": "object",
+  "required": ["schemaVersion", "strings"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+    "strings": {
+      "type": "object",
+      "description": "Key → text. Keys are dotted groups, e.g. \"hud.integrity\". The listed keys are the ones the game uses; others are allowed while drafting.",
+      "propertyNames": { "pattern": "^[a-z][a-zA-Z0-9]*(\\.[a-z][a-zA-Z0-9]*)+$" },
+      "additionalProperties": { "type": "string" },
+      "required": [
+        "game.title",
+        "game.version",
+        "hud.integrity",
+        "hint.fullscreen",
+        "msg.boot",
+        "msg.welcome",
+        "msg.die",
+        "msg.respawn",
+        "msg.plug"
+      ],
+      "properties": {
+        "game.title": { "type": "string", "description": "Game name in the HUD corner." },
+        "game.version": { "type": "string", "description": "Version next to the name; {version} is the game version." },
+        "hud.integrity": { "type": "string", "description": "Label of the integrity (health) bar." },
+        "hint.fullscreen": { "type": "string", "description": "Hint shown while the game is drawn below 1080 pixels high." },
+        "msg.boot": { "type": "string", "description": "Terminal message when the game starts." },
+        "msg.welcome": { "type": "string", "description": "Second terminal message when the game starts." },
+        "msg.die": { "type": "string", "description": "Terminal message when the wizard dies." },
+        "msg.respawn": { "type": "string", "description": "Terminal message when the wizard recompiles at the room entrance." },
+        "msg.plug": { "type": "string", "description": "Terminal message when a pushed object fills a hole." }
+      }
+    }
+  }
+}

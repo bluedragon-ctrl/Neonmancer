@@ -23,7 +23,7 @@ import {
 } from './room-data.js';
 
 /** Files every game needs (paths relative to data/). */
-export const REQUIRED_FILES = ['defs.json', 'biomes.json', 'world.json'];
+export const REQUIRED_FILES = ['defs.json', 'biomes.json', 'world.json', 'strings.json'];
 
 /**
  * @param {string} file path relative to data/
