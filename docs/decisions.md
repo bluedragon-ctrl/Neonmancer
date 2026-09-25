@@ -246,3 +246,11 @@ color + proximity; reviewed in the asset showcase first.
 sides and the open front, hint where they lead (useful with 40–60 rooms)
 and react to the player, while staying thin lines that keep rooms clean.
 A curtain may come later; glitch on crossing belongs to the juice pass.
+
+### D29 — 2026-09-25 — Doorways lead into darkness; a quieter stream
+Behind every back doorway a short dark tunnel (floor, sides, ceiling and
+far end, shaded from the void color to black, with corner lines fading into
+it) hides the outer floor grid, as the pits do for holes. The exit stream
+(D28) is dimmer and thinner and reaches only half a tile past the threshold.
+**Why:** author's review: the grid seen through a doorway made it look like
+a hole in a thin wall rather than a way out, and the stream was too strong.

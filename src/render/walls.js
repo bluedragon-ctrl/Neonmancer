@@ -108,3 +108,38 @@ export function frontChevrons([w, , d], exits) {
   }
   return segments;
 }
+
+/** How deep the dark tunnel behind a doorway reaches, in blocks. */
+export const TUNNEL_DEPTH = 1.2;
+
+/** Length of the fading lines running into a tunnel from the doorway corners. */
+export const TUNNEL_LINE = 0.45;
+
+/**
+ * Dark tunnels behind the doorways in the back walls (like the pits of
+ * holes): the doorway leads into darkness instead of showing the floor grid
+ * outside. Each face is a quad whose corners carry a shade: 0 at the
+ * doorway, 1 (black) at the far end.
+ * @param {number[]} size room size [x, y, z]
+ * @param {{ side: string, at: number, width: number, y: number, height: number }[]} exits
+ * @returns {{ quads: { points: number[][], shade: number[] }[], lines: number[][][] }}
+ *   `lines` run from each doorway corner into the tunnel (bright to black)
+ */
+export function doorwayTunnels(size, exits) {
+  const quads = [];
+  const lines = [];
+  for (const { side, at, width, y, height } of exits) {
+    if (side !== '-x' && side !== '-z') continue;
+    // (a, c, h): a along the wall, c outwards from it, h height.
+    const point = (a, c, h) => (side === '-x' ? [0 - c, h, a] : [a, h, 0 - c]); // 0 - c: no -0
+    const [a0, a1, top, D] = [at, at + width, y + height, TUNNEL_DEPTH];
+    const quad = (a, b, c, d) => quads.push({ points: [a, b, c, d].map(([u, v, h]) => point(u, v, h)), shade: [a, b, c, d].map(([, v]) => v / D) });
+    quad([a0, 0, y], [a1, 0, y], [a1, D, y], [a0, D, y]); // floor
+    quad([a0, 0, top], [a1, 0, top], [a1, D, top], [a0, D, top]); // ceiling
+    quad([a0, 0, y], [a0, 0, top], [a0, D, top], [a0, D, y]); // side
+    quad([a1, 0, y], [a1, 0, top], [a1, D, top], [a1, D, y]); // side
+    quad([a0, D, y], [a1, D, y], [a1, D, top], [a0, D, top]); // far end
+    for (const a of [a0, a1]) for (const h of [y, top]) lines.push([point(a, 0, h), point(a, TUNNEL_LINE, h)]);
+  }
+  return { quads, lines };
+}

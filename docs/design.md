@@ -79,10 +79,11 @@ drifting up and a thin neon outline. Proportions are `WIZARD` in
 - Horizontal exits only in Phase 1: an opening on one side of the room
   (`side`, first cell `at`, `width`, floor level `y`, `height`).
 - On the back sides an exit is a doorway in the wall (framed, with a
-  threshold line); on the front sides it is a gap in the invisible boundary
+  threshold line) leading into darkness: a short tunnel fading to black with
+  corner lines fading into it, like a hole's pit; on the front sides it is a gap in the invisible boundary
   and in the floor edge, marked by two chevrons `>>` on its floor pointing out.
-- Every exit has a data stream: dashes flow along lanes on its floor out of
-  the room (and up the jambs to the middle of the lintel on doorways), in the
+- Every exit has a faint data stream: thin dashes flow along lanes on its
+  floor out of the room, reaching half a tile past the threshold (and up the jambs to the middle of the lintel on doorways), in the
   color of the room it leads to. Far from the wizard the stream is dim and
   slow; within a few cells it brightens, speeds up and pulses. Tuning values
   are `EXIT_FX` in `src/render/exit-view.js`; review it in the asset

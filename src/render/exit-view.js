@@ -25,7 +25,7 @@ export const EXIT_FX = {
   lanesPerUnit: 2,
   /** How far a lane starts inside the room and ends outside it. */
   laneInside: 1.5,
-  laneOutside: 1,
+  laneOutside: 0.5,
   /** Dash and gap length: short packets with room between them. */
   dash: 0.16,
   gap: 0.34,
@@ -33,12 +33,12 @@ export const EXIT_FX = {
   far: 4.5,
   near: 1.5,
   /** Brightness far away and close up; flow speed far and close (units/s). */
-  dim: 0.5,
-  bright: 1.6,
+  dim: 0.2,
+  bright: 0.7,
   slow: 0.5,
   fast: 1.6,
   /** Pulse when close: share of the brightness and speed in cycles per second. */
-  pulse: 0.25,
+  pulse: 0.15,
   pulseRate: 1.5,
 };
 
@@ -130,7 +130,7 @@ export class ExitView {
     const geometry = new LineSegmentsGeometry();
     geometry.setPositions(flattenSegments(segments));
     geometry.setColors(fade.flatMap(([f0, f1]) => [f0, f0, f0, f1, f1, f1]));
-    this.material = lineMaterial({ color: 0xffffff, width: 2.5, dashed: true });
+    this.material = lineMaterial({ color: 0xffffff, width: 1.5, dashed: true });
     this.material.vertexColors = true;
     this.material.dashSize = EXIT_FX.dash;
     this.material.gapSize = EXIT_FX.gap;

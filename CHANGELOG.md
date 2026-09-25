@@ -49,8 +49,8 @@ and the project uses [Semantic Versioning](https://semver.org/).
 - Flip-screen exits: doorways in the back walls, chevron-marked gaps on
   the front sides; walking out loads the connected room at the matching
   exit (offset along the edge kept), which becomes the respawn point.
-  Rooms fade out and in through black. Exits show a data stream flowing
-  out, in the color of the room they lead to, brightening and pulsing as
+  Rooms fade out and in through black. Doorways lead into a dark tunnel.
+  Exits show a faint data stream flowing out, in the color of the room they lead to, brightening and pulsing as
   the wizard comes close (also in the asset showcase).
   Crates can't be pushed out of a room; the first row inside an exit is
   validated to be free.

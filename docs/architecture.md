@@ -64,7 +64,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/floor.js` | Infinite grid floor fading into darkness; hole tiles cut out via a mask texture |
 | `render/edges.js` | Visible block edges from grid occupancy; merging unit segments into runs (pure, tested) |
 | `render/exit-view.js` | Exit data stream: layout and proximity glow (pure, tested), animated dashed lines |
-| `render/walls.js` | Back walls with doorways, front edges with gaps, chevrons on front exits (pure, tested) |
+| `render/walls.js` | Back walls with doorways and dark tunnels behind them, front edges with gaps, chevrons on front exits (pure, tested) |
 | `render/marks.js` | Face-mark line patterns for object styles (pure, tested) |
 | `render/hole-view.js` | Hole pits: walls fading to black, rim, short fading corner lines; outline math (tested) |
 | `render/room-view.js` | Static blocks (merged edges + instanced occluder faces), back walls, styled object views |

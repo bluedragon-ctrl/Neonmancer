@@ -5,7 +5,7 @@ import { exitCells, withExitDefaults } from '../src/data/room-data.js';
 import { Pushable } from '../src/entities/pushable.js';
 import { Game, TRANSITION } from '../src/game.js';
 import { mergeUnitSegments } from '../src/render/edges.js';
-import { frontChevrons, wallLayout } from '../src/render/walls.js';
+import { TUNNEL_DEPTH, doorwayTunnels, frontChevrons, wallLayout } from '../src/render/walls.js';
 import { EXIT_FX, exitCenter, exitGlow, exitStreamLayout } from '../src/render/exit-view.js';
 import { arrival, exitAt } from '../src/world/exits.js';
 import { Grid } from '../src/world/grid.js';
@@ -269,4 +269,24 @@ test('an exit stream has the color of the room it leads to', () => {
   data.rooms.get('beta').biome = 'lava';
   const game = new Game(data);
   assert.equal(game.destinationColor(game.room.exits[0]), '#ff2020');
+});
+
+test('doorways lead into dark tunnels; front exits get none', () => {
+  const exits = [
+    withExitDefaults({ id: 'n', side: '-z', at: 1, y: 1 }),
+    withExitDefaults({ id: 'e', side: '+x', at: 1 }),
+  ];
+  const { quads, lines } = doorwayTunnels([6, 4, 6], exits);
+  assert.equal(quads.length, 5); // floor, ceiling, two sides, far end
+  assert.equal(lines.length, 4); // one from each doorway corner
+  for (const { points, shade } of quads) {
+    points.forEach(([x, y, z], i) => {
+      assert.ok(z <= 0 && z >= -TUNNEL_DEPTH); // behind the z = 0 wall
+      assert.ok(x >= 1 && x <= 3 && y >= 1 && y <= 3); // within the doorway
+      assert.ok(Math.abs(shade[i] - -z / TUNNEL_DEPTH) < 1e-9); // darker the deeper
+    });
+  }
+  const [from, to] = lines[0];
+  assert.deepEqual(from, [1, 1, 0]);
+  assert.ok(to[2] < 0);
 });

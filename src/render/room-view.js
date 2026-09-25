@@ -9,18 +9,20 @@
 import {
   BoxGeometry,
   BufferGeometry,
+  Color,
   DoubleSide,
   Float32BufferAttribute,
   Group,
   InstancedMesh,
   Matrix4,
   Mesh,
+  MeshBasicMaterial,
 } from 'three';
 import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
 import { blockEdges, flattenSegments } from './edges.js';
 import { markSegments } from './marks.js';
-import { frontChevrons, wallLayout } from './walls.js';
+import { doorwayTunnels, frontChevrons, wallLayout } from './walls.js';
 import { PALETTE, faceMaterial, lineMaterial, tintedFaceMaterials } from './neon.js';
 
 /**
@@ -78,9 +80,47 @@ function createWalls(size, exits, color) {
   edges.renderOrder = 1;
   group.add(edges);
 
+  // Doorways lead into darkness: dark tunnel faces fading to black, and
+  // short corner lines fading into them (like the pits of holes).
+  const tunnels = doorwayTunnels(size, exits);
+  if (tunnels.quads.length > 0) group.add(createTunnels(tunnels, color));
+
   // Exits on the open front sides: arrows on the floor pointing out.
   const chevrons = frontChevrons(size, exits);
   if (chevrons.length > 0) group.add(lines(chevrons, lineMaterial({ color, width: 2.5, brightness: 1 })));
+  return group;
+}
+
+/**
+ * @param {ReturnType<typeof doorwayTunnels>} tunnels
+ * @param {number|string} color room color
+ */
+function createTunnels({ quads, lines: corners }, color) {
+  const group = new Group();
+  const near = new Color(PALETTE.void);
+  const far = new Color(0x000000);
+  const positions = [];
+  const colors = [];
+  for (const { points, shade } of quads) {
+    for (const i of [0, 1, 2, 0, 2, 3]) {
+      positions.push(...points[i]);
+      const c = near.clone().lerp(far, shade[i]);
+      colors.push(c.r, c.g, c.b);
+    }
+  }
+  const geometry = new BufferGeometry();
+  geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('color', new Float32BufferAttribute(colors, 3));
+  const material = new MeshBasicMaterial({ vertexColors: true, side: DoubleSide });
+  group.add(new Mesh(geometry, material));
+
+  const glow = new Color(color).multiplyScalar(0.6);
+  const fading = new LineSegmentsGeometry();
+  fading.setPositions(flattenSegments(corners));
+  fading.setColors(corners.flatMap(() => [glow.r, glow.g, glow.b, 0, 0, 0]));
+  const lineMat = lineMaterial({ color: 0xffffff, width: 1.5 });
+  lineMat.vertexColors = true;
+  group.add(new LineSegments2(fading, lineMat));
   return group;
 }
 
