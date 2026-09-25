@@ -16,6 +16,7 @@ import {
   OBJECT_STYLE_DEFAULTS,
   OPPOSITE_SIDE,
   blockCells,
+  exitCells,
   holeTiles,
   sideLength,
   withExitDefaults,
@@ -182,6 +183,20 @@ function validateRoom(file, room, { objectTypes, biomes }, report) {
       }
       holes.set(key, path);
     }
+  });
+
+  // Exits: the first row inside is free, so the wizard can pass and arrive.
+  (room.exits ?? []).forEach((raw, i) => {
+    const exit = withExitDefaults(raw);
+    if (exit.at + exit.width > sideLength(exit.side, room.size) || exit.y + exit.height > h) return; // reported above
+    const { inside } = exitCells(exit, room.size);
+    const blocked = inside.find((cell) => filled.has(cell.join(',')));
+    if (blocked) {
+      report(file, `exits[${i}]`, `cell ${cellText(blocked)} inside the exit is filled by ${filled.get(blocked.join(','))}`);
+      return;
+    }
+    const pit = exit.y === 0 && inside.find(([x, , z]) => holes.has(`${x},${z}`));
+    if (pit) report(file, `exits[${i}]`, `tile ${cellText([pit[0], pit[2]])} inside the exit is a hole`);
   });
 
   // Spawn: the whole player hitbox inside the room and clear of solids.

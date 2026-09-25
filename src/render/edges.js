@@ -24,9 +24,7 @@ export function blockEdges(cells) {
   for (const [x, y, z] of cells) filled.add(`${x},${y},${z}`);
   const has = (p) => filled.has(`${p[0]},${p[1]},${p[2]}`);
 
-  // Unit edges keyed by line (axis + the two fixed coordinates), each
-  // holding the start positions along the axis.
-  const lines = new Map();
+  const units = [];
   const seen = new Set();
 
   for (const key of filled) {
@@ -43,18 +41,38 @@ export function blockEdges(cells) {
           if (seen.has(edgeKey)) continue;
           seen.add(edgeKey);
           if (!isCorner(has, start, axis, b, c)) continue;
-
-          const lineKey = `${axis}:${start[b]},${start[c]}`;
-          if (!lines.has(lineKey)) lines.set(lineKey, { axis, start, positions: [] });
-          lines.get(lineKey).positions.push(start[axis]);
+          const end = [...start];
+          end[axis] += 1;
+          units.push([start, end]);
         }
       }
     }
   }
+  return mergeUnitSegments(units);
+}
+
+/**
+ * Merge axis-aligned unit segments that continue each other into single
+ * segments (duplicates count once), so thick lines have no seams.
+ * @param {number[][][]} units segments of length 1 along one axis
+ * @returns {number[][][]}
+ */
+export function mergeUnitSegments(units) {
+  // Keyed by line (axis + the two fixed coordinates), each holding the start
+  // positions along the axis.
+  const lines = new Map();
+  for (const [p, q] of units) {
+    const axis = p.findIndex((v, i) => v !== q[i]);
+    const start = p[axis] < q[axis] ? p : q;
+    const [b, c] = OTHER_AXES[axis];
+    const lineKey = `${axis}:${start[b]},${start[c]}`;
+    if (!lines.has(lineKey)) lines.set(lineKey, { axis, start, positions: new Set() });
+    lines.get(lineKey).positions.add(start[axis]);
+  }
 
   const segments = [];
-  for (const { axis, start, positions } of lines.values()) {
-    positions.sort((p, q) => p - q);
+  for (const { axis, start, positions: unique } of lines.values()) {
+    const positions = [...unique].sort((p, q) => p - q);
     let runStart = positions[0];
     for (let i = 1; i <= positions.length; i++) {
       // A run ends at a gap or after the last piece.

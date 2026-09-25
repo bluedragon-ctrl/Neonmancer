@@ -16,7 +16,9 @@ export class DataError extends Error {
 
 /**
  * @param {Record<string, any>} files parsed JSON keyed by path relative to data/
- * @returns {{ objectTypes: object, biomes: object, world: object, rooms: Map<string, object> }}
+ * @returns {{ objectTypes: object, biomes: object, world: object, rooms: Map<string, object>,
+ *   links: Map<string, { room: string, exit: string }> }} `links` maps "room.exit" to the exit
+ *   it is connected to (both ways round)
  */
 export function loadGameData(files) {
   const errors = validateData(files);
@@ -26,10 +28,22 @@ export function loadGameData(files) {
   for (const [file, room] of Object.entries(files)) {
     if (file.startsWith('rooms/')) rooms.set(room.id, room);
   }
+
+  const links = new Map();
+  for (const pair of files['world.json'].connections) {
+    const [a, b] = pair.map((ref) => {
+      const [room, exit] = ref.split('.');
+      return { room, exit };
+    });
+    links.set(pair[0], b);
+    links.set(pair[1], a);
+  }
+
   return {
     objectTypes: files['defs.json'].objects,
     biomes: files['biomes.json'].biomes,
     world: files['world.json'],
     rooms,
+    links,
   };
 }
