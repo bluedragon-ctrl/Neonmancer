@@ -69,8 +69,9 @@ drifting up and a thin neon outline. Proportions are `WIZARD` in
   Respawning resets the room (D24).
 - A block pushed onto a hole drops in and fills it: the hole becomes
   walkable floor and the block is used up: only its top stays visible,
-  flush with the floor (objects are never drawn below the floor, so a
-  crate dropping in sinks out of sight). Puzzle idea: push the crate into the pit to cross it.
+  flush with the floor, with short corner lines fading into the pit like
+  the pit's own (objects are never drawn below the floor, so a crate
+  dropping in sinks out of sight). Puzzle idea: push the crate into the pit to cross it.
 - No way down: holes are only a look plus a rule, never a real lower level.
 
 ## Rooms and exits

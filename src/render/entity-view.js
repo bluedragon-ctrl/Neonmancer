@@ -5,6 +5,7 @@
  */
 import { AdditiveBlending, Color, Group, Mesh, Plane, PlaneGeometry, ShaderMaterial, Vector3 } from 'three';
 import { PALETTE } from './neon.js';
+import { fadingDrops } from './hole-view.js';
 import { createObjectView } from './room-view.js';
 import { createWizard } from './wizard.js';
 
@@ -111,7 +112,8 @@ export class PlayerView {
 /**
  * Nothing of an object is drawn below the floor: one sinking into a hole
  * disappears into the pit, and a plugged hole shows only the object's top,
- * flush with the floor. (A hair below 0, so edges lying on the floor stay.)
+ * flush with the floor, plus short corner lines fading into the pit like
+ * the pit's own. (A hair below 0, so edges lying on the floor stay.)
  */
 const FLOOR_CLIP = [new Plane(new Vector3(0, 1, 0), 0.01)];
 
@@ -130,7 +132,11 @@ export class PushableView {
       for (const material of [node.material ?? []].flat()) material.clippingPlanes = FLOOR_CLIP;
     });
     this.shadow = createDropShadow(pushable.object.color);
-    this.group.add(this.block, this.shadow);
+    // Shown once the object plugs a hole: its vertical edges fade into the pit.
+    const corners = [[0, 0], [1, 0], [0, 1], [1, 1]];
+    this.plugDrops = fadingDrops(corners, 1, pushable.object.color, 1, 2.5);
+    this.plugDrops.visible = false;
+    this.group.add(this.block, this.shadow, this.plugDrops);
   }
 
   /** @param {number} alpha interpolation factor 0..1 between the last two ticks */
@@ -138,6 +144,8 @@ export class PushableView {
     const { pushable } = this;
     const pos = lerpPosition(pushable.prev, pushable.pos, alpha);
     this.block.position.set(pos[0], pos[1], pos[2]);
+    this.plugDrops.visible = pushable.state === 'plugged';
+    this.plugDrops.position.set(pos[0], pos[1], pos[2]);
 
     // Drop shadow only while falling (CLAUDE.md §4).
     const ground = pushable.state === 'fall' ? this.game.objectShadowHeight(pushable, pos) : null;
