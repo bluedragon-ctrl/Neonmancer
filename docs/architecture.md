@@ -67,7 +67,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/hole-view.js` | Hole pits: walls fading to black, rim, short fading corner lines; outline math (tested) |
 | `render/room-view.js` | Static blocks (merged edges + instanced occluder faces), back walls, styled object views |
 | `render/entity-view.js` | Player (later pushable) views, interpolation, glowing drop shadows |
-| `render/wizard.js` | Wizard model: line segments (pure, tested) and dark occluding solids |
+| `render/wizard.js` | Wizard model: parts as data (pure, tested), built in the hologram look |
+| `render/holo.js` | Hologram look for characters: rim-glow material, inverted-hull outline, eyes, shared clock |
 | `ui/hud.js` | DOM overlay: integrity, room name, terminal messages |
 | `ui/error-screen.js` | Startup error screen listing every data problem |
 | `tools/check-data.js` | Dev only: Ajv schema check + semantic checks over `data/` |

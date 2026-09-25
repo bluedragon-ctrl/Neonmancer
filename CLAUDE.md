@@ -172,8 +172,11 @@ Map screen showing visited rooms, connections and fragment markers.
 
 - Bright neon wireframe on dark background; saturated cyan, magenta,
   lime, amber. Infinite grid floor fading into darkness.
-- The wizard: wireframe figure with a big pointy hat and robe, readable
-  at a glance. Characters use slightly thicker lines than the environment.
+- Characters (the wizard, monsters) are holograms: a dark core glowing
+  towards the silhouette, faint drifting scanlines, a thin neon outline and
+  glowing eyes (D22). The world stays wireframe.
+- The wizard: cone body, ball head, floating ball hands and a big pointy
+  hat, readable at a glance.
 - "Juice": squash-and-stretch on jumps and landings, small screen shake
   and hit-flash on hits, particle bursts on pickups, enemies pop into
   pixel fragments, collapsing blocks fragment into pixels, moving

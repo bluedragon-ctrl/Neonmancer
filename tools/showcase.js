@@ -18,6 +18,7 @@ import { PALETTE } from '../src/render/neon.js';
 import { Renderer } from '../src/render/renderer.js';
 import { ASPECT } from '../src/render/viewport.js';
 import { createObjectView } from '../src/render/room-view.js';
+import { HOLO_TIME } from '../src/render/holo.js';
 import { createWizard } from '../src/render/wizard.js';
 
 /** Units between two assets. */
@@ -97,6 +98,7 @@ let last = performance.now();
 function frame(now) {
   const dt = Math.min((now - last) / 1000, 0.1);
   last = now;
+  HOLO_TIME.value = now / 1000;
   let turn = spinning ? SPIN : 0;
   if (held.has('ArrowLeft')) turn -= 2;
   if (held.has('ArrowRight')) turn += 2;

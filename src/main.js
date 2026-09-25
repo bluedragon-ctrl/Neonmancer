@@ -13,6 +13,7 @@ import { createFloor } from './render/floor.js';
 import { createHoleView } from './render/hole-view.js';
 import { createObjectView, createRoomView } from './render/room-view.js';
 import { PlayerView } from './render/entity-view.js';
+import { HOLO_TIME } from './render/holo.js';
 import { showErrorScreen } from './ui/error-screen.js';
 
 const app = document.getElementById('app');
@@ -69,6 +70,7 @@ function boot() {
 
   function render(alpha) {
     playerView.sync(alpha);
+    HOLO_TIME.value = performance.now() / 1000;
     renderer.render();
 
     framesThisSecond++;

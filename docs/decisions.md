@@ -172,3 +172,15 @@ thin and dark, the rims bright.
 **Why:** author's design. The hat tilt keeps the face visible from the
 isometric camera, which looks down on the brim; faint upright lines keep the
 silhouette clean.
+
+### D22 — 2026-09-25 — Characters use a hologram look
+Supersedes the line style of D21 (the wizard's shapes stay). Characters are
+smooth solids with a shader that keeps the core near-black and glows towards
+the silhouette (rim / Fresnel), faint scanlines drifting up, a thin outline
+from an inverted hull, and glowing eyes (`render/holo.js`). Outline width is
+in world units, which scale with the render height because the framing is
+fixed (D2). Rooms and objects stay wireframe.
+**Why:** author's choice after comparing toon, hologram and faceted mockups
+in the asset showcase. Wireframe globe lines made the ball head and face hard
+to read; the hologram reads as a figure, fits "programs in the Grid", and
+gives monsters a shared look (color + silhouette + eyes).

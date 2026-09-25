@@ -4,7 +4,7 @@ import { groundBelow, moveAxis } from '../src/physics/collision.js';
 import { JUMP_SPEED, PLAYER, Player } from '../src/entities/player.js';
 import { Grid } from '../src/world/grid.js';
 import { lerpAngle, lerpPosition, shadowScale } from '../src/render/entity-view.js';
-import { wizardSegments } from '../src/render/wizard.js';
+import { WIZARD, wizardParts } from '../src/render/wizard.js';
 
 const HITBOX = [0.6, 1.5, 0.6];
 
@@ -184,13 +184,13 @@ test('interpolation helpers', () => {
   assert.ok(shadowScale(2).scale < 1);
 });
 
-test('wizard: hat reaches above the hitbox, body cone fits inside it', () => {
-  const { body, bodyRibs, hands, hat, hatRibs, eyes } = wizardSegments();
-  const points = (segments) => segments.flat();
-  const top = Math.max(...points([...hat, ...hatRibs]).map((p) => p[1]));
-  assert.ok(top > HITBOX[1], 'the hat towers over the hitbox');
-  for (const [x, , z] of points([...body, ...bodyRibs])) assert.ok(Math.abs(x) <= 0.3 + 1e-9 && Math.abs(z) <= 0.3 + 1e-9);
-  // Two floating hands, one on each side.
-  assert.ok(points(hands).some(([x]) => x < -0.3) && points(hands).some(([x]) => x > 0.3));
-  assert.equal(eyes.length, 2);
+test('wizard: hat reaches above the hitbox, body fits inside it, hands float beside', () => {
+  const { main, hat } = wizardParts();
+  const tip = hat.find((p) => p.r1 === 0);
+  assert.ok(WIZARD.brim.y + tip.center[1] + tip.height / 2 > HITBOX[1], 'the hat towers over the hitbox');
+  const body = main.find((p) => p.role === 'body');
+  assert.ok(body.r0 <= HITBOX[0] / 2);
+  const hands = main.filter((p) => p.shape === 'ball' && p.center[0] !== 0);
+  assert.equal(hands.length, 2);
+  assert.ok(hands.every((p) => Math.abs(p.center[0]) > body.r0));
 });

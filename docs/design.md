@@ -32,11 +32,11 @@ same on QWERTY, QWERTZ and AZERTY keyboards.
 
 ### Look
 
-Magenta cone body, cyan ball head (globe lines) and two small floating cyan
-ball hands, magenta pointy hat (cone + brim) sitting on the head, tilted back
-so the face shows under the brim, white eyes. Rims use thicker lines than
-the environment; the upright cone lines and the globe lines of the head and
-hands are thin and dark. Proportions are `WIZARD` in
+Hologram look (D22): magenta cone body, cyan ball head and two small
+floating cyan ball hands, magenta pointy hat (cone + brim) sitting on the
+head, tilted back so the face shows under the brim, glowing white eyes.
+Each part has a dark core glowing towards its silhouette, faint scanlines
+drifting up and a thin neon outline. Proportions are `WIZARD` in
 `src/render/wizard.js`; review looks in the asset showcase
 (`/tools/showcase.html?asset=wizard`).
 - Integrity (health) max 8, at most 15 (4 bits in the save key).
