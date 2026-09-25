@@ -12,9 +12,12 @@ for the current phase. Locked decisions live in CLAUDE.md; their reasons in
 | Jump | Space |
 | Cast | J |
 | Cycle spell | Q / E |
-| Pause | Esc |
+| Pause | Esc / P |
 | Map | M |
 | Debug mode | F3 |
+
+Keys are physical positions (`KeyboardEvent.code`), so the layout is the
+same on QWERTY, QWERTZ and AZERTY keyboards.
 
 ## Player
 
