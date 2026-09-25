@@ -23,6 +23,7 @@ requestAnimationFrame(now)
           acc -= 1/60
        alpha = acc / (1/60)
        views.sync(alpha)          render position = lerp(prev, curr, alpha)
+       hud.update(dt)             integrity, banner, terminal, fullscreen hint (frame time)
        renderer.render()          composer: render pass + one effect pass (bloom)
 ```
 
@@ -44,7 +45,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `core/loop.js` | Fixed 60 Hz timestep, step clamp, interpolation alpha |
 | `core/input.js` | Raw keys → action states once per tick |
 | `core/bindings.js` | Default key → action map (the only place raw key codes appear) |
-| `core/events.js` | Small pub/sub between simulation, HUD and debug |
+| `core/events.js` | Small pub/sub between simulation, HUD and debug *(planned)* |
+| `core/messages.js` | `say(key, values)` terminal messages and `announce(key, values, options)` banners from any module, queued until the HUD takes them |
 | `core/rules.js` | Shared rule constants (player hitbox, max room footprint) |
 | `data/bundle.js` | The only Vite-specific module: bundles `data/**/*.json`, imports dev schema errors |
 | `data/room-data.js` | Shared reading of room data: block boxes → cells, exit defaults, sides, exit cells |
@@ -54,7 +56,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `world/room.js` | Runtime room built fresh from data on every entry (type defaults + overrides) |
 | `world/exits.js` | Which exit the wizard left through; where he arrives in the connected room |
 | `physics/collision.js` | Axis-separated AABB movement against the grid; surface below a body |
-| `entities/player.js` | Movement, jump, gravity, turning, death in holes, respawn (integrity, push intent later) |
+| `entities/player.js` | Movement, jump, gravity, turning, pushing, death in holes, respawn |
 | `entities/pushable.js` | Rest → slide → fall → land / plug-a-hole state machine |
 | `render/viewport.js` | Letterbox, buffer size and 1080p-relative sizing math (pure, tested) |
 | `render/renderer.js` | WebGLRenderer, 16:9 stage + HUD overlay, DPR cap, render scale, resize |
@@ -71,7 +73,10 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/entity-view.js` | Player (later pushable) views, interpolation, glowing drop shadows |
 | `render/wizard.js` | Wizard model: parts as data (pure, tested), built in the hologram look |
 | `render/holo.js` | Hologram look for characters: rim-glow material, inverted-hull outline, eyes, shared clock |
-| `ui/hud.js` | DOM overlay: integrity, room name, terminal messages |
+| `ui/hud.js` | DOM overlay: integrity bar, room banner, terminal messages, fullscreen hint |
+| `ui/terminal.js` | Terminal message queue (typing, hold, fade) and banner timing (pure, tested) |
+| `ui/text.js` | String lookup with `{name}` values; scrambled "decoding" text for the banner (pure, tested) |
+| `ui/fullscreen.js` | Fullscreen toggle and when to suggest it (below 1080 physical pixels; tested) |
 | `ui/error-screen.js` | Startup error screen listing every data problem |
 | `tools/check-data.js` | Dev only: Ajv schema check + semantic checks over `data/` |
 | `tools/vite-plugin-data.js` | Dev only: runs the check in the dev server and fails the build on errors |
@@ -84,7 +89,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 Key events only update a raw key set (keyed by `KeyboardEvent.code`, the
 physical key position, so WASD works on QWERTZ/AZERTY too). Once per tick
 `input.sample()` turns it into actions (`up`, `down`, `left`, `right`, `jump`,
-`cast`, `spellNext`, `spellPrev`, `pause`, `map`, `debug`); game code asks
+`cast`, `spellNext`, `spellPrev`, `pause`, `map`, `debug`, `fullscreen`); game code asks
 `input.down(action)`, `input.pressed(action)` or `input.released(action)`.
 
 - A key pressed and released between two ticks still counts as down and
@@ -187,6 +192,27 @@ through the flip. Dying respawns him at the room's current spawn (the
 arrival point, or the room's own `spawn` in the start room) in a fresh copy
 of the room. The fade is timed in ticks, so it is part of the deterministic
 simulation; views only read `fadeLevel()`.
+
+## HUD
+
+```
+content.strings (data/strings.json) ──► Hud(renderer.hud, strings)   all text via formatText(key, values)
+any module: say(key, values) ──► queue (core/messages.js)   e.g. game.js on die, respawn, plug
+            announce(key, values, { sub, subValues, color }) ──► queue   e.g. enterRoom() for a new room
+       input.pressed('fullscreen') ──► toggleFullscreen()   within the key press's user activation
+frame: hud.setIntegrity(game.integrity, game.maxIntegrity)   cells rebuilt only on change
+       hud.setHintWanted(wantsFullscreenHint(stage height, DPR, fullscreen?))
+       hud.update(dt)   takeMessages() → Terminal.push(); takeAnnouncements() → last one shown;
+                        Terminal.update / lines(), bannerState(t), scrambleText()
+```
+
+The HUD is visual only and runs on frame time; it never feeds back into the
+simulation. Its timing (`Terminal`, `bannerState`) is plain logic, tested
+with made-up times; `hud.js` only moves the results into the DOM. Integrity
+lives on `Game` (not the per-room `Player`), so it carries over between
+rooms. A missing string shows as `[key]`; the schema lists every key the
+game uses, so the data check catches missing ones first, and a test checks
+that every key passed to `say()` or `announce()` in `src/` exists.
 
 ## Data loading and validation
 

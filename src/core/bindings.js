@@ -19,6 +19,7 @@ export const ACTIONS = [
   'pause',
   'map',
   'debug',
+  'fullscreen',
 ];
 
 /** @type {Record<string, string[]>} */
@@ -34,4 +35,5 @@ export const DEFAULT_BINDINGS = {
   pause: ['Escape', 'KeyP'],
   map: ['KeyM'],
   debug: ['F3'],
+  fullscreen: ['KeyF'],
 };

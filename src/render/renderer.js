@@ -66,6 +66,8 @@ export class Renderer {
       height: `${box.height}px`,
     });
     this.stage.style.setProperty('--u', `${box.height / REFERENCE_HEIGHT}px`);
+    /** Stage height in CSS pixels. */
+    this.stageHeight = box.height;
 
     const buffer = bufferSize(box.width, box.height, window.devicePixelRatio, this.renderScale);
     this.composer.setSize(buffer.width, buffer.height, false);

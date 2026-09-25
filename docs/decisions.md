@@ -289,7 +289,7 @@ arrow centered on the exit.
 tiles in front of the exit; small arrows per tile keep the mark on the exit
 itself and show its width.
 
-### D34 — 2026-09-25 — Slower steering in the air: a jump can't cross 2 tiles
+### D36 — 2026-09-25 — Slower steering in the air: a jump can't cross 2 tiles
 In the air the wizard moves at 65% of his walking speed (`airSpeed`), so a
 full jump reaches ~1.65 units: enough for a 1-tile gap or hole, not for a
 2-tile one at the same level.

@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import STRINGS from '../data/strings.json' with { type: 'json' };
 import { loadGameData } from '../src/data/load.js';
 import { exitCells, withExitDefaults } from '../src/data/room-data.js';
 import { Pushable } from '../src/entities/pushable.js';
@@ -16,6 +17,7 @@ function content() {
     'defs.json': { schemaVersion: 1, objects: { crate: { kind: 'pushable', color: '#b6ff3c' } } },
     'biomes.json': { schemaVersion: 1, biomes: { home: { name: 'Home', color: '#ffb020' } } },
     'world.json': { schemaVersion: 1, start: 'alpha', connections: [['alpha.east', 'beta.west']] },
+    'strings.json': structuredClone(STRINGS),
     'rooms/alpha.json': {
       schemaVersion: 1,
       id: 'alpha',

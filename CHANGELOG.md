@@ -56,6 +56,16 @@ and the project uses [Semantic Versioning](https://semver.org/).
   validated to be free.
 - Three connected test rooms: Boot Sector, Cache Hall (pit puzzle) and
   Stack Yard (stacked crates, Glitch Zone color).
+- HUD: integrity bar (8 cells, flashing when lost, blinking when low), room
+  name banner that decodes in on entering a room, terminal messages typed
+  out bottom left (start, death, respawn, plugged hole), and a fullscreen
+  hint while the game is drawn below 1080 pixels high. F toggles
+  fullscreen. Bundled fonts (Orbitron, Share Tech Mono).
+- `data/strings.json` with its schema: every UI text by key.
+- `say()` and `announce()` (`src/core/messages.js`): any module can print a
+  terminal message or show a banner (used for room names).
+- Integrity: falling into a hole drains it, respawning restores it; it
+  carries over between rooms.
 
 ### Removed
 - The four box-look crates in Boot Sector (the asset showcase shows them).

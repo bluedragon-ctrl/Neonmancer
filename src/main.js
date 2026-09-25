@@ -2,7 +2,6 @@
 // the loop. Any startup problem shows the error screen instead.
 // The readout is temporary and moves into debug mode later.
 import { Group } from 'three';
-import { GAME_VERSION } from './core/version.js';
 import { FixedLoop } from './core/loop.js';
 import { Input } from './core/input.js';
 import { DATA_FILES, SCHEMA_ERRORS } from './data/bundle.js';
@@ -18,6 +17,9 @@ import { ExitView } from './render/exit-view.js';
 import { disposeTree } from './render/neon.js';
 import { HOLO_TIME } from './render/holo.js';
 import { showErrorScreen } from './ui/error-screen.js';
+import { Hud } from './ui/hud.js';
+import { say } from './core/messages.js';
+import { toggleFullscreen, wantsFullscreenHint } from './ui/fullscreen.js';
 
 const app = document.getElementById('app');
 
@@ -37,6 +39,10 @@ function boot() {
   // ?scale=0.5 tries a lower render scale until there is a settings menu.
   const renderScale = Number(new URLSearchParams(location.search).get('scale') ?? 1);
   const renderer = new Renderer(app, { renderScale });
+
+  const hud = new Hud(renderer.hud, content.strings);
+  renderer.hud.insertAdjacentHTML('beforeend', '<pre class="readout"></pre>');
+  const readout = renderer.hud.querySelector('.readout');
 
   // The room's views are rebuilt whenever the game rebuilds the room.
   let roomScene = new Group();
@@ -62,11 +68,8 @@ function boot() {
   const playerView = new PlayerView(game);
   renderer.scene.add(playerView.group);
 
-  renderer.hud.innerHTML = `
-    <div class="brand">NEONMANCER <span>v${GAME_VERSION}</span></div>
-    <pre class="readout"></pre>
-  `;
-  const readout = renderer.hud.querySelector('.readout');
+  say('msg.boot');
+  say('msg.welcome');
 
   const input = new Input();
   input.attach(window);
@@ -81,6 +84,7 @@ function boot() {
 
   function update() {
     input.sample();
+    if (input.pressed('fullscreen')) toggleFullscreen(document.documentElement);
     if (game.update(input).includes('room')) showRoom();
     ticksThisSecond++;
   }
@@ -93,6 +97,9 @@ function boot() {
     const dt = Math.min(time - lastFrame, 0.1);
     lastFrame = time;
     for (const view of exitViews) view.update(dt);
+    hud.setIntegrity(game.integrity, game.maxIntegrity);
+    hud.setHintWanted(wantsFullscreenHint(renderer.stageHeight, window.devicePixelRatio, !!document.fullscreenElement));
+    hud.update(dt);
     HOLO_TIME.value = time;
     renderer.render();
 
