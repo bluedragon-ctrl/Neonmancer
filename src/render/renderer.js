@@ -36,6 +36,10 @@ export class Renderer {
     this.stage = document.createElement('div');
     this.stage.className = 'stage';
     this.stage.append(this.webgl.domElement);
+    /** Black veil over the game (not the HUD) for room transitions. */
+    this.veil = document.createElement('div');
+    this.veil.className = 'veil';
+    this.stage.append(this.veil);
     /** Overlay for DOM UI, scaled with the stage. */
     this.hud = document.createElement('div');
     this.hud.className = 'hud';
@@ -74,6 +78,11 @@ export class Renderer {
   setRenderScale(scale) {
     this.renderScale = clampRenderScale(scale);
     this.resize();
+  }
+
+  /** @param {number} level 0 (clear) to 1 (black) */
+  setFade(level) {
+    this.veil.style.opacity = String(level);
   }
 
   render() {

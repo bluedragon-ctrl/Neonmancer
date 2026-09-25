@@ -82,7 +82,9 @@ drifting up and a thin neon outline. Proportions are `WIZARD` in
   threshold line); on the front sides it is a gap in the invisible boundary
   and in the floor edge, marked by two chevrons `>>` on its floor pointing out.
 - An exit leads out once the wizard's feet center passes the side. The
-  connected room loads instantly (flip screen) and he arrives half a cell
+  screen fades to black (0.2 s) while he walks on out and the world stands
+  still, then the connected room fades in (0.25 s, already playable). He
+  arrives half a cell
   inside the matching exit, keeping his offset along the edge, his height
   above the exit floor, his fall and his facing.
 - That arrival point (on the exit floor) is where he respawns in the room;

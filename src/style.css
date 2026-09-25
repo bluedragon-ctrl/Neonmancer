@@ -34,6 +34,15 @@ body {
   height: 100%;
 }
 
+/* Fades the game to black for room transitions; the HUD stays on top. */
+.veil {
+  position: absolute;
+  inset: 0;
+  background: var(--void);
+  opacity: 0;
+  pointer-events: none;
+}
+
 .hud {
   position: absolute;
   inset: 0;

@@ -2,19 +2,33 @@
  * Game state and the fixed-order update of one tick. Pure logic: views read
  * the state, they never change it.
  */
-import { withExitDefaults } from './data/room-data.js';
-import { Player } from './entities/player.js';
+import { DT } from './core/loop.js';
+import { sideAxes, withExitDefaults } from './data/room-data.js';
+import { PLAYER, Player } from './entities/player.js';
 import { Pushable } from './entities/pushable.js';
 import { groundBelow, surfaceBelow } from './physics/collision.js';
 import { arrival, exitAt } from './world/exits.js';
 import { Grid } from './world/grid.js';
 import { buildRoom } from './world/room.js';
 
+/** Room transition timing in ticks (60 per second). */
+export const TRANSITION = {
+  /** Fade to black while the wizard walks on through the exit; the world is frozen. */
+  outTicks: 12,
+  /** Fade in from black in the new room; the game already runs. */
+  inTicks: 15,
+};
+
 export class Game {
   /** @param {object} content loaded game data (see data/load.js) */
   constructor(content) {
     this.content = content;
     this.enterRoom(content.world.start);
+    /**
+     * Room transition in progress, or null: { phase: 'out' | 'in', tick, exit }.
+     * Views read it through fadeLevel().
+     */
+    this.transition = null;
   }
 
   /**
@@ -53,11 +67,16 @@ export class Game {
   }
 
   /**
-   * One fixed tick: player (and his push) → exits → objects → events.
+   * One fixed tick: player → exits → his push → objects → events.
+   * Walking out through an exit starts a transition: fade out (frozen
+   * world), load the next room, fade in (running).
    * @param {import('./core/input.js').Input} input
    * @returns {string[]} events this tick (e.g. 'jump', 'push', 'plug', 'exit', 'room')
    */
   update(input) {
+    if (this.transition?.phase === 'out') return this.fadeOut();
+    if (this.transition && ++this.transition.tick >= TRANSITION.inTicks) this.transition = null;
+
     const events = [];
     const playerEvent = this.player.update(input, this.grid, this.pushables);
 
@@ -69,8 +88,8 @@ export class Game {
 
     const exit = this.player.dead ? null : exitAt(this.room, this.player.pos);
     if (exit) {
-      this.travel(exit);
-      return ['exit', 'room'];
+      this.transition = { phase: 'out', tick: 0, exit };
+      return ['exit'];
     }
     if (playerEvent) events.push(playerEvent);
 
@@ -84,6 +103,39 @@ export class Game {
       if (event) events.push(event);
     }
     return events;
+  }
+
+  /**
+   * One tick of fading out: the world stands still while the wizard walks on
+   * out through the exit; then the next room loads and fades in.
+   * @returns {string[]} events
+   */
+  fadeOut() {
+    const { exit } = this.transition;
+    const player = this.player;
+    player.prev = [...player.pos];
+    player.prevFacing = player.facing;
+    for (const pushable of this.pushables) pushable.prev = [...pushable.pos];
+
+    if (++this.transition.tick < TRANSITION.outTicks) {
+      const { cross } = sideAxes(exit.side);
+      player.pos[cross] += (exit.side.startsWith('-') ? -1 : 1) * PLAYER.speed * DT;
+      return [];
+    }
+    this.travel(exit);
+    this.transition = { phase: 'in', tick: 0 };
+    return ['room'];
+  }
+
+  /**
+   * How far the screen is faded to black: 0 (clear) to 1 (black).
+   * @param {number} alpha interpolation factor between the last two ticks
+   */
+  fadeLevel(alpha) {
+    if (!this.transition) return 0;
+    const { phase, tick } = this.transition;
+    if (phase === 'out') return Math.min((tick + alpha) / TRANSITION.outTicks, 1);
+    return Math.max(1 - (tick + alpha) / TRANSITION.inTicks, 0);
   }
 
   /**

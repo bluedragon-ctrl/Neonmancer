@@ -162,18 +162,22 @@ old ones).
 
 ```
 game.update: player moved ──► exitAt(room, pos)   feet center past a side, inside an opening?
+                                └─ transition 'out' (TRANSITION.outTicks): world frozen, wizard walks on out
                                 └─ travel(exit)   links "room.exit" → the connected exit
                                      arrival()    same offset along the edge and height above the
                                                   exit floor, half a cell inside the new room
                                      enterRoom(id, spawn)   fresh room; spawn = arrival on the exit floor
+                                └─ transition 'in' (TRANSITION.inTicks): game runs, veil lifts
 main.js: 'room' event ──► showRoom()              views rebuilt, camera reframed
+         every frame  ──► renderer.setFade(game.fadeLevel(alpha))   black veil under the HUD
 ```
 
 `content.links` (built in `data/load.js`) maps every `"room.exit"` to the
 exit it connects to, both ways. The wizard keeps his fall speed and facing
 through the flip. Dying respawns him at the room's current spawn (the
 arrival point, or the room's own `spawn` in the start room) in a fresh copy
-of the room. The switch is instant, like classic flip-screen games.
+of the room. The fade is timed in ticks, so it is part of the deterministic
+simulation; views only read `fadeLevel()`.
 
 ## Data loading and validation
 

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { loadGameData } from '../src/data/load.js';
 import { exitCells, withExitDefaults } from '../src/data/room-data.js';
 import { Pushable } from '../src/entities/pushable.js';
-import { Game } from '../src/game.js';
+import { Game, TRANSITION } from '../src/game.js';
 import { mergeUnitSegments } from '../src/render/edges.js';
 import { frontChevrons, wallLayout } from '../src/render/walls.js';
 import { arrival, exitAt } from '../src/world/exits.js';
@@ -99,7 +99,7 @@ test('walking out through an exit enters the connected room at the matching exit
   const game = new Game(content());
   game.player.pos = [7, 0, 4.25];
   game.player.prev = [...game.player.pos];
-  const events = run(game, hold('down'), 30); // Down = +x
+  const events = run(game, hold('down'), 60); // Down = +x
   assert.ok(events.includes('exit'));
   assert.ok(events.includes('room'));
   assert.equal(game.room.id, 'beta');
@@ -109,7 +109,7 @@ test('walking out through an exit enters the connected room at the matching exit
   assert.ok(Math.abs(game.player.pos[1] - 1) < 1e-9); // on the ledge
 
   // And back again.
-  run(game, hold('up'), 30); // Up = −x
+  run(game, hold('up'), 60); // Up = −x
   assert.equal(game.room.id, 'alpha');
   assert.ok(Math.abs(game.player.pos[0] - 7.5) < 1e-9);
   assert.ok(Math.abs(game.player.pos[2] - 4.25) < 1e-9);
@@ -195,4 +195,30 @@ test('mergeUnitSegments joins runs and drops duplicates', () => {
     [[0, 0, 0], [2, 0, 0]],
     [[3, 0, 0], [4, 0, 0]],
   ]);
+});
+
+test('a room transition fades out with the world frozen, then fades in while running', () => {
+  const game = new Game(content());
+  game.player.pos = [7.95, 0, 4.25];
+  assert.deepEqual(game.update(hold('down')), ['exit']);
+  assert.equal(game.room.id, 'alpha');
+  assert.ok(game.fadeLevel(0) < 0.1);
+
+  // Fading out: nothing but the wizard walking on out moves; input is ignored.
+  let events = [];
+  for (let i = 1; i < TRANSITION.outTicks; i++) events.push(...game.update(hold('up')));
+  assert.deepEqual(events, []);
+  assert.ok(game.player.pos[0] > 8.5);
+  assert.ok(game.fadeLevel(1) > 0.99);
+
+  assert.deepEqual(game.update(idle), ['room']);
+  assert.equal(game.room.id, 'beta');
+  assert.equal(game.fadeLevel(0), 1);
+
+  // Fading in: the game runs (the wizard can walk) and the veil lifts.
+  game.update(hold('down'));
+  assert.ok(game.player.pos[0] > 0.5);
+  for (let i = 1; i < TRANSITION.inTicks; i++) game.update(idle);
+  assert.equal(game.transition, null);
+  assert.equal(game.fadeLevel(0.5), 0);
 });

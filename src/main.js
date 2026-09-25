@@ -83,6 +83,7 @@ function boot() {
   function render(alpha) {
     playerView.sync(alpha);
     for (const view of pushableViews) view.sync(alpha);
+    renderer.setFade(game.fadeLevel(alpha));
     HOLO_TIME.value = performance.now() / 1000;
     renderer.render();
 

@@ -213,7 +213,8 @@ landing on the wizard and crates in holes. Showing the plug makes it
 obvious where the pit was filled.
 
 ### D26 — 2026-09-25 — Flip-screen exits keep the offset; the arrival is the respawn point
-Leaving through an exit enters the connected room instantly, half a cell
+Leaving through an exit enters the connected room (after a short fade, see
+below), half a cell
 inside the matching exit, with the same offset along the edge and height
 above the exit floor; fall speed and facing carry over. The arrival point
 on the exit floor becomes the room's respawn point. Exits on the open front
@@ -224,3 +225,12 @@ an exit must be free (validated).
 the entrance matches "recompile at the room entrance" (CLAUDE.md §4). The
 front sides have no wall, so without a mark a front exit is only a gap in a
 thin floor line. Objects leaving would be lost, since rooms reset.
+
+### D27 — 2026-09-25 — Room transitions fade through black
+Leaving a room fades to black in 0.2 s with the world frozen while the
+wizard walks on out through the exit; the next room fades in over 0.25 s
+and is playable right away. The veil is a DOM layer between the canvas and
+the HUD, so HUD text stays readable.
+**Why:** author's request; an instant swap felt abrupt. Freezing only the
+fade-out keeps the player from turning back mid-transition, and letting
+the fade-in run avoids dead time.
