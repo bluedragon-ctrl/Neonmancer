@@ -28,6 +28,8 @@ export const PLAYER = {
   turnRate: 0.35,
   /** Ticks between dying and respawning. */
   deathTicks: 45,
+  /** Integrity (health) at the start and after respawning; at most 15 fits the save key. */
+  maxIntegrity: 8,
 };
 
 /** Take-off speed that reaches exactly jumpHeight: v = √(2gh). */

@@ -23,6 +23,9 @@ export class Game {
   /** @param {object} content loaded game data (see data/load.js) */
   constructor(content) {
     this.content = content;
+    /** Integrity (health); it carries over between rooms. */
+    this.maxIntegrity = PLAYER.maxIntegrity;
+    this.integrity = this.maxIntegrity;
     this.enterRoom(content.world.start);
     /**
      * Room transition in progress, or null: { phase: 'out' | 'in', tick, exit }.
@@ -71,7 +74,7 @@ export class Game {
    * Walking out through an exit starts a transition: fade out (frozen
    * world), load the next room, fade in (running).
    * @param {import('./core/input.js').Input} input
-   * @returns {string[]} events this tick (e.g. 'jump', 'push', 'plug', 'exit', 'room')
+   * @returns {string[]} events this tick (e.g. 'jump', 'push', 'plug', 'die', 'respawn', 'exit', 'room')
    */
   update(input) {
     if (this.transition?.phase === 'out') return this.fadeOut();
@@ -80,8 +83,11 @@ export class Game {
     const events = [];
     const playerEvent = this.player.update(input, this.grid, this.pushables);
 
-    // Respawn after a death resets the room, so no puzzle stays broken.
+    // Falling into a hole drains all integrity. Respawning restores it and
+    // resets the room, so no puzzle stays broken.
+    if (playerEvent === 'die') this.integrity = 0;
     if (playerEvent === 'respawn') {
+      this.integrity = this.maxIntegrity;
       this.enterRoom(this.room.id, this.player.spawn);
       return ['respawn', 'room'];
     }

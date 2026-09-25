@@ -1,0 +1,155 @@
+/**
+ * The HUD: a DOM overlay on the stage with the integrity bar, the room name
+ * banner, terminal messages and the fullscreen hint. It only shows state;
+ * main.js feeds it every frame. Sizes use --u (one pixel at 1080p), so it
+ * scales with the stage. All text comes from data/strings.json.
+ */
+import { GAME_VERSION } from '../core/version.js';
+import { HINT_SECONDS } from './fullscreen.js';
+import { Terminal, bannerState } from './terminal.js';
+import { formatText, scrambleText } from './text.js';
+
+/** Game events that print a terminal message, and the string key they print. */
+export const EVENT_MESSAGES = {
+  die: 'msg.die',
+  respawn: 'msg.respawn',
+  plug: 'msg.plug',
+};
+
+/** Integrity at or below this blinks as a warning. */
+const LOW_INTEGRITY = 2;
+
+export class Hud {
+  /**
+   * @param {HTMLElement} root the renderer's HUD overlay
+   * @param {Record<string, string>} strings
+   */
+  constructor(root, strings) {
+    this.strings = strings;
+    root.insertAdjacentHTML(
+      'beforeend',
+      `<div class="hud-integrity"><div class="hud-label"></div><div class="hud-cells"></div></div>
+      <div class="brand"><span class="brand-title"></span> <span class="brand-version"></span></div>
+      <div class="hud-banner"><div class="hud-banner-name"></div><div class="hud-banner-biome"></div></div>
+      <div class="hud-terminal"></div>
+      <div class="hud-hint"></div>`,
+    );
+    const find = (selector) => root.querySelector(selector);
+    find('.hud-label').textContent = this.text('hud.integrity');
+    find('.brand-title').textContent = this.text('game.title');
+    find('.brand-version').textContent = this.text('game.version', { version: GAME_VERSION });
+    find('.hud-hint').textContent = this.text('hint.fullscreen');
+    this.integrityBox = find('.hud-integrity');
+    this.cellBox = find('.hud-cells');
+    this.banner = find('.hud-banner');
+    this.bannerName = find('.hud-banner-name');
+    this.bannerBiome = find('.hud-banner-biome');
+    this.terminalBox = find('.hud-terminal');
+    this.hint = find('.hud-hint');
+
+    this.cells = [];
+    this.integrity = null;
+    this.terminal = new Terminal();
+    /** Seconds since the banner appeared; null when there is none. */
+    this.bannerTime = null;
+    this.bannerText = '';
+    this.frame = 0;
+    this.hintWanted = false;
+    this.hintLeft = 0;
+  }
+
+  /** Text for a string key, with values filled in. */
+  text(key, values) {
+    return formatText(this.strings, key, values);
+  }
+
+  /** Print a terminal message by string key. */
+  message(key, values) {
+    this.terminal.push(this.text(key, values));
+  }
+
+  /** Print the messages for this tick's game events. */
+  showEvents(events) {
+    for (const event of events) if (EVENT_MESSAGES[event]) this.message(EVENT_MESSAGES[event]);
+  }
+
+  /**
+   * Show integrity as a row of cells; lost cells flash as they empty.
+   * @param {number} value
+   * @param {number} max
+   */
+  setIntegrity(value, max) {
+    if (value === this.integrity && this.cells.length === max) return;
+    while (this.cells.length < max) {
+      const cell = document.createElement('i');
+      this.cellBox.append(cell);
+      this.cells.push(cell);
+    }
+    this.cells.forEach((cell, i) => {
+      const full = i < value;
+      // Restart the flash animation on cells that were full a moment ago.
+      if (!full && this.integrity !== null && i < this.integrity) {
+        cell.classList.remove('lost');
+        void cell.offsetWidth;
+        cell.classList.add('lost');
+      }
+      if (full) cell.classList.remove('lost');
+      cell.classList.toggle('full', full);
+    });
+    this.integrityBox.classList.toggle('low', value > 0 && value <= LOW_INTEGRITY);
+    this.integrity = value;
+  }
+
+  /**
+   * Show the room name banner (on entering a room).
+   * @param {string} name room name
+   * @param {string} biome biome name
+   * @param {string} color biome color (#rrggbb)
+   */
+  showRoom(name, biome, color) {
+    this.bannerText = name.toUpperCase();
+    this.bannerBiome.textContent = biome.toUpperCase();
+    this.banner.style.setProperty('--room', color);
+    this.bannerTime = 0;
+  }
+
+  /**
+   * Show or hide the fullscreen hint; each time it becomes needed it stays
+   * up for HINT_SECONDS.
+   * @param {boolean} wanted
+   */
+  setHintWanted(wanted) {
+    if (wanted && !this.hintWanted) this.hintLeft = HINT_SECONDS;
+    this.hintWanted = wanted;
+  }
+
+  /** @param {number} dt seconds since the last frame */
+  update(dt) {
+    this.frame++;
+
+    this.terminal.update(dt);
+    const lines = this.terminal.lines();
+    while (this.terminalBox.children.length < lines.length) this.terminalBox.append(document.createElement('div'));
+    while (this.terminalBox.children.length > lines.length) this.terminalBox.firstChild.remove();
+    lines.forEach((line, i) => {
+      const element = this.terminalBox.children[i];
+      element.textContent = line.text;
+      element.classList.toggle('typing', line.typing);
+      element.style.opacity = String(line.opacity);
+    });
+
+    if (this.bannerTime !== null) {
+      this.bannerTime += dt;
+      const { decoded, opacity } = bannerState(this.bannerTime);
+      // New glyphs every other frame, so the decoding flickers but stays readable.
+      const shown = Math.floor(decoded * this.bannerText.length);
+      this.bannerName.textContent = scrambleText(this.bannerText, shown, this.frame >> 1);
+      this.bannerBiome.style.opacity = String(decoded);
+      this.banner.style.opacity = String(opacity);
+      if (opacity === 0) this.bannerTime = null;
+    }
+
+    this.hintLeft = Math.max(0, this.hintLeft - dt);
+    this.hint.classList.toggle('shown', this.hintWanted && this.hintLeft > 0);
+  }
+}

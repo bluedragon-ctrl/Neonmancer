@@ -1,5 +1,15 @@
+/* Retro fonts, bundled (no font CDN): Press Start 2P for HUD labels and
+   the room banner, VT323 for terminal messages. Latin + Latin Extended. */
+@import '@fontsource/press-start-2p/latin.css';
+@import '@fontsource/press-start-2p/latin-ext.css';
+@import '@fontsource/vt323/latin.css';
+@import '@fontsource/vt323/latin-ext.css';
+
 :root {
   --void: #05060d;
+  --amber: #ffb020;
+  --arcade: 'Press Start 2P', 'Courier New', monospace;
+  --terminal: 'VT323', 'Courier New', monospace;
   --letterbox: #000;
   --cyan: #00f0ff;
   --magenta: #ff2bd6;
@@ -47,37 +57,180 @@ body {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  font-family: 'Courier New', monospace;
-  font-weight: bold;
+  font-family: var(--arcade);
+  user-select: none;
+}
+
+/* Integrity: a label over a row of slanted cells, top left. */
+.hud-integrity {
+  position: absolute;
+  top: calc(36 * var(--u));
+  left: calc(44 * var(--u));
+  color: var(--cyan);
+}
+
+.hud-label {
+  font-size: calc(14 * var(--u));
+  letter-spacing: 0.15em;
+  margin-bottom: calc(12 * var(--u));
+  text-shadow: 0 0 calc(8 * var(--u)) currentColor;
+}
+
+.hud-cells {
+  display: flex;
+  gap: calc(7 * var(--u));
+}
+
+.hud-cells i {
+  width: calc(22 * var(--u));
+  height: calc(30 * var(--u));
+  transform: skewX(-18deg);
+  box-sizing: border-box;
+  border: calc(2 * var(--u)) solid currentColor;
+  opacity: 0.3;
+}
+
+.hud-cells i.full {
+  background: currentColor;
+  opacity: 1;
+  box-shadow:
+    0 0 calc(10 * var(--u)) currentColor,
+    inset 0 0 calc(6 * var(--u)) #fff8;
+}
+
+/* A cell that was just lost flashes white, then empties. */
+.hud-cells i.lost {
+  animation: cell-lost 0.5s ease-out;
+}
+
+@keyframes cell-lost {
+  0% {
+    background: #fff;
+    opacity: 1;
+    box-shadow: 0 0 calc(18 * var(--u)) #fff;
+  }
+}
+
+.hud-integrity.low {
+  color: var(--magenta);
+  animation: integrity-low 0.8s steps(2, jump-none) infinite;
+}
+
+@keyframes integrity-low {
+  50% {
+    opacity: 0.45;
+  }
 }
 
 .brand {
   position: absolute;
-  top: calc(32 * var(--u));
-  right: calc(40 * var(--u));
-  font-size: calc(32 * var(--u));
-  letter-spacing: 0.2em;
+  top: calc(36 * var(--u));
+  right: calc(44 * var(--u));
+  font-size: calc(22 * var(--u));
+  letter-spacing: 0.12em;
   color: var(--cyan);
   text-shadow:
     0 0 calc(8 * var(--u)) var(--cyan),
     0 0 calc(20 * var(--u)) var(--magenta);
 }
 
-.brand span {
-  font-size: 0.6em;
+.brand .brand-version {
+  font-size: 0.5em;
   color: var(--magenta);
   text-shadow: 0 0 calc(6 * var(--u)) var(--magenta);
 }
 
+/* Room name banner: top center, decodes in, then fades. --room is the
+   biome color, set from JS. */
+.hud-banner {
+  position: absolute;
+  top: calc(96 * var(--u));
+  left: 0;
+  right: 0;
+  text-align: center;
+  opacity: 0;
+  --room: var(--amber);
+}
+
+.hud-banner-name {
+  font-size: calc(40 * var(--u));
+  letter-spacing: 0.12em;
+  color: #fff;
+  white-space: pre;
+  text-shadow:
+    0 0 calc(6 * var(--u)) var(--room),
+    0 0 calc(22 * var(--u)) var(--room);
+}
+
+.hud-banner-biome {
+  margin-top: calc(16 * var(--u));
+  font-size: calc(14 * var(--u));
+  letter-spacing: 0.3em;
+  color: var(--room);
+  text-shadow: 0 0 calc(8 * var(--u)) var(--room);
+}
+
+/* Terminal messages: bottom left, newest at the bottom. */
+.hud-terminal {
+  position: absolute;
+  left: calc(44 * var(--u));
+  bottom: calc(36 * var(--u));
+  font-family: var(--terminal);
+  font-size: calc(34 * var(--u));
+  line-height: 1.1;
+  color: var(--lime);
+  text-shadow: 0 0 calc(8 * var(--u)) var(--lime);
+  white-space: pre;
+}
+
+/* Block cursor on the line being typed. */
+.hud-terminal .typing::after {
+  content: '';
+  display: inline-block;
+  width: 0.5em;
+  height: 0.9em;
+  margin-left: 0.1em;
+  vertical-align: -0.1em;
+  background: currentColor;
+}
+
+/* Fullscreen hint: bottom center, blinking slowly while shown. */
+.hud-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(40 * var(--u));
+  text-align: center;
+  font-size: calc(14 * var(--u));
+  letter-spacing: 0.15em;
+  color: var(--amber);
+  text-shadow: 0 0 calc(8 * var(--u)) var(--amber);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.hud-hint.shown {
+  opacity: 1;
+  animation: hint-blink 1.6s ease-in-out infinite;
+}
+
+@keyframes hint-blink {
+  50% {
+    opacity: 0.4;
+  }
+}
+
+/* Temporary dev readout (moves into debug mode), under the brand. */
 .readout {
   position: absolute;
-  top: calc(32 * var(--u));
-  left: calc(40 * var(--u));
+  top: calc(84 * var(--u));
+  right: calc(44 * var(--u));
   margin: 0;
-  font-size: calc(20 * var(--u));
-  letter-spacing: 0.08em;
+  font-family: var(--terminal);
+  font-size: calc(22 * var(--u));
+  text-align: right;
   color: var(--lime);
-  text-shadow: 0 0 calc(6 * var(--u)) var(--lime);
+  opacity: 0.6;
 }
 
 /* Startup error screen (e.g. invalid data). Uses vh units: the stage and
