@@ -97,3 +97,10 @@ depth buffer. All effects share one `EffectPass`. The render scale can be
 tried with `?scale=0.5` until the settings menu exists (Phase 4).
 **Why:** smooth neon lines and a controllable glow at a fixed cost; one
 effect pass keeps the post-processing cheap.
+
+### D14 — 2026-09-25 — Amber is the default room color; outer floor grid is faint
+Rooms and the floor grid default to amber. Outside the room the floor grid
+is dim (about a third of the inside brightness) and fades out within
+5 units.
+**Why:** author's preference; a quieter surrounding keeps the focus on the
+room. Biome palettes (step 3) can still override the color per room.

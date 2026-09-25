@@ -25,7 +25,7 @@ import { PALETTE, faceMaterial, lineMaterial } from './neon.js';
  * @param {number[][]} room.cells filled block cells as [x, y, z]
  * @param {number} [room.color] palette color of the room
  */
-export function createRoomView({ size, cells, color = PALETTE.cyan }) {
+export function createRoomView({ size, cells, color = PALETTE.amber }) {
   const group = new Group();
   group.add(createWalls(size, color));
   if (cells.length > 0) group.add(createBlocks(cells, color));

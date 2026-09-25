@@ -41,7 +41,7 @@ const fragmentShader = /* glsl */ `
     // Brighter inside the room, fading out with distance outside it.
     vec2 outside = max(max(uRoomMin - vPos, vPos - uRoomMax), 0.0);
     float dist = length(outside);
-    float strength = dist > 0.0 ? 0.22 : 0.4;
+    float strength = dist > 0.0 ? 0.12 : 0.4;
     strength *= 1.0 - smoothstep(0.0, uFade, dist);
 
     gl_FragColor = vec4(mix(uVoid, uColor, line * strength), 1.0);
@@ -52,7 +52,7 @@ const fragmentShader = /* glsl */ `
  * @param {number[]} size room size [x, y, z]
  * @param {number} [color] palette color of the grid lines
  */
-export function createFloor([w, , d], color = PALETTE.cyan) {
+export function createFloor([w, , d], color = PALETTE.amber) {
   const material = new ShaderMaterial({
     vertexShader,
     fragmentShader,
@@ -62,7 +62,7 @@ export function createFloor([w, , d], color = PALETTE.cyan) {
       uRoomMin: { value: new Vector2(0, 0) },
       uRoomMax: { value: new Vector2(w, d) },
       uLineWidth: { value: LINE_WIDTH },
-      uFade: { value: 10 },
+      uFade: { value: 5 },
     },
     // Keep the floor behind edges and faces lying on y = 0.
     polygonOffset: true,
