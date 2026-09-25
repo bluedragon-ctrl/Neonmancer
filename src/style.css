@@ -1,15 +1,14 @@
-/* Retro fonts, bundled (no font CDN): Press Start 2P for HUD labels and
-   the room banner, VT323 for terminal messages. Latin + Latin Extended. */
-@import '@fontsource/press-start-2p/latin.css';
-@import '@fontsource/press-start-2p/latin-ext.css';
-@import '@fontsource/vt323/latin.css';
-@import '@fontsource/vt323/latin-ext.css';
+/* Fonts, bundled (no font CDN): Orbitron for HUD labels and the room
+   banner, Share Tech Mono for terminal messages (Latin only). */
+@import '@fontsource/orbitron/latin-500.css';
+@import '@fontsource/orbitron/latin-700.css';
+@import '@fontsource/share-tech-mono/latin.css';
 
 :root {
   --void: #05060d;
   --amber: #ffb020;
-  --arcade: 'Press Start 2P', 'Courier New', monospace;
-  --terminal: 'VT323', 'Courier New', monospace;
+  --arcade: 'Orbitron', 'Segoe UI', sans-serif;
+  --terminal: 'Share Tech Mono', 'Courier New', monospace;
   --letterbox: #000;
   --cyan: #00f0ff;
   --magenta: #ff2bd6;
@@ -58,6 +57,7 @@ body {
   inset: 0;
   pointer-events: none;
   font-family: var(--arcade);
+  font-weight: 500;
   user-select: none;
 }
 
@@ -70,7 +70,8 @@ body {
 }
 
 .hud-label {
-  font-size: calc(14 * var(--u));
+  font-weight: 700;
+  font-size: calc(18 * var(--u));
   letter-spacing: 0.15em;
   margin-bottom: calc(12 * var(--u));
   text-shadow: 0 0 calc(8 * var(--u)) currentColor;
@@ -123,10 +124,11 @@ body {
 }
 
 .brand {
+  font-weight: 700;
   position: absolute;
   top: calc(36 * var(--u));
   right: calc(44 * var(--u));
-  font-size: calc(22 * var(--u));
+  font-size: calc(30 * var(--u));
   letter-spacing: 0.12em;
   color: var(--cyan);
   text-shadow:
@@ -153,7 +155,8 @@ body {
 }
 
 .hud-banner-name {
-  font-size: calc(40 * var(--u));
+  font-weight: 700;
+  font-size: calc(52 * var(--u));
   letter-spacing: 0.12em;
   color: #fff;
   white-space: pre;
@@ -164,7 +167,7 @@ body {
 
 .hud-banner-biome {
   margin-top: calc(16 * var(--u));
-  font-size: calc(14 * var(--u));
+  font-size: calc(18 * var(--u));
   letter-spacing: 0.3em;
   color: var(--room);
   text-shadow: 0 0 calc(8 * var(--u)) var(--room);
@@ -176,7 +179,7 @@ body {
   left: calc(44 * var(--u));
   bottom: calc(36 * var(--u));
   font-family: var(--terminal);
-  font-size: calc(34 * var(--u));
+  font-size: calc(27 * var(--u));
   line-height: 1.1;
   color: var(--lime);
   text-shadow: 0 0 calc(8 * var(--u)) var(--lime);
@@ -201,7 +204,7 @@ body {
   right: 0;
   bottom: calc(40 * var(--u));
   text-align: center;
-  font-size: calc(14 * var(--u));
+  font-size: calc(18 * var(--u));
   letter-spacing: 0.15em;
   color: var(--amber);
   text-shadow: 0 0 calc(8 * var(--u)) var(--amber);
@@ -227,7 +230,7 @@ body {
   right: calc(44 * var(--u));
   margin: 0;
   font-family: var(--terminal);
-  font-size: calc(22 * var(--u));
+  font-size: calc(17 * var(--u));
   text-align: right;
   color: var(--lime);
   opacity: 0.6;
