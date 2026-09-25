@@ -24,15 +24,15 @@ export const WIZARD = {
   body: { y0: 0, y1: 0.75, r0: 0.3, r1: 0.07 },
   head: { y: 0.95, r: 0.21 },
   hands: { x: 0.33, y: 0.48, z: 0.06, r: 0.075 },
-  brim: { y: 1.19, r: 0.31, thickness: 0.03 },
-  hat: { y0: 1.21, r: 0.22, tipY: 1.95 },
+  brim: { y: 1.12, r: 0.31, thickness: 0.03 },
+  hat: { y0: 1.14, r: 0.22, tipY: 1.88 },
   /** Backward tilt of the whole hat around the brim center, in radians. */
   hatTilt: 0.3,
 };
 
 /** Character lines are thicker than the environment's 2.5 px. */
 const LINE_WIDTH = 3.5;
-/** The upright lines of the cones (ribs) are thinner and darker than the rims. */
+/** Ribs (upright cone lines, globe lines on the balls) are thinner and darker than the rims. */
 const RIB_WIDTH = 2;
 const RIB_BRIGHTNESS = 0.6;
 
@@ -81,19 +81,21 @@ function tiltHat([x, y, z]) {
 
 /**
  * Line segments of the wizard, split by color group (pure, tested).
- * Ribs are the upright lines of the body and hat cones, drawn fainter.
- * @returns {{ body: number[][][], bodyRibs: number[][][], hands: number[][][], hat: number[][][], hatRibs: number[][][], eyes: number[][][] }}
+ * Ribs are the upright lines of the body and hat cones; they and the globe
+ * lines of the head and hands are drawn fainter than the rims.
+ * @returns {{ body: number[][][], bodyRibs: number[][][], head: number[][][], hands: number[][][], hat: number[][][], hatRibs: number[][][], eyes: number[][][] }}
  */
 export function wizardSegments() {
   const { body, head, hands, brim, hat } = WIZARD;
 
-  // Body: a cone (frustum), bottom and top rings joined at the corners,
-  // with the ball head on top.
+  // Body: a cone (frustum), bottom and top rings joined at the corners.
   const bottom = ring(body.r0, body.y0);
   const top = ring(body.r1, body.y1);
   const bodySegments = [...loop(bottom), ...loop(top)];
   const bodyRibs = bottom.map((p, i) => [p, top[i]]);
-  bodySegments.push(...ball([0, head.y, 0], head.r, 16));
+
+  // Head: a ball on top of the body.
+  const headSegments = ball([0, head.y, 0], head.r, 16);
 
   // Hands: small balls floating beside the body.
   const handSegments = [-1, 1].flatMap((side) => ball([side * hands.x, hands.y, hands.z], hands.r, 8));
@@ -113,7 +115,7 @@ export function wizardSegments() {
     [[0.03, eyeY, eyeZ + 0.01], [0.08, eyeY, eyeZ]],
   ];
 
-  return { body: bodySegments, bodyRibs, hands: handSegments, hat: hatSegments, hatRibs, eyes };
+  return { body: bodySegments, bodyRibs, head: headSegments, hands: handSegments, hat: hatSegments, hatRibs, eyes };
 }
 
 /** Dark occluding solids matching the line model. */
@@ -158,20 +160,24 @@ function lines(segments, material) {
 /**
  * The wizard as a three.js group (origin at the feet, looking along +z).
  * @param {object} [colors]
- * @param {number|string} [colors.body] body, head and hands
+ * @param {number|string} [colors.body] body cone
+ * @param {number|string} [colors.head] head and hands
  * @param {number|string} [colors.hat]
  */
-export function createWizard({ body = PALETTE.cyan, hat = PALETTE.magenta } = {}) {
+export function createWizard({ body = PALETTE.magenta, head = PALETTE.cyan, hat = PALETTE.magenta } = {}) {
   const group = new Group();
   const segments = wizardSegments();
-  const bodyMaterial = lineMaterial({ color: body, width: LINE_WIDTH, brightness: 1.6 });
+  const rim = (color) => lineMaterial({ color, width: LINE_WIDTH, brightness: 1.6 });
+  const rib = (color) => lineMaterial({ color, width: RIB_WIDTH, brightness: RIB_BRIGHTNESS });
+  const headRibs = rib(head);
   group.add(
     ...createFaces(),
-    lines(segments.body, bodyMaterial),
-    lines(segments.hands, bodyMaterial),
-    lines(segments.bodyRibs, lineMaterial({ color: body, width: RIB_WIDTH, brightness: RIB_BRIGHTNESS })),
-    lines(segments.hat, lineMaterial({ color: hat, width: LINE_WIDTH, brightness: 1.6 })),
-    lines(segments.hatRibs, lineMaterial({ color: hat, width: RIB_WIDTH, brightness: RIB_BRIGHTNESS })),
+    lines(segments.body, rim(body)),
+    lines(segments.bodyRibs, rib(body)),
+    lines(segments.head, headRibs),
+    lines(segments.hands, headRibs),
+    lines(segments.hat, rim(hat)),
+    lines(segments.hatRibs, rib(hat)),
     lines(segments.eyes, lineMaterial({ color: 0xffffff, width: LINE_WIDTH, brightness: 2 })),
   );
   return group;

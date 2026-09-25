@@ -166,8 +166,9 @@ monsters) without playing to them, locally or online.
 
 ### D21 — 2026-09-25 — Wizard look: cone body, ball head, floating hands, tilted hat
 The wizard is a cone body, a ball head drawn as a globe, two floating ball
-hands (no arms) and a pointy hat (cone + brim) tilted back. The upright cone
-lines are thin and dark, the rims bright.
+hands (no arms) and a pointy hat (cone + brim) tilted back. Body and hat are
+magenta, head and hands cyan. The upright cone lines and the globe lines are
+thin and dark, the rims bright.
 **Why:** author's design. The hat tilt keeps the face visible from the
 isometric camera, which looks down on the brim; faint upright lines keep the
 silhouette clean.

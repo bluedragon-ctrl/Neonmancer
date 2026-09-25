@@ -32,10 +32,11 @@ same on QWERTY, QWERTZ and AZERTY keyboards.
 
 ### Look
 
-Cyan cone body with a ball head (globe lines) and two small floating ball
-hands, magenta pointy hat (cone + brim) tilted back so the face shows under
-the brim, white eyes. Rims use thicker lines than the environment; the
-upright lines of the cones are thin and dark. Proportions are `WIZARD` in
+Magenta cone body, cyan ball head (globe lines) and two small floating cyan
+ball hands, magenta pointy hat (cone + brim) sitting on the head, tilted back
+so the face shows under the brim, white eyes. Rims use thicker lines than
+the environment; the upright cone lines and the globe lines of the head and
+hands are thin and dark. Proportions are `WIZARD` in
 `src/render/wizard.js`; review looks in the asset showcase
 (`/tools/showcase.html?asset=wizard`).
 - Integrity (health) max 8, at most 15 (4 bits in the save key).
