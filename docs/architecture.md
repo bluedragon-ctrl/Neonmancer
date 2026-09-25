@@ -63,7 +63,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/post.js` | pmndrs postprocessing composer (bloom) |
 | `render/floor.js` | Infinite grid floor fading into darkness |
 | `render/edges.js` | Visible block edges from grid occupancy (pure, tested) |
-| `render/room-view.js` | Merged edges + instanced occluder faces for static blocks; back walls |
+| `render/marks.js` | Face-mark line patterns for object styles (pure, tested) |
+| `render/room-view.js` | Static blocks (merged edges + instanced occluder faces), back walls, styled object views |
 | `render/entity-view.js` | Player / pushable meshes, interpolation, drop shadows |
 | `ui/hud.js` | DOM overlay: integrity, room name, terminal messages |
 | `ui/error-screen.js` | Startup error screen listing every data problem |

@@ -11,7 +11,14 @@
  */
 import { DATA_SCHEMA_VERSION } from '../core/version.js';
 import { MAX_ROOM_FOOTPRINT, PLAYER_HITBOX } from '../core/rules.js';
-import { OPPOSITE_SIDE, blockCells, sideLength, withExitDefaults } from './room-data.js';
+import {
+  OBJECT_STYLES,
+  OBJECT_STYLE_DEFAULTS,
+  OPPOSITE_SIDE,
+  blockCells,
+  sideLength,
+  withExitDefaults,
+} from './room-data.js';
 
 /** Files every game needs (paths relative to data/). */
 export const REQUIRED_FILES = ['defs.json', 'biomes.json', 'world.json'];
@@ -131,14 +138,20 @@ function validateRoom(file, room, { objectTypes, biomes }, report) {
     if (objectIds.has(object.id)) report(file, path, `duplicate object id "${object.id}"`);
     objectIds.add(object.id);
 
-    const type = objectTypes[object.type];
+    const type = objectTypes[object.type] && { ...OBJECT_STYLE_DEFAULTS, ...objectTypes[object.type] };
     if (!type) {
       report(file, path, `unknown object type "${object.type}"`);
     } else {
+      // Overrides can only change existing properties, with valid values.
+      const overridesPath = `${path}.overrides`;
       for (const [key, value] of Object.entries(object.overrides ?? {})) {
-        if (!(key in type)) report(file, `${path}.overrides`, `"${key}" is not a property of type "${object.type}"`);
+        if (!(key in type)) report(file, overridesPath, `"${key}" is not a property of type "${object.type}"`);
         else if (typeof value !== typeof type[key]) {
-          report(file, `${path}.overrides`, `"${key}" must be a ${typeof type[key]}`);
+          report(file, overridesPath, `"${key}" must be a ${typeof type[key]}`);
+        } else if (OBJECT_STYLES[key] && !OBJECT_STYLES[key].includes(value)) {
+          report(file, overridesPath, `"${key}" must be one of ${OBJECT_STYLES[key].join(', ')}`);
+        } else if (key === 'color' && !/^#[0-9a-fA-F]{6}$/.test(value)) {
+          report(file, overridesPath, `"color" must be #rrggbb`);
         }
       }
     }

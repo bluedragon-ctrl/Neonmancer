@@ -2,6 +2,6 @@
   "$schema": "../schemas/defs.schema.json",
   "schemaVersion": 1,
   "objects": {
-    "crate": { "kind": "pushable", "color": "#b6ff3c" }
+    "crate": { "kind": "pushable", "color": "#b6ff3c", "mark": "inset", "faces": "tinted" }
   }
 }

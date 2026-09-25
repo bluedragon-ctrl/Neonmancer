@@ -3,7 +3,7 @@
  * room fully resets on re-entry (CLAUDE.md §4). Nothing here points back
  * into the data, so the game can change it freely.
  */
-import { blockCells, withExitDefaults } from '../data/room-data.js';
+import { OBJECT_STYLE_DEFAULTS, blockCells, withExitDefaults } from '../data/room-data.js';
 
 /**
  * @param {object} data room file contents (validated)
@@ -25,6 +25,7 @@ export function buildRoom(data, { objectTypes, biomes }) {
       id: object.id,
       type: object.type,
       at: [...object.at],
+      ...OBJECT_STYLE_DEFAULTS,
       ...objectTypes[object.type],
       ...object.overrides,
     })),

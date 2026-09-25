@@ -17,7 +17,8 @@ import {
 import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
 import { blockEdges, flattenSegments } from './edges.js';
-import { PALETTE, faceMaterial, lineMaterial } from './neon.js';
+import { markSegments } from './marks.js';
+import { PALETTE, faceMaterial, lineMaterial, tintedFaceMaterials } from './neon.js';
 
 /**
  * @param {object} room
@@ -100,10 +101,30 @@ function lines(segments, material) {
 }
 
 /**
- * View of one typed object (a single cell in its own color). Kept separate
- * from the static blocks because objects move (pushables, step 5).
- * @param {{ at: number[], color: string }} object
+ * View of one typed object: a single cell drawn in the object's style
+ * (edges, face mark, faces), so types differ by more than color. Kept
+ * separate from the static blocks because objects move (pushables, step 5).
+ * @param {{ at: number[], color: string, edges: string, mark: string, faces: string }} object
  */
-export function createObjectView(object) {
-  return createBlockView([object.at], object.color);
+export function createObjectView({ at, color, edges, mark, faces }) {
+  const group = new Group();
+  const [x, y, z] = at;
+
+  const materials = faces === 'tinted' ? tintedFaceMaterials(color) : faceMaterial();
+  const box = new Mesh(new BoxGeometry(1, 1, 1), materials);
+  box.position.set(x + 0.5, y + 0.5, z + 0.5);
+  group.add(box);
+
+  const dashed = edges === 'dashed';
+  const outline = lines(blockEdges([at]), lineMaterial({ color, width: 2.5, brightness: 1.6, dashed }));
+  if (dashed) outline.computeLineDistances();
+  outline.renderOrder = 2;
+  group.add(outline);
+
+  if (mark !== 'none') {
+    const marks = lines(markSegments(mark, at), lineMaterial({ color, width: 1.5, brightness: 1 }));
+    marks.renderOrder = 2;
+    group.add(marks);
+  }
+  return group;
 }

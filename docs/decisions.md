@@ -121,3 +121,13 @@ An exit that no `world.json` connection uses is an error, as is an exit used
 twice.
 **Why:** an opening that leads nowhere would let the player walk out of the
 world. A dead-end opening can be modelled as blocks instead.
+
+### D17 — 2026-09-25 — Object types differ by shape, not only color
+Each object type in `defs.json` can set a style: `edges` (solid / dashed),
+`mark` (none / inset / cross / brackets: a line pattern on every face) and
+`faces` (dark / tinted: faces shaded in the object color, top lighter).
+Objects can override the style like any other type property. Crates use an
+inset square with tinted faces; static blocks stay plain.
+**Why:** color alone is not enough for color-blind players and gets washed
+out by bloom. Keeping the style in data lets every future type pick its look
+without code changes, and the room editor can preview it.

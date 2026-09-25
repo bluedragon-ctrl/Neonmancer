@@ -15,12 +15,16 @@
     { "at": [8, 2, 0], "to": [9, 2, 0] },
     { "at": [4, 0, 4], "to": [4, 2, 4] },
     { "at": [7, 0, 6], "to": [9, 0, 6] },
-    { "at": [9, 0, 7], "to": [9, 0, 8] },
-    { "at": [5, 0, 9] },
-    { "at": [4, 0, 10] }
+    { "at": [9, 0, 7], "to": [9, 0, 8] }
   ],
   "objects": [
     { "id": "crate_a", "type": "crate", "at": [2, 0, 5] },
-    { "id": "crate_b", "type": "crate", "at": [7, 0, 3] }
+    { "id": "crate_b", "type": "crate", "at": [7, 0, 3] },
+    { "id": "look_plain", "type": "crate", "at": [1, 0, 11], "overrides": { "mark": "none", "faces": "dark" } },
+    { "id": "look_inset_dark", "type": "crate", "at": [3, 0, 11], "overrides": { "faces": "dark" } },
+    { "id": "look_cross", "type": "crate", "at": [5, 0, 11], "overrides": { "mark": "cross" } },
+    { "id": "look_brackets", "type": "crate", "at": [7, 0, 11], "overrides": { "mark": "brackets" } },
+    { "id": "look_dashed", "type": "crate", "at": [9, 0, 11], "overrides": { "mark": "none", "edges": "dashed", "faces": "dark" } },
+    { "id": "look_dashed_tinted", "type": "crate", "at": [11, 0, 11], "overrides": { "mark": "none", "edges": "dashed", "faces": "tinted" } }
   ]
 }

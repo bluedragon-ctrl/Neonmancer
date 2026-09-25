@@ -22,7 +22,22 @@
       "additionalProperties": false,
       "properties": {
         "kind": { "enum": ["pushable"], "description": "Which engine behavior the object uses." },
-        "color": { "$ref": "common.schema.json#/$defs/color" }
+        "color": { "$ref": "common.schema.json#/$defs/color" },
+        "edges": {
+          "enum": ["solid", "dashed"],
+          "default": "solid",
+          "description": "Outline style."
+        },
+        "mark": {
+          "enum": ["none", "inset", "cross", "brackets"],
+          "default": "none",
+          "description": "Pattern drawn on every face."
+        },
+        "faces": {
+          "enum": ["dark", "tinted"],
+          "default": "dark",
+          "description": "dark: like static blocks; tinted: faces shaded in the object color (top lighter)."
+        }
       }
     }
   }

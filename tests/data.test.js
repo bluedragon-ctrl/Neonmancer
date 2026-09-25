@@ -5,6 +5,8 @@ import { checkData, checkFiles, readSchemas } from '../tools/check-data.js';
 import { validateData } from '../src/data/validate.js';
 import { DataError, loadGameData } from '../src/data/load.js';
 import { buildRoom } from '../src/world/room.js';
+import { OBJECT_STYLES } from '../src/data/room-data.js';
+import { MARKS } from '../src/render/marks.js';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const schemas = readSchemas(root);
@@ -221,7 +223,16 @@ test('buildRoom expands blocks, merges type defaults and applies exit defaults',
     [5, 1, 4],
   ]);
   assert.deepEqual(room.objects, [
-    { id: 'box', type: 'crate', at: [2, 0, 5], kind: 'pushable', color: '#00f0ff' },
+    {
+      id: 'box',
+      type: 'crate',
+      at: [2, 0, 5],
+      kind: 'pushable',
+      color: '#00f0ff',
+      edges: 'solid',
+      mark: 'none',
+      faces: 'dark',
+    },
   ]);
   assert.deepEqual(room.exits, [{ id: 'east', side: '+x', at: 3, width: 2, y: 0, height: 2 }]);
 });
@@ -236,4 +247,33 @@ test('buildRoom gives a fresh copy every time (rooms reset on entry)', () => {
   assert.equal(second.objects[0].at[0], 2);
   assert.equal(second.spawn[0], 1.5);
   assert.equal(data.objects[0].at[0], 2);
+});
+
+test('object styles: overrides must use known values', () => {
+  assertError(
+    errorsAfter((f) => (f['rooms/alpha.json'].objects[0].overrides = { mark: 'stars' })),
+    'objects[0].overrides',
+    '"mark" must be one of none, inset, cross, brackets',
+  );
+  assertError(
+    errorsAfter((f) => (f['rooms/alpha.json'].objects[0].overrides = { color: 'green' })),
+    '"color" must be #rrggbb',
+  );
+  // Style keys can be overridden even when the type relies on the defaults.
+  assert.deepEqual(
+    errorsAfter((f) => (f['rooms/alpha.json'].objects[0].overrides = { edges: 'dashed' })),
+    [],
+  );
+});
+
+test('object styles: the schema rejects unknown values in defs.json', () => {
+  assertError(
+    errorsAfter((f) => (f['defs.json'].objects.crate.faces = 'glass')),
+    'defs.json › objects.crate.faces',
+    'must be one of',
+  );
+});
+
+test('object styles: every mark in the data has a renderer pattern', () => {
+  assert.deepEqual(OBJECT_STYLES.mark, MARKS);
 });

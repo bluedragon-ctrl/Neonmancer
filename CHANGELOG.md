@@ -24,3 +24,5 @@ and the project uses [Semantic Versioning](https://semver.org/).
   `npm run validate:data` (CI); semantic checks at load time; the start
   room is built from JSON; error screen listing every data problem.
 - First room "Boot Sector" with two crates (not pushable yet).
+- Object type styles (dashed edges, face marks, tinted faces) so types
+  differ by shape, not only color; Boot Sector shows a comparison row.

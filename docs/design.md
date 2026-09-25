@@ -68,7 +68,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 | File | Contents |
 |---|---|
 | `data/rooms/<id>.json` | One room (id = file name) |
-| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime) |
+| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, inset mark, tinted faces) |
 | `data/biomes.json` | Biome name and room color (`home_lattice`: amber) |
 | `data/world.json` | Start room and exit connections |
 
@@ -104,5 +104,8 @@ Example room (12×12):
   (default 2).
 - `blocks` — anonymous static geometry; `to` fills a box (inclusive).
 - `objects` — typed things with stable ids; `overrides` replace type defaults.
+- Object type style (D17): `edges` `solid`/`dashed`, `mark`
+  `none`/`inset`/`cross`/`brackets`, `faces` `dark`/`tinted` (defaults first).
+  Objects may override them.
 - `world.json` pairs exits: `"connections": [["boot_sector.east", "cache_hall.west"]]`.
   Paired exits are on opposite sides and equally wide; every exit is connected.

@@ -35,3 +35,19 @@ export function sideLength(side, [w, , d]) {
 
 /** The side a connected exit must be on. */
 export const OPPOSITE_SIDE = { '-x': '+x', '+x': '-x', '-z': '+z', '+z': '-z' };
+
+/**
+ * Optional look of an object type, so types differ by more than color
+ * (readable in grayscale and for color-blind players). The first value of
+ * each list is the default.
+ */
+export const OBJECT_STYLES = {
+  edges: ['solid', 'dashed'],
+  mark: ['none', 'inset', 'cross', 'brackets'],
+  faces: ['dark', 'tinted'],
+};
+
+/** Style defaults: the first value of each OBJECT_STYLES list. */
+export const OBJECT_STYLE_DEFAULTS = Object.fromEntries(
+  Object.entries(OBJECT_STYLES).map(([key, values]) => [key, values[0]]),
+);
