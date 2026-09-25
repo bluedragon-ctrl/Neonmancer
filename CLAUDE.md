@@ -247,6 +247,9 @@ not critical.
 
 - **Debug mode** (toggle key): collision boxes, FPS, room jump,
   invincibility.
+- **Asset showcase** (`tools/showcase.html`, also deployed): every character
+  and object look on a turntable with the real renderer. Add every new
+  visual asset (monsters, pickups) to it.
 - **Room editor** (in-game, Phase 2): place blocks, enemies and pickups
   with the mouse, preview in the real neon look, export room JSON.
 - **Reachability checker** (Phase 3): script that searches the grid with

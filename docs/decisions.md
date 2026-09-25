@@ -147,3 +147,27 @@ dying in step 4, filling in step 5.
 **Why:** a trap and a push-puzzle element ("fill the pit to cross it")
 without real vertical space, which would need vertical exits and a deeper
 room model. Unlike Phase 2 void blocks, holes are at floor level.
+
+### D19 — 2026-09-25 — Fixed-height jumps with coyote time and a jump buffer
+Every jump reaches `jumpHeight` (1.2); releasing the key early does not cut
+it short. A jump still works a few ticks after leaving a ledge (coyote time)
+and a press shortly before landing is remembered (jump buffer).
+**Why:** puzzles rely on "a jump clears exactly one block" (D3); variable
+height would make that depend on how long the key is held. The small
+forgiveness windows make jumps feel responsive without changing their reach.
+
+### D20 — 2026-09-25 — Asset showcase page, deployed with the game
+`tools/showcase.html` renders every character and object type on a turntable
+with the game's own renderer. It is a second Vite entry, so it is also on
+GitHub Pages; the dev server port follows `PORT` so several worktrees can
+run side by side.
+**Why:** author's proposal: review and tune looks (wizard, crates, later
+monsters) without playing to them, locally or online.
+
+### D21 — 2026-09-25 — Wizard look: cone body, ball head, floating hands, tilted hat
+The wizard is a cone body, a ball head drawn as a globe, two floating ball
+hands (no arms) and a pointy hat (cone + brim) tilted back. The upright cone
+lines are thin and dark, the rims bright.
+**Why:** author's design. The hat tilt keeps the face visible from the
+isometric camera, which looks down on the brim; faint upright lines keep the
+silhouette clean.

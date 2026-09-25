@@ -22,7 +22,22 @@ same on QWERTY, QWERTZ and AZERTY keyboards.
 ## Player
 
 - Hitbox 0.6 × 1.5 × 0.6 (hat is visual only) — needs 2 blocks of headroom.
-- Jump clears exactly one block (`jumpHeight` 1.2).
+- Walks at 4.5 units/s along the grid axes; diagonals are normalised.
+- Jump clears exactly one block (`jumpHeight` 1.2). Every jump has the same
+  height (no short hops), so the block rule never depends on timing (D19).
+- Forgiveness: a jump still works 6 ticks after walking off a ledge, and a
+  jump pressed up to 6 ticks before landing happens on landing.
+- Turns smoothly towards the walking direction; starts facing the camera.
+- Tuning values live in `PLAYER` in `src/entities/player.js`.
+
+### Look
+
+Cyan cone body with a ball head (globe lines) and two small floating ball
+hands, magenta pointy hat (cone + brim) tilted back so the face shows under
+the brim, white eyes. Rims use thicker lines than the environment; the
+upright lines of the cones are thin and dark. Proportions are `WIZARD` in
+`src/render/wizard.js`; review looks in the asset showcase
+(`/tools/showcase.html?asset=wizard`).
 - Integrity (health) max 8, at most 15 (4 bits in the save key).
 
 ## Pushing
@@ -36,7 +51,8 @@ same on QWERTY, QWERTZ and AZERTY keyboards.
 - Floor tiles marked in the room data; drawn as black pits with a bright rim
   on a faintly tinted room floor.
 - The player dies when the center of his hitbox is over a hole at floor
-  level (grazing the edge is safe), then respawns at the room entrance.
+  level (grazing the edge is safe; jumping over is safe), drops into the pit
+  and respawns at the room entrance (for now the room spawn) after 0.75 s.
 - A block pushed onto a hole drops in and fills it: the hole becomes
   walkable floor and the block is used up. Puzzle idea: push the crate into
   the pit to cross it.

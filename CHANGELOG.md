@@ -29,4 +29,13 @@ and the project uses [Semantic Versioning](https://semver.org/).
   `defs.json`, shown side by side in Boot Sector.
 - Floor holes in room data (`holes`): drawn as black pits on a faintly
   tinted room floor, validated (inside the room, nothing standing in them,
-  spawn not above one). Deadly and fillable in the next steps.
+  spawn not above one). Fillable in the next step.
+- The wizard: cone body, ball head, floating hands and a tilted pointy hat
+  in neon lines; walks along the grid axes, jumps exactly one block high
+  (with coyote time and a jump buffer), falls with gravity and collides
+  with blocks, objects and the room sides. Motion is interpolated between
+  logic ticks; a glowing drop shadow shows where he will land.
+- Falling into a hole: the wizard drops into the pit and respawns at the
+  room spawn.
+- Asset showcase (`/tools/showcase.html`): every character and object look
+  on a turntable, also on the deployed site.
