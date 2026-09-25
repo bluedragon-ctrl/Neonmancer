@@ -1,0 +1,45 @@
+:root {
+  --void: #05060d;
+  --cyan: #00f0ff;
+  --magenta: #ff2bd6;
+  /* 1 "virtual pixel" at 1080p; UI sizes scale with viewport height. */
+  --u: calc(100vh / 1080);
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--void);
+  overflow: hidden;
+}
+
+#app {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.title {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  letter-spacing: 0.2em;
+  text-align: center;
+  color: var(--cyan);
+  text-shadow:
+    0 0 calc(8 * var(--u)) var(--cyan),
+    0 0 calc(24 * var(--u)) var(--magenta);
+}
+
+.title h1 {
+  margin: 0;
+  font-size: calc(120 * var(--u));
+}
+
+.title p {
+  margin: calc(16 * var(--u)) 0 0;
+  font-size: calc(28 * var(--u));
+  color: var(--magenta);
+  text-shadow: 0 0 calc(8 * var(--u)) var(--magenta);
+}
