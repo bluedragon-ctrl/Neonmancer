@@ -80,14 +80,13 @@ drifting up and a thin neon outline. Proportions are `WIZARD` in
   (`side`, first cell `at`, `width`, floor level `y`, `height`).
 - On the back sides an exit is a doorway in the wall (framed, with a
   threshold line) leading into darkness: a short tunnel fading to black with
-  corner lines fading into it, like a hole's pit; on the front sides it is a gap in the invisible boundary
-  and in the floor edge, marked by two chevrons `>>` on its floor pointing out.
-- Every exit has a faint data stream: thin dashes flow along lanes on its
-  floor out of the room, reaching half a tile past the threshold (and up the jambs to the middle of the lintel on doorways), in the
-  color of the room it leads to. Far from the wizard the stream is dim and
-  slow; within a few cells it brightens, speeds up and pulses. Tuning values
-  are `EXIT_FX` in `src/render/exit-view.js`; review it in the asset
-  showcase (`/tools/showcase.html?asset=exits`, cycling far ⇄ near).
+  corner lines fading into it, like a hole's pit. On the front sides it is a
+  gap in the invisible boundary and in the floor edge.
+- Exits show where they lead in the color of the connected room: on a
+  doorway, dashes run up both jambs and meet in the middle of the lintel;
+  on a front exit, two arrows on its floor glide out of the room, fading in
+  and out. Tuning values are `EXIT_FX` in `src/render/exit-view.js`; review
+  them in the asset showcase (`/tools/showcase.html?asset=exits`).
 - An exit leads out once the wizard's feet center passes the side. The
   screen fades to black (0.2 s) while he walks on out and the world stands
   still, then the connected room fades in (0.25 s, already playable). He

@@ -22,7 +22,7 @@ import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
 import { blockEdges, flattenSegments } from './edges.js';
 import { markSegments } from './marks.js';
-import { doorwayTunnels, frontChevrons, wallLayout } from './walls.js';
+import { doorwayTunnels, wallLayout } from './walls.js';
 import { PALETTE, faceMaterial, lineMaterial, tintedFaceMaterials } from './neon.js';
 
 /**
@@ -85,9 +85,6 @@ function createWalls(size, exits, color) {
   const tunnels = doorwayTunnels(size, exits);
   if (tunnels.quads.length > 0) group.add(createTunnels(tunnels, color));
 
-  // Exits on the open front sides: arrows on the floor pointing out.
-  const chevrons = frontChevrons(size, exits);
-  if (chevrons.length > 0) group.add(lines(chevrons, lineMaterial({ color, width: 2.5, brightness: 1 })));
   return group;
 }
 

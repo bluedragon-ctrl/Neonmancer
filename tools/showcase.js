@@ -19,14 +19,12 @@ import { PALETTE } from '../src/render/neon.js';
 import { Renderer } from '../src/render/renderer.js';
 import { ASPECT } from '../src/render/viewport.js';
 import { createObjectView, createRoomView } from '../src/render/room-view.js';
-import { EXIT_FX, ExitView } from '../src/render/exit-view.js';
+import { ExitView } from '../src/render/exit-view.js';
 import { HOLO_TIME } from '../src/render/holo.js';
 import { createWizard } from '../src/render/wizard.js';
 
 /** Units between two assets (the default span of an asset). */
 const SPACING = 3;
-/** Seconds for the exit demo to go from far to near and back. */
-const EXIT_CYCLE = 6;
 /** Turning speed in radians per second. */
 const SPIN = 0.6;
 
@@ -50,8 +48,7 @@ const ALL_ASSETS = [
 
 /**
  * A 3×3 room corner with a back doorway leading to a magenta room and a
- * front exit leading to a cyan one. The glow cycles between far and near,
- * as if the wizard walked up to the exits and away.
+ * front exit leading to a cyan one.
  */
 function buildExits() {
   const size = [3, 3, 3];
@@ -63,10 +60,8 @@ function buildExits() {
   const room = new Group().add(createRoomView({ size, cells: [], exits, color: PALETTE.amber }), ...views.map((v) => v.group));
   room.position.set(-1.5, 0, -1.5);
   const asset = new Group().add(room);
-  asset.userData.update = (dt, time) => {
-    const t = 0.5 - 0.5 * Math.cos((time / EXIT_CYCLE) * 2 * Math.PI);
-    const distance = EXIT_FX.far + 1 - t * (EXIT_FX.far + 1 - EXIT_FX.near + 0.5);
-    for (const view of views) view.update(dt, time, distance);
+  asset.userData.update = (dt) => {
+    for (const view of views) view.update(dt);
   };
   return asset;
 }

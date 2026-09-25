@@ -254,3 +254,12 @@ it) hides the outer floor grid, as the pits do for holes. The exit stream
 (D28) is dimmer and thinner and reaches only half a tile past the threshold.
 **Why:** author's review: the grid seen through a doorway made it look like
 a hole in a thin wall rather than a way out, and the stream was too strong.
+
+### D30 — 2026-09-25 — Exit effect only on the doorway frame and the front arrows
+Supersedes the stream parts of D28 and D29 (the dark tunnels stay). The
+floor-lane data stream and the proximity glow are removed. The destination
+color now goes on moving dashes up the doorway frame (back exits) and on two
+arrows gliding out of front exits, replacing the static floor chevrons.
+**Why:** author's review: the stream over the floor was too much even when
+toned down; the color hint and motion work better kept on the exit's own
+outline.

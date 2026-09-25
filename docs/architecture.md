@@ -63,8 +63,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/post.js` | pmndrs postprocessing composer (bloom) |
 | `render/floor.js` | Infinite grid floor fading into darkness; hole tiles cut out via a mask texture |
 | `render/edges.js` | Visible block edges from grid occupancy; merging unit segments into runs (pure, tested) |
-| `render/exit-view.js` | Exit data stream: layout and proximity glow (pure, tested), animated dashed lines |
-| `render/walls.js` | Back walls with doorways and dark tunnels behind them, front edges with gaps, chevrons on front exits (pure, tested) |
+| `render/exit-view.js` | Exit effect in the destination color: doorway frame dashes, gliding arrows on front exits (layout and timing pure, tested) |
+| `render/walls.js` | Back walls with doorways and dark tunnels behind them, front edges with gaps, arrow shape for front exits (pure, tested) |
 | `render/marks.js` | Face-mark line patterns for object styles (pure, tested) |
 | `render/hole-view.js` | Hole pits: walls fading to black, rim, short fading corner lines; outline math (tested) |
 | `render/room-view.js` | Static blocks (merged edges + instanced occluder faces), back walls, styled object views |
@@ -171,14 +171,14 @@ game.update: player moved ──► exitAt(room, pos)   feet center past a side,
                                 └─ transition 'in' (TRANSITION.inTicks): game runs, veil lifts
 main.js: 'room' event ──► showRoom()              views rebuilt, camera reframed
          every frame  ──► renderer.setFade(game.fadeLevel(alpha))   black veil under the HUD
-                      ──► exitView.update(dt, time, distance)     stream flow and glow
+                      ──► exitView.update(dt)                      frame dashes and arrows move
 ```
 
-Exit streams are dashed `LineMaterial` lines whose `dashOffset` moves every
-frame, so the dashes flow out; the color comes from
-`game.destinationColor(exit)` (the biome of the room behind it) and the
-brightness and speed from the wizard's distance (`exitGlow`). They are
-purely visual and never touch the simulation.
+Exit effects take their color from `game.destinationColor(exit)` (the biome
+of the room behind the exit). Doorway frame dashes are a dashed
+`LineMaterial` whose `dashOffset` moves every frame; front-exit arrows are
+two copies of one chevron, moved and faded per frame. They are purely
+visual and never touch the simulation.
 
 `content.links` (built in `data/load.js`) maps every `"room.exit"` to the
 exit it connects to, both ways. The wizard keeps his fall speed and facing

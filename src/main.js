@@ -92,8 +92,7 @@ function boot() {
     const time = performance.now() / 1000;
     const dt = Math.min(time - lastFrame, 0.1);
     lastFrame = time;
-    const wizard = playerView.wizard.position.toArray();
-    for (const view of exitViews) view.update(dt, time, view.distanceTo(wizard));
+    for (const view of exitViews) view.update(dt);
     HOLO_TIME.value = time;
     renderer.render();
 
