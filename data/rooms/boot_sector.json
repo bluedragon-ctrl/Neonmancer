@@ -24,11 +24,11 @@
   "objects": [
     { "id": "crate_a", "type": "crate", "at": [2, 0, 5] },
     { "id": "crate_b", "type": "crate", "at": [7, 0, 3] },
-    { "id": "look_plain", "type": "crate", "at": [1, 0, 11], "overrides": { "mark": "none", "faces": "dark" } },
-    { "id": "look_inset_dark", "type": "crate", "at": [3, 0, 11], "overrides": { "faces": "dark" } },
-    { "id": "look_cross", "type": "crate", "at": [5, 0, 11], "overrides": { "mark": "cross" } },
-    { "id": "look_brackets", "type": "crate", "at": [7, 0, 11], "overrides": { "mark": "brackets" } },
-    { "id": "look_dashed", "type": "crate", "at": [9, 0, 11], "overrides": { "mark": "none", "edges": "dashed", "faces": "dark" } },
-    { "id": "look_dashed_tinted", "type": "crate", "at": [11, 0, 11], "overrides": { "mark": "none", "edges": "dashed", "faces": "tinted" } }
+    { "id": "look_plain", "type": "crate_plain", "at": [1, 0, 11] },
+    { "id": "look_inset_dark", "type": "crate_inset_dark", "at": [3, 0, 11] },
+    { "id": "look_cross", "type": "crate_cross", "at": [5, 0, 11] },
+    { "id": "look_brackets", "type": "crate_brackets", "at": [7, 0, 11] },
+    { "id": "look_dashed", "type": "crate_dashed", "at": [9, 0, 11] },
+    { "id": "look_dashed_tinted", "type": "crate_dashed_tinted", "at": [11, 0, 11] }
   ]
 }

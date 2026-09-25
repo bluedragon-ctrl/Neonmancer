@@ -128,7 +128,10 @@ Each object type in `defs.json` can set a style: `edges` (solid / dashed),
 `faces` (dark / tinted: faces shaded in the object color, top lighter) and
 `tint` (0–1, how much color the tinted top face gets; default 0.1).
 Objects can override the style like any other type property. Crates use an
-inset square with tinted faces; static blocks stay plain.
+inset square with tinted faces; the other looks are kept as named box types
+(`crate_plain`, `crate_inset_dark`, `crate_cross`, `crate_brackets`,
+`crate_dashed`, `crate_dashed_tinted`) for rooms to use. Static blocks stay
+plain.
 **Why:** color alone is not enough for color-blind players and gets washed
 out by bloom. Keeping the style in data lets every future type pick its look
 without code changes, and the room editor can preview it.
