@@ -43,3 +43,14 @@ body {
   color: var(--magenta);
   text-shadow: 0 0 calc(8 * var(--u)) var(--magenta);
 }
+
+.readout {
+  margin: calc(48 * var(--u)) auto 0;
+  width: calc(720 * var(--u));
+  min-height: 3lh;
+  text-align: left;
+  font-size: calc(22 * var(--u));
+  letter-spacing: 0.08em;
+  color: #b6ff3c;
+  text-shadow: 0 0 calc(6 * var(--u)) #b6ff3c;
+}

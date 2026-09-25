@@ -12,23 +12,25 @@ Schema in `schemas/`. Data is bundled at build time
 (`import.meta.glob`), validated, merged with type defaults and turned into a
 runtime room every time the player enters it (rooms fully reset).
 
-## Frame flow *(planned)*
+## Frame flow
 
 ```
 requestAnimationFrame(now)
-  └─ loop: acc += min(now - last, 250 ms)
-       while acc >= 1/60 (at most 5 steps):
+  └─ FixedLoop.advance(elapsed): acc += elapsed
+       while acc >= 1/60 (at most 5 steps, then the backlog is dropped):
           input.sample()          raw key state → actions {down, pressed, released}
-          game.update(actions)    save prev positions → player → pushables → exits → events
-          input.endTick()         clear edge flags
+          game.update(input)      save prev positions → player → pushables → exits → events  (planned)
           acc -= 1/60
        alpha = acc / (1/60)
-       views.sync(alpha)          render position = lerp(prev, curr, alpha)
-       composer.render()
+       views.sync(alpha)          render position = lerp(prev, curr, alpha)  (planned)
+       composer.render()          (planned)
 ```
 
 Game logic only ever sees `dt = 1/60`, so behaviour is identical at any
-refresh rate.
+refresh rate. If a frame takes longer than 5 steps (under 12 FPS, or the tab
+was in the background) the game slows down instead of freezing while it
+catches up. `FixedLoop.advance()` is plain logic, so tests drive it with
+made-up frame times.
 
 ## Modules
 
@@ -59,13 +61,23 @@ refresh rate.
 | `ui/hud.js` | DOM overlay: integrity, room name, terminal messages |
 | `debug/debug.js` | Collision boxes, FPS, room jump, invincibility |
 
-## Input *(planned)*
+## Input
 
-Key events update a raw key set. Each tick the input module converts it into
-actions (`move`, `jump`, `cast`, `cycleSpell`, `pause`, `map`, `debug`) with
-`down` / `pressed` / `released` flags. A press is latched until the next tick
-samples it, so taps shorter than a tick are not lost. Window blur releases
-everything. Game code never reads raw keys.
+Key events only update a raw key set (keyed by `KeyboardEvent.code`, the
+physical key position, so WASD works on QWERTZ/AZERTY too). Once per tick
+`input.sample()` turns it into actions (`up`, `down`, `left`, `right`, `jump`,
+`cast`, `spellNext`, `spellPrev`, `pause`, `map`, `debug`); game code asks
+`input.down(action)`, `input.pressed(action)` or `input.released(action)`.
+
+- A key pressed and released between two ticks still counts as down and
+  pressed for one tick, so short taps are never lost.
+- Auto-repeat is ignored; window blur releases everything.
+- Bound keys have their browser default blocked (arrows/space scrolling,
+  F3 search), unless Ctrl/Alt/Meta is held, so browser shortcuts still work.
+- Bindings are a plain action → keys object (`core/bindings.js`), passed to
+  the `Input` constructor; rebinding later just passes a different object.
+
+Game code never reads raw keys.
 
 Movement follows grid axes: Up = −z (screen up-right), Right = +x,
 Down = +z, Left = −x.
