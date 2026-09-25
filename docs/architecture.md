@@ -177,7 +177,7 @@ main.js: 'room' event ──► showRoom()              views rebuilt, camera re
 Exit effects take their color from `game.destinationColor(exit)` (the biome
 of the room behind the exit). The doorway stream is a dashed `LineMaterial`
 whose `dashOffset` moves every frame, faded towards black with vertex
-colors; front-exit arrows are two copies of one chevron, moved outwards and
+colors; front-exit arrows (one per tile) are drawn twice, moved outwards and
 faded per frame (`glideState`), half a glide apart. They are purely
 visual and never touch the simulation.
 

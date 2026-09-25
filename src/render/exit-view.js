@@ -2,8 +2,8 @@
  * Exit effect, in the color of the room the exit leads to:
  * - back doorways: dashes flow along the tunnel's corner edges and two lanes
  *   on its floor, from the doorway into the dark, fading out;
- * - front exits: two copies of an arrow on the exit floor glide out to the
- *   edge, fading in and out, one after the other.
+ * - front exits: small arrows on the exit floor (one per tile of width)
+ *   glide out to the edge, fading in and out, in two waves.
  *
  * Layout and timing are pure (tested); ExitView animates them (dashes moved
  * with LineMaterial's dashOffset, arrows moved and faded per frame).
@@ -27,7 +27,7 @@ export const EXIT_FX = {
   streamDepth: 1.1,
   /** Arrows: seconds for one arrow to glide out, and how far it glides. */
   arrowPeriod: 0.9,
-  arrowTravel: 0.6,
+  arrowTravel: 0.45,
 };
 
 /** Lift of floor lanes above the tunnel floor, so they never fight with it. */
@@ -101,9 +101,9 @@ export class ExitView {
       stream.renderOrder = 3; // over the tunnel's own corner lines
       this.group.add(stream);
     } else {
-      // One arrow (the outer of the two chevrons), drawn twice, half a glide
-      // apart; it starts arrowTravel inside the edge and ends right at it.
-      const chevron = frontChevrons(size, [exit]).slice(0, 2);
+      // The row of arrows (one per tile), drawn twice, half a glide apart; it
+      // starts arrowTravel inside its spot by the edge and ends there.
+      const chevron = frontChevrons(size, [exit]);
       const { cross } = sideAxes(exit.side);
       this.outward = [0, 0, 0];
       this.outward[cross] = 1; // front sides are +x / +z

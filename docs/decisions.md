@@ -280,3 +280,11 @@ The two styles were compared side by side in the asset showcase.
 **Why:** author's choice. It merges the first stream idea (D28) with the
 tunnel: the motion stays inside the doorway instead of spreading over the
 room floor, and the fade into the dark adds depth.
+
+### D33 — 2026-09-25 — Front exits: one small arrow per tile
+Front exits show one small arrow per tile of exit width, side by side,
+gliding out to the edge within the first row of tiles. Replaces one large
+arrow centered on the exit.
+**Why:** author's review: the large arrow and its glide covered about four
+tiles in front of the exit; small arrows per tile keep the mark on the exit
+itself and show its width.

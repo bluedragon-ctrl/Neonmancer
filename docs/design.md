@@ -85,8 +85,8 @@ drifting up and a thin neon outline. Proportions are `WIZARD` in
 - Exits show where they lead in the color of the connected room. On a
   doorway, dashes flow from the doorway into the dark tunnel along its
   corner edges and two lanes on its floor, fading to black. On a front exit,
-  two arrows on the exit floor glide out to the edge, fading in and out one
-  after the other. Tuning values are `EXIT_FX` in `src/render/exit-view.js`; review
+  small arrows, one per tile of exit width and side by side, glide out to
+  the edge within the first row of tiles, fading in and out in two waves. Tuning values are `EXIT_FX` in `src/render/exit-view.js`; review
   them in the asset showcase (`/tools/showcase.html?asset=exits`).
 - An exit leads out once the wizard's feet center passes the side. The
   screen fades to black (0.2 s) while he walks on out and the world stands

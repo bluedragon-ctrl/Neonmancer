@@ -6,7 +6,7 @@ import { Pushable } from '../src/entities/pushable.js';
 import { Game, TRANSITION } from '../src/game.js';
 import { mergeUnitSegments } from '../src/render/edges.js';
 import { TUNNEL_DEPTH, doorwayTunnels, frontChevrons, wallLayout } from '../src/render/walls.js';
-import { exitStreamLayout, glideState } from '../src/render/exit-view.js';
+import { EXIT_FX, exitStreamLayout, glideState } from '../src/render/exit-view.js';
 import { arrival, exitAt } from '../src/world/exits.js';
 import { Grid } from '../src/world/grid.js';
 
@@ -169,17 +169,20 @@ test('walls: floor-level exits leave a gap in the front edge', () => {
   ]);
 });
 
-test('front exits get chevrons on their floor pointing out, back exits none', () => {
+test('front exits get one small arrow per tile, pointing out, back exits none', () => {
   const exits = [
     withExitDefaults({ id: 'e', side: '+x', at: 2, y: 1 }),
     withExitDefaults({ id: 'n', side: '-z', at: 1 }),
   ];
   const segments = frontChevrons([6, 4, 6], exits);
-  assert.equal(segments.length, 4); // two arrows of two strokes
+  assert.equal(segments.length, 4); // an arrow of two strokes per tile of width
   for (const [p, q] of segments) {
     assert.ok(Math.abs(p[1] - 1) < 0.02 && Math.abs(q[1] - 1) < 0.02); // on the exit floor
-    for (const point of [p, q]) assert.ok(point[0] < 6 && point[0] >= 5 && point[2] >= 2 && point[2] <= 4);
+    // Within the first row of tiles, even after gliding in by arrowTravel.
+    for (const point of [p, q]) assert.ok(point[0] < 6 && point[0] - EXIT_FX.arrowTravel > 5 && point[2] >= 2 && point[2] <= 4);
   }
+  // The arrows' tips are centered on the tiles 2 and 3.
+  assert.deepEqual([segments[0][1][2], segments[2][1][2]], [2.5, 3.5]);
   // The tip (shared point) is nearer the side than the arms.
   const [arm, tip] = segments[0];
   assert.ok(tip[0] > arm[0]);

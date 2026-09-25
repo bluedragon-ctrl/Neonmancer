@@ -85,10 +85,15 @@ export function wallLayout(size, exits) {
   return { faces, grid: mergeUnitSegments(grid), outline: mergeUnitSegments(outline) };
 }
 
+/** Arrow tip distance from the side, and half its width (= its depth). */
+const ARROW_TIP = 0.15;
+const ARROW_HALF = 0.2;
+
 /**
- * Chevrons on the floor of exits on the open front sides (+x, +z), where
- * there is no wall to cut a doorway into: two arrows ">>" pointing out of
- * the room, centered on the opening, just above its floor.
+ * Arrows on the floor of exits on the open front sides (+x, +z), where
+ * there is no wall to cut a doorway into: one small arrow per tile of exit
+ * width, side by side, pointing out of the room, just above its floor. They
+ * stay in the first row of tiles (the exit effect glides them out to here).
  * @param {number[]} size room size [x, y, z]
  * @param {{ side: string, at: number, width: number, y: number }[]} exits
  * @returns {number[][][]} line segments
@@ -97,13 +102,12 @@ export function frontChevrons([w, , d], exits) {
   const segments = [];
   for (const { side, at, width, y } of exits) {
     if (side !== '+x' && side !== '+z') continue;
-    const center = at + width / 2;
-    const half = Math.min(width, 2) * 0.25;
     // (a, c): a along the side, c inwards from it.
     const point = (a, c) => (side === '+x' ? [w - c, y + FLOOR_LIFT, a] : [a, y + FLOOR_LIFT, d - c]);
-    for (const tip of [0.2, 0.5]) {
-      segments.push([point(center - half, tip + half), point(center, tip)]);
-      segments.push([point(center, tip), point(center + half, tip + half)]);
+    for (let i = 0; i < width; i++) {
+      const center = at + i + 0.5;
+      segments.push([point(center - ARROW_HALF, ARROW_TIP + ARROW_HALF), point(center, ARROW_TIP)]);
+      segments.push([point(center, ARROW_TIP), point(center + ARROW_HALF, ARROW_TIP + ARROW_HALF)]);
     }
   }
   return segments;
