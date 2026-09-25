@@ -14,6 +14,7 @@ import { createFloor } from './render/floor.js';
 import { createHoleView } from './render/hole-view.js';
 import { createRoomView } from './render/room-view.js';
 import { PlayerView, PushableView } from './render/entity-view.js';
+import { ExitView } from './render/exit-view.js';
 import { disposeTree } from './render/neon.js';
 import { HOLO_TIME } from './render/holo.js';
 import { showErrorScreen } from './ui/error-screen.js';
@@ -40,16 +41,19 @@ function boot() {
   // The room's views are rebuilt whenever the game rebuilds the room.
   let roomScene = new Group();
   let pushableViews = [];
+  let exitViews = [];
   function showRoom() {
     renderer.scene.remove(roomScene);
     disposeTree(roomScene);
     const { room } = game;
     pushableViews = game.pushables.map((pushable) => new PushableView(game, pushable));
+    exitViews = room.exits.map((exit) => new ExitView(exit, room.size, game.destinationColor(exit)));
     roomScene = new Group().add(
       createFloor(room.size, room.color, room.holes),
       createHoleView(room.holes, room.color),
       createRoomView(room),
       ...pushableViews.map((view) => view.group),
+      ...exitViews.map((view) => view.group),
     );
     renderer.scene.add(roomScene);
     frameRoom(renderer.camera, room.size);
@@ -72,6 +76,7 @@ function boot() {
   let framesThisSecond = 0;
   let secondStart = performance.now();
   let tps = 0;
+  let lastFrame = performance.now() / 1000;
   let fps = 0;
 
   function update() {
@@ -83,7 +88,12 @@ function boot() {
   function render(alpha) {
     playerView.sync(alpha);
     for (const view of pushableViews) view.sync(alpha);
-    HOLO_TIME.value = performance.now() / 1000;
+    renderer.setFade(game.fadeLevel(alpha));
+    const time = performance.now() / 1000;
+    const dt = Math.min(time - lastFrame, 0.1);
+    lastFrame = time;
+    for (const view of exitViews) view.update(dt);
+    HOLO_TIME.value = time;
     renderer.render();
 
     framesThisSecond++;

@@ -168,6 +168,19 @@ test('room: exits must fit their side', () => {
   );
 });
 
+test('room: the first row inside an exit must be free', () => {
+  assertError(
+    errorsAfter((f) => f['rooms/alpha.json'].blocks.push({ at: [7, 1, 4] })),
+    'rooms/alpha.json › exits[0]',
+    'cell [7,1,4] inside the exit is filled by blocks[1]',
+  );
+  assertError(
+    errorsAfter((f) => (f['rooms/alpha.json'].holes = [{ at: [7, 3] }])),
+    'rooms/alpha.json › exits[0]',
+    'tile [7,3] inside the exit is a hole',
+  );
+});
+
 test('world: unknown start room', () => {
   assertError(errorsAfter((f) => (f['world.json'].start = 'nowhere')), 'world.json › start');
 });

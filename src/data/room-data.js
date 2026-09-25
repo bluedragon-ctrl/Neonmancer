@@ -37,6 +37,42 @@ export function sideLength(side, [w, , d]) {
 export const OPPOSITE_SIDE = { '-x': '+x', '+x': '-x', '-z': '+z', '+z': '-z' };
 
 /**
+ * Axes of a side: `cross` is the axis the side faces along (0 = x, 2 = z),
+ * `along` the axis `at` counts along.
+ * @param {string} side '-x' | '+x' | '-z' | '+z'
+ */
+export function sideAxes(side) {
+  return side.endsWith('x') ? { cross: 0, along: 2 } : { cross: 2, along: 0 };
+}
+
+/**
+ * Cells of an exit opening (defaults applied): `outside` is the row just
+ * beyond the side (left open in the boundary), `inside` the first row in
+ * the room (must stay free so the player can pass).
+ * @param {{ side: string, at: number, width: number, y: number, height: number }} exit
+ * @param {number[]} size room size [x, y, z]
+ * @returns {{ outside: number[][], inside: number[][] }} cells as [x, y, z]
+ */
+export function exitCells({ side, at, width, y, height }, size) {
+  const { cross, along } = sideAxes(side);
+  const last = size[cross] - 1;
+  const [outer, inner] = side.startsWith('-') ? [-1, 0] : [last + 1, last];
+  const outside = [];
+  const inside = [];
+  for (let i = at; i < at + width; i++) {
+    for (let cy = y; cy < y + height; cy++) {
+      const cell = [0, cy, 0];
+      cell[along] = i;
+      cell[cross] = outer;
+      outside.push([...cell]);
+      cell[cross] = inner;
+      inside.push(cell);
+    }
+  }
+  return { outside, inside };
+}
+
+/**
  * Optional look of an object type, so types differ by more than color
  * (readable in grayscale and for color-blind players). The first value of
  * each list is the default.

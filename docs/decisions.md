@@ -211,3 +211,80 @@ at 3 units/s. A plugged hole keeps its object, top flush with the floor.
 reserved cells, and the same code handles standing on crates, crates
 landing on the wizard and crates in holes. Showing the plug makes it
 obvious where the pit was filled.
+
+### D26 — 2026-09-25 — Flip-screen exits keep the offset; the arrival is the respawn point
+Leaving through an exit enters the connected room (after a short fade, see
+below), half a cell
+inside the matching exit, with the same offset along the edge and height
+above the exit floor; fall speed and facing carry over. The arrival point
+on the exit floor becomes the room's respawn point. Exits on the open front
+sides are marked with floor chevrons; back exits are doorways cut out of
+the wall. Objects cannot be pushed out of a room, and the first row inside
+an exit must be free (validated).
+**Why:** keeping the offset makes the two rooms feel joined; respawning at
+the entrance matches "recompile at the room entrance" (CLAUDE.md §4). The
+front sides have no wall, so without a mark a front exit is only a gap in a
+thin floor line. Objects leaving would be lost, since rooms reset.
+
+### D27 — 2026-09-25 — Room transitions fade through black
+Leaving a room fades to black in 0.2 s with the world frozen while the
+wizard walks on out through the exit; the next room fades in over 0.25 s
+and is playable right away. The veil is a DOM layer between the canvas and
+the HUD, so HUD text stays readable.
+**Why:** author's request; an instant swap felt abrupt. Freezing only the
+fade-out keeps the player from turning back mid-transition, and letting
+the fade-in run avoids dead time.
+
+### D28 — 2026-09-25 — Exits show a data stream in the destination's color
+Every exit gets dashes flowing out of the room along floor lanes (and up the
+doorway frame on back exits), colored like the room it leads to, dim and
+slow when the wizard is far, bright, fast and pulsing when he is close.
+Chosen from six proposals (stream, portal curtain, destination hint,
+proximity glow, glitch on crossing, light spill) as stream + destination
+color + proximity; reviewed in the asset showcase first.
+**Why:** author's choice. Exits read at a glance on both the walled back
+sides and the open front, hint where they lead (useful with 40–60 rooms)
+and react to the player, while staying thin lines that keep rooms clean.
+A curtain may come later; glitch on crossing belongs to the juice pass.
+
+### D29 — 2026-09-25 — Doorways lead into darkness; a quieter stream
+Behind every back doorway a short dark tunnel (floor, sides, ceiling and
+far end, shaded from the void color to black, with corner lines fading into
+it) hides the outer floor grid, as the pits do for holes. The exit stream
+(D28) is dimmer and thinner and reaches only half a tile past the threshold.
+**Why:** author's review: the grid seen through a doorway made it look like
+a hole in a thin wall rather than a way out, and the stream was too strong.
+
+### D30 — 2026-09-25 — Exit effect only on the doorway frame and the front arrows
+Supersedes the stream parts of D28 and D29 (the dark tunnels stay). The
+floor-lane data stream and the proximity glow are removed. The destination
+color now goes on moving dashes up the doorway frame (back exits) and on two
+arrows gliding out of front exits, replacing the static floor chevrons.
+**Why:** author's review: the stream over the floor was too much even when
+toned down; the color hint and motion work better kept on the exit's own
+outline.
+
+### D31 — 2026-09-25 — Doorway effect uses the arrow pattern
+Replaces the frame dashes of D30. On back doorways two copies of the
+doorway frame, in the destination color, glide from the wall back into the
+dark tunnel, fading in and out, half a glide apart: the same pattern as the
+arrows on front exits.
+**Why:** author's choice; one pattern for every exit, and frames receding
+into the dark read as a passage.
+
+### D32 — 2026-09-25 — Doorways: a dashed stream into the tunnel
+Replaces the gliding frames of D31. Dashes in the destination color flow
+from the doorway into the dark tunnel along its four corner edges and two
+lanes on its floor, fading to black. Front exits keep the gliding arrows.
+The two styles were compared side by side in the asset showcase.
+**Why:** author's choice. It merges the first stream idea (D28) with the
+tunnel: the motion stays inside the doorway instead of spreading over the
+room floor, and the fade into the dark adds depth.
+
+### D33 — 2026-09-25 — Front exits: one small arrow per tile
+Front exits show one small arrow per tile of exit width, side by side,
+gliding out to the edge within the first row of tiles. Replaces one large
+arrow centered on the exit.
+**Why:** author's review: the large arrow and its glide covered about four
+tiles in front of the exit; small arrows per tile keep the mark on the exit
+itself and show its width.

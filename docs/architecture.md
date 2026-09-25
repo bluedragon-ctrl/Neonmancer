@@ -19,7 +19,7 @@ requestAnimationFrame(now)
   └─ FixedLoop.advance(elapsed): acc += elapsed
        while acc >= 1/60 (at most 5 steps, then the backlog is dropped):
           input.sample()          raw key state → actions {down, pressed, released}
-          game.update(input)      player → his push → pushables (lowest first) → exits (planned) → events
+          game.update(input)      player → exits → his push → pushables (lowest first) → events
           acc -= 1/60
        alpha = acc / (1/60)
        views.sync(alpha)          render position = lerp(prev, curr, alpha)
@@ -47,12 +47,12 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `core/events.js` | Small pub/sub between simulation, HUD and debug |
 | `core/rules.js` | Shared rule constants (player hitbox, max room footprint) |
 | `data/bundle.js` | The only Vite-specific module: bundles `data/**/*.json`, imports dev schema errors |
-| `data/room-data.js` | Shared reading of room data: block boxes → cells, exit defaults, sides |
+| `data/room-data.js` | Shared reading of room data: block boxes → cells, exit defaults, sides, exit cells |
 | `data/validate.js` | Semantic checks and readable error messages (Ajv schema pass is dev/CI) |
 | `data/load.js` | Validate the data files and build the content tables; throws `DataError` |
-| `world/grid.js` | 3D occupancy grid: static cells, objects, room sides, hole tiles |
+| `world/grid.js` | 3D occupancy grid: static cells, room sides with exit openings, hole tiles |
 | `world/room.js` | Runtime room built fresh from data on every entry (type defaults + overrides) |
-| `world/exits.js` | Exit openings, boundary walls with gaps, transition triggers |
+| `world/exits.js` | Which exit the wizard left through; where he arrives in the connected room |
 | `physics/collision.js` | Axis-separated AABB movement against the grid; surface below a body |
 | `entities/player.js` | Movement, jump, gravity, turning, death in holes, respawn (integrity, push intent later) |
 | `entities/pushable.js` | Rest → slide → fall → land / plug-a-hole state machine |
@@ -62,7 +62,9 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/neon.js` | Palette, line and face materials; line widths scaled by render height |
 | `render/post.js` | pmndrs postprocessing composer (bloom) |
 | `render/floor.js` | Infinite grid floor fading into darkness; hole tiles cut out via a mask texture |
-| `render/edges.js` | Visible block edges from grid occupancy (pure, tested) |
+| `render/edges.js` | Visible block edges from grid occupancy; merging unit segments into runs (pure, tested) |
+| `render/exit-view.js` | Exit effect in the destination color: dashed stream into doorway tunnels, arrows gliding out of front exits (layout and timing pure, tested) |
+| `render/walls.js` | Back walls with doorways and dark tunnels behind them, front edges with gaps, arrow shape for front exits (pure, tested) |
 | `render/marks.js` | Face-mark line patterns for object styles (pure, tested) |
 | `render/hole-view.js` | Hole pits: walls fading to black, rim, short fading corner lines; outline math (tested) |
 | `render/room-view.js` | Static blocks (merged edges + instanced occluder faces), back walls, styled object views |
@@ -108,8 +110,9 @@ collision is needed. No auto step-up: the wizard jumps.
 
 Solid for the player: static blocks, the room sides (x/z outside the room)
 and everything below y = 0 (the grid), plus pushable objects as moving
-bodies; above the room height is open. Exit openings in the sides come in
-step 6.
+bodies; above the room height is open. At an exit the row of cells just
+beyond the side is open (as high as the exit), so the wizard can walk
+through; pushables never move outside the room.
 
 Pushables are not grid cells: each is a body with a `box()`, and
 `moveAxis` clamps against bodies like against cells and reports which body
@@ -156,6 +159,35 @@ old ones).
 - Composer: half-float buffers, 4× MSAA, render pass + one effect pass
   (bloom with mipmap blur, which scales with resolution by itself) (D13).
 
+## Rooms and flip-screen exits
+
+```
+game.update: player moved ──► exitAt(room, pos)   feet center past a side, inside an opening?
+                                └─ transition 'out' (TRANSITION.outTicks): world frozen, wizard walks on out
+                                └─ travel(exit)   links "room.exit" → the connected exit
+                                     arrival()    same offset along the edge and height above the
+                                                  exit floor, half a cell inside the new room
+                                     enterRoom(id, spawn)   fresh room; spawn = arrival on the exit floor
+                                └─ transition 'in' (TRANSITION.inTicks): game runs, veil lifts
+main.js: 'room' event ──► showRoom()              views rebuilt, camera reframed
+         every frame  ──► renderer.setFade(game.fadeLevel(alpha))   black veil under the HUD
+                      ──► exitView.update(dt)                      stream flows, arrows glide
+```
+
+Exit effects take their color from `game.destinationColor(exit)` (the biome
+of the room behind the exit). The doorway stream is a dashed `LineMaterial`
+whose `dashOffset` moves every frame, faded towards black with vertex
+colors; front-exit arrows (one per tile) are drawn twice, moved outwards and
+faded per frame (`glideState`), half a glide apart. They are purely
+visual and never touch the simulation.
+
+`content.links` (built in `data/load.js`) maps every `"room.exit"` to the
+exit it connects to, both ways. The wizard keeps his fall speed and facing
+through the flip. Dying respawns him at the room's current spawn (the
+arrival point, or the room's own `spawn` in the start room) in a fresh copy
+of the room. The fade is timed in ticks, so it is part of the deterministic
+simulation; views only read `fadeLevel()`.
+
 ## Data loading and validation
 
 ```
@@ -179,7 +211,8 @@ Validation has two layers:
    object types, overrides only of existing type properties, blocks/objects
    inside the room and not overlapping, exits fit their side, the player
    hitbox fits at the spawn, start room exists, connections join existing
-   exits on opposite sides with equal width, every exit connected once.
+   exits on opposite sides with equal width, every exit connected once, the
+   first row inside an exit free of blocks, objects and (at floor level) holes.
 
 Semantic checks run only when the schema pass is clean. Every problem is
 reported (not just the first), naming the file and path, e.g.

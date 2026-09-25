@@ -2,46 +2,94 @@
  * Game state and the fixed-order update of one tick. Pure logic: views read
  * the state, they never change it.
  */
-import { Player } from './entities/player.js';
+import { DT } from './core/loop.js';
+import { sideAxes, withExitDefaults } from './data/room-data.js';
+import { PLAYER, Player } from './entities/player.js';
 import { Pushable } from './entities/pushable.js';
 import { groundBelow, surfaceBelow } from './physics/collision.js';
+import { arrival, exitAt } from './world/exits.js';
 import { Grid } from './world/grid.js';
 import { buildRoom } from './world/room.js';
+
+/** Room transition timing in ticks (60 per second). */
+export const TRANSITION = {
+  /** Fade to black while the wizard walks on through the exit; the world is frozen. */
+  outTicks: 12,
+  /** Fade in from black in the new room; the game already runs. */
+  inTicks: 15,
+};
 
 export class Game {
   /** @param {object} content loaded game data (see data/load.js) */
   constructor(content) {
     this.content = content;
     this.enterRoom(content.world.start);
+    /**
+     * Room transition in progress, or null: { phase: 'out' | 'in', tick, exit }.
+     * Views read it through fadeLevel().
+     */
+    this.transition = null;
   }
 
   /**
    * Build the room fresh from data (rooms fully reset on entry) and put the
-   * wizard at its spawn.
+   * wizard at `spawn`, which is also where he respawns in this room.
    * @param {string} id room id
+   * @param {number[]} [spawn] feet center; the room's own spawn by default
    */
-  enterRoom(id) {
+  enterRoom(id, spawn) {
     this.room = buildRoom(this.content.rooms.get(id), this.content);
     this.grid = new Grid(this.room);
     this.pushables = this.room.objects.filter((o) => o.kind === 'pushable').map((o) => new Pushable(o));
-    this.player = new Player(this.room.spawn);
+    this.player = new Player(spawn ?? this.room.spawn);
     /** Everything objects collide with: the objects themselves and the wizard. */
     this.bodies = [...this.pushables, this.player];
   }
 
   /**
-   * One fixed tick: player (and his push) → objects → events.
+   * Flip screen: the wizard walked out through `exit`; enter the connected
+   * room at the matching exit, keeping his offset, height, fall and facing.
+   * @param {object} exit exit of the current room (defaults applied)
+   */
+  travel(exit) {
+    const link = this.content.links.get(`${this.room.id}.${exit.id}`);
+    const { pos, vy, facing } = this.player;
+    const target = this.content.rooms.get(link.room);
+    const to = withExitDefaults(target.exits.find((e) => e.id === link.exit));
+    const arrived = arrival(exit, pos, to, target.size);
+
+    this.enterRoom(link.room, arrived.spawn);
+    const player = this.player;
+    player.pos = arrived.pos;
+    player.prev = [...arrived.pos];
+    player.vy = vy;
+    player.facing = player.prevFacing = player.targetFacing = facing;
+  }
+
+  /**
+   * One fixed tick: player → exits → his push → objects → events.
+   * Walking out through an exit starts a transition: fade out (frozen
+   * world), load the next room, fade in (running).
    * @param {import('./core/input.js').Input} input
-   * @returns {string[]} events this tick (e.g. 'jump', 'push', 'plug', 'room')
+   * @returns {string[]} events this tick (e.g. 'jump', 'push', 'plug', 'exit', 'room')
    */
   update(input) {
+    if (this.transition?.phase === 'out') return this.fadeOut();
+    if (this.transition && ++this.transition.tick >= TRANSITION.inTicks) this.transition = null;
+
     const events = [];
     const playerEvent = this.player.update(input, this.grid, this.pushables);
 
     // Respawn after a death resets the room, so no puzzle stays broken.
     if (playerEvent === 'respawn') {
-      this.enterRoom(this.room.id);
+      this.enterRoom(this.room.id, this.player.spawn);
       return ['respawn', 'room'];
+    }
+
+    const exit = this.player.dead ? null : exitAt(this.room, this.player.pos);
+    if (exit) {
+      this.transition = { phase: 'out', tick: 0, exit };
+      return ['exit'];
     }
     if (playerEvent) events.push(playerEvent);
 
@@ -55,6 +103,49 @@ export class Game {
       if (event) events.push(event);
     }
     return events;
+  }
+
+  /**
+   * Color of the room behind an exit of the current room (its biome color),
+   * for the exit's stream.
+   * @param {object} exit exit of the current room
+   */
+  destinationColor(exit) {
+    const link = this.content.links.get(`${this.room.id}.${exit.id}`);
+    return this.content.biomes[this.content.rooms.get(link.room).biome].color;
+  }
+
+  /**
+   * One tick of fading out: the world stands still while the wizard walks on
+   * out through the exit; then the next room loads and fades in.
+   * @returns {string[]} events
+   */
+  fadeOut() {
+    const { exit } = this.transition;
+    const player = this.player;
+    player.prev = [...player.pos];
+    player.prevFacing = player.facing;
+    for (const pushable of this.pushables) pushable.prev = [...pushable.pos];
+
+    if (++this.transition.tick < TRANSITION.outTicks) {
+      const { cross } = sideAxes(exit.side);
+      player.pos[cross] += (exit.side.startsWith('-') ? -1 : 1) * PLAYER.speed * DT;
+      return [];
+    }
+    this.travel(exit);
+    this.transition = { phase: 'in', tick: 0 };
+    return ['room'];
+  }
+
+  /**
+   * How far the screen is faded to black: 0 (clear) to 1 (black).
+   * @param {number} alpha interpolation factor between the last two ticks
+   */
+  fadeLevel(alpha) {
+    if (!this.transition) return 0;
+    const { phase, tick } = this.transition;
+    if (phase === 'out') return Math.min((tick + alpha) / TRANSITION.outTicks, 1);
+    return Math.max(1 - (tick + alpha) / TRANSITION.inTicks, 0);
   }
 
   /**

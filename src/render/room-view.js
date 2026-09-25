@@ -3,32 +3,38 @@
  *
  * Blocks are one instanced mesh of dark cubes (the occluding faces) plus one
  * merged set of neon edges from blockEdges(). Only the back walls (x = 0 and
- * z = 0) are drawn; the front sides stay open (CLAUDE.md §4).
+ * z = 0) are drawn; the front sides stay open (CLAUDE.md §4). Exits are
+ * doorways in the back walls and gaps in the front edges (render/walls.js).
  */
 import {
   BoxGeometry,
+  BufferGeometry,
+  Color,
   DoubleSide,
+  Float32BufferAttribute,
   Group,
   InstancedMesh,
   Matrix4,
   Mesh,
-  PlaneGeometry,
+  MeshBasicMaterial,
 } from 'three';
 import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
 import { blockEdges, flattenSegments } from './edges.js';
 import { markSegments } from './marks.js';
+import { doorwayTunnels, wallLayout } from './walls.js';
 import { PALETTE, faceMaterial, lineMaterial, tintedFaceMaterials } from './neon.js';
 
 /**
  * @param {object} room
  * @param {number[]} room.size [x, y, z]
  * @param {number[][]} room.cells filled block cells as [x, y, z]
+ * @param {object[]} [room.exits] exits (defaults applied): doorways in the back walls, gaps in the front edges
  * @param {number|string} [room.color] room color (biome), amber by default
  */
-export function createRoomView({ size, cells, color = PALETTE.amber }) {
+export function createRoomView({ size, cells, exits = [], color = PALETTE.amber }) {
   const group = new Group();
-  group.add(createWalls(size, color));
+  group.add(createWalls(size, exits, color));
   if (cells.length > 0) group.add(createBlockView(cells, color));
   return group;
 }
@@ -54,42 +60,71 @@ export function createBlockView(cells, color) {
   return group;
 }
 
-function createWalls([w, h, d], color) {
+function createWalls(size, exits, color) {
   const group = new Group();
+  const { faces, grid, outline } = wallLayout(size, exits);
 
-  // Dark wall faces; they also hide the floor grid behind the room.
+  // Dark wall faces (cells, leaving doorways open); they also hide the floor
+  // grid behind the room.
+  const positions = faces.flatMap(([a, b, c, d]) => [...a, ...b, ...c, ...a, ...c, ...d]);
+  const geometry = new BufferGeometry();
+  geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
   const material = faceMaterial();
   material.side = DoubleSide;
-  const wallX = new Mesh(new PlaneGeometry(d, h), material); // x = 0 plane
-  wallX.rotation.y = Math.PI / 2;
-  wallX.position.set(0, h / 2, d / 2);
-  const wallZ = new Mesh(new PlaneGeometry(w, h), material); // z = 0 plane
-  wallZ.position.set(w / 2, h / 2, 0);
-  group.add(wallX, wallZ);
+  group.add(new Mesh(geometry, material));
 
-  // Faint grid on the walls.
-  const grid = [];
-  for (let z = 1; z < d; z++) grid.push([[0, 0, z], [0, h, z]]);
-  for (let x = 1; x < w; x++) grid.push([[x, 0, 0], [x, h, 0]]);
-  for (let y = 1; y < h; y++) {
-    grid.push([[0, y, 0], [0, y, d]]);
-    grid.push([[0, y, 0], [w, y, 0]]);
-  }
+  // Faint grid on the walls; bright outline: wall tops and ends, doorway
+  // frames and the open front edges of the floor.
   group.add(lines(grid, lineMaterial({ color, width: 1.5, brightness: 0.3 })));
-
-  // Bright outline: wall tops, corners and the open front edges of the floor.
-  const outline = [
-    [[0, 0, 0], [0, h, 0]],
-    [[0, h, 0], [0, h, d]],
-    [[0, h, 0], [w, h, 0]],
-    [[0, 0, d], [0, h, d]],
-    [[w, 0, 0], [w, h, 0]],
-    [[0, 0, d], [w, 0, d]],
-    [[w, 0, 0], [w, 0, d]],
-  ];
   const edges = lines(outline, lineMaterial({ color, width: 2.5, brightness: 1.2 }));
   edges.renderOrder = 1;
   group.add(edges);
+
+  // Doorways lead into darkness: dark tunnel faces fading to black, and
+  // short corner lines fading into them (like the pits of holes).
+  const tunnels = doorwayTunnels(size, exits);
+  if (tunnels.quads.length > 0) group.add(createTunnels(tunnels, color));
+
+  return group;
+}
+
+/**
+ * @param {ReturnType<typeof doorwayTunnels>} tunnels
+ * @param {number|string} color room color
+ */
+function createTunnels({ quads, lines: corners }, color) {
+  const group = new Group();
+  const near = new Color(PALETTE.void);
+  const far = new Color(0x000000);
+  const positions = [];
+  const colors = [];
+  for (const { points, shade } of quads) {
+    for (const i of [0, 1, 2, 0, 2, 3]) {
+      positions.push(...points[i]);
+      const c = near.clone().lerp(far, shade[i]);
+      colors.push(c.r, c.g, c.b);
+    }
+  }
+  const geometry = new BufferGeometry();
+  geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('color', new Float32BufferAttribute(colors, 3));
+  // Pushed back in depth, so lines lying on the tunnel faces (the exit effect) win.
+  const material = new MeshBasicMaterial({
+    vertexColors: true,
+    side: DoubleSide,
+    polygonOffset: true,
+    polygonOffsetFactor: 1,
+    polygonOffsetUnits: 1,
+  });
+  group.add(new Mesh(geometry, material));
+
+  const glow = new Color(color).multiplyScalar(0.6);
+  const fading = new LineSegmentsGeometry();
+  fading.setPositions(flattenSegments(corners));
+  fading.setColors(corners.flatMap(() => [glow.r, glow.g, glow.b, 0, 0, 0]));
+  const lineMat = lineMaterial({ color: 0xffffff, width: 1.5 });
+  lineMat.vertexColors = true;
+  group.add(new LineSegments2(fading, lineMat));
   return group;
 }
 

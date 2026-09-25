@@ -77,6 +77,8 @@ export class Pushable {
     const target = [x + dx, y, z + dz];
     // Resting objects sit on whole cells, except on top of the player.
     if (!Number.isInteger(y) || grid.isSolid(...target)) return false;
+    // Objects never leave through an exit: rooms reset, so they would be lost.
+    if (!grid.isInside(target[0], target[2])) return false;
     if (this.support(grid, bodies) < y - EPS) return false; // about to fall
     if (overlapsAny(boxAt(target), bodies, this)) return false;
     this.state = 'slide';

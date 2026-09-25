@@ -78,11 +78,37 @@ drifting up and a thin neon outline. Proportions are `WIZARD` in
 
 - Horizontal exits only in Phase 1: an opening on one side of the room
   (`side`, first cell `at`, `width`, floor level `y`, `height`).
-- On the back sides an exit is a doorway in the wall; on the front sides it
-  is simply a gap in the invisible boundary.
-- Walking through an exit loads the connected room; the player arrives at
-  the matching exit, keeping the offset along the edge. That arrival point
-  is the respawn point for the room.
+- On the back sides an exit is a doorway in the wall (framed, with a
+  threshold line) leading into darkness: a short tunnel fading to black with
+  corner lines fading into it, like a hole's pit. On the front sides it is a
+  gap in the invisible boundary and in the floor edge.
+- Exits show where they lead in the color of the connected room. On a
+  doorway, dashes flow from the doorway into the dark tunnel along its
+  corner edges and two lanes on its floor, fading to black. On a front exit,
+  small arrows, one per tile of exit width and side by side, glide out to
+  the edge within the first row of tiles, fading in and out in two waves. Tuning values are `EXIT_FX` in `src/render/exit-view.js`; review
+  them in the asset showcase (`/tools/showcase.html?asset=exits`).
+- An exit leads out once the wizard's feet center passes the side. The
+  screen fades to black (0.2 s) while he walks on out and the world stands
+  still, then the connected room fades in (0.25 s, already playable). He
+  arrives half a cell
+  inside the matching exit, keeping his offset along the edge, his height
+  above the exit floor, his fall and his facing.
+- That arrival point (on the exit floor) is where he respawns in the room;
+  the start room uses its own `spawn` until he leaves it.
+- Rooms fully reset on entry and on respawn.
+- Objects never leave a room: pushing one out through an exit is blocked.
+- The first row of cells inside an exit must be free (no blocks, objects or,
+  at floor level, holes). A raised exit (`y` > 0) needs something to stand
+  on in front of it, usually a ledge.
+
+### Test rooms (Phase 1)
+
+| Room | Size | Exits | Shows |
+|---|---|---|---|
+| `boot_sector` (start) | 12×12 | north doorway → Cache Hall; raised east exit on a ledge → Stack Yard | blocks, holes, two crates |
+| `cache_hall` | 16×8 | south (front) → Boot Sector | a 3-wide pit across the room: push a crate in, then jump the rest |
+| `stack_yard` | 8×8, Glitch Zone color | raised west doorway → Boot Sector | stacked crates, a 2-high block to climb via a crate |
 
 ---
 
@@ -153,5 +179,5 @@ Example room (12×12):
   `none`/`inset`/`cross`/`brackets`, `faces` `dark`/`tinted` (defaults first),
   `tint` 0–1 (color share of a tinted top face, default 0.1).
   Objects may override them.
-- `world.json` pairs exits: `"connections": [["boot_sector.east", "cache_hall.west"]]`.
+- `world.json` pairs exits: `"connections": [["boot_sector.north", "cache_hall.south"]]`.
   Paired exits are on opposite sides and equally wide; every exit is connected.
