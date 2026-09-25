@@ -38,8 +38,8 @@ const shadowFragment = /* glsl */ `
     float r = length(vUv - 0.5) * 2.0;
     if (r > 1.0) discard;
     float ring = smoothstep(0.55, 0.8, r) * (1.0 - smoothstep(0.8, 1.0, r));
-    float fill = 0.35 * (1.0 - smoothstep(0.0, 0.8, r));
-    gl_FragColor = vec4(uColor * (ring * 1.4 + fill) * uOpacity, 1.0);
+    float fill = 0.12 * (1.0 - smoothstep(0.0, 0.8, r));
+    gl_FragColor = vec4(uColor * (ring * 0.5 + fill) * uOpacity, 1.0);
   }
 `;
 
