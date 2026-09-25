@@ -136,7 +136,7 @@ without code changes, and the room editor can preview it.
 ### D18 — 2026-09-25 — Holes are floor tiles, not a lower level
 Rooms can mark floor tiles as holes (`holes`, `[x, z]` at y = 0). They are a
 look plus a rule: black pits (the floor shader cuts them out, pit walls fade
-to a black bottom, rim and fading rings for depth) on a faintly tinted room
+to a black bottom, bright rim, short corner lines fading to black) on a faintly tinted room
 floor. The player dies when his hitbox center is over a hole at floor level;
 a pushed block drops in and fills the hole, making it floor. Holes never
 lead to another room. The data format, validation and look land in step 3,

@@ -1,7 +1,7 @@
 /**
  * Holes in the floor: pits that look bottomless. The floor shader cuts the
  * hole tiles out; this view adds the pit (walls fading to a black bottom),
- * a bright rim and short vertical lines that fade downwards for depth.
+ * a bright rim and short corner lines that quickly fade to black for depth.
  * There is no real space below the floor: the pit is only a look.
  */
 import {
@@ -20,6 +20,9 @@ import { PALETTE, lineMaterial } from './neon.js';
 
 /** How far the pit walls reach below the floor, in blocks. */
 const PIT_DEPTH = 1.2;
+
+/** Length of the fading corner lines in the pit, in blocks. */
+const DROP_LENGTH = 0.45;
 
 /**
  * The outline of a set of hole tiles: every tile side that borders a
@@ -89,25 +92,19 @@ export function createHoleView(holes, color) {
   group.add(new Mesh(pit, pitMaterial));
 
   // Bright rim along the floor edge of the hole.
-  const rimAt = (y) => flattenSegments(sides.map(([[x1, z1], [x2, z2]]) => [[x1, y, z1], [x2, y, z2]]));
   const rim = new LineSegmentsGeometry();
-  rim.setPositions(rimAt(0));
+  rim.setPositions(flattenSegments(sides.map(([[x1, z1], [x2, z2]]) => [[x1, 0, z1], [x2, 0, z2]])));
   const rimLines = new LineSegments2(rim, lineMaterial({ color, width: 2.5, brightness: 1.6 }));
   rimLines.renderOrder = 2;
   group.add(rimLines);
 
-  // Fainter copies of the rim further down, and vertical lines at the rim
-  // corners fading to black: the eye reads them as depth.
-  for (const [depth, brightness] of [[0.3, 0.35], [0.6, 0.15]]) {
-    const ring = new LineSegmentsGeometry();
-    ring.setPositions(rimAt(-depth));
-    group.add(new LineSegments2(ring, lineMaterial({ color, width: 1.5, brightness })));
-  }
+  // Short vertical lines at the rim corners, fading to black quickly: the
+  // eye reads them as depth.
   const corners = new Map();
   for (const side of sides) for (const [x, z] of side) corners.set(`${x},${z}`, [x, z]);
   const glow = new Color(color).multiplyScalar(0.6);
   const drops = new LineSegmentsGeometry();
-  drops.setPositions(flattenSegments([...corners.values()].map(([x, z]) => [[x, 0, z], [x, -PIT_DEPTH, z]])));
+  drops.setPositions(flattenSegments([...corners.values()].map(([x, z]) => [[x, 0, z], [x, -DROP_LENGTH, z]])));
   drops.setColors([...corners.values()].flatMap(() => [glow.r, glow.g, glow.b, 0, 0, 0]));
   const dropMaterial = lineMaterial({ color: 0xffffff, width: 1.5 });
   dropMaterial.vertexColors = true;
