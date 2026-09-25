@@ -263,3 +263,11 @@ arrows gliding out of front exits, replacing the static floor chevrons.
 **Why:** author's review: the stream over the floor was too much even when
 toned down; the color hint and motion work better kept on the exit's own
 outline.
+
+### D31 — 2026-09-25 — Doorway effect uses the arrow pattern
+Replaces the frame dashes of D30. On back doorways two copies of the
+doorway frame, in the destination color, glide from the wall back into the
+dark tunnel, fading in and out, half a glide apart: the same pattern as the
+arrows on front exits.
+**Why:** author's choice; one pattern for every exit, and frames receding
+into the dark read as a passage.

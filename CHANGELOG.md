@@ -50,8 +50,8 @@ and the project uses [Semantic Versioning](https://semver.org/).
   tunnel, gaps on the front sides; walking out loads the connected room at
   the matching exit (offset along the edge kept), which becomes the respawn
   point. Rooms fade out and in through black. Exits show where they lead
-  in the color of the next room: dashes running round the doorway frame,
-  arrows gliding out of front exits (also in the asset showcase).
+  in the color of the next room: doorway frames gliding back into the
+  tunnel, arrows gliding out of front exits (also in the asset showcase).
   Crates can't be pushed out of a room; the first row inside an exit is
   validated to be free.
 - Three connected test rooms: Boot Sector, Cache Hall (pit puzzle) and

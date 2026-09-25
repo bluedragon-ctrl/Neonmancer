@@ -1,12 +1,12 @@
 /**
- * Exit effect, in the color of the room the exit leads to:
- * - back doorways: dashes run up both jambs and meet in the middle of the
- *   lintel, over the doorway frame;
- * - front exits: two arrows on the exit floor glide out of the room, fading
- *   in and out, one after the other.
+ * Exit effect, in the color of the room the exit leads to. Two copies of a
+ * shape glide out of the room, fading in and out, one after the other:
+ * - back doorways: the doorway frame, gliding from the wall into the dark
+ *   tunnel behind it;
+ * - front exits: an arrow on the exit floor, gliding out to the edge.
  *
- * Layout and timing are pure (tested); ExitView animates them (dashes moved
- * with LineMaterial's dashOffset, arrows moved and faded per frame).
+ * Layout and timing are pure (tested); ExitView moves and fades the copies
+ * every frame.
  */
 import { Color, Group } from 'three';
 import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
@@ -18,25 +18,21 @@ import { frontChevrons } from './walls.js';
 
 /** Tuning values (units, seconds). */
 export const EXIT_FX = {
-  /** Frame dashes: length, gap and speed in units per second. */
-  dash: 0.18,
-  gap: 0.22,
-  frameSpeed: 1.6,
-  /** Frame dash brightness. */
-  frameBrightness: 1.4,
-  /** Arrows: seconds for one arrow to glide out, and how far it glides. */
-  arrowPeriod: 0.9,
+  /** Seconds for one copy to glide out. */
+  period: 0.9,
+  /** How far an arrow glides, and a doorway frame (into the tunnel). */
   arrowTravel: 0.6,
-  /** Arrow brightness at its brightest. */
-  arrowBrightness: 1.4,
+  frameTravel: 0.9,
+  /** Brightness of a copy at its brightest. */
+  brightness: 1.4,
 };
 
 /** Is the exit on a back side (a doorway in a wall)? */
 const isBack = ({ side }) => side.startsWith('-');
 
 /**
- * Doorway frame paths of a back exit, pointing the way the dashes flow: up
- * each jamb, then along the lintel to its middle. Front exits have none.
+ * The doorway frame of a back exit (a rectangle in the wall plane); front
+ * exits have none.
  * @param {{ side: string, at: number, width: number, y: number, height: number }} exit defaults applied
  * @returns {number[][][]} segments
  */
@@ -48,23 +44,24 @@ export function exitFrameLayout(exit) {
     p[along] = a;
     return p;
   };
-  const top = exit.y + exit.height;
-  const middle = exit.at + exit.width / 2;
-  const segments = [];
-  for (const a of [exit.at, exit.at + exit.width]) {
-    segments.push([point(a, exit.y), point(a, top)], [point(a, top), point(middle, top)]);
-  }
-  return segments;
+  const [a0, a1, y0, y1] = [exit.at, exit.at + exit.width, exit.y, exit.y + exit.height];
+  return [
+    [point(a0, y0), point(a0, y1)],
+    [point(a0, y1), point(a1, y1)],
+    [point(a1, y1), point(a1, y0)],
+    [point(a1, y0), point(a0, y0)],
+  ];
 }
 
 /**
- * Where an arrow is in its glide: `f` 0–1 through the glide. It starts
- * `arrowTravel` inside its rest spot and ends there, fading in and out.
+ * A gliding copy at `f` (0–1 through its glide): how far out of the room
+ * it has moved (0 to `travel`) and how bright it is (fading in and out).
  * @param {number} f
- * @returns {{ inside: number, brightness: number }} distance inwards from the rest spot, 0–1 brightness
+ * @param {number} travel
+ * @returns {{ out: number, brightness: number }}
  */
-export function arrowState(f) {
-  return { inside: EXIT_FX.arrowTravel * (1 - f), brightness: Math.sin(Math.PI * f) };
+export function glideState(f, travel) {
+  return { out: travel * f, brightness: Math.sin(Math.PI * f) };
 }
 
 export class ExitView {
@@ -78,30 +75,32 @@ export class ExitView {
     this.group = new Group();
     this.time = 0;
 
-    const frame = exitFrameLayout(exit);
-    if (frame.length > 0) {
-      this.frameMaterial = lineMaterial({ color, width: 2.5, brightness: EXIT_FX.frameBrightness, dashed: true });
-      this.frameMaterial.dashSize = EXIT_FX.dash;
-      this.frameMaterial.gapSize = EXIT_FX.gap;
-      const lines = new LineSegments2(new LineSegmentsGeometry().setPositions(flattenSegments(frame)), this.frameMaterial);
-      lines.computeLineDistances();
-      lines.renderOrder = 3; // over the doorway frame lying in the same spot
-      this.group.add(lines);
+    const { cross } = sideAxes(exit.side);
+    /** Unit vector out of the room through this exit. */
+    this.outward = [0, 0, 0];
+    this.outward[cross] = isBack(exit) ? -1 : 1;
+
+    // Back exits: the doorway frame, starting in the wall plane. Front exits:
+    // an arrow (the outer of the two chevrons), starting `arrowTravel` inside
+    // the edge so it ends right at it.
+    let shape;
+    if (isBack(exit)) {
+      shape = exitFrameLayout(exit);
+      this.start = 0;
+      this.travel = EXIT_FX.frameTravel;
+    } else {
+      shape = frontChevrons(size, [exit]).slice(0, 2);
+      this.start = -EXIT_FX.arrowTravel;
+      this.travel = EXIT_FX.arrowTravel;
     }
 
-    this.arrows = [];
-    if (!isBack(exit)) {
-      // One arrow (the outer of the two chevrons), drawn twice, half a glide apart.
-      const chevron = frontChevrons(size, [exit]).slice(0, 2);
-      const { cross } = sideAxes(exit.side);
-      this.inward = [0, 0, 0];
-      this.inward[cross] = -1; // front sides are +x / +z: inwards is negative
-      for (let i = 0; i < 2; i++) {
-        const material = lineMaterial({ color, width: 2.5 });
-        const arrow = new LineSegments2(new LineSegmentsGeometry().setPositions(flattenSegments(chevron)), material);
-        this.arrows.push({ arrow, material, offset: i / 2 });
-        this.group.add(arrow);
-      }
+    this.copies = [];
+    for (let i = 0; i < 2; i++) {
+      const material = lineMaterial({ color, width: 2.5 });
+      const line = new LineSegments2(new LineSegmentsGeometry().setPositions(flattenSegments(shape)), material);
+      line.renderOrder = 3; // over the doorway frame lying in the same spot
+      this.copies.push({ line, material, offset: i / 2 });
+      this.group.add(line);
     }
     this.update(0);
   }
@@ -109,15 +108,10 @@ export class ExitView {
   /** @param {number} dt seconds since the last frame */
   update(dt) {
     this.time += dt;
-    if (this.frameMaterial) {
-      // Moving the dash pattern back makes the dashes flow forward.
-      const period = EXIT_FX.dash + EXIT_FX.gap;
-      this.frameMaterial.dashOffset = -((this.time * EXIT_FX.frameSpeed) % period);
-    }
-    for (const { arrow, material, offset } of this.arrows) {
-      const { inside, brightness } = arrowState((this.time / EXIT_FX.arrowPeriod + offset) % 1);
-      arrow.position.set(...this.inward.map((v) => v * inside));
-      material.color.copy(this.color).multiplyScalar(EXIT_FX.arrowBrightness * brightness);
+    for (const { line, material, offset } of this.copies) {
+      const { out, brightness } = glideState((this.time / EXIT_FX.period + offset) % 1, this.travel);
+      line.position.set(...this.outward.map((v) => v * (this.start + out)));
+      material.color.copy(this.color).multiplyScalar(EXIT_FX.brightness * brightness);
     }
   }
 }

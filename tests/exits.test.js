@@ -6,7 +6,7 @@ import { Pushable } from '../src/entities/pushable.js';
 import { Game, TRANSITION } from '../src/game.js';
 import { mergeUnitSegments } from '../src/render/edges.js';
 import { TUNNEL_DEPTH, doorwayTunnels, frontChevrons, wallLayout } from '../src/render/walls.js';
-import { EXIT_FX, arrowState, exitFrameLayout } from '../src/render/exit-view.js';
+import { exitFrameLayout, glideState } from '../src/render/exit-view.js';
 import { arrival, exitAt } from '../src/world/exits.js';
 import { Grid } from '../src/world/grid.js';
 
@@ -224,23 +224,22 @@ test('a room transition fades out with the world frozen, then fades in while run
   assert.equal(game.fadeLevel(0.5), 0);
 });
 
-test('exit frame: back doorways get dashes up both jambs to the middle of the lintel', () => {
+test('exit frame: the doorway outline of back exits only', () => {
   const exit = withExitDefaults({ id: 'n', side: '-z', at: 1 });
   assert.deepEqual(exitFrameLayout(exit), [
     [[1, 0, 0], [1, 2, 0]],
-    [[1, 2, 0], [2, 2, 0]],
-    [[3, 0, 0], [3, 2, 0]],
-    [[3, 2, 0], [2, 2, 0]],
+    [[1, 2, 0], [3, 2, 0]],
+    [[3, 2, 0], [3, 0, 0]],
+    [[3, 0, 0], [1, 0, 0]],
   ]);
   assert.deepEqual(exitFrameLayout(withExitDefaults({ id: 'e', side: '+x', at: 1 })), []);
 });
 
-test('exit arrows glide outwards to their spot, fading in and out', () => {
-  assert.equal(arrowState(0).inside, EXIT_FX.arrowTravel);
-  assert.equal(arrowState(0).brightness, 0);
-  assert.equal(arrowState(0.5).brightness, 1);
-  assert.ok(arrowState(0.75).inside < arrowState(0.25).inside);
-  assert.ok(arrowState(0.999).brightness < 0.01 && arrowState(0.999).inside < 0.01);
+test('exit effect copies glide out of the room, fading in and out', () => {
+  assert.deepEqual(glideState(0, 0.6), { out: 0, brightness: 0 });
+  assert.equal(glideState(0.5, 0.6).brightness, 1);
+  assert.ok(glideState(0.75, 0.6).out > glideState(0.25, 0.6).out);
+  assert.ok(glideState(0.999, 0.6).brightness < 0.01 && Math.abs(glideState(0.999, 0.6).out - 0.6) < 0.01);
 });
 
 test('an exit effect has the color of the room it leads to', () => {

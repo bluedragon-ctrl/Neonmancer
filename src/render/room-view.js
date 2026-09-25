@@ -108,7 +108,14 @@ function createTunnels({ quads, lines: corners }, color) {
   const geometry = new BufferGeometry();
   geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
   geometry.setAttribute('color', new Float32BufferAttribute(colors, 3));
-  const material = new MeshBasicMaterial({ vertexColors: true, side: DoubleSide });
+  // Pushed back in depth, so lines lying on the tunnel faces (the exit effect) win.
+  const material = new MeshBasicMaterial({
+    vertexColors: true,
+    side: DoubleSide,
+    polygonOffset: true,
+    polygonOffsetFactor: 1,
+    polygonOffsetUnits: 1,
+  });
   group.add(new Mesh(geometry, material));
 
   const glow = new Color(color).multiplyScalar(0.6);
