@@ -12,6 +12,8 @@ import { scaleToHeight } from './viewport.js';
 export const PALETTE = {
   void: 0x05060d,
   face: 0x070916,
+  /** Floor grid outside the room: neutral, so it never reads as room. */
+  outerGrid: 0x2a2d35,
   cyan: 0x00f0ff,
   magenta: 0xff2bd6,
   lime: 0xb6ff3c,

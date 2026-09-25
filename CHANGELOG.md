@@ -17,5 +17,6 @@ and the project uses [Semantic Versioning](https://semver.org/).
 - Temporary on-screen readout of TPS, FPS, buffer size and active actions.
 - Isometric neon renderer: letterboxed 16:9 stage, capped pixel ratio and
   render scale (`?scale=0.5`), fixed isometric camera, thick neon edges
-  scaled with render height, bloom, fading infinite floor grid, back walls
+  scaled with render height, bloom, amber room grid on a fading dark-gray
+  infinite floor grid, back walls
   and a hand-made demo room with dark occluding block faces.

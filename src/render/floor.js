@@ -2,7 +2,8 @@
  * Infinite grid floor fading into darkness.
  *
  * One large plane at y = 0 with a shader that draws unit grid lines. Lines
- * are brightest inside the room and fade out with distance from it; the
+ * use the room color inside the room; outside they are dark gray (clearly
+ * not part of the room) and fade out with distance from it; the
  * plane itself has the void color, so it melts into the background.
  */
 import { Color, Mesh, PlaneGeometry, ShaderMaterial, Vector2 } from 'three';
@@ -25,6 +26,7 @@ const vertexShader = /* glsl */ `
 
 const fragmentShader = /* glsl */ `
   uniform vec3 uColor;
+  uniform vec3 uOuterColor;
   uniform vec3 uVoid;
   uniform vec2 uRoomMin;
   uniform vec2 uRoomMax;
@@ -38,13 +40,13 @@ const fragmentShader = /* glsl */ `
     float halfWidth = uLineWidth * 0.5;
     float line = 1.0 - smoothstep(halfWidth - 0.5, halfWidth + 0.5, min(grid.x, grid.y));
 
-    // Brighter inside the room, fading out with distance outside it.
+    // Room color inside the room; dim gray outside, fading with distance.
     vec2 outside = max(max(uRoomMin - vPos, vPos - uRoomMax), 0.0);
     float dist = length(outside);
-    float strength = dist > 0.0 ? 0.12 : 0.4;
-    strength *= 1.0 - smoothstep(0.0, uFade, dist);
+    vec3 color = dist > 0.0 ? uOuterColor : uColor * 0.4;
+    float strength = 1.0 - smoothstep(0.0, uFade, dist);
 
-    gl_FragColor = vec4(mix(uVoid, uColor, line * strength), 1.0);
+    gl_FragColor = vec4(mix(uVoid, color, line * strength), 1.0);
   }
 `;
 
@@ -58,6 +60,7 @@ export function createFloor([w, , d], color = PALETTE.amber) {
     fragmentShader,
     uniforms: {
       uColor: { value: new Color(color) },
+      uOuterColor: { value: new Color(PALETTE.outerGrid) },
       uVoid: { value: new Color(PALETTE.void) },
       uRoomMin: { value: new Vector2(0, 0) },
       uRoomMax: { value: new Vector2(w, d) },

@@ -99,8 +99,8 @@ tried with `?scale=0.5` until the settings menu exists (Phase 4).
 effect pass keeps the post-processing cheap.
 
 ### D14 — 2026-09-25 — Amber is the default room color; outer floor grid is faint
-Rooms and the floor grid default to amber. Outside the room the floor grid
-is dim (about a third of the inside brightness) and fades out within
-5 units.
-**Why:** author's preference; a quieter surrounding keeps the focus on the
-room. Biome palettes (step 3) can still override the color per room.
+Rooms and the floor grid inside them default to amber. Outside the room the
+floor grid is a neutral dark gray and fades out within 5 units.
+**Why:** author's preference; a colorless surrounding makes it obvious to the
+player what is part of the room. Biome palettes (step 3) can still override
+the room color.
