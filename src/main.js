@@ -6,12 +6,14 @@ import { FixedLoop } from './core/loop.js';
 import { Input } from './core/input.js';
 import { DATA_FILES, SCHEMA_ERRORS } from './data/bundle.js';
 import { DataError, loadGameData } from './data/load.js';
-import { buildRoom } from './world/room.js';
+import { Game } from './game.js';
 import { Renderer } from './render/renderer.js';
 import { frameRoom } from './render/camera.js';
 import { createFloor } from './render/floor.js';
 import { createHoleView } from './render/hole-view.js';
 import { createObjectView, createRoomView } from './render/room-view.js';
+import { PlayerView } from './render/entity-view.js';
+import { HOLO_TIME } from './render/holo.js';
 import { showErrorScreen } from './ui/error-screen.js';
 
 const app = document.getElementById('app');
@@ -27,7 +29,8 @@ function boot() {
   // well-formed data.
   if (SCHEMA_ERRORS.length > 0) throw new DataError(SCHEMA_ERRORS);
   const content = loadGameData(DATA_FILES);
-  const room = buildRoom(content.rooms.get(content.world.start), content);
+  const game = new Game(content);
+  const room = game.room;
 
   // ?scale=0.5 tries a lower render scale until there is a settings menu.
   const renderScale = Number(new URLSearchParams(location.search).get('scale') ?? 1);
@@ -39,6 +42,8 @@ function boot() {
     createRoomView(room),
   );
   for (const object of room.objects) renderer.scene.add(createObjectView(object));
+  const playerView = new PlayerView(game);
+  renderer.scene.add(playerView.group);
   frameRoom(renderer.camera, room.size);
 
   renderer.hud.innerHTML = `
@@ -59,10 +64,13 @@ function boot() {
 
   function update() {
     input.sample();
+    game.update(input);
     ticksThisSecond++;
   }
 
   function render(alpha) {
+    playerView.sync(alpha);
+    HOLO_TIME.value = performance.now() / 1000;
     renderer.render();
 
     framesThisSecond++;
@@ -79,7 +87,8 @@ function boot() {
       `> ROOM ${room.id}\n` +
       `> TICK/S ${tps}  FPS ${fps}  ALPHA ${alpha.toFixed(2)}\n` +
       `> BUFFER ${renderer.bufferWidth}x${renderer.bufferHeight}\n` +
-      `> ACTIONS ${actions}`;
+      `> ACTIONS ${actions}\n` +
+      `> POS ${game.player.pos.map((v) => v.toFixed(2)).join(' ')}${game.player.grounded ? '  GROUNDED' : ''}`;
   }
 
   new FixedLoop({ update, render }).start();

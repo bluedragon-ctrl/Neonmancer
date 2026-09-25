@@ -147,3 +147,48 @@ dying in step 4, filling in step 5.
 **Why:** a trap and a push-puzzle element ("fill the pit to cross it")
 without real vertical space, which would need vertical exits and a deeper
 room model. Unlike Phase 2 void blocks, holes are at floor level.
+
+### D19 — 2026-09-25 — Fixed-height jumps with coyote time and a jump buffer
+Every jump reaches `jumpHeight` (1.2); releasing the key early does not cut
+it short. A jump still works a few ticks after leaving a ledge (coyote time)
+and a press shortly before landing is remembered (jump buffer).
+**Why:** puzzles rely on "a jump clears exactly one block" (D3); variable
+height would make that depend on how long the key is held. The small
+forgiveness windows make jumps feel responsive without changing their reach.
+
+### D20 — 2026-09-25 — Asset showcase page, deployed with the game
+`tools/showcase.html` renders every character and object type on a turntable
+with the game's own renderer. It is a second Vite entry, so it is also on
+GitHub Pages; the dev server port follows `PORT` so several worktrees can
+run side by side.
+**Why:** author's proposal: review and tune looks (wizard, crates, later
+monsters) without playing to them, locally or online.
+
+### D21 — 2026-09-25 — Wizard look: cone body, ball head, floating hands, tilted hat
+The wizard is a cone body, a ball head drawn as a globe, two floating ball
+hands (no arms) and a pointy hat (cone + brim) tilted back. Body and hat are
+magenta, head and hands cyan. The upright cone lines and the globe lines are
+thin and dark, the rims bright.
+**Why:** author's design. The hat tilt keeps the face visible from the
+isometric camera, which looks down on the brim; faint upright lines keep the
+silhouette clean.
+
+### D22 — 2026-09-25 — Characters use a hologram look
+Supersedes the line style of D21 (the wizard's shapes stay). Characters are
+smooth solids with a shader that keeps the core near-black and glows towards
+the silhouette (rim / Fresnel), faint scanlines drifting up, a thin outline
+from an inverted hull, and glowing eyes (`render/holo.js`). Outline width is
+in world units, which scale with the render height because the framing is
+fixed (D2). Rooms and objects stay wireframe.
+**Why:** author's choice after comparing toon, hologram and faceted mockups
+in the asset showcase. Wireframe globe lines made the ball head and face hard
+to read; the hologram reads as a figure, fits "programs in the Grid", and
+gives monsters a shared look (color + silhouette + eyes).
+
+### D23 — 2026-09-25 — Direction keys: Right goes up-right on screen
+Movement keys follow the grid axes rotated so that Right = −z (screen
+up-right), Up = −x (up-left), Left = +z (down-left), Down = +x (down-right).
+Replaces the step 1 mapping (Up = up-right, Right = down-right).
+**Why:** author's preference after playing: "right" should head to the
+upper right corner. Neither isometric mapping is standard; a setting with
+both (and the planned screen-relative mode) can come with the settings menu.

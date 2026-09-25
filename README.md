@@ -5,7 +5,8 @@ zapped into the Grid, a neon digital kingdom where magic and code are the same
 thing. Explore rooms, solve block puzzles, fight corrupted programs with spells
 and collect key fragments to reboot the Grid.
 
-> Status: early development — Phase 1 (v0.1, foundations). Not playable yet.
+> Status: early development — Phase 1 (v0.1, foundations). The wizard walks
+> and jumps around the first room; no goal yet.
 > Latest `main` build: https://bluedragon-ctrl.github.io/Neonmancer/
 
 ## Requirements
@@ -24,6 +25,10 @@ npm run build          # production build into dist/
 npm run preview        # serve the production build locally
 ```
 
+The asset showcase shows every character and object look side by side:
+`/tools/showcase.html` in the dev server or on the deployed site
+(`?asset=wizard` for a close-up).
+
 ## Project layout
 
 | Path | Contents |
@@ -32,7 +37,7 @@ npm run preview        # serve the production build locally
 | `data/` | All game content as JSON (rooms, definitions, biomes, world) |
 | `schemas/` | JSON Schema for every data format |
 | `tests/` | Unit tests (`node --test`) |
-| `tools/` | Dev tooling: data validation (Ajv), Vite plugin |
+| `tools/` | Dev tooling: data validation (Ajv), Vite plugin, asset showcase |
 | `docs/` | Architecture, design and the decision log |
 
 ## Documentation

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NEONMANCER — Asset showcase</title>
+    <link rel="stylesheet" href="/src/style.css" />
+    <style>
+      .showcase-title,
+      .showcase-label {
+        position: absolute;
+        color: var(--lime);
+        font-size: calc(22 * var(--u));
+        text-shadow: 0 0 calc(6 * var(--u)) var(--lime);
+      }
+      .showcase-title {
+        top: calc(32 * var(--u));
+        left: calc(40 * var(--u));
+      }
+      .showcase-label {
+        transform: translate(-50%, 0);
+        white-space: nowrap;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="./showcase.js"></script>
+  </body>
+</html>

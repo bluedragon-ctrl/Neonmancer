@@ -19,10 +19,10 @@ requestAnimationFrame(now)
   └─ FixedLoop.advance(elapsed): acc += elapsed
        while acc >= 1/60 (at most 5 steps, then the backlog is dropped):
           input.sample()          raw key state → actions {down, pressed, released}
-          game.update(input)      save prev positions → player → pushables → exits → events  (planned)
+          game.update(input)      player (saves prev position) → pushables, exits (planned) → events
           acc -= 1/60
        alpha = acc / (1/60)
-       views.sync(alpha)          render position = lerp(prev, curr, alpha)  (planned)
+       views.sync(alpha)          render position = lerp(prev, curr, alpha)
        renderer.render()          composer: render pass + one effect pass (bloom)
 ```
 
@@ -50,11 +50,11 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `data/room-data.js` | Shared reading of room data: block boxes → cells, exit defaults, sides |
 | `data/validate.js` | Semantic checks and readable error messages (Ajv schema pass is dev/CI) |
 | `data/load.js` | Validate the data files and build the content tables; throws `DataError` |
-| `world/grid.js` | 3D occupancy grid (static cells + resting pushables) |
+| `world/grid.js` | 3D occupancy grid: static cells, objects, room sides, hole tiles |
 | `world/room.js` | Runtime room built fresh from data on every entry (type defaults + overrides) |
 | `world/exits.js` | Exit openings, boundary walls with gaps, transition triggers |
-| `physics/collision.js` | Axis-separated AABB movement against grid, walls, moving bodies |
-| `entities/player.js` | Movement, jump, gravity, integrity, push intent |
+| `physics/collision.js` | Axis-separated AABB movement against the grid; surface below a body |
+| `entities/player.js` | Movement, jump, gravity, turning, death in holes, respawn (integrity, push intent later) |
 | `entities/pushable.js` | Rest → slide → fall → land state machine |
 | `render/viewport.js` | Letterbox, buffer size and 1080p-relative sizing math (pure, tested) |
 | `render/renderer.js` | WebGLRenderer, 16:9 stage + HUD overlay, DPR cap, render scale, resize |
@@ -66,12 +66,15 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/marks.js` | Face-mark line patterns for object styles (pure, tested) |
 | `render/hole-view.js` | Hole pits: walls fading to black, rim, short fading corner lines; outline math (tested) |
 | `render/room-view.js` | Static blocks (merged edges + instanced occluder faces), back walls, styled object views |
-| `render/entity-view.js` | Player / pushable meshes, interpolation, drop shadows |
+| `render/entity-view.js` | Player (later pushable) views, interpolation, glowing drop shadows |
+| `render/wizard.js` | Wizard model: parts as data (pure, tested), built in the hologram look |
+| `render/holo.js` | Hologram look for characters: rim-glow material, inverted-hull outline, eyes, shared clock |
 | `ui/hud.js` | DOM overlay: integrity, room name, terminal messages |
 | `ui/error-screen.js` | Startup error screen listing every data problem |
 | `tools/check-data.js` | Dev only: Ajv schema check + semantic checks over `data/` |
 | `tools/vite-plugin-data.js` | Dev only: runs the check in the dev server and fails the build on errors |
 | `tools/validate-data.js` | Dev only: `npm run validate:data` for CI |
+| `tools/showcase.html`, `tools/showcase.js` | Asset showcase page: every look on a turntable with the real renderer (also deployed) |
 | `debug/debug.js` | Collision boxes, FPS, room jump, invincibility |
 
 ## Input
@@ -92,10 +95,10 @@ physical key position, so WASD works on QWERTZ/AZERTY too). Once per tick
 
 Game code never reads raw keys.
 
-Movement follows grid axes: Up = −z (screen up-right), Right = +x,
-Down = +z, Left = −x.
+Movement follows grid axes (D23): Right = −z (screen up-right),
+Up = −x (screen up-left), Left = +z (down-left), Down = +x (down-right).
 
-## Collision *(planned)*
+## Collision
 
 The player is an AABB moved one axis at a time (x, z, then y). For each axis
 the solids are gathered from overlapped grid cells, the room boundary
@@ -103,7 +106,15 @@ the solids are gathered from overlapped grid cells, the room boundary
 Landing sets `grounded`. Speeds stay below 0.35 units per tick, so no swept
 collision is needed. No auto step-up: the wizard jumps.
 
-Pushables keep x/z on the grid. Walking into one along an axis for
+Solid for the player: static blocks, objects, the room sides (x/z outside
+the room) and everything below y = 0; above the room height is open. Exit
+openings in the sides come in step 6.
+
+The drop shadow sits on the highest solid surface under the body's
+footprint (`groundBelow`), computed from the interpolated render position;
+over a hole at floor level there is no shadow.
+
+*(planned, step 5)* Pushables keep x/z on the grid. Walking into one along an axis for
 `pushDelay` while grounded slides it one cell (both cells reserved while
 sliding) if the target cell is free and nothing rests on it (D4). Without
 support it falls with gravity and snaps to the grid on landing.
