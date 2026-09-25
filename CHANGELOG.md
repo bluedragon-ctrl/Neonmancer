@@ -8,4 +8,5 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 - Project scaffolding: Vite, placeholder title screen, unit tests with
-  `node --test`, GitHub Actions CI (test + build), PR template, docs skeleton.
+  `node --test`, GitHub Actions CI (test + build), GitHub Pages deploy of
+  `main`, PR template, docs skeleton.

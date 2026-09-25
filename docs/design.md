@@ -46,7 +46,7 @@ Each step is one branch and one PR; the game runs after every step.
 
 | # | Branch | Delivers |
 |---|---|---|
-| 0 | `chore/repo-setup` | Vite, README, docs skeleton, PR template, `.gitignore`, CI (test + build), placeholder title screen |
+| 0 | `chore/repo-setup` | Vite, README, docs skeleton, PR template, `.gitignore`, CI (test + build), GitHub Pages deploy of `main`, placeholder title screen |
 | 1 | `feat/loop-and-input` | Fixed-timestep loop and action mapping, with tests; on-screen readout of ticks and actions |
 | 2 | `feat/iso-renderer` | Letterboxed resolution-independent renderer, iso camera, neon lines, bloom, fading floor grid, back walls, demo blocks |
 | 3 | `feat/data-loading` | Schemas, Ajv plugin + semantic validation, `validate:data` in CI, room built from JSON, error screen |
@@ -55,7 +55,7 @@ Each step is one branch and one PR; the game runs after every step.
 | 6 | `feat/rooms-and-exits` | `world.json`, 3 connected test rooms, flip-screen transitions, room reset, respawn |
 | 7 | `feat/hud` | `strings.json`, integrity HUD, room name banner, terminal messages, fullscreen hint |
 | 8 | `feat/debug-mode` | Collision boxes, FPS, room jump, invincibility, test damage key |
-| 9 | `chore/release-0.1.0` | Docs pass, CHANGELOG, `v0.1.0` tag and release, GitHub Pages deploy |
+| 9 | `chore/release-0.1.0` | Docs pass, CHANGELOG, `v0.1.0` tag and GitHub Release |
 
 ### Data formats (draft)
 

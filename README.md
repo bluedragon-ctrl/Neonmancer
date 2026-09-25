@@ -6,6 +6,7 @@ thing. Explore rooms, solve block puzzles, fight corrupted programs with spells
 and collect key fragments to reboot the Grid.
 
 > Status: early development — Phase 1 (v0.1, foundations). Not playable yet.
+> Latest `main` build: https://bluedragon-ctrl.github.io/Neonmancer/
 
 ## Requirements
 

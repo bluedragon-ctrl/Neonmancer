@@ -73,3 +73,10 @@ the PR manually.
 `.gitattributes` forces LF in the repo.
 **Why:** development on multiple machines (Windows included) must not
 produce whole-file line-ending diffs.
+
+### D11 — 2026-09-25 — GitHub Pages deploys every push to main
+A workflow builds and deploys `main` to GitHub Pages on each push (Pages
+source: "GitHub Actions"). Vite uses a relative `base: './'`, so the build
+works under `/Neonmancer/`. This replaces "deploy on release" for now.
+**Why:** the author tests the latest `main` online, from any computer.
+Release-only deploys can come back later (e.g. a separate test URL) if needed.

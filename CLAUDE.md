@@ -274,7 +274,8 @@ not critical.
 - Separate version numbers for: game (package.json), save-key format, data
   schema (`src/core/version.js`).
 - CI (GitHub Actions): on PR run tests, data validation and build;
-  on release deploy to GitHub Pages.
+  every push to `main` builds and deploys to GitHub Pages for testing
+  (release-only deploys may return later).
 - Docs: README.md, CLAUDE.md, docs/architecture.md, docs/design.md,
   docs/decisions.md (decision log). JSDoc on public modules.
 - Never commit secrets; keep .gitignore current.
