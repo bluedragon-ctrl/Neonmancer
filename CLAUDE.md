@@ -29,8 +29,8 @@ mobile/touch support, backend or accounts.
 ## 2. Tech stack
 
 - Plain JavaScript (ES modules), Vite for dev server and build
-- three.js for rendering: orthographic isometric camera, EdgesGeometry /
-  Line2 for thick neon edges
+- three.js for rendering: orthographic isometric camera, thick neon edges
+  with LineSegments2 (block edges computed from the grid, see D12)
 - pmndrs `postprocessing` for effects (bloom, pixelation, noise, scanlines,
   chromatic aberration, glitch), merged into as few passes as possible
 - Custom AABB grid collision — no physics engine
@@ -146,7 +146,7 @@ AI is implemented as named behavior modules referenced from data.
 Each room has a biome defining look and optional environmental effects,
 defined in data and combinable. Health pickups and safe rooms balance
 drain effects.
-- **Home Lattice** — cyan, safe
+- **Home Lattice** — amber (the default room color), safe
 - **Glitch Zone** — magenta, slow health drain
 - **Low-Res Zone** — pixelated, reduced visibility
 - **Zero-G Sector** — low gravity

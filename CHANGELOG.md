@@ -14,4 +14,9 @@ and the project uses [Semantic Versioning](https://semver.org/).
   alpha for rendering, capped catch-up).
 - Action-mapped keyboard input with default bindings; taps shorter than a
   tick are never lost.
-- Temporary on-screen readout of ticks, TPS, FPS and active actions.
+- Temporary on-screen readout of TPS, FPS, buffer size and active actions.
+- Isometric neon renderer: letterboxed 16:9 stage, capped pixel ratio and
+  render scale (`?scale=0.5`), fixed isometric camera, thick neon edges
+  scaled with render height, bloom, amber room grid on a fading dark-gray
+  infinite floor grid, back walls
+  and a hand-made demo room with dark occluding block faces.

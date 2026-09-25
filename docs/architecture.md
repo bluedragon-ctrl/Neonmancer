@@ -23,7 +23,7 @@ requestAnimationFrame(now)
           acc -= 1/60
        alpha = acc / (1/60)
        views.sync(alpha)          render position = lerp(prev, curr, alpha)  (planned)
-       composer.render()          (planned)
+       renderer.render()          composer: render pass + one effect pass (bloom)
 ```
 
 Game logic only ever sees `dt = 1/60`, so behaviour is identical at any
@@ -51,11 +51,13 @@ made-up frame times.
 | `physics/collision.js` | Axis-separated AABB movement against grid, walls, moving bodies |
 | `entities/player.js` | Movement, jump, gravity, integrity, push intent |
 | `entities/pushable.js` | Rest → slide → fall → land state machine |
-| `render/renderer.js` | WebGLRenderer, 16:9 letterbox, DPR cap, render scale, resize |
+| `render/viewport.js` | Letterbox, buffer size and 1080p-relative sizing math (pure, tested) |
+| `render/renderer.js` | WebGLRenderer, 16:9 stage + HUD overlay, DPR cap, render scale, resize |
 | `render/camera.js` | Fixed isometric orthographic camera |
-| `render/neon.js` | Neon materials; line widths scaled by render height |
+| `render/neon.js` | Palette, line and face materials; line widths scaled by render height |
 | `render/post.js` | pmndrs postprocessing composer (bloom) |
 | `render/floor.js` | Infinite grid floor fading into darkness |
+| `render/edges.js` | Visible block edges from grid occupancy (pure, tested) |
 | `render/room-view.js` | Merged edges + instanced occluder faces for static blocks; back walls |
 | `render/entity-view.js` | Player / pushable meshes, interpolation, drop shadows |
 | `ui/hud.js` | DOM overlay: integrity, room name, terminal messages |
@@ -95,12 +97,23 @@ Pushables keep x/z on the grid. Walking into one along an axis for
 sliding) if the target cell is free and nothing rests on it (D4). Without
 support it falls with gravity and snaps to the grid on landing.
 
-## Resolution independence *(planned)*
+## Rendering
 
-- Canvas CSS size = largest 16:9 rectangle inside the window; the rest is letterbox.
-- Drawing buffer = CSS size × min(devicePixelRatio, 2) × renderScale (0.5–1.0).
-- Fixed orthographic view height (D2), so framing never depends on resolution.
-- Line widths = base × bufferHeight / 1080; HUD uses `--u = viewportHeight / 1080`.
+- The stage (canvas + HUD overlay) is the largest 16:9 rectangle inside the
+  window; the rest is black letterbox.
+- Drawing buffer = stage CSS size × min(devicePixelRatio, 2) × renderScale
+  (0.5–1.0, try `?scale=0.5`).
+- Fixed orthographic view height of 20 units (D2), so framing never depends
+  on resolution; `frameRoom()` centers the room.
+- Sizes are given in pixels at 1080p: line widths = base × bufferHeight / 1080;
+  the HUD uses the CSS variable `--u` (1080p pixel), set on the stage.
+- Static blocks: dark instanced cubes (pushed back with polygon offset) plus
+  one `LineSegments2` of edges from `blockEdges()` (D5, D12). Back walls are
+  dark planes with a faint grid and a bright outline.
+- The floor is one large plane with a grid shader that fades with distance
+  from the room and has the void color, so it melts into the background.
+- Composer: half-float buffers, 4× MSAA, render pass + one effect pass
+  (bloom with mipmap blur, which scales with resolution by itself) (D13).
 
 ## Data validation *(planned)*
 

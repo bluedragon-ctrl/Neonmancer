@@ -80,3 +80,28 @@ source: "GitHub Actions"). Vite uses a relative `base: './'`, so the build
 works under `/Neonmancer/`. This replaces "deploy on release" for now.
 **Why:** the author tests the latest `main` online, from any computer.
 Release-only deploys can come back later (e.g. a separate test URL) if needed.
+
+### D12 — 2026-09-25 — Block edges from a corner rule, not EdgesGeometry
+Static block edges are computed from grid occupancy (`render/edges.js`): an
+edge is drawn when the four cells around it form an outer or inner corner,
+and collinear pieces are merged. The result is drawn as one `LineSegments2`
+(thick lines); faces are one `InstancedMesh` of dark cubes.
+**Why:** `EdgesGeometry` works per mesh and would draw lines between
+neighbouring blocks (D5 wants them dropped); the corner rule is simple,
+exact for grid blocks and unit tested.
+
+### D13 — 2026-09-25 — Render pipeline: half-float, 4× MSAA, one effect pass
+The composer renders into half-float buffers (colors above 1 feed the bloom)
+with 4× multisampling to smooth lines. The canvas itself has no antialias or
+depth buffer. All effects share one `EffectPass`. The render scale can be
+tried with `?scale=0.5` until the settings menu exists (Phase 4).
+**Why:** smooth neon lines and a controllable glow at a fixed cost; one
+effect pass keeps the post-processing cheap.
+
+### D14 — 2026-09-25 — Amber is the default room color; outer floor grid is dark gray
+Rooms and the floor grid inside them default to amber. Outside the room the
+floor grid is a neutral dark gray and fades out within 5 units.
+**Why:** author's preference; a colorless surrounding makes it obvious to the
+player what is part of the room. Biome palettes (step 3) can still override
+the room color. Home Lattice, the default safe biome, is amber (was cyan
+in CLAUDE.md §5); other biomes use their own colors.
