@@ -211,3 +211,16 @@ at 3 units/s. A plugged hole keeps its object, top flush with the floor.
 reserved cells, and the same code handles standing on crates, crates
 landing on the wizard and crates in holes. Showing the plug makes it
 obvious where the pit was filled.
+
+### D26 — 2026-09-25 — Flip-screen exits keep the offset; the arrival is the respawn point
+Leaving through an exit enters the connected room instantly, half a cell
+inside the matching exit, with the same offset along the edge and height
+above the exit floor; fall speed and facing carry over. The arrival point
+on the exit floor becomes the room's respawn point. Exits on the open front
+sides are marked with floor chevrons; back exits are doorways cut out of
+the wall. Objects cannot be pushed out of a room, and the first row inside
+an exit must be free (validated).
+**Why:** keeping the offset makes the two rooms feel joined; respawning at
+the entrance matches "recompile at the room entrance" (CLAUDE.md §4). The
+front sides have no wall, so without a mark a front exit is only a gap in a
+thin floor line. Objects leaving would be lost, since rooms reset.

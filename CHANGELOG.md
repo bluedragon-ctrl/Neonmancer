@@ -46,3 +46,13 @@ and the project uses [Semantic Versioning](https://semver.org/).
   while falling and can't be pushed with something on top. A crate pushed
   into a hole plugs it and the tile becomes floor.
 - Dying resets the room.
+- Flip-screen exits: doorways in the back walls, chevron-marked gaps on
+  the front sides; walking out loads the connected room at the matching
+  exit (offset along the edge kept), which becomes the respawn point.
+  Crates can't be pushed out of a room; the first row inside an exit is
+  validated to be free.
+- Three connected test rooms: Boot Sector, Cache Hall (pit puzzle) and
+  Stack Yard (stacked crates, Glitch Zone color).
+
+### Removed
+- The four box-look crates in Boot Sector (the asset showcase shows them).
