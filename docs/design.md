@@ -43,9 +43,21 @@ drifting up and a thin neon outline. Proportions are `WIZARD` in
 
 ## Pushing
 
-- Push by walking into an object along a grid axis while standing on the ground.
-- One object at a time; an object with something on top cannot be pushed.
-- A pushed object slides one cell, then falls if nothing supports it.
+- Push by walking into an object along a grid axis while standing on the
+  ground at its level, with the wizard's center lined up with the object
+  (grazing a corner doesn't push). After 8 ticks (~0.13 s) it slides one
+  cell at 3 units/s, slower than walking, so the wizard visibly shoves it.
+  Holding the key keeps pushing, cell after cell.
+- One object at a time; an object with something on top (another object or
+  the wizard) cannot be pushed (D4). No chain pushing.
+- The target cell must be free: no block, room side, object or wizard.
+- A pushed object slides one cell, then falls at once if nothing supports
+  it; it lands on blocks, other objects or the floor, so objects stack.
+  Falling objects show a drop shadow in their own color.
+- An object falling onto the wizard rests on his head and falls on when he
+  steps away.
+- Tuning values: `PUSHABLE` in `src/entities/pushable.js`, `pushDelay` in
+  `PLAYER`.
 
 ## Holes
 
@@ -54,9 +66,11 @@ drifting up and a thin neon outline. Proportions are `WIZARD` in
 - The player dies when the center of his hitbox is over a hole at floor
   level (grazing the edge is safe; jumping over is safe), drops into the pit
   and respawns at the room entrance (for now the room spawn) after 0.75 s.
+  Respawning resets the room (D24).
 - A block pushed onto a hole drops in and fills it: the hole becomes
-  walkable floor and the block is used up. Puzzle idea: push the crate into
-  the pit to cross it.
+  walkable floor and the block is used up: only its top stays visible,
+  flush with the floor (objects are never drawn below the floor, so a
+  crate dropping in sinks out of sight). Puzzle idea: push the crate into the pit to cross it.
 - No way down: holes are only a look plus a rule, never a real lower level.
 
 ## Rooms and exits

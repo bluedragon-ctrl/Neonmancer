@@ -19,7 +19,7 @@ requestAnimationFrame(now)
   └─ FixedLoop.advance(elapsed): acc += elapsed
        while acc >= 1/60 (at most 5 steps, then the backlog is dropped):
           input.sample()          raw key state → actions {down, pressed, released}
-          game.update(input)      player (saves prev position) → pushables, exits (planned) → events
+          game.update(input)      player → his push → pushables (lowest first) → exits (planned) → events
           acc -= 1/60
        alpha = acc / (1/60)
        views.sync(alpha)          render position = lerp(prev, curr, alpha)
@@ -55,7 +55,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `world/exits.js` | Exit openings, boundary walls with gaps, transition triggers |
 | `physics/collision.js` | Axis-separated AABB movement against the grid; surface below a body |
 | `entities/player.js` | Movement, jump, gravity, turning, death in holes, respawn (integrity, push intent later) |
-| `entities/pushable.js` | Rest → slide → fall → land state machine |
+| `entities/pushable.js` | Rest → slide → fall → land / plug-a-hole state machine |
 | `render/viewport.js` | Letterbox, buffer size and 1080p-relative sizing math (pure, tested) |
 | `render/renderer.js` | WebGLRenderer, 16:9 stage + HUD overlay, DPR cap, render scale, resize |
 | `render/camera.js` | Fixed isometric orthographic camera |
@@ -106,18 +106,37 @@ the solids are gathered from overlapped grid cells, the room boundary
 Landing sets `grounded`. Speeds stay below 0.35 units per tick, so no swept
 collision is needed. No auto step-up: the wizard jumps.
 
-Solid for the player: static blocks, objects, the room sides (x/z outside
-the room) and everything below y = 0; above the room height is open. Exit
-openings in the sides come in step 6.
+Solid for the player: static blocks, the room sides (x/z outside the room)
+and everything below y = 0 (the grid), plus pushable objects as moving
+bodies; above the room height is open. Exit openings in the sides come in
+step 6.
 
-The drop shadow sits on the highest solid surface under the body's
-footprint (`groundBelow`), computed from the interpolated render position;
-over a hole at floor level there is no shadow.
+Pushables are not grid cells: each is a body with a `box()`, and
+`moveAxis` clamps against bodies like against cells and reports which body
+stopped the move. The player is a body too, so objects can rest on him and
+never slide into him.
 
-*(planned, step 5)* Pushables keep x/z on the grid. Walking into one along an axis for
-`pushDelay` while grounded slides it one cell (both cells reserved while
-sliding) if the target cell is free and nothing rests on it (D4). Without
-support it falls with gravity and snaps to the grid on landing.
+The drop shadow sits on the highest surface under the footprint
+(`surfaceBelow`: cells, bodies, floor), computed from the interpolated
+render position; over a hole at floor level there is no shadow.
+
+Pushing: the player counts ticks of walking into the same pushable along
+one axis (grounded, at its level, lined up); from `pushDelay` on he sets
+`pushIntent`, and the game calls `pushable.push()`, which starts a slide if
+the object rests, is supported, has nothing on top (D4) and the target cell
+is free. A slide moves x/z towards the target cell (waiting if something
+steps into the way); on arrival the object falls at once if unsupported.
+Falling ends on the highest surface below; above a hole at floor level
+that is −1, the object becomes `plugged` and `grid.fillHole()` turns the
+tile into floor. Object views are clipped at y = 0 (a clipping plane), so
+a sinking or plugged object shows nothing below the floor.
+
+## Room reset
+
+`Game.enterRoom()` rebuilds everything from data. It runs on entry and when
+the wizard respawns after dying (D24); `update()` then reports a `room`
+event and `main.js` rebuilds the room's views (`disposeTree()` frees the
+old ones).
 
 ## Rendering
 

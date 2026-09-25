@@ -1,10 +1,14 @@
 /**
- * Axis-separated AABB movement against the solid cells of a grid.
+ * Axis-separated AABB movement against the solid cells of a grid and
+ * against moving bodies (pushable objects).
  *
  * A body is a box given by its feet center `pos` [x, y, z] (bottom middle)
  * and `size` [x, y, z]. It moves one axis at a time; after each axis move
  * any overlap with a solid cell is resolved by pushing the box back to the
  * cell face. Speeds stay below one unit per tick, so no swept test is needed.
+ *
+ * Bodies are anything with `box()` returning [[minX, maxX], [minY, maxY],
+ * [minZ, maxZ]] (pushables); the mover never collides with itself.
  */
 
 /** Overlaps smaller than this don't count, so touching faces never collide. */
@@ -21,6 +25,11 @@ export function bodyBox(pos, size) {
     [pos[1], pos[1] + size[1]],
     [pos[2] - size[2] / 2, pos[2] + size[2] / 2],
   ];
+}
+
+/** Do two [min, max] intervals overlap by more than EPS? */
+export function overlaps([a0, a1], [b0, b1]) {
+  return a0 < b1 - EPS && b0 < a1 - EPS;
 }
 
 /** Integer cell range [lo, hi] a [min, max] interval overlaps. */
@@ -43,15 +52,18 @@ export function overlapsSolid(box, grid) {
 }
 
 /**
- * Move a body along one axis, stopping at the first solid cell face.
- * Changes `pos` in place and returns true if the move was blocked.
+ * Move a body along one axis, stopping at the first solid cell face or body.
+ * Changes `pos` in place. Returns false if the move was free, the body that
+ * stopped it, or true for a cell (a body wins if both touch).
  * @param {number[]} pos feet center, updated
  * @param {number[]} size
  * @param {0|1|2} axis
  * @param {number} delta
  * @param {{ isSolid(x: number, y: number, z: number): boolean }} grid
+ * @param {Iterable<{ box(): number[][] }>} [bodies] moving bodies
+ * @param {object} [self] the mover itself, skipped among the bodies
  */
-export function moveAxis(pos, size, axis, delta, grid) {
+export function moveAxis(pos, size, axis, delta, grid, bodies = [], self = null) {
   if (delta === 0) return false;
   pos[axis] += delta;
 
@@ -75,23 +87,64 @@ export function moveAxis(pos, size, axis, delta, grid) {
       }
     }
   }
+
+  // Offsets from the reference point to the box faces on this axis.
+  const toMin = pos[axis] - box[axis][0];
+  const toMax = box[axis][1] - pos[axis];
+  for (const body of bodies) {
+    if (body === self) continue;
+    const other = body.box();
+    if (!other.every((range, i) => overlaps(box[i], range))) continue;
+    const stop = delta > 0 ? other[axis][0] - toMax : other[axis][1] + toMin;
+    if (delta > 0 ? stop <= limit : stop >= limit) {
+      limit = stop;
+      blocked = body;
+    }
+  }
   pos[axis] = limit;
   return blocked;
 }
 
 /**
- * Height of the highest solid surface under the body's footprint, at or
- * below its feet (the floor is at 0). Used for the drop shadow.
+ * Height of the highest solid surface under the footprint of a box, at or
+ * below its bottom: static cells, bodies, or the floor at 0. Used for drop
+ * shadows and for landing pushables.
+ * @param {number[][]} box [[minX, maxX], [minY, maxY], [minZ, maxZ]]
+ * @param {{ isSolid(x: number, y: number, z: number): boolean }} grid
+ * @param {Iterable<{ box(): number[][] }>} [bodies]
+ * @param {object} [self] skipped among the bodies
+ */
+export function surfaceBelow(box, grid, bodies = [], self = null) {
+  const [x0, x1] = cellRange(box[0]);
+  const [z0, z1] = cellRange(box[2]);
+  const bottom = box[1][0];
+  let top = 0;
+  search: for (let y = Math.floor(bottom + EPS) - 1; y >= 0; y--) {
+    for (let x = x0; x <= x1; x++) {
+      for (let z = z0; z <= z1; z++) {
+        if (grid.isSolid(x, y, z)) {
+          top = y + 1;
+          break search;
+        }
+      }
+    }
+  }
+  for (const body of bodies) {
+    if (body === self) continue;
+    const other = body.box();
+    if (!overlaps(box[0], other[0]) || !overlaps(box[2], other[2])) continue;
+    if (other[1][1] <= bottom + EPS) top = Math.max(top, other[1][1]);
+  }
+  return top;
+}
+
+/**
+ * Surface height under a body given by its feet center (the player).
  * @param {number[]} pos feet center
  * @param {number[]} size
  * @param {{ isSolid(x: number, y: number, z: number): boolean }} grid
+ * @param {Iterable<{ box(): number[][] }>} [bodies]
  */
-export function groundBelow(pos, size, grid) {
-  const box = bodyBox(pos, size);
-  const [x0, x1] = cellRange(box[0]);
-  const [z0, z1] = cellRange(box[2]);
-  for (let y = Math.floor(pos[1] + EPS) - 1; y >= 0; y--) {
-    for (let x = x0; x <= x1; x++) for (let z = z0; z <= z1; z++) if (grid.isSolid(x, y, z)) return y + 1;
-  }
-  return 0;
+export function groundBelow(pos, size, grid, bodies = []) {
+  return surfaceBelow(bodyBox(pos, size), grid, bodies);
 }

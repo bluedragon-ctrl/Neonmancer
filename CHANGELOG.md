@@ -29,7 +29,7 @@ and the project uses [Semantic Versioning](https://semver.org/).
   `defs.json`, shown side by side in Boot Sector.
 - Floor holes in room data (`holes`): drawn as black pits on a faintly
   tinted room floor, validated (inside the room, nothing standing in them,
-  spawn not above one). Fillable in the next step.
+  spawn not above one).
 - The wizard, drawn as a hologram (dark core, glowing silhouette,
   scanlines, neon outline, glowing eyes): magenta cone body and tilted
   pointy hat, cyan ball head and floating hands; walks along the grid axes
@@ -41,3 +41,8 @@ and the project uses [Semantic Versioning](https://semver.org/).
   room spawn.
 - Asset showcase (`/tools/showcase.html`): every character and object look
   on a turntable, also on the deployed site.
+- Pushable crates: walk into one to shove it a cell (hold to keep pushing);
+  crates fall off ledges, stack, rest on the wizard, show a drop shadow
+  while falling and can't be pushed with something on top. A crate pushed
+  into a hole plugs it and the tile becomes floor.
+- Dying resets the room.

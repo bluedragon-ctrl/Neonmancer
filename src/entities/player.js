@@ -1,10 +1,10 @@
 /**
- * The wizard: movement along the grid axes, jump, gravity, death in holes
- * and respawn. Pure logic, one call to update() per fixed tick.
+ * The wizard: movement along the grid axes, jump, gravity, pushing, death
+ * in holes and respawn. Pure logic, one call to update() per fixed tick.
  */
 import { DT } from '../core/loop.js';
 import { PLAYER_HITBOX } from '../core/rules.js';
-import { moveAxis } from '../physics/collision.js';
+import { bodyBox, moveAxis } from '../physics/collision.js';
 
 /** Tuning values (units, seconds, ticks). */
 export const PLAYER = {
@@ -20,6 +20,8 @@ export const PLAYER = {
   maxFall: 18,
   /** A jump still works this many ticks after walking off a ledge. */
   coyoteTicks: 6,
+  /** Ticks of walking into an object before it moves (a short, deliberate shove). */
+  pushDelay: 8,
   /** A jump pressed this many ticks before landing still happens on landing. */
   jumpBufferTicks: 6,
   /** Share of the remaining turn done each tick. */
@@ -65,17 +67,29 @@ export class Player {
     this.deathTimer = 0;
     this.coyote = 0;
     this.jumpBuffer = 0;
+    /** Object being walked into, and for how many ticks. */
+    this.pushTarget = null;
+    this.pushTicks = 0;
+    /** Set when a push is due this tick: { body, dir: [dx, dz] }; the game carries it out. */
+    this.pushIntent = null;
+  }
+
+  /** Collision box, so objects can rest on and avoid the wizard. */
+  box() {
+    return bodyBox(this.pos, this.size);
   }
 
   /**
    * One fixed tick.
    * @param {{ down(a: string): boolean, pressed(a: string): boolean }} input
    * @param {import('../world/grid.js').Grid} grid
+   * @param {Iterable<{ box(): number[][] }>} [bodies] pushable objects
    * @returns {string|null} event: 'jump', 'land', 'die', 'respawn' or null
    */
-  update(input, grid) {
+  update(input, grid, bodies = []) {
     this.prev = [...this.pos];
     this.prevFacing = this.facing;
+    this.pushIntent = null;
 
     if (this.dead) {
       // Drop into the pit (drifting to the middle of the hole tile, so the
@@ -105,9 +119,12 @@ export class Player {
     this.moving = dx !== 0 || dz !== 0;
     if (this.moving) {
       const step = (PLAYER.speed * DT) / Math.hypot(dx, dz);
-      moveAxis(this.pos, this.size, 0, dx * step, grid);
-      moveAxis(this.pos, this.size, 2, dz * step, grid);
+      const hitX = moveAxis(this.pos, this.size, 0, dx * step, grid, bodies, this);
+      const hitZ = moveAxis(this.pos, this.size, 2, dz * step, grid, bodies, this);
       this.targetFacing = Math.atan2(dx, dz);
+      this.trackPush(dx === 0 ? hitZ : dz === 0 ? hitX : null, [dx, dz]);
+    } else {
+      this.trackPush(null);
     }
     // Turn quickly but visibly towards the walking direction.
     const turn = Math.atan2(Math.sin(this.targetFacing - this.facing), Math.cos(this.targetFacing - this.facing));
@@ -128,7 +145,7 @@ export class Player {
     const vy = this.vy;
     this.vy = Math.max(vy - PLAYER.gravity * DT, -PLAYER.maxFall);
     const wasGrounded = this.grounded;
-    const blocked = moveAxis(this.pos, this.size, 1, ((vy + this.vy) / 2) * DT, grid);
+    const blocked = moveAxis(this.pos, this.size, 1, ((vy + this.vy) / 2) * DT, grid, bodies, this);
     if (blocked) {
       this.grounded = this.vy < 0;
       this.vy = 0;
@@ -146,5 +163,32 @@ export class Player {
       return 'die';
     }
     return event;
+  }
+
+  /**
+   * Count how long the wizard walks into the same object along one axis,
+   * standing on the ground at its level and lined up with it; from
+   * pushDelay ticks on, a push is due every tick until the object moves.
+   * @param {object|boolean|null} hit what stopped the walk (a body, or true for a wall)
+   * @param {number[]} [dir] [dx, dz] walking direction
+   */
+  trackPush(hit, dir) {
+    const body = hit && typeof hit === 'object' && hit.push ? hit : null;
+    if (!body || !this.grounded || !this.linedUp(body, dir)) {
+      this.pushTarget = null;
+      this.pushTicks = 0;
+      return;
+    }
+    this.pushTicks = body === this.pushTarget ? this.pushTicks + 1 : 1;
+    this.pushTarget = body;
+    if (this.pushTicks >= PLAYER.pushDelay) this.pushIntent = { body, dir: dir.map(Math.sign) };
+  }
+
+  /** Feet at the object's level, and the wizard's center within its span across the push. */
+  linedUp(body, [dx]) {
+    const box = body.box();
+    const across = dx !== 0 ? 2 : 0;
+    const center = this.pos[across];
+    return Math.abs(this.pos[1] - box[1][0]) < 0.5 && center > box[across][0] && center < box[across][1];
   }
 }
