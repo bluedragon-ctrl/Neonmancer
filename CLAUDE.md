@@ -36,6 +36,9 @@ mobile/touch support, backend or accounts.
 - Custom AABB grid collision — no physics engine
 - Howler.js for music (looping, crossfades); ZzFX for sound effects
 - Web Audio AnalyserNode for audio-reactive visuals (later phase)
+- Ajv (dev-only) for JSON Schema validation in the dev server, build and CI;
+  not shipped to players
+- Tests: Node's built-in runner (`node --test`), no test framework
 - Static hosting on GitHub Pages; no backend
 
 ---
@@ -62,7 +65,12 @@ mobile/touch support, backend or accounts.
 ## 4. Locked design decisions
 
 ### Grid and rooms
-- 1 block = 1 unit (1x1x1). Player jump height: 1 unit.
+- Coordinates: y is up; room size is [x, y, z] = [width, height, depth];
+  the floor is at y = 0; back walls are the x = 0 and z = 0 planes.
+- 1 block = 1 unit (1x1x1). Player jump height: 1 unit (clears exactly one
+  block, never two).
+- Player hitbox 0.6 x 1.5 x 0.6 (the hat is visual only), so the wizard
+  needs 2 blocks of headroom.
 - Blocks snap to the grid; player and enemies move freely (sub-grid).
 - Room size: width + depth <= 32, height <= 6 (max 16x16; also e.g.
   20x12, 24x8). Mix of small (8x8), standard (12x12) and large (16x16).
@@ -79,6 +87,7 @@ mobile/touch support, backend or accounts.
 ### Depth readability
 - Glowing drop shadow directly under the player and falling objects.
 - Only back walls rendered; front walls omitted.
+- Neon edges are drawn over dark occluding faces, so hidden edges never show.
 - X-ray outline when the player is hidden behind blocks.
 - Movement along grid axes (screen-diagonal) by default;
   screen-relative mode as a later option.
@@ -88,6 +97,8 @@ mobile/touch support, backend or accounts.
   them), collapsing (vanish after being stepped on, optional respawn),
   hazard (deals damage), void (instant death when the player falls onto it).
 - Objects rest on and stack on each other (pushed off ledges, falling).
+- Push one object at a time; an object with something on top of it cannot
+  be pushed (only the top of a stack moves).
 - No basic carry action: the wizard can only push objects until he
   unlocks the Cut & Paste spell.
 - Frozen enemies can be stood on; active enemies cannot.
@@ -249,14 +260,22 @@ not critical.
 - Git: protected `main` (always playable), feature branches
   (`feat/cut-paste-spell`), pull requests. Use the GitHub CLI to open a
   PR for each step; the author reviews and merges.
+- Not every development computer has the GitHub CLI. If `gh` is missing,
+  push the branch and give the author a prefilled compare link
+  (`https://github.com/bluedragon-ctrl/Neonmancer/compare/main...<branch>?expand=1`)
+  plus the PR title and body, so they can create the PR manually.
+- CLAUDE.md is versioned in the repo so every machine shares it; put
+  working rules here, not in machine-local notes.
 - Conventional Commits (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`).
 - PR template: summary, how it was tested, docs updated.
 - Semantic Versioning: 0.x during development (0.1 = Phase 1, ...),
   1.0.0 for the first full release. Git tags, GitHub Releases,
   CHANGELOG.md.
-- Separate version numbers for: game, save-key format, data schema.
+- Separate version numbers for: game (package.json), save-key format, data
+  schema (`src/core/version.js`).
 - CI (GitHub Actions): on PR run tests, data validation and build;
-  on release deploy to GitHub Pages.
+  every push to `main` builds and deploys to GitHub Pages for testing
+  (release-only deploys may return later).
 - Docs: README.md, CLAUDE.md, docs/architecture.md, docs/design.md,
   docs/decisions.md (decision log). JSDoc on public modules.
 - Never commit secrets; keep .gitignore current.

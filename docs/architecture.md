@@ -1,0 +1,105 @@
+# Architecture
+
+How the code fits together. The vision and locked decisions are in
+[CLAUDE.md](../CLAUDE.md); reasons for decisions are in
+[decisions.md](decisions.md). Sections marked *(planned)* describe code that
+does not exist yet.
+
+## Overview
+
+The engine is generic; all content is JSON in `data/`, described by JSON
+Schema in `schemas/`. Data is bundled at build time
+(`import.meta.glob`), validated, merged with type defaults and turned into a
+runtime room every time the player enters it (rooms fully reset).
+
+## Frame flow *(planned)*
+
+```
+requestAnimationFrame(now)
+  └─ loop: acc += min(now - last, 250 ms)
+       while acc >= 1/60 (at most 5 steps):
+          input.sample()          raw key state → actions {down, pressed, released}
+          game.update(actions)    save prev positions → player → pushables → exits → events
+          input.endTick()         clear edge flags
+          acc -= 1/60
+       alpha = acc / (1/60)
+       views.sync(alpha)          render position = lerp(prev, curr, alpha)
+       composer.render()
+```
+
+Game logic only ever sees `dt = 1/60`, so behaviour is identical at any
+refresh rate.
+
+## Modules
+
+| Module | Responsibility |
+|---|---|
+| `main.js` | Bootstrap: load and validate data, build systems, start the loop, error screen |
+| `game.js` | Owns game state; fixed-order `update()`; room switching |
+| `core/version.js` | Game and data-schema version numbers |
+| `core/loop.js` | Fixed 60 Hz timestep, step clamp, interpolation alpha |
+| `core/input.js` | Raw keys → action states once per tick |
+| `core/bindings.js` | Default key → action map (the only place raw key codes appear) |
+| `core/events.js` | Small pub/sub between simulation, HUD and debug |
+| `data/validate.js` | Semantic checks and readable error messages (Ajv schema pass is dev/CI) |
+| `data/load.js` | Collect JSON, validate, merge type defaults with room overrides |
+| `world/grid.js` | 3D occupancy grid (static cells + resting pushables) |
+| `world/room.js` | Runtime room built fresh from data on every entry |
+| `world/exits.js` | Exit openings, boundary walls with gaps, transition triggers |
+| `physics/collision.js` | Axis-separated AABB movement against grid, walls, moving bodies |
+| `entities/player.js` | Movement, jump, gravity, integrity, push intent |
+| `entities/pushable.js` | Rest → slide → fall → land state machine |
+| `render/renderer.js` | WebGLRenderer, 16:9 letterbox, DPR cap, render scale, resize |
+| `render/camera.js` | Fixed isometric orthographic camera |
+| `render/neon.js` | Neon materials; line widths scaled by render height |
+| `render/post.js` | pmndrs postprocessing composer (bloom) |
+| `render/floor.js` | Infinite grid floor fading into darkness |
+| `render/room-view.js` | Merged edges + instanced occluder faces for static blocks; back walls |
+| `render/entity-view.js` | Player / pushable meshes, interpolation, drop shadows |
+| `ui/hud.js` | DOM overlay: integrity, room name, terminal messages |
+| `debug/debug.js` | Collision boxes, FPS, room jump, invincibility |
+
+## Input *(planned)*
+
+Key events update a raw key set. Each tick the input module converts it into
+actions (`move`, `jump`, `cast`, `cycleSpell`, `pause`, `map`, `debug`) with
+`down` / `pressed` / `released` flags. A press is latched until the next tick
+samples it, so taps shorter than a tick are not lost. Window blur releases
+everything. Game code never reads raw keys.
+
+Movement follows grid axes: Up = −z (screen up-right), Right = +x,
+Down = +z, Left = −x.
+
+## Collision *(planned)*
+
+The player is an AABB moved one axis at a time (x, z, then y). For each axis
+the solids are gathered from overlapped grid cells, the room boundary
+(except exit openings) and moving bodies, and the movement is clamped.
+Landing sets `grounded`. Speeds stay below 0.35 units per tick, so no swept
+collision is needed. No auto step-up: the wizard jumps.
+
+Pushables keep x/z on the grid. Walking into one along an axis for
+`pushDelay` while grounded slides it one cell (both cells reserved while
+sliding) if the target cell is free and nothing rests on it (D4). Without
+support it falls with gravity and snaps to the grid on landing.
+
+## Resolution independence *(planned)*
+
+- Canvas CSS size = largest 16:9 rectangle inside the window; the rest is letterbox.
+- Drawing buffer = CSS size × min(devicePixelRatio, 2) × renderScale (0.5–1.0).
+- Fixed orthographic view height (D2), so framing never depends on resolution.
+- Line widths = base × bufferHeight / 1080; HUD uses `--u = viewportHeight / 1080`.
+
+## Data validation *(planned)*
+
+1. JSON Schema (Ajv) — Vite plugin in dev/build and `npm run validate:data` in CI (D8).
+2. Semantic checks at runtime — width + depth ≤ 32, bounds, overlaps, known
+   types/biomes, exits on their edge, connections valid, spawn not inside a solid.
+
+Errors name the file and path, e.g.
+`rooms/cache_hall.json › blocks[3]: cell [12,0,4] is outside size [12,4,12]`.
+
+## Testing
+
+`npm test` runs Node's built-in test runner over `tests/**/*.test.js` (D7).
+Tests cover pure logic only (no DOM or WebGL).
