@@ -232,6 +232,7 @@ test('buildRoom expands blocks, merges type defaults and applies exit defaults',
       edges: 'solid',
       mark: 'none',
       faces: 'dark',
+      tint: 0.1,
     },
   ]);
   assert.deepEqual(room.exits, [{ id: 'east', side: '+x', at: 3, width: 2, y: 0, height: 2 }]);
@@ -254,6 +255,10 @@ test('object styles: overrides must use known values', () => {
     errorsAfter((f) => (f['rooms/alpha.json'].objects[0].overrides = { mark: 'stars' })),
     'objects[0].overrides',
     '"mark" must be one of none, inset, cross, brackets',
+  );
+  assertError(
+    errorsAfter((f) => (f['rooms/alpha.json'].objects[0].overrides = { tint: 1.5 })),
+    '"tint" must be between 0 and 1',
   );
   assertError(
     errorsAfter((f) => (f['rooms/alpha.json'].objects[0].overrides = { color: 'green' })),

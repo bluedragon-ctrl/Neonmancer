@@ -104,13 +104,13 @@ function lines(segments, material) {
  * View of one typed object: a single cell drawn in the object's style
  * (edges, face mark, faces), so types differ by more than color. Kept
  * separate from the static blocks because objects move (pushables, step 5).
- * @param {{ at: number[], color: string, edges: string, mark: string, faces: string }} object
+ * @param {{ at: number[], color: string, edges: string, mark: string, faces: string, tint: number }} object
  */
-export function createObjectView({ at, color, edges, mark, faces }) {
+export function createObjectView({ at, color, edges, mark, faces, tint }) {
   const group = new Group();
   const [x, y, z] = at;
 
-  const materials = faces === 'tinted' ? tintedFaceMaterials(color) : faceMaterial();
+  const materials = faces === 'tinted' ? tintedFaceMaterials(color, tint) : faceMaterial();
   const box = new Mesh(new BoxGeometry(1, 1, 1), materials);
   box.position.set(x + 0.5, y + 0.5, z + 0.5);
   group.add(box);

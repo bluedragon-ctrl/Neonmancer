@@ -105,7 +105,8 @@ Example room (12×12):
 - `blocks` — anonymous static geometry; `to` fills a box (inclusive).
 - `objects` — typed things with stable ids; `overrides` replace type defaults.
 - Object type style (D17): `edges` `solid`/`dashed`, `mark`
-  `none`/`inset`/`cross`/`brackets`, `faces` `dark`/`tinted` (defaults first).
+  `none`/`inset`/`cross`/`brackets`, `faces` `dark`/`tinted` (defaults first),
+  `tint` 0–1 (color share of a tinted top face, default 0.1).
   Objects may override them.
 - `world.json` pairs exits: `"connections": [["boot_sector.east", "cache_hall.west"]]`.
   Paired exits are on opposite sides and equally wide; every exit is connected.

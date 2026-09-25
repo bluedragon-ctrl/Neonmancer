@@ -37,6 +37,13 @@
           "enum": ["dark", "tinted"],
           "default": "dark",
           "description": "dark: like static blocks; tinted: faces shaded in the object color (top lighter)."
+        },
+        "tint": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.1,
+          "description": "With tinted faces: share of the object color in the top face; the sides get less."
         }
       }
     }

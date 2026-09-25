@@ -105,11 +105,12 @@ export function faceMaterial(color = PALETTE.face) {
  * darker, so the object reads as solid and "different" even in grayscale.
  * Returns one material per BoxGeometry face (+x, -x, +y, -y, +z, -z).
  * @param {number|string} color
+ * @param {number} tint share of the object color in the top face (0–1)
  */
-export function tintedFaceMaterials(color) {
+export function tintedFaceMaterials(color, tint) {
   const shade = (amount) => faceMaterial(new Color(PALETTE.face).lerp(new Color(color), amount));
-  const top = shade(0.16);
-  const right = shade(0.1); // +x side
-  const left = shade(0.06); // +z side
+  const top = shade(tint);
+  const right = shade(tint * 0.6); // +x side
+  const left = shade(tint * 0.4); // +z side
   return [right, right, top, top, left, left];
 }

@@ -47,7 +47,9 @@ export const OBJECT_STYLES = {
   faces: ['dark', 'tinted'],
 };
 
-/** Style defaults: the first value of each OBJECT_STYLES list. */
-export const OBJECT_STYLE_DEFAULTS = Object.fromEntries(
-  Object.entries(OBJECT_STYLES).map(([key, values]) => [key, values[0]]),
-);
+/** Style defaults: the first value of each OBJECT_STYLES list, plus the tint. */
+export const OBJECT_STYLE_DEFAULTS = {
+  ...Object.fromEntries(Object.entries(OBJECT_STYLES).map(([key, values]) => [key, values[0]])),
+  /** With tinted faces: share of the object color in the top face (0–1); sides get less. */
+  tint: 0.1,
+};

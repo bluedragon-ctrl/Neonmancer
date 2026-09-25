@@ -152,6 +152,8 @@ function validateRoom(file, room, { objectTypes, biomes }, report) {
           report(file, overridesPath, `"${key}" must be one of ${OBJECT_STYLES[key].join(', ')}`);
         } else if (key === 'color' && !/^#[0-9a-fA-F]{6}$/.test(value)) {
           report(file, overridesPath, `"color" must be #rrggbb`);
+        } else if (key === 'tint' && !(value >= 0 && value <= 1)) {
+          report(file, overridesPath, `"tint" must be between 0 and 1`);
         }
       }
     }
