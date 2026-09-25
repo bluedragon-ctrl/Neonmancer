@@ -5,5 +5,7 @@ export default defineConfig({
   base: './',
   build: {
     target: 'es2022',
+    // three.js alone is about 600 kB; one bundle is fine for a game.
+    chunkSizeWarningLimit: 1000,
   },
 });
