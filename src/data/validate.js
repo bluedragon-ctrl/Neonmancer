@@ -16,6 +16,7 @@ import {
   OBJECT_STYLE_DEFAULTS,
   OPPOSITE_SIDE,
   blockCells,
+  holeTiles,
   sideLength,
   withExitDefaults,
 } from './room-data.js';
@@ -160,6 +161,29 @@ function validateRoom(file, room, { objectTypes, biomes }, report) {
     fill(object.at, path);
   });
 
+  // Holes: floor tiles inside the room, nothing standing in them.
+  const holes = new Map(); // "x,z" → hole path
+  (room.holes ?? []).forEach((hole, i) => {
+    const path = `holes[${i}]`;
+    if (hole.to && hole.to.some((v, axis) => v < hole.at[axis])) {
+      report(file, path, `"to" ${cellText(hole.to)} must not be below "at" ${cellText(hole.at)} on any axis`);
+      return;
+    }
+    for (const [x, z] of holeTiles(hole)) {
+      const tile = cellText([x, z]);
+      const key = `${x},${z}`;
+      let problem = null;
+      if (x >= w || z >= d) problem = `tile ${tile} is outside size ${cellText(room.size)}`;
+      else if (holes.has(key)) problem = `tile ${tile} is already a hole in ${holes.get(key)}`;
+      else if (filled.has(`${x},0,${z}`)) problem = `tile ${tile} is under ${filled.get(`${x},0,${z}`)}`;
+      if (problem) {
+        report(file, path, problem);
+        break; // one problem per entry is enough
+      }
+      holes.set(key, path);
+    }
+  });
+
   // Spawn: the whole player hitbox inside the room and clear of solids.
   const [sx, sy, sz] = room.spawn;
   const [hw, hh, hd] = PLAYER_HITBOX;
@@ -174,6 +198,13 @@ function validateRoom(file, room, { objectTypes, biomes }, report) {
     });
     const hit = overlapped.find((cell) => filled.has(cell.join(',')));
     if (hit) report(file, 'spawn', `the player at ${cellText(room.spawn)} overlaps ${filled.get(hit.join(','))}`);
+
+    // Not above a hole unless a block below catches the player.
+    const [cx, cz] = [Math.floor(sx), Math.floor(sz)];
+    const caught = [...Array(Math.floor(sy)).keys()].some((y) => filled.has(`${cx},${y},${cz}`));
+    if (holes.has(`${cx},${cz}`) && !caught) {
+      report(file, 'spawn', `the player at ${cellText(room.spawn)} would fall into ${holes.get(`${cx},${cz}`)}`);
+    }
   }
 }
 

@@ -53,3 +53,15 @@ export const OBJECT_STYLE_DEFAULTS = {
   /** With tinted faces: share of the object color in the top face (0–1); sides get less. */
   tint: 0.1,
 };
+
+/**
+ * Every floor tile a hole entry covers: just `at`, or the rectangle from
+ * `at` to `to` (inclusive).
+ * @param {{ at: number[], to?: number[] }} hole
+ * @returns {number[][]} tiles as [x, z]
+ */
+export function holeTiles({ at, to = at }) {
+  const tiles = [];
+  for (let x = at[0]; x <= to[0]; x++) for (let z = at[1]; z <= to[1]; z++) tiles.push([x, z]);
+  return tiles;
+}

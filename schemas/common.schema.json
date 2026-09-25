@@ -29,6 +29,16 @@
       "items": false,
       "minItems": 3
     },
+    "tile": {
+      "description": "Floor tile [x, z]; fills [x, x+1] × [z, z+1] at floor level.",
+      "type": "array",
+      "prefixItems": [
+        { "type": "integer", "minimum": 0 },
+        { "type": "integer", "minimum": 0 }
+      ],
+      "items": false,
+      "minItems": 2
+    },
     "point": {
       "description": "Position [x, y, z] in world units.",
       "type": "array",

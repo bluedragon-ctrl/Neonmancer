@@ -282,3 +282,46 @@ test('object styles: the schema rejects unknown values in defs.json', () => {
 test('object styles: every mark in the data has a renderer pattern', () => {
   assert.deepEqual(OBJECT_STYLES.mark, MARKS);
 });
+
+test('holes: inside the room, not under blocks or objects, not twice', () => {
+  const addHole = (hole) => (f) => (f['rooms/alpha.json'].holes = [hole]);
+  assert.deepEqual(errorsAfter(addHole({ at: [6, 6], to: [7, 7] })), []);
+  assertError(errorsAfter(addHole({ at: [7, 8] })), 'holes[0]', 'tile [7,8] is outside size');
+  assertError(errorsAfter(addHole({ at: [4, 4] })), 'holes[0]', 'tile [4,4] is under blocks[0]');
+  assertError(errorsAfter(addHole({ at: [2, 5] })), 'holes[0]', 'is under objects[0]');
+  assertError(errorsAfter(addHole({ at: [3, 3], to: [2, 3] })), 'holes[0]', 'must not be below');
+  assertError(
+    errorsAfter((f) => (f['rooms/alpha.json'].holes = [{ at: [6, 6] }, { at: [5, 5], to: [6, 6] }])),
+    'holes[1]',
+    'already a hole in holes[0]',
+  );
+});
+
+test('holes: the player must not spawn above one', () => {
+  assertError(
+    errorsAfter((f) => (f['rooms/alpha.json'].holes = [{ at: [1, 1] }])),
+    'spawn',
+    'would fall into holes[0]',
+  );
+  // A block below the spawn catches the player.
+  assert.deepEqual(
+    errorsAfter((f) => {
+      const room = f['rooms/alpha.json'];
+      room.holes = [{ at: [4, 4] }];
+      room.blocks = [{ at: [4, 1, 4] }];
+      room.spawn = [4.5, 2, 4.5];
+    }),
+    [],
+  );
+});
+
+test('buildRoom expands hole rectangles into tiles', () => {
+  const files = validFiles();
+  files['rooms/alpha.json'].holes = [{ at: [6, 6], to: [7, 6] }, { at: [1, 6] }];
+  const content = loadGameData(files);
+  assert.deepEqual(buildRoom(content.rooms.get('alpha'), content).holes, [
+    [6, 6],
+    [7, 6],
+    [1, 6],
+  ]);
+});

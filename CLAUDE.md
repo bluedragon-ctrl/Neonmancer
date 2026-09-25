@@ -96,6 +96,9 @@ mobile/touch support, backend or accounts.
 - Types: static, pushable, moving (paths or up/down cycles; player rides
   them), collapsing (vanish after being stepped on, optional respawn),
   hazard (deals damage), void (instant death when the player falls onto it).
+- Holes: floor tiles (at y = 0) drawn as black pits. The player dies falling
+  in (a trap, no way back out); a block pushed into a hole drops in and fills
+  it, turning it into walkable floor. Holes never lead to another room.
 - Objects rest on and stack on each other (pushed off ledges, falling).
 - Push one object at a time; an object with something on top of it cannot
   be pushed (only the top of a stack moves).
@@ -289,7 +292,8 @@ Vite setup, repo scaffolding, README, docs skeleton, PR template, CI
 (test + build). Fixed-timestep loop and input mapping. Isometric camera,
 resolution-independent rendering, neon wireframe room with bloom, back
 walls only. Player movement, jumping, gravity, grid collision, drop
-shadow. Pushable objects that fall and stack. JSON Schema + validated
+shadow. Pushable objects that fall and stack; floor holes (death trap,
+filled by pushed blocks). JSON Schema + validated
 room loading; 2–3 connected test rooms with flip-screen exits. Health
 HUD. Debug mode.
 

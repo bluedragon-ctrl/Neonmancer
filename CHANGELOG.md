@@ -26,3 +26,6 @@ and the project uses [Semantic Versioning](https://semver.org/).
 - First room "Boot Sector" with two crates (not pushable yet).
 - Object type styles (dashed edges, face marks, tinted faces) so types
   differ by shape, not only color; Boot Sector shows a comparison row.
+- Floor holes in room data (`holes`): drawn as black pits on a faintly
+  tinted room floor, validated (inside the room, nothing standing in them,
+  spawn not above one). Deadly and fillable in the next steps.

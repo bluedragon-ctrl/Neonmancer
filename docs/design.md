@@ -31,6 +31,17 @@ same on QWERTY, QWERTZ and AZERTY keyboards.
 - One object at a time; an object with something on top cannot be pushed.
 - A pushed object slides one cell, then falls if nothing supports it.
 
+## Holes
+
+- Floor tiles marked in the room data; drawn as black pits with a bright rim
+  on a faintly tinted room floor.
+- The player dies when the center of his hitbox is over a hole at floor
+  level (grazing the edge is safe), then respawns at the room entrance.
+- A block pushed onto a hole drops in and fills it: the hole becomes
+  walkable floor and the block is used up. Puzzle idea: push the crate into
+  the pit to cross it.
+- No way down: holes are only a look plus a rule, never a real lower level.
+
 ## Rooms and exits
 
 - Horizontal exits only in Phase 1: an opening on one side of the room
@@ -52,9 +63,9 @@ Each step is one branch and one PR; the game runs after every step.
 | 0 | `chore/repo-setup` | Vite, README, docs skeleton, PR template, `.gitignore`, CI (test + build), GitHub Pages deploy of `main`, placeholder title screen |
 | 1 | `feat/loop-and-input` | Fixed-timestep loop and action mapping, with tests; on-screen readout of ticks and actions |
 | 2 | `feat/iso-renderer` | Letterboxed resolution-independent renderer, iso camera, neon lines, bloom, fading floor grid, back walls, demo blocks |
-| 3 | `feat/data-loading` | Schemas, Ajv plugin + semantic validation, `validate:data` in CI, room built from JSON, error screen |
-| 4 | `feat/player` | Wireframe wizard, movement, jump, gravity, grid collision, interpolation, drop shadow |
-| 5 | `feat/pushables` | Pushing, sliding, falling, stacking |
+| 3 | `feat/data-loading` | Schemas, Ajv plugin + semantic validation, `validate:data` in CI, room built from JSON, error screen, object styles, hole look |
+| 4 | `feat/player` | Wireframe wizard, movement, jump, gravity, grid collision, interpolation, drop shadow, death in holes + respawn |
+| 5 | `feat/pushables` | Pushing, sliding, falling, stacking, blocks filling holes |
 | 6 | `feat/rooms-and-exits` | `world.json`, 3 connected test rooms, flip-screen transitions, room reset, respawn |
 | 7 | `feat/hud` | `strings.json`, integrity HUD, room name banner, terminal messages, fullscreen hint |
 | 8 | `feat/debug-mode` | Collision boxes, FPS, room jump, invincibility, test damage key |
@@ -91,6 +102,7 @@ Example room (12×12):
     { "at": [0, 0, 0], "to": [2, 0, 3] },
     { "at": [3, 0, 0], "to": [5, 0, 0] }
   ],
+  "holes": [{ "at": [8, 8], "to": [9, 8] }],
   "objects": [
     { "id": "crate_a", "type": "crate", "at": [6, 0, 6] },
     { "id": "crate_b", "type": "crate", "at": [7, 0, 6], "overrides": { "color": "#00f0ff" } }
@@ -103,6 +115,7 @@ Example room (12×12):
   that side; `width` (default 2), `y` floor level (default 0), `height`
   (default 2).
 - `blocks` — anonymous static geometry; `to` fills a box (inclusive).
+- `holes` — floor tiles `[x, z]` that are pits; `to` fills a rectangle.
 - `objects` — typed things with stable ids; `overrides` replace type defaults.
 - Object type style (D17): `edges` `solid`/`dashed`, `mark`
   `none`/`inset`/`cross`/`brackets`, `faces` `dark`/`tinted` (defaults first),

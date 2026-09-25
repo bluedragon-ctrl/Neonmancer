@@ -39,6 +39,11 @@
       "type": "array",
       "items": { "$ref": "#/$defs/block" }
     },
+    "holes": {
+      "description": "Floor tiles that are pits: deadly for the player; a pushed block drops in and fills the hole.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/hole" }
+    },
     "objects": {
       "description": "Typed objects with stable ids (types from defs.json).",
       "type": "array",
@@ -74,6 +79,18 @@
         "to": {
           "$ref": "common.schema.json#/$defs/cell",
           "description": "Optional opposite corner; fills the box from at to to (inclusive)."
+        }
+      }
+    },
+    "hole": {
+      "type": "object",
+      "required": ["at"],
+      "additionalProperties": false,
+      "properties": {
+        "at": { "$ref": "common.schema.json#/$defs/tile" },
+        "to": {
+          "$ref": "common.schema.json#/$defs/tile",
+          "description": "Optional opposite corner; fills the rectangle from at to to (inclusive)."
         }
       }
     },

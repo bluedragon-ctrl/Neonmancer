@@ -132,3 +132,15 @@ inset square with tinted faces; static blocks stay plain.
 **Why:** color alone is not enough for color-blind players and gets washed
 out by bloom. Keeping the style in data lets every future type pick its look
 without code changes, and the room editor can preview it.
+
+### D18 — 2026-09-25 — Holes are floor tiles, not a lower level
+Rooms can mark floor tiles as holes (`holes`, `[x, z]` at y = 0). They are a
+look plus a rule: black pits (the floor shader cuts them out, pit walls fade
+to a black bottom, rim and fading rings for depth) on a faintly tinted room
+floor. The player dies when his hitbox center is over a hole at floor level;
+a pushed block drops in and fills the hole, making it floor. Holes never
+lead to another room. The data format, validation and look land in step 3,
+dying in step 4, filling in step 5.
+**Why:** a trap and a push-puzzle element ("fill the pit to cross it")
+without real vertical space, which would need vertical exits and a deeper
+room model. Unlike Phase 2 void blocks, holes are at floor level.

@@ -61,9 +61,10 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/camera.js` | Fixed isometric orthographic camera |
 | `render/neon.js` | Palette, line and face materials; line widths scaled by render height |
 | `render/post.js` | pmndrs postprocessing composer (bloom) |
-| `render/floor.js` | Infinite grid floor fading into darkness |
+| `render/floor.js` | Infinite grid floor fading into darkness; hole tiles cut out via a mask texture |
 | `render/edges.js` | Visible block edges from grid occupancy (pure, tested) |
 | `render/marks.js` | Face-mark line patterns for object styles (pure, tested) |
+| `render/hole-view.js` | Hole pits: walls fading to black, rim, depth rings; outline math (tested) |
 | `render/room-view.js` | Static blocks (merged edges + instanced occluder faces), back walls, styled object views |
 | `render/entity-view.js` | Player / pushable meshes, interpolation, drop shadows |
 | `ui/hud.js` | DOM overlay: integrity, room name, terminal messages |

@@ -10,6 +10,7 @@ import { buildRoom } from './world/room.js';
 import { Renderer } from './render/renderer.js';
 import { frameRoom } from './render/camera.js';
 import { createFloor } from './render/floor.js';
+import { createHoleView } from './render/hole-view.js';
 import { createObjectView, createRoomView } from './render/room-view.js';
 import { showErrorScreen } from './ui/error-screen.js';
 
@@ -32,7 +33,11 @@ function boot() {
   const renderScale = Number(new URLSearchParams(location.search).get('scale') ?? 1);
   const renderer = new Renderer(app, { renderScale });
 
-  renderer.scene.add(createFloor(room.size, room.color), createRoomView(room));
+  renderer.scene.add(
+    createFloor(room.size, room.color, room.holes),
+    createHoleView(room.holes, room.color),
+    createRoomView(room),
+  );
   for (const object of room.objects) renderer.scene.add(createObjectView(object));
   frameRoom(renderer.camera, room.size);
 
