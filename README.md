@@ -6,7 +6,8 @@ thing. Explore rooms, solve block puzzles, fight corrupted programs with spells
 and collect key fragments to reboot the Grid.
 
 > Status: early development — Phase 1 (v0.1, foundations). The wizard walks,
-> jumps, pushes crates and explores three connected test rooms; no goal yet.
+> jumps, pushes crates and explores three connected test rooms, with an
+> integrity HUD, room banners and terminal messages; no goal yet.
 > Latest `main` build: https://bluedragon-ctrl.github.io/Neonmancer/
 
 ## Requirements

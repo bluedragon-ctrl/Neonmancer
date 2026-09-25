@@ -15,6 +15,7 @@ for the current phase. Locked decisions live in CLAUDE.md; their reasons in
 | Pause | Esc / P |
 | Map | M |
 | Debug mode | F3 |
+| Fullscreen | F |
 
 Keys are physical positions (`KeyboardEvent.code`), so the layout is the
 same on QWERTY, QWERTZ and AZERTY keyboards.
@@ -39,7 +40,9 @@ Each part has a dark core glowing towards its silhouette, faint scanlines
 drifting up and a thin neon outline. Proportions are `WIZARD` in
 `src/render/wizard.js`; review looks in the asset showcase
 (`/tools/showcase.html?asset=wizard`).
-- Integrity (health) max 8, at most 15 (4 bits in the save key).
+- Integrity (health) max 8, at most 15 (4 bits in the save key); it carries
+  over between rooms. Falling into a hole drains it all; respawning restores
+  it (D35). Damage from hazards and enemies comes in Phase 2.
 
 ## Pushing
 
@@ -110,6 +113,27 @@ drifting up and a thin neon outline. Proportions are `WIZARD` in
 | `cache_hall` | 16×8 | south (front) → Boot Sector | a 3-wide pit across the room: push a crate in, then jump the rest |
 | `stack_yard` | 8×8, Glitch Zone color | raised west doorway → Boot Sector | stacked crates, a 2-high block to climb via a crate |
 
+## HUD
+
+A DOM overlay on the stage, sized in 1080p pixels (`--u`), all text from
+`data/strings.json` (D34).
+
+| Where | What |
+|---|---|
+| Top left | Integrity: label over a row of slanted cyan cells, one per point. A lost cell flashes white and empties; at 2 or less the bar turns magenta and blinks. |
+| Top center | Banner: a title decoding from glyphs (0.45 s), holding (1.8 s) and fading (0.7 s), with an optional smaller line below, in its own color. On entering a room (not on respawn) it shows the room name and the biome name in the biome color; later pickups (e.g. a spell installed) use it too. A new banner replaces the one showing. |
+| Top right | Game name and version; for now the dev readout below it (moves to debug mode in step 8). |
+| Bottom left | Terminal: lime lines typed at 40 characters/s with a block cursor, kept 4 s, then faded; at most 4 lines. Printed on start, death, respawn and when a crate plugs a hole. |
+| Bottom center | Fullscreen hint while the stage has fewer than 1080 physical pixels of height and the page is not fullscreen; shown for 8 s each time it becomes needed. F toggles fullscreen. |
+
+Any module prints through `src/core/messages.js`: `say('msg.plug')` for a
+terminal line, `announce('banner.room', { room }, { sub, subValues, color })`
+for a banner. Both take string keys and values for `{placeholders}`.
+
+Fonts are bundled (Fontsource, no CDN): Orbitron for labels, the banner and
+the hint, Share Tech Mono for terminal lines (both Latin only). Timing values are `TERMINAL`
+and `BANNER` in `src/ui/terminal.js`.
+
 ---
 
 ## Phase 1 (v0.1) plan
@@ -140,6 +164,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 | `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, inset mark, dark faces; box variants `crate_plain`, `crate_cross`, `crate_dashed`) |
 | `data/biomes.json` | Biome name and room color (`home_lattice`: amber) |
 | `data/world.json` | Start room and exit connections |
+| `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |
 
 Example room (12×12):
 

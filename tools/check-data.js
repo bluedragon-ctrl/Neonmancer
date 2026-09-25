@@ -15,6 +15,7 @@ export function schemaFor(file) {
     'defs.json': 'defs.schema.json',
     'biomes.json': 'biomes.schema.json',
     'world.json': 'world.schema.json',
+    'strings.json': 'strings.schema.json',
   }[file];
 }
 

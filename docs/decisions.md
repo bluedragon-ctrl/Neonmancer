@@ -288,3 +288,31 @@ arrow centered on the exit.
 **Why:** author's review: the large arrow and its glide covered about four
 tiles in front of the exit; small arrows per tile keep the mark on the exit
 itself and show its width.
+
+### D34 — 2026-09-25 — HUD layout, bundled retro fonts, text in strings.json
+Integrity top left, room banner top center, game name top right, terminal
+messages bottom left, fullscreen hint bottom center. Labels, banner and
+hint use Orbitron, terminal lines Share Tech Mono; both are bundled through
+Fontsource (Latin) instead of loaded from a font CDN. Pixel fonts (Press
+Start 2P, VT323) were tried first. Terminal messages and banners go through
+two functions any module can call: `say(key, values)` and
+`announce(key, values, options)`; room names use the banner.
+Every UI text comes from `data/strings.json` by dotted key; the schema
+lists the keys the game uses. The startup error screen keeps its own
+English text, since it must work when the data does not. F toggles
+fullscreen (an action, so it can be rebound later).
+**Why:** CLAUDE.md asks for a retro font and a big clear HUD; the author
+preferred smoother fonts to the pixel ones. Bundling keeps the game
+self-contained on GitHub Pages and working offline. `say()` and `announce()` let
+game logic, spells or pickups print messages without knowing the HUD.
+The corners keep the room area (center) clear in every room size.
+
+### D35 — 2026-09-25 — Integrity carries over; a fatal fall drains it, respawn refills it
+Integrity (max 8) is game state, not room state: it carries over between
+rooms. Falling into a hole sets it to 0; recompiling at the room entrance
+restores it to full.
+**Why:** holes are instant deaths, and the bar emptying shows it. Refilling
+on respawn keeps death quick and non-punishing (CLAUDE.md §4); with rooms
+resetting on respawn, a half-empty bar would only make the retry harder.
+Damage and invulnerability arrive with hazards and enemies in Phase 2.
+

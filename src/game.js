@@ -3,6 +3,7 @@
  * the state, they never change it.
  */
 import { DT } from './core/loop.js';
+import { announce, say } from './core/messages.js';
 import { sideAxes, withExitDefaults } from './data/room-data.js';
 import { PLAYER, Player } from './entities/player.js';
 import { Pushable } from './entities/pushable.js';
@@ -23,6 +24,9 @@ export class Game {
   /** @param {object} content loaded game data (see data/load.js) */
   constructor(content) {
     this.content = content;
+    /** Integrity (health); it carries over between rooms. */
+    this.maxIntegrity = PLAYER.maxIntegrity;
+    this.integrity = this.maxIntegrity;
     this.enterRoom(content.world.start);
     /**
      * Room transition in progress, or null: { phase: 'out' | 'in', tick, exit }.
@@ -38,6 +42,12 @@ export class Game {
    * @param {number[]} [spawn] feet center; the room's own spawn by default
    */
   enterRoom(id, spawn) {
+    // Announce the room when it is a different one (not on a respawn).
+    if (id !== this.room?.id) {
+      const data = this.content.rooms.get(id);
+      const biome = this.content.biomes[data.biome];
+      announce('banner.room', { room: data.name }, { sub: 'banner.biome', subValues: { biome: biome.name }, color: biome.color });
+    }
     this.room = buildRoom(this.content.rooms.get(id), this.content);
     this.grid = new Grid(this.room);
     this.pushables = this.room.objects.filter((o) => o.kind === 'pushable').map((o) => new Pushable(o));
@@ -71,7 +81,7 @@ export class Game {
    * Walking out through an exit starts a transition: fade out (frozen
    * world), load the next room, fade in (running).
    * @param {import('./core/input.js').Input} input
-   * @returns {string[]} events this tick (e.g. 'jump', 'push', 'plug', 'exit', 'room')
+   * @returns {string[]} events this tick (e.g. 'jump', 'push', 'plug', 'die', 'respawn', 'exit', 'room')
    */
   update(input) {
     if (this.transition?.phase === 'out') return this.fadeOut();
@@ -80,8 +90,15 @@ export class Game {
     const events = [];
     const playerEvent = this.player.update(input, this.grid, this.pushables);
 
-    // Respawn after a death resets the room, so no puzzle stays broken.
+    // Falling into a hole drains all integrity. Respawning restores it and
+    // resets the room, so no puzzle stays broken.
+    if (playerEvent === 'die') {
+      this.integrity = 0;
+      say('msg.die');
+    }
     if (playerEvent === 'respawn') {
+      this.integrity = this.maxIntegrity;
+      say('msg.respawn');
       this.enterRoom(this.room.id, this.player.spawn);
       return ['respawn', 'room'];
     }
@@ -101,6 +118,7 @@ export class Game {
     for (const pushable of order) {
       const event = pushable.update(this);
       if (event) events.push(event);
+      if (event === 'plug') say('msg.plug');
     }
     return events;
   }
