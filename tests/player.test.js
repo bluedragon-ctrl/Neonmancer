@@ -179,6 +179,19 @@ test('grazing a hole edge is safe, and jumping over one is too', () => {
   assert.ok(jumper.pos[0] > 6);
 });
 
+test('a jump crosses a 1-tile hole but never a 2-tile one on the same level (D34)', () => {
+  // Start as close to the edge as possible without dying (center on the last safe tile).
+  const wide = grid({ holes: [[5, 4], [6, 4]] });
+  const far = standing(wide, [4.99, 0, 4.5]);
+  const events = run(far, wide, input(['down'], ['jump']), 60);
+  assert.ok(events.includes('die'), 'a 2-tile hole is too wide to jump');
+
+  // A sloppy take-off half a tile back still clears a 1-tile hole.
+  const narrow = grid({ holes: [[5, 4]] });
+  const near = standing(narrow, [4.5, 0, 4.5]);
+  assert.ok(!run(near, narrow, input(['down'], ['jump']), 60).includes('die'));
+});
+
 test('interpolation helpers', () => {
   assert.deepEqual(lerpPosition([0, 0, 0], [2, 4, -2], 0.5), [1, 2, -1]);
   // The short way round across ±π.
