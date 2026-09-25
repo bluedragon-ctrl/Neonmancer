@@ -234,3 +234,15 @@ the HUD, so HUD text stays readable.
 **Why:** author's request; an instant swap felt abrupt. Freezing only the
 fade-out keeps the player from turning back mid-transition, and letting
 the fade-in run avoids dead time.
+
+### D28 — 2026-09-25 — Exits show a data stream in the destination's color
+Every exit gets dashes flowing out of the room along floor lanes (and up the
+doorway frame on back exits), colored like the room it leads to, dim and
+slow when the wizard is far, bright, fast and pulsing when he is close.
+Chosen from six proposals (stream, portal curtain, destination hint,
+proximity glow, glitch on crossing, light spill) as stream + destination
+color + proximity; reviewed in the asset showcase first.
+**Why:** author's choice. Exits read at a glance on both the walled back
+sides and the open front, hint where they lead (useful with 40–60 rooms)
+and react to the player, while staying thin lines that keep rooms clean.
+A curtain may come later; glitch on crossing belongs to the juice pass.

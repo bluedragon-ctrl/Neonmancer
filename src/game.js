@@ -106,6 +106,16 @@ export class Game {
   }
 
   /**
+   * Color of the room behind an exit of the current room (its biome color),
+   * for the exit's stream.
+   * @param {object} exit exit of the current room
+   */
+  destinationColor(exit) {
+    const link = this.content.links.get(`${this.room.id}.${exit.id}`);
+    return this.content.biomes[this.content.rooms.get(link.room).biome].color;
+  }
+
+  /**
    * One tick of fading out: the world stands still while the wizard walks on
    * out through the exit; then the next room loads and fades in.
    * @returns {string[]} events

@@ -63,6 +63,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/post.js` | pmndrs postprocessing composer (bloom) |
 | `render/floor.js` | Infinite grid floor fading into darkness; hole tiles cut out via a mask texture |
 | `render/edges.js` | Visible block edges from grid occupancy; merging unit segments into runs (pure, tested) |
+| `render/exit-view.js` | Exit data stream: layout and proximity glow (pure, tested), animated dashed lines |
 | `render/walls.js` | Back walls with doorways, front edges with gaps, chevrons on front exits (pure, tested) |
 | `render/marks.js` | Face-mark line patterns for object styles (pure, tested) |
 | `render/hole-view.js` | Hole pits: walls fading to black, rim, short fading corner lines; outline math (tested) |
@@ -170,7 +171,14 @@ game.update: player moved ──► exitAt(room, pos)   feet center past a side,
                                 └─ transition 'in' (TRANSITION.inTicks): game runs, veil lifts
 main.js: 'room' event ──► showRoom()              views rebuilt, camera reframed
          every frame  ──► renderer.setFade(game.fadeLevel(alpha))   black veil under the HUD
+                      ──► exitView.update(dt, time, distance)     stream flow and glow
 ```
+
+Exit streams are dashed `LineMaterial` lines whose `dashOffset` moves every
+frame, so the dashes flow out; the color comes from
+`game.destinationColor(exit)` (the biome of the room behind it) and the
+brightness and speed from the wizard's distance (`exitGlow`). They are
+purely visual and never touch the simulation.
 
 `content.links` (built in `data/load.js`) maps every `"room.exit"` to the
 exit it connects to, both ways. The wizard keeps his fall speed and facing

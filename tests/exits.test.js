@@ -6,6 +6,7 @@ import { Pushable } from '../src/entities/pushable.js';
 import { Game, TRANSITION } from '../src/game.js';
 import { mergeUnitSegments } from '../src/render/edges.js';
 import { frontChevrons, wallLayout } from '../src/render/walls.js';
+import { EXIT_FX, exitCenter, exitGlow, exitStreamLayout } from '../src/render/exit-view.js';
 import { arrival, exitAt } from '../src/world/exits.js';
 import { Grid } from '../src/world/grid.js';
 
@@ -221,4 +222,51 @@ test('a room transition fades out with the world frozen, then fades in while run
   for (let i = 1; i < TRANSITION.inTicks; i++) game.update(idle);
   assert.equal(game.transition, null);
   assert.equal(game.fadeLevel(0.5), 0);
+});
+
+test('exit stream: lanes run from inside the room out through the opening', () => {
+  const exit = withExitDefaults({ id: 'e', side: '+x', at: 2, y: 1 });
+  const { segments, fade } = exitStreamLayout(exit, [6, 4, 6]);
+  assert.equal(segments.length, 2 * 2 * EXIT_FX.lanesPerUnit); // front exit: floor lanes only
+  for (const [[x0, y0, z0], [x1, y1, z1]] of segments) {
+    assert.ok(x1 > x0); // flowing out towards +x
+    assert.ok(Math.abs(y0 - 1) < 0.02 && Math.abs(y1 - 1) < 0.02); // on the exit floor
+    assert.ok(z0 === z1 && z0 > 2 && z0 < 4);
+  }
+  assert.deepEqual(fade.slice(0, 2), [[0, 1], [1, 0]]); // fade in, bright at the threshold, fade out
+  assert.deepEqual(exitCenter(exit, [6, 4, 6]), [6, 1, 3]);
+});
+
+test('exit stream: back doorways also climb the jambs to the middle of the lintel', () => {
+  const exit = withExitDefaults({ id: 'n', side: '-z', at: 1 });
+  const { segments } = exitStreamLayout(exit, [6, 4, 6]);
+  const frame = segments.slice(2 * 2 * EXIT_FX.lanesPerUnit);
+  assert.deepEqual(frame, [
+    [[1, 0, 0], [1, 2, 0]],
+    [[1, 2, 0], [2, 2, 0]],
+    [[3, 0, 0], [3, 2, 0]],
+    [[3, 2, 0], [2, 2, 0]],
+  ]);
+});
+
+test('exit glow: dim and slow far away, bright and fast close up', () => {
+  const far = exitGlow(10, 0);
+  const near = exitGlow(1, 0);
+  assert.equal(far.brightness, EXIT_FX.dim);
+  assert.equal(far.speed, EXIT_FX.slow);
+  assert.equal(near.brightness, EXIT_FX.bright);
+  assert.equal(near.speed, EXIT_FX.fast);
+  const middle = exitGlow((EXIT_FX.far + EXIT_FX.near) / 2, 0);
+  assert.ok(middle.brightness > far.brightness && middle.brightness < near.brightness);
+  // Close up it pulses; far away it doesn't.
+  assert.ok(exitGlow(1, 1 / (4 * EXIT_FX.pulseRate)).brightness > near.brightness);
+  assert.equal(exitGlow(10, 1 / (4 * EXIT_FX.pulseRate)).brightness, far.brightness);
+});
+
+test('an exit stream has the color of the room it leads to', () => {
+  const data = content();
+  data.biomes.lava = { name: 'Lava', color: '#ff2020' };
+  data.rooms.get('beta').biome = 'lava';
+  const game = new Game(data);
+  assert.equal(game.destinationColor(game.room.exits[0]), '#ff2020');
 });
