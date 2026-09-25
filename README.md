@@ -5,8 +5,8 @@ zapped into the Grid, a neon digital kingdom where magic and code are the same
 thing. Explore rooms, solve block puzzles, fight corrupted programs with spells
 and collect key fragments to reboot the Grid.
 
-> Status: early development — Phase 1 (v0.1, foundations). The wizard walks
-> and jumps around the first room; no goal yet.
+> Status: early development — Phase 1 (v0.1, foundations). The wizard walks,
+> jumps and pushes crates around the first room; no goal yet.
 > Latest `main` build: https://bluedragon-ctrl.github.io/Neonmancer/
 
 ## Requirements

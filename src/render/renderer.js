@@ -30,6 +30,8 @@ export class Renderer {
       powerPreference: 'high-performance',
     });
     this.webgl.setPixelRatio(1); // the buffer size is computed in resize()
+    // Materials can clip themselves (objects are cut off at the floor, see entity-view.js).
+    this.webgl.localClippingEnabled = true;
 
     this.stage = document.createElement('div');
     this.stage.className = 'stage';

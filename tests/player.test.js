@@ -10,7 +10,7 @@ const HITBOX = [0.6, 1.5, 0.6];
 
 /** A room with the given block cells and hole tiles. */
 function grid({ size = [8, 4, 8], cells = [], holes = [] } = {}) {
-  return new Grid({ size, cells, objects: [], holes });
+  return new Grid({ size, cells, holes });
 }
 
 /** Fake input: `held` actions are down every tick; `tap` is pressed on the first tick only. */
@@ -55,11 +55,12 @@ test('grid: room sides and the space below the floor are solid, above is open', 
   assert.equal(g.isSolid(0, 4, 0), false);
 });
 
-test('grid: objects are solid, holes are found by point', () => {
-  const g = new Grid({ size: [8, 4, 8], cells: [], objects: [{ at: [1, 0, 1] }], holes: [[5, 6]] });
-  assert.equal(g.isSolid(1, 0, 1), true);
+test('grid: holes are found by point and can be filled', () => {
+  const g = grid({ holes: [[5, 6]] });
   assert.equal(g.isHole(5.5, 6.9), true);
   assert.equal(g.isHole(4.99, 6.5), false);
+  g.fillHole(5, 6);
+  assert.equal(g.isHole(5.5, 6.5), false);
 });
 
 test('moveAxis stops at a block face and at the room side', () => {

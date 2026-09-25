@@ -192,3 +192,22 @@ Replaces the step 1 mapping (Up = up-right, Right = down-right).
 **Why:** author's preference after playing: "right" should head to the
 upper right corner. Neither isometric mapping is standard; a setting with
 both (and the planned screen-relative mode) can come with the settings menu.
+
+### D24 — 2026-09-25 — Dying resets the room
+When the wizard respawns after falling into a hole, the room is rebuilt
+from data (objects back in place, holes open again), as on re-entry.
+**Why:** a push puzzle can be left unsolvable (a crate in a corner or in
+the wrong hole); dying already means starting the room over, so resetting
+it is the least surprising and needs no separate "reset room" action.
+Softlocks without a hole are still possible; a reset action can come with
+the pause menu if rooms need it.
+
+### D25 — 2026-09-25 — Pushables are moving bodies, not grid cells
+Pushable objects collide as boxes (`box()`), not as cells in the static
+grid; the player is a body too. Pushing needs a short deliberate shove
+(`pushDelay`) and the wizard lined up with the object; a slide is one cell
+at 3 units/s. A plugged hole keeps its object, top flush with the floor.
+**Why:** the player follows a sliding crate smoothly instead of stopping at
+reserved cells, and the same code handles standing on crates, crates
+landing on the wizard and crates in holes. Showing the plug makes it
+obvious where the pit was filled.

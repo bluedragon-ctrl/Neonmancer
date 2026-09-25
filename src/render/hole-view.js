@@ -22,7 +22,7 @@ import { PALETTE, lineMaterial } from './neon.js';
 const PIT_DEPTH = 1.2;
 
 /** Length of the fading corner lines in the pit, in blocks. */
-const DROP_LENGTH = 0.45;
+export const DROP_LENGTH = 0.45;
 
 /**
  * The outline of a set of hole tiles: every tile side that borders a
@@ -102,13 +102,27 @@ export function createHoleView(holes, color) {
   // eye reads them as depth.
   const corners = new Map();
   for (const side of sides) for (const [x, z] of side) corners.set(`${x},${z}`, [x, z]);
-  const glow = new Color(color).multiplyScalar(0.6);
-  const drops = new LineSegmentsGeometry();
-  drops.setPositions(flattenSegments([...corners.values()].map(([x, z]) => [[x, 0, z], [x, -DROP_LENGTH, z]])));
-  drops.setColors([...corners.values()].flatMap(() => [glow.r, glow.g, glow.b, 0, 0, 0]));
-  const dropMaterial = lineMaterial({ color: 0xffffff, width: 1.5 });
-  dropMaterial.vertexColors = true;
-  group.add(new LineSegments2(drops, dropMaterial));
+  group.add(fadingDrops([...corners.values()], 0, color, 0.6));
 
   return group;
+}
+
+/**
+ * Short vertical lines going down from `top` at the given [x, z] corners,
+ * fading from the color to black within DROP_LENGTH: they read as depth.
+ * Also used for the corners of an object plugging a hole.
+ * @param {number[][]} corners [x, z] points
+ * @param {number} top height the lines start at
+ * @param {number|string} color
+ * @param {number} brightness of the top end
+ * @param {number} [width] in pixels at 1080p
+ */
+export function fadingDrops(corners, top, color, brightness, width = 1.5) {
+  const glow = new Color(color).multiplyScalar(brightness);
+  const drops = new LineSegmentsGeometry();
+  drops.setPositions(flattenSegments(corners.map(([x, z]) => [[x, top, z], [x, top - DROP_LENGTH, z]])));
+  drops.setColors(corners.flatMap(() => [glow.r, glow.g, glow.b, 0, 0, 0]));
+  const material = lineMaterial({ color: 0xffffff, width });
+  material.vertexColors = true;
+  return new LineSegments2(drops, material);
 }

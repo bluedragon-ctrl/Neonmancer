@@ -114,3 +114,19 @@ export function tintedFaceMaterials(color, tint) {
   const left = shade(tint * 0.4); // +z side
   return [right, right, top, top, left, left];
 }
+
+/**
+ * Free the GPU resources of a scene subtree that is thrown away (a room
+ * rebuilt on reset) and stop scaling its line materials.
+ * @param {import('three').Object3D} root
+ */
+export function disposeTree(root) {
+  root.traverse((node) => {
+    node.geometry?.dispose();
+    const materials = Array.isArray(node.material) ? node.material : node.material ? [node.material] : [];
+    for (const material of materials) {
+      scaledMaterials.delete(material);
+      material.dispose();
+    }
+  });
+}

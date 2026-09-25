@@ -1,6 +1,7 @@
 // Entry point: load and validate the game data, show the start room, run
 // the loop. Any startup problem shows the error screen instead.
 // The readout is temporary and moves into debug mode later.
+import { Group } from 'three';
 import { GAME_VERSION } from './core/version.js';
 import { FixedLoop } from './core/loop.js';
 import { Input } from './core/input.js';
@@ -11,8 +12,9 @@ import { Renderer } from './render/renderer.js';
 import { frameRoom } from './render/camera.js';
 import { createFloor } from './render/floor.js';
 import { createHoleView } from './render/hole-view.js';
-import { createObjectView, createRoomView } from './render/room-view.js';
-import { PlayerView } from './render/entity-view.js';
+import { createRoomView } from './render/room-view.js';
+import { PlayerView, PushableView } from './render/entity-view.js';
+import { disposeTree } from './render/neon.js';
 import { HOLO_TIME } from './render/holo.js';
 import { showErrorScreen } from './ui/error-screen.js';
 
@@ -30,21 +32,31 @@ function boot() {
   if (SCHEMA_ERRORS.length > 0) throw new DataError(SCHEMA_ERRORS);
   const content = loadGameData(DATA_FILES);
   const game = new Game(content);
-  const room = game.room;
 
   // ?scale=0.5 tries a lower render scale until there is a settings menu.
   const renderScale = Number(new URLSearchParams(location.search).get('scale') ?? 1);
   const renderer = new Renderer(app, { renderScale });
 
-  renderer.scene.add(
-    createFloor(room.size, room.color, room.holes),
-    createHoleView(room.holes, room.color),
-    createRoomView(room),
-  );
-  for (const object of room.objects) renderer.scene.add(createObjectView(object));
+  // The room's views are rebuilt whenever the game rebuilds the room.
+  let roomScene = new Group();
+  let pushableViews = [];
+  function showRoom() {
+    renderer.scene.remove(roomScene);
+    disposeTree(roomScene);
+    const { room } = game;
+    pushableViews = game.pushables.map((pushable) => new PushableView(game, pushable));
+    roomScene = new Group().add(
+      createFloor(room.size, room.color, room.holes),
+      createHoleView(room.holes, room.color),
+      createRoomView(room),
+      ...pushableViews.map((view) => view.group),
+    );
+    renderer.scene.add(roomScene);
+    frameRoom(renderer.camera, room.size);
+  }
+  showRoom();
   const playerView = new PlayerView(game);
   renderer.scene.add(playerView.group);
-  frameRoom(renderer.camera, room.size);
 
   renderer.hud.innerHTML = `
     <div class="brand">NEONMANCER <span>v${GAME_VERSION}</span></div>
@@ -64,12 +76,13 @@ function boot() {
 
   function update() {
     input.sample();
-    game.update(input);
+    if (game.update(input).includes('room')) showRoom();
     ticksThisSecond++;
   }
 
   function render(alpha) {
     playerView.sync(alpha);
+    for (const view of pushableViews) view.sync(alpha);
     HOLO_TIME.value = performance.now() / 1000;
     renderer.render();
 
@@ -84,7 +97,7 @@ function boot() {
 
     const actions = input.activeActions().join(' ') || '-';
     readout.textContent =
-      `> ROOM ${room.id}\n` +
+      `> ROOM ${game.room.id}\n` +
       `> TICK/S ${tps}  FPS ${fps}  ALPHA ${alpha.toFixed(2)}\n` +
       `> BUFFER ${renderer.bufferWidth}x${renderer.bufferHeight}\n` +
       `> ACTIONS ${actions}\n` +
