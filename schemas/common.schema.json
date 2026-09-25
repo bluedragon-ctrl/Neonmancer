@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "common.schema.json",
+  "title": "Shared definitions",
+  "$defs": {
+    "schemaVersion": {
+      "description": "Data schema version (src/core/version.js DATA_SCHEMA_VERSION).",
+      "type": "integer",
+      "minimum": 1
+    },
+    "id": {
+      "description": "Stable id: lowercase letters, digits and underscores, starting with a letter.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "color": {
+      "description": "Color as #rrggbb.",
+      "type": "string",
+      "pattern": "^#[0-9a-fA-F]{6}$"
+    },
+    "cell": {
+      "description": "Grid cell [x, y, z]; the block fills [x, x+1] × [y, y+1] × [z, z+1].",
+      "type": "array",
+      "prefixItems": [
+        { "type": "integer", "minimum": 0 },
+        { "type": "integer", "minimum": 0 },
+        { "type": "integer", "minimum": 0 }
+      ],
+      "items": false,
+      "minItems": 3
+    },
+    "tile": {
+      "description": "Floor tile [x, z]; fills [x, x+1] × [z, z+1] at floor level.",
+      "type": "array",
+      "prefixItems": [
+        { "type": "integer", "minimum": 0 },
+        { "type": "integer", "minimum": 0 }
+      ],
+      "items": false,
+      "minItems": 2
+    },
+    "point": {
+      "description": "Position [x, y, z] in world units.",
+      "type": "array",
+      "prefixItems": [{ "type": "number" }, { "type": "number" }, { "type": "number" }],
+      "items": false,
+      "minItems": 3
+    }
+  }
+}

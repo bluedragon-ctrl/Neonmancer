@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "room.schema.json",
+  "title": "Room (data/rooms/<id>.json)",
+  "description": "One room. Rules JSON Schema cannot express (width + depth <= 32, bounds, overlaps, known types) are checked by src/data/validate.js.",
+  "type": "object",
+  "required": ["schemaVersion", "id", "name", "biome", "size", "spawn"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+    "id": {
+      "$ref": "common.schema.json#/$defs/id",
+      "description": "Must match the file name."
+    },
+    "name": { "type": "string", "minLength": 1, "description": "Shown when entering the room." },
+    "biome": { "$ref": "common.schema.json#/$defs/id", "description": "Id from biomes.json." },
+    "size": {
+      "description": "[width x, height y, depth z] in blocks; width + depth <= 32.",
+      "type": "array",
+      "prefixItems": [
+        { "type": "integer", "minimum": 1, "maximum": 31 },
+        { "type": "integer", "minimum": 2, "maximum": 6 },
+        { "type": "integer", "minimum": 1, "maximum": 31 }
+      ],
+      "items": false,
+      "minItems": 3
+    },
+    "spawn": {
+      "$ref": "common.schema.json#/$defs/point",
+      "description": "Player start (feet center) when the game starts in this room."
+    },
+    "exits": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/exit" }
+    },
+    "blocks": {
+      "description": "Anonymous static blocks.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/block" }
+    },
+    "holes": {
+      "description": "Floor tiles that are pits: deadly for the player; a pushed block drops in and fills the hole.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/hole" }
+    },
+    "objects": {
+      "description": "Typed objects with stable ids (types from defs.json).",
+      "type": "array",
+      "items": { "$ref": "#/$defs/object" }
+    }
+  },
+  "$defs": {
+    "exit": {
+      "description": "Opening in one side of the room. Connections live in world.json.",
+      "type": "object",
+      "required": ["id", "side", "at"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/id" },
+        "side": { "enum": ["-x", "+x", "-z", "+z"] },
+        "at": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "First cell along the side (z for x sides, x for z sides)."
+        },
+        "width": { "type": "integer", "minimum": 1, "default": 2 },
+        "y": { "type": "integer", "minimum": 0, "default": 0, "description": "Floor level of the opening." },
+        "height": { "type": "integer", "minimum": 2, "default": 2 }
+      }
+    },
+    "block": {
+      "type": "object",
+      "required": ["at"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "enum": ["block"], "default": "block" },
+        "at": { "$ref": "common.schema.json#/$defs/cell" },
+        "to": {
+          "$ref": "common.schema.json#/$defs/cell",
+          "description": "Optional opposite corner; fills the box from at to to (inclusive)."
+        }
+      }
+    },
+    "hole": {
+      "type": "object",
+      "required": ["at"],
+      "additionalProperties": false,
+      "properties": {
+        "at": { "$ref": "common.schema.json#/$defs/tile" },
+        "to": {
+          "$ref": "common.schema.json#/$defs/tile",
+          "description": "Optional opposite corner; fills the rectangle from at to to (inclusive)."
+        }
+      }
+    },
+    "object": {
+      "type": "object",
+      "required": ["id", "type", "at"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/id" },
+        "type": { "$ref": "common.schema.json#/$defs/id", "description": "Object type from defs.json." },
+        "at": { "$ref": "common.schema.json#/$defs/cell" },
+        "overrides": {
+          "type": "object",
+          "description": "Values that replace the type defaults for this object only."
+        }
+      }
+    }
+  }
+}

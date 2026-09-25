@@ -9,6 +9,8 @@ import {
 } from '../src/render/viewport.js';
 import { VIEW_HEIGHT, createIsoCamera, frameRoom, projectedHeight } from '../src/render/camera.js';
 import { blockEdges } from '../src/render/edges.js';
+import { MARKS, markSegments } from '../src/render/marks.js';
+import { holeSides } from '../src/render/hole-view.js';
 
 test('letterbox fills a 16:9 window exactly', () => {
   assert.deepEqual(fitLetterbox(1920, 1080), { x: 0, y: 0, width: 1920, height: 1080 });
@@ -100,4 +102,32 @@ test('an edge shared by diagonal blocks is drawn once', () => {
 
 test('no blocks, no edges', () => {
   assert.deepEqual(blockEdges([]), []);
+});
+
+test('face marks: patterns on all six faces', () => {
+  assert.equal(markSegments('none').length, 0);
+  assert.equal(markSegments('inset').length, 6 * 4);
+  assert.equal(markSegments('cross').length, 6 * 2);
+  assert.equal(markSegments('brackets').length, 6 * 8);
+  assert.deepEqual(MARKS, ['none', 'inset', 'cross', 'brackets']);
+});
+
+test('face marks lie on the faces of the cube at the given cell', () => {
+  const cell = [3, 1, 5];
+  for (const segment of markSegments('inset', cell)) {
+    for (const point of segment) {
+      // Every point is inside the cube and on at least one of its faces.
+      const local = point.map((v, i) => v - cell[i]);
+      assert.ok(local.every((v) => v >= 0 && v <= 1));
+      assert.ok(local.some((v) => v === 0 || v === 1));
+    }
+  }
+});
+
+test('hole outline: only sides that border floor', () => {
+  assert.equal(holeSides([[2, 3]]).length, 4);
+  // A 2×2 hole has an outline of 8 unit sides, none between its own tiles.
+  const square = holeSides([[0, 0], [1, 0], [0, 1], [1, 1]]);
+  assert.equal(square.length, 8);
+  assert.ok(!square.some(([[x1], [x2]]) => x1 === 1 && x2 === 1));
 });

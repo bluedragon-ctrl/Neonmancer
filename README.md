@@ -17,10 +17,11 @@ and collect key fragments to reboot the Grid.
 
 ```bash
 npm install
-npm run dev       # dev server with hot reload
-npm test          # unit tests (Node's built-in test runner)
-npm run build     # production build into dist/
-npm run preview   # serve the production build locally
+npm run dev            # dev server with hot reload
+npm test               # unit tests (Node's built-in test runner)
+npm run validate:data  # check data/ against schemas/ and the game rules
+npm run build          # production build into dist/
+npm run preview        # serve the production build locally
 ```
 
 ## Project layout
@@ -31,6 +32,7 @@ npm run preview   # serve the production build locally
 | `data/` | All game content as JSON (rooms, definitions, biomes, world) |
 | `schemas/` | JSON Schema for every data format |
 | `tests/` | Unit tests (`node --test`) |
+| `tools/` | Dev tooling: data validation (Ajv), Vite plugin |
 | `docs/` | Architecture, design and the decision log |
 
 ## Documentation

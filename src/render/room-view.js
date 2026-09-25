@@ -17,22 +17,28 @@ import {
 import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
 import { blockEdges, flattenSegments } from './edges.js';
-import { PALETTE, faceMaterial, lineMaterial } from './neon.js';
+import { markSegments } from './marks.js';
+import { PALETTE, faceMaterial, lineMaterial, tintedFaceMaterials } from './neon.js';
 
 /**
  * @param {object} room
  * @param {number[]} room.size [x, y, z]
  * @param {number[][]} room.cells filled block cells as [x, y, z]
- * @param {number} [room.color] palette color of the room
+ * @param {number|string} [room.color] room color (biome), amber by default
  */
 export function createRoomView({ size, cells, color = PALETTE.amber }) {
   const group = new Group();
   group.add(createWalls(size, color));
-  if (cells.length > 0) group.add(createBlocks(cells, color));
+  if (cells.length > 0) group.add(createBlockView(cells, color));
   return group;
 }
 
-function createBlocks(cells, color) {
+/**
+ * Dark occluding cubes with merged neon edges.
+ * @param {number[][]} cells [x, y, z] cells
+ * @param {number|string} color
+ */
+export function createBlockView(cells, color) {
   const group = new Group();
 
   const faces = new InstancedMesh(new BoxGeometry(1, 1, 1), faceMaterial(), cells.length);
@@ -92,4 +98,33 @@ function lines(segments, material) {
   const geometry = new LineSegmentsGeometry();
   geometry.setPositions(flattenSegments(segments));
   return new LineSegments2(geometry, material);
+}
+
+/**
+ * View of one typed object: a single cell drawn in the object's style
+ * (edges, face mark, faces), so types differ by more than color. Kept
+ * separate from the static blocks because objects move (pushables, step 5).
+ * @param {{ at: number[], color: string, edges: string, mark: string, faces: string, tint: number }} object
+ */
+export function createObjectView({ at, color, edges, mark, faces, tint }) {
+  const group = new Group();
+  const [x, y, z] = at;
+
+  const materials = faces === 'tinted' ? tintedFaceMaterials(color, tint) : faceMaterial();
+  const box = new Mesh(new BoxGeometry(1, 1, 1), materials);
+  box.position.set(x + 0.5, y + 0.5, z + 0.5);
+  group.add(box);
+
+  const dashed = edges === 'dashed';
+  const outline = lines(blockEdges([at]), lineMaterial({ color, width: 2.5, brightness: 1.6, dashed }));
+  if (dashed) outline.computeLineDistances();
+  outline.renderOrder = 2;
+  group.add(outline);
+
+  if (mark !== 'none') {
+    const marks = lines(markSegments(mark, at), lineMaterial({ color, width: 1.5, brightness: 1 }));
+    marks.renderOrder = 2;
+    group.add(marks);
+  }
+  return group;
 }

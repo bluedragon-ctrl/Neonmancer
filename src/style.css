@@ -70,3 +70,29 @@ body {
   color: var(--lime);
   text-shadow: 0 0 calc(6 * var(--u)) var(--lime);
 }
+
+/* Startup error screen (e.g. invalid data). Uses vh units: the stage and
+   its --u don't exist when the game fails to start. */
+.error-screen {
+  box-sizing: border-box;
+  height: 100%;
+  overflow: auto;
+  padding: 4vh 5vw;
+  background: var(--void);
+  font-family: 'Courier New', monospace;
+  font-size: max(14px, 1.8vh);
+  color: var(--lime);
+}
+
+.error-screen h1 {
+  margin: 0 0 1em;
+  font-size: 2.2em;
+  letter-spacing: 0.15em;
+  color: var(--magenta);
+  text-shadow: 0 0 0.3em var(--magenta);
+}
+
+.error-screen ul {
+  padding-left: 1.5em;
+  line-height: 1.6;
+}

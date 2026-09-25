@@ -1,0 +1,6 @@
+{
+  "$schema": "../schemas/world.schema.json",
+  "schemaVersion": 1,
+  "start": "boot_sector",
+  "connections": []
+}

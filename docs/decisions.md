@@ -105,3 +105,45 @@ floor grid is a neutral dark gray and fades out within 5 units.
 player what is part of the room. Biome palettes (step 3) can still override
 the room color. Home Lattice, the default safe biome, is amber (was cyan
 in CLAUDE.md §5); other biomes use their own colors.
+
+### D15 — 2026-09-25 — Data errors: build fails, dev server shows them in the game
+Any data error (schema or semantic) fails `npm run build`, so invalid data
+never deploys. In the dev server the schema errors reach the game through
+the virtual module `virtual:data-schema-errors`; the game adds its own
+semantic check and lists every problem on an error screen. Rooms are keyed
+by file name while validating, so a wrong `id` gives one clear error instead
+of a cascade.
+**Why:** one place (the game window) to see what is wrong while editing
+data, with all problems at once; no chance of shipping broken rooms.
+
+### D16 — 2026-09-25 — Every exit must be connected
+An exit that no `world.json` connection uses is an error, as is an exit used
+twice.
+**Why:** an opening that leads nowhere would let the player walk out of the
+world. A dead-end opening can be modelled as blocks instead.
+
+### D17 — 2026-09-25 — Object types differ by shape, not only color
+Each object type in `defs.json` can set a style: `edges` (solid / dashed),
+`mark` (none / inset / cross / brackets: a line pattern on every face),
+`faces` (dark / tinted: faces shaded in the object color, top lighter) and
+`tint` (0–1, how much color the tinted top face gets; default 0.1).
+Objects can override the style like any other type property. The default
+`crate` has an inset square with dark faces; the author kept three more looks
+as named box types (`crate_plain`, `crate_cross`, `crate_dashed`) for
+rooms to use. Static blocks stay plain. The `brackets` mark and dashed +
+tinted combination stay available through `overrides` but have no type.
+**Why:** color alone is not enough for color-blind players and gets washed
+out by bloom. Keeping the style in data lets every future type pick its look
+without code changes, and the room editor can preview it.
+
+### D18 — 2026-09-25 — Holes are floor tiles, not a lower level
+Rooms can mark floor tiles as holes (`holes`, `[x, z]` at y = 0). They are a
+look plus a rule: black pits (the floor shader cuts them out, pit walls fade
+to a black bottom, bright rim, short corner lines fading to black) on a faintly tinted room
+floor. The player dies when his hitbox center is over a hole at floor level;
+a pushed block drops in and fills the hole, making it floor. Holes never
+lead to another room. The data format, validation and look land in step 3,
+dying in step 4, filling in step 5.
+**Why:** a trap and a push-puzzle element ("fill the pit to cross it")
+without real vertical space, which would need vertical exits and a deeper
+room model. Unlike Phase 2 void blocks, holes are at floor level.

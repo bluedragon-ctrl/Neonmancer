@@ -1,0 +1,32 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "boot_sector",
+  "name": "Boot Sector",
+  "biome": "home_lattice",
+  "size": [12, 4, 12],
+  "spawn": [5.5, 0, 8.5],
+  "exits": [],
+  "blocks": [
+    { "at": [0, 0, 3], "to": [1, 0, 8] },
+    { "at": [0, 1, 7], "to": [1, 1, 8] },
+    { "at": [6, 0, 0], "to": [9, 0, 0] },
+    { "at": [7, 1, 0], "to": [9, 1, 0] },
+    { "at": [8, 2, 0], "to": [9, 2, 0] },
+    { "at": [4, 0, 4], "to": [4, 2, 4] },
+    { "at": [7, 0, 6], "to": [9, 0, 6] },
+    { "at": [9, 0, 7], "to": [9, 0, 8] }
+  ],
+  "holes": [
+    { "at": [2, 8], "to": [3, 9] },
+    { "at": [10, 2] }
+  ],
+  "objects": [
+    { "id": "crate_a", "type": "crate", "at": [2, 0, 5] },
+    { "id": "crate_b", "type": "crate", "at": [7, 0, 3] },
+    { "id": "look_plain", "type": "crate_plain", "at": [1, 0, 11] },
+    { "id": "look_crate", "type": "crate", "at": [3, 0, 11] },
+    { "id": "look_cross", "type": "crate_cross", "at": [5, 0, 11] },
+    { "id": "look_dashed", "type": "crate_dashed", "at": [7, 0, 11] }
+  ]
+}
