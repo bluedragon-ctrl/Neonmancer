@@ -27,8 +27,6 @@
     { "id": "look_plain", "type": "crate_plain", "at": [1, 0, 11] },
     { "id": "look_inset_dark", "type": "crate_inset_dark", "at": [3, 0, 11] },
     { "id": "look_cross", "type": "crate_cross", "at": [5, 0, 11] },
-    { "id": "look_brackets", "type": "crate_brackets", "at": [7, 0, 11] },
-    { "id": "look_dashed", "type": "crate_dashed", "at": [9, 0, 11] },
-    { "id": "look_dashed_tinted", "type": "crate_dashed_tinted", "at": [11, 0, 11] }
+    { "id": "look_dashed", "type": "crate_dashed", "at": [7, 0, 11] }
   ]
 }
