@@ -146,7 +146,7 @@ AI is implemented as named behavior modules referenced from data.
 Each room has a biome defining look and optional environmental effects,
 defined in data and combinable. Health pickups and safe rooms balance
 drain effects.
-- **Home Lattice** — cyan, safe
+- **Home Lattice** — amber (the default room color), safe
 - **Glitch Zone** — magenta, slow health drain
 - **Low-Res Zone** — pixelated, reduced visibility
 - **Zero-G Sector** — low gravity

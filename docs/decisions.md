@@ -103,4 +103,5 @@ Rooms and the floor grid inside them default to amber. Outside the room the
 floor grid is a neutral dark gray and fades out within 5 units.
 **Why:** author's preference; a colorless surrounding makes it obvious to the
 player what is part of the room. Biome palettes (step 3) can still override
-the room color.
+the room color. Home Lattice, the default safe biome, is amber (was cyan
+in CLAUDE.md §5); other biomes use their own colors.
