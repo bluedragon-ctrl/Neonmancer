@@ -60,8 +60,10 @@ and the project uses [Semantic Versioning](https://semver.org/).
   name banner that decodes in on entering a room, terminal messages typed
   out bottom left (start, death, respawn, plugged hole), and a fullscreen
   hint while the game is drawn below 1080 pixels high. F toggles
-  fullscreen. Bundled retro fonts (Press Start 2P, VT323).
+  fullscreen. Bundled fonts (Orbitron, Share Tech Mono).
 - `data/strings.json` with its schema: every UI text by key.
+- `say(key, values)` (`src/core/messages.js`): any module can print a
+  terminal message.
 - Integrity: falling into a hole drains it, respawning restores it; it
   carries over between rooms.
 

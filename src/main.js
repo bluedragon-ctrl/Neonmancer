@@ -18,6 +18,7 @@ import { disposeTree } from './render/neon.js';
 import { HOLO_TIME } from './render/holo.js';
 import { showErrorScreen } from './ui/error-screen.js';
 import { Hud } from './ui/hud.js';
+import { say } from './core/messages.js';
 import { toggleFullscreen, wantsFullscreenHint } from './ui/fullscreen.js';
 
 const app = document.getElementById('app');
@@ -75,8 +76,8 @@ function boot() {
   const playerView = new PlayerView(game);
   renderer.scene.add(playerView.group);
 
-  hud.message('msg.boot');
-  hud.message('msg.welcome');
+  say('msg.boot');
+  say('msg.welcome');
 
   const input = new Input();
   input.attach(window);
@@ -92,9 +93,7 @@ function boot() {
   function update() {
     input.sample();
     if (input.pressed('fullscreen')) toggleFullscreen(document.documentElement);
-    const events = game.update(input);
-    if (events.includes('room')) showRoom();
-    hud.showEvents(events);
+    if (game.update(input).includes('room')) showRoom();
     ticksThisSecond++;
   }
 

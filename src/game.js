@@ -3,6 +3,7 @@
  * the state, they never change it.
  */
 import { DT } from './core/loop.js';
+import { say } from './core/messages.js';
 import { sideAxes, withExitDefaults } from './data/room-data.js';
 import { PLAYER, Player } from './entities/player.js';
 import { Pushable } from './entities/pushable.js';
@@ -85,9 +86,13 @@ export class Game {
 
     // Falling into a hole drains all integrity. Respawning restores it and
     // resets the room, so no puzzle stays broken.
-    if (playerEvent === 'die') this.integrity = 0;
+    if (playerEvent === 'die') {
+      this.integrity = 0;
+      say('msg.die');
+    }
     if (playerEvent === 'respawn') {
       this.integrity = this.maxIntegrity;
+      say('msg.respawn');
       this.enterRoom(this.room.id, this.player.spawn);
       return ['respawn', 'room'];
     }
@@ -107,6 +112,7 @@ export class Game {
     for (const pushable of order) {
       const event = pushable.update(this);
       if (event) events.push(event);
+      if (event === 'plug') say('msg.plug');
     }
     return events;
   }

@@ -1,6 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { readDataFiles } from '../tools/check-data.js';
 import { loadGameData } from '../src/data/load.js';
 import { Game } from '../src/game.js';
@@ -9,7 +11,7 @@ import { withExitDefaults } from '../src/data/room-data.js';
 import { formatText, scrambleText } from '../src/ui/text.js';
 import { BANNER, TERMINAL, Terminal, bannerState } from '../src/ui/terminal.js';
 import { wantsFullscreenHint } from '../src/ui/fullscreen.js';
-import { EVENT_MESSAGES } from '../src/ui/hud.js';
+import { say, takeMessages } from '../src/core/messages.js';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const shipped = () => loadGameData(readDataFiles(root).files);
@@ -21,9 +23,25 @@ test('formatText fills placeholders and marks missing keys', () => {
   assert.equal(formatText(strings, 'msg.missing'), '[msg.missing]');
 });
 
-test('every string key the HUD prints exists in the shipped strings', () => {
+test('say() queues messages until they are taken', () => {
+  takeMessages();
+  say('msg.boot');
+  say('game.version', { version: '1.2.3' });
+  assert.deepEqual(takeMessages(), [
+    { key: 'msg.boot', values: undefined },
+    { key: 'game.version', values: { version: '1.2.3' } },
+  ]);
+  assert.deepEqual(takeMessages(), []);
+});
+
+test('every string key passed to say() in src/ exists in the shipped strings', () => {
   const { strings } = shipped();
-  for (const key of Object.values(EVENT_MESSAGES)) assert.ok(key in strings, key);
+  const src = fileURLToPath(new URL('../src', import.meta.url));
+  const keys = readdirSync(src, { recursive: true })
+    .filter((file) => file.endsWith('.js'))
+    .flatMap((file) => [...readFileSync(join(src, file), 'utf8').matchAll(/\bsay\('([^']+)'/g)].map((m) => m[1]));
+  assert.ok(keys.length > 0);
+  for (const key of keys) assert.ok(key in strings, `missing string "${key}"`);
 });
 
 test('scrambleText keeps the decoded part and spaces, same seed same glyphs', () => {
@@ -95,6 +113,7 @@ test('integrity drains on a fatal fall, comes back on respawn and carries over b
   for (let i = 0; i < 3; i++) events.push(...game.update(idle));
   assert.ok(events.includes('die'), events.join());
   assert.equal(game.integrity, 0);
+  assert.deepEqual(takeMessages().map((m) => m.key), ['msg.die']);
 
   for (let i = 0; i < PLAYER.deathTicks && !events.includes('respawn'); i++) events.push(...game.update(idle));
   assert.ok(events.includes('respawn'));

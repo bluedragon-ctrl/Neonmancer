@@ -2,19 +2,14 @@
  * The HUD: a DOM overlay on the stage with the integrity bar, the room name
  * banner, terminal messages and the fullscreen hint. It only shows state;
  * main.js feeds it every frame. Sizes use --u (one pixel at 1080p), so it
- * scales with the stage. All text comes from data/strings.json.
+ * scales with the stage. All text comes from data/strings.json; terminal
+ * messages arrive through say() (core/messages.js) from any module.
  */
+import { takeMessages } from '../core/messages.js';
 import { GAME_VERSION } from '../core/version.js';
 import { HINT_SECONDS } from './fullscreen.js';
 import { Terminal, bannerState } from './terminal.js';
 import { formatText, scrambleText } from './text.js';
-
-/** Game events that print a terminal message, and the string key they print. */
-export const EVENT_MESSAGES = {
-  die: 'msg.die',
-  respawn: 'msg.respawn',
-  plug: 'msg.plug',
-};
 
 /** Integrity at or below this blinks as a warning. */
 const LOW_INTEGRITY = 2;
@@ -63,15 +58,6 @@ export class Hud {
     return formatText(this.strings, key, values);
   }
 
-  /** Print a terminal message by string key. */
-  message(key, values) {
-    this.terminal.push(this.text(key, values));
-  }
-
-  /** Print the messages for this tick's game events. */
-  showEvents(events) {
-    for (const event of events) if (EVENT_MESSAGES[event]) this.message(EVENT_MESSAGES[event]);
-  }
 
   /**
    * Show integrity as a row of cells; lost cells flash as they empty.
@@ -127,6 +113,7 @@ export class Hud {
   update(dt) {
     this.frame++;
 
+    for (const { key, values } of takeMessages()) this.terminal.push(this.text(key, values));
     this.terminal.update(dt);
     const lines = this.terminal.lines();
     while (this.terminalBox.children.length < lines.length) this.terminalBox.append(document.createElement('div'));

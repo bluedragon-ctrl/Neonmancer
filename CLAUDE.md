@@ -39,8 +39,8 @@ mobile/touch support, backend or accounts.
 - Ajv (dev-only) for JSON Schema validation in the dev server, build and CI;
   not shipped to players
 - Tests: Node's built-in runner (`node --test`), no test framework
-- Fonts bundled via Fontsource (no CDN): Press Start 2P for HUD labels,
-  VT323 for terminal text (D34)
+- Fonts bundled via Fontsource (no CDN): Orbitron for HUD labels,
+  Share Tech Mono for terminal text (D34)
 - Static hosting on GitHub Pages; no backend
 
 ---

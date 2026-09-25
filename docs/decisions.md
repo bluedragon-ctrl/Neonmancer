@@ -292,14 +292,18 @@ itself and show its width.
 ### D34 — 2026-09-25 — HUD layout, bundled retro fonts, text in strings.json
 Integrity top left, room banner top center, game name top right, terminal
 messages bottom left, fullscreen hint bottom center. Labels, banner and
-hint use Press Start 2P, terminal lines VT323; both are bundled through
-Fontsource (Latin and Latin Extended) instead of loaded from a font CDN.
+hint use Orbitron, terminal lines Share Tech Mono; both are bundled through
+Fontsource (Latin) instead of loaded from a font CDN. Pixel fonts (Press
+Start 2P, VT323) were tried first. Terminal messages go through one
+function, `say(key, values)`, that any module can call.
 Every UI text comes from `data/strings.json` by dotted key; the schema
 lists the keys the game uses. The startup error screen keeps its own
 English text, since it must work when the data does not. F toggles
 fullscreen (an action, so it can be rebound later).
-**Why:** CLAUDE.md asks for a chunky retro arcade font and a big clear HUD;
-bundling keeps the game self-contained on GitHub Pages and working offline.
+**Why:** CLAUDE.md asks for a retro font and a big clear HUD; the author
+preferred smoother fonts to the pixel ones. Bundling keeps the game
+self-contained on GitHub Pages and working offline. A single `say()` lets
+game logic, spells or pickups print messages without knowing the HUD.
 The corners keep the room area (center) clear in every room size.
 
 ### D35 — 2026-09-25 — Integrity carries over; a fatal fall drains it, respawn refills it

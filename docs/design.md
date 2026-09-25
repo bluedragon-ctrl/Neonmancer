@@ -126,8 +126,8 @@ A DOM overlay on the stage, sized in 1080p pixels (`--u`), all text from
 | Bottom left | Terminal: lime lines typed at 40 characters/s with a block cursor, kept 4 s, then faded; at most 4 lines. Printed on start, death, respawn and when a crate plugs a hole. |
 | Bottom center | Fullscreen hint while the stage has fewer than 1080 physical pixels of height and the page is not fullscreen; shown for 8 s each time it becomes needed. F toggles fullscreen. |
 
-Fonts are bundled (Fontsource, no CDN): Press Start 2P for labels, the
-banner and the hint, VT323 for terminal lines. Timing values are `TERMINAL`
+Fonts are bundled (Fontsource, no CDN): Orbitron for labels, the banner and
+the hint, Share Tech Mono for terminal lines (both Latin only). Timing values are `TERMINAL`
 and `BANNER` in `src/ui/terminal.js`.
 
 ---
