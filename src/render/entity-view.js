@@ -20,7 +20,7 @@ import {
 import { PLAYER } from '../entities/player.js';
 import { PALETTE, shared } from './neon.js';
 import { fadingDrops } from './hole-view.js';
-import { HIT_FX, derezPixels, wizardLook } from './hit-fx.js';
+import { HIT_FX, derezPixels, hitFlash, wizardLook } from './hit-fx.js';
 import { lerpAngle, lerpPosition, shadowScale } from './interp.js';
 import { createObjectView } from './room-view.js';
 import { createWizard } from './wizard.js';
@@ -128,6 +128,17 @@ export function placeDerezPixels(mesh, pixels, pos) {
   mesh.instanceMatrix.needsUpdate = true;
 }
 
+/**
+ * Set a wizard model's flash uniforms from hitFlash().
+ * @param {import('three').Object3D} wizard from createWizard()
+ * @param {{ amount: number, color: 'white'|'magenta' }} flash
+ */
+export function showHitFlash(wizard, { amount, color }) {
+  const uniforms = wizard.userData.flash;
+  uniforms.amount.value = amount;
+  uniforms.color.value.set(color === 'white' ? 0xffffff : PALETTE.magenta);
+}
+
 export class PlayerView {
   /**
    * @param {import('../game.js').Game} game
@@ -152,6 +163,7 @@ export class PlayerView {
     const look = wizardLook(player, PLAYER.deathTicks);
     this.wizard.visible = look.visible;
     this.wizard.scale.set(...look.scale);
+    showHitFlash(this.wizard, hitFlash(player));
     const derezzing = player.dead && player.deathCause !== 'hole';
     placeDerezPixels(this.pixels, derezzing ? derezPixels(PLAYER.deathTicks - player.deathTimer + alpha) : [], pos);
 

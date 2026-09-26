@@ -8,18 +8,19 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 - Damage (Phase 2 step 1): every source goes through `Game.hurt()`; after
-  a hit the wizard is invulnerable for 1 s and blinks, and the stage edges
-  flash magenta. At 0 integrity he derezzes into pixels and recompiles at
-  the room's reset point. Death events name their cause (`hole` or
+  a hit his hologram flashes white, then magenta, and he is invulnerable
+  for 1 s and blinks. At 0 integrity he derezzes into pixels and recompiles
+  at the room's reset point after about 1.1 s. Death events name their cause (`hole` or
   `damage`), each with its own terminal line.
-- Asset showcase: `wizard-hit` loops the blink and the derez.
+- Asset showcase: `wizard-hit` loops the hit flash, the blink and the derez.
 - Hazard and void blocks (Phase 2 step 2): a `type` on room blocks, with
   their color and the hazard's damage in `defs.json` `blocks`. Touching a
   hazard hurts, and the block flares; landing on void is instant death
   (cause `void`, own terminal line). Both have animated looks: red pixels
-  switching on and off, and grains sinking inside a black void block. Validation keeps spawn and reset points off them and raised
-  exits off void. New test room Fault Line east of Stack Yard; showcase
-  `block-hazard` and `block-void`.
+  switching on and off, and grains sinking inside a black void block.
+  Validation keeps spawn and reset points off them and raised exits off
+  void. New test room Fault Line east of Stack Yard; showcase
+  `block-hazard`, `block-void` and `blocks-in-room`.
 
 ### Fixed
 - A room without objects logged a three.js error on entry.

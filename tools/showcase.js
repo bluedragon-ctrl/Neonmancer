@@ -14,8 +14,8 @@ import defs from '../data/defs.json';
 import { OBJECT_STYLE_DEFAULTS, withExitDefaults } from '../src/data/room-data.js';
 import { VIEW_HEIGHT, frameRoom } from '../src/render/camera.js';
 import { PLAYER } from '../src/entities/player.js';
-import { createDerezPixels, createDropShadow, placeDerezPixels } from '../src/render/entity-view.js';
-import { derezPixels, wizardLook } from '../src/render/hit-fx.js';
+import { createDerezPixels, createDropShadow, placeDerezPixels, showHitFlash } from '../src/render/entity-view.js';
+import { derezPixels, hitFlash, wizardLook } from '../src/render/hit-fx.js';
 import { createFloor } from '../src/render/floor.js';
 import { PALETTE } from '../src/render/neon.js';
 import { Renderer } from '../src/render/renderer.js';
@@ -56,7 +56,7 @@ const ALL_ASSETS = [
 ];
 
 /**
- * The wizard getting hurt, in a loop: hit (blinking while invulnerable),
+ * The wizard getting hurt, in a loop: hit (a flash, then blinking while invulnerable),
  * a pause, then losing his last point (derez into pixels), then back.
  */
 function buildWizardHit() {
@@ -79,6 +79,7 @@ function buildWizardHit() {
     const look = wizardLook(player, PLAYER.deathTicks);
     wizard.visible = look.visible;
     wizard.scale.set(...look.scale);
+    showHitFlash(wizard, hitFlash(player));
     placeDerezPixels(pixels, dead ? derezPixels(derezTick) : [], [0, 0, 0]);
   };
   return asset;

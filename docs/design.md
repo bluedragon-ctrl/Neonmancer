@@ -75,16 +75,17 @@ drifting up and a thin neon outline. Proportions are `WIZARD` in
 Every damage source calls `Game.hurt(amount)` (D43): hazard blocks and the
 debug `H` key now, platforms and enemies in later Phase 2 steps.
 
-- A hit takes integrity, reports a `hurt` event (`amount` actually lost)
-  and flashes the stage edges magenta (HUD). Then the wizard is
-  invulnerable for 60 ticks (1 s) and blinks (4 ticks shown, 4 hidden);
-  hits during that time do nothing. No knockback. Invulnerability carries
-  through exits and ends on respawn.
+- A hit takes integrity and reports a `hurt` event (`amount` actually
+  lost). The wizard's hologram flashes: white-hot for 3 ticks, then
+  magenta fading out by 8 ticks. The effect stays on him; nothing covers the
+  screen. Then he stays invulnerable until 60 ticks (1 s) after the hit
+  and blinks (4 ticks shown, 4 hidden); hits during that time do nothing.
+  No knockback. Invulnerability carries through exits and ends on respawn.
 - Losing the last point kills him (`die` event, cause `damage`): he
   derezzes on the spot, flickering and squeezing into a thin beam while
   a burst of cyan and magenta pixels drifts up out of him (placeholder
   until the Phase 4 juice pass), then recompiles at the room's reset point
-  after 0.75 s, like a hole death (cause `hole`, dropping into the pit).
+  after about 1.1 s, like a hole death (cause `hole`, dropping into the pit).
   Each cause prints its own terminal line.
 - Nothing hurts a dead wizard; debug invincibility blocks all damage.
 - Tuning: `invulnerableTicks` and `deathTicks` in `PLAYER`; the look is
@@ -150,7 +151,7 @@ edges where they meet. Motion is slow; nothing strobes.
   on a faintly tinted room floor.
 - The player dies when the center of his hitbox is over a hole at floor
   level (grazing the edge is safe; jumping over is safe), drops into the pit
-  and respawns at the room's own `reset` point (D39) after 0.75 s.
+  and respawns at the room's own `reset` point (D39) after about 1.1 s.
   Respawning resets the room (D24).
 - A block pushed onto a hole drops in and fills it: the hole becomes
   walkable floor and the block is used up: only its top stays visible,
@@ -209,7 +210,6 @@ A DOM overlay on the stage, sized in 1080p pixels (`--u`), all text from
 | Where | What |
 |---|---|
 | Top left | Integrity: label over a row of slanted cyan cells, one per point. A lost cell flashes white and empties; at 2 or less the bar turns magenta and blinks. |
-| Stage edges | Hit flash: a magenta glow around the edges fading out over 0.35 s on every `hurt` event. |
 | Top center | Banner: a title decoding from glyphs (0.45 s), holding (1.8 s) and fading (0.7 s), with an optional smaller line below, in its own color. On entering a room (not on respawn) it shows the room name and the biome name in the biome color; later pickups (e.g. a spell installed) use it too. A new banner replaces the one showing. |
 | Top right | Game name and version; the debug readout (F3) shows below it. |
 | Bottom left | Terminal: lime lines typed at 40 characters/s with a block cursor, kept 4 s, then faded; at most 4 lines. Printed on start, death (one line per cause), respawn and when a crate plugs a hole. |
