@@ -12,6 +12,22 @@ import { checkFiles, readDataFiles, readSchemas } from './check-data.js';
 export { SAVE_ROOM_URL } from '../src/editor/save.js';
 
 /**
+ * Why a save request is refused, as an HTTP status, or 0 to go ahead. Only
+ * the game's own page may save: a JSON POST (other sites can't send one
+ * without the browser asking first) whose Origin, if any, is the dev server
+ * itself. Other pages open in the browser can't overwrite rooms.
+ * @param {{ method?: string, headers: Record<string, string|string[]|undefined> }} req
+ * @returns {number}
+ */
+export function refuseSaveRequest({ method, headers }) {
+  if (method !== 'POST') return 405;
+  const { origin, host } = headers;
+  if (origin !== undefined && origin !== `http://${host}` && origin !== `https://${host}`) return 403;
+  if (!String(headers['content-type'] ?? '').startsWith('application/json')) return 415;
+  return 0;
+}
+
+/**
  * Check a room against the data on disk and write it if it is valid.
  * @param {string} root project root
  * @param {any} room room data from the editor

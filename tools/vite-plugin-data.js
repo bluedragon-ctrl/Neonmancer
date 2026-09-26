@@ -9,7 +9,7 @@
  * - Dev server: the room editor saves rooms through SAVE_ROOM_URL (D56).
  */
 import { checkData, relativeTo } from './check-data.js';
-import { SAVE_ROOM_URL, saveRoom } from './room-save.js';
+import { SAVE_ROOM_URL, refuseSaveRequest, saveRoom } from './room-save.js';
 
 const VIRTUAL_ID = 'virtual:data-schema-errors';
 const RESOLVED_ID = '\0' + VIRTUAL_ID;
@@ -38,8 +38,9 @@ export function dataValidation() {
 
     configureServer(server) {
       server.middlewares.use(SAVE_ROOM_URL, (req, res) => {
-        if (req.method !== 'POST') {
-          res.statusCode = 405;
+        const refused = refuseSaveRequest(req);
+        if (refused) {
+          res.statusCode = refused;
           res.end();
           return;
         }

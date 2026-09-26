@@ -77,6 +77,9 @@ test('typing into a text field (the room editor panel) is left to the browser', 
   for (const tagName of ['INPUT', 'SELECT', 'TEXTAREA']) assert.ok(!input.takes({ code: 'KeyW', target: { tagName } }), tagName);
   assert.ok(input.takes({ code: 'KeyW', target: { tagName: 'BODY' } }));
   assert.ok(input.takes({ code: 'F2' }), 'the editor key');
+  // Function keys type nothing: F2 leaves the editor even from a field.
+  assert.ok(input.takes({ code: 'F2', target: { tagName: 'INPUT' } }));
+  assert.ok(input.takes({ code: 'F3', target: { tagName: 'SELECT' } }));
 });
 
 test('releaseAll drops held keys (window blur)', () => {

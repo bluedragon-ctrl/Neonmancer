@@ -180,7 +180,7 @@ export class RoomEdit {
   placeObject(cell, type, extra = {}) {
     if (!this.inside(cell)) return false;
     const here = this.at(cell);
-    if (here?.kind === 'object' && here.item.type === type && JSON.stringify(pick(here.item, extra)) === JSON.stringify(extra)) return false;
+    if (here?.kind === 'object' && here.item.type === type && sameFields(settings(here.item), extra)) return false;
     return this.edit(() => {
       this.remove(cell);
       this.data.objects = [...(this.data.objects ?? []), { id: this.freeId(type), type, at: [...cell], ...structuredClone(extra) }];
@@ -283,9 +283,15 @@ export class RoomEdit {
   }
 }
 
-/** The fields of `item` named in `keys` (an object whose keys are used). */
-function pick(item, keys) {
-  return Object.fromEntries(Object.keys(keys).map((key) => [key, item[key]]));
+/** A room object's own settings: every field but its id, type and cell (e.g. `regrow`). */
+function settings({ id, type, at, ...rest }) {
+  return rest;
+}
+
+/** Do two objects have the same fields with the same values, in any key order? */
+function sameFields(a, b) {
+  const keys = Object.keys(a);
+  return keys.length === Object.keys(b).length && keys.every((key) => key in b && JSON.stringify(a[key]) === JSON.stringify(b[key]));
 }
 
 /**

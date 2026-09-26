@@ -395,7 +395,10 @@ While editing, the page checks the room with `validateData()` against its
 own copy of the data after every change (`roomErrors()`), and hands the
 edited data to the game (`content.rooms`) so `Game.enterRoom()` rebuilds it
 and `RoomScene.show(game, { rebuild: true })` redraws the static views too.
-Only the dev server writes files; a build downloads the room instead.
+Only the dev server writes files; a build downloads the room instead. The
+endpoint takes only a JSON POST whose `Origin` (if any) is the dev server
+itself (`refuseSaveRequest()`), so another site open in the browser can't
+post a room to it.
 
 Data files start with a `"$schema"` pointing to their schema, so editors like
 VS Code offer completion and inline errors.

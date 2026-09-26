@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { Boxes } from '../src/editor/boxes.js';
 import { formatJson } from '../src/editor/format-json.js';
 import { RoomEdit, roomErrors, sizeProblem } from '../src/editor/room-edit.js';
-import { saveRoom } from '../tools/room-save.js';
+import { refuseSaveRequest, saveRoom } from '../tools/room-save.js';
 import { CRUMBLE, dataFiles, roomFile } from './helpers.js';
 
 const dataDir = fileURLToPath(new URL('../data/', import.meta.url));
@@ -131,6 +131,17 @@ test('RoomEdit places and erases blocks, objects and holes', () => {
   assert.equal(edit.dirty, false);
 });
 
+test('RoomEdit.placeObject on the same object applies the new settings', () => {
+  const edit = new RoomEdit(sampleRoom());
+  assert.equal(edit.placeObject([2, 1, 2], 'collapsing', { regrow: 3 }), true);
+  assert.equal(edit.placeObject([2, 1, 2], 'collapsing', { regrow: 3 }), false, 'nothing to change');
+  assert.equal(edit.placeObject([2, 1, 2], 'collapsing', { regrow: 5 }), true);
+  // Placed again without a regrow time: it no longer grows back.
+  assert.equal(edit.placeObject([2, 1, 2], 'collapsing'), true);
+  assert.deepEqual(edit.at([2, 1, 2]).item, { id: 'collapsing_1', type: 'collapsing', at: [2, 1, 2] });
+  assert.equal(edit.placeObject([2, 1, 2], 'collapsing'), false);
+});
+
 test('RoomEdit moves spawn and reset; no reset falls back to spawn', () => {
   const edit = new RoomEdit(sampleRoom());
   assert.equal(edit.setPoint('spawn', [2.5, 0, 3.5]), true);
@@ -217,6 +228,16 @@ test('saveRoom writes a valid room and refuses an invalid, unknown or badly name
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
+});
+
+test('refuseSaveRequest lets only the game page save (a JSON POST from its own origin)', () => {
+  const headers = { host: 'localhost:5173', origin: 'http://localhost:5173', 'content-type': 'application/json' };
+  assert.equal(refuseSaveRequest({ method: 'POST', headers }), 0);
+  assert.equal(refuseSaveRequest({ method: 'POST', headers: { ...headers, origin: undefined } }), 0, 'no Origin: not a browser page');
+  assert.equal(refuseSaveRequest({ method: 'GET', headers }), 405);
+  assert.equal(refuseSaveRequest({ method: 'POST', headers: { ...headers, origin: 'https://evil.example' } }), 403);
+  // A form post from another page: text/plain needs no CORS preflight.
+  assert.equal(refuseSaveRequest({ method: 'POST', headers: { ...headers, 'content-type': 'text/plain' } }), 415);
 });
 
 test('sizeProblem keeps room sizes within the schema and camera limits', () => {

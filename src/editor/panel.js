@@ -4,6 +4,7 @@
  * state and reports clicks to the editor (src/editor/editor.js). A tool, so
  * its text is written here, not in strings.json (like the debug readout).
  */
+import { isFunctionKey } from '../core/input.js';
 
 /**
  * The editor's tools, in panel order; `key` is the digit that picks it.
@@ -129,8 +130,9 @@ export class EditorPanel {
     this.element.addEventListener('click', (e) => {
       if (e.target.closest('button')) e.target.closest('button').blur();
     });
+    // Function keys (F2 plays the room) commit the field first.
     this.element.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' || e.key === 'Enter') e.target.blur();
+      if (e.key === 'Escape' || e.key === 'Enter' || isFunctionKey(e.code)) e.target.blur();
     });
   }
 
