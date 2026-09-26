@@ -2,14 +2,14 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PLAYER, Player } from '../src/entities/player.js';
 import { Pushable } from '../src/entities/pushable.js';
-import { Grid } from '../src/world/grid.js';
+import { grid as makeGrid, hold, idle } from './helpers.js';
 
 /**
  * A tiny world like Game: grid, pushables and the player, updated in the
  * game's order (player → push → objects, lowest first).
  */
 function world({ size = [8, 4, 8], cells = [], holes = [], crates = [], spawn = [0.5, 0, 0.5] } = {}) {
-  const grid = new Grid({ size, cells, holes });
+  const grid = makeGrid({ size, cells, holes });
   const pushables = crates.map((at, i) => new Pushable({ id: `c${i}`, at }));
   const player = new Player(spawn);
   const w = { grid, pushables, player, bodies: [...pushables, player], events: [] };
@@ -28,8 +28,6 @@ function world({ size = [8, 4, 8], cells = [], holes = [], crates = [], spawn = 
   return w;
 }
 
-const idle = { down: () => false, pressed: () => false };
-const hold = (action) => ({ down: (a) => a === action, pressed: () => false });
 
 test('objects rest on the floor and on each other, falling when unsupported', () => {
   const w = world({ crates: [[3, 0, 3], [3, 2, 3], [5, 3, 5]] });

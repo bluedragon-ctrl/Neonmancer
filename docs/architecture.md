@@ -260,5 +260,7 @@ VS Code offer completion and inline errors.
 
 ## Testing
 
-`npm test` runs Node's built-in test runner over `tests/**/*.test.js` (D7).
+`npm test` runs Node's built-in test runner over the `*.test.js` files in `tests/` (D7);
+shared fixtures (small data files and games, fake input, grids) live in
+`tests/helpers.js`.
 Tests cover pure logic only (no DOM or WebGL).
