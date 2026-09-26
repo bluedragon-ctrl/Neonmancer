@@ -75,6 +75,19 @@ and the project uses [Semantic Versioning](https://semver.org/).
   permanent HUD tag (bottom right) naming the active mode.
 - Rooms define their own death-respawn point (`reset`, defaults to `spawn`)
   instead of respawning wherever the wizard last entered through a door.
+- `?msaa=0` turns multisampling off; the debug readout shows GPU shaders,
+  geometries and textures.
+
+### Changed
+- Phase 1 code review: rooms free the floor's hole-mask texture (it leaked
+  one per room entry and death), keep shared shaders across room changes,
+  and a respawn rebuilds only the object views. Window resizing
+  reallocates buffers only once it pauses.
+- The occupancy grid is typed arrays and the logic tick no longer
+  allocates per entity: about 1.7× more logic ticks per second.
+- Shared render builders (`neonLines`, `fadingLines`, `shadedFaces`),
+  `main.js` and `validateRoom()` split into focused parts, pure helpers
+  moved out of three.js view modules.
 
 ### Removed
 - The four box-look crates in Boot Sector (the asset showcase shows them).
