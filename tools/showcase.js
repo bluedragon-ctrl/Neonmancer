@@ -35,7 +35,7 @@ import { createObjectView, createRoomView } from '../src/render/room-view.js';
 import { ExitView } from '../src/render/exit-view.js';
 import { HOLO_TIME } from '../src/render/holo.js';
 import { createWizard } from '../src/render/wizard.js';
-import { BUG, bounceSquash, bugPose, createBug, popPixels, setEyeMood } from '../src/render/bug.js';
+import { BUG, animateBug, createBug, popPixels, setEyeMood } from '../src/render/bug.js';
 
 /** Units between two assets (the default span of an asset). */
 const SPACING = 3;
@@ -85,11 +85,7 @@ function buildBug(mood, { bounced = false } = {}) {
   setEyeMood(bug, mood);
   const asset = new Group().add(bug);
   asset.userData.update = (dt, time) => {
-    const { body } = bug.userData;
-    const pose = bounced ? bugPose(time * BUG.idleRate, BUG.idleLift) : bugPose(time * speed);
-    const squash = bounced ? bounceSquash(((time % 1.2) / 1.2) * 72) : 0;
-    body.position.y = pose.lift;
-    body.scale.set(pose.scale[0] * (1 + squash * 0.5), pose.scale[1] * (1 - squash), pose.scale[2] * (1 + squash * 0.5));
+    animateBug(bug, bounced ? { time, bounced: ((time % 1.2) / 1.2) * 72 } : { state: 'walk', walked: time * speed });
   };
   return asset;
 }

@@ -5,6 +5,7 @@
  * recompiles, growing from its center, when it grows back.
  */
 import { COLLAPSING } from '../entities/collapsing.js';
+import { hash } from './hash.js';
 
 /** Timing in ticks, sizes in units. */
 export const COLLAPSE_FX = {
@@ -23,11 +24,8 @@ export const COLLAPSE_FX = {
   spread: 0.5,
 };
 
-/** A fixed pseudo-random number in [0, 1) for pixel `i` and channel `k`. */
-function hash(i, k) {
-  const x = Math.sin(i * 91.7 + k * 263.3) * 43758.5453;
-  return x - Math.floor(x);
-}
+/** Seed of this effect's hash() sequence. */
+const SEED = [91.7, 263.3];
 
 /** Where the pixels start: every other point (a checkerboard) of a 4×4×4 lattice through the block. */
 const LATTICE = [];
@@ -69,8 +67,8 @@ export function collapsePixels(tick) {
   if (tick < 0 || tick >= COLLAPSE_FX.pixelTicks) return [];
   const t = tick / COLLAPSE_FX.pixelTicks;
   return LATTICE.map((start, i) => {
-    const fall = t * t * COLLAPSE_FX.drop * (0.6 + 0.4 * hash(i, 0));
-    const out = t * COLLAPSE_FX.spread * hash(i, 1);
+    const fall = t * t * COLLAPSE_FX.drop * (0.6 + 0.4 * hash(i, 0, SEED));
+    const out = t * COLLAPSE_FX.spread * hash(i, 1, SEED);
     return {
       offset: [start[0] + (start[0] - 0.5) * out * 2, start[1] - fall, start[2] + (start[2] - 0.5) * out * 2],
       scale: 1 - t,

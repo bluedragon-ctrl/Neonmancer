@@ -14,6 +14,9 @@
 /** Overlaps smaller than this don't count, so touching faces never collide. */
 const EPS = 1e-6;
 
+/** Heights closer than this count as touching (one box resting on another). */
+export const REST_EPS = 1e-4;
+
 /**
  * The box of a body on each axis as [min, max].
  * @param {number[]} pos feet center
@@ -30,6 +33,15 @@ export function bodyBox(pos, size) {
 /** Do two [min, max] intervals overlap by more than EPS? */
 export function overlaps([a0, a1], [b0, b1]) {
   return a0 < b1 - EPS && b0 < a1 - EPS;
+}
+
+/** Box of the unit cell with its lower corner at [x, y, z]. */
+export function cellBox([x, y, z]) {
+  return [
+    [x, x + 1],
+    [y, y + 1],
+    [z, z + 1],
+  ];
 }
 
 /** Integer cell range [lo, hi] a [min, max] interval overlaps. */
@@ -69,11 +81,9 @@ export function touchedCell(box, grid, type, reach = 0.02) {
     for (let y = y0; y <= y1; y++) {
       for (let z = z0; z <= z1; z++) {
         if (grid.cellAt(x, y, z) !== type) continue;
-        // Reaching past a corner diagonally doesn't count: the box must
-        // overlap the cell on at least two axes.
+        // Reaching past a corner diagonally doesn't count (touchesBox()).
         const cell = [x, y, z];
-        const inside = box.filter(([min, max], i) => overlaps([min, max], [cell[i], cell[i] + 1])).length;
-        if (inside >= 2) return cell;
+        if (touchesBox(box, cellBox(cell), reach)) return cell;
       }
     }
   }
@@ -181,6 +191,11 @@ export function groundBelow(pos, size, grid, bodies = []) {
 /** Do two boxes overlap on every axis (more than touching)? */
 export function overlapsBox(a, b) {
   return a.every((range, i) => overlaps(range, b[i]));
+}
+
+/** Does box `a` rest on top of box `b`: bottom on its top, footprints overlapping? */
+export function restsOn(a, b) {
+  return Math.abs(a[1][0] - b[1][1]) < REST_EPS && overlaps(a[0], b[0]) && overlaps(a[2], b[2]);
 }
 
 /**

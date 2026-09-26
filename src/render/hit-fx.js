@@ -8,6 +8,7 @@
  */
 
 import { PLAYER } from '../entities/player.js';
+import { hash } from './hash.js';
 
 /** Timing in ticks, sizes in units. */
 export const HIT_FX = {
@@ -67,12 +68,6 @@ export function hitFlash({ invulnerable, dead }) {
   if (tick < HIT_FX.flashHotTicks) return { amount: 1, color: 'white' };
   const fade = (tick - HIT_FX.flashHotTicks) / (HIT_FX.flashTicks - HIT_FX.flashHotTicks);
   return { amount: 0.85 * (1 - fade), color: 'magenta' };
-}
-
-/** A fixed pseudo-random number in [0, 1) for pixel `i` and channel `k`. */
-function hash(i, k) {
-  const x = Math.sin(i * 127.1 + k * 311.7) * 43758.5453;
-  return x - Math.floor(x);
 }
 
 /**

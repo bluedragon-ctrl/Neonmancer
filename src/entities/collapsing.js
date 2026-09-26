@@ -11,16 +11,13 @@
  * it is no body at all (`solid` false: the game leaves it out of the
  * bodies others collide with).
  */
-import { overlaps } from '../physics/collision.js';
+import { cellBox, overlapsBox, restsOn } from '../physics/collision.js';
 
 /** Tuning values (ticks, 60 per second). */
 export const COLLAPSING = {
   /** Ticks it shakes after the wizard steps on it, before it vanishes. */
   shakeTicks: 30,
 };
-
-/** Heights closer than this count as touching (the wizard standing on it). */
-const EPS = 1e-4;
 
 export class Collapsing {
   /**
@@ -57,12 +54,7 @@ export class Collapsing {
 
   /** Collision box [[minX, maxX], [minY, maxY], [minZ, maxZ]]. */
   box() {
-    const [x, y, z] = this.pos;
-    return [
-      [x, x + 1],
-      [y, y + 1],
-      [z, z + 1],
-    ];
+    return cellBox(this.pos);
   }
 
   /** Start shaking (the wizard stepped on it); nothing happens unless it is solid and still. */
@@ -93,7 +85,7 @@ export class Collapsing {
     if (this.regrowTicks === null || this.timer < this.regrowTicks) return null;
     const box = this.box();
     for (const body of bodies) {
-      if (body !== this && body.box().every((range, i) => overlaps(range, box[i]))) return null;
+      if (body !== this && overlapsBox(body.box(), box)) return null;
     }
     this.state = 'solid';
     this.timer = 0;
@@ -104,8 +96,6 @@ export class Collapsing {
   /** Is the wizard standing on top: alive, grounded, feet on its top, footprints overlapping? */
   stoodOnBy(player) {
     if (player.dead || !player.grounded) return false;
-    const [px, py, pz] = player.box();
-    const [bx, by, bz] = this.box();
-    return Math.abs(py[0] - by[1]) < EPS && overlaps(px, bx) && overlaps(pz, bz);
+    return restsOn(player.box(), this.box());
   }
 }

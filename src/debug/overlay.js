@@ -6,6 +6,7 @@
  * only draws the boxes and tracks whether the mode is on.
  */
 import { BoxGeometry, EdgesGeometry, Group, LineBasicMaterial, LineSegments } from 'three';
+import { enemyBox } from '../entities/enemy.js';
 import { lerpPosition } from '../render/interp.js';
 import { PALETTE } from '../render/neon.js';
 
@@ -90,9 +91,8 @@ export class DebugOverlay {
     });
     enemies.forEach((enemy, i) => {
       this.enemyBoxes[i].visible = enemy.alive;
-      const [x, y, z] = lerpPosition(enemy.prev, enemy.pos, alpha);
-      const [w, , d] = enemy.size;
-      place(this.enemyBoxes[i], [x + (1 - w) / 2, y, z + (1 - d) / 2], enemy.size);
+      const corner = enemyBox(lerpPosition(enemy.prev, enemy.pos, alpha), enemy.size).map(([min]) => min);
+      place(this.enemyBoxes[i], corner, enemy.size);
     });
   }
 }

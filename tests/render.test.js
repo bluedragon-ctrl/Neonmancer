@@ -13,7 +13,9 @@ import { MARKS, markSegments } from '../src/render/marks.js';
 import { holeSides } from '../src/render/hole-view.js';
 import { OBJECT_VIEWS } from '../src/render/room-scene.js';
 import { OBJECT_KINDS } from '../src/entities/kinds.js';
+import DEFS from '../data/defs.json' with { type: 'json' };
 import DEFS_SCHEMA from '../schemas/defs.schema.json' with { type: 'json' };
+import { ENEMY_MODELS } from '../src/render/entity-view.js';
 
 test('letterbox fills a 16:9 window exactly', () => {
   assert.deepEqual(fitLetterbox(1920, 1080), { x: 0, y: 0, width: 1920, height: 1080 });
@@ -139,4 +141,8 @@ test('every object kind in the schema has a logic class and a view', () => {
   const kinds = DEFS_SCHEMA.$defs.objectType.properties.kind.enum;
   assert.deepEqual(Object.keys(OBJECT_KINDS).sort(), [...kinds].sort());
   assert.deepEqual(Object.keys(OBJECT_VIEWS).sort(), [...kinds].sort());
+});
+
+test('every enemy type in defs.json has a model', () => {
+  for (const type of Object.keys(DEFS.enemies)) assert.ok(ENEMY_MODELS[type], `no model for "${type}"`);
 });

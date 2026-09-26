@@ -14,7 +14,8 @@
  *   no room for that it hurts him and waits. It never kills outright.
  */
 import { DT } from '../core/loop.js';
-import { moveAxis, overlaps, overlapsBox, overlapsSolid, shoveClear } from '../physics/collision.js';
+import { cellBox, moveAxis, overlapsBox, overlapsSolid, restsOn, shoveClear } from '../physics/collision.js';
+import { Enemy } from './enemy.js';
 import { advance, buildTrack, positionOf, startState } from '../world/path.js';
 
 /** Tuning values (units, integrity). */
@@ -24,9 +25,6 @@ export const PLATFORM = {
   /** Farthest a platform shoves the wizard in one tick; more than that and he is squeezed. */
   maxShove: 0.35,
 };
-
-/** Heights closer than this count as touching (one resting on the other). */
-const EPS = 1e-4;
 
 export class Platform {
   /**
@@ -53,7 +51,7 @@ export class Platform {
 
   /** Collision box [[minX, maxX], [minY, maxY], [minZ, maxZ]]. */
   box() {
-    return boxAt(this.pos);
+    return cellBox(this.pos);
   }
 
   /**
@@ -88,10 +86,9 @@ export class Platform {
    * @returns {{ ok: boolean, squeezed?: boolean, crates?: object[], player?: number[]|null }}
    *   `crates` ride along; `player` is the wizard's new feet center (null: he stays put)
    */
-  plan(to, delta, { grid, solids, liveEnemies = [], player }) {
-    const box = boxAt(to);
+  plan(to, delta, { grid, solids, obstacles: objects, player }) {
+    const box = cellBox(to);
     const alive = !player.dead;
-    const objects = [...new Set([...solids, ...liveEnemies])];
     const { crates, carriesPlayer, stepping } = this.riders(objects, alive ? player : null);
     if (stepping) return { ok: false };
     const moving = new Set([this, ...crates]);
@@ -102,12 +99,12 @@ export class Platform {
       if (!moving.has(object) && overlapsBox(box, object.box())) return { ok: false };
     }
     // Riders must fit where they are carried: clear of blocks and other
-    // bodies (an enemy may overlap the wizard, it doesn't block him).
+    // bodies (a non-solid enemy may overlap the wizard, it doesn't block him).
     const still = objects.filter((object) => !moving.has(object));
     const stillAndPlayer = alive && !carriesPlayer ? [...still, player] : still;
     for (const crate of crates) {
       const moved = crate.box().map(([min, max], i) => [min + delta[i], max + delta[i]]);
-      const others = crate.behavior ? still : stillAndPlayer;
+      const others = crate instanceof Enemy && !crate.solid ? still : stillAndPlayer;
       if (overlapsSolid(moved, grid) || others.some((body) => overlapsBox(moved, body.box()))) return { ok: false };
     }
     if (!alive) return { ok: true, crates, player: null };
@@ -154,21 +151,6 @@ export class Platform {
   shove(pos, size, box, grid, others, player) {
     return shoveClear(pos, size, box, grid, others, player, PLATFORM.maxShove);
   }
-
-}
-
-/** Box of a unit block with its lower corner at `pos`. */
-function boxAt([x, y, z]) {
-  return [
-    [x, x + 1],
-    [y, y + 1],
-    [z, z + 1],
-  ];
-}
-
-/** Does box `a` rest on top of box `b`: bottom on its top, footprints overlapping? */
-function restsOn(a, b) {
-  return Math.abs(a[1][0] - b[1][1]) < EPS && overlaps(a[0], b[0]) && overlaps(a[2], b[2]);
 }
 
 /** Round a coordinate that is a hair off a whole cell, so carried objects stay on the grid. */

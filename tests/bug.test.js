@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { Patrol } from '../src/ai/patrol.js';
 import { ENEMY } from '../src/entities/enemy.js';
 import { Game } from '../src/game.js';
+import { overlapsBox } from '../src/physics/collision.js';
 import { BUG as BUG_LOOK, bugPose, popPixels } from '../src/render/bug.js';
 import { BOUNCE_SPEED, PLAYER } from '../src/entities/player.js';
 import { CRATE, LIFT, eventTypes, gameData, hold, idle, roomFile } from './helpers.js';
@@ -259,6 +260,18 @@ test('a platform waits while a bug steps on or off it', () => {
   run(game, idle, 10);
   assert.ok(game.objects[1].pos[0] > 2, 'moves on once the bug is off');
   assert.deepEqual(game.enemies[0].pos, [1, 1, 1]);
+});
+
+test('a platform waits rather than carry a solid bug into the wizard', () => {
+  const lift = { id: 'p', type: 'lift', at: [1, 0, 1], path: { points: [[5, 0, 1]] } };
+  const plan = (overrides) => {
+    const game = gameWith({ enemies: [sitter([1, 1, 1], 'b', overrides)], objects: [lift] });
+    // Mid-jump beside the bug (not riding), just clear of its box (x up to 1.8).
+    game.player.place([2.12, 1.2, 1.5]);
+    return game.objects[0].plan([1.05, 0, 1], [0.05, 0, 0], game);
+  };
+  assert.equal(plan({ solid: true }).ok, false, 'a solid bug would be carried into him');
+  assert.equal(plan({}).ok, true, 'he walks through a bug that is not solid');
 });
 
 test('a bug in its way makes a platform wait', () => {

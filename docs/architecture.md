@@ -54,7 +54,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `world/grid.js` | 3D occupancy grid: static cells, room sides with exit openings, hole tiles |
 | `world/room.js` | Runtime room built fresh from data on every entry (type defaults + overrides) |
 | `world/exits.js` | Which exit the wizard left through; where he arrives in the connected room |
-| `physics/collision.js` | Axis-separated AABB movement against the grid; surface below a body |
+| `physics/collision.js` | Axis-separated AABB movement against the grid; surface below a body; box helpers (`restsOn()`, `touchesBox()`, `shoveClear()`) shared by all entities |
 | `entities/player.js` | Movement, jump, gravity, turning, pushing, integrity, invulnerability after a hit, death (hole or damage), respawn; one wizard for the whole game |
 | `entities/kinds.js` | Object kind → logic class (`OBJECT_KINDS`); the room's objects are built from it |
 | `entities/pushable.js` | Rest → slide → fall → land / plug-a-hole state machine |
@@ -77,9 +77,10 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/marks.js` | Face-mark line patterns for object styles (pure, tested) |
 | `render/hole-view.js` | Hole pits: walls fading to black, rim, short fading corner lines; outline math (tested) |
 | `render/room-view.js` | Static blocks (merged edges + instanced occluder faces), back walls, styled object views |
-| `render/entity-view.js` | Player, pushable, platform, collapsing-block and enemy views, glowing drop shadows, pixel bursts (derez, collapse), platform guide lines |
+| `render/entity-view.js` | Player, pushable, platform, collapsing-block and enemy views (enemy models by type: `ENEMY_MODELS`), glowing drop shadows, pixel bursts (derez, collapse), platform guide lines |
 | `render/collapse-fx.js` | Collapsing-block look: shake, pixels breaking off, regrow, `COLLAPSE_FX` tuning (pure, tested) |
-| `render/bug.js` | Bug model (ball, eyes colored by mood), hop pose, bounce squash, pop pixels, `BUG` tuning (pure parts tested) |
+| `render/bug.js` | Bug model (ball, eyes colored by mood), hop pose, bounce squash, pop pixels, `BUG` tuning (pure parts tested); `BUG_MODEL` for `EnemyView` |
+| `render/hash.js` | Fixed pseudo-random numbers for pixel bursts (pure) |
 | `render/rails.js` | Guide line along a platform's path, `RAILS` tuning (pure, tested) |
 | `render/block-fx.js` | Animated looks of hazard and void blocks (face shaders in room coordinates, steady edges, hazard flare), `BLOCK_FX` tuning |
 | `render/hit-fx.js` | Damage look: blinking while invulnerable, derez flicker and pixel burst, `HIT_FX` tuning (pure, tested) |
