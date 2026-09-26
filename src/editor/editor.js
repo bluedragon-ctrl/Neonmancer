@@ -112,6 +112,8 @@ export class Editor {
   close() {
     this.edit.end();
     this.stroke = null;
+    // An edit this frame may not be rebuilt yet: check and play the room as it is now.
+    if (this.stale) this.rebuild();
     if (this.errors.length > 0) {
       this.status = 'Fix the errors below to play the room.';
       this.refresh();

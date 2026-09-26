@@ -20,6 +20,15 @@ export function isTextField(target) {
   return ['INPUT', 'SELECT', 'TEXTAREA'].includes(/** @type {any} */ (target)?.tagName);
 }
 
+/**
+ * Is the key a function key (F1–F24)? They type nothing, so they work in a
+ * text field too (F2 leaves the room editor).
+ * @param {string} code
+ */
+export function isFunctionKey(code) {
+  return /^F\d+$/.test(code);
+}
+
 export class Input {
   /** @param {Record<string, string[]>} bindings action → key codes */
   constructor(bindings = DEFAULT_BINDINGS) {
@@ -50,11 +59,12 @@ export class Input {
   /**
    * Does the game take this key event, or leave it to the browser? Unbound
    * keys, shortcuts (with Ctrl, Alt or Meta, e.g. Ctrl+R) and typing into a
-   * text field (the room editor's) go to the browser.
+   * text field (the room editor's; function keys still count there) go to
+   * the browser.
    * @param {{ code: string, ctrlKey?: boolean, metaKey?: boolean, altKey?: boolean, target?: EventTarget|null }} event
    */
   takes({ code, ctrlKey = false, metaKey = false, altKey = false, target = null }) {
-    return this.isBound(code) && !ctrlKey && !metaKey && !altKey && !isTextField(target);
+    return this.isBound(code) && !ctrlKey && !metaKey && !altKey && (isFunctionKey(code) || !isTextField(target));
   }
 
   /** Record a key going down (auto-repeat is ignored). @param {string} code */

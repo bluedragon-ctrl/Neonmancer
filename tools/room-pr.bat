@@ -14,7 +14,10 @@ setlocal
 cd /d "%~dp0.."
 
 set "WHAT=%~1"
-if "%WHAT%"=="" set "WHAT=update rooms"
+if not defined WHAT set "WHAT=update rooms"
+rem From here the description is used as !WHAT!: expanded after the line is
+rem parsed, so ( ) & < > | in it are plain text, not batch syntax.
+setlocal EnableDelayedExpansion
 
 rem Anything to send?
 set "CHANGED="
@@ -48,7 +51,7 @@ git add -A -- data/rooms data/world.json || exit /b 1
 set "BODY=%TEMP%\neonmancer-room-pr.md"
 > "%BODY%" echo ## Summary
 >> "%BODY%" echo.
->> "%BODY%" echo Room and map data: %WHAT%.
+>> "%BODY%" echo Room and map data: !WHAT!.
 >> "%BODY%" echo.
 >> "%BODY%" echo Changed files:
 >> "%BODY%" echo.
@@ -59,7 +62,7 @@ for /f "tokens=1,*" %%a in ('git diff --cached --name-status') do >> "%BODY%" ec
 >> "%BODY%" echo - [x] `npm run validate:data` passes
 >> "%BODY%" echo - [ ] Rooms played in the game (`npm run dev`)
 
-git commit -q -m "feat(rooms): %WHAT%" || exit /b 1
+git commit -q -m "feat(rooms): !WHAT!" || exit /b 1
 git push -u origin "%BRANCH%" || exit /b 1
 
 where gh >nul 2>nul
@@ -67,9 +70,9 @@ if errorlevel 1 (
   echo.
   echo The GitHub CLI is not installed. Create the PR here:
   echo https://github.com/bluedragon-ctrl/Neonmancer/compare/main...%BRANCH%?expand=1
-  echo Title: feat^(rooms^): %WHAT%
+  echo Title: feat^(rooms^): !WHAT!
   echo Body:  %BODY%
   exit /b 0
 )
-gh pr create --base main --head "%BRANCH%" --title "feat(rooms): %WHAT%" --body-file "%BODY%"
+gh pr create --base main --head "%BRANCH%" --title "feat(rooms): !WHAT!" --body-file "%BODY%"
 del "%BODY%"

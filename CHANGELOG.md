@@ -98,6 +98,13 @@ and the project uses [Semantic Versioning](https://semver.org/).
 - Room resets no longer free the hologram materials that the new views
   share, so enemy shaders aren't compiled again after each death or
   re-entry.
+- Room editor review fixes: F2 leaves the editor even while a panel field
+  has focus, and the typed value counts; leaving checks and plays the room
+  with the edit made that same frame; placing a collapsing block again
+  without a regrow time clears its `regrow`; the dev server takes saves
+  only as a JSON POST from the game's own page, so other sites open in the
+  browser can't overwrite rooms; `tools/room-pr.bat` takes a description
+  with `( ) & < > |` in it.
 
 ### Changed
 - Enemy code cleanup: shared collision helpers (`restsOn()`, `cellBox()`,
