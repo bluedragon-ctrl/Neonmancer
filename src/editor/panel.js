@@ -1,5 +1,5 @@
 /**
- * The room editor's side panel (D56): tools, height layer, room settings,
+ * The room editor's side panel (D56): room settings, height layer, tools,
  * undo/redo/save and the room's validation errors. Plain DOM; it only shows
  * state and reports clicks to the editor (src/editor/editor.js). A tool, so
  * its text is written here, not in strings.json (like the debug readout).
@@ -80,7 +80,7 @@ export class EditorPanel {
     const up = el('button', 'editor-small', '+');
     down.addEventListener('click', () => on.layer(-1));
     up.addEventListener('click', () => on.layer(1));
-    const layer = el('div', 'editor-row');
+    const layer = el('div', 'editor-row editor-layer');
     layer.append(el('span', 'editor-label', 'Layer'), down, this.layerLabel, up);
 
     this.nameInput = Object.assign(el('input'), { type: 'text' });
@@ -113,7 +113,7 @@ export class EditorPanel {
     const help = el('div', 'editor-help');
     for (const line of HELP) help.append(el('div', '', line));
 
-    this.element.append(title, this.roomLabel, tools, objectRows, layer, room, actions, this.status, this.errors, help);
+    this.element.append(title, this.roomLabel, room, layer, tools, objectRows, actions, this.status, this.errors, help);
     root.append(this.element);
 
     // Controls let go of the keyboard once used, so the editor's keys (1–7

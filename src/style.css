@@ -482,6 +482,10 @@ body {
   margin-bottom: calc(6 * var(--u));
 }
 
+.editor-layer {
+  margin-bottom: calc(12 * var(--u));
+}
+
 .editor-row[hidden] {
   display: none;
 }
