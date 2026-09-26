@@ -30,6 +30,10 @@
       "$ref": "common.schema.json#/$defs/point",
       "description": "Player start (feet center) when the game starts in this room."
     },
+    "reset": {
+      "$ref": "common.schema.json#/$defs/point",
+      "description": "Where the wizard reappears (feet center) after dying in this room, however he entered it. Defaults to \"spawn\" if omitted. Above the floor is fine: he falls from there like anywhere else."
+    },
     "exits": {
       "type": "array",
       "items": { "$ref": "#/$defs/exit" }

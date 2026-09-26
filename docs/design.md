@@ -94,7 +94,7 @@ drifting up and a thin neon outline. Proportions are `WIZARD` in
   on a faintly tinted room floor.
 - The player dies when the center of his hitbox is over a hole at floor
   level (grazing the edge is safe; jumping over is safe), drops into the pit
-  and respawns at the room entrance (for now the room spawn) after 0.75 s.
+  and respawns at the room's own `reset` point (D39) after 0.75 s.
   Respawning resets the room (D24).
 - A block pushed onto a hole drops in and fills it: the hole becomes
   walkable floor and the block is used up: only its top stays visible,
@@ -123,8 +123,8 @@ drifting up and a thin neon outline. Proportions are `WIZARD` in
   arrives half a cell
   inside the matching exit, keeping his offset along the edge, his height
   above the exit floor, his fall and his facing.
-- That arrival point (on the exit floor) is where he respawns in the room;
-  the start room uses its own `spawn` until he leaves it.
+- Where he respawns if he dies is each room's own `reset` point (D39), not
+  the arrival point: it stays put regardless of which door he came through.
 - Rooms fully reset on entry and on respawn.
 - Objects never leave a room: pushing one out through an exit is blocked.
 - The first row of cells inside an exit must be free (no blocks, objects or,
@@ -240,6 +240,9 @@ Example room (12×12):
 ```
 
 - `spawn` — player feet center; where the game starts if this is the start room.
+- `reset` — player feet center; where he reappears after dying in this room,
+  however he entered it (D39). Optional, defaults to `spawn`. Above the
+  floor is fine, he just falls from there like anywhere else.
 - `exits` — `side` is `-x`, `+x`, `-z` or `+z`; `at` is the first cell along
   that side; `width` (default 2), `y` floor level (default 0), `height`
   (default 2).

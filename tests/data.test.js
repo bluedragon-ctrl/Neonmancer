@@ -162,6 +162,19 @@ test('room: the player must fit at the spawn point', () => {
   );
 });
 
+test('room: an explicit reset point (D39) is validated like spawn, at its own path', () => {
+  assertError(
+    errorsAfter((f) => (f['rooms/alpha.json'].reset = [0.1, 0, 1.5])),
+    'rooms/alpha.json › reset',
+    'does not fit',
+  );
+  assertError(
+    errorsAfter((f) => (f['rooms/alpha.json'].reset = [4.9, 0, 4.5])),
+    'reset',
+    'overlaps blocks[0]',
+  );
+});
+
 test('room: exits must fit their side', () => {
   assertError(
     errorsAfter((f) => (f['rooms/alpha.json'].exits[0].at = 7)),
@@ -253,15 +266,29 @@ test('buildRoom expands blocks, merges type defaults and applies exit defaults',
   assert.deepEqual(room.exits, [{ id: 'east', side: '+x', at: 3, width: 2, y: 0, height: 2 }]);
 });
 
+test('buildRoom defaults reset to spawn, or uses an explicit reset (D39)', () => {
+  const content = loadGameData(validFiles());
+  const withoutReset = buildRoom(content.rooms.get('alpha'), content);
+  assert.deepEqual(withoutReset.reset, withoutReset.spawn);
+
+  const files = validFiles();
+  files['rooms/alpha.json'].reset = [6, 0, 6];
+  const withReset = buildRoom(loadGameData(files).rooms.get('alpha'), content);
+  assert.deepEqual(withReset.reset, [6, 0, 6]);
+  assert.deepEqual(withReset.spawn, [1.5, 0, 1.5]); // spawn itself is untouched
+});
+
 test('buildRoom gives a fresh copy every time (rooms reset on entry)', () => {
   const content = loadGameData(validFiles());
   const data = content.rooms.get('alpha');
   const first = buildRoom(data, content);
   first.objects[0].at[0] = 7;
   first.spawn[0] = 5;
+  first.reset[0] = 9;
   const second = buildRoom(data, content);
   assert.equal(second.objects[0].at[0], 2);
   assert.equal(second.spawn[0], 1.5);
+  assert.equal(second.reset[0], 1.5);
   assert.equal(data.objects[0].at[0], 2);
 });
 

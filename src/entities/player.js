@@ -59,16 +59,27 @@ const SCREEN_DIRECTIONS = { up: [-1, -1], down: [1, 1], left: [-1, 1], right: [1
 const FLOOR_EPS = 1e-4;
 
 export class Player {
-  /** @param {number[]} spawn feet center [x, y, z] */
-  constructor(spawn) {
+  /**
+   * @param {number[]} pos feet center [x, y, z] to appear at right now
+   * @param {number[]} [resetPoint] where he reappears after dying (D39);
+   *   defaults to `pos`, so a Player made without a room (e.g. tests) just
+   *   respawns where it started
+   */
+  constructor(pos, resetPoint = pos) {
     this.size = PLAYER_HITBOX;
-    this.spawn = [...spawn];
-    this.respawn();
+    /** Room's death-respawn point; independent of how he entered the room. */
+    this.resetPoint = [...resetPoint];
+    this.place(pos);
   }
 
-  /** Put the wizard back at the spawn point, alive and still. */
+  /** Put the wizard back at the room's reset point, alive and still. */
   respawn() {
-    this.pos = [...this.spawn];
+    this.place(this.resetPoint);
+  }
+
+  /** Appear at `pos`, alive, still and facing the camera. */
+  place(pos) {
+    this.pos = [...pos];
     /** Position at the previous tick, for render interpolation. */
     this.prev = [...this.pos];
     this.vy = 0;

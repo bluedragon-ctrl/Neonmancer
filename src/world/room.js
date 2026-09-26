@@ -17,6 +17,8 @@ export function buildRoom(data, { objectTypes, biomes }) {
     color: biomes[data.biome].color,
     size: [...data.size],
     spawn: [...data.spawn],
+    /** Where the wizard reappears after dying here, however he entered (D39). */
+    reset: [...(data.reset ?? data.spawn)],
     exits: (data.exits ?? []).map(withExitDefaults),
     /** Static block cells as [x, y, z]. */
     cells: (data.blocks ?? []).flatMap(blockCells),
