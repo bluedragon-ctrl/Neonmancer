@@ -12,6 +12,14 @@
  */
 import { ACTIONS, DEFAULT_BINDINGS } from './bindings.js';
 
+/**
+ * Is the event target a field the user types into (input, select, textarea)?
+ * @param {EventTarget|null} target
+ */
+export function isTextField(target) {
+  return ['INPUT', 'SELECT', 'TEXTAREA'].includes(/** @type {any} */ (target)?.tagName);
+}
+
 export class Input {
   /** @param {Record<string, string[]>} bindings action → key codes */
   constructor(bindings = DEFAULT_BINDINGS) {
@@ -41,11 +49,12 @@ export class Input {
 
   /**
    * Does the game take this key event, or leave it to the browser? Unbound
-   * keys and shortcuts (with Ctrl, Alt or Meta, e.g. Ctrl+R) go to the browser.
-   * @param {{ code: string, ctrlKey?: boolean, metaKey?: boolean, altKey?: boolean }} event
+   * keys, shortcuts (with Ctrl, Alt or Meta, e.g. Ctrl+R) and typing into a
+   * text field (the room editor's) go to the browser.
+   * @param {{ code: string, ctrlKey?: boolean, metaKey?: boolean, altKey?: boolean, target?: EventTarget|null }} event
    */
-  takes({ code, ctrlKey = false, metaKey = false, altKey = false }) {
-    return this.isBound(code) && !ctrlKey && !metaKey && !altKey;
+  takes({ code, ctrlKey = false, metaKey = false, altKey = false, target = null }) {
+    return this.isBound(code) && !ctrlKey && !metaKey && !altKey && !isTextField(target);
   }
 
   /** Record a key going down (auto-repeat is ignored). @param {string} code */

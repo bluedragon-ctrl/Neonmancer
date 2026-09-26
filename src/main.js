@@ -3,10 +3,11 @@
 import { FixedLoop } from './core/loop.js';
 import { Input } from './core/input.js';
 import { say } from './core/messages.js';
-import { DATA_FILES, SCHEMA_ERRORS } from './data/bundle.js';
+import { DATA_FILES, DEV_SERVER, SCHEMA_ERRORS } from './data/bundle.js';
 import { DataError, loadGameData } from './data/load.js';
 import { DebugOverlay } from './debug/overlay.js';
 import { DebugReadout } from './debug/readout.js';
+import { Editor } from './editor/editor.js';
 import { Game } from './game.js';
 import { PlayerView } from './render/entity-view.js';
 import { HOLO_TIME } from './render/holo.js';
@@ -44,13 +45,17 @@ function boot() {
   renderer.scene.add(debug.group);
 
   const roomScene = new RoomScene(renderer);
-  function showRoom() {
-    roomScene.show(game);
+  /** @param {{ rebuild?: boolean }} [options] see RoomScene.show() */
+  function showRoom(options) {
+    roomScene.show(game, options);
     debug.setRoom(game.room, game.objects, game.enemies);
   }
   showRoom();
   const playerView = new PlayerView(game);
   renderer.scene.add(playerView.group);
+
+  // F2: the room editor (saves in the dev server, exports in a build).
+  const editor = new Editor({ game, renderer, files: DATA_FILES, canSave: DEV_SERVER, onRoom: () => showRoom({ rebuild: true }) });
 
   say('msg.boot');
   say('msg.welcome');
@@ -61,8 +66,14 @@ function boot() {
   function update() {
     input.sample();
     if (input.pressed('fullscreen')) toggleFullscreen(document.documentElement);
-    if (input.pressed('movementMode')) game.toggleMovementMode();
     if (input.pressed('debug')) debug.toggle();
+    if (input.pressed('editor')) editor.toggle();
+    // The game stands still while the room is being edited.
+    if (editor.active) {
+      readout.countTick();
+      return;
+    }
+    if (input.pressed('movementMode')) game.toggleMovementMode();
     if (debug.active) {
       if (input.pressed('debugRoomNext') && game.debugJumpRoom(1)) showRoom();
       if (input.pressed('debugRoomPrev') && game.debugJumpRoom(-1)) showRoom();
@@ -85,6 +96,7 @@ function boot() {
     const dt = Math.min(time - lastFrame, 0.1);
     lastFrame = time;
 
+    editor.frame();
     playerView.sync(alpha);
     roomScene.update(alpha, dt);
     debug.sync(game, alpha);

@@ -72,6 +72,13 @@ test('the game takes bound keys; shortcuts and unbound keys go to the browser', 
   for (const modifier of ['ctrlKey', 'altKey', 'metaKey']) assert.ok(!input.takes({ code: 'KeyW', [modifier]: true }), modifier);
 });
 
+test('typing into a text field (the room editor panel) is left to the browser', () => {
+  const input = new Input();
+  for (const tagName of ['INPUT', 'SELECT', 'TEXTAREA']) assert.ok(!input.takes({ code: 'KeyW', target: { tagName } }), tagName);
+  assert.ok(input.takes({ code: 'KeyW', target: { tagName: 'BODY' } }));
+  assert.ok(input.takes({ code: 'F2' }), 'the editor key');
+});
+
 test('releaseAll drops held keys (window blur)', () => {
   const input = new Input();
   input.keyDown('KeyA');

@@ -48,7 +48,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `core/bindings.js` | Default key → action map (the only place raw key codes appear) |
 | `core/messages.js` | `say(key, values)` terminal messages and `announce(key, values, options)` banners from any module, queued until the HUD takes them |
 | `core/rules.js` | Shared rule constants (player hitbox, max room footprint) |
-| `data/bundle.js` | The only Vite-specific module: bundles `data/**/*.json`, imports dev schema errors |
+| `data/bundle.js` | The only Vite-specific module: bundles `data/**/*.json`, imports dev schema errors, `DEV_SERVER` flag |
 | `data/room-data.js` | Shared reading of room data: block boxes → cells, exit defaults, sides, exit cells |
 | `data/validate.js` | Semantic checks and readable error messages (Ajv schema pass is dev/CI) |
 | `data/load.js` | Validate the data files and build the content tables; throws `DataError` |
@@ -106,6 +106,14 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `tools/run-tests.js` | `npm test`: runs `node --test` on an explicit list of `tests/*.test.js` (works on Node 20 and 22+, Windows and Linux) |
 | `tools/game-version.js` | Dev only: the game version for builds, PATCH counted from git merges since the phase tag (D42) |
 | `tools/showcase.html`, `tools/showcase.js` | Asset showcase page: every look on a turntable with the real renderer (also deployed) |
+| `editor/editor.js` | Room editor (F2, D56): opens on the current room, mouse picking on a height layer, tools, keys, rebuilding the room from the edited data, save or export |
+| `editor/room-edit.js` | One room being edited: place/erase edits, spawn/reset, name, biome, size, undo/redo, dirty state; `roomErrors()` (pure, tested) |
+| `editor/boxes.js` | `blocks`/`holes` entries edited cell by cell: untouched entries kept, loose cells merged greedily into boxes (pure, tested) |
+| `editor/format-json.js` | JSON in the data files' hand-written style (pure, tested against every data file) |
+| `editor/overlay.js` | Editor gizmos: layer grid, cursor, spawn and reset markers, `EDITOR_LOOK` |
+| `editor/panel.js` | Editor side panel (DOM): tools, layer, room settings, actions, errors |
+| `editor/save.js` | Posting a room to the dev server; downloading it in a build |
+| `tools/room-save.js` | Dev only: checks a room from the editor with the rest of `data/` and writes it |
 | `debug/overlay.js` | Debug mode's wireframe collision boxes |
 | `debug/readout.js` | Debug mode's stats readout (rates, buffer, GPU resources, actions, position) |
 
@@ -358,7 +366,8 @@ Validation has two layers:
    - the Vite plugin: a build with *any* data error fails; the dev server prints
      errors and hands the schema errors to the game through the virtual module
      `virtual:data-schema-errors`, so the error screen can show them (D15);
-     editing `data/` or `schemas/` reloads the page;
+     editing `data/` or `schemas/` reloads the page, except a room the room
+     editor just saved; the plugin also takes the editor's saves (see below);
    - `npm run validate:data` in CI and before deploys.
 2. **Semantic checks** (`src/data/validate.js`), also at runtime: file present,
    schemaVersion, room id = file name, width + depth ≤ 32, known biome and
@@ -372,6 +381,21 @@ Semantic checks run only when the schema pass is clean. Every problem is
 reported (not just the first), naming the file and path, e.g.
 `rooms/cache_hall.json › blocks[3]: cell [12,0,4] is outside size [12,4,12]`.
 If the game cannot start, `ui/error-screen.js` lists them.
+
+### Saving from the room editor
+
+```
+editor (page) ──POST /__editor/save-room {room}──► tools/vite-plugin-data.js
+                                                    └─ tools/room-save.js: read data/, swap in the room,
+                                                       schema + semantic checks, write data/rooms/<id>.json
+editor ◄── { ok, errors } ──────────────────────────┘  (no page reload for that write)
+```
+
+While editing, the page checks the room with `validateData()` against its
+own copy of the data after every change (`roomErrors()`), and hands the
+edited data to the game (`content.rooms`) so `Game.enterRoom()` rebuilds it
+and `RoomScene.show(game, { rebuild: true })` redraws the static views too.
+Only the dev server writes files; a build downloads the room instead.
 
 Data files start with a `"$schema"` pointing to their schema, so editors like
 VS Code offer completion and inline errors.

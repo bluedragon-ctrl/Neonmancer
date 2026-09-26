@@ -73,6 +73,15 @@ and the project uses [Semantic Versioning](https://semver.org/).
   his own colors (D55); it blinks and flashes with him and is hidden while
   he is dead. Boot Sector gets a 2-high wall near the front to walk
   behind; showcase `xray` (showcase assets can now stand still).
+- Room editor, static part (Phase 2 step 8a, D56): F2 freezes the game
+  and edits the current room in the real look, one height layer at a time.
+  Place and erase plain, hazard and void blocks, holes, objects (crates,
+  collapsing blocks with a regrow time), the spawn and reset points; set
+  the room's name, biome and size; undo and redo; errors listed live. F2
+  again plays the edited room. In the dev server Save checks the room with
+  all the data and writes `data/rooms/<id>.json`, keeping untouched block
+  entries and the hand-written JSON style; the deployed build exports the
+  file. Keys typed into the editor's fields no longer reach the game.
 - Room design checklist in docs/design.md: reach, timing budgets,
   readability and soft-lock checks collected from playtests; the basis for
   the Phase 3 room design skill and level review subagent.
