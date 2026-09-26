@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "defs.schema.json",
   "title": "Type definitions (data/defs.json)",
-  "description": "Object types with their defaults, and the look and rules of the special static block types. Enemy types and spells join in later phases.",
+  "description": "Object types with their defaults, enemy types, and the look and rules of the special static block types. Spells join in a later phase.",
   "type": "object",
   "required": ["schemaVersion", "objects", "blocks"],
   "additionalProperties": false,
@@ -13,6 +13,12 @@
       "type": "object",
       "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
       "additionalProperties": { "$ref": "#/$defs/objectType" }
+    },
+    "enemies": {
+      "type": "object",
+      "description": "Enemy types (corrupted programs), by id.",
+      "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
+      "additionalProperties": { "$ref": "#/$defs/enemyType" }
     },
     "blocks": {
       "type": "object",
@@ -43,6 +49,46 @@
     }
   },
   "$defs": {
+    "enemyType": {
+      "type": "object",
+      "required": ["movement", "attack", "hostility", "integrity", "damage", "speed", "color"],
+      "additionalProperties": false,
+      "properties": {
+        "movement": {
+          "enum": ["patrol", "stationary"],
+          "description": "Movement behavior (src/ai/behaviors.js). patrol: walks its path (room data \"path\", required) cell by cell, turning back when blocked; stationary: stays in its cell (still falls and rides platforms)."
+        },
+        "attack": {
+          "enum": ["contact", "none"],
+          "description": "How it hurts the wizard while hostile. contact: touching it; none: never."
+        },
+        "hostility": {
+          "enum": ["hostile", "peaceful", "provoked"],
+          "description": "hostile: attacks (red eyes); peaceful: never attacks (cyan eyes); provoked: peaceful (amber eyes) until a spell hits it, then hostile."
+        },
+        "aggroRange": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 32,
+          "default": 0,
+          "description": "Units within which a hostile enemy notices the wizard (chasing and shooting behaviors, later). No effect on patrol and contact."
+        },
+        "integrity": { "type": "integer", "minimum": 1, "maximum": 15, "description": "Hits it takes to destroy (spells, from step 6)." },
+        "damage": { "type": "integer", "minimum": 1, "description": "Integrity the wizard loses per attack." },
+        "speed": { "type": "number", "exclusiveMinimum": 0, "maximum": 8, "description": "Walking speed in units per second (a path's own speed overrides it)." },
+        "bounce": {
+          "type": "boolean",
+          "default": false,
+          "description": "Trampoline top: landing on it bounces the wizard up (clearing 2 blocks) without hurting him; its sides still hurt if it is hostile."
+        },
+        "solid": {
+          "type": "boolean",
+          "default": false,
+          "description": "Solid: the wizard can not walk through it; he stands on it and rides along, and it shoves him when it walks into him (turning back if he is pinned). Touching it counts when he leans against it. Not solid: he walks through it."
+        },
+        "color": { "$ref": "common.schema.json#/$defs/color", "description": "Body (hologram) color; the eyes show hostility." }
+      }
+    },
     "objectType": {
       "type": "object",
       "required": ["kind", "color"],

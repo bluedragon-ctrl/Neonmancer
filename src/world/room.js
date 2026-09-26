@@ -3,7 +3,7 @@
  * room fully resets on re-entry (CLAUDE.md §4). Nothing here points back
  * into the data, so the game can change it freely.
  */
-import { OBJECT_STYLE_DEFAULTS, blockCells, holeTiles, withExitDefaults } from '../data/room-data.js';
+import { ENEMY_DEFAULTS, OBJECT_STYLE_DEFAULTS, blockCells, holeTiles, withExitDefaults } from '../data/room-data.js';
 
 /** Cells of the room's blocks of one type ("type" defaults to "block"). */
 function blocksOfType(data, type) {
@@ -12,9 +12,9 @@ function blocksOfType(data, type) {
 
 /**
  * @param {object} data room file contents (validated)
- * @param {{ objectTypes: object, blockTypes: object, biomes: object }} content loaded game data
+ * @param {{ objectTypes: object, blockTypes: object, enemyTypes?: object, biomes: object }} content loaded game data
  */
-export function buildRoom(data, { objectTypes, blockTypes, biomes }) {
+export function buildRoom(data, { objectTypes, blockTypes, enemyTypes = {}, biomes }) {
   return {
     id: data.id,
     name: data.name,
@@ -45,6 +45,16 @@ export function buildRoom(data, { objectTypes, blockTypes, biomes }) {
       ...(object.path && { path: structuredClone(object.path) }),
       // Collapsing blocks: seconds until they grow back (none: they never do).
       ...(object.regrow !== undefined && { regrow: object.regrow }),
+    })),
+    /** Enemies: type values (movement, hostility, speed...) merged with this enemy's overrides, id, cell and path. */
+    enemies: (data.enemies ?? []).map((enemy) => ({
+      ...ENEMY_DEFAULTS,
+      ...structuredClone(enemyTypes[enemy.type]),
+      ...enemy.overrides,
+      id: enemy.id,
+      type: enemy.type,
+      at: [...enemy.at],
+      ...(enemy.path && { path: structuredClone(enemy.path) }),
     })),
   };
 }

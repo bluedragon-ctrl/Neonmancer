@@ -9,6 +9,20 @@
     "platform": { "kind": "platform", "color": "#00f0ff", "mark": "brackets", "faces": "tinted" },
     "collapsing": { "kind": "collapsing", "color": "#ff2bd6", "edges": "dashed", "faces": "tinted" }
   },
+  "enemies": {
+    "bug": {
+      "movement": "patrol",
+      "attack": "contact",
+      "hostility": "hostile",
+      "aggroRange": 0,
+      "integrity": 1,
+      "damage": 1,
+      "speed": 3,
+      "bounce": true,
+      "solid": false,
+      "color": "#2bff88"
+    }
+  },
   "blocks": {
     "hazard": { "color": "#ff3b30", "damage": 1 },
     "void": { "color": "#8a5cff" }

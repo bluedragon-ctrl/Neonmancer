@@ -191,6 +191,66 @@ that gives way under the wizard.
   `COLLAPSE_FX` in `src/render/collapse-fx.js`; review in the asset
   showcase (`/tools/showcase.html?asset=collapsing,collapsing-cycle`).
 
+## Enemies
+
+Corrupted programs (D48), listed in a room's `enemies`. Everything about one
+comes from data: its type in `defs.json` `enemies`, and the room's
+`overrides` for that one enemy.
+
+| Field | Values | Meaning |
+|---|---|---|
+| `movement` | `patrol`, `stationary` | patrol walks the enemy's `path` (required); stationary stays in its cell (no path). Chasing comes with Viruses (Phase 3); a turret is a stationary enemy with a projectile attack (Pop-ups). |
+| `attack` | `contact`, `none` | contact: touching it hurts while it is hostile. Projectiles come with Pop-ups. |
+| `hostility` | `hostile`, `peaceful`, `provoked` | hostile attacks; peaceful never does; provoked is peaceful until a spell hits it (Zap, step 6), then hostile. |
+| `aggroRange` | units (default 0) | how far a hostile enemy notices the wizard; used by chasing and shooting later, no effect on patrol and contact. |
+| `integrity` | 1–15 | hits it takes (spells, from step 6). |
+| `damage` | ≥ 1 | integrity the wizard loses per attack. |
+| `speed` | units/s | walking speed; a path's own `speed` overrides it. |
+| `bounce` | true / false (default false; bug: true) | trampoline top (below). |
+| `solid` | true / false (default false) | blocks the wizard, carries him and shoves him (below). |
+| `color` | #rrggbb | body color; the eyes always show hostility, so a room can recolor one enemy with `overrides` without a new type or model. |
+
+- **Moving:** an enemy stands in a grid cell (hitbox 0.6 × 0.6 × 0.6,
+  centered) and steps one cell at a time with one hop per cell (bug: 3
+  cells per second). It only starts a step from a whole cell, so on a
+  platform only at a stop.
+- **Patrol:** the shared path format (D46) with level legs (along x or z,
+  all at the height of `at`); only x and z count once it walks, so after
+  falling off a ledge it keeps to its path below. Ping-pong or loop, pause
+  at the ends.
+- **Blocked:** a wall, a block, a step up, a crate, a platform or another
+  enemy in the way turns it back to the waypoint it came from, after a
+  0.2 s beat (`turnTicks`). It never leaves the room.
+- **Physics:** it walks off ledges and falls, rides platforms (which wait
+  while it steps on or off, and wait for one in their way), and a crate
+  can rest on it but can't be pushed into it. Falling into a hole or
+  landing on a void block pops it into pixels; it stays gone until the
+  room resets. Hazard blocks don't hurt it; it never triggers collapsing
+  blocks.
+- **The wizard** walks through enemies unless they are **solid**. A solid
+  enemy blocks him like a crate; he can stand on it (if it doesn't bounce)
+  and it carries him as it walks, walls scraping him off; walking into him
+  it shoves him along (at most 0.35 per tick), and if he is pinned it
+  turns back instead. A crate resting on a solid enemy holds it in place.
+- Touching a hostile enemy with a contact attack hurts him (`Game.hurt()`,
+  then the usual invulnerability): overlapping it, or for a solid one
+  leaning on it or standing on it (the hazard rule, D44).
+  Landing on top of a **bouncy** one (every bug by default: a round ball
+  reads as bouncy) bounces him up 2.2 above its top (clears 2 blocks)
+  without hurting him; its sides still hurt if it is hostile. Enemies with
+  `bounce` false can be stood on only if they are solid.
+- **Look (bug):** a mint-green hologram ball with two slanted eyes whose
+  color shows its mood: red hostile, amber calm until provoked, cyan
+  peaceful. It squashes when bounced on, hops as it walks, bobs while
+  standing, turns towards where it walks and pops into pixels. No drop
+  shadow (D50).
+- Validation: known type, valid overrides, a free cell of its own not over
+  a hole, ids unique among objects and enemies, a patrol has a level path
+  clear of static blocks, a stationary enemy has none.
+- Tuning: `ENEMY` in `src/entities/enemy.js`, `PLAYER.bounceHeight`, the
+  look is `BUG` in `src/render/bug.js`; review in the asset showcase
+  (`/tools/showcase.html?asset=bugs`).
+
 ## Pushing
 
 - Push by walking into an object along a grid axis while standing on the
@@ -203,7 +263,8 @@ that gives way under the wizard.
 - The target cell must be free: no block, room side, object or wizard.
 - A pushed object slides one cell, then falls at once if nothing supports
   it; it lands on blocks, other objects or the floor, so objects stack.
-  Falling objects show a drop shadow in their own color.
+  Falling objects' drop shadow (in their own color) is switched off for
+  now: only the wizard has one (D50, `DROP_SHADOWS`).
 - An object falling onto the wizard rests on his head and falls on when he
   steps away.
 - Tuning values: `PUSHABLE` in `src/entities/pushable.js`, `pushDelay` in
@@ -257,16 +318,19 @@ that gives way under the wizard.
 Test rooms stay in the world until content production (Phase 4) builds the
 real rooms and puzzles (D45). They are a test lab: each shows one mechanic
 in isolation, and later spells and enemy behaviors get tested in them too.
-New mechanics add or extend one (D43).
+New mechanics add or extend one (D43). Boot Sector, the start, is the
+hub: every test room is at most two rooms away from it, so no test means
+walking the whole world (new exits are added for that where needed, D49).
 
 | Room | Size | Exits | Shows |
 |---|---|---|---|
-| `boot_sector` (start) | 12×12 | north doorway → Cache Hall; raised east exit on a ledge → Stack Yard | blocks, holes, two crates |
+| `boot_sector` (start, hub) | 12×12 | north doorway → Cache Hall; raised east exit on a ledge → Stack Yard; west doorway → Crawl Space; south (front) → Transit Bus | blocks, holes, two crates |
 | `cache_hall` | 16×8 | south (front) → Boot Sector | a 3-wide pit across the room: push a crate in, then jump the rest |
 | `stack_yard` | 8×8, Glitch Zone color | raised west doorway → Boot Sector; east (front) → Fault Line | stacked crates, a 2-high block to climb via a crate |
 | `fault_line` (Phase 2) | 12×12 | west doorway → Stack Yard; raised east exit on the lookout → Transit Bus | a corridor between hazard walls, hazard blocks between two plain ones to walk across, a zigzag path of plain blocks through a field of void blocks up to a lookout |
-| `transit_bus` (Phase 2) | 12×12, 5 high | west doorway → Fault Line; raised east exit on the high ledge → Volatile Memory | a ferry across a pit between two ledges, a lift up to a high ledge, a loop carrying a crate, a press coming down (with a crate to jam it) and a pusher squeezing the wizard against the room's edge |
-| `volatile_memory` (Phase 2) | 12×12, 5 high | west doorway → Transit Bus | a pit across the room with two collapsing bridges: one regrowing after 3 s (the way back), one that stays gone, with a crate on a plain ledge in front of it to push onto the bridge from solid ground (it doesn't trigger the blocks, so it is a safe spot to hop onto); two one-shot collapsing steps up to a high ledge |
+| `transit_bus` (Phase 2) | 12×12, 5 high | west doorway → Fault Line; north doorway → Boot Sector; raised east exit on the high ledge → Volatile Memory | a ferry across a pit between two ledges, a lift up to a high ledge, a loop carrying a crate, a press coming down (with a crate to jam it) and a pusher squeezing the wizard against the room's edge |
+| `volatile_memory` (Phase 2) | 12×12, 5 high | west doorway → Transit Bus; raised east exit on the high ledge → Crawl Space | a pit across the room with two collapsing bridges: one regrowing after 3 s (the way back), one that stays gone, with a crate on a plain ledge in front of it to push onto the bridge from solid ground (it doesn't trigger the blocks, so it is a safe spot to hop onto); two one-shot collapsing steps up to a high ledge |
+| `crawl_space` (Phase 2) | 12×12 | west doorway → Volatile Memory; east (front) → Boot Sector | bugs: a sentry crossing the entrance lane, one walking off a ledge and patrolling the floor below, a solid one shoving along a lane with a crate to push in its way, a provoked one circling a pillar, a peaceful stationary one to bounce up to a 2-high ledge, a solid peaceful one along the front edge to ride |
 
 ### Room design checklist
 
@@ -284,6 +348,9 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
 - A running jump crosses a 1-tile gap, never a 2-tile one (~1.65 units of
   air travel); a pit 2 or more wide needs a bridge, a platform or a crate
   to plug it.
+- A bouncy enemy launches him 2.2 above its top (0.6): from the floor
+  that clears a 2-high ledge, never 3. Where the enemy can walk, the way
+  up moves with it.
 - Headroom: the wizard is 1.5 high, so wherever he stands there must be 2
   free cells above the surface. A ledge 3 high needs a room 5 high.
 
@@ -345,7 +412,7 @@ and `BANNER` in `src/ui/terminal.js`.
 F3 toggles debug mode; off by default. While it's on:
 
 - Wireframe collision boxes: cyan for static block cells, lime for the
-  wizard and every pushable, updated at the interpolated render position
+  wizard and every room object, red for enemies, updated at the interpolated render position
   (`src/debug/overlay.js`).
 - The dev readout (top right, under the brand): room id, tick rate, frame
   rate, render buffer size, GPU resources (shaders, geometries, textures;
@@ -384,7 +451,7 @@ Each step is one branch and one PR; the game runs after every step.
 Hazards, combat and the room editor. Each step is one branch and one PR
 against `main` (no stacked PRs); the game runs after every step, CI is
 green before a PR is called ready. Rules that apply across steps are in
-D43. **Next step: 5.**
+D43. **Next step: 6.**
 
 Every step also:
 - adds its new looks to the asset showcase (`tools/showcase.js`);
@@ -419,7 +486,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 | File | Contents |
 |---|---|
 | `data/rooms/<id>.json` | One room (id = file name) |
-| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, inset mark, dark faces; box variants `crate_plain`, `crate_cross`, `crate_dashed`; `platform`: moving platform, cyan; `collapsing`: collapsing block, magenta); `blocks`: look of the `hazard` and `void` block types and the hazard's `damage` |
+| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, inset mark, dark faces; box variants `crate_plain`, `crate_cross`, `crate_dashed`; `platform`: moving platform, cyan; `collapsing`: collapsing block, magenta); `enemies`: enemy types (`bug`, see Enemies); `blocks`: look of the `hazard` and `void` block types and the hazard's `damage` |
 | `data/biomes.json` | Biome name and room color (`home_lattice`: amber) |
 | `data/world.json` | Start room and exit connections |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |
@@ -466,6 +533,9 @@ Example room (12×12):
   `{ "points": [[6, 0, 1]], "mode": "pingpong", "speed": 2, "pause": 0.8 }`
   (see Moving platforms). Collapsing blocks may take `"regrow": 3`
   (seconds; see Collapsing blocks).
+- `enemies` — `{ "id", "type", "at", "path", "overrides" }`: `at` is the
+  spawn cell, `path` a patrol path (level legs), `overrides` any type field
+  (see Enemies). Ids are shared with objects.
 - Object type style (D17): `edges` `solid`/`dashed`, `mark`
   `none`/`inset`/`cross`/`brackets`, `faces` `dark`/`tinted` (defaults first),
   `tint` 0–1 (color share of a tinted top face, default 0.1).

@@ -25,6 +25,11 @@ export const PLAYER = {
    * (D3). Jumps have a fixed height (no short hops), like the block rule.
    */
   jumpHeight: 1.2,
+  /**
+   * Apex of a bounce off a bouncy enemy above its top (D48): clears 2
+   * blocks, so a bouncy enemy is a way up to a 2-high ledge.
+   */
+  bounceHeight: 2.2,
   /** Fastest fall in units per second (below 1 unit per tick, see collision.js). */
   maxFall: 18,
   /** A jump still works this many ticks after walking off a ledge. */
@@ -45,6 +50,9 @@ export const PLAYER = {
 
 /** Take-off speed that reaches exactly jumpHeight: v = √(2gh). */
 export const JUMP_SPEED = Math.sqrt(2 * PLAYER.gravity * PLAYER.jumpHeight);
+
+/** Speed a bounce launches him up with, reaching bounceHeight. */
+export const BOUNCE_SPEED = Math.sqrt(2 * PLAYER.gravity * PLAYER.bounceHeight);
 
 /**
  * Movement [dx, dz] per action along the grid axes, the default (D23):
@@ -128,6 +136,19 @@ export class Player {
     this.deathTimer = PLAYER.deathTicks;
     this.grounded = false;
     this.vy = 0;
+  }
+
+  /**
+   * Bounce off the top of a bouncy enemy at height `top`: launched up to
+   * PLAYER.bounceHeight above it, whatever the jump key does.
+   * @param {number} top
+   */
+  bounce(top) {
+    this.pos[1] = top;
+    this.vy = BOUNCE_SPEED;
+    this.grounded = false;
+    this.coyote = 0;
+    this.jumpBuffer = 0;
   }
 
   /** Appear at `pos`, alive, still and facing the camera. */

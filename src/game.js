@@ -5,15 +5,22 @@
 import { DT } from './core/loop.js';
 import { announce, say } from './core/messages.js';
 import { isBackSide, sideAxes, withExitDefaults } from './data/room-data.js';
+import { Enemy } from './entities/enemy.js';
 import { createObject } from './entities/kinds.js';
 import { PLAYER, Player } from './entities/player.js';
-import { groundBelow, surfaceBelow, touchedCell } from './physics/collision.js';
+import { groundBelow, overlaps, surfaceBelow, touchedCell, touchesBox } from './physics/collision.js';
 import { arrival, exitAt } from './world/exits.js';
 import { CELL, Grid } from './world/grid.js';
 import { buildRoom } from './world/room.js';
 
 /** Terminal message for each way to die (Player.deathCause). */
 const DEATH_MESSAGES = { hole: 'msg.die', void: 'msg.void', damage: 'msg.derez' };
+
+/**
+ * How far below a bouncy enemy's top his feet may have been last tick and
+ * still bounce (it may have hopped up a little into him).
+ */
+const BOUNCE_REACH = 0.05;
 
 /** Room transition timing in ticks (60 per second). */
 export const TRANSITION = {
@@ -27,9 +34,11 @@ export const TRANSITION = {
  * Something that happened, for views, the HUD and (later) sound. Returned
  * by Game.update() for the tick it happened in.
  * @typedef {object} GameEvent
- * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'hurt'|'exit'|'room'} type
+ * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'exit'|'room'} type
  * @property {object} [object] the room object it happened to (push, plug,
  *   land of an object; shake, collapse and regrow of a collapsing block)
+ * @property {object} [enemy] the enemy it happened to (pop, land of an
+ *   enemy, bounce off it) or that hurt the wizard (hurt)
  * @property {number} [amount] integrity lost (hurt)
  * @property {number[]} [cell] the hazard block that hurt him (hurt), [x, y, z]
  * @property {'hole'|'void'|'damage'} [cause] how the wizard died (die)
@@ -77,19 +86,26 @@ export class Game {
     this.objects = this.room.objects.map(createObject);
     /** The objects in update order, lowest first; re-sorted in place every tick. */
     this.updateOrder = [...this.objects];
+    /** The room's enemies (entities/enemy.js), dead ones included until the room resets. */
+    this.enemies = this.room.enemies.map((enemy) => new Enemy(enemy));
     this.player.enter(pos ?? this.room.spawn, this.room.reset);
     this.refreshBodies();
   }
 
   /**
    * Work out what there is to collide with, after an object appeared or
-   * vanished (a collapsing block).
+   * vanished (a collapsing block, a popped enemy).
    */
   refreshBodies() {
-    /** The objects that are there to collide with: all but collapsed blocks. */
-    this.solids = this.objects.filter((object) => object.solid !== false);
-    /** Everything objects collide with: the solid objects and the wizard. */
-    this.bodies = [...this.solids, this.player];
+    const objects = this.objects.filter((object) => object.solid !== false);
+    /** The enemies still alive. */
+    this.liveEnemies = this.enemies.filter((enemy) => enemy.alive);
+    /** What the wizard collides with: objects (all but collapsed blocks) and solid enemies. */
+    this.solids = [...objects, ...this.liveEnemies.filter((enemy) => enemy.solid)];
+    /** What enemies collide with: the objects and the other live enemies (not the wizard). */
+    this.obstacles = [...objects, ...this.liveEnemies];
+    /** Everything objects collide with: the solid objects, live enemies and the wizard. */
+    this.bodies = [...this.obstacles, this.player];
   }
 
   /**
@@ -112,18 +128,19 @@ export class Game {
   /**
    * The wizard loses integrity, unless invincible (debug mode) or still
    * invulnerable from the last hit; losing the last point kills him. Every
-   * damage source goes through here (D43): hazard blocks, the debug
-   * test-damage key, and enemies later in Phase 2. Reported
+   * damage source goes through here (D43): hazard blocks, enemies,
+   * squeezing platforms and the debug test-damage key. Reported
    * as a 'hurt' (and 'die') event with this tick's events, or the next
    * tick's when called outside update().
    * @param {number} [amount]
    * @param {object} [source]
    * @param {number[]} [source.cell] the hazard block that hurt him, passed on with the event
+   * @param {Enemy} [source.enemy] the enemy that hurt him, passed on with the event
    */
-  hurt(amount = 1, { cell } = {}) {
+  hurt(amount = 1, { cell, enemy } = {}) {
     if (this.invincible) return;
     const lost = this.player.hurt(amount);
-    if (lost > 0) this.emit('hurt', cell ? { amount: lost, cell } : { amount: lost });
+    if (lost > 0) this.emit('hurt', { amount: lost, ...(cell && { cell }), ...(enemy && { enemy }) });
     if (this.player.dead) this.died();
   }
 
@@ -173,7 +190,8 @@ export class Game {
   }
 
   /**
-   * One fixed tick: player → exits → his push → objects → events.
+   * One fixed tick: player → exits → his push → objects → enemies →
+   * bouncing off enemies → enemy contact → events.
    * Walking out through an exit starts a transition: fade out (frozen
    * world), load the next room, fade in (running).
    * @param {import('./core/input.js').Input} input
@@ -225,7 +243,60 @@ export class Game {
       // Objects above it see the change this same tick (a crate on a collapsed block falls).
       if (event === 'collapse' || event === 'regrow') this.refreshBodies();
     }
+
+    // Enemies after objects, so they step off platforms and crates where those are now.
+    // Dead ones too: their pop runs on.
+    for (const enemy of this.enemies) {
+      const event = enemy.update(this);
+      if (event) this.emit(event, { enemy });
+      if (event === 'pop') this.refreshBodies();
+    }
+    const bounced = this.bounceOffEnemies();
+    this.touchEnemies(bounced);
     return this.takeEvents();
+  }
+
+  /**
+   * Falling onto the top of a bouncy enemy bounces the wizard up (D48),
+   * harmlessly: his feet were above its top last tick and are at or below
+   * it now (on it, if it is solid), over its footprint.
+   * @returns {Enemy|null} the enemy he bounced off
+   */
+  bounceOffEnemies() {
+    const { player } = this;
+    if (player.dead || player.pos[1] >= player.prev[1]) return null;
+    const [px, , pz] = player.box();
+    for (const enemy of this.liveEnemies) {
+      if (!enemy.data.bounce) continue;
+      const [bx, by, bz] = enemy.box();
+      const top = by[1];
+      if (player.prev[1] >= top - BOUNCE_REACH && player.pos[1] <= top + 1e-6 && overlaps(px, bx) && overlaps(pz, bz)) {
+        player.bounce(top);
+        enemy.bounced = 0;
+        this.emit('bounce', { enemy });
+        return enemy;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Touching a hostile enemy with a contact attack hurts the wizard (D43):
+   * overlapping it, or leaning on or standing on a solid one (the hazard
+   * rule, D44). Not the enemy he just bounced off.
+   * @param {Enemy|null} bounced
+   */
+  touchEnemies(bounced) {
+    const { player } = this;
+    if (player.dead) return;
+    const box = player.box();
+    for (const enemy of this.liveEnemies) {
+      if (!enemy.hurtsOnContact || enemy === bounced) continue;
+      if (touchesBox(box, enemy.box())) {
+        this.hurt(enemy.data.damage, { enemy });
+        return;
+      }
+    }
   }
 
   /**
@@ -248,6 +319,7 @@ export class Game {
     const player = this.player;
     player.savePrevious();
     for (const object of this.objects) object.savePrevious();
+    for (const enemy of this.enemies) enemy.savePrevious();
 
     if (++this.transition.tick < TRANSITION.outTicks) {
       const { cross } = sideAxes(exit.side);

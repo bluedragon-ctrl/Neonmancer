@@ -5,7 +5,7 @@
  */
 import { Group } from 'three';
 import { frameRoom } from './camera.js';
-import { CollapsingView, PlatformView, PushableView } from './entity-view.js';
+import { CollapsingView, EnemyView, PlatformView, PushableView } from './entity-view.js';
 import { ExitView } from './exit-view.js';
 import { createFloor } from './floor.js';
 import { createHoleView } from './hole-view.js';
@@ -31,6 +31,7 @@ export class RoomScene {
     this.objectGroup = new Group();
     this.roomId = null;
     this.objectViews = [];
+    this.enemyViews = [];
     this.exitViews = [];
     /** Face material of the room's hazard blocks, or null. */
     this.hazardFaces = null;
@@ -47,9 +48,11 @@ export class RoomScene {
     const { renderer } = this;
     const old = [this.objectGroup];
     this.objectViews = game.objects.map((object) => new OBJECT_VIEWS[object.kind](game, object));
+    this.enemyViews = game.enemies.map((enemy) => new EnemyView(game, enemy));
     this.objectGroup = new Group();
     // add() with no arguments logs an error (a room without objects).
-    if (this.objectViews.length > 0) this.objectGroup.add(...this.objectViews.map((view) => view.group));
+    const views = [...this.objectViews, ...this.enemyViews];
+    if (views.length > 0) this.objectGroup.add(...views.map((view) => view.group));
     if (room.id !== this.roomId) {
       old.push(this.staticGroup);
       this.exitViews = room.exits.map((exit) => new ExitView(exit, room.size, game.destinationColor(exit)));
@@ -82,6 +85,7 @@ export class RoomScene {
    */
   update(alpha, dt) {
     for (const view of this.objectViews) view.sync(alpha);
+    for (const view of this.enemyViews) view.sync(alpha, dt);
     for (const view of this.exitViews) view.update(dt);
     if (this.flare && this.hazardFaces) {
       this.flare.time += dt;

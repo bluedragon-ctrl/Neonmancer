@@ -177,3 +177,55 @@ export function surfaceBelow(box, grid, bodies = [], self = null) {
 export function groundBelow(pos, size, grid, bodies = []) {
   return surfaceBelow(bodyBox(pos, size), grid, bodies);
 }
+
+/** Do two boxes overlap on every axis (more than touching)? */
+export function overlapsBox(a, b) {
+  return a.every((range, i) => overlaps(range, b[i]));
+}
+
+/**
+ * A body's feet center moved clear of `box` (something moving into it): `pos`
+ * itself if it is clear already, else the smallest shove (at most
+ * `maxShove`, along any axis) that fits between blocks and `others`, or
+ * null if none does (he is pinned).
+ * @param {number[]} pos feet center
+ * @param {number[]} size
+ * @param {number[][]} box the pusher's new box
+ * @param {{ isSolid(x: number, y: number, z: number): boolean }} grid
+ * @param {Iterable<{ box(): number[][] }>} others bodies he can't be shoved into
+ * @param {object} self the shoved body, skipped among `others`
+ * @param {number} maxShove
+ * @returns {number[]|null}
+ */
+export function shoveClear(pos, size, box, grid, others, self, maxShove) {
+  const current = bodyBox(pos, size);
+  if (!overlapsBox(current, box)) return pos;
+  const shoves = [];
+  for (const axis of [0, 1, 2]) {
+    shoves.push([axis, box[axis][1] - current[axis][0]], [axis, box[axis][0] - current[axis][1]]);
+  }
+  shoves.sort((a, b) => Math.abs(a[1]) - Math.abs(b[1]));
+  for (const [axis, amount] of shoves) {
+    if (Math.abs(amount) > maxShove) break;
+    const moved = [...pos];
+    if (moveAxis(moved, size, axis, amount, grid, others, self) === false && !overlapsBox(bodyBox(moved, size), box)) return moved;
+  }
+  return null;
+}
+
+/**
+ * Does box `a` touch box `b`: overlap it on at least two axes and lie
+ * against or in it on the third (within `reach`)? Grazing a corner
+ * diagonally doesn't count (the hazard rule, D44).
+ * @param {number[][]} a
+ * @param {number[][]} b
+ * @param {number} [reach]
+ */
+export function touchesBox(a, b, reach = 0.02) {
+  let inside = 0;
+  for (let i = 0; i < 3; i++) {
+    if (overlaps(a[i], b[i])) inside++;
+    else if (a[i][0] > b[i][1] + reach || b[i][0] > a[i][1] + reach) return false;
+  }
+  return inside >= 2;
+}

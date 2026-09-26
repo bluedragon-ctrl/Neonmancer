@@ -4,16 +4,17 @@
  * fixed tick.
  *
  * Each tick it works out the whole move before making it:
- * - what rides on it: resting pushables and the wizard standing on top, and
- *   whatever stands on those (stacks ride along);
- * - a pushable or another platform in the way, or a rider that would be
- *   carried into something: it waits (the path doesn't move on);
+ * - what rides on it: resting pushables and enemies and the wizard standing
+ *   on top, and whatever stands on those (stacks ride along);
+ * - a pushable, an enemy or another platform in the way, a rider that would
+ *   be carried into something, or an enemy stepping on or off: it waits
+ *   (the path doesn't move on);
  * - the wizard in the way (or carried into a ceiling): he is shoved out of
  *   the way, along the motion or aside, by at most PLATFORM.maxShove; with
  *   no room for that it hurts him and waits. It never kills outright.
  */
 import { DT } from '../core/loop.js';
-import { bodyBox, moveAxis, overlaps, overlapsSolid } from '../physics/collision.js';
+import { moveAxis, overlaps, overlapsBox, overlapsSolid, shoveClear } from '../physics/collision.js';
 import { advance, buildTrack, positionOf, startState } from '../world/path.js';
 
 /** Tuning values (units, integrity). */
@@ -76,6 +77,7 @@ export class Platform {
 
     this.pathState = next;
     this.pos = to;
+    // Riders: pushables and enemies (and whatever rests on them).
     for (const rider of move.crates) rider.pos = rider.pos.map((v, i) => snap(v + delta[i]));
     if (move.player) game.player.pos = move.player;
     return null;
@@ -86,29 +88,33 @@ export class Platform {
    * @returns {{ ok: boolean, squeezed?: boolean, crates?: object[], player?: number[]|null }}
    *   `crates` ride along; `player` is the wizard's new feet center (null: he stays put)
    */
-  plan(to, delta, { grid, solids: objects, player }) {
+  plan(to, delta, { grid, solids, liveEnemies = [], player }) {
     const box = boxAt(to);
     const alive = !player.dead;
-    const { crates, carriesPlayer } = this.riders(objects, alive ? player : null);
+    const objects = [...new Set([...solids, ...liveEnemies])];
+    const { crates, carriesPlayer, stepping } = this.riders(objects, alive ? player : null);
+    if (stepping) return { ok: false };
     const moving = new Set([this, ...crates]);
     if (carriesPlayer) moving.add(player);
 
-    // Anything else in the way (a pushable, another platform, a collapsing block) stops it.
+    // Anything else in the way (a pushable, an enemy, another platform, a collapsing block) stops it.
     for (const object of objects) {
       if (!moving.has(object) && overlapsBox(box, object.box())) return { ok: false };
     }
-    // Riders must fit where they are carried: clear of blocks and other bodies.
+    // Riders must fit where they are carried: clear of blocks and other
+    // bodies (an enemy may overlap the wizard, it doesn't block him).
     const still = objects.filter((object) => !moving.has(object));
-    if (alive && !carriesPlayer) still.push(player);
+    const stillAndPlayer = alive && !carriesPlayer ? [...still, player] : still;
     for (const crate of crates) {
       const moved = crate.box().map(([min, max], i) => [min + delta[i], max + delta[i]]);
-      if (overlapsSolid(moved, grid) || still.some((body) => overlapsBox(moved, body.box()))) return { ok: false };
+      const others = crate.behavior ? still : stillAndPlayer;
+      if (overlapsSolid(moved, grid) || others.some((body) => overlapsBox(moved, body.box()))) return { ok: false };
     }
     if (!alive) return { ok: true, crates, player: null };
 
     // The wizard rides along (clamped by walls and bodies), or stays; then
     // he must be clear of the platform's new box, shoved out if need be.
-    const others = objects.filter((object) => !moving.has(object));
+    const others = solids.filter((object) => !moving.has(object));
     const pos = [...player.pos];
     if (carriesPlayer) for (const axis of [0, 1, 2]) moveAxis(pos, player.size, axis, delta[axis], grid, others, player);
     const shoved = this.shove(pos, player.size, box, grid, others, player);
@@ -117,51 +123,38 @@ export class Platform {
   }
 
   /**
-   * What rides on the platform: resting pushables on top of it, and
-   * whatever rests on those; and whether the wizard stands on any of them.
-   * @param {object[]} objects room objects
+   * What rides on the platform: resting pushables and enemies on top of it,
+   * and whatever rests on those; whether the wizard stands on any of them;
+   * and whether an enemy is stepping on or off (the platform waits for it).
+   * @param {object[]} objects room objects and live enemies
    * @param {object|null} player the wizard, or null when he can't ride (dead)
    */
   riders(objects, player) {
     const carriers = [this];
     const crates = [];
+    let stepping = false;
     for (let i = 0; i < carriers.length; i++) {
       const under = carriers[i].box();
       for (const object of objects) {
-        if (object.state !== 'rest' || carriers.includes(object)) continue;
-        if (restsOn(object.box(), under)) {
-          carriers.push(object);
-          crates.push(object);
-        }
+        if (carriers.includes(object) || !restsOn(object.box(), under)) continue;
+        if (object.state === 'walk') stepping = true;
+        if (object.state !== 'rest') continue;
+        carriers.push(object);
+        crates.push(object);
       }
     }
     const carriesPlayer = !!player && carriers.some((carrier) => restsOn(player.box(), carrier.box()));
-    return { crates, carriesPlayer };
+    return { crates, carriesPlayer, stepping };
   }
 
   /**
-   * The wizard's feet center clear of the platform box `box`: `pos` itself
-   * if it already is, else the smallest shove (at most PLATFORM.maxShove,
-   * along any axis) that fits, or null if none does.
-   * @param {number[]} pos feet center
-   * @param {number[]} size
-   * @param {number[][]} box the platform's new box
+   * The wizard's feet center clear of the platform box `box`, shoved by at
+   * most PLATFORM.maxShove, or null if he is pinned (physics/collision.js).
    */
   shove(pos, size, box, grid, others, player) {
-    const current = bodyBox(pos, size);
-    if (!overlapsBox(current, box)) return pos;
-    const shoves = [];
-    for (const axis of [0, 1, 2]) {
-      shoves.push([axis, box[axis][1] - current[axis][0]], [axis, box[axis][0] - current[axis][1]]);
-    }
-    shoves.sort((a, b) => Math.abs(a[1]) - Math.abs(b[1]));
-    for (const [axis, amount] of shoves) {
-      if (Math.abs(amount) > PLATFORM.maxShove) break;
-      const moved = [...pos];
-      if (moveAxis(moved, size, axis, amount, grid, others, player) === false && !overlapsBox(bodyBox(moved, size), box)) return moved;
-    }
-    return null;
+    return shoveClear(pos, size, box, grid, others, player, PLATFORM.maxShove);
   }
+
 }
 
 /** Box of a unit block with its lower corner at `pos`. */
@@ -171,11 +164,6 @@ function boxAt([x, y, z]) {
     [y, y + 1],
     [z, z + 1],
   ];
-}
-
-/** Do two boxes overlap (more than touching)? */
-function overlapsBox(a, b) {
-  return a.every((range, i) => overlaps(range, b[i]));
 }
 
 /** Does box `a` rest on top of box `b`: bottom on its top, footprints overlapping? */

@@ -60,6 +60,9 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `entities/pushable.js` | Rest → slide → fall → land / plug-a-hole state machine |
 | `entities/platform.js` | Moving platform: follows its path, carries riders, waits when blocked, shoves or squeezes the wizard (D46) |
 | `entities/collapsing.js` | Collapsing block: solid → shake (the wizard stood on it) → gone → optional regrow once its cell is clear (D47) |
+| `entities/enemy.js` | Enemy body: steps cell by cell where its movement behavior leads, turns back when blocked, falls, rides platforms, pops in holes and on void; hostility, provoke, bounce state (D48) |
+| `ai/behaviors.js` | Movement behaviors by name (`BEHAVIORS`: `patrol`, `stationary`), as enemy types refer to them |
+| `ai/patrol.js` | Patrol: next step towards the next waypoint column, pauses at the ends, turns back (pure, tested) |
 | `world/path.js` | Shared path format: legs from `at` through `points`, `advance()` / `positionOf()` on a small path state, swept cells |
 | `render/viewport.js` | Letterbox, buffer size and 1080p-relative sizing math (pure, tested) |
 | `render/renderer.js` | WebGLRenderer, 16:9 stage + HUD overlay, DPR cap, render scale, resize |
@@ -74,8 +77,9 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/marks.js` | Face-mark line patterns for object styles (pure, tested) |
 | `render/hole-view.js` | Hole pits: walls fading to black, rim, short fading corner lines; outline math (tested) |
 | `render/room-view.js` | Static blocks (merged edges + instanced occluder faces), back walls, styled object views |
-| `render/entity-view.js` | Player, pushable, platform and collapsing-block views, glowing drop shadows, pixel bursts (derez, collapse), platform guide lines |
+| `render/entity-view.js` | Player, pushable, platform, collapsing-block and enemy views, glowing drop shadows, pixel bursts (derez, collapse), platform guide lines |
 | `render/collapse-fx.js` | Collapsing-block look: shake, pixels breaking off, regrow, `COLLAPSE_FX` tuning (pure, tested) |
+| `render/bug.js` | Bug model (ball, eyes colored by mood), hop pose, bounce squash, pop pixels, `BUG` tuning (pure parts tested) |
 | `render/rails.js` | Guide line along a platform's path, `RAILS` tuning (pure, tested) |
 | `render/block-fx.js` | Animated looks of hazard and void blocks (face shaders in room coordinates, steady edges, hazard flare), `BLOCK_FX` tuning |
 | `render/hit-fx.js` | Damage look: blinking while invulnerable, derez flicker and pixel burst, `HIT_FX` tuning (pure, tested) |
@@ -145,7 +149,9 @@ cells: each is a body with a `box()`, and
 stopped the move. The player is a body too, so objects can rest on him and
 never slide into him.
 
-The drop shadow sits on the highest surface under the footprint
+Only the wizard has a drop shadow for now (D50): falling objects' shadow is
+behind `DROP_SHADOWS.fallingObjects` in `render/entity-view.js` (off), and
+enemies have none. The drop shadow sits on the highest surface under the footprint
 (`surfaceBelow`: cells, bodies, floor), computed from the interpolated
 render position; over a hole at floor level there is no shadow.
 
@@ -182,13 +188,39 @@ or `regrow` event, inside the objects loop, so a crate resting on it falls
 in the same tick. A block with a regrow time grows back once the time is
 up and no body overlaps its cell.
 
+Enemies (D48) are not room objects: `Game.enemies` holds them, built from
+the room's `enemies` (type fields from `defs.json` merged with the room's
+overrides). They update after the objects, so they see platforms and
+crates where those are now. An enemy stands in a cell (a 0.6 box centered
+on its floor) and only starts a step from whole cells: it asks its
+movement behavior for the next step and walks one cell, counting the
+distance walked so cells stay exact. A block, solid object, other enemy
+or step up in the way turns it back (`turnBack()`, then `turnTicks` of
+waiting). Unsupported, it falls; landing at −1 (a hole) or on a void cell
+pops it (`dead`, gone until the room resets; `refreshBodies()` drops it).
+Enemies are in `Game.obstacles` (what enemies collide with: solid objects
+and live enemies) and in `Game.bodies` (what objects collide with), so
+crates land on them and can't be pushed into them. Only solid enemies are
+in `Game.solids` (what the wizard collides with); he walks through the
+rest. A solid enemy moving carries the wizard standing on it (`moveAxis`,
+so walls scrape him off) and shoves him clear of its new box with
+`shoveClear()` (physics/collision.js, shared with platforms); if he is
+pinned it turns back. Platforms carry resting enemies like crates and wait
+while one is stepping on or off. After the enemies,
+`bounceOffEnemies()` launches the wizard up (`Player.bounce()`) when his
+feet crossed the top of a bouncy enemy this tick, and `touchEnemies()`
+calls `hurt()` for the first hostile contact-attack enemy he touches
+(`touchesBox()`: overlapping, or against a solid one within 0.02 on two
+axes), skipping the one he just bounced off.
+
 ## Game events
 
 `Game.update()` returns what happened during the tick as `GameEvent`
 objects (typedef in `game.js`): `{ type, ...details }`, e.g.
 `{ type: 'push', object }`, `{ type: 'exit', exit }`, `{ type: 'hurt', amount }`.
 Types so far: `jump`, `land`, `die`, `respawn`, `push`, `plug`, `shake`,
-`collapse`, `regrow`, `hurt`, `exit`, `room`. Game code records them with `emit()`; events raised
+`collapse`, `regrow`, `pop`, `bounce`, `hurt`, `exit`, `room`; enemy events
+(and a hurt by an enemy) carry the `enemy`. Game code records them with `emit()`; events raised
 outside a tick (`hurt()` from the debug key) come out with the next tick's.
 `main.js` rebuilds the room's views on `room`; later, sound, screen shake
 and score popups read the same list (D41).

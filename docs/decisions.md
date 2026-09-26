@@ -510,3 +510,72 @@ or a crate inside it. One refreshed list keeps the collision code free of
 special cases. Bridges over pits are the classic use; a spawn on one would
 drop the wizard to his death on every respawn. Dashed edges read as
 fragile (thinner than other objects', author's review); magenta is the one palette color objects did not use yet.
+
+### D48 — 2026-09-26 — Enemies: data-driven types, cell-by-cell physics, hostility and bounce
+Enemy types in `defs.json` `enemies` hold every trait: `movement`
+(behavior module: `patrol`, `stationary`), `attack` (`contact`, `none`),
+`hostility` (`hostile`, `peaceful`, `provoked`: hostile once attacked),
+`aggroRange`, `integrity`, `damage`, `speed`, `bounce` and `color`; room
+entries (`id`, `type`, `at` = spawn cell, `path`, `overrides`) can change
+any of them for one enemy. Enemies are not room objects: they move one
+grid cell at a time (starting a step only from a whole cell), fall when
+unsupported, ride platforms, turn back when anything blocks the next cell
+(including a step up), walk off ledges, and pop in holes and on void
+blocks (gone until the room resets). The wizard walks through them;
+crates rest on them and can't be pushed into them. Touching a hostile
+contact enemy hurts; landing on a bouncy one launches the wizard 2.2 above
+its top (2 blocks), harmlessly, which amends the locked "active enemies
+cannot be stood on" rule. The bug is a mint-green hologram ball; eye color
+shows hostility (red, amber, cyan), a pad ring marks a bouncy one.
+Patrol paths are level (legs along x or z at one height); only x and z
+count at runtime.
+**Why:** author's review. Grid-aligned movement (author's suggestion)
+removes the sub-cell edge cases of free movement against crates,
+platforms and ledges, and lets enemies reuse the crate rules for falling
+and riding; physics makes rooms more systemic (a floor giving way, a crate
+used as a fence). Putting every trait in data lets one room tune an
+enemy (a peaceful bug, a bouncy one) without new types, and the fields
+chase and shoot behaviors will need (aggro range, attack) are in place
+before Viruses and Pop-ups. Red eyes warn of hostility at a glance, as the
+author asked; a mood color keeps peaceful and provoked readable. A bounce
+higher than a jump turns bouncy enemies into a way up (the reachability
+checker must learn it); keeping it harmless and limited to the top keeps
+hostile bouncy enemies dangerous from the sides.
+
+### D49 — 2026-09-26 — Test rooms hang off Boot Sector, not in one row
+Boot Sector (the start) is a hub for the test rooms: new west and south
+exits lead to Crawl Space and Transit Bus, so every test room is at most
+two rooms from the start (Cache Hall and Stack Yard directly, Fault Line
+behind Stack Yard, Volatile Memory behind Transit Bus). The old chain
+stays, so the rooms also form loops. New test rooms connect near the hub,
+adding exits to existing rooms where needed.
+**Why:** author's request: with every room in one row, testing the newest
+mechanic meant walking through all the others first.
+
+### D50 — 2026-09-26 — Every bug bounces; a drop shadow only under the wizard
+Supersedes the pad ring of D48. `bounce` is true on the `bug` type, so
+every bug is a trampoline unless a room overrides it; the ring that marked
+bouncy bugs is gone. Drop shadows are drawn only under the wizard for now:
+bugs have none, and falling objects' shadow (CLAUDE.md §4) is switched off
+behind `DROP_SHADOWS.fallingObjects` in `render/entity-view.js`, so it can
+come back in one line.
+**Why:** author's review: the ball shape already says "bouncy", so a mark
+is not needed and every bug should bounce. The author wants to try a
+single shadow under the wizard to see whether it reads more clearly.
+
+### D51 — 2026-09-26 — Solid enemies block, carry and shove the wizard
+A `solid` enemy type field (default false, overridable per enemy). A
+solid enemy is one of the bodies the wizard collides with: he can't walk
+through it, can stand on it (unless it bounces) and is carried as it
+walks, and it shoves him when it walks into him (at most 0.35 per tick,
+as platforms do, with the same `shoveClear()`); if he is pinned it turns
+back instead of hurting him. A crate on top holds it in place. Touching a
+hostile solid enemy uses the hazard rule (leaning or standing on it
+counts). Body color stays the `color` field, overridable per enemy; the
+eyes keep showing hostility.
+**Why:** author's request: enemies the wizard must avoid or ride, set by
+data rather than new code. Carrying like a platform was preferred over a
+simpler "it waits while he stands on it". Turning back when he is pinned
+keeps "never killed outright by being squeezed" from D46, and contact
+damage already covers hostile ones. With `stationary` movement, a turret
+needs only a projectile attack (Pop-ups), no new movement code.

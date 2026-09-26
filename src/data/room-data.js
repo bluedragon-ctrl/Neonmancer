@@ -114,6 +114,24 @@ export const OBJECT_STYLE_DEFAULTS = {
 };
 
 /**
+ * Values an enemy type's fields can take (the first is listed first in the
+ * schema too). movement: a behavior module (ai/behaviors.js); attack: how it
+ * hurts; hostility: hostile hurts, peaceful never does, provoked turns
+ * hostile once a spell hits it.
+ */
+export const ENEMY_OPTIONS = {
+  movement: ['patrol', 'stationary'],
+  attack: ['contact', 'none'],
+  hostility: ['hostile', 'peaceful', 'provoked'],
+};
+
+/**
+ * Enemy type fields that may be left out: aggro range (units), bounce (a
+ * trampoline top) and solid (blocks, carries and shoves the wizard).
+ */
+export const ENEMY_DEFAULTS = { aggroRange: 0, bounce: false, solid: false };
+
+/**
  * Every floor tile a hole entry covers: just `at`, or the rectangle from
  * `at` to `to` (inclusive).
  * @param {{ at: number[], to?: number[] }} hole

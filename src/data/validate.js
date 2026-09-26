@@ -12,6 +12,8 @@
 import { DATA_SCHEMA_VERSION } from '../core/version.js';
 import { MAX_ROOM_FOOTPRINT, PLAYER_HITBOX } from '../core/rules.js';
 import {
+  ENEMY_DEFAULTS,
+  ENEMY_OPTIONS,
   OBJECT_STYLES,
   OBJECT_STYLE_DEFAULTS,
   OPPOSITE_SIDE,
@@ -62,6 +64,7 @@ export function validateData(files) {
 
   const context = {
     objectTypes: files['defs.json'].objects ?? {},
+    enemyTypes: files['defs.json'].enemies ?? {},
     biomes: files['biomes.json'].biomes ?? {},
   };
   /** room id (from the file name) → room data */
@@ -84,7 +87,7 @@ function guarded(file, report, check) {
   }
 }
 
-function validateRoom(file, room, { objectTypes, biomes }, report) {
+function validateRoom(file, room, { objectTypes, enemyTypes, biomes }, report) {
   const expectedId = roomIdFromFile(file);
   if (room.id !== expectedId) report(file, 'id', `"${room.id}" must match the file name ("${expectedId}")`);
 
@@ -108,12 +111,15 @@ function validateRoom(file, room, { objectTypes, biomes }, report) {
     pathCells: new Map(),
     /** "x,y,z" of every collapsing block */
     collapsing: new Set(),
+    /** Ids of objects and enemies (one namespace per room) */
+    ids: new Set(),
   };
   const exits = (room.exits ?? []).map(withExitDefaults);
   const exitFits = validateExitBounds(checks, exits);
   validateBlocks(checks);
   validateObjects(checks, objectTypes);
   validateHoles(checks);
+  validateEnemies(checks, enemyTypes);
   validateExitPassage(checks, exits, exitFits);
 
   // Spawn and reset (D39). reset defaults to spawn (buildRoom does the
@@ -187,8 +193,7 @@ function validateBlocks(checks) {
 
 /** Objects: unique ids, known types, valid overrides, each in a free cell. */
 function validateObjects(checks, objectTypes) {
-  const { report } = checks;
-  const ids = new Set();
+  const { report, ids } = checks;
   (checks.room.objects ?? []).forEach((object, i) => {
     const path = `objects[${i}]`;
     if (ids.has(object.id)) report(path, `duplicate object id "${object.id}"`);
@@ -218,23 +223,7 @@ function validateObjects(checks, objectTypes) {
  * crate in the way makes the platform wait).
  */
 function validatePath({ room, report, filled, pathCells: swept }, path, { at, path: { points, mode } }) {
-  const [w, h, d] = room.size;
-  const outside = points.findIndex(([x, y, z]) => !(x < w && y < h && z < d));
-  if (outside >= 0) {
-    report(`${path}.points[${outside}]`, `cell ${cellText(points[outside])} is outside size ${cellText(room.size)}`);
-    return;
-  }
-  const stops = [at, ...points];
-  for (let i = 1; i < stops.length; i++) {
-    if (legAxis(stops[i - 1], stops[i]) < 0) {
-      report(`${path}.points[${i - 1}]`, `${cellText(stops[i])} must differ from ${cellText(stops[i - 1])} on exactly one axis`);
-      return;
-    }
-  }
-  if (mode === 'loop' && legAxis(stops.at(-1), at) < 0) {
-    report(path, `a loop runs from ${cellText(stops.at(-1))} back to ${cellText(at)}: they must differ on exactly one axis`);
-    return;
-  }
+  if (!validatePathShape(room, report, path, at, points, mode)) return;
   for (const cell of pathCells(at, { points, mode })) {
     const key = cellKey(cell);
     const by = filled.get(key);
@@ -246,15 +235,104 @@ function validatePath({ room, report, filled, pathCells: swept }, path, { at, pa
   }
 }
 
-/** Overrides can only change existing properties of the type, with valid values. */
-function validateOverrides(report, path, object, type) {
+/**
+ * Points inside the room, each leg along one axis (`level`: along x or z,
+ * all at the height of `at`), a loop closing along one axis too.
+ * @returns {boolean} whether the shape is fine
+ */
+function validatePathShape(room, report, path, at, points, mode, level = false) {
+  const [w, h, d] = room.size;
+  const outside = points.findIndex(([x, y, z]) => !(x < w && y < h && z < d));
+  if (outside >= 0) {
+    report(`${path}.points[${outside}]`, `cell ${cellText(points[outside])} is outside size ${cellText(room.size)}`);
+    return false;
+  }
+  const oneAxis = (a, b) => (level ? a[1] === b[1] && [0, 2].includes(legAxis(a, b)) : legAxis(a, b) >= 0);
+  const rule = level ? 'on exactly one of x and z (same y)' : 'on exactly one axis';
+  const stops = [at, ...points];
+  for (let i = 1; i < stops.length; i++) {
+    if (!oneAxis(stops[i - 1], stops[i])) {
+      report(`${path}.points[${i - 1}]`, `${cellText(stops[i])} must differ from ${cellText(stops[i - 1])} ${rule}`);
+      return false;
+    }
+  }
+  if (mode === 'loop' && !oneAxis(stops.at(-1), at)) {
+    report(path, `a loop runs from ${cellText(stops.at(-1))} back to ${cellText(at)}: they must differ ${rule}`);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Enemies (D48): unique ids (shared with objects), known types and valid
+ * overrides, each in a free cell of its own, not starting over a hole;
+ * patrols have a path, level (legs along x or z) and through no static
+ * block; stationary enemies have none.
+ */
+function validateEnemies(checks, enemyTypes) {
+  const { room, report, ids, filled, holes } = checks;
+  const [w, h, d] = room.size;
+  const taken = new Map();
+  (room.enemies ?? []).forEach((enemy, i) => {
+    const path = `enemies[${i}]`;
+    if (ids.has(enemy.id)) report(path, `duplicate id "${enemy.id}"`);
+    ids.add(enemy.id);
+    const type = enemyTypes[enemy.type] && { ...ENEMY_DEFAULTS, ...enemyTypes[enemy.type] };
+    if (!type) report(path, `unknown enemy type "${enemy.type}"`);
+    else validateOverrides(report, `${path}.overrides`, enemy, type, ENEMY_OPTIONS);
+    // A patrol walks its path; a stationary enemy has none.
+    const movement = enemy.overrides?.movement ?? type?.movement;
+    if (movement === 'patrol' && !enemy.path) report(path, 'a patrolling enemy needs a "path"');
+    if (movement === 'stationary' && enemy.path) report(`${path}.path`, 'a stationary enemy has no path');
+
+    const [x, y, z] = enemy.at;
+    const key = cellKey(enemy.at);
+    if (!(x < w && y < h && z < d)) {
+      report(path, `cell ${cellText(enemy.at)} is outside size ${cellText(room.size)}`);
+      return;
+    }
+    if (filled.has(key)) report(path, `cell ${cellText(enemy.at)} is filled by ${filled.get(key)}`);
+    else if (taken.has(key)) report(path, `cell ${cellText(enemy.at)} is taken by ${taken.get(key)}`);
+    taken.set(key, path);
+    if (y === 0 && holes.has(cellKey([x, z]))) report(path, `it starts over ${holes.get(cellKey([x, z]))}`);
+
+    if (!enemy.path) return;
+    const { points, mode } = enemy.path;
+    if (!validatePathShape(room, report, `${path}.path`, enemy.at, points, mode, true)) return;
+    for (const cell of pathCells(enemy.at, { points, mode })) {
+      const by = filled.get(cellKey(cell));
+      if (by?.startsWith('blocks')) {
+        report(`${path}.path`, `it runs through cell ${cellText(cell)}, filled by ${by}`);
+        return;
+      }
+    }
+  });
+}
+
+/** Number ranges of overridable values, as in the schemas: [min, max, whole numbers only]. */
+const OVERRIDE_RANGES = {
+  tint: [0, 1, false],
+  aggroRange: [0, 32, false],
+  speed: [0.01, 8, false],
+  integrity: [1, 15, true],
+  damage: [1, 99, true],
+};
+
+/**
+ * Overrides can only change existing properties of the type, with valid
+ * values (`enums`: the allowed values of listed properties).
+ */
+function validateOverrides(report, path, object, type, enums = OBJECT_STYLES) {
   for (const [key, value] of Object.entries(object.overrides ?? {})) {
+    const range = OVERRIDE_RANGES[key];
     if (!(key in type)) report(path, `"${key}" is not a property of type "${object.type}"`);
     else if (typeof value !== typeof type[key]) report(path, `"${key}" must be a ${typeof type[key]}`);
-    else if (OBJECT_STYLES[key] && !OBJECT_STYLES[key].includes(value)) {
-      report(path, `"${key}" must be one of ${OBJECT_STYLES[key].join(', ')}`);
+    else if (enums[key] && !enums[key].includes(value)) {
+      report(path, `"${key}" must be one of ${enums[key].join(', ')}`);
     } else if (key === 'color' && !/^#[0-9a-fA-F]{6}$/.test(value)) report(path, `"color" must be #rrggbb`);
-    else if (key === 'tint' && !(value >= 0 && value <= 1)) report(path, `"tint" must be between 0 and 1`);
+    else if (range && !(value >= range[0] && value <= range[1] && (!range[2] || Number.isInteger(value)))) {
+      report(path, `"${key}" must be ${range[2] ? 'a whole number ' : ''}between ${range[0]} and ${range[1]}`);
+    }
   }
 }
 

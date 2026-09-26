@@ -1,6 +1,6 @@
 /**
  * Debug mode (F3, CLAUDE.md §9): wireframe collision boxes for the static
- * blocks, the wizard and every room object, plus the stats readout in
+ * blocks, the wizard, every room object and enemy, plus the stats readout in
  * src/main.js. Room jump, invincibility and the test-damage key are actions
  * on the Game (see debugJumpRoom() and hurt() in src/game.js); this module
  * only draws the boxes and tracks whether the mode is on.
@@ -15,6 +15,7 @@ const UNIT_EDGES = new EdgesGeometry(new BoxGeometry(1, 1, 1));
 const materials = {
   cell: new LineBasicMaterial({ color: PALETTE.cyan, transparent: true, opacity: 0.5 }),
   body: new LineBasicMaterial({ color: PALETTE.lime }),
+  enemy: new LineBasicMaterial({ color: 0xff3b30 }),
 };
 
 /** A wireframe box sized and centered by place(). */
@@ -36,6 +37,7 @@ export class DebugOverlay {
     this.cellGroup = new Group();
     this.playerBox = box(materials.body);
     this.objectBoxes = [];
+    this.enemyBoxes = [];
     this.bodyGroup = new Group().add(this.playerBox);
     this.group.add(this.cellGroup, this.bodyGroup);
   }
@@ -48,11 +50,12 @@ export class DebugOverlay {
 
   /**
    * Rebuild the boxes for a freshly (re)built room: one per static block
-   * cell, one per room object (the wizard's box is reused, see the constructor).
+   * cell, one per room object and enemy (the wizard's box is reused, see the constructor).
    * @param {{ cells: number[][] }} room
    * @param {object[]} objects the game's room objects
+   * @param {object[]} [enemies] the game's enemies
    */
-  setRoom(room, objects) {
+  setRoom(room, objects, enemies = []) {
     this.cellGroup.clear();
     for (const cell of room.cells) {
       const mesh = box(materials.cell);
@@ -63,6 +66,10 @@ export class DebugOverlay {
     for (const mesh of this.objectBoxes) this.bodyGroup.remove(mesh);
     this.objectBoxes = objects.map(() => box(materials.body));
     for (const mesh of this.objectBoxes) this.bodyGroup.add(mesh);
+
+    for (const mesh of this.enemyBoxes) this.bodyGroup.remove(mesh);
+    this.enemyBoxes = enemies.map(() => box(materials.enemy));
+    for (const mesh of this.enemyBoxes) this.bodyGroup.add(mesh);
   }
 
   /**
@@ -72,7 +79,7 @@ export class DebugOverlay {
    */
   sync(game, alpha) {
     if (!this.active) return;
-    const { player, objects } = game;
+    const { player, objects, enemies } = game;
     const pos = lerpPosition(player.prev, player.pos, alpha);
     place(this.playerBox, [pos[0] - player.size[0] / 2, pos[1], pos[2] - player.size[2] / 2], player.size);
 
@@ -80,6 +87,12 @@ export class DebugOverlay {
       // A collapsed block has nothing to collide with.
       this.objectBoxes[i].visible = object.solid !== false;
       place(this.objectBoxes[i], lerpPosition(object.prev, object.pos, alpha), object.size);
+    });
+    enemies.forEach((enemy, i) => {
+      this.enemyBoxes[i].visible = enemy.alive;
+      const [x, y, z] = lerpPosition(enemy.prev, enemy.pos, alpha);
+      const [w, , d] = enemy.size;
+      place(this.enemyBoxes[i], [x + (1 - w) / 2, y, z + (1 - d) / 2], enemy.size);
     });
   }
 }
