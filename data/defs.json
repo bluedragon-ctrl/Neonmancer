@@ -2,9 +2,9 @@
   "$schema": "../schemas/defs.schema.json",
   "schemaVersion": 1,
   "objects": {
-    "crate": { "kind": "pushable", "color": "#b6ff3c", "mark": "inset" },
+    "crate": { "kind": "pushable", "color": "#b6ff3c", "mark": "bits", "faces": "tinted" },
     "crate_plain": { "kind": "pushable", "color": "#b6ff3c" },
-    "crate_cross": { "kind": "pushable", "color": "#b6ff3c", "mark": "cross", "faces": "tinted" },
+    "crate_cross": { "kind": "pushable", "color": "#b6ff3c", "faces": "tinted", "integrity": 1 },
     "crate_dashed": { "kind": "pushable", "color": "#b6ff3c", "edges": "dashed" },
     "platform": { "kind": "platform", "color": "#00f0ff", "mark": "brackets", "faces": "tinted" },
     "collapsing": { "kind": "collapsing", "color": "#ff2bd6", "edges": "dashed", "faces": "tinted" }
@@ -15,13 +15,16 @@
       "attack": "contact",
       "hostility": "hostile",
       "aggroRange": 0,
-      "integrity": 1,
+      "integrity": 2,
       "damage": 1,
       "speed": 3,
       "bounce": true,
       "solid": false,
       "color": "#2bff88"
     }
+  },
+  "spells": {
+    "zap": { "cost": 2, "cooldown": 0.25, "speed": 12, "damage": 1 }
   },
   "blocks": {
     "hazard": { "color": "#ff3b30", "damage": 1 },

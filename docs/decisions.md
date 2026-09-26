@@ -579,3 +579,55 @@ simpler "it waits while he stands on it". Turning back when he is pinned
 keeps "never killed outright by being squeezed" from D46, and contact
 damage already covers hostile ones. With `stationary` movement, a turret
 needs only a projectile attack (Pop-ups), no new movement code.
+
+### D52 — 2026-09-26 — Zap and energy: numbers, aim, what stops a bolt; bugs take two hits
+Energy: 10, recharging 1 per second, full after a respawn, carried
+between rooms. Zap costs 2 (5 in a row), 0.25 s cooldown, bolt speed 12,
+damage 1; the numbers are in `defs.json` `spells.zap` (required) and
+`PLAYER`. The bolt flies level from his hands the way he aims (the
+direction he last walked or turned to, diagonals included) and stops at
+the first live enemy, block, room object or the room's side. It hits
+every enemy, peaceful ones too, and provokes it. A bug's integrity is 2,
+so it takes two Zaps; a hit flashes it and it glitches while damaged, so
+the first hit reads as damage and not a miss. A failed cast flashes the
+energy bar instead of printing a terminal line. The looks were reviewed
+in the asset showcase before they went into the game.
+**Why:** the step plan said one hit kills a bug; the author asked for two.
+A bar of one segment per cast shows how many Zaps are left at a glance.
+Aiming the way he last walked keeps the controls to one cast key.
+Stopping at crates keeps them useful as cover, and a bolt at hand height
+passing over enemies below a ledge follows from flying level.
+
+### D53 — 2026-09-26 — Destructible crates: integrity on pushables, drawn as data bits
+A pushable object type may have `integrity` (1–15, overridable per
+object); spells take it like an enemy's, and at 0 the crate breaks into
+pixels and is gone until the room resets. Only pushables can have it (the
+data check rejects it on other kinds). `crate_cross` has integrity 1 and
+no longer draws its cross. The plain `crate` gets a new `bits` mark: a
+4×4 grid of small pale squares (its color mixed a third towards white) on
+every face, and the same tinted faces as `crate_cross`; every destructible
+object is drawn with that grid with 6 of 16 bits missing, in place of
+whatever its `mark` says. Boxes stay static: no pulse or blinking, only a
+jolt on a hit that doesn't break it.
+**Why:** author's request, with a visual hint that it can be destroyed.
+Tried and turned down on the way: jagged glowing crack lines (the author
+wanted a small square pattern that keeps the "data block" look), then
+pulsing and blinking bits (the author wants boxes static). Whole grid
+against grid with holes was the author's idea; 6 missing bits rather than
+3 was a counterproposal, as a few gaps are easy to miss at game distance.
+Drawing the holes from `integrity` (rather than as a `mark` a type picks)
+means a breakable crate can never look solid, nor a solid one breakable. `crate_cross`
+keeps its id (stable IDs; room data uses it). The look was reviewed in
+the asset showcase before it went into the game.
+
+### D54 — 2026-09-26 — Cast on E or Numpad 0; Tab switches spells; the selected spell under energy
+The cast action is bound to E and Numpad 0, replacing J; `spellNext`
+moves from E to Tab (`spellPrev` stays on Q). The selected spell's name
+shows in a tag under the energy bar, with the Tab hint once he knows more
+than one spell. Casting goes through the selected spell (`Player.spell`,
+`SPELL_EFFECTS`), so new spells plug in without new keys.
+**Why:** author's request. Ctrl was tried first and dropped: Ctrl+W closes
+the browser tab and a page can't block it, so casting (Ctrl) while moving
+up (W) could close the game. No game key is a modifier, so Ctrl, Alt and
+Meta combinations all stay browser shortcuts. Numpad 0 fits players who
+move with the arrow keys.

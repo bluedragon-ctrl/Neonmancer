@@ -21,13 +21,16 @@ export const BUG = {
   attack: 'contact',
   hostility: 'hostile',
   aggroRange: 0,
-  integrity: 1,
+  integrity: 2,
   damage: 1,
   speed: 3,
   bounce: true,
   solid: false,
   color: '#2bff88',
 };
+
+/** Spell tuning, as in defs.json. */
+export const SPELLS = { zap: { cost: 2, cooldown: 0.25, speed: 12, damage: 1 } };
 
 /** Looks and rules of the special block types, as in defs.json. */
 export const BLOCK_TYPES = { hazard: { color: '#ff3b30', damage: 1 }, void: { color: '#8a5cff' } };
@@ -54,7 +57,7 @@ export function roomFile(id, props = {}) {
  */
 export function dataFiles({ rooms, objects = { crate: CRATE }, enemies = { bug: BUG }, connections = [], start = rooms[0].id }) {
   return structuredClone({
-    'defs.json': { schemaVersion: 1, objects, enemies, blocks: BLOCK_TYPES },
+    'defs.json': { schemaVersion: 1, objects, enemies, spells: SPELLS, blocks: BLOCK_TYPES },
     'biomes.json': { schemaVersion: 1, biomes: { home: { name: 'Home', color: '#ffb020' } } },
     'world.json': { schemaVersion: 1, start, connections },
     'strings.json': STRINGS,

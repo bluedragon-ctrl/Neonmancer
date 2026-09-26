@@ -10,8 +10,8 @@ for the current phase. Locked decisions live in CLAUDE.md; their reasons in
 |---|---|
 | Move | WASD / arrow keys; grid-aligned by default: Right ↗, Up ↖, Left ↙, Down ↘ |
 | Jump | Space |
-| Cast | J |
-| Cycle spell | Q / E |
+| Cast (the selected spell) | E / Numpad 0 |
+| Switch spell | Tab (next) / Q (previous) |
 | Pause | Esc / P |
 | Map | M |
 | Switch movement mode | G |
@@ -201,9 +201,9 @@ comes from data: its type in `defs.json` `enemies`, and the room's
 |---|---|---|
 | `movement` | `patrol`, `stationary` | patrol walks the enemy's `path` (required); stationary stays in its cell (no path). Chasing comes with Viruses (Phase 3); a turret is a stationary enemy with a projectile attack (Pop-ups). |
 | `attack` | `contact`, `none` | contact: touching it hurts while it is hostile. Projectiles come with Pop-ups. |
-| `hostility` | `hostile`, `peaceful`, `provoked` | hostile attacks; peaceful never does; provoked is peaceful until a spell hits it (Zap, step 6), then hostile. |
+| `hostility` | `hostile`, `peaceful`, `provoked` | hostile attacks; peaceful never does; provoked is peaceful until a spell (Zap) hits it, then hostile. |
 | `aggroRange` | units (default 0) | how far a hostile enemy notices the wizard; used by chasing and shooting later, no effect on patrol and contact. |
-| `integrity` | 1–15 | hits it takes (spells, from step 6). |
+| `integrity` | 1–15 | how much spell damage it takes before it pops (bug: 2, so two Zaps). |
 | `damage` | ≥ 1 | integrity the wizard loses per attack. |
 | `speed` | units/s | walking speed; a path's own `speed` overrides it. |
 | `bounce` | true / false (default false; bug: true) | trampoline top (below). |
@@ -244,12 +244,47 @@ comes from data: its type in `defs.json` `enemies`, and the room's
   peaceful. It squashes when bounced on, hops as it walks, bobs while
   standing, turns towards where it walks and pops into pixels. No drop
   shadow (D50).
+- **Spell hits:** a Zap takes `damage` (1) of its integrity and provokes
+  it; the last point pops it into pixels. Any enemy can be hit, peaceful
+  ones too (they stay peaceful). A hit flashes it white, then cyan, with a
+  recoil squash; while damaged it glitches every ~0.8 s (a small sideways
+  jump and a faint flash).
 - Validation: known type, valid overrides, a free cell of its own not over
   a hole, ids unique among objects and enemies, a patrol has a level path
   clear of static blocks, a stationary enemy has none.
 - Tuning: `ENEMY` in `src/entities/enemy.js`, `PLAYER.bounceHeight`, the
   look is `BUG` in `src/render/bug.js`; review in the asset showcase
   (`/tools/showcase.html?asset=bugs`).
+
+## Zap and energy
+
+- **Energy** (mana): the wizard holds 10 and gets 1 back per second;
+  it carries over between rooms and is full again after a respawn. The
+  HUD shows it under integrity as one lime segment per Zap (5), each
+  filling as it recharges; a full segment glows.
+- **Casting:** E or Numpad 0 casts the selected spell. Its name
+  shows in a lime tag under the energy bar (ZAP); Tab switches to the next
+  spell he knows (Q back), and the tag flashes. With only Zap known, Tab
+  does nothing and the tag shows no key hint (D54).
+- **Zap** (E or Numpad 0): costs 2 energy, then 0.25 s before the next
+  cast. The bolt flies at 12 units per second from his hands (0.48 above
+  his feet, 0.34 in front) the way he aims: the direction he last walked
+  or turned to, so diagonals too. It is a 0.3 box, low enough to hit a bug
+  on the same level; standing a block higher he zaps over it.
+- It stops at the first thing in its way: a live enemy (which takes the
+  hit), a block of any type, a room object (crate, platform, standing
+  collapsing block; a destructible crate takes the hit) or the room's
+  side, exits included. Cast into a wall right in front of him, it stops
+  at once.
+- Without enough energy the cast fails: the energy bar flashes magenta
+  and jolts.
+- **Look:** a flare at his hands; a white-hot core in a cyan halo
+  dragging a crackling zigzag trail; cyan and white sparks flying back out
+  of whatever it hits.
+- Tuning: `defs.json` `spells.zap` (cost, cooldown, speed, damage),
+  `maxEnergy` and `energyRecharge` in `PLAYER`, `BOLT` in
+  `src/entities/bolt.js`; the look is `ZAP_FX` in `src/render/zap-fx.js`;
+  review in the asset showcase (`/tools/showcase.html?asset=zap`).
 
 ## Pushing
 
@@ -269,6 +304,28 @@ comes from data: its type in `defs.json` `enemies`, and the room's
   steps away.
 - Tuning values: `PUSHABLE` in `src/entities/pushable.js`, `pushDelay` in
   `PLAYER`.
+
+## Destructible crates
+
+- A pushable type with `integrity` (1–15) is destructible: each Zap takes
+  1, and at 0 it breaks into pixels (like a collapsing block) and is gone
+  until the room resets; whatever stood on it falls. `crate_cross` has
+  integrity 1: one Zap. A hit that doesn't break it jolts it.
+- It always shows it, standing still: the plain `crate` carries a whole
+  4×4 grid of small pale squares (its data bits, the `bits` mark; both
+  crates have the same tinted faces)
+  on every face; a destructible object shows the same grid with 6 of the
+  16 bits missing, different on every face (in place of whatever its
+  `mark` is), so it reads as a data block with holes. No animation; only a
+  hit jolts it. Plain crates shrug a Zap off (sparks only).
+- Room design: a destructible crate is cover that can be shot away, or a
+  wall of crates to blast through; don't make one the only way up, since
+  the wizard can break it by accident (the room comes back on re-entry,
+  but it is annoying).
+- Tuning: `integrity` on the type (overridable per object); the bits are
+  `BITS` in `src/render/marks.js`, the jolt `BREAK_FX` in
+  `src/render/break-fx.js`; review in the asset showcase
+  (`?asset=crate,crate_cross,zap-break`).
 
 ## Holes
 
@@ -330,7 +387,7 @@ walking the whole world (new exits are added for that where needed, D49).
 | `fault_line` (Phase 2) | 12×12 | west doorway → Stack Yard; raised east exit on the lookout → Transit Bus | a corridor between hazard walls, hazard blocks between two plain ones to walk across, a zigzag path of plain blocks through a field of void blocks up to a lookout |
 | `transit_bus` (Phase 2) | 12×12, 5 high | west doorway → Fault Line; north doorway → Boot Sector; raised east exit on the high ledge → Volatile Memory | a ferry across a pit between two ledges, a lift up to a high ledge, a loop carrying a crate, a press coming down (with a crate to jam it) and a pusher squeezing the wizard against the room's edge |
 | `volatile_memory` (Phase 2) | 12×12, 5 high | west doorway → Transit Bus; raised east exit on the high ledge → Crawl Space | a pit across the room with two collapsing bridges: one regrowing after 3 s (the way back), one that stays gone, with a crate on a plain ledge in front of it to push onto the bridge from solid ground (it doesn't trigger the blocks, so it is a safe spot to hop onto); two one-shot collapsing steps up to a high ledge |
-| `crawl_space` (Phase 2) | 12×12 | west doorway → Volatile Memory; east (front) → Boot Sector | bugs: a sentry crossing the entrance lane, one walking off a ledge and patrolling the floor below, a solid one shoving along a lane with a crate to push in its way, a provoked one circling a pillar, a peaceful stationary one to bounce up to a 2-high ledge, a solid peaceful one along the front edge to ride |
+| `crawl_space` (Phase 2) | 12×12 | west doorway → Volatile Memory; east (front) → Boot Sector | bugs: a sentry crossing the entrance lane, one walking off a ledge and patrolling the floor below, a solid one shoving along a lane with a crate to push in its way, a provoked one circling a pillar, a peaceful stationary one to bounce up to a 2-high ledge, a solid peaceful one along the front edge to ride; Zap targets: the provoked one turns hostile when hit, and an amber stationary one with 4 integrity |
 
 ### Room design checklist
 
@@ -451,7 +508,7 @@ Each step is one branch and one PR; the game runs after every step.
 Hazards, combat and the room editor. Each step is one branch and one PR
 against `main` (no stacked PRs); the game runs after every step, CI is
 green before a PR is called ready. Rules that apply across steps are in
-D43. **Next step: 6.**
+D43. **Next step: 7.**
 
 Every step also:
 - adds its new looks to the asset showcase (`tools/showcase.js`);
@@ -468,7 +525,7 @@ Every step also:
 | 3 | `feat/moving-blocks` | Shared path format (waypoints, speed, optional pause at ends, loop or ping-pong) in room data; moving platforms as a room object kind (D40) that the wizard and pushables ride; a platform that would push the wizard into something solid pushes him aside, or hurts him if there is no room (never instant death); a glowing guide line along the path. |
 | 4 | `feat/collapsing-blocks` | Collapsing blocks as a room object kind: the wizard standing on one starts a short shake, then it vanishes; optional regrow after N seconds (room data). Pushables don't trigger them. |
 | 5 | `feat/bugs` | Enemy types in `defs.json` (speed, health, behavior, color) and an `enemies` list in room data; AI as named behavior modules (`src/ai/`, first `patrol` on the shared path format); bugs don't block movement, touching one hurts; hologram bug model (D22) with a bouncy walk; reset with the room. |
-| 6 | `feat/zap-and-mana` | Mana (energy) on the Player with slow recharge and a HUD bar; `cast` fires Zap the way the wizard faces (same directions as movement); the bolt stops at solids and pushables, one hit kills a bug (pops into pixels). Zap is available from the start (data disks come in Phase 3). |
+| 6 | `feat/zap-and-mana` | Mana (energy) on the Player with slow recharge and a HUD bar; `cast` fires Zap the way the wizard faces (same directions as movement); the bolt stops at solids and pushables, a bug takes two hits (the second pops it into pixels). Zap is available from the start (data disks come in Phase 3). |
 | 7 | `feat/xray-outline` | Outline of the wizard drawn through blocks while he is hidden behind them. |
 | 8 | `feat/room-editor` | In-game editor (dev server): pick a height layer, place and erase blocks (with type), objects, holes, exits, enemies and paths with the mouse in the real neon look; validate, then save straight to `data/rooms/*.json` through a dev-server endpoint; the deployed build exports JSON only. May be split into two PRs (blocks/objects/holes/exits, then enemies/paths). |
 | 9 | `chore/release-0.2.0` | Docs pass, CHANGELOG, `v0.2.0` tag and GitHub Release (CLAUDE.md §10) |
@@ -486,7 +543,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 | File | Contents |
 |---|---|
 | `data/rooms/<id>.json` | One room (id = file name) |
-| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, inset mark, dark faces; box variants `crate_plain`, `crate_cross`, `crate_dashed`; `platform`: moving platform, cyan; `collapsing`: collapsing block, magenta); `enemies`: enemy types (`bug`, see Enemies); `blocks`: look of the `hazard` and `void` block types and the hazard's `damage` |
+| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; `collapsing`: collapsing block, magenta); `enemies`: enemy types (`bug`, see Enemies); `spells`: spell tuning (`zap`, see Zap and energy); `blocks`: look of the `hazard` and `void` block types and the hazard's `damage` |
 | `data/biomes.json` | Biome name and room color (`home_lattice`: amber) |
 | `data/world.json` | Start room and exit connections |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |

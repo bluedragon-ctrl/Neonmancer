@@ -102,7 +102,7 @@ export function exitCells({ side, at, width, y, height }, size) {
  */
 export const OBJECT_STYLES = {
   edges: ['solid', 'dashed'],
-  mark: ['none', 'inset', 'cross', 'brackets'],
+  mark: ['none', 'inset', 'cross', 'brackets', 'bits'],
   faces: ['dark', 'tinted'],
 };
 

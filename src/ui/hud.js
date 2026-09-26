@@ -1,6 +1,6 @@
 /**
- * The HUD: a DOM overlay on the stage with the integrity bar, the room name
- * banner, terminal messages and the fullscreen hint. It only shows state;
+ * The HUD: a DOM overlay on the stage with the integrity bar, the energy
+ * bar with the selected spell under it, the room name banner, terminal messages and the fullscreen hint. It only shows state;
  * main.js feeds it every frame. Sizes use --u (one pixel at 1080p), so it
  * scales with the stage. All text comes from data/strings.json; terminal
  * messages and banners arrive through say() and announce()
@@ -8,6 +8,7 @@
  */
 import { takeAnnouncements, takeMessages } from '../core/messages.js';
 import { GAME_VERSION } from '../core/version.js';
+import { EnergyBar } from './energy-bar.js';
 import { HINT_SECONDS } from './fullscreen.js';
 import { Terminal, bannerState } from './terminal.js';
 import { formatText, scrambleText } from './text.js';
@@ -45,6 +46,13 @@ export class Hud {
     this.hint = find('.hud-hint');
     this.movementTag = find('.hud-movement');
     this.movementMode = null;
+    this.energy = new EnergyBar(root, this.text('hud.energy'));
+    root.insertAdjacentHTML('beforeend', '<div class="hud-spell"><span class="hud-spell-name"></span><span class="hud-spell-key"></span></div>');
+    this.spellBox = find('.hud-spell');
+    this.spellName = find('.hud-spell-name');
+    this.spellKey = find('.hud-spell-key');
+    this.spellKey.textContent = this.text('hud.spellSwitch');
+    this.spell = null;
 
     this.cells = [];
     this.integrity = null;
@@ -87,6 +95,39 @@ export class Hud {
     });
     this.integrityBox.classList.toggle('low', value > 0 && value <= LOW_INTEGRITY);
     this.integrity = value;
+  }
+
+  /**
+   * Show energy in segments of one cast each.
+   * @param {number} value
+   * @param {number} max
+   * @param {number} cost energy per cast
+   */
+  setEnergy(value, max, cost) {
+    this.energy.set(value, max, cost);
+  }
+
+  /**
+   * The selected spell, under the energy bar; the switch key shows only
+   * when he knows more than one. A new selection flashes.
+   * @param {string} spell spell id (its name is the string "spell.<id>")
+   * @param {number} known how many spells he knows
+   */
+  setSpell(spell, known) {
+    this.spellKey.hidden = known < 2;
+    if (spell === this.spell) return;
+    const first = this.spell === null;
+    this.spell = spell;
+    this.spellName.textContent = this.text(`spell.${spell}`);
+    if (first) return;
+    this.spellBox.classList.remove('switched');
+    void this.spellBox.offsetWidth; // restart the animation
+    this.spellBox.classList.add('switched');
+  }
+
+  /** A cast failed for lack of energy: flash the energy bar. */
+  denyEnergy() {
+    this.energy.deny();
   }
 
   /**

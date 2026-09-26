@@ -2,9 +2,9 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "defs.schema.json",
   "title": "Type definitions (data/defs.json)",
-  "description": "Object types with their defaults, enemy types, and the look and rules of the special static block types. Spells join in a later phase.",
+  "description": "Object types with their defaults, enemy types, spells, and the look and rules of the special static block types.",
   "type": "object",
-  "required": ["schemaVersion", "objects", "blocks"],
+  "required": ["schemaVersion", "objects", "spells", "blocks"],
   "additionalProperties": false,
   "properties": {
     "$schema": { "type": "string" },
@@ -19,6 +19,26 @@
       "description": "Enemy types (corrupted programs), by id.",
       "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
       "additionalProperties": { "$ref": "#/$defs/enemyType" }
+    },
+    "spells": {
+      "type": "object",
+      "description": "Spell tuning, by spell id. What each spell does is built into the engine (Zap: src/entities/bolt.js and Game.castZap()).",
+      "required": ["zap"],
+      "additionalProperties": false,
+      "properties": {
+        "zap": {
+          "description": "A fast bolt the way the wizard faces; it stops at blocks and objects and hits the first enemy in its way.",
+          "type": "object",
+          "required": ["cost", "cooldown", "speed", "damage"],
+          "additionalProperties": false,
+          "properties": {
+            "cost": { "type": "number", "exclusiveMinimum": 0, "description": "Energy per cast." },
+            "cooldown": { "type": "number", "minimum": 0, "maximum": 5, "description": "Seconds before he can cast it again." },
+            "speed": { "type": "number", "exclusiveMinimum": 0, "maximum": 50, "description": "Bolt speed in units per second." },
+            "damage": { "type": "integer", "minimum": 1, "description": "Integrity an enemy loses per hit." }
+          }
+        }
+      }
     },
     "blocks": {
       "type": "object",
@@ -105,7 +125,7 @@
           "description": "Outline style."
         },
         "mark": {
-          "enum": ["none", "inset", "cross", "brackets"],
+          "enum": ["none", "inset", "cross", "brackets", "bits"],
           "default": "none",
           "description": "Pattern drawn on every face."
         },
@@ -120,6 +140,12 @@
           "maximum": 1,
           "default": 0.1,
           "description": "With tinted faces: share of the object color in the top face; the sides get less."
+        },
+        "integrity": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 15,
+          "description": "Pushable objects only: makes it destructible, taking this much spell damage (Zap: 1 per hit) before it breaks into pixels. It is drawn with its data bits with some missing (a grid of small squares, holes in it) instead of its mark, so it reads as breakable next to a crate with the whole grid. Without it the object is indestructible."
         }
       }
     }

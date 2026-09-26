@@ -1,11 +1,13 @@
 /**
  * A pushable object: one 1×1×1 block that rests, slides one cell when
- * pushed, falls when nothing holds it, and plugs a hole it drops into.
+ * pushed, falls when nothing holds it, and plugs a hole it drops into. One
+ * with `integrity` (destructible) breaks when spells have taken all of it.
  * Pure logic, one call to update() per fixed tick.
  *
  *   rest ──push──► slide ──arrive──► rest
  *   rest ──no support──► fall ──land──► rest
  *                               └─into a hole──► plugged (floor from now on)
+ *   rest, slide, fall ──last integrity hit away──► broken (gone until the room resets)
  */
 import { DT } from '../core/loop.js';
 import { REST_EPS, cellBox, overlapsBox, restsOn, surfaceBelow } from '../physics/collision.js';
@@ -31,11 +33,37 @@ export class Pushable {
     this.pos = [...object.at];
     /** Position at the previous tick, for render interpolation. */
     this.prev = [...this.pos];
-    /** 'rest' | 'slide' | 'fall' | 'plugged' */
+    /** 'rest' | 'slide' | 'fall' | 'plugged' | 'broken' */
     this.state = 'rest';
+    /** Integrity left, or null: indestructible (the type has none). */
+    this.integrity = object.integrity ?? null;
+    /** Ticks since a spell last hit it, or null; ticks since it broke. */
+    this.hitTicks = null;
+    this.timer = 0;
     this.vy = 0;
     /** While sliding: the cell it slides into. */
     this.target = null;
+  }
+
+  /** Is it there to collide with (not broken)? */
+  get solid() {
+    return this.state !== 'broken';
+  }
+
+  /**
+   * A spell hits it: a destructible object loses `damage` integrity and
+   * breaks at 0. Indestructible or plugged ones don't mind.
+   * @param {number} damage
+   * @returns {'hit'|'break'|null} event
+   */
+  hit(damage) {
+    if (this.integrity === null || this.state === 'plugged' || this.state === 'broken') return null;
+    this.integrity = Math.max(0, this.integrity - damage);
+    this.hitTicks = 0;
+    if (this.integrity > 0) return 'hit';
+    this.state = 'broken';
+    this.timer = 0;
+    return 'break';
   }
 
   /** Keep this tick's start for render interpolation (copied in place: no new array every tick). */
@@ -91,6 +119,11 @@ export class Pushable {
    */
   update({ grid, bodies }) {
     this.savePrevious();
+    if (this.hitTicks !== null) this.hitTicks++;
+    if (this.state === 'broken') {
+      this.timer++;
+      return null;
+    }
 
     if (this.state === 'slide') {
       const step = PUSHABLE.slideSpeed * DT;

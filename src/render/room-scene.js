@@ -12,6 +12,7 @@ import { createHoleView } from './hole-view.js';
 import { disposeTree } from './neon.js';
 import { flareHazard } from './block-fx.js';
 import { createRoomView } from './room-view.js';
+import { ZapView } from './zap-view.js';
 
 /**
  * The view class for each object kind (see entities/kinds.js). A view is
@@ -33,6 +34,8 @@ export class RoomScene {
     this.objectViews = [];
     this.enemyViews = [];
     this.exitViews = [];
+    /** Bolts and sparks of the room (made in show()). */
+    this.zapView = null;
     /** Face material of the room's hazard blocks, or null. */
     this.hazardFaces = null;
     /** The hazard block that last hurt the wizard, flaring: { cell, time } (seconds since). */
@@ -49,7 +52,8 @@ export class RoomScene {
     const old = [this.objectGroup];
     this.objectViews = game.objects.map((object) => new OBJECT_VIEWS[object.kind](game, object));
     this.enemyViews = game.enemies.map((enemy) => new EnemyView(game, enemy));
-    this.objectGroup = new Group();
+    this.zapView = new ZapView(game);
+    this.objectGroup = new Group().add(this.zapView.group);
     // add() with no arguments logs an error (a room without objects).
     const views = [...this.objectViews, ...this.enemyViews];
     if (views.length > 0) this.objectGroup.add(...views.map((view) => view.group));
@@ -86,11 +90,20 @@ export class RoomScene {
   update(alpha, dt) {
     for (const view of this.objectViews) view.sync(alpha);
     for (const view of this.enemyViews) view.sync(alpha, dt);
+    this.zapView.sync(alpha, dt);
     for (const view of this.exitViews) view.update(dt);
     if (this.flare && this.hazardFaces) {
       this.flare.time += dt;
       flareHazard(this.hazardFaces, this.flare.cell, this.flare.time);
     }
+  }
+
+  /**
+   * A bolt stopped: sparks where it is.
+   * @param {import('../entities/bolt.js').Bolt} bolt
+   */
+  sparks(bolt) {
+    this.zapView.spark(bolt);
   }
 
   /**

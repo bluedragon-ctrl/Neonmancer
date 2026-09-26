@@ -112,6 +112,109 @@ body {
   }
 }
 
+/* Energy: a label over slanted segments (one per cast) under integrity. */
+.hud-energy {
+  position: absolute;
+  top: calc(126 * var(--u));
+  left: calc(44 * var(--u));
+  color: var(--lime);
+}
+
+.hud-segments {
+  display: flex;
+  gap: calc(7 * var(--u));
+}
+
+.hud-segments i {
+  position: relative;
+  width: calc(39 * var(--u));
+  height: calc(14 * var(--u));
+  transform: skewX(-18deg);
+  box-sizing: border-box;
+  border: calc(2 * var(--u)) solid color-mix(in srgb, currentColor 35%, transparent);
+  overflow: hidden;
+}
+
+/* The filling part: dim while it recharges, glowing once the segment is full. */
+.hud-segments b {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: currentColor;
+  opacity: 0.4;
+}
+
+.hud-segments i.full {
+  border-color: currentColor;
+  box-shadow:
+    0 0 calc(10 * var(--u)) currentColor,
+    inset 0 0 calc(4 * var(--u)) #fff8;
+}
+
+.hud-segments i.full b {
+  opacity: 1;
+}
+
+/* The selected spell under the energy bar: its name in a slanted tag,
+   the switch key beside it once there is more than one spell. */
+.hud-spell {
+  position: absolute;
+  top: calc(182 * var(--u));
+  left: calc(44 * var(--u));
+  display: flex;
+  align-items: center;
+  gap: calc(10 * var(--u));
+  color: var(--lime);
+}
+
+.hud-spell-name {
+  font-weight: 700;
+  font-size: calc(20 * var(--u));
+  letter-spacing: 0.15em;
+  padding: calc(3 * var(--u)) calc(12 * var(--u));
+  border: calc(2 * var(--u)) solid currentColor;
+  transform: skewX(-18deg);
+  text-shadow: 0 0 calc(8 * var(--u)) currentColor;
+  box-shadow:
+    0 0 calc(8 * var(--u)) currentColor,
+    inset 0 0 calc(6 * var(--u)) color-mix(in srgb, currentColor 40%, transparent);
+}
+
+.hud-spell-key {
+  font-family: var(--terminal);
+  font-size: calc(16 * var(--u));
+  opacity: 0.6;
+}
+
+/* A new spell selected: the tag flashes white. */
+.hud-spell.switched .hud-spell-name {
+  animation: spell-switched 0.35s ease-out;
+}
+
+@keyframes spell-switched {
+  0% {
+    color: #fff;
+    box-shadow: 0 0 calc(18 * var(--u)) #fff;
+  }
+}
+
+/* A cast without enough energy: the bar flashes magenta and jolts. */
+.hud-energy.denied {
+  animation: energy-denied 0.4s steps(4, jump-none);
+}
+
+@keyframes energy-denied {
+  0%,
+  50% {
+    color: var(--magenta);
+    transform: translateX(calc(4 * var(--u)));
+  }
+  25%,
+  75% {
+    color: var(--magenta);
+    transform: translateX(calc(-4 * var(--u)));
+  }
+}
+
 .hud-integrity.low {
   color: var(--magenta);
   animation: integrity-low 0.8s steps(2, jump-none) infinite;

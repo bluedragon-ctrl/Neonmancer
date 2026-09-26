@@ -10,6 +10,7 @@
  *     │ └─cell blocked: turn back, wait turnTicks                 │
  *     └──no support──► fall ──land──► rest                         │
  *   onto a hole or a void block ──► dead (pops; gone until the room resets)
+ *   hit by a spell ──► integrity − damage; at 0 ──► dead (pops)
  *
  * It only starts a step from a whole cell (so on a platform, only at a
  * stop). The wizard walks through it, unless it is solid: then it blocks
@@ -67,15 +68,17 @@ export class Enemy {
     /** Walking speed in units per second: the path's own, else its type's. */
     this.speed = enemy.path?.speed ?? enemy.speed;
     this.behavior = new BEHAVIORS[enemy.movement](enemy.at, enemy.path);
-    /** Hits it can still take (spells, from step 6). */
+    /** Integrity left; a spell hit takes some (hit()), at 0 it pops. */
     this.integrity = enemy.integrity;
+    /** Ticks since a spell last hit it (for the view), or null. */
+    this.hitTicks = null;
     /** A 'provoked' enemy turns hostile once attacked (provoke()). */
     this.provoked = false;
     /** Ticks since the wizard last bounced off it (for the view), or null. */
     this.bounced = null;
     /** Ticks left before it may start a step (after being blocked). */
     this.wait = 0;
-    /** How it died: 'hole' | 'void' (later a spell); null while alive. */
+    /** How it died: 'hole' | 'void' | 'zap'; null while alive. */
     this.deathCause = null;
     /** Ticks since it died, for the pop. */
     this.timer = 0;
@@ -106,6 +109,26 @@ export class Enemy {
     this.provoked = true;
   }
 
+  /** Has a spell taken some of its integrity? */
+  get damaged() {
+    return this.integrity < this.data.integrity;
+  }
+
+  /**
+   * A spell hits it: it is provoked and loses `damage` integrity; losing the
+   * last pops it.
+   * @param {number} damage
+   * @param {'zap'} cause the spell
+   * @returns {'hit'|'pop'|null} event (null if it was dead already)
+   */
+  hit(damage, cause) {
+    if (!this.alive) return null;
+    this.provoke();
+    this.integrity = Math.max(0, this.integrity - damage);
+    this.hitTicks = 0;
+    return this.integrity === 0 ? this.die(cause) : 'hit';
+  }
+
   /** Keep this tick's start for render interpolation (copied in place). */
   savePrevious() {
     for (let i = 0; i < 3; i++) this.prev[i] = this.pos[i];
@@ -124,6 +147,7 @@ export class Enemy {
   update(game) {
     this.savePrevious();
     if (this.bounced !== null) this.bounced++;
+    if (this.hitTicks !== null) this.hitTicks++;
     if (this.state === 'dead') {
       this.timer++;
       return null;
@@ -218,7 +242,7 @@ export class Enemy {
     return 'land';
   }
 
-  /** @param {'hole'|'void'} cause */
+  /** @param {'hole'|'void'|'zap'} cause */
   die(cause) {
     this.state = 'dead';
     this.deathCause = cause;

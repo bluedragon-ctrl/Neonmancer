@@ -10,7 +10,7 @@
  */
 import { Group, Mesh, MeshBasicMaterial, SphereGeometry } from 'three';
 import { hash } from './hash.js';
-import { holoPart } from './holo.js';
+import { createFlash, holoPart } from './holo.js';
 import { shared } from './neon.js';
 
 /** Proportions (world units) and animation tuning. */
@@ -45,13 +45,15 @@ const FALL_POSE = { lift: 0, scale: [0.92, 1.15, 0.92] };
 /**
  * The bug as a three.js group (origin at the feet center, looking along
  * +z). Its `userData.body` is the part that hops (see bugPose()),
- * `userData.eyes` the eye material (see setEyeMood()).
+ * `userData.eyes` the eye material (see setEyeMood()), `userData.flash`
+ * its own flash uniforms (holo.js createFlash(); a Zap hit flashes it).
  * @param {number|string} color
  */
 export function createBug(color) {
   const { r, eyes } = BUG;
   const body = new Group();
-  const ball = holoPart(BALL, color);
+  const flash = createFlash();
+  const ball = holoPart(BALL, color, flash);
   ball.position.y = r;
   body.add(ball);
 
@@ -69,6 +71,7 @@ export function createBug(color) {
   const group = new Group().add(body);
   group.userData.body = body;
   group.userData.eyes = material;
+  group.userData.flash = flash;
   setEyeMood(group, 'hostile');
   return group;
 }
@@ -126,18 +129,21 @@ export function bugPose(phase, size = 1) {
 /**
  * Pose a bug's body for this frame: a hop per cell while walking, small
  * hops while standing, stretched while falling, plus the squash of a
- * bounce.
+ * bounce or a hit, shifted sideways by a glitch.
  * @param {Group} bug from createBug()
  * @param {object} state
  * @param {string} [state.state] the enemy's state ('rest', 'walk', 'fall')
  * @param {number} [state.walked] cells walked (while walking)
  * @param {number} [state.time] seconds (for the standing hops)
  * @param {number|null} [state.bounced] ticks since the wizard bounced off it
+ * @param {number} [state.squash] extra squash (a hit, zap-fx.js enemyHitLook())
+ * @param {number} [state.shift] sideways shift (a glitch, zap-fx.js damagedGlitch())
  */
-export function animateBug(bug, { state = 'rest', walked = 0, time = 0, bounced = null }) {
+export function animateBug(bug, { state = 'rest', walked = 0, time = 0, bounced = null, squash: hit = 0, shift = 0 }) {
   const pose = state === 'fall' ? FALL_POSE : state === 'walk' ? bugPose(walked) : bugPose(time * BUG.idleRate, BUG.idleLift);
-  const squash = bounceSquash(bounced);
+  const squash = bounceSquash(bounced) + hit;
   const { body } = bug.userData;
+  body.position.x = shift;
   body.position.y = pose.lift;
   body.scale.set(pose.scale[0] * (1 + squash * 0.5), pose.scale[1] * (1 - squash), pose.scale[2] * (1 + squash * 0.5));
 }

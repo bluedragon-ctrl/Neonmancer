@@ -44,11 +44,32 @@ test('two keys bound to one action act as one', () => {
 
 test('key repeat does not re-trigger pressed', () => {
   const input = new Input();
-  input.keyDown('KeyJ');
+  input.keyDown('KeyE');
   input.sample();
-  input.keyDown('KeyJ'); // auto-repeat
+  input.keyDown('KeyE'); // auto-repeat
   input.sample();
   assert.ok(input.down('cast') && !input.pressed('cast'));
+});
+
+test('E and Numpad 0 cast; Tab switches spells', () => {
+  for (const code of ['KeyE', 'Numpad0']) {
+    const input = new Input();
+    input.keyDown(code);
+    input.sample();
+    assert.ok(input.pressed('cast'), code);
+  }
+  const input = new Input();
+  input.keyDown('Tab');
+  input.sample();
+  assert.ok(input.pressed('spellNext'));
+});
+
+test('the game takes bound keys; shortcuts and unbound keys go to the browser', () => {
+  const input = new Input();
+  assert.ok(input.takes({ code: 'KeyW' }));
+  assert.ok(input.takes({ code: 'Tab' }));
+  assert.ok(!input.takes({ code: 'KeyR' }));
+  for (const modifier of ['ctrlKey', 'altKey', 'metaKey']) assert.ok(!input.takes({ code: 'KeyW', [modifier]: true }), modifier);
 });
 
 test('releaseAll drops held keys (window blur)', () => {
