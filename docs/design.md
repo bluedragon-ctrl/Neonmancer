@@ -200,6 +200,38 @@ Each step is one branch and one PR; the game runs after every step.
 | 8 | `feat/debug-mode` | Collision boxes, FPS, room jump, invincibility, test damage key |
 | 9 | `chore/release-0.1.0` | Docs pass, CHANGELOG, `v0.1.0` tag and GitHub Release |
 
+## Phase 2 (v0.2) plan
+
+Hazards, combat and the room editor. Each step is one branch and one PR
+against `main` (no stacked PRs); the game runs after every step, CI is
+green before a PR is called ready. Rules that apply across steps are in
+D43. **Next step: 1.**
+
+Every step also:
+- adds its new looks to the asset showcase (`tools/showcase.js`);
+- adds or extends a small test room that shows the mechanic, connected to
+  the world (`data/world.json`);
+- adds unit tests for the logic (fixtures in `tests/helpers.js`);
+- updates `docs/design.md`, `docs/architecture.md` and CHANGELOG, and
+  records new decisions.
+
+| # | Branch | Delivers |
+|---|---|---|
+| 1 | `feat/damage` | Damage from any source through `Game.hurt()`: invulnerability after a hit (~1 s) with the wizard blinking, `hurt` event, HUD hit flash. Integrity 0 kills: the wizard derezzes into pixels (placeholder effect is fine) and recompiles at the room's reset point, like a hole death. |
+| 2 | `feat/hazard-void-blocks` | Hazard and void block types as grid cell types (D40): room data gets a block type, `CELL` codes, their own neon looks. Hazard: touching from any side or standing on it deals 1 damage (then invulnerability). Void: landing on top is instant death; touching a side is safe. |
+| 3 | `feat/moving-blocks` | Shared path format (waypoints, speed, optional pause at ends, loop or ping-pong) in room data; moving platforms as a room object kind (D40) that the wizard and pushables ride; a platform that would push the wizard into something solid pushes him aside, or hurts him if there is no room (never instant death); glowing rails along the path. |
+| 4 | `feat/collapsing-blocks` | Collapsing blocks as a room object kind: the wizard standing on one starts a short shake, then it vanishes; optional regrow after N seconds (room data). Pushables don't trigger them. |
+| 5 | `feat/bugs` | Enemy types in `defs.json` (speed, health, behavior, color) and an `enemies` list in room data; AI as named behavior modules (`src/ai/`, first `patrol` on the shared path format); bugs don't block movement, touching one hurts; hologram bug model (D22) with a bouncy walk; reset with the room. |
+| 6 | `feat/zap-and-mana` | Mana (energy) on the Player with slow recharge and a HUD bar; `cast` fires Zap the way the wizard faces (same directions as movement); the bolt stops at solids and pushables, one hit kills a bug (pops into pixels). Zap is available from the start (data disks come in Phase 3). |
+| 7 | `feat/xray-outline` | Outline of the wizard drawn through blocks while he is hidden behind them. |
+| 8 | `feat/room-editor` | In-game editor (dev server): pick a height layer, place and erase blocks (with type), objects, holes, exits, enemies and paths with the mouse in the real neon look; validate, then save straight to `data/rooms/*.json` through a dev-server endpoint; the deployed build exports JSON only. May be split into two PRs (blocks/objects/holes/exits, then enemies/paths). |
+| 9 | `chore/release-0.2.0` | Docs pass, CHANGELOG, `v0.2.0` tag and GitHub Release (CLAUDE.md §10) |
+
+Moved out of Phase 2: biome environmental effects (Glitch Zone drain,
+Low-Res, Zero-G) and the health pickups and safe rooms that balance them
+are specific content, planned for Phase 4 (content production). Biomes stay
+look-only (name, color) until then.
+
 ## Data formats
 
 The schemas in `schemas/` are the reference; this is an overview. Every file

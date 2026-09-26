@@ -271,6 +271,11 @@ not critical.
 - Git: protected `main` (always playable), feature branches
   (`feat/cut-paste-spell`), pull requests. Use the GitHub CLI to open a
   PR for each step; the author reviews and merges.
+- Every PR targets `main`; never stack a PR on another open PR's branch
+  (stacked PRs got merged into their bases instead of `main`). Work that
+  depends on an open PR waits for its merge.
+- A PR is ready only when its CI is green; before tagging a release,
+  CI and the Pages deploy on `main` must be green.
 - Not every development computer has the GitHub CLI. If `gh` is missing,
   push the branch and give the author a prefilled compare link
   (`https://github.com/bluedragon-ctrl/Neonmancer/compare/main...<branch>?expand=1`)
@@ -316,9 +321,9 @@ room loading; 2–3 connected test rooms with flip-screen exits. Health
 HUD. Debug mode.
 
 **Phase 2 (v0.2) — Hazards, combat, editor**
-Moving, collapsing, hazard and void blocks. Bugs enemy, damage and
-invulnerability. Zap spell and mana. Biomes with health drain. X-ray
-outline. In-game room editor with JSON export.
+Damage, invulnerability and death at 0 integrity. Moving, collapsing,
+hazard and void blocks. Bugs enemy. Zap spell and mana. X-ray outline.
+In-game room editor with JSON export. Step plan: docs/design.md (D43).
 
 **Phase 3 (v0.3) — Game structure**
 Viruses, Pop-ups, Firewall Wardens. Firewall, Pause, Warp, Cut & Paste
@@ -329,4 +334,6 @@ screen. Reachability checker. Design skills and subagents.
 **Phase 4 (v0.4+) — Polish**
 Full post-processing, juice pass, music and SFX, audio-reactive visuals,
 settings menu with quality presets, fullscreen, gamepad, key rebinding.
-Then content production toward 1.0.0.
+Then content production toward 1.0.0, including biome environmental
+effects (Glitch Zone drain, Low-Res, Zero-G) with health pickups and safe
+rooms.

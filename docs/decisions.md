@@ -398,3 +398,35 @@ step owned it. The author wants every merge to show up as a new patch
 number. Bumping `package.json` in each PR would make every open PR
 conflict on the same line (stacked PRs always would); counting merges
 from git needs no manual step and cannot be forgotten.
+
+### D43 — 2026-09-26 — Phase 2 scope, order and rules
+Phase 2 runs in the steps of the plan in docs/design.md: damage first
+(everything that hurts depends on it), then hazard/void, moving and
+collapsing blocks, bugs, Zap and mana, X-ray outline, and the room editor
+last (it needs every block and enemy type to exist). Rules:
+- Damage: every source goes through `Game.hurt()`; ~1 s invulnerability
+  with blinking after a hit, no knockback. Integrity 0 kills (derezz, then
+  respawn at the room's reset point).
+- Hazard blocks hurt on any contact, from the side or standing on them.
+  Void blocks kill only when landed on from above.
+- Moving platforms carry the wizard and pushables. One that would push the
+  wizard into something solid pushes him aside, or hurts him if there is
+  no room; it never kills outright.
+- Collapsing blocks are triggered only by the wizard standing on them;
+  regrowing after N seconds is optional per block.
+- Moving platforms and patrolling enemies share one path format.
+- Bugs don't block movement; touching one hurts; one Zap kills one.
+- Zap fires the way the wizard faces and is available from the start
+  until data disks exist (Phase 3).
+- X-ray outline covers the wizard only for now.
+- The editor saves straight to `data/rooms/` in the dev server (after
+  validation); the deployed build can only export JSON.
+- Biome environmental effects (drain, Low-Res, Zero-G) and the health
+  pickups and safe rooms balancing them move to Phase 4 content
+  production.
+**Why:** author's review of the Phase 2 plan after v0.1.0. Environmental
+effects are specific content, not basics, and without pickups a drain
+room only counts down to death. Several Phase 2 mechanics were only named
+in CLAUDE.md; fixing their rules up front keeps each step's PR focused.
+Death at 0 integrity was implied by damage but not planned. The shared
+path format avoids two movement systems.
