@@ -6,7 +6,10 @@
   "biome": "home_lattice",
   "size": [12, 4, 12],
   "spawn": [1.5, 0, 6],
-  "exits": [{ "id": "west", "side": "-x", "at": 5 }],
+  "exits": [
+    { "id": "west", "side": "-x", "at": 5 },
+    { "id": "east", "side": "+x", "at": 9, "y": 2 }
+  ],
   "blocks": [
     { "type": "hazard", "at": [2, 0, 4], "to": [6, 0, 4] },
     { "type": "hazard", "at": [2, 0, 7], "to": [6, 0, 7] },

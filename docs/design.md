@@ -73,7 +73,8 @@ drifting up and a thin neon outline. Proportions are `WIZARD` in
 ### Damage
 
 Every damage source calls `Game.hurt(amount)` (D43): hazard blocks and the
-debug `H` key now, platforms and enemies in later Phase 2 steps.
+debug `H` key, platforms squeezing the wizard now, enemies in later Phase 2
+steps.
 
 - A hit takes integrity and reports a `hurt` event (`amount` actually
   lost). The wizard's hologram flashes: white-hot for 3 ticks, then
@@ -126,6 +127,42 @@ edges where they meet. Motion is slow; nothing strobes.
 - Tuning: color and `damage` in `data/defs.json` `blocks`; the animated
   looks are `BLOCK_FX` in `src/render/block-fx.js`. Review them in the
   asset showcase (`/tools/showcase.html?asset=block-hazard,block-void,blocks-in-room`).
+
+## Moving platforms
+
+Room objects of kind `platform` (D40, D46): a 1×1×1 block in its own
+color (`platform` in `defs.json`: cyan, tinted faces, bracket marks) that
+follows a path given on the room object.
+
+- **Path** (shared with patrolling enemies later): from the object's `at`
+  through `points` (cells, the platform's lower corner), each leg along one
+  axis. `pingpong` (default) runs there and back, `loop` runs on from the
+  last point straight back to `at`. `speed` in units per second (default
+  2, at most 8); `pause` seconds of waiting at the ends: both ends of a
+  ping-pong path, `at` on a loop. Corners keep the speed; stops are exact
+  whole cells.
+- **Riding:** whatever stands on top moves with it: the wizard, resting
+  crates, and whatever stands on those (stacks ride along). A wall or
+  block scrapes the wizard off; he keeps walking and jumping as usual.
+- **In the way:** a crate or another platform in its way, or a carried
+  crate that would hit something, makes it wait until the way is clear.
+  A crate under a lift jams it.
+- **The wizard in the way** is shoved out of it: along the motion, or aside
+  when only an edge of him is caught (at most 0.35 units per tick). With no
+  room for that (pinned against a wall, fully under a lift coming down,
+  carried into a ceiling) it hurts him (1 integrity, through `Game.hurt()`)
+  and waits; it never kills outright, and he can walk out.
+- Crates on a platform can be pushed only while it stands at a stop (on
+  whole cells).
+- **Rails:** dim glowing rails in the platform color along its path: two
+  rails with a cross tie at every point on horizontal legs, two guide
+  posts at the side corners on vertical ones.
+- Validation: points inside the room, legs along one axis, nothing static
+  on the path, and no path through the first row inside an exit. Crates on
+  the path and holes under it are fine.
+- Tuning: `PLATFORM` in `src/entities/platform.js`, `RAILS` in
+  `src/render/rails.js`; review in the asset showcase
+  (`/tools/showcase.html?asset=platform,platforms`).
 
 ## Pushing
 
@@ -200,7 +237,8 @@ New mechanics add or extend one (D43).
 | `boot_sector` (start) | 12×12 | north doorway → Cache Hall; raised east exit on a ledge → Stack Yard | blocks, holes, two crates |
 | `cache_hall` | 16×8 | south (front) → Boot Sector | a 3-wide pit across the room: push a crate in, then jump the rest |
 | `stack_yard` | 8×8, Glitch Zone color | raised west doorway → Boot Sector; east (front) → Fault Line | stacked crates, a 2-high block to climb via a crate |
-| `fault_line` (Phase 2) | 12×12 | west doorway → Stack Yard | a corridor between hazard walls, hazard blocks between two plain ones to walk across, a zigzag path of plain blocks through a field of void blocks up to a lookout |
+| `fault_line` (Phase 2) | 12×12 | west doorway → Stack Yard; raised east exit on the lookout → Transit Bus | a corridor between hazard walls, hazard blocks between two plain ones to walk across, a zigzag path of plain blocks through a field of void blocks up to a lookout |
+| `transit_bus` (Phase 2) | 12×12, 5 high | west doorway → Fault Line | a ferry across a pit between two ledges, a lift up to a high ledge, a loop carrying a crate, a press coming down (with a crate to jam it) and a pusher squeezing the wizard against the room's edge |
 
 ## HUD
 
@@ -268,7 +306,7 @@ Each step is one branch and one PR; the game runs after every step.
 Hazards, combat and the room editor. Each step is one branch and one PR
 against `main` (no stacked PRs); the game runs after every step, CI is
 green before a PR is called ready. Rules that apply across steps are in
-D43. **Next step: 3.**
+D43. **Next step: 4.**
 
 Every step also:
 - adds its new looks to the asset showcase (`tools/showcase.js`);
@@ -303,7 +341,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 | File | Contents |
 |---|---|
 | `data/rooms/<id>.json` | One room (id = file name) |
-| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, inset mark, dark faces; box variants `crate_plain`, `crate_cross`, `crate_dashed`); `blocks`: look of the `hazard` and `void` block types and the hazard's `damage` |
+| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, inset mark, dark faces; box variants `crate_plain`, `crate_cross`, `crate_dashed`; `platform`: moving platform, cyan); `blocks`: look of the `hazard` and `void` block types and the hazard's `damage` |
 | `data/biomes.json` | Biome name and room color (`home_lattice`: amber) |
 | `data/world.json` | Start room and exit connections |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |
@@ -346,6 +384,9 @@ Example room (12×12):
   `type` is `block` (default, room color), `hazard` or `void`.
 - `holes` — floor tiles `[x, z]` that are pits; `to` fills a rectangle.
 - `objects` — typed things with stable ids; `overrides` replace type defaults.
+  Platforms also take a `path`:
+  `{ "points": [[6, 0, 1]], "mode": "pingpong", "speed": 2, "pause": 0.8 }`
+  (see Moving platforms).
 - Object type style (D17): `edges` `solid`/`dashed`, `mark`
   `none`/`inset`/`cross`/`brackets`, `faces` `dark`/`tinted` (defaults first),
   `tint` 0–1 (color share of a tinted top face, default 0.1).

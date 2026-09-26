@@ -58,6 +58,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `entities/player.js` | Movement, jump, gravity, turning, pushing, integrity, invulnerability after a hit, death (hole or damage), respawn; one wizard for the whole game |
 | `entities/kinds.js` | Object kind → logic class (`OBJECT_KINDS`); the room's objects are built from it |
 | `entities/pushable.js` | Rest → slide → fall → land / plug-a-hole state machine |
+| `entities/platform.js` | Moving platform: follows its path, carries riders, waits when blocked, shoves or squeezes the wizard (D46) |
+| `world/path.js` | Shared path format: legs from `at` through `points`, `advance()` / `positionOf()` on a small path state, swept cells |
 | `render/viewport.js` | Letterbox, buffer size and 1080p-relative sizing math (pure, tested) |
 | `render/renderer.js` | WebGLRenderer, 16:9 stage + HUD overlay, DPR cap, render scale, resize |
 | `render/camera.js` | Fixed isometric orthographic camera |
@@ -71,7 +73,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/marks.js` | Face-mark line patterns for object styles (pure, tested) |
 | `render/hole-view.js` | Hole pits: walls fading to black, rim, short fading corner lines; outline math (tested) |
 | `render/room-view.js` | Static blocks (merged edges + instanced occluder faces), back walls, styled object views |
-| `render/entity-view.js` | Player and pushable views, glowing drop shadows, derez pixel burst |
+| `render/entity-view.js` | Player, pushable and platform views, glowing drop shadows, derez pixel burst, platform rails |
+| `render/rails.js` | Rail layout along a platform's path, `RAILS` tuning (pure, tested) |
 | `render/block-fx.js` | Animated looks of hazard and void blocks (face shaders in room coordinates, steady edges, hazard flare), `BLOCK_FX` tuning |
 | `render/hit-fx.js` | Damage look: blinking while invulnerable, derez flicker and pixel burst, `HIT_FX` tuning (pure, tested) |
 | `render/interp.js` | Tick interpolation (positions, angles) and drop-shadow sizing (pure, tested) |
@@ -154,6 +157,18 @@ Falling ends on the highest surface below; above a hole at floor level
 that is −1, the object becomes `plugged` and `grid.fillHole()` turns the
 tile into floor. Object views are clipped at y = 0 (a clipping plane), so
 a sinking or plugged object shows nothing below the floor.
+
+Moving platforms (D46) are room objects too, updated with the others
+(lowest first, so a platform moves before what rides on it). Each tick a
+platform asks `advance()` (`world/path.js`) where it would be next and
+plans the whole move before making it: its riders (resting pushables on
+top, recursively, and the wizard if he stands on any of them), anything
+else in the new box or in the way of a carried crate (then it waits and
+its path state stays), and the wizard: carried with `moveAxis` (so walls
+scrape him off), then shoved clear of the new box by the smallest move of
+at most `maxShove` along any axis. If none fits, it calls `Game.hurt()`
+and waits. Carried crates keep whole-cell positions at stops (a tiny
+rounding snap), and `push()` only moves a crate standing on whole cells.
 
 ## Game events
 

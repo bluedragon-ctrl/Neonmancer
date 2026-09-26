@@ -41,6 +41,8 @@ export function buildRoom(data, { objectTypes, blockTypes, biomes }) {
       ...OBJECT_STYLE_DEFAULTS,
       ...objectTypes[object.type],
       ...object.overrides,
+      // Moving platforms: the path they follow (world/path.js).
+      ...(object.path && { path: structuredClone(object.path) }),
     })),
   };
 }

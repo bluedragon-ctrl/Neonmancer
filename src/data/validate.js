@@ -22,6 +22,7 @@ import {
   sideLength,
   withExitDefaults,
 } from './room-data.js';
+import { legAxis, pathCells } from '../world/path.js';
 
 /** Files every game needs (paths relative to data/). */
 export const REQUIRED_FILES = ['defs.json', 'biomes.json', 'world.json', 'strings.json'];
@@ -103,6 +104,8 @@ function validateRoom(file, room, { objectTypes, biomes }, report) {
     holes: new Map(),
     /** "x,y,z" → type of the special block filling it (hazard, void); plain blocks aren't listed */
     blockTypes: new Map(),
+    /** "x,y,z" → path of the platform whose path sweeps it */
+    pathCells: new Map(),
   };
   const exits = (room.exits ?? []).map(withExitDefaults);
   const exitFits = validateExitBounds(checks, exits);
@@ -192,8 +195,47 @@ function validateObjects(checks, objectTypes) {
     const type = objectTypes[object.type] && { ...OBJECT_STYLE_DEFAULTS, ...objectTypes[object.type] };
     if (!type) report(path, `unknown object type "${object.type}"`);
     else validateOverrides(report, `${path}.overrides`, object, type);
-    fillCell(checks, object.at, path);
+    const inside = fillCell(checks, object.at, path);
+
+    // Platforms follow a path (D46); nothing else does yet.
+    if (type?.kind === 'platform' && !object.path) report(path, 'a platform needs a "path"');
+    if (type && type.kind !== 'platform' && object.path) report(`${path}.path`, `only platforms follow a path, not "${object.type}"`);
+    if (type?.kind === 'platform' && object.path && inside) validatePath(checks, `${path}.path`, object);
   });
+}
+
+/**
+ * A platform's path: points inside the room, each leg along one axis, and
+ * no static block anywhere it sweeps. Objects on the path are allowed (a
+ * crate in the way makes the platform wait).
+ */
+function validatePath({ room, report, filled, pathCells: swept }, path, { at, path: { points, mode } }) {
+  const [w, h, d] = room.size;
+  const outside = points.findIndex(([x, y, z]) => !(x < w && y < h && z < d));
+  if (outside >= 0) {
+    report(`${path}.points[${outside}]`, `cell ${cellText(points[outside])} is outside size ${cellText(room.size)}`);
+    return;
+  }
+  const stops = [at, ...points];
+  for (let i = 1; i < stops.length; i++) {
+    if (legAxis(stops[i - 1], stops[i]) < 0) {
+      report(`${path}.points[${i - 1}]`, `${cellText(stops[i])} must differ from ${cellText(stops[i - 1])} on exactly one axis`);
+      return;
+    }
+  }
+  if (mode === 'loop' && legAxis(stops.at(-1), at) < 0) {
+    report(path, `a loop runs from ${cellText(stops.at(-1))} back to ${cellText(at)}: they must differ on exactly one axis`);
+    return;
+  }
+  for (const cell of pathCells(at, { points, mode })) {
+    const key = cellKey(cell);
+    const by = filled.get(key);
+    if (by?.startsWith('blocks')) {
+      report(path, `it runs through cell ${cellText(cell)}, filled by ${by}`);
+      return;
+    }
+    swept.set(key, path);
+  }
 }
 
 /** Overrides can only change existing properties of the type, with valid values. */
@@ -209,7 +251,7 @@ function validateOverrides(report, path, object, type) {
 }
 
 /** Holes: floor tiles inside the room, nothing standing in them. */
-function validateHoles({ room, report, filled, holes }) {
+function validateHoles({ room, report, filled, holes, pathCells }) {
   const [w, , d] = room.size;
   (room.holes ?? []).forEach((hole, i) => {
     const path = `holes[${i}]`;
@@ -217,7 +259,8 @@ function validateHoles({ room, report, filled, holes }) {
     for (const [x, z] of holeTiles(hole)) {
       const tile = cellText([x, z]);
       const key = cellKey([x, z]);
-      const under = filled.get(cellKey([x, 0, z]));
+      // A platform may start over a hole: it carries the wizard across.
+    const under = !pathCells.has(cellKey([x, 0, z])) && filled.get(cellKey([x, 0, z]));
       let problem = null;
       if (x >= w || z >= d) problem = `tile ${tile} is outside size ${cellText(room.size)}`;
       else if (holes.has(key)) problem = `tile ${tile} is already a hole in ${holes.get(key)}`;
@@ -233,15 +276,21 @@ function validateHoles({ room, report, filled, holes }) {
 
 /**
  * Exits: the first row inside is free, so the wizard can pass and arrive,
- * and a raised exit's floor is no void block (he would die on arrival).
+ * no platform passes through it, and a raised exit's floor is no void
+ * block (he would die on arrival).
  */
-function validateExitPassage({ room, report, filled, holes, blockTypes }, exits, exitFits) {
+function validateExitPassage({ room, report, filled, holes, blockTypes, pathCells }, exits, exitFits) {
   exits.forEach((exit, i) => {
     if (!exitFits[i]) return; // reported already
     const { inside } = exitCells(exit, room.size);
     const blocked = inside.find((cell) => filled.has(cellKey(cell)));
     if (blocked) {
       report(`exits[${i}]`, `cell ${cellText(blocked)} inside the exit is filled by ${filled.get(cellKey(blocked))}`);
+      return;
+    }
+    const swept = inside.find((cell) => pathCells.has(cellKey(cell)));
+    if (swept) {
+      report(`exits[${i}]`, `cell ${cellText(swept)} inside the exit is on ${pathCells.get(cellKey(swept))}`);
       return;
     }
     const pit = exit.y === 0 && inside.find(([x, , z]) => holes.has(cellKey([x, z])));

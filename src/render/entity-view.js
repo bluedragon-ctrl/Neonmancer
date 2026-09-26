@@ -18,10 +18,11 @@ import {
   Vector3,
 } from 'three';
 import { PLAYER } from '../entities/player.js';
-import { PALETTE, shared } from './neon.js';
+import { PALETTE, lineMaterial, neonLines, shared } from './neon.js';
 import { fadingDrops } from './hole-view.js';
 import { HIT_FX, derezPixels, hitFlash, wizardLook } from './hit-fx.js';
 import { lerpAngle, lerpPosition, shadowScale } from './interp.js';
+import { railSegments } from './rails.js';
 import { createObjectView } from './room-view.js';
 import { createWizard } from './wizard.js';
 
@@ -216,4 +217,37 @@ export class PushableView {
     const ground = pushable.state === 'fall' ? this.game.objectShadowHeight(pushable, pos) : null;
     placeShadow(this.shadow, pos[0] + 0.5, pos[2] + 0.5, pos[1], ground, 1.3);
   }
+}
+
+export class PlatformView {
+  /**
+   * @param {import('../game.js').Game} game
+   * @param {import('../entities/platform.js').Platform} platform
+   */
+  constructor(game, platform) {
+    this.platform = platform;
+    this.group = new Group();
+    // The block is built at the origin and moved as a whole; the rails stay
+    // in room coordinates.
+    this.block = createObjectView({ ...platform.object, at: [0, 0, 0] });
+    this.rails = createRails(platform.track, platform.object.color);
+    this.group.add(this.rails, this.block);
+  }
+
+  /** @param {number} alpha interpolation factor 0..1 between the last two ticks */
+  sync(alpha) {
+    const { platform } = this;
+    const pos = lerpPosition(platform.prev, platform.pos, alpha);
+    this.block.position.set(pos[0], pos[1], pos[2]);
+  }
+}
+
+/**
+ * The glowing rails a platform glides on (render/rails.js), dimmer than its
+ * edges so the platform itself stands out.
+ * @param {Parameters<typeof railSegments>[0]} track
+ * @param {number|string} color
+ */
+export function createRails(track, color) {
+  return neonLines(railSegments(track), lineMaterial({ color, width: 1.5, brightness: 0.55 }));
 }
