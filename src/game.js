@@ -41,11 +41,12 @@ export class Game {
 
   /**
    * Build the room fresh from data (rooms fully reset on entry) and put the
-   * wizard at `spawn`, which is also where he respawns in this room.
+   * wizard at `pos`; he respawns at the room's own `reset` point instead
+   * (D39), wherever he entered.
    * @param {string} id room id
-   * @param {number[]} [spawn] feet center; the room's own spawn by default
+   * @param {number[]} [pos] feet center to appear at; the room's own spawn by default
    */
-  enterRoom(id, spawn) {
+  enterRoom(id, pos) {
     // Announce the room when it is a different one (not on a respawn).
     if (id !== this.room?.id) {
       const data = this.content.rooms.get(id);
@@ -55,7 +56,7 @@ export class Game {
     this.room = buildRoom(this.content.rooms.get(id), this.content);
     this.grid = new Grid(this.room);
     this.pushables = this.room.objects.filter((o) => o.kind === 'pushable').map((o) => new Pushable(o));
-    this.player = new Player(spawn ?? this.room.spawn);
+    this.player = new Player(pos ?? this.room.spawn, this.room.reset);
     /** Everything objects collide with: the objects themselves and the wizard. */
     this.bodies = [...this.pushables, this.player];
   }
@@ -136,7 +137,7 @@ export class Game {
     if (playerEvent === 'respawn') {
       this.integrity = this.maxIntegrity;
       say('msg.respawn');
-      this.enterRoom(this.room.id, this.player.spawn);
+      this.enterRoom(this.room.id, this.room.reset);
       return ['respawn', 'room'];
     }
 

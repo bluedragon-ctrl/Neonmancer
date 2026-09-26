@@ -199,27 +199,44 @@ function validateRoom(file, room, { objectTypes, biomes }, report) {
     if (pit) report(file, `exits[${i}]`, `tile ${cellText([pit[0], pit[2]])} inside the exit is a hole`);
   });
 
-  // Spawn: the whole player hitbox inside the room and clear of solids.
-  const [sx, sy, sz] = room.spawn;
-  const [hw, hh, hd] = PLAYER_HITBOX;
-  const min = [sx - hw / 2, sy, sz - hd / 2];
-  const max = [sx + hw / 2, sy + hh, sz + hd / 2];
-  if (min.some((v) => v < 0) || max[0] > w || max[1] > h || max[2] > d) {
-    report(file, 'spawn', `the player (${hw}×${hh}×${hd}) at ${cellText(room.spawn)} does not fit inside the room`);
-  } else {
-    const overlapped = blockCells({
-      at: min.map(Math.floor),
-      to: max.map((v) => Math.ceil(v) - 1),
-    });
-    const hit = overlapped.find((cell) => filled.has(cell.join(',')));
-    if (hit) report(file, 'spawn', `the player at ${cellText(room.spawn)} overlaps ${filled.get(hit.join(','))}`);
+  // Spawn and reset (D39): the whole player hitbox inside the room, clear of
+  // solids. reset defaults to spawn (buildRoom does the same), so it only
+  // needs its own check when a room gives it explicitly.
+  validatePlayerPoint(file, 'spawn', room.spawn, [w, h, d], filled, holes, report);
+  if (room.reset) validatePlayerPoint(file, 'reset', room.reset, [w, h, d], filled, holes, report);
+}
 
-    // Not above a hole unless a block below catches the player.
-    const [cx, cz] = [Math.floor(sx), Math.floor(sz)];
-    const caught = [...Array(Math.floor(sy)).keys()].some((y) => filled.has(`${cx},${y},${cz}`));
-    if (holes.has(`${cx},${cz}`) && !caught) {
-      report(file, 'spawn', `the player at ${cellText(room.spawn)} would fall into ${holes.get(`${cx},${cz}`)}`);
-    }
+/**
+ * Does the player's hitbox fit at `point`, clear of solids and not hovering
+ * over an unsupported hole? Used for both `spawn` and `reset`.
+ * @param {string} file
+ * @param {string} path 'spawn' or 'reset'
+ * @param {number[]} point feet center
+ * @param {number[]} size room size [w, h, d]
+ * @param {Map<string, string>} filled "x,y,z" → what fills it
+ * @param {Map<string, string>} holes "x,z" → hole path
+ */
+function validatePlayerPoint(file, path, point, [w, h, d], filled, holes, report) {
+  const [px, py, pz] = point;
+  const [hw, hh, hd] = PLAYER_HITBOX;
+  const min = [px - hw / 2, py, pz - hd / 2];
+  const max = [px + hw / 2, py + hh, pz + hd / 2];
+  if (min.some((v) => v < 0) || max[0] > w || max[1] > h || max[2] > d) {
+    report(file, path, `the player (${hw}×${hh}×${hd}) at ${cellText(point)} does not fit inside the room`);
+    return;
+  }
+  const overlapped = blockCells({
+    at: min.map(Math.floor),
+    to: max.map((v) => Math.ceil(v) - 1),
+  });
+  const hit = overlapped.find((cell) => filled.has(cell.join(',')));
+  if (hit) report(file, path, `the player at ${cellText(point)} overlaps ${filled.get(hit.join(','))}`);
+
+  // Not above a hole unless a block below catches the player.
+  const [cx, cz] = [Math.floor(px), Math.floor(pz)];
+  const caught = [...Array(Math.floor(py)).keys()].some((y) => filled.has(`${cx},${y},${cz}`));
+  if (holes.has(`${cx},${cz}`) && !caught) {
+    report(file, path, `the player at ${cellText(point)} would fall into ${holes.get(`${cx},${cz}`)}`);
   }
 }
 

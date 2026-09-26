@@ -50,7 +50,7 @@ test('rooms are announced on start and on entering another room, not on respawn'
   const start = takeAnnouncements();
   assert.equal(start.length, 1);
   assert.deepEqual(start[0].values, { room: game.room.name });
-  game.enterRoom(game.room.id, game.player.spawn); // what a respawn does
+  game.enterRoom(game.room.id, game.room.reset); // what a respawn does
   assert.deepEqual(takeAnnouncements(), []);
   game.travel(withExitDefaults(game.room.exits[0]));
   assert.deepEqual(takeAnnouncements()[0].values, { room: game.room.name });

@@ -191,6 +191,27 @@ test('standing on a hole kills the player, who respawns at the spawn', () => {
   assert.deepEqual(player.pos, [3.5, 0, 4.5]);
 });
 
+test('a room reset point is independent of where the wizard entered, and he falls if it is above the floor (D39)', () => {
+  const g = grid({ holes: [[5, 4]] });
+  // He entered far from the room's own reset point.
+  const player = new Player([3.5, 0, 4.5], [1, 2, 1]);
+  const inp = input(['down']); // walks himself onto the hole
+  let respawned = false;
+  for (let i = 0; i < 200 && !respawned; i++) {
+    respawned = player.update(inp, g) === 'respawn';
+    inp.next();
+  }
+  // Checked the instant he respawns: nothing has moved him since (D39: not
+  // the tile he entered on, and not the tile he died on either).
+  assert.ok(respawned);
+  assert.deepEqual(player.pos, [1, 2, 1]);
+  assert.equal(player.grounded, false); // above the floor: falling, not standing
+
+  run(player, g, input(), 30);
+  assert.equal(player.grounded, true);
+  assert.equal(player.pos[1], 0);
+});
+
 test('debug invincibility: standing on a hole never kills', () => {
   const g = grid({ holes: [[5, 4]] });
   const player = standing(g, [3.5, 0, 4.5]);

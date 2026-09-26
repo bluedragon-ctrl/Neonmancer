@@ -344,3 +344,15 @@ the active mode, since it changes how every key behaves.
 players who find grid-aligned controls harder to read. Not saving it keeps
 the access-key format (CLAUDE.md §8) untouched; it can move into a real
 settings menu in Phase 4 without changing the underlying direction tables.
+
+### D39 — 2026-09-26 — Each room defines its own death-respawn point
+Supersedes the part of D23/exits design that made the exit arrival point
+double as the respawn point. Room data gets an optional `reset` field (a
+point, same shape as `spawn`); it defaults to `spawn` when omitted. Dying
+always respawns the wizard at the room's `reset` point, no matter which
+door he entered through. `reset` doesn't need to touch the floor: gravity
+takes over normally, same as any other position.
+**Why:** author's request: a fixed, designed respawn spot is easier to
+reason about than "wherever the last door happened to drop him", especially
+once a room has several exits. It also keeps a respawn from ever landing on
+an awkward spot right at a raised or narrow doorway.

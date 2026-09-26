@@ -5,8 +5,8 @@
  * The room boundary is solid except at exit openings (world/grid.js), so the
  * wizard's center can only leave the room through one. He then arrives at
  * the matching exit of the connected room, keeping his offset along the
- * edge and his height above the exit floor; that arrival point (on the exit
- * floor) is the respawn point for the room.
+ * edge and his height above the exit floor. Where he respawns if he dies is
+ * a separate, room-authored point (`reset`, D39) — not tied to this arrival.
  */
 import { PLAYER_HITBOX } from '../core/rules.js';
 import { sideAxes } from '../data/room-data.js';
@@ -37,7 +37,8 @@ export function exitAt({ size, exits }, pos) {
  * @param {object} to exit arrived at (defaults applied)
  * @param {number[]} size size of the room arrived in
  * @returns {{ pos: number[], spawn: number[] }} arrival position, and the
- *   same point on the exit floor (the room's respawn point)
+ *   same point snapped to the exit floor (passed to Game.enterRoom() as
+ *   where he appears; not the death-respawn point, see `reset` in room data)
  */
 export function arrival(from, pos, to, size) {
   const { cross, along } = sideAxes(to.side);

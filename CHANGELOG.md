@@ -73,6 +73,8 @@ and the project uses [Semantic Versioning](https://semver.org/).
 - Screen-relative movement as an alternative to the default grid-aligned
   keys: `G` switches between them, with a terminal message and a small
   permanent HUD tag (bottom right) naming the active mode.
+- Rooms define their own death-respawn point (`reset`, defaults to `spawn`)
+  instead of respawning wherever the wizard last entered through a door.
 
 ### Removed
 - The four box-look crates in Boot Sector (the asset showcase shows them).

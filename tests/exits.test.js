@@ -106,7 +106,7 @@ test('walking out through an exit enters the connected room at the matching exit
   assert.ok(events.includes('exit'));
   assert.ok(events.includes('room'));
   assert.equal(game.room.id, 'beta');
-  assert.deepEqual(game.player.spawn, [0.5, 1, 2.25]); // respawn point: the arrival on the exit floor
+  assert.deepEqual(game.player.resetPoint, [6, 0, 2]); // beta's own reset point (D39), not the arrival
   run(game, idle, 10);
   assert.equal(game.player.grounded, true);
   assert.ok(Math.abs(game.player.pos[1] - 1) < 1e-9); // on the ledge
@@ -126,7 +126,7 @@ test('the room side beside an exit still blocks the wizard', () => {
   assert.ok(game.player.pos[0] <= 7.7 + 1e-9);
 });
 
-test('a respawn after travelling happens at the arrival point, in a fresh room', () => {
+test("a respawn after travelling happens at the room's reset point, in a fresh room", () => {
   const game = new Game(content());
   game.travel(game.room.exits[0]);
   game.player.pos = [5, 0, 4];
@@ -136,8 +136,8 @@ test('a respawn after travelling happens at the arrival point, in a fresh room',
   events.push(...game.update(idle));
   assert.deepEqual(events, ['respawn', 'room']);
   assert.equal(game.room.id, 'beta');
-  assert.deepEqual(game.player.pos, game.player.spawn);
-  assert.equal(game.player.spawn[0], 0.5);
+  assert.deepEqual(game.player.pos, game.room.reset); // not the arrival point he travelled in through
+  assert.equal(game.room.reset[0], 6);
 });
 
 test('objects are never pushed out through an exit', () => {
