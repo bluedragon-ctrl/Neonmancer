@@ -39,7 +39,14 @@ and the project uses [Semantic Versioning](https://semver.org/).
   Volatile Memory behind a raised exit on Transit Bus's high ledge;
   showcase `collapsing` and `collapsing-cycle`.
 
+- Room design checklist in docs/design.md: reach, timing budgets,
+  readability and soft-lock checks collected from playtests; the basis for
+  the Phase 3 room design skill and level review subagent.
+
 ### Fixed
+- Volatile Memory: the crate on the one-shot bridge now starts on a plain
+  ledge, so it can be pushed onto the bridge from solid ground (pushing
+  from a collapsing block took as long as the block's shake).
 - A room without objects logged a three.js error on entry.
 - `npm test` failed on Node 22+ (CI) after the Node 20 change: it now runs
   through `tools/run-tests.js`, which lists the test files itself.

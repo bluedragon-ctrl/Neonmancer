@@ -266,7 +266,57 @@ New mechanics add or extend one (D43).
 | `stack_yard` | 8×8, Glitch Zone color | raised west doorway → Boot Sector; east (front) → Fault Line | stacked crates, a 2-high block to climb via a crate |
 | `fault_line` (Phase 2) | 12×12 | west doorway → Stack Yard; raised east exit on the lookout → Transit Bus | a corridor between hazard walls, hazard blocks between two plain ones to walk across, a zigzag path of plain blocks through a field of void blocks up to a lookout |
 | `transit_bus` (Phase 2) | 12×12, 5 high | west doorway → Fault Line; raised east exit on the high ledge → Volatile Memory | a ferry across a pit between two ledges, a lift up to a high ledge, a loop carrying a crate, a press coming down (with a crate to jam it) and a pusher squeezing the wizard against the room's edge |
-| `volatile_memory` (Phase 2) | 12×12, 5 high | west doorway → Transit Bus | a pit across the room with two collapsing bridges: one regrowing after 3 s (the way back), one that stays gone, with a crate parked on it as a safe spot; two one-shot collapsing steps up to a high ledge |
+| `volatile_memory` (Phase 2) | 12×12, 5 high | west doorway → Transit Bus | a pit across the room with two collapsing bridges: one regrowing after 3 s (the way back), one that stays gone, with a crate on a plain ledge in front of it to push onto the bridge from solid ground (it doesn't trigger the blocks, so it is a safe spot to hop onto); two one-shot collapsing steps up to a high ledge |
+
+### Room design checklist
+
+What to check when building or reviewing a room, beyond what validation
+catches (validation: bounds, overlaps, exits, spawn and reset points). It
+collects problems found in playtests; the room design skill and the level
+review subagent planned for Phase 3 (CLAUDE.md §9) start from it, and the
+reachability checker will automate the reach and timing checks. Numbers
+come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
+`COLLAPSING`); update them here when those change.
+
+**Reach**
+- A jump clears exactly 1 block up, never 2 (apex 1.2). A 2-high step
+  needs a crate, a platform or a step in between.
+- A running jump crosses a 1-tile gap, never a 2-tile one (~1.65 units of
+  air travel); a pit 2 or more wide needs a bridge, a platform or a crate
+  to plug it.
+- Headroom: the wizard is 1.5 high, so wherever he stands there must be 2
+  free cells above the surface. A ledge 3 high needs a room 5 high.
+
+**Timing** (60 ticks per second)
+- Walking (4.5 units/s) crosses one cell in ~13 ticks (0.22 s); a jump
+  lasts ~34 ticks (0.57 s).
+- A push takes ~28 ticks (0.47 s): 8 ticks of walking into the crate, then
+  20 ticks of sliding one cell.
+- A collapsing block goes 30 ticks (0.5 s) after he steps on it. Running
+  across or hopping off in time is fine; anything that makes him stand
+  still on one (a push, lining up a jump, waiting for a platform) is
+  almost always fatal. Give such actions solid ground (playtest: pushing a
+  crate off a collapsing bridge).
+- Platforms: check the wait at the ends (`pause`) is long enough to get on
+  and off, and that a squeeze always leaves a way out.
+
+**Readability**
+- The camera looks from the front corner (+x, +z). Tall blocks near the
+  front sides hide what is behind them: keep high ledges and walls against
+  the back walls (x = 0, z = 0), and put steps on the side facing the
+  camera, not behind a ledge.
+- Each mechanic should be seen before it matters: a pit, a hazard or a
+  collapsing bridge in view from where the wizard enters.
+
+**No soft-locks**
+- Every one-shot change (a collapsing block without `regrow`, a crate
+  pushed into a hole or into a corner) must leave a way back to an exit, or
+  a way to die and reset the room. Dropping off a ledge is always possible
+  (no fall damage); climbing back is not.
+- Exits stay reachable from wherever he can end up; rooms fully reset on
+  re-entry and respawn, so no puzzle stays broken for good.
+- `reset` (the respawn point) must be safe to land on and let him walk
+  away: not on a collapsing block, not under a platform's path.
 
 ## HUD
 
