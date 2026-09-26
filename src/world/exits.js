@@ -9,7 +9,7 @@
  * a separate, room-authored point (`reset`, D39) — not tied to this arrival.
  */
 import { PLAYER_HITBOX } from '../core/rules.js';
-import { sideAxes } from '../data/room-data.js';
+import { isBackSide, sideAxes } from '../data/room-data.js';
 
 /** Distance of the arrival point from the side: the middle of the first cell. */
 const ARRIVAL_DEPTH = 0.5;
@@ -23,7 +23,7 @@ const ARRIVAL_DEPTH = 0.5;
 export function exitAt({ size, exits }, pos) {
   for (const exit of exits) {
     const { cross, along } = sideAxes(exit.side);
-    const out = exit.side.startsWith('-') ? pos[cross] < 0 : pos[cross] > size[cross];
+    const out = isBackSide(exit.side) ? pos[cross] < 0 : pos[cross] > size[cross];
     if (out && pos[along] >= exit.at && pos[along] <= exit.at + exit.width) return exit;
   }
   return null;
@@ -46,7 +46,7 @@ export function arrival(from, pos, to, size) {
   const offset = pos[along] - from.at;
   const arrived = [0, 0, 0];
   arrived[along] = Math.min(Math.max(to.at + offset, to.at + half), to.at + to.width - half);
-  arrived[cross] = to.side.startsWith('-') ? ARRIVAL_DEPTH : size[cross] - ARRIVAL_DEPTH;
+  arrived[cross] = isBackSide(to.side) ? ARRIVAL_DEPTH : size[cross] - ARRIVAL_DEPTH;
   arrived[1] = to.y + Math.max(pos[1] - from.y, 0);
   const spawn = [...arrived];
   spawn[1] = to.y;

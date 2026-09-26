@@ -37,6 +37,23 @@ export function sideLength(side, [w, , d]) {
 export const OPPOSITE_SIDE = { '-x': '+x', '+x': '-x', '-z': '+z', '+z': '-z' };
 
 /**
+ * Is the side a back side (−x or −z, where the walls are)? Leaving through
+ * it moves towards negative coordinates.
+ * @param {string} side '-x' | '+x' | '-z' | '+z'
+ */
+export function isBackSide(side) {
+  return side.startsWith('-');
+}
+
+/**
+ * Key of a grid cell [x, y, z] or floor tile [x, z] in a Set or Map.
+ * @param {number[]} coords
+ */
+export function cellKey(coords) {
+  return coords.join(',');
+}
+
+/**
  * Axes of a side: `cross` is the axis the side faces along (0 = x, 2 = z),
  * `along` the axis `at` counts along.
  * @param {string} side '-x' | '+x' | '-z' | '+z'
@@ -56,7 +73,7 @@ export function sideAxes(side) {
 export function exitCells({ side, at, width, y, height }, size) {
   const { cross, along } = sideAxes(side);
   const last = size[cross] - 1;
-  const [outer, inner] = side.startsWith('-') ? [-1, 0] : [last + 1, last];
+  const [outer, inner] = isBackSide(side) ? [-1, 0] : [last + 1, last];
   const outside = [];
   const inside = [];
   for (let i = at; i < at + width; i++) {

@@ -4,7 +4,7 @@
  */
 import { DT } from './core/loop.js';
 import { announce, say } from './core/messages.js';
-import { sideAxes, withExitDefaults } from './data/room-data.js';
+import { isBackSide, sideAxes, withExitDefaults } from './data/room-data.js';
 import { PLAYER, Player } from './entities/player.js';
 import { Pushable } from './entities/pushable.js';
 import { groundBelow, surfaceBelow } from './physics/collision.js';
@@ -185,7 +185,7 @@ export class Game {
 
     if (++this.transition.tick < TRANSITION.outTicks) {
       const { cross } = sideAxes(exit.side);
-      player.pos[cross] += (exit.side.startsWith('-') ? -1 : 1) * PLAYER.speed * DT;
+      player.pos[cross] += (isBackSide(exit.side) ? -1 : 1) * PLAYER.speed * DT;
       return [];
     }
     this.travel(exit);

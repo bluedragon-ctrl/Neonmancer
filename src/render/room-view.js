@@ -6,24 +6,23 @@
  * z = 0) are drawn; the front sides stay open (CLAUDE.md §4). Exits are
  * doorways in the back walls and gaps in the front edges (render/walls.js).
  */
-import {
-  BoxGeometry,
-  BufferGeometry,
-  Color,
-  DoubleSide,
-  Float32BufferAttribute,
-  Group,
-  InstancedMesh,
-  Matrix4,
-  Mesh,
-  MeshBasicMaterial,
-} from 'three';
-import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
-import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
-import { blockEdges, flattenSegments } from './edges.js';
+import { BoxGeometry, BufferGeometry, Color, DoubleSide, Float32BufferAttribute, Group, InstancedMesh, Matrix4, Mesh } from 'three';
+import { blockEdges } from './edges.js';
 import { markSegments } from './marks.js';
 import { doorwayTunnels, wallLayout } from './walls.js';
-import { PALETTE, faceMaterial, lineMaterial, tintedFaceMaterials } from './neon.js';
+import {
+  PALETTE,
+  fadingLines,
+  faceMaterial,
+  lineMaterial,
+  neonLines,
+  shadedFaces,
+  shared,
+  tintedFaceMaterials,
+} from './neon.js';
+
+/** Unit cube with its corner at the origin, shared by every block and object view. */
+const UNIT_BOX = shared(new BoxGeometry(1, 1, 1).translate(0.5, 0.5, 0.5));
 
 /**
  * @param {object} room
@@ -47,14 +46,12 @@ export function createRoomView({ size, cells, exits = [], color = PALETTE.amber 
 export function createBlockView(cells, color) {
   const group = new Group();
 
-  const faces = new InstancedMesh(new BoxGeometry(1, 1, 1), faceMaterial(), cells.length);
+  const faces = new InstancedMesh(UNIT_BOX, faceMaterial(), cells.length);
   const matrix = new Matrix4();
-  cells.forEach(([x, y, z], i) => {
-    faces.setMatrixAt(i, matrix.makeTranslation(x + 0.5, y + 0.5, z + 0.5));
-  });
+  cells.forEach(([x, y, z], i) => faces.setMatrixAt(i, matrix.makeTranslation(x, y, z)));
   group.add(faces);
 
-  const edges = lines(blockEdges(cells), lineMaterial({ color, width: 2.5, brightness: 1.6 }));
+  const edges = neonLines(blockEdges(cells), lineMaterial({ color, width: 2.5, brightness: 1.6 }));
   edges.renderOrder = 2; // drawn over wall lines lying in the same spot
   group.add(edges);
   return group;
@@ -75,8 +72,8 @@ function createWalls(size, exits, color) {
 
   // Faint grid on the walls; bright outline: wall tops and ends, doorway
   // frames and the open front edges of the floor.
-  group.add(lines(grid, lineMaterial({ color, width: 1.5, brightness: 0.3 })));
-  const edges = lines(outline, lineMaterial({ color, width: 2.5, brightness: 1.2 }));
+  group.add(neonLines(grid, lineMaterial({ color, width: 1.5, brightness: 0.3 })));
+  const edges = neonLines(outline, lineMaterial({ color, width: 2.5, brightness: 1.2 }));
   edges.renderOrder = 1;
   group.add(edges);
 
@@ -93,46 +90,19 @@ function createWalls(size, exits, color) {
  * @param {number|string} color room color
  */
 function createTunnels({ quads, lines: corners }, color) {
-  const group = new Group();
   const near = new Color(PALETTE.void);
   const far = new Color(0x000000);
   const positions = [];
   const colors = [];
-  for (const { points, shade } of quads) {
+  const shade = new Color();
+  for (const { points, shade: amounts } of quads) {
     for (const i of [0, 1, 2, 0, 2, 3]) {
       positions.push(...points[i]);
-      const c = near.clone().lerp(far, shade[i]);
-      colors.push(c.r, c.g, c.b);
+      shade.copy(near).lerp(far, amounts[i]);
+      colors.push(shade.r, shade.g, shade.b);
     }
   }
-  const geometry = new BufferGeometry();
-  geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
-  geometry.setAttribute('color', new Float32BufferAttribute(colors, 3));
-  // Pushed back in depth, so lines lying on the tunnel faces (the exit effect) win.
-  const material = new MeshBasicMaterial({
-    vertexColors: true,
-    side: DoubleSide,
-    polygonOffset: true,
-    polygonOffsetFactor: 1,
-    polygonOffsetUnits: 1,
-  });
-  group.add(new Mesh(geometry, material));
-
-  const glow = new Color(color).multiplyScalar(0.6);
-  const fading = new LineSegmentsGeometry();
-  fading.setPositions(flattenSegments(corners));
-  fading.setColors(corners.flatMap(() => [glow.r, glow.g, glow.b, 0, 0, 0]));
-  const lineMat = lineMaterial({ color: 0xffffff, width: 1.5 });
-  lineMat.vertexColors = true;
-  group.add(new LineSegments2(fading, lineMat));
-  return group;
-}
-
-/** Thick neon lines from segments. */
-function lines(segments, material) {
-  const geometry = new LineSegmentsGeometry();
-  geometry.setPositions(flattenSegments(segments));
-  return new LineSegments2(geometry, material);
+  return new Group().add(shadedFaces(positions, colors), fadingLines(corners, { color, width: 1.5, brightness: 0.6 }));
 }
 
 /**
@@ -143,21 +113,19 @@ function lines(segments, material) {
  */
 export function createObjectView({ at, color, edges, mark, faces, tint }) {
   const group = new Group();
-  const [x, y, z] = at;
 
   const materials = faces === 'tinted' ? tintedFaceMaterials(color, tint) : faceMaterial();
-  const box = new Mesh(new BoxGeometry(1, 1, 1), materials);
-  box.position.set(x + 0.5, y + 0.5, z + 0.5);
+  const box = new Mesh(UNIT_BOX, materials);
+  box.position.set(...at);
   group.add(box);
 
   const dashed = edges === 'dashed';
-  const outline = lines(blockEdges([at]), lineMaterial({ color, width: 2.5, brightness: 1.6, dashed }));
-  if (dashed) outline.computeLineDistances();
+  const outline = neonLines(blockEdges([at]), lineMaterial({ color, width: 2.5, brightness: 1.6, dashed }));
   outline.renderOrder = 2;
   group.add(outline);
 
   if (mark !== 'none') {
-    const marks = lines(markSegments(mark, at), lineMaterial({ color, width: 1.5, brightness: 1 }));
+    const marks = neonLines(markSegments(mark, at), lineMaterial({ color, width: 1.5, brightness: 1 }));
     marks.renderOrder = 2;
     group.add(marks);
   }

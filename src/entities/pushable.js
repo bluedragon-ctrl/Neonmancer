@@ -41,12 +41,7 @@ export class Pushable {
 
   /** Collision box [[minX, maxX], [minY, maxY], [minZ, maxZ]]. */
   box() {
-    const [x, y, z] = this.pos;
-    return [
-      [x, x + 1],
-      [y, y + 1],
-      [z, z + 1],
-    ];
+    return boxAt(this.pos);
   }
 
   /**

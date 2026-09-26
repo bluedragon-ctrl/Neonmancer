@@ -5,8 +5,11 @@
  * new materials start at the current size, and resizeLines() updates all of
  * them, so lines look the same from 1080p to 4K.
  */
-import { Color, MeshBasicMaterial } from 'three';
+import { BufferGeometry, Color, DoubleSide, Float32BufferAttribute, Mesh, MeshBasicMaterial } from 'three';
 import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
+import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
+import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
+import { flattenSegments } from './edges.js';
 import { scaleToHeight } from './viewport.js';
 
 /** Base palette (sRGB hex). */
@@ -116,16 +119,73 @@ export function tintedFaceMaterials(color, tint) {
 }
 
 /**
+ * Thick neon lines from segments.
+ * @param {number[][][]} segments [[x, y, z], [x, y, z]] pairs
+ * @param {LineMaterial} material
+ */
+export function neonLines(segments, material) {
+  const line = new LineSegments2(new LineSegmentsGeometry().setPositions(flattenSegments(segments)), material);
+  if (material.dashed) line.computeLineDistances();
+  return line;
+}
+
+/**
+ * Lines that fade from the color at their start to black at their end: they
+ * read as depth (pit corners, doorway tunnels) or as a stream into the dark.
+ * @param {number[][][]} segments each from its bright end to its dark end
+ * @param {Parameters<typeof lineMaterial>[0]} options as for lineMaterial()
+ */
+export function fadingLines(segments, options) {
+  const material = lineMaterial(options);
+  material.vertexColors = true;
+  const line = new LineSegments2(new LineSegmentsGeometry().setPositions(flattenSegments(segments)), material);
+  line.geometry.setColors(segments.flatMap(() => [1, 1, 1, 0, 0, 0]));
+  if (material.dashed) line.computeLineDistances();
+  return line;
+}
+
+/**
+ * Dark faces shaded per vertex (pits, doorway tunnels), pushed back in depth
+ * like faceMaterial() so lines lying on them win.
+ * @param {number[]} positions triangle vertices, flat [x, y, z, ...]
+ * @param {number[]} colors one [r, g, b] per vertex, flat
+ */
+export function shadedFaces(positions, colors) {
+  const geometry = new BufferGeometry();
+  geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('color', new Float32BufferAttribute(colors, 3));
+  const material = faceMaterial(0xffffff);
+  material.vertexColors = true;
+  material.side = DoubleSide;
+  return new Mesh(geometry, material);
+}
+
+/**
+ * Mark a geometry or material shared between views, so disposeTree() leaves
+ * it alone.
+ * @template {{ userData: object }} T
+ * @param {T} resource
+ * @returns {T}
+ */
+export function shared(resource) {
+  resource.userData.shared = true;
+  return resource;
+}
+
+/**
  * Free the GPU resources of a scene subtree that is thrown away (a room
- * rebuilt on reset) and stop scaling its line materials.
+ * rebuilt on reset) and stop scaling its line materials. Shared resources
+ * (see shared()) are kept.
  * @param {import('three').Object3D} root
  */
 export function disposeTree(root) {
   root.traverse((node) => {
-    node.geometry?.dispose();
-    const materials = Array.isArray(node.material) ? node.material : node.material ? [node.material] : [];
-    for (const material of materials) {
+    if (node.geometry && !node.geometry.userData.shared) node.geometry.dispose();
+    for (const material of [node.material ?? []].flat()) {
+      if (material.userData.shared) continue;
       scaledMaterials.delete(material);
+      // Textures in shader uniforms (the floor's hole mask) are not freed with the material.
+      for (const uniform of Object.values(material.uniforms ?? {})) if (uniform.value?.isTexture) uniform.value.dispose();
       material.dispose();
     }
   });

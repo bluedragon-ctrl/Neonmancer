@@ -36,9 +36,13 @@ function boot() {
   const content = loadGameData(DATA_FILES);
   const game = new Game(content);
 
-  // ?scale=0.5 tries a lower render scale until there is a settings menu.
-  const renderScale = Number(new URLSearchParams(location.search).get('scale') ?? 1);
-  const renderer = new Renderer(app, { renderScale });
+  // ?scale=0.5 tries a lower render scale and ?msaa=0 turns multisampling
+  // off, until there is a settings menu with quality presets.
+  const params = new URLSearchParams(location.search);
+  const renderer = new Renderer(app, {
+    renderScale: Number(params.get('scale') ?? 1),
+    multisampling: Number(params.get('msaa') ?? 4),
+  });
 
   const hud = new Hud(renderer.hud, content.strings);
   renderer.hud.insertAdjacentHTML('beforeend', '<pre class="readout"></pre>');
@@ -47,25 +51,39 @@ function boot() {
   const debug = new DebugOverlay();
   renderer.scene.add(debug.group);
 
-  // The room's views are rebuilt whenever the game rebuilds the room.
-  let roomScene = new Group();
+  // The room's views are rebuilt whenever the game rebuilds the room. A
+  // respawn rebuilds the same room, where only the objects can have changed,
+  // so the static views (floor, holes, walls, blocks, exits) are kept then.
+  let staticScene = new Group();
+  let objectScene = new Group();
+  let shownRoomId = null;
   let pushableViews = [];
   let exitViews = [];
   function showRoom() {
-    renderer.scene.remove(roomScene);
-    disposeTree(roomScene);
     const { room } = game;
+    const old = [objectScene];
     pushableViews = game.pushables.map((pushable) => new PushableView(game, pushable));
-    exitViews = room.exits.map((exit) => new ExitView(exit, room.size, game.destinationColor(exit)));
-    roomScene = new Group().add(
-      createFloor(room.size, room.color, room.holes),
-      createHoleView(room.holes, room.color),
-      createRoomView(room),
-      ...pushableViews.map((view) => view.group),
-      ...exitViews.map((view) => view.group),
-    );
-    renderer.scene.add(roomScene);
-    frameRoom(renderer.camera, room.size);
+    objectScene = new Group().add(...pushableViews.map((view) => view.group));
+    if (room.id !== shownRoomId) {
+      old.push(staticScene);
+      exitViews = room.exits.map((exit) => new ExitView(exit, room.size, game.destinationColor(exit)));
+      staticScene = new Group().add(
+        createFloor(room.size, room.color, room.holes),
+        createHoleView(room.holes, room.color),
+        createRoomView(room),
+        ...exitViews.map((view) => view.group),
+      );
+      frameRoom(renderer.camera, room.size);
+      shownRoomId = room.id;
+    }
+    renderer.scene.add(staticScene, objectScene);
+    // Compile the new views before freeing the old ones, so shaders they
+    // share stay alive instead of being compiled again.
+    renderer.compile();
+    for (const group of old) {
+      renderer.scene.remove(group);
+      disposeTree(group);
+    }
     debug.setRoom(room, game.pushables);
   }
   showRoom();
@@ -128,11 +146,13 @@ function boot() {
 
     readout.classList.toggle('shown', debug.active);
     if (debug.active) {
+      const { info } = renderer.webgl;
       const actions = input.activeActions().join(' ') || '-';
       readout.textContent =
         `> ROOM ${game.room.id}${game.invincible ? '  INVINCIBLE' : ''}\n` +
         `> TICK/S ${tps}  FPS ${fps}  ALPHA ${alpha.toFixed(2)}\n` +
         `> BUFFER ${renderer.bufferWidth}x${renderer.bufferHeight}\n` +
+        `> GPU SHADERS ${info.programs.length}  GEOMETRIES ${info.memory.geometries}  TEXTURES ${info.memory.textures}\n` +
         `> ACTIONS ${actions}\n` +
         `> POS ${game.player.pos.map((v) => v.toFixed(2)).join(' ')}${game.player.grounded ? '  GROUNDED' : ''}\n` +
         `> [/] ROOM  I INVINCIBLE  H DAMAGE`;

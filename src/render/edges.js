@@ -7,6 +7,7 @@
  * edge between neighbouring blocks is dropped. Collinear pieces are merged
  * into single segments.
  */
+import { cellKey } from '../data/room-data.js';
 
 /** For each axis, the two other axes. */
 const OTHER_AXES = [
@@ -21,8 +22,8 @@ const OTHER_AXES = [
  */
 export function blockEdges(cells) {
   const filled = new Set();
-  for (const [x, y, z] of cells) filled.add(`${x},${y},${z}`);
-  const has = (p) => filled.has(`${p[0]},${p[1]},${p[2]}`);
+  for (const cell of cells) filled.add(cellKey(cell));
+  const has = (p) => filled.has(cellKey(p));
 
   const units = [];
   const seen = new Set();

@@ -134,9 +134,11 @@ export class Hud {
     while (this.terminalBox.children.length > lines.length) this.terminalBox.firstChild.remove();
     lines.forEach((line, i) => {
       const element = this.terminalBox.children[i];
-      element.textContent = line.text;
+      // Only write what changed: most frames nothing does.
+      if (element.textContent !== line.text) element.textContent = line.text;
       element.classList.toggle('typing', line.typing);
-      element.style.opacity = String(line.opacity);
+      const opacity = String(line.opacity);
+      if (element.style.opacity !== opacity) element.style.opacity = opacity;
     });
 
     if (this.bannerTime !== null) {
