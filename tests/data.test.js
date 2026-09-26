@@ -1,6 +1,5 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import STRINGS from '../data/strings.json' with { type: 'json' };
 import { fileURLToPath } from 'node:url';
 import { checkData, checkFiles, readSchemas } from '../tools/check-data.js';
 import { validateData } from '../src/data/validate.js';
@@ -8,38 +7,25 @@ import { DataError, loadGameData } from '../src/data/load.js';
 import { buildRoom } from '../src/world/room.js';
 import { OBJECT_STYLES } from '../src/data/room-data.js';
 import { MARKS } from '../src/render/marks.js';
+import { dataFiles, roomFile } from './helpers.js';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const schemas = readSchemas(root);
 
 /** A small valid game: two connected rooms. Fresh copy on every call. */
 function validFiles() {
-  return {
-    'defs.json': { schemaVersion: 1, objects: { crate: { kind: 'pushable', color: '#b6ff3c' } } },
-    'biomes.json': { schemaVersion: 1, biomes: { home: { name: 'Home', color: '#ffb020' } } },
-    'world.json': { schemaVersion: 1, start: 'alpha', connections: [['alpha.east', 'beta.west']] },
-    'strings.json': structuredClone(STRINGS),
-    'rooms/alpha.json': {
-      schemaVersion: 1,
-      id: 'alpha',
-      name: 'Alpha',
-      biome: 'home',
-      size: [8, 4, 8],
-      spawn: [1.5, 0, 1.5],
-      exits: [{ id: 'east', side: '+x', at: 3 }],
-      blocks: [{ at: [4, 0, 4], to: [5, 1, 4] }],
-      objects: [{ id: 'box', type: 'crate', at: [2, 0, 5], overrides: { color: '#00f0ff' } }],
-    },
-    'rooms/beta.json': {
-      schemaVersion: 1,
-      id: 'beta',
-      name: 'Beta',
-      biome: 'home',
-      size: [12, 4, 8],
-      spawn: [2, 0, 2],
-      exits: [{ id: 'west', side: '-x', at: 3, width: 2 }],
-    },
-  };
+  return dataFiles({
+    rooms: [
+      roomFile('alpha', {
+        name: 'Alpha',
+        exits: [{ id: 'east', side: '+x', at: 3 }],
+        blocks: [{ at: [4, 0, 4], to: [5, 1, 4] }],
+        objects: [{ id: 'box', type: 'crate', at: [2, 0, 5], overrides: { color: '#00f0ff' } }],
+      }),
+      roomFile('beta', { name: 'Beta', size: [12, 4, 8], spawn: [2, 0, 2], exits: [{ id: 'west', side: '-x', at: 3, width: 2 }] }),
+    ],
+    connections: [['alpha.east', 'beta.west']],
+  });
 }
 
 /** Errors for the valid game after `change` has modified it. */

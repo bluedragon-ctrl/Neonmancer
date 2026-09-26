@@ -1,7 +1,5 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import STRINGS from '../data/strings.json' with { type: 'json' };
-import { loadGameData } from '../src/data/load.js';
 import { exitCells, withExitDefaults } from '../src/data/room-data.js';
 import { Pushable } from '../src/entities/pushable.js';
 import { Game, TRANSITION } from '../src/game.js';
@@ -9,44 +7,29 @@ import { mergeUnitSegments } from '../src/render/edges.js';
 import { TUNNEL_DEPTH, doorwayTunnels, frontChevrons, wallLayout } from '../src/render/walls.js';
 import { EXIT_FX, exitStreamLayout, glideState } from '../src/render/exit-layout.js';
 import { arrival, exitAt } from '../src/world/exits.js';
-import { Grid } from '../src/world/grid.js';
+import { eventTypes, gameData, grid, hold, idle, roomFile } from './helpers.js';
 
 /** Two rooms joined east ↔ west; beta's exit is raised onto a ledge. */
 function content() {
-  return loadGameData({
-    'defs.json': { schemaVersion: 1, objects: { crate: { kind: 'pushable', color: '#b6ff3c' } } },
-    'biomes.json': { schemaVersion: 1, biomes: { home: { name: 'Home', color: '#ffb020' } } },
-    'world.json': { schemaVersion: 1, start: 'alpha', connections: [['alpha.east', 'beta.west']] },
-    'strings.json': structuredClone(STRINGS),
-    'rooms/alpha.json': {
-      schemaVersion: 1,
-      id: 'alpha',
-      name: 'Alpha',
-      biome: 'home',
-      size: [8, 4, 8],
-      spawn: [1.5, 0, 1.5],
-      exits: [{ id: 'east', side: '+x', at: 3 }],
-    },
-    'rooms/beta.json': {
-      schemaVersion: 1,
-      id: 'beta',
-      name: 'Beta',
-      biome: 'home',
-      size: [12, 4, 6],
-      spawn: [6, 0, 2],
-      exits: [{ id: 'west', side: '-x', at: 1, y: 1 }],
-      blocks: [{ at: [0, 0, 1], to: [1, 0, 2] }],
-    },
+  return gameData({
+    rooms: [
+      roomFile('alpha', { name: 'Alpha', exits: [{ id: 'east', side: '+x', at: 3 }] }),
+      roomFile('beta', {
+        name: 'Beta',
+        size: [12, 4, 6],
+        spawn: [6, 0, 2],
+        exits: [{ id: 'west', side: '-x', at: 1, y: 1 }],
+        blocks: [{ at: [0, 0, 1], to: [1, 0, 2] }],
+      }),
+    ],
+    connections: [['alpha.east', 'beta.west']],
   });
 }
 
-const idle = { down: () => false, pressed: () => false };
-const hold = (action) => ({ down: (a) => a === action, pressed: () => false });
-
-/** Run the game for `ticks` ticks, or until the room changes; returns all events. */
+/** Run the game for `ticks` ticks, or until the room changes; returns all event types. */
 function run(game, input, ticks) {
   const events = [];
-  for (let i = 0; i < ticks && !events.includes('room'); i++) events.push(...game.update(input));
+  for (let i = 0; i < ticks && !events.includes('room'); i++) events.push(...eventTypes(game.update(input)));
   return events;
 }
 
@@ -61,7 +44,7 @@ test('exit cells: the row beyond the side and the first row inside', () => {
 });
 
 test('grid: exit openings are open, the rest of the boundary stays solid', () => {
-  const g = new Grid({ size: [8, 4, 8], cells: [], holes: [], exits: [withExitDefaults({ id: 'e', side: '+x', at: 3 })] });
+  const g = grid({ exits: [withExitDefaults({ id: 'e', side: '+x', at: 3 })] });
   assert.equal(g.isSolid(8, 0, 3), false);
   assert.equal(g.isSolid(8, 1, 4), false);
   assert.equal(g.isSolid(8, 2, 3), true); // above the opening
@@ -132,7 +115,7 @@ test("a respawn after travelling happens at the room's reset point, in a fresh r
   const events = [];
   game.player.dead = true;
   game.player.deathTimer = 1;
-  events.push(...game.update(idle));
+  events.push(...eventTypes(game.update(idle)));
   assert.deepEqual(events, ['respawn', 'room']);
   assert.equal(game.room.id, 'beta');
   assert.deepEqual(game.player.pos, game.room.reset); // not the arrival point he travelled in through
@@ -141,10 +124,10 @@ test("a respawn after travelling happens at the room's reset point, in a fresh r
 
 test('objects are never pushed out through an exit', () => {
   const exits = [withExitDefaults({ id: 'e', side: '+x', at: 3 })];
-  const grid = new Grid({ size: [8, 4, 8], cells: [], holes: [], exits });
+  const walls = grid({ exits });
   const crate = new Pushable({ id: 'c', at: [7, 0, 3] });
-  assert.equal(crate.push([1, 0], { grid, bodies: [crate] }), false);
-  assert.equal(crate.push([-1, 0], { grid, bodies: [crate] }), true);
+  assert.equal(crate.push([1, 0], { grid: walls, bodies: [crate] }), false);
+  assert.equal(crate.push([-1, 0], { grid: walls, bodies: [crate] }), true);
 });
 
 test('walls: doorways are cut out of the wall faces and framed', () => {
@@ -206,7 +189,9 @@ test('a room transition fades out with the world frozen, then fades in while run
   const game = new Game(content());
   game.player.pos = [7.95, 0, 4.25];
   game.player.grounded = true; // air steering is slower (D34)
-  assert.deepEqual(game.update(hold('down')), ['exit']);
+  const [exitEvent] = game.update(hold('down'));
+  assert.equal(exitEvent.type, 'exit');
+  assert.equal(exitEvent.exit.id, 'east');
   assert.equal(game.room.id, 'alpha');
   assert.ok(game.fadeLevel(0) < 0.1);
 
@@ -217,7 +202,7 @@ test('a room transition fades out with the world frozen, then fades in while run
   assert.ok(game.player.pos[0] > 8.5);
   assert.ok(game.fadeLevel(1) > 0.99);
 
-  assert.deepEqual(game.update(idle), ['room']);
+  assert.deepEqual(eventTypes(game.update(idle)), ['room']);
   assert.equal(game.room.id, 'beta');
   assert.equal(game.fadeLevel(0), 1);
 

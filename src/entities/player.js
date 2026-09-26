@@ -1,6 +1,8 @@
 /**
- * The wizard: movement along the grid axes, jump, gravity, pushing, death
- * in holes and respawn. Pure logic, one call to update() per fixed tick.
+ * The wizard: movement along the grid axes, jump, gravity, pushing,
+ * integrity (health), death in holes and respawn. Pure logic, one call to
+ * update() per fixed tick. One Player lasts the whole game: entering a room
+ * places him (enter()), so integrity carries over.
  */
 import { DT } from '../core/loop.js';
 import { PLAYER_HITBOX } from '../core/rules.js';
@@ -67,14 +69,38 @@ export class Player {
    */
   constructor(pos, resetPoint = pos) {
     this.size = PLAYER_HITBOX;
-    /** Room's death-respawn point; independent of how he entered the room. */
+    this.maxIntegrity = PLAYER.maxIntegrity;
+    /** Integrity (health), 0..maxIntegrity; it carries over between rooms. */
+    this.integrity = this.maxIntegrity;
+    this.enter(pos, resetPoint);
+  }
+
+  /**
+   * Arrive in a room at `pos`, alive and still.
+   * @param {number[]} pos feet center
+   * @param {number[]} resetPoint the room's death-respawn point (D39),
+   *   independent of how he entered the room
+   */
+  enter(pos, resetPoint) {
     this.resetPoint = [...resetPoint];
     this.place(pos);
   }
 
-  /** Put the wizard back at the room's reset point, alive and still. */
+  /** Put the wizard back at the room's reset point, alive, still and whole. */
   respawn() {
+    this.integrity = this.maxIntegrity;
     this.place(this.resetPoint);
+  }
+
+  /**
+   * Lose integrity (at least 0 left).
+   * @param {number} amount
+   * @returns {number} how much was actually lost
+   */
+  hurt(amount) {
+    const lost = Math.min(amount, this.integrity);
+    this.integrity -= lost;
+    return lost;
   }
 
   /** Appear at `pos`, alive, still and facing the camera. */
@@ -191,8 +217,10 @@ export class Player {
     }
     if (this.grounded && !wasGrounded) event = 'land';
 
-    // Standing on a hole at floor level: fall in (D18).
+    // Standing on a hole at floor level: fall in (D18), which drains all
+    // integrity. Respawning restores it.
     if (this.grounded && this.pos[1] < FLOOR_EPS && grid.isHole(this.pos[0], this.pos[2]) && !invincible) {
+      this.integrity = 0;
       this.dead = true;
       this.deathTimer = PLAYER.deathTicks;
       this.grounded = false;

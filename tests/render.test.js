@@ -11,6 +11,9 @@ import { VIEW_HEIGHT, createIsoCamera, frameRoom, projectedHeight } from '../src
 import { blockEdges } from '../src/render/edges.js';
 import { MARKS, markSegments } from '../src/render/marks.js';
 import { holeSides } from '../src/render/hole-view.js';
+import { OBJECT_VIEWS } from '../src/render/room-scene.js';
+import { OBJECT_KINDS } from '../src/entities/kinds.js';
+import DEFS_SCHEMA from '../schemas/defs.schema.json' with { type: 'json' };
 
 test('letterbox fills a 16:9 window exactly', () => {
   assert.deepEqual(fitLetterbox(1920, 1080), { x: 0, y: 0, width: 1920, height: 1080 });
@@ -130,4 +133,10 @@ test('hole outline: only sides that border floor', () => {
   const square = holeSides([[0, 0], [1, 0], [0, 1], [1, 1]]);
   assert.equal(square.length, 8);
   assert.ok(!square.some(([[x1], [x2]]) => x1 === 1 && x2 === 1));
+});
+
+test('every object kind in the schema has a logic class and a view', () => {
+  const kinds = DEFS_SCHEMA.$defs.objectType.properties.kind.enum;
+  assert.deepEqual(Object.keys(OBJECT_KINDS).sort(), [...kinds].sort());
+  assert.deepEqual(Object.keys(OBJECT_VIEWS).sort(), [...kinds].sort());
 });

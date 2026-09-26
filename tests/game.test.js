@@ -1,42 +1,35 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import STRINGS from '../data/strings.json' with { type: 'json' };
 import { takeMessages } from '../src/core/messages.js';
-import { loadGameData } from '../src/data/load.js';
 import { Game } from '../src/game.js';
+import { eventTypes, gameData, hold, idle, roomFile } from './helpers.js';
 
 /** Three unconnected rooms, only for debugJumpRoom() to cycle through. */
 function content() {
-  const room = (id) => ({
-    schemaVersion: 1,
-    id,
-    name: id,
-    biome: 'home',
-    size: [8, 4, 8],
-    spawn: [1.5, 0, 1.5],
-  });
-  return loadGameData({
-    'defs.json': { schemaVersion: 1, objects: {} },
-    'biomes.json': { schemaVersion: 1, biomes: { home: { name: 'Home', color: '#ffb020' } } },
-    'world.json': { schemaVersion: 1, start: 'alpha', connections: [] },
-    'strings.json': structuredClone(STRINGS),
-    'rooms/alpha.json': room('alpha'),
-    'rooms/beta.json': room('beta'),
-    'rooms/gamma.json': room('gamma'),
-  });
+  return gameData({ rooms: ['alpha', 'beta', 'gamma'].map((id) => roomFile(id)) });
 }
 
-test('hurt() reduces integrity, floored at 0, and does nothing while invincible', () => {
+test("hurt() reduces the wizard's integrity, floored at 0, and does nothing while invincible", () => {
   const game = new Game(content());
+  const { player } = game;
   game.hurt(3);
-  assert.equal(game.integrity, game.maxIntegrity - 3);
+  assert.equal(player.integrity, player.maxIntegrity - 3);
   game.hurt(100);
-  assert.equal(game.integrity, 0);
+  assert.equal(player.integrity, 0);
 
-  game.integrity = game.maxIntegrity;
+  player.integrity = player.maxIntegrity;
   game.invincible = true;
   game.hurt(1);
-  assert.equal(game.integrity, game.maxIntegrity);
+  assert.equal(player.integrity, player.maxIntegrity);
+});
+
+test('hurt() is reported as an event with the next tick, with the integrity actually lost', () => {
+  const game = new Game(content());
+  game.player.integrity = 2;
+  game.hurt(5);
+  const [hurt] = game.update(idle);
+  assert.deepEqual(hurt, { type: 'hurt', amount: 2 });
+  assert.deepEqual(eventTypes(game.update(idle)), []);
 });
 
 test('debugJumpRoom cycles through the loaded rooms and wraps around', () => {
@@ -71,4 +64,15 @@ test('toggleMovementMode starts grid, flips both ways and announces the change (
   game.toggleMovementMode();
   assert.equal(game.movementMode, 'grid');
   assert.deepEqual(takeMessages(), [{ key: 'msg.movementGrid', values: undefined }]);
+});
+
+test('room objects are built by kind, and their events name the object', () => {
+  const game = new Game(
+    gameData({ rooms: [roomFile('alpha', { spawn: [2.7, 0, 2.5], objects: [{ id: 'box', type: 'crate', at: [3, 0, 2] }] })] }),
+  );
+  assert.deepEqual(game.objects.map((object) => [object.id, object.kind, object.constructor.name]), [['box', 'pushable', 'Pushable']]);
+  const events = [];
+  for (let i = 0; i < 20; i++) events.push(...game.update(hold('down'))); // Down = +x, into the crate
+  const push = events.find((event) => event.type === 'push');
+  assert.equal(push.object, game.objects[0]);
 });

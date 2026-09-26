@@ -12,6 +12,14 @@ import { createHoleView } from './hole-view.js';
 import { disposeTree } from './neon.js';
 import { createRoomView } from './room-view.js';
 
+/**
+ * The view class for each object kind (see entities/kinds.js). A view is
+ * made with (game, object), has a `group` and syncs it once per frame.
+ */
+export const OBJECT_VIEWS = {
+  pushable: PushableView,
+};
+
 export class RoomScene {
   /** @param {import('./renderer.js').Renderer} renderer */
   constructor(renderer) {
@@ -19,7 +27,7 @@ export class RoomScene {
     this.staticGroup = new Group();
     this.objectGroup = new Group();
     this.roomId = null;
-    this.pushableViews = [];
+    this.objectViews = [];
     this.exitViews = [];
   }
 
@@ -31,8 +39,8 @@ export class RoomScene {
     const { room } = game;
     const { renderer } = this;
     const old = [this.objectGroup];
-    this.pushableViews = game.pushables.map((pushable) => new PushableView(game, pushable));
-    this.objectGroup = new Group().add(...this.pushableViews.map((view) => view.group));
+    this.objectViews = game.objects.map((object) => new OBJECT_VIEWS[object.kind](game, object));
+    this.objectGroup = new Group().add(...this.objectViews.map((view) => view.group));
     if (room.id !== this.roomId) {
       old.push(this.staticGroup);
       this.exitViews = room.exits.map((exit) => new ExitView(exit, room.size, game.destinationColor(exit)));
@@ -61,7 +69,7 @@ export class RoomScene {
    * @param {number} dt seconds since the last frame
    */
   update(alpha, dt) {
-    for (const view of this.pushableViews) view.sync(alpha);
+    for (const view of this.objectViews) view.sync(alpha);
     for (const view of this.exitViews) view.update(dt);
   }
 }

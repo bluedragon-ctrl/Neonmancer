@@ -46,7 +46,7 @@ function boot() {
   const roomScene = new RoomScene(renderer);
   function showRoom() {
     roomScene.show(game);
-    debug.setRoom(game.room, game.pushables);
+    debug.setRoom(game.room, game.objects);
   }
   showRoom();
   const playerView = new PlayerView(game);
@@ -69,7 +69,7 @@ function boot() {
       if (input.pressed('debugInvincible')) game.invincible = !game.invincible;
       if (input.pressed('debugDamage')) game.hurt(1);
     }
-    if (game.update(input).includes('room')) showRoom();
+    if (game.update(input).some((event) => event.type === 'room')) showRoom();
     readout.countTick();
   }
 
@@ -83,7 +83,7 @@ function boot() {
     roomScene.update(alpha, dt);
     debug.sync(game, alpha);
     renderer.setFade(game.fadeLevel(alpha));
-    hud.setIntegrity(game.integrity, game.maxIntegrity);
+    hud.setIntegrity(game.player.integrity, game.player.maxIntegrity);
     hud.setMovementMode(game.movementMode);
     hud.setHintWanted(wantsFullscreenHint(renderer.stageHeight, window.devicePixelRatio, !!document.fullscreenElement));
     hud.update(dt);

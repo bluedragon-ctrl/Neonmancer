@@ -1,6 +1,6 @@
 /**
  * Debug mode (F3, CLAUDE.md §9): wireframe collision boxes for the static
- * blocks, the wizard and every pushable, plus the stats readout in
+ * blocks, the wizard and every room object, plus the stats readout in
  * src/main.js. Room jump, invincibility and the test-damage key are actions
  * on the Game (see debugJumpRoom() and hurt() in src/game.js); this module
  * only draws the boxes and tracks whether the mode is on.
@@ -35,7 +35,7 @@ export class DebugOverlay {
     this.group.visible = false;
     this.cellGroup = new Group();
     this.playerBox = box(materials.body);
-    this.pushableBoxes = [];
+    this.objectBoxes = [];
     this.bodyGroup = new Group().add(this.playerBox);
     this.group.add(this.cellGroup, this.bodyGroup);
   }
@@ -48,11 +48,11 @@ export class DebugOverlay {
 
   /**
    * Rebuild the boxes for a freshly (re)built room: one per static block
-   * cell, one per pushable (the wizard's box is reused, see the constructor).
+   * cell, one per room object (the wizard's box is reused, see the constructor).
    * @param {{ cells: number[][] }} room
-   * @param {import('../entities/pushable.js').Pushable[]} pushables
+   * @param {object[]} objects the game's room objects
    */
-  setRoom(room, pushables) {
+  setRoom(room, objects) {
     this.cellGroup.clear();
     for (const cell of room.cells) {
       const mesh = box(materials.cell);
@@ -60,24 +60,24 @@ export class DebugOverlay {
       this.cellGroup.add(mesh);
     }
 
-    for (const mesh of this.pushableBoxes) this.bodyGroup.remove(mesh);
-    this.pushableBoxes = pushables.map(() => box(materials.body));
-    for (const mesh of this.pushableBoxes) this.bodyGroup.add(mesh);
+    for (const mesh of this.objectBoxes) this.bodyGroup.remove(mesh);
+    this.objectBoxes = objects.map(() => box(materials.body));
+    for (const mesh of this.objectBoxes) this.bodyGroup.add(mesh);
   }
 
   /**
-   * Place the player and pushable boxes at their interpolated position.
+   * Place the player and object boxes at their interpolated position.
    * @param {import('../game.js').Game} game
    * @param {number} alpha interpolation factor 0..1 between the last two ticks
    */
   sync(game, alpha) {
     if (!this.active) return;
-    const { player, pushables } = game;
+    const { player, objects } = game;
     const pos = lerpPosition(player.prev, player.pos, alpha);
     place(this.playerBox, [pos[0] - player.size[0] / 2, pos[1], pos[2] - player.size[2] / 2], player.size);
 
-    pushables.forEach((pushable, i) => {
-      place(this.pushableBoxes[i], lerpPosition(pushable.prev, pushable.pos, alpha), [1, 1, 1]);
+    objects.forEach((object, i) => {
+      place(this.objectBoxes[i], lerpPosition(object.prev, object.pos, alpha), object.size);
     });
   }
 }
