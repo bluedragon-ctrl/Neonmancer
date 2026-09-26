@@ -117,6 +117,12 @@
         "path": {
           "$ref": "#/$defs/path",
           "description": "Required for platforms (and only allowed on them): the path they follow, starting at \"at\"."
+        },
+        "regrow": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 60,
+          "description": "Collapsing blocks only: seconds after vanishing until the block grows back (once its cell is clear). Without it the block stays gone until the room resets."
         }
       }
     },

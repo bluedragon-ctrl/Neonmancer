@@ -487,3 +487,26 @@ crates on the grid and never forces one into a wall; it also gives a
 puzzle (jam a lift with a crate). A shove limit stops the wizard from
 jumping a whole block in one tick; hurting and waiting when he is pinned
 follows D43 (never instant death) and always leaves him a way out.
+
+### D47 — 2026-09-26 — Collapsing blocks: trigger, timing, regrow and bodies
+A collapsing block is a 1×1×1 room object (kind `collapsing`, D40). Only
+the wizard triggers it, by standing on it: alive, grounded, feet on its
+top, any footprint overlap (like a platform's riders). It then shakes for
+0.5 s (30 ticks) and vanishes, even if he steps off meanwhile. With
+`regrow` (seconds, on the room object) it comes back that long after
+vanishing, but only once no body overlaps its cell; without it, it stays
+gone until the room resets. A vanished block is left out of the bodies
+everything collides with (`Game.solids`, `Game.bodies`, refreshed on
+`collapse` and `regrow`), rather than every collision check skipping it.
+It may stand in a hole tile (a bridge that gives way), and spawn and reset
+points don't count it as ground over a hole. Look: magenta, dashed edges,
+tinted faces; it rattles, breaks into falling pixels, and grows back from
+its center.
+**Why:** 0.5 s lets the wizard run across a row (a block takes ~0.22 s at
+walking speed) or hop up a step, but not stand still. Going on after he
+steps off keeps the rule simple and readable (touch it and it is doomed).
+Waiting for a clear cell stops a regrowing block from trapping the wizard
+or a crate inside it. One refreshed list keeps the collision code free of
+special cases. Bridges over pits are the classic use; a spawn on one would
+drop the wizard to his death on every respawn. Dashed edges read as
+fragile; magenta is the one palette color objects did not use yet.

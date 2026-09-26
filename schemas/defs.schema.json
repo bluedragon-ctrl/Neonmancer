@@ -49,8 +49,8 @@
       "additionalProperties": false,
       "properties": {
         "kind": {
-          "enum": ["pushable", "platform"],
-          "description": "Which engine behavior the object uses. pushable: the wizard pushes it; platform: follows its path (room data \"path\") carrying the wizard and pushables."
+          "enum": ["pushable", "platform", "collapsing"],
+          "description": "Which engine behavior the object uses. pushable: the wizard pushes it; platform: follows its path (room data \"path\") carrying the wizard and pushables; collapsing: shakes when the wizard stands on it, then vanishes (optionally growing back, room data \"regrow\")."
         },
         "color": { "$ref": "common.schema.json#/$defs/color" },
         "edges": {

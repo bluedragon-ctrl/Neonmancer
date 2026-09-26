@@ -31,6 +31,13 @@ and the project uses [Semantic Versioning](https://semver.org/).
   Validation checks path legs, blocks on the path and exits. New test
   room Transit Bus behind a raised exit on Fault Line's lookout; showcase
   `platform` and `platforms`.
+- Collapsing blocks (Phase 2 step 4): a `collapsing` object type that
+  shakes for 0.5 s once the wizard stands on it, then breaks into pixels
+  and is gone; whatever stood on it falls. Crates don't trigger them. An
+  optional `regrow` time in room data brings one back once its cell is
+  clear. They may stand in holes as bridges that give way. New test room
+  Volatile Memory behind a raised exit on Transit Bus's high ledge;
+  showcase `collapsing` and `collapsing-cycle`.
 
 ### Fixed
 - A room without objects logged a three.js error on entry.
