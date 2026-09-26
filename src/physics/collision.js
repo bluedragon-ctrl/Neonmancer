@@ -52,15 +52,16 @@ export function overlapsSolid(box, grid) {
 }
 
 /**
- * Does the box touch a cell of the given type: overlap it, or lie against
- * one of its faces (within `reach`)? Standing on a block, or walking into
- * its side, counts as touching it.
+ * The first cell of the given type the box touches: overlaps, or lies
+ * against one of its faces (within `reach`). Standing on a block, or
+ * walking into its side, counts as touching it.
  * @param {number[][]} box from bodyBox()
  * @param {{ cellAt(x: number, y: number, z: number): number }} grid
  * @param {number} type a CELL type (world/grid.js)
  * @param {number} [reach] how far beyond the box faces still counts
+ * @returns {number[]|null} the cell [x, y, z], or null if none
  */
-export function touchesCell(box, grid, type, reach = 0.02) {
+export function touchedCell(box, grid, type, reach = 0.02) {
   const [x0, x1] = cellRange([box[0][0] - reach, box[0][1] + reach]);
   const [y0, y1] = cellRange([box[1][0] - reach, box[1][1] + reach]);
   const [z0, z1] = cellRange([box[2][0] - reach, box[2][1] + reach]);
@@ -72,11 +73,11 @@ export function touchesCell(box, grid, type, reach = 0.02) {
         // overlap the cell on at least two axes.
         const cell = [x, y, z];
         const inside = box.filter(([min, max], i) => overlaps([min, max], [cell[i], cell[i] + 1])).length;
-        if (inside >= 2) return true;
+        if (inside >= 2) return cell;
       }
     }
   }
-  return false;
+  return null;
 }
 
 /**

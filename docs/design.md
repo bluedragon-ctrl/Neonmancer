@@ -94,16 +94,27 @@ debug `H` key now, platforms and enemies in later Phase 2 steps.
 ## Hazard and void blocks
 
 Static blocks of their own type (`"type"` on a room's block entry, D40,
-D44), solid like plain blocks, drawn in their own style from `defs.json`
-`blocks` instead of the room color, with their edges drawn over plain
-blocks' where they meet.
+D44), solid like plain blocks. They are drawn in an animated look of
+their own (color from `defs.json` `blocks`, not the room color), so they
+read as active. Their edges stay steady and are drawn over plain blocks'
+edges where they meet. Motion is slow; nothing strobes.
 
-- **Hazard** (red, crossed faces, tinted): touching one hurts, standing on
+- **Hazard look:** dark red faces with red pixels (8 per unit) that
+  switch on and off at random, each on its own timer (about 30% lit,
+  1.5 re-rolls per second). The block that just hurt the wizard flares for
+  0.4 s.
+- **Void look:** black faces in a thin, dim violet frame, working as
+  windows into the block. Layers of sparse grains lie behind each face
+  (found along the view ray, clipped to the block) and slowly sink deeper,
+  shrinking and fading, as if falling into the void (9 s per layer). Grains
+  show more strongly through the top face, since only landing on top
+  kills.
+- **Hazard rules:** touching one hurts, standing on
   it or walking into any side of it (`damage` in defs.json, 1). The body
   must overlap the block on two axes and lie against or in it (within 0.02),
   so brushing past a corner diagonally doesn't count. Leaning on or
   standing on one keeps hurting each time the 1 s invulnerability ends.
-- **Void** (violet, dashed edges, corner brackets): landing on top is
+- **Void rules:** landing on top is
   instant death (`die`, cause `void`), whatever the integrity; he derezzes
   on the spot like a damage death. Only the block under his feet center
   counts, like a hole, so an edge under one foot is safe; walking into its
@@ -111,8 +122,9 @@ blocks' where they meet.
 - Debug invincibility: hazards don't hurt, void blocks don't kill.
 - Validation: `spawn` and `reset` can't be above a hazard or void block
   (he would land on it), and a raised exit's floor can't be a void block.
-- Tuning: looks and `damage` in `data/defs.json` `blocks`; review them in the
-  asset showcase (`/tools/showcase.html?asset=block-hazard,block-void`).
+- Tuning: color and `damage` in `data/defs.json` `blocks`; the animated
+  looks are `BLOCK_FX` in `src/render/block-fx.js`. Review them in the
+  asset showcase (`/tools/showcase.html?asset=block-hazard,block-void,blocks-in-room`).
 
 ## Pushing
 

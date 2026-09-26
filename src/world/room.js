@@ -29,10 +29,8 @@ export function buildRoom(data, { objectTypes, blockTypes, biomes }) {
     cells: blocksOfType(data, 'block'),
     /** Cells of the other static block types (D40), by type. */
     typedCells: { hazard: blocksOfType(data, 'hazard'), void: blocksOfType(data, 'void') },
-    /** Look and rules of those block types (defs.json "blocks"), style defaults applied. */
-    blockTypes: Object.fromEntries(
-      Object.entries(blockTypes).map(([type, props]) => [type, { ...OBJECT_STYLE_DEFAULTS, ...props }]),
-    ),
+    /** Color and rules of those block types (defs.json "blocks"). */
+    blockTypes: structuredClone(blockTypes),
     /** Hole floor tiles as [x, z]. */
     holes: (data.holes ?? []).flatMap(holeTiles),
     /** Typed objects: type defaults merged with this object's overrides. */

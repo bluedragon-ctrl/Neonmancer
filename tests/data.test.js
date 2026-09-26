@@ -410,7 +410,7 @@ test('buildRoom sorts blocks by type and carries the block type looks', () => {
     ],
   });
   assert.equal(room.blockTypes.hazard.damage, 1);
-  assert.equal(room.blockTypes.void.edges, 'solid'); // style defaults applied
+  assert.equal(room.blockTypes.void.color, '#8a5cff');
 });
 
 test('block types: the schema requires both types and a hazard damage', () => {

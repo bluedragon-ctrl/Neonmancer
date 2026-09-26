@@ -14,9 +14,10 @@ and the project uses [Semantic Versioning](https://semver.org/).
   `damage`), each with its own terminal line.
 - Asset showcase: `wizard-hit` loops the blink and the derez.
 - Hazard and void blocks (Phase 2 step 2): a `type` on room blocks, with
-  their looks and the hazard's damage in `defs.json` `blocks`. Touching a
-  hazard hurts; landing on void is instant death (cause `void`, own
-  terminal line). Validation keeps spawn and reset points off them and raised
+  their color and the hazard's damage in `defs.json` `blocks`. Touching a
+  hazard hurts, and the block flares; landing on void is instant death
+  (cause `void`, own terminal line). Both have animated looks: red pixels
+  switching on and off, and grains sinking inside a black void block. Validation keeps spawn and reset points off them and raised
   exits off void. New test room Fault Line east of Stack Yard; showcase
   `block-hazard` and `block-void`.
 

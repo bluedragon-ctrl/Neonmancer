@@ -7,7 +7,7 @@ import { announce, say } from './core/messages.js';
 import { isBackSide, sideAxes, withExitDefaults } from './data/room-data.js';
 import { createObject } from './entities/kinds.js';
 import { PLAYER, Player } from './entities/player.js';
-import { groundBelow, surfaceBelow, touchesCell } from './physics/collision.js';
+import { groundBelow, surfaceBelow, touchedCell } from './physics/collision.js';
 import { arrival, exitAt } from './world/exits.js';
 import { CELL, Grid } from './world/grid.js';
 import { buildRoom } from './world/room.js';
@@ -30,6 +30,7 @@ export const TRANSITION = {
  * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'hurt'|'exit'|'room'} type
  * @property {object} [object] the room object it happened to (push, plug, and land of an object)
  * @property {number} [amount] integrity lost (hurt)
+ * @property {number[]} [cell] the hazard block that hurt him (hurt), [x, y, z]
  * @property {'hole'|'void'|'damage'} [cause] how the wizard died (die)
  * @property {object} [exit] the exit walked out through (exit)
  */
@@ -105,11 +106,13 @@ export class Game {
    * as a 'hurt' (and 'die') event with this tick's events, or the next
    * tick's when called outside update().
    * @param {number} [amount]
+   * @param {object} [source]
+   * @param {number[]} [source.cell] the hazard block that hurt him, passed on with the event
    */
-  hurt(amount = 1) {
+  hurt(amount = 1, { cell } = {}) {
     if (this.invincible) return;
     const lost = this.player.hurt(amount);
-    if (lost > 0) this.emit('hurt', { amount: lost });
+    if (lost > 0) this.emit('hurt', cell ? { amount: lost, cell } : { amount: lost });
     if (this.player.dead) this.died();
   }
 
@@ -196,7 +199,8 @@ export class Game {
     else if (playerEvent) this.emit(playerEvent);
 
     // Touching a hazard block hurts (then he is invulnerable for a while).
-    if (!player.dead && touchesCell(player.box(), this.grid, CELL.hazard)) this.hurt(this.room.blockTypes.hazard.damage);
+    const hazard = player.dead ? null : touchedCell(player.box(), this.grid, CELL.hazard);
+    if (hazard) this.hurt(this.room.blockTypes.hazard.damage, { cell: hazard });
 
     const intent = player.pushIntent;
     if (intent && intent.body.push(intent.dir, this)) this.emit('push', { object: intent.body });

@@ -10,6 +10,7 @@ import { ExitView } from './exit-view.js';
 import { createFloor } from './floor.js';
 import { createHoleView } from './hole-view.js';
 import { disposeTree } from './neon.js';
+import { flareHazard } from './block-fx.js';
 import { createRoomView } from './room-view.js';
 
 /**
@@ -29,6 +30,10 @@ export class RoomScene {
     this.roomId = null;
     this.objectViews = [];
     this.exitViews = [];
+    /** Face material of the room's hazard blocks, or null. */
+    this.hazardFaces = null;
+    /** The hazard block that last hurt the wizard, flaring: { cell, time } (seconds since). */
+    this.flare = null;
   }
 
   /**
@@ -46,10 +51,13 @@ export class RoomScene {
     if (room.id !== this.roomId) {
       old.push(this.staticGroup);
       this.exitViews = room.exits.map((exit) => new ExitView(exit, room.size, game.destinationColor(exit)));
+      const roomView = createRoomView(room);
+      this.hazardFaces = roomView.userData.hazardFaces;
+      this.flare = null;
       this.staticGroup = new Group().add(
         createFloor(room.size, room.color, room.holes),
         createHoleView(room.holes, room.color),
-        createRoomView(room),
+        roomView,
         ...this.exitViews.map((view) => view.group),
       );
       frameRoom(renderer.camera, room.size);
@@ -73,5 +81,17 @@ export class RoomScene {
   update(alpha, dt) {
     for (const view of this.objectViews) view.sync(alpha);
     for (const view of this.exitViews) view.update(dt);
+    if (this.flare && this.hazardFaces) {
+      this.flare.time += dt;
+      flareHazard(this.hazardFaces, this.flare.cell, this.flare.time);
+    }
+  }
+
+  /**
+   * A hazard block just hurt the wizard: make it flare.
+   * @param {number[]} cell [x, y, z]
+   */
+  flareHazard(cell) {
+    this.flare = { cell, time: 0 };
   }
 }

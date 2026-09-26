@@ -8,7 +8,7 @@
     "crate_dashed": { "kind": "pushable", "color": "#b6ff3c", "edges": "dashed" }
   },
   "blocks": {
-    "hazard": { "color": "#ff3b30", "mark": "cross", "faces": "tinted", "tint": 0.25, "damage": 1 },
-    "void": { "color": "#8a5cff", "edges": "dashed", "mark": "brackets" }
+    "hazard": { "color": "#ff3b30", "damage": 1 },
+    "void": { "color": "#8a5cff" }
   }
 }

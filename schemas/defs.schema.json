@@ -16,7 +16,7 @@
     },
     "blocks": {
       "type": "object",
-      "description": "Static block types other than plain blocks (which take the room color). Their behavior is built into the engine; this sets their look and tuning.",
+      "description": "Static block types other than plain blocks (which take the room color). Their behavior and animated look are built into the engine (src/render/block-fx.js); this sets their color and tuning.",
       "required": ["hazard", "void"],
       "additionalProperties": false,
       "properties": {
@@ -26,11 +26,7 @@
           "required": ["color", "damage"],
           "additionalProperties": false,
           "properties": {
-            "color": { "$ref": "common.schema.json#/$defs/color" },
-            "edges": { "$ref": "#/$defs/objectType/properties/edges" },
-            "mark": { "$ref": "#/$defs/objectType/properties/mark" },
-            "faces": { "$ref": "#/$defs/objectType/properties/faces" },
-            "tint": { "$ref": "#/$defs/objectType/properties/tint" },
+            "color": { "$ref": "common.schema.json#/$defs/color", "description": "Edges and lit pixels." },
             "damage": { "type": "integer", "minimum": 1, "description": "Integrity lost per hit." }
           }
         },
@@ -40,11 +36,7 @@
           "required": ["color"],
           "additionalProperties": false,
           "properties": {
-            "color": { "$ref": "common.schema.json#/$defs/color" },
-            "edges": { "$ref": "#/$defs/objectType/properties/edges" },
-            "mark": { "$ref": "#/$defs/objectType/properties/mark" },
-            "faces": { "$ref": "#/$defs/objectType/properties/faces" },
-            "tint": { "$ref": "#/$defs/objectType/properties/tint" }
+            "color": { "$ref": "common.schema.json#/$defs/color", "description": "Thin frame; also tints the grains inside." }
           }
         }
       }
