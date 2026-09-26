@@ -7,6 +7,7 @@
     ["boot_sector.east", "stack_yard.west"],
     ["stack_yard.east", "fault_line.west"],
     ["fault_line.east", "transit_bus.west"],
-    ["transit_bus.east", "volatile_memory.west"]
+    ["transit_bus.east", "volatile_memory.west"],
+    ["volatile_memory.east", "crawl_space.west"]
   ]
 }

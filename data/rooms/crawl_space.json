@@ -1,0 +1,34 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "crawl_space",
+  "name": "Crawl Space",
+  "biome": "home_lattice",
+  "size": [12, 4, 12],
+  "spawn": [1, 0, 6],
+  "exits": [{ "id": "west", "side": "-x", "at": 5 }],
+  "blocks": [
+    { "at": [9, 0, 0], "to": [11, 0, 2] },
+    { "at": [6, 0, 8], "to": [7, 0, 9] },
+    { "at": [0, 0, 0], "to": [1, 1, 1] }
+  ],
+  "objects": [{ "id": "fence", "type": "crate", "at": [9, 0, 6] }],
+  "enemies": [
+    { "id": "sentry", "type": "bug", "at": [3, 0, 2], "path": { "points": [[3, 0, 10]], "pause": 0.4 } },
+    { "id": "diver", "type": "bug", "at": [10, 1, 1], "path": { "points": [[5, 1, 1]], "pause": 0.4 } },
+    { "id": "lane", "type": "bug", "at": [5, 0, 4], "path": { "points": [[11, 0, 4]], "pause": 0.4 } },
+    {
+      "id": "circler",
+      "type": "bug",
+      "at": [5, 0, 7],
+      "overrides": { "hostility": "provoked" },
+      "path": { "points": [[8, 0, 7], [8, 0, 10], [5, 0, 10]], "mode": "loop", "speed": 2 }
+    },
+    {
+      "id": "spring",
+      "type": "bug",
+      "at": [2, 0, 1],
+      "overrides": { "movement": "stationary", "hostility": "peaceful", "bounce": true }
+    }
+  ]
+}

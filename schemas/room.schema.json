@@ -52,6 +52,11 @@
       "description": "Typed objects with stable ids (types from defs.json).",
       "type": "array",
       "items": { "$ref": "#/$defs/object" }
+    },
+    "enemies": {
+      "description": "Enemies with stable ids (types from defs.json \"enemies\"); ids are shared with objects.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/enemy" }
     }
   },
   "$defs": {
@@ -126,8 +131,26 @@
         }
       }
     },
+    "enemy": {
+      "type": "object",
+      "required": ["id", "type", "at"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/id" },
+        "type": { "$ref": "common.schema.json#/$defs/id", "description": "Enemy type from defs.json." },
+        "at": { "$ref": "common.schema.json#/$defs/cell", "description": "Spawn cell (its lower corner); it starts here whenever the room resets." },
+        "overrides": {
+          "type": "object",
+          "description": "Values that replace the type's for this enemy only (e.g. hostility, bounce, speed, color)."
+        },
+        "path": {
+          "$ref": "#/$defs/path",
+          "description": "Patrol path: level (legs along x or z at the height of \"at\"); only x and z count once it walks, so it keeps to it after falling off a ledge. \"speed\" overrides the type's. Without a path it stays put."
+        }
+      }
+    },
     "path": {
-      "description": "Path shared by moving platforms (and later patrolling enemies): from the object's \"at\" through \"points\", each leg along one axis.",
+      "description": "Path shared by moving platforms and patrolling enemies: from the object's \"at\" through \"points\", each leg along one axis.",
       "type": "object",
       "required": ["points"],
       "additionalProperties": false,

@@ -46,7 +46,7 @@ function boot() {
   const roomScene = new RoomScene(renderer);
   function showRoom() {
     roomScene.show(game);
-    debug.setRoom(game.room, game.objects);
+    debug.setRoom(game.room, game.objects, game.enemies);
   }
   showRoom();
   const playerView = new PlayerView(game);

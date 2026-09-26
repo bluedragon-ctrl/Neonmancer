@@ -38,6 +38,19 @@ and the project uses [Semantic Versioning](https://semver.org/).
   clear. They may stand in holes as bridges that give way. New test room
   Volatile Memory behind a raised exit on Transit Bus's high ledge;
   showcase `collapsing` and `collapsing-cycle`.
+- Enemies and bugs (Phase 2 step 5): data-driven enemy types in
+  `defs.json` `enemies` (movement, attack, hostility, aggro range,
+  integrity, damage, speed, bounce, color) and an `enemies` list in room
+  data with per-enemy overrides. Movement behaviors in `src/ai/` (`patrol`
+  on the shared path format, `stationary`). Enemies step cell by cell,
+  turn back when blocked, walk off ledges and fall, ride platforms, and pop
+  in holes and on void blocks; crates rest on them. The wizard walks
+  through them; touching a hostile one hurts, and bouncy ones launch him 2
+  blocks up. The bug: a mint-green hologram ball whose eyes show its mood
+  (red hostile, amber provoked, cyan peaceful), hopping as it walks; a pad
+  ring marks bouncy ones. Enemy collision boxes in debug mode. New test
+  room Crawl Space behind a raised exit on Volatile Memory's high ledge;
+  showcase `bug`, `bug-provoked`, `bug-peaceful`, `bug-bouncy`, `bug-pop`.
 
 - Room design checklist in docs/design.md: reach, timing budgets,
   readability and soft-lock checks collected from playtests; the basis for

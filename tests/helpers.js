@@ -15,6 +15,19 @@ export const LIFT = { kind: 'platform', color: '#00f0ff' };
 /** A collapsing block type (its optional regrow time is on the room object). */
 export const CRUMBLE = { kind: 'collapsing', color: '#ff2bd6' };
 
+/** A bug enemy type, as in defs.json (3 units per second: 20 ticks per cell). */
+export const BUG = {
+  movement: 'patrol',
+  attack: 'contact',
+  hostility: 'hostile',
+  aggroRange: 0,
+  integrity: 1,
+  damage: 1,
+  speed: 3,
+  bounce: false,
+  color: '#2bff88',
+};
+
 /** Looks and rules of the special block types, as in defs.json. */
 export const BLOCK_TYPES = { hazard: { color: '#ff3b30', damage: 1 }, void: { color: '#8a5cff' } };
 
@@ -34,12 +47,13 @@ export function roomFile(id, props = {}) {
  * @param {object} options
  * @param {object[]} options.rooms room files (see roomFile())
  * @param {Record<string, object>} [options.objects] object types; a crate by default
+ * @param {Record<string, object>} [options.enemies] enemy types; a bug by default
  * @param {string[][]} [options.connections] pairs of "room.exit"
  * @param {string} [options.start] start room; the first room by default
  */
-export function dataFiles({ rooms, objects = { crate: CRATE }, connections = [], start = rooms[0].id }) {
+export function dataFiles({ rooms, objects = { crate: CRATE }, enemies = { bug: BUG }, connections = [], start = rooms[0].id }) {
   return structuredClone({
-    'defs.json': { schemaVersion: 1, objects, blocks: BLOCK_TYPES },
+    'defs.json': { schemaVersion: 1, objects, enemies, blocks: BLOCK_TYPES },
     'biomes.json': { schemaVersion: 1, biomes: { home: { name: 'Home', color: '#ffb020' } } },
     'world.json': { schemaVersion: 1, start, connections },
     'strings.json': STRINGS,

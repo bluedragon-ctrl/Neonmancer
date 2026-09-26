@@ -18,6 +18,7 @@ import {
   Vector3,
 } from 'three';
 import { PLAYER } from '../entities/player.js';
+import { BUG, bounceSquash, bugPose, createBug, eyeMood, popPixels, setEyeMood } from './bug.js';
 import { COLLAPSE_FX, COLLAPSE_PIXELS, collapseLook, collapsePixels } from './collapse-fx.js';
 import { PALETTE, lineMaterial, neonLines, shared } from './neon.js';
 import { fadingDrops } from './hole-view.js';
@@ -290,4 +291,70 @@ export class CollapsingView {
  */
 export function createRails(track, color) {
   return neonLines(railSegments(track), lineMaterial({ color, width: 1.5, brightness: 0.55 }));
+}
+
+/** The model of each enemy type (defs.json "enemies"), by type id. */
+export const ENEMY_MODELS = { bug: createBug };
+
+export class EnemyView {
+  /**
+   * @param {import('../game.js').Game} game
+   * @param {import('../entities/enemy.js').Enemy} enemy
+   */
+  constructor(game, enemy) {
+    this.game = game;
+    this.enemy = enemy;
+    const { color, bounce } = enemy.data;
+    this.model = (ENEMY_MODELS[enemy.type] ?? createBug)(color, { bounce });
+    this.shadow = createDropShadow(color);
+    this.pixels = createPixelBurst(BUG.pop.pixels, BUG.pop.pixelSize, [color, 0xffffff]);
+    this.mood = null;
+    this.group = new Group().add(this.model, this.shadow, this.pixels);
+    /** Angle the model faces now; it turns towards the enemy's facing. */
+    this.angle = enemy.facing;
+    /** Seconds, for the hop while standing. */
+    this.time = 0;
+  }
+
+  /**
+   * @param {number} alpha interpolation factor 0..1 between the last two ticks
+   * @param {number} dt seconds since the last frame
+   */
+  sync(alpha, dt) {
+    const { enemy } = this;
+    const pos = lerpPosition(enemy.prev, enemy.pos, alpha);
+    const feet = [pos[0] + 0.5, pos[1], pos[2] + 0.5];
+    const dead = enemy.state === 'dead';
+    this.model.visible = !dead;
+    // Popped in a pit: the burst comes out at the floor.
+    placePixels(this.pixels, dead ? popPixels(enemy.timer + alpha) : [], [feet[0], Math.max(feet[1], 0), feet[2]]);
+    this.shadow.visible = !dead;
+    if (dead) return;
+
+    this.time += dt;
+    this.angle += wrapAngle(enemy.facing - this.angle) * Math.min(1, dt * BUG.turnRate);
+    this.model.position.set(...feet);
+    this.model.rotation.y = this.angle;
+
+    // One hop per cell while walking (the distance from the cell it left), small ones while standing.
+    const { from } = enemy;
+    const walked = enemy.state === 'walk' && from ? Math.abs(pos[0] - from[0]) + Math.abs(pos[2] - from[2]) : null;
+    const pose =
+      enemy.state === 'fall' ? { lift: 0, scale: [0.92, 1.15, 0.92] } : walked !== null ? bugPose(walked) : bugPose(this.time * BUG.idleRate, BUG.idleLift);
+    const squash = bounceSquash(enemy.bounced === null ? null : enemy.bounced + alpha);
+    const body = this.model.userData.body;
+    body.position.y = pose.lift;
+    body.scale.set(pose.scale[0] * (1 + squash * 0.5), pose.scale[1] * (1 - squash), pose.scale[2] * (1 + squash * 0.5));
+
+    const mood = eyeMood(enemy);
+    if (mood !== this.mood) setEyeMood(this.model, (this.mood = mood));
+
+    const ground = this.game.shadowHeight(feet, enemy.size);
+    placeShadow(this.shadow, feet[0], feet[2], pos[1], ground, 1.1);
+  }
+}
+
+/** An angle difference brought into −π..π, so turning takes the short way round. */
+function wrapAngle(a) {
+  return a - Math.PI * 2 * Math.round(a / (Math.PI * 2));
 }

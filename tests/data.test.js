@@ -5,7 +5,8 @@ import { checkData, checkFiles, readSchemas } from '../tools/check-data.js';
 import { validateData } from '../src/data/validate.js';
 import { DataError, loadGameData } from '../src/data/load.js';
 import { buildRoom } from '../src/world/room.js';
-import { OBJECT_STYLES } from '../src/data/room-data.js';
+import { ENEMY_OPTIONS, OBJECT_STYLES } from '../src/data/room-data.js';
+import { BEHAVIORS } from '../src/ai/behaviors.js';
 import { MARKS } from '../src/render/marks.js';
 import { CRUMBLE, LIFT, dataFiles, roomFile } from './helpers.js';
 
@@ -505,4 +506,63 @@ test('collapsing blocks: the room carries the regrow time', () => {
   assert.equal(c.kind, 'collapsing');
   assert.equal(c.regrow, 4);
   assert.equal('regrow' in d, false);
+});
+
+/** The valid game with `enemies` added to room alpha (a crate at [2,0,5], blocks [4..5, 0..1, 4]). */
+function withEnemies(enemies, change = () => {}) {
+  return errorsAfter((f) => {
+    f['rooms/alpha.json'].enemies = enemies;
+    change(f);
+  });
+}
+
+test('enemies: a patrol needs a level path along x or z, clear of blocks', () => {
+  assert.deepEqual(withEnemies([{ id: 'b', type: 'bug', at: [1, 0, 1], path: { points: [[3, 0, 1], [3, 0, 3]], mode: 'loop' } }]), [
+    'rooms/alpha.json › enemies[0].path: a loop runs from [3,0,3] back to [1,0,1]: they must differ on exactly one of x and z (same y)',
+  ]);
+  assert.deepEqual(withEnemies([{ id: 'b', type: 'bug', at: [1, 0, 1], path: { points: [[3, 0, 1], [3, 0, 3]] } }]), []);
+  assertError(withEnemies([{ id: 'b', type: 'bug', at: [1, 0, 1] }]), 'enemies[0]', 'needs a "path"');
+  assertError(withEnemies([{ id: 'b', type: 'bug', at: [1, 0, 1], path: { points: [[1, 1, 1]] } }]), 'enemies[0].path.points[0]', 'same y');
+  assertError(withEnemies([{ id: 'b', type: 'bug', at: [2, 1, 4], path: { points: [[6, 1, 4]] } }]), 'enemies[0].path', 'filled by blocks[0]');
+  // A crate on the path is fine: the bug turns back at it.
+  assert.deepEqual(withEnemies([{ id: 'b', type: 'bug', at: [0, 0, 5], path: { points: [[3, 0, 5]] } }]), []);
+});
+
+test('enemies: a stationary enemy has no path', () => {
+  const still = { id: 'b', type: 'bug', at: [1, 0, 1], overrides: { movement: 'stationary' } };
+  assert.deepEqual(withEnemies([still]), []);
+  assertError(withEnemies([{ ...still, path: { points: [[3, 0, 1]] } }]), 'enemies[0].path', 'no path');
+});
+
+test('enemies: known type, unique id shared with objects, a free cell of its own, not over a hole', () => {
+  const still = (id, at, extra = {}) => ({ id, type: 'bug', at, overrides: { movement: 'stationary' }, ...extra });
+  assertError(withEnemies([still('b', [1, 0, 1], { type: 'moth' })]), 'enemies[0]', 'unknown enemy type "moth"');
+  assertError(withEnemies([still('box', [1, 0, 1])]), 'enemies[0]', 'duplicate id "box"');
+  assertError(withEnemies([still('b', [2, 0, 5])]), 'enemies[0]', 'filled by objects[0]');
+  assertError(withEnemies([still('a', [1, 0, 1]), still('b', [1, 0, 1])]), 'enemies[1]', 'taken by enemies[0]');
+  assertError(withEnemies([still('b', [9, 0, 1])]), 'enemies[0]', 'outside size');
+  assertError(
+    withEnemies([still('b', [3, 0, 1])], (f) => (f['rooms/alpha.json'].holes = [{ at: [3, 1] }])),
+    'enemies[0]',
+    'starts over holes[0]',
+  );
+});
+
+test('enemies: overrides change type fields with valid values only', () => {
+  const bug = (overrides) => [{ id: 'b', type: 'bug', at: [1, 0, 1], overrides: { movement: 'stationary', ...overrides } }];
+  assert.deepEqual(withEnemies(bug({ hostility: 'provoked', bounce: true, speed: 2, color: '#ffffff', aggroRange: 5 })), []);
+  assertError(withEnemies(bug({ hostility: 'grumpy' })), 'enemies[0].overrides', '"hostility" must be one of hostile, peaceful, provoked');
+  assertError(withEnemies(bug({ bounce: 'yes' })), 'enemies[0].overrides', '"bounce" must be a boolean');
+  assertError(withEnemies(bug({ integrity: 1.5 })), 'enemies[0].overrides', '"integrity" must be a whole number');
+  assertError(withEnemies(bug({ wings: 2 })), 'enemies[0].overrides', '"wings" is not a property');
+});
+
+test('enemy types: the schema and the code agree on the allowed values', () => {
+  const props = schemas.find((schema) => schema.$id === 'defs.schema.json').$defs.enemyType.properties;
+  for (const [key, values] of Object.entries(ENEMY_OPTIONS)) assert.deepEqual(props[key].enum, values, key);
+  assert.deepEqual(Object.keys(BEHAVIORS), ENEMY_OPTIONS.movement);
+  assertError(
+    errorsAfter((f) => (f['defs.json'].enemies.bug.hostility = 'grumpy')),
+    'defs.json › enemies.bug.hostility',
+  );
 });

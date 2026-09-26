@@ -510,3 +510,34 @@ or a crate inside it. One refreshed list keeps the collision code free of
 special cases. Bridges over pits are the classic use; a spawn on one would
 drop the wizard to his death on every respawn. Dashed edges read as
 fragile (thinner than other objects', author's review); magenta is the one palette color objects did not use yet.
+
+### D48 — 2026-09-26 — Enemies: data-driven types, cell-by-cell physics, hostility and bounce
+Enemy types in `defs.json` `enemies` hold every trait: `movement`
+(behavior module: `patrol`, `stationary`), `attack` (`contact`, `none`),
+`hostility` (`hostile`, `peaceful`, `provoked`: hostile once attacked),
+`aggroRange`, `integrity`, `damage`, `speed`, `bounce` and `color`; room
+entries (`id`, `type`, `at` = spawn cell, `path`, `overrides`) can change
+any of them for one enemy. Enemies are not room objects: they move one
+grid cell at a time (starting a step only from a whole cell), fall when
+unsupported, ride platforms, turn back when anything blocks the next cell
+(including a step up), walk off ledges, and pop in holes and on void
+blocks (gone until the room resets). The wizard walks through them;
+crates rest on them and can't be pushed into them. Touching a hostile
+contact enemy hurts; landing on a bouncy one launches the wizard 2.2 above
+its top (2 blocks), harmlessly, which amends the locked "active enemies
+cannot be stood on" rule. The bug is a mint-green hologram ball; eye color
+shows hostility (red, amber, cyan), a pad ring marks a bouncy one.
+Patrol paths are level (legs along x or z at one height); only x and z
+count at runtime.
+**Why:** author's review. Grid-aligned movement (author's suggestion)
+removes the sub-cell edge cases of free movement against crates,
+platforms and ledges, and lets enemies reuse the crate rules for falling
+and riding; physics makes rooms more systemic (a floor giving way, a crate
+used as a fence). Putting every trait in data lets one room tune an
+enemy (a peaceful bug, a bouncy one) without new types, and the fields
+chase and shoot behaviors will need (aggro range, attack) are in place
+before Viruses and Pop-ups. Red eyes warn of hostility at a glance, as the
+author asked; a mood color keeps peaceful and provoked readable. A bounce
+higher than a jump turns bouncy enemies into a way up (the reachability
+checker must learn it); keeping it harmless and limited to the top keeps
+hostile bouncy enemies dangerous from the sides.

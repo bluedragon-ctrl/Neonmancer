@@ -18,6 +18,7 @@ import { COLLAPSING } from '../src/entities/collapsing.js';
 import {
   CollapsingView,
   createDerezPixels,
+  createPixelBurst,
   createDropShadow,
   createRails,
   placePixels,
@@ -34,6 +35,7 @@ import { createObjectView, createRoomView } from '../src/render/room-view.js';
 import { ExitView } from '../src/render/exit-view.js';
 import { HOLO_TIME } from '../src/render/holo.js';
 import { createWizard } from '../src/render/wizard.js';
+import { BUG, bounceSquash, bugPose, createBug, popPixels, setEyeMood } from '../src/render/bug.js';
 
 /** Units between two assets (the default span of an asset). */
 const SPACING = 3;
@@ -64,7 +66,50 @@ const ALL_ASSETS = [
   { label: 'exits', span: 5.5, build: buildExits },
   { label: 'platforms', span: 5.5, build: buildPlatforms },
   { label: 'collapsing-cycle', span: 4.5, build: buildCollapsingCycle },
+  // Bugs (D48): walking hops in each mood, a bouncy one being bounced on, a pop.
+  { label: 'bug', group: 'bugs', build: () => buildBug('hostile'), shadow: defs.enemies.bug.color },
+  { label: 'bug-provoked', group: 'bugs', build: () => buildBug('provoked'), shadow: defs.enemies.bug.color },
+  { label: 'bug-peaceful', group: 'bugs', build: () => buildBug('peaceful'), shadow: defs.enemies.bug.color },
+  { label: 'bug-bouncy', group: 'bugs', build: () => buildBug('peaceful', { bounce: true }), shadow: defs.enemies.bug.color },
+  { label: 'bug-pop', group: 'bugs', build: buildBugPop },
 ];
+
+/**
+ * A bug in a mood, hopping as it walks (3 cells per second); a bouncy one
+ * stands still and gets bounced on every 1.2 s instead.
+ * @param {'hostile'|'provoked'|'peaceful'} mood
+ */
+function buildBug(mood, { bounce = false } = {}) {
+  const { color, speed } = defs.enemies.bug;
+  const bug = createBug(color, { bounce });
+  setEyeMood(bug, mood);
+  const asset = new Group().add(bug);
+  asset.userData.update = (dt, time) => {
+    const { body } = bug.userData;
+    const pose = bounce ? bugPose(time * BUG.idleRate, BUG.idleLift) : bugPose(time * speed);
+    const squash = bounce ? bounceSquash(((time % 1.2) / 1.2) * 72) : 0;
+    body.position.y = pose.lift;
+    body.scale.set(pose.scale[0] * (1 + squash * 0.5), pose.scale[1] * (1 - squash), pose.scale[2] * (1 + squash * 0.5));
+  };
+  return asset;
+}
+
+/** A bug popping into pixels, in a loop. */
+function buildBugPop() {
+  const { color } = defs.enemies.bug;
+  const bug = createBug(color);
+  const pixels = createPixelBurst(BUG.pop.pixels, BUG.pop.pixelSize, [color, 0xffffff]);
+  const asset = new Group().add(bug, pixels);
+  const loop = 90;
+  let tick = 0;
+  asset.userData.update = (dt) => {
+    tick = (tick + dt * 60) % loop;
+    const popped = tick >= 40;
+    bug.visible = !popped;
+    placePixels(pixels, popped ? popPixels(tick - 40) : [], [0, 0, 0]);
+  };
+  return asset;
+}
 
 /**
  * The wizard getting hurt, in a loop: hit (a flash, then blinking while invulnerable),
@@ -208,7 +253,7 @@ function buildExits() {
 }
 
 const only = new URLSearchParams(location.search).get('asset');
-const ASSETS = ALL_ASSETS.filter(({ label }) => !only || only.split(',').includes(label));
+const ASSETS = ALL_ASSETS.filter(({ label, group }) => !only || only.split(',').some((name) => name === label || name === group));
 
 const renderer = new Renderer(document.getElementById('app'));
 // Assets stand in a row that runs left to right on screen (world +x −z),

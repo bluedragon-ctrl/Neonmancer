@@ -106,7 +106,8 @@ mobile/touch support, backend or accounts.
   be pushed (only the top of a stack moves).
 - No basic carry action: the wizard can only push objects until he
   unlocks the Cut & Paste spell.
-- Frozen enemies can be stood on; active enemies cannot.
+- Frozen enemies can be stood on; active enemies cannot, except bouncy
+  ones: landing on top bounces the wizard up 2 blocks, harmlessly (D48).
 
 ### Damage and death
 - Hazards and enemies deal damage, followed by brief invulnerability with
@@ -146,6 +147,12 @@ Mana recharges slowly. Installing a spell plays a short animation.
 
 Each has a distinct color, silhouette and bouncy animation.
 AI is implemented as named behavior modules referenced from data.
+Enemies are fully data-driven (D48): type fields in `defs.json` (movement,
+attack, hostility — hostile / peaceful / provoked —, aggro range,
+integrity, damage, speed, bounce, color), overridable per enemy in the
+room. Eye color shows hostility (red hostile, amber provoked, cyan
+peaceful). Enemies move cell by cell with physics (fall, ride platforms,
+pop in holes and on void).
 
 ### Biomes (Grid sectors)
 Each room has a biome defining look and optional environmental effects,
@@ -198,8 +205,8 @@ Map screen showing visited rooms, connections and fragment markers.
 
 The engine is generic; all content lives in data.
 
-- `data/defs.json` — object types, enemy types (speed, health, behavior,
-  color), spells
+- `data/defs.json` — object types, enemy types (movement, attack,
+  hostility, aggro range, integrity, damage, speed, bounce, color), spells
 - `data/biomes.json` — palette, floor pattern, effect settings,
   environmental effects
 - `data/rooms/*.json` — one file per room: biome, size [x, y, z], exits,
