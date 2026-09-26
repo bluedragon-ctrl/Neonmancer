@@ -8,7 +8,7 @@
  * cell face. Speeds stay below one unit per tick, so no swept test is needed.
  *
  * Bodies are anything with `box()` returning [[minX, maxX], [minY, maxY],
- * [minZ, maxZ]] (pushables); the mover never collides with itself.
+ * [minZ, maxZ]] (room objects and the wizard); the mover never collides with itself.
  */
 
 /** Overlaps smaller than this don't count, so touching faces never collide. */

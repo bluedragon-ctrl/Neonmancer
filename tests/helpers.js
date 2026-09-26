@@ -48,6 +48,9 @@ export function grid({ size = [8, 4, 8], cells = [], holes = [], exits = [] } = 
   return new Grid({ size, cells, holes, exits });
 }
 
+/** Just the types of a list of game events, e.g. ['exit'], for short assertions. */
+export const eventTypes = (events) => events.map((event) => event.type);
+
 /** Fake input with nothing held. */
 export const idle = { down: () => false, pressed: () => false };
 

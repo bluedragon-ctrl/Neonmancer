@@ -85,6 +85,9 @@ and the project uses [Semantic Versioning](https://semver.org/).
   reallocates buffers only once it pauses.
 - The occupancy grid is typed arrays and the logic tick no longer
   allocates per entity: about 1.7× more logic ticks per second.
+- Phase 2 groundwork: room objects are built and drawn by kind; grid cells
+  hold a type (D40); one Player for the whole game owns integrity, and the
+  tick returns typed events (D41).
 - Shared render builders (`neonLines`, `fadingLines`, `shadedFaces`),
   `main.js` and `validateRoom()` split into focused parts, pure helpers
   moved out of three.js view modules.

@@ -7,7 +7,7 @@ import { mergeUnitSegments } from '../src/render/edges.js';
 import { TUNNEL_DEPTH, doorwayTunnels, frontChevrons, wallLayout } from '../src/render/walls.js';
 import { EXIT_FX, exitStreamLayout, glideState } from '../src/render/exit-layout.js';
 import { arrival, exitAt } from '../src/world/exits.js';
-import { gameData, grid, hold, idle, roomFile } from './helpers.js';
+import { eventTypes, gameData, grid, hold, idle, roomFile } from './helpers.js';
 
 /** Two rooms joined east ↔ west; beta's exit is raised onto a ledge. */
 function content() {
@@ -26,10 +26,10 @@ function content() {
   });
 }
 
-/** Run the game for `ticks` ticks, or until the room changes; returns all events. */
+/** Run the game for `ticks` ticks, or until the room changes; returns all event types. */
 function run(game, input, ticks) {
   const events = [];
-  for (let i = 0; i < ticks && !events.includes('room'); i++) events.push(...game.update(input));
+  for (let i = 0; i < ticks && !events.includes('room'); i++) events.push(...eventTypes(game.update(input)));
   return events;
 }
 
@@ -115,7 +115,7 @@ test("a respawn after travelling happens at the room's reset point, in a fresh r
   const events = [];
   game.player.dead = true;
   game.player.deathTimer = 1;
-  events.push(...game.update(idle));
+  events.push(...eventTypes(game.update(idle)));
   assert.deepEqual(events, ['respawn', 'room']);
   assert.equal(game.room.id, 'beta');
   assert.deepEqual(game.player.pos, game.room.reset); // not the arrival point he travelled in through
@@ -189,7 +189,9 @@ test('a room transition fades out with the world frozen, then fades in while run
   const game = new Game(content());
   game.player.pos = [7.95, 0, 4.25];
   game.player.grounded = true; // air steering is slower (D34)
-  assert.deepEqual(game.update(hold('down')), ['exit']);
+  const [exitEvent] = game.update(hold('down'));
+  assert.equal(exitEvent.type, 'exit');
+  assert.equal(exitEvent.exit.id, 'east');
   assert.equal(game.room.id, 'alpha');
   assert.ok(game.fadeLevel(0) < 0.1);
 
@@ -200,7 +202,7 @@ test('a room transition fades out with the world frozen, then fades in while run
   assert.ok(game.player.pos[0] > 8.5);
   assert.ok(game.fadeLevel(1) > 0.99);
 
-  assert.deepEqual(game.update(idle), ['room']);
+  assert.deepEqual(eventTypes(game.update(idle)), ['room']);
   assert.equal(game.room.id, 'beta');
   assert.equal(game.fadeLevel(0), 1);
 

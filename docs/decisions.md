@@ -356,3 +356,30 @@ takes over normally, same as any other position.
 reason about than "wherever the last door happened to drop him", especially
 once a room has several exits. It also keeps a respawn from ever landing on
 an awkward spot right at a raised or narrow doorway.
+
+### D40 — 2026-09-26 — Static block types live in the grid; changing blocks are room objects
+Grid cells hold a type code (`CELL` in `src/world/grid.js`; only `empty` and
+`solid` so far). The Phase 2 block types that never move or change shape
+(hazard, void) become new cell types with their own look. Blocks that move
+or disappear (moving platforms, collapsing blocks) are room objects, like
+pushables: built by kind (`entities/kinds.js`), colliding as bodies, drawn
+by their own view.
+**Why:** static blocks are drawn as one instanced mesh with merged edges
+(D12); making a single cell vanish or move would mean rebuilding them, and
+the typed-array grid can't carry per-cell motion. Room objects already
+move, collide, carry an interpolated position and reset with the room, so
+moving and collapsing blocks get all of that for free. Hazard and void
+blocks only differ in what touching them does, which the grid answers with
+one lookup.
+
+### D41 — 2026-09-26 — One Player for the whole game; the tick returns typed events
+The `Player` is made once and placed by `Game.enterRoom()` instead of being
+rebuilt with every room; it owns integrity (and later mana, invulnerability
+and spells), and `Game.hurt()` passes damage on to it. `Game.update()`
+returns `GameEvent` objects (`{ type, ...details }`) instead of strings.
+**Why:** Phase 2 adds invulnerability after hits, blinking, health drain and
+mana, all per-wizard state that must survive room changes; on `Game` it
+would split the wizard's state across two objects. Damage, pickups and
+later sound and effects need details (amount, which object, where), which
+plain strings can't carry; changing the event shape now touches three
+consumers instead of every Phase 2 system.

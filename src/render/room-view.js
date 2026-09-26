@@ -108,7 +108,7 @@ function createTunnels({ quads, lines: corners }, color) {
 /**
  * View of one typed object: a single cell drawn in the object's style
  * (edges, face mark, faces), so types differ by more than color. Kept
- * separate from the static blocks because objects move (pushables, step 5).
+ * separate from the static blocks because objects move (D40).
  * @param {{ at: number[], color: string, edges: string, mark: string, faces: string, tint: number }} object
  */
 export function createObjectView({ at, color, edges, mark, faces, tint }) {

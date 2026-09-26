@@ -4,6 +4,7 @@ import { groundBelow, moveAxis } from '../src/physics/collision.js';
 import { JUMP_SPEED, PLAYER, Player } from '../src/entities/player.js';
 import { lerpAngle, lerpPosition, shadowScale } from '../src/render/interp.js';
 import { WIZARD, wizardParts } from '../src/render/wizard.js';
+import { CELL } from '../src/world/grid.js';
 import { grid, input } from './helpers.js';
 
 const HITBOX = [0.6, 1.5, 0.6];
@@ -36,6 +37,15 @@ test('grid: room sides and the space below the floor are solid, above is open', 
   assert.equal(g.isSolid(0, 0, 8), true);
   assert.equal(g.isSolid(0, -1, 0), true);
   assert.equal(g.isSolid(0, 4, 0), false);
+});
+
+test('grid: cellAt() tells what fills a cell', () => {
+  const g = grid({ cells: [[2, 0, 3]] });
+  assert.equal(g.cellAt(2, 0, 3), CELL.solid);
+  assert.equal(g.cellAt(2, 1, 3), CELL.empty);
+  assert.equal(g.cellAt(-1, 0, 0), CELL.solid); // beyond a side
+  assert.equal(g.cellAt(-5, 9, -5), CELL.solid);
+  assert.equal(g.cellAt(3, 9, 3), CELL.empty); // above the room
 });
 
 test('grid: holes are found by point and can be filled', () => {
