@@ -3,8 +3,14 @@ import assert from 'node:assert/strict';
 import { BOLT } from '../src/entities/bolt.js';
 import { PLAYER } from '../src/entities/player.js';
 import { Game } from '../src/game.js';
+import { validateData } from '../src/data/validate.js';
+import { BREAK_FX, hitJolt } from '../src/render/break-fx.js';
+import { BITS, bitLayout, markSegments } from '../src/render/marks.js';
 import { ZAP_FX, castFlare, damagedGlitch, enemyHitLook, sparkPixels, trailPoints } from '../src/render/zap-fx.js';
-import { SPELLS, eventTypes, gameData, idle, roomFile } from './helpers.js';
+import { CRATE, CRUMBLE, SPELLS, dataFiles, eventTypes, gameData, idle, roomFile } from './helpers.js';
+
+/** A destructible crate type (like crate_cross), taking `integrity` hits. */
+const brittle = (integrity = 1) => ({ ...CRATE, integrity });
 
 /** Fake input pressing cast this tick. */
 const cast = { down: (a) => a === 'cast', pressed: (a) => a === 'cast' };
@@ -13,8 +19,8 @@ const cast = { down: (a) => a === 'cast', pressed: (a) => a === 'cast' };
  * A game in one 8×4×8 room with the given enemies, objects and blocks; the
  * wizard stands at [0.5, 0, 3.5] aiming along +x.
  */
-function gameWith({ enemies = [], objects = [], blocks = [] } = {}) {
-  const game = new Game(gameData({ rooms: [roomFile('alpha', { enemies, objects, blocks })] }));
+function gameWith({ enemies = [], objects = [], blocks = [], types = { crate: CRATE, brittle: brittle() } } = {}) {
+  const game = new Game(gameData({ rooms: [roomFile('alpha', { enemies, objects, blocks })], objects: types }));
   game.player.place([0.5, 0, 3.5]);
   game.player.targetFacing = Math.PI / 2;
   return game;
@@ -162,6 +168,82 @@ test('bolts are gone when the room resets', () => {
   assert.equal(game.bolts.length, 0);
 });
 
+test('a destructible crate breaks on the hit; a plain one shrugs it off', () => {
+  const game = gameWith({ objects: [{ id: 'c', type: 'brittle', at: [3, 0, 3] }] });
+  const [crate] = game.objects;
+  game.update(cast);
+  const events = run(game, idle, 30);
+  const hit = events.find((e) => e.type === 'break');
+  assert.equal(hit?.object, crate);
+  assert.equal(crate.state, 'broken');
+  assert.ok(!game.solids.includes(crate) && !game.bodies.includes(crate));
+  assert.equal(crate.push([1, 0], game), false, 'nothing left to push');
+
+  const plain = gameWith({ objects: [{ id: 'c', type: 'crate', at: [3, 0, 3] }] });
+  plain.update(cast);
+  const plainEvents = eventTypes(run(plain, idle, 30));
+  assert.ok(plainEvents.includes('zap') && !plainEvents.includes('hit') && !plainEvents.includes('break'));
+  assert.equal(plain.objects[0].state, 'rest');
+});
+
+test('a tougher destructible crate takes a hit per integrity point; the next bolt flies through where it was', () => {
+  const game = gameWith({
+    objects: [{ id: 'c', type: 'tough', at: [3, 0, 3] }],
+    enemies: [sitter([6, 0, 3])],
+    types: { crate: CRATE, tough: brittle(2) },
+  });
+  const [crate] = game.objects;
+  game.update(cast);
+  assert.ok(eventTypes(run(game, idle, 30)).includes('hit'));
+  assert.equal(crate.integrity, 1);
+  assert.equal(crate.state, 'rest');
+  game.update(cast);
+  assert.ok(eventTypes(run(game, idle, 30)).includes('break'));
+  game.update(cast);
+  assert.ok(eventTypes(run(game, idle, 40)).includes('hit'), 'the bug behind it is hit now');
+  assert.equal(game.enemies[0].integrity, 1);
+});
+
+test('what stood on a broken crate falls', () => {
+  const game = gameWith({
+    objects: [
+      { id: 'low', type: 'brittle', at: [3, 0, 3] },
+      { id: 'top', type: 'crate', at: [3, 1, 3] },
+    ],
+  });
+  game.update(cast);
+  run(game, idle, 60);
+  const top = game.objects.find((o) => o.id === 'top');
+  assert.equal(top.pos[1], 0);
+  assert.equal(top.state, 'rest');
+});
+
+test('only pushable object types may have integrity', () => {
+  const files = dataFiles({ rooms: [roomFile('alpha')], objects: { crate: CRATE, crumble: { ...CRUMBLE, integrity: 1 } } });
+  const errors = validateData(files);
+  assert.ok(errors.some((e) => e.includes('objects.crumble.integrity') && e.includes('only pushable')), errors.join('\n'));
+});
+
+test('break look: a hit jolts and settles', () => {
+  assert.deepEqual(hitJolt(null), [0, 0, 0]);
+  assert.notDeepEqual(hitJolt(1), [0, 0, 0]);
+  assert.deepEqual(hitJolt(BREAK_FX.jolt.ticks), [0, 0, 0]);
+});
+
+test('data bits: a whole grid of squares on every face; a destructible object misses some, not the same on every face', () => {
+  const count = BITS.grid * BITS.grid;
+  assert.ok(bitLayout(null).every(Boolean));
+  const layouts = [0, 1, 2, 3, 4, 5].map(bitLayout);
+  for (const layout of layouts) {
+    assert.equal(layout.length, count);
+    assert.equal(layout.filter((on) => !on).length, BITS.off);
+  }
+  assert.ok(new Set(layouts.map(String)).size > 1);
+  // Four sides per square, on six faces.
+  assert.equal(markSegments('bits').length, 6 * 4 * count);
+  assert.equal(markSegments('bitsBroken').length, 6 * 4 * (count - BITS.off));
+});
+
 test('zap look: the trail runs back from the core to its tail, both ends on the flight line', () => {
   for (let v = 0; v < ZAP_FX.trail.variants; v++) {
     const points = trailPoints(v);
@@ -187,4 +269,25 @@ test('zap look: a damaged enemy glitches for a few ticks in every round', () => 
   const { every, ticks } = ZAP_FX.glitch;
   const glitching = Array.from({ length: every }, (_, t) => damagedGlitch(t, 3).flash > 0).filter(Boolean);
   assert.equal(glitching.length, ticks);
+});
+
+test('Tab switches through the spells he knows; with only Zap nothing changes', () => {
+  const game = gameWith();
+  const tab = { down: (a) => a === 'spellNext', pressed: (a) => a === 'spellNext' };
+  assert.ok(!eventTypes(game.update(tab)).includes('spell'));
+  assert.equal(game.player.spell, 'zap');
+
+  // A second spell (Phase 3 data disks) to switch to, and back round.
+  game.player.spells.push('warp');
+  const events = game.update(tab);
+  assert.deepEqual(events.find((e) => e.type === 'spell'), { type: 'spell', spell: 'warp' });
+  assert.equal(game.player.selectSpell(-1), true);
+  assert.equal(game.player.spell, 'zap');
+  assert.equal(game.player.selectSpell(1) && game.player.selectSpell(1), true);
+  assert.equal(game.player.spell, 'zap', 'wraps round');
+});
+
+test('a cast reports the spell it was', () => {
+  const game = gameWith();
+  assert.deepEqual(game.update(cast).find((e) => e.type === 'cast'), { type: 'cast', spell: 'zap' });
 });

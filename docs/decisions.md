@@ -597,3 +597,39 @@ A bar of one segment per cast shows how many Zaps are left at a glance.
 Aiming the way he last walked keeps the controls to one cast key.
 Stopping at crates keeps them useful as cover, and a bolt at hand height
 passing over enemies below a ledge follows from flying level.
+
+### D53 — 2026-09-26 — Destructible crates: integrity on pushables, drawn as data bits
+A pushable object type may have `integrity` (1–15, overridable per
+object); spells take it like an enemy's, and at 0 the crate breaks into
+pixels and is gone until the room resets. Only pushables can have it (the
+data check rejects it on other kinds). `crate_cross` has integrity 1 and
+no longer draws its cross. The plain `crate` gets a new `bits` mark: a
+4×4 grid of small pale squares (its color mixed a third towards white) on
+every face, and the same tinted faces as `crate_cross`; every destructible
+object is drawn with that grid with 6 of 16 bits missing, in place of
+whatever its `mark` says. Boxes stay static: no pulse or blinking, only a
+jolt on a hit that doesn't break it.
+**Why:** author's request, with a visual hint that it can be destroyed.
+Tried and turned down on the way: jagged glowing crack lines (the author
+wanted a small square pattern that keeps the "data block" look), then
+pulsing and blinking bits (the author wants boxes static). Whole grid
+against grid with holes was the author's idea; 6 missing bits rather than
+3 was a counterproposal, as a few gaps are easy to miss at game distance.
+Drawing the holes from `integrity` (rather than as a `mark` a type picks)
+means a breakable crate can never look solid, nor a solid one breakable. `crate_cross`
+keeps its id (stable IDs; room data uses it). The look was reviewed in
+the asset showcase before it went into the game.
+
+### D54 — 2026-09-26 — Cast on Ctrl or E; Tab switches spells; the selected spell under energy
+The cast action is bound to Ctrl (left and right) and E, replacing J;
+`spellNext` moves from E to Tab (`spellPrev` stays on Q). The selected
+spell's name shows in a tag under the energy bar, with the Tab hint once
+he knows more than one spell. Casting goes through the selected spell
+(`Player.spell`, `SPELL_EFFECTS`), so new spells plug in without new keys.
+Because Ctrl is a game key, the input takes Ctrl plus another bound key
+as play, and still leaves Ctrl plus unbound keys (Ctrl+R) to the browser.
+**Why:** author's request: fire on Ctrl or E and switch with Tab. Known
+risk: Ctrl+W closes the browser tab and a page can't block it (outside
+fullscreen keyboard lock), so casting while pressing W to move can close
+the game; the author was told and decides on a guard (e.g. a "leave
+page?" prompt) or another key.

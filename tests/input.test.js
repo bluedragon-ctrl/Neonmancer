@@ -44,11 +44,37 @@ test('two keys bound to one action act as one', () => {
 
 test('key repeat does not re-trigger pressed', () => {
   const input = new Input();
-  input.keyDown('KeyJ');
+  input.keyDown('KeyE');
   input.sample();
-  input.keyDown('KeyJ'); // auto-repeat
+  input.keyDown('KeyE'); // auto-repeat
   input.sample();
   assert.ok(input.down('cast') && !input.pressed('cast'));
+});
+
+test('Ctrl and E cast; Tab switches spells', () => {
+  for (const code of ['ControlLeft', 'ControlRight', 'KeyE']) {
+    const input = new Input();
+    input.keyDown(code);
+    input.sample();
+    assert.ok(input.pressed('cast'), code);
+  }
+  const input = new Input();
+  input.keyDown('Tab');
+  input.sample();
+  assert.ok(input.pressed('spellNext'));
+});
+
+test('with Ctrl a game key, Ctrl plus a game key is play; other shortcuts go to the browser', () => {
+  const input = new Input();
+  assert.ok(input.takes({ code: 'ControlLeft', ctrlKey: true }));
+  assert.ok(input.takes({ code: 'KeyW', ctrlKey: true }), 'moving while casting');
+  assert.ok(!input.takes({ code: 'KeyR', ctrlKey: true }), 'Ctrl+R reloads');
+  assert.ok(!input.takes({ code: 'KeyW', altKey: true }));
+  assert.ok(!input.takes({ code: 'KeyW', metaKey: true }));
+  // Without Ctrl bound, any Ctrl combination is a browser shortcut.
+  const plain = new Input({ up: ['KeyW'] });
+  assert.ok(plain.takes({ code: 'KeyW' }));
+  assert.ok(!plain.takes({ code: 'KeyW', ctrlKey: true }));
 });
 
 test('releaseAll drops held keys (window blur)', () => {

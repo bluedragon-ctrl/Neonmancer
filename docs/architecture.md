@@ -58,7 +58,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `physics/collision.js` | Axis-separated AABB movement against the grid; surface below a body; box helpers (`restsOn()`, `touchesBox()`, `shoveClear()`) shared by all entities |
 | `entities/player.js` | Movement, jump, gravity, turning, pushing, integrity, invulnerability after a hit, death (hole or damage), respawn; one wizard for the whole game |
 | `entities/kinds.js` | Object kind → logic class (`OBJECT_KINDS`); the room's objects are built from it |
-| `entities/pushable.js` | Rest → slide → fall → land / plug-a-hole state machine |
+| `entities/pushable.js` | Rest → slide → fall → land / plug-a-hole state machine; destructible ones break (`hit()` → `broken`) |
 | `entities/platform.js` | Moving platform: follows its path, carries riders, waits when blocked, shoves or squeezes the wizard (D46) |
 | `entities/collapsing.js` | Collapsing block: solid → shake (the wizard stood on it) → gone → optional regrow once its cell is clear (D47) |
 | `entities/enemy.js` | Enemy body: steps cell by cell where its movement behavior leads, turns back when blocked, falls, rides platforms, pops in holes and on void; hostility, provoke, bounce state (D48) |
@@ -76,7 +76,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/exit-view.js` | Exit effect in the destination color: dashed stream into doorway tunnels, arrows gliding out of front exits |
 | `render/exit-layout.js` | Exit effect layout and timing, `EXIT_FX` tuning (pure, tested) |
 | `render/walls.js` | Back walls with doorways and dark tunnels behind them, front edges with gaps, arrow shape for front exits (pure, tested) |
-| `render/marks.js` | Face-mark line patterns for object styles (pure, tested) |
+| `render/marks.js` | Face-mark line patterns for object styles, including the data bits, whole (`bits`) or with holes for destructible objects (`bitsBroken`, `bitLayout()`); pure, tested |
+| `render/break-fx.js` | Destructible object's jolt on a hit that doesn't break it, `BREAK_FX` tuning (pure, tested) |
 | `render/hole-view.js` | Hole pits: walls fading to black, rim, short fading corner lines; outline math (tested) |
 | `render/room-view.js` | Static blocks (merged edges + instanced occluder faces), back walls, styled object views |
 | `render/entity-view.js` | Player (with the cast flare), pushable, platform, collapsing-block and enemy views (enemy models by type: `ENEMY_MODELS`; spell-hit flash and glitch), glowing drop shadows, pixel bursts (derez, collapse), platform guide lines |
@@ -119,7 +120,11 @@ physical key position, so WASD works on QWERTZ/AZERTY too). Once per tick
   pressed for one tick, so short taps are never lost.
 - Auto-repeat is ignored; window blur releases everything.
 - Bound keys have their browser default blocked (arrows/space scrolling,
-  F3 search), unless Ctrl/Alt/Meta is held, so browser shortcuts still work.
+  F3 search, Tab focus), unless Alt/Meta is held, so browser shortcuts
+  still work (`Input.takes()`). Ctrl is a game key (cast, D54): Ctrl plus
+  another bound key is play (moving while casting), Ctrl plus an unbound
+  key (Ctrl+R) goes to the browser. Ctrl+W can't be blocked and closes the
+  tab.
 - Bindings are a plain action → keys object (`core/bindings.js`), passed to
   the `Input` constructor; rebinding later just passes a different object.
 
@@ -219,17 +224,24 @@ calls `hurt()` for the first hostile contact-attack enemy he touches
 (`touchesBox()`: overlapping, or against a solid one within 0.02 on two
 axes), skipping the one he just bounced off.
 
-Zap: on the cast action `Game.castZap()` asks `Player.cast(cost,
-cooldown)`: while dead or cooling down nothing happens; without the energy
-it reports `deny`; else it spends the energy and `Game.bolts` gets a
-`Bolt` at his hands, aimed along `Player.aim()` (his `targetFacing`). Bolts
+Spells: `Player.spells` lists the ones he knows and `Player.spell` is the
+selected one; `spellNext` / `spellPrev` call `Player.selectSpell()` (a
+`spell` event when it changed). On the cast action `Game.castSpell()`
+asks `Player.cast(cost, cooldown)` with the selected spell's tuning: while
+dead or cooling down nothing happens; without the energy it reports
+`deny`; else it spends the energy and runs the spell's effect
+(`SPELL_EFFECTS` in game.js). Zap's puts a `Bolt` at his hands in
+`Game.bolts`, aimed along `Player.aim()` (his `targetFacing`). Bolts
 update after the enemies (`updateBolts()`), in sub-steps of at most 0.1,
 and stop at the first live enemy, solid cell, solid object or room side;
 a stopped bolt is reported (`zap`, with the bolt, for the sparks) and
 dropped. The enemy it stopped at takes `Enemy.hit(damage, 'zap')`: it is
 provoked and loses integrity, `hit` or, at 0, `pop` (then
 `refreshBodies()`), before `touchEnemies()` runs, so a popped enemy can't
-hurt him that tick. Bolts belong to the room: `enterRoom()` clears them.
+hurt him that tick. A room object it stopped at takes `hit(damage)` if it
+has one: a pushable with `integrity` reports `hit` or, at 0, `break` (state
+`broken`, `solid` false, so `refreshBodies()` drops it and what stood on
+it falls next tick); indestructible ones return null. Bolts belong to the room: `enterRoom()` clears them.
 Energy recharges in `Player.update()` and lives on the `Player`, so it
 carries over between rooms.
 
@@ -239,8 +251,9 @@ carries over between rooms.
 objects (typedef in `game.js`): `{ type, ...details }`, e.g.
 `{ type: 'push', object }`, `{ type: 'exit', exit }`, `{ type: 'hurt', amount }`.
 Types so far: `jump`, `land`, `die`, `respawn`, `push`, `plug`, `shake`,
-`collapse`, `regrow`, `pop`, `bounce`, `hurt`, `cast`, `deny`, `zap`, `hit`,
-`exit`, `room`; enemy events (and a hurt by an enemy) carry the `enemy`,
+`collapse`, `regrow`, `pop`, `bounce`, `hurt`, `cast`, `deny`, `spell`, `zap`, `hit`,
+`break`, `exit`, `room`; enemy events (and a hurt by an enemy) carry the
+`enemy`, object events (`hit` and `break` of a crate too) the `object`,
 `zap` the stopped `bolt`. `main.js` passes `zap` to `RoomScene.sparks()`
 and `deny` to the HUD's energy bar. Game code records them with `emit()`; events raised
 outside a tick (`hurt()` from the debug key) come out with the next tick's.
@@ -316,7 +329,8 @@ any module: say(key, values) ──► queue (core/messages.js)   e.g. game.js o
             announce(key, values, { sub, subValues, color }) ──► queue   e.g. enterRoom() for a new room
        input.pressed('fullscreen') ──► toggleFullscreen()   within the key press's user activation
 frame: hud.setIntegrity(player.integrity, player.maxIntegrity)   cells rebuilt only on change
-       hud.setEnergy(player.energy, player.maxEnergy, zap cost)   segments written only on change
+       hud.setEnergy(player.energy, player.maxEnergy, selected spell's cost)   segments written only on change
+       hud.setSpell(player.spell, player.spells.length)   tag under the energy bar
        hud.setHintWanted(wantsFullscreenHint(stage height, DPR, fullscreen?))
        hud.update(dt)   takeMessages() → Terminal.push(); takeAnnouncements() → last one shown;
                         Terminal.update / lines(), bannerState(t), scrambleText()

@@ -11,7 +11,7 @@
 import { BoxGeometry, BufferGeometry, Color, DoubleSide, Float32BufferAttribute, Group, InstancedMesh, Matrix4, Mesh } from 'three';
 import { createActiveBlockView } from './block-fx.js';
 import { blockEdges } from './edges.js';
-import { markSegments } from './marks.js';
+import { BITS, markSegments } from './marks.js';
 import { doorwayTunnels, wallLayout } from './walls.js';
 import {
   PALETTE,
@@ -126,10 +126,12 @@ const EDGE_WIDTH = { collapsing: 1.5 };
 /**
  * View of one typed object: a single cell drawn in the object's style
  * (edges, face mark, faces), so types differ by more than color. Kept
- * separate from the static blocks because objects move (D40).
- * @param {{ at: number[], kind?: string, color: string, edges: string, mark: string, faces: string, tint: number }} object
+ * separate from the static blocks because objects move (D40). A
+ * destructible object (with `integrity`) shows its data bits with some
+ * missing instead of its mark.
+ * @param {{ at: number[], kind?: string, color: string, edges: string, mark: string, faces: string, tint: number, integrity?: number }} object
  */
-export function createObjectView({ at, kind, color, edges, mark, faces, tint }) {
+export function createObjectView({ at, kind, color, edges, mark, faces, tint, integrity }) {
   const group = new Group();
 
   const materials = faces === 'tinted' ? tintedFaceMaterials(color, tint) : faceMaterial();
@@ -142,8 +144,14 @@ export function createObjectView({ at, kind, color, edges, mark, faces, tint }) 
   outline.renderOrder = 2;
   group.add(outline);
 
-  if (mark !== 'none') {
-    const marks = neonLines(markSegments(mark, at), lineMaterial({ color, width: 1.5, brightness: 1 }));
+  // A destructible object shows its data bits with some missing, whatever its mark.
+  const drawn = integrity !== undefined ? 'bitsBroken' : mark;
+  if (drawn !== 'none') {
+    const bits = drawn === 'bits' || drawn === 'bitsBroken';
+    const style = bits
+      ? { color: new Color(color).lerp(new Color(0xffffff), BITS.whiten), width: BITS.width, brightness: BITS.brightness }
+      : { color, width: 1.5, brightness: 1 };
+    const marks = neonLines(markSegments(drawn, at), lineMaterial(style));
     marks.renderOrder = 2;
     group.add(marks);
   }

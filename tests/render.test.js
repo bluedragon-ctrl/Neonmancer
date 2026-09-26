@@ -114,7 +114,7 @@ test('face marks: patterns on all six faces', () => {
   assert.equal(markSegments('inset').length, 6 * 4);
   assert.equal(markSegments('cross').length, 6 * 2);
   assert.equal(markSegments('brackets').length, 6 * 8);
-  assert.deepEqual(MARKS, ['none', 'inset', 'cross', 'brackets']);
+  assert.deepEqual(MARKS, ['none', 'inset', 'cross', 'brackets', 'bits']);
 });
 
 test('face marks lie on the faces of the cube at the given cell', () => {

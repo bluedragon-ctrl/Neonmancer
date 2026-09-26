@@ -262,15 +262,20 @@ comes from data: its type in `defs.json` `enemies`, and the room's
   it carries over between rooms and is full again after a respawn. The
   HUD shows it under integrity as one lime segment per Zap (5), each
   filling as it recharges; a full segment glows.
-- **Zap** (the cast key, J): costs 2 energy, then 0.25 s before the next
+- **Casting:** Ctrl (left or right) or E casts the selected spell. Its name
+  shows in a lime tag under the energy bar (ZAP); Tab switches to the next
+  spell he knows (Q back), and the tag flashes. With only Zap known, Tab
+  does nothing and the tag shows no key hint (D54).
+- **Zap** (Ctrl or E): costs 2 energy, then 0.25 s before the next
   cast. The bolt flies at 12 units per second from his hands (0.48 above
   his feet, 0.34 in front) the way he aims: the direction he last walked
   or turned to, so diagonals too. It is a 0.3 box, low enough to hit a bug
   on the same level; standing a block higher he zaps over it.
 - It stops at the first thing in its way: a live enemy (which takes the
   hit), a block of any type, a room object (crate, platform, standing
-  collapsing block) or the room's side, exits included. Cast into a wall
-  right in front of him, it stops at once.
+  collapsing block; a destructible crate takes the hit) or the room's
+  side, exits included. Cast into a wall right in front of him, it stops
+  at once.
 - Without enough energy the cast fails: the energy bar flashes magenta
   and jolts.
 - **Look:** a flare at his hands; a white-hot core in a cyan halo
@@ -299,6 +304,28 @@ comes from data: its type in `defs.json` `enemies`, and the room's
   steps away.
 - Tuning values: `PUSHABLE` in `src/entities/pushable.js`, `pushDelay` in
   `PLAYER`.
+
+## Destructible crates
+
+- A pushable type with `integrity` (1–15) is destructible: each Zap takes
+  1, and at 0 it breaks into pixels (like a collapsing block) and is gone
+  until the room resets; whatever stood on it falls. `crate_cross` has
+  integrity 1: one Zap. A hit that doesn't break it jolts it.
+- It always shows it, standing still: the plain `crate` carries a whole
+  4×4 grid of small pale squares (its data bits, the `bits` mark; both
+  crates have the same tinted faces)
+  on every face; a destructible object shows the same grid with 6 of the
+  16 bits missing, different on every face (in place of whatever its
+  `mark` is), so it reads as a data block with holes. No animation; only a
+  hit jolts it. Plain crates shrug a Zap off (sparks only).
+- Room design: a destructible crate is cover that can be shot away, or a
+  wall of crates to blast through; don't make one the only way up, since
+  the wizard can break it by accident (the room comes back on re-entry,
+  but it is annoying).
+- Tuning: `integrity` on the type (overridable per object); the bits are
+  `BITS` in `src/render/marks.js`, the jolt `BREAK_FX` in
+  `src/render/break-fx.js`; review in the asset showcase
+  (`?asset=crate,crate_cross,zap-break`).
 
 ## Holes
 
@@ -516,7 +543,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 | File | Contents |
 |---|---|
 | `data/rooms/<id>.json` | One room (id = file name) |
-| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, inset mark, dark faces; box variants `crate_plain`, `crate_cross`, `crate_dashed`; `platform`: moving platform, cyan; `collapsing`: collapsing block, magenta); `enemies`: enemy types (`bug`, see Enemies); `spells`: spell tuning (`zap`, see Zap and energy); `blocks`: look of the `hazard` and `void` block types and the hazard's `damage` |
+| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; `collapsing`: collapsing block, magenta); `enemies`: enemy types (`bug`, see Enemies); `spells`: spell tuning (`zap`, see Zap and energy); `blocks`: look of the `hazard` and `void` block types and the hazard's `damage` |
 | `data/biomes.json` | Biome name and room color (`home_lattice`: amber) |
 | `data/world.json` | Start room and exit connections |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |

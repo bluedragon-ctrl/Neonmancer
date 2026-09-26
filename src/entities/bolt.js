@@ -1,8 +1,9 @@
 /**
  * A Zap bolt: a small box flying level from the wizard's hands the way he
- * aims, until something stops it: the first live enemy it touches (which
- * takes the hit, see Game.update()), a block, a room object (crate,
- * platform, standing collapsing block) or the room's side. It never goes
+ * aims, until something stops it: the first live enemy it touches, a
+ * block, a room object (crate, platform, standing collapsing block) or the
+ * room's side. The enemy or object it stops at takes the hit
+ * (Game.updateBolts(); only destructible objects mind). It never goes
  * through a thing: it moves in short sub-steps. Pure logic, one call to
  * update() per fixed tick.
  */
@@ -38,7 +39,7 @@ export class Bolt {
     /** Ticks since it was cast, and units flown. */
     this.age = 0;
     this.traveled = 0;
-    /** Set once it stopped: the enemy it hit, or null for anything else. */
+    /** Set once it stopped: the enemy or room object it hit, or null for anything else. */
     this.stopped = false;
     this.target = null;
   }
@@ -76,20 +77,18 @@ export class Bolt {
   }
 
   /**
-   * Does something stop it where it is now? An enemy first (it takes the
-   * hit), then a block, an object or the room's side (an exit included).
-   * Marks it stopped.
+   * Does something stop it where it is now? An enemy first, then a room
+   * object (either is its `target`), a block or the room's side (an exit
+   * included). Marks it stopped.
    */
   blocked({ grid, liveEnemies, objects }) {
     const box = this.box();
-    this.target = liveEnemies.find((enemy) => overlapsBox(box, enemy.box())) ?? null;
+    const hits = (body) => overlapsBox(box, body.box());
+    // Every live enemy counts (solid or not); objects only while there (not collapsed or broken).
+    this.target = liveEnemies.find(hits) ?? objects.find((object) => object.solid !== false && hits(object)) ?? null;
     const [x, , z] = this.pos;
     const outside = x < 0 || z < 0 || x > grid.w || z > grid.d;
-    this.stopped =
-      this.target !== null ||
-      outside ||
-      overlapsSolid(box, grid) ||
-      objects.some((object) => object.solid !== false && overlapsBox(box, object.box()));
+    this.stopped = this.target !== null || outside || overlapsSolid(box, grid);
     return this.stopped;
   }
 }

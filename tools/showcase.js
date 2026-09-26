@@ -33,6 +33,7 @@ import { Renderer } from '../src/render/renderer.js';
 import { ASPECT } from '../src/render/viewport.js';
 import { createActiveBlockView, flareHazard } from '../src/render/block-fx.js';
 import { createObjectView, createRoomView } from '../src/render/room-view.js';
+import { COLLAPSE_FX, COLLAPSE_PIXELS, collapsePixels } from '../src/render/collapse-fx.js';
 import { ExitView } from '../src/render/exit-view.js';
 import { HOLO_TIME } from '../src/render/holo.js';
 import { createWizard } from '../src/render/wizard.js';
@@ -53,7 +54,8 @@ const SPIN = 0.6;
 const ALL_ASSETS = [
   { label: 'wizard', build: () => createWizard(), shadow: PALETTE.cyan },
   { label: 'wizard-hit', build: buildWizardHit, shadow: PALETTE.cyan },
-  // Every object type from defs.json, in its own style.
+  // Every object type from defs.json, in its own style (destructible ones
+  // with data bits missing).
   ...Object.entries(defs.objects).map(([type, props]) => ({
     label: type,
     build: () => {
@@ -81,7 +83,40 @@ const ALL_ASSETS = [
   { label: 'zap-bolt', group: 'zap', build: buildZapBolt },
   { label: 'zap-bug', group: 'zap', span: 6, build: buildZapBug },
   { label: 'zap-crate', group: 'zap', span: 5, build: buildZapCrate },
+  { label: 'zap-break', group: 'zap', span: 5, build: buildZapBreak },
 ];
+
+/**
+ * The wizard zapping a destructible crate (crate_cross): it breaks into
+ * pixels on the hit and comes back for the next round.
+ */
+function buildZapBreak() {
+  const asset = new Group();
+  const zapper = new Zapper(asset, -1.8, 0.8);
+  const props = defs.objects.crate_cross;
+  const crate = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...props, at: [0, 0, 0] });
+  crate.position.set(0.8, 0, -0.5);
+  const pixels = createPixelBurst(COLLAPSE_PIXELS, COLLAPSE_FX.pixelSize, [props.color, 0xffffff]);
+  asset.add(crate, pixels);
+
+  const loop = 180;
+  let carry = 0;
+  let tick = 0;
+  let broke = Infinity;
+  asset.userData.update = (dt) => {
+    for (carry += dt * 60; carry >= 1; carry--) {
+      tick = (tick + 1) % loop;
+      if (tick === 0) broke = Infinity;
+      if (tick === 40) zapper.cast();
+      if (zapper.tick()) broke = 0;
+      broke++;
+    }
+    zapper.sync();
+    crate.visible = broke === Infinity;
+    placePixels(pixels, collapsePixels(broke), [0.8, 0, -0.5]);
+  };
+  return asset;
+}
 
 /** A Zap bolt flying back and forth through the turntable's middle. */
 function buildZapBolt() {

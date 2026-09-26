@@ -39,6 +39,19 @@ export class Input {
     return this.keyActions.has(code);
   }
 
+  /**
+   * Does the game take this key event, or leave it to the browser? Unbound
+   * keys and shortcuts (with Alt or Meta, or with Ctrl) go to the browser,
+   * except that when Ctrl is a game key (cast), Ctrl plus another game key
+   * is play: the wizard moves or jumps while casting. Browser shortcuts on
+   * other keys (Ctrl+R) still work.
+   * @param {{ code: string, ctrlKey?: boolean, metaKey?: boolean, altKey?: boolean }} event
+   */
+  takes({ code, ctrlKey = false, metaKey = false, altKey = false }) {
+    if (!this.isBound(code) || metaKey || altKey) return false;
+    return !ctrlKey || this.isBound('ControlLeft') || this.isBound('ControlRight');
+  }
+
   /** Record a key going down (auto-repeat is ignored). @param {string} code */
   keyDown(code) {
     if (this.held.has(code)) return;
@@ -100,9 +113,11 @@ export class Input {
    */
   attach(target) {
     const onKeyDown = (e) => {
-      // Leave browser shortcuts such as Ctrl+R alone.
-      if (e.ctrlKey || e.metaKey || e.altKey || !this.isBound(e.code)) return;
-      e.preventDefault(); // stop arrows/space scrolling the page, F3 opening search
+      // Leave browser shortcuts such as Ctrl+R alone (see takes()).
+      if (!this.takes(e)) return;
+      // Stop arrows/space scrolling the page, F3 opening search, Tab moving
+      // focus, Ctrl+D bookmarking. (Ctrl+W can't be stopped: it closes the tab.)
+      e.preventDefault();
       if (!e.repeat) this.keyDown(e.code);
     };
     const onKeyUp = (e) => this.keyUp(e.code);

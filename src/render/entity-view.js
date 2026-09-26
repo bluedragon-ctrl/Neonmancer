@@ -19,6 +19,7 @@ import {
 } from 'three';
 import { PLAYER } from '../entities/player.js';
 import { BUG_MODEL, eyeMood } from './bug.js';
+import { hitJolt } from './break-fx.js';
 import { COLLAPSE_FX, COLLAPSE_PIXELS, collapseLook, collapsePixels } from './collapse-fx.js';
 import { PALETTE, lineMaterial, neonLines, shared } from './neon.js';
 import { fadingDrops } from './hole-view.js';
@@ -222,12 +223,28 @@ export class PushableView {
     /** Made once the object plugs a hole (most never do): its vertical edges fade into the pit. */
     this.plugDrops = null;
     this.group.add(this.block, this.shadow);
+    // Destructible: it breaks into pixels like a collapsing block.
+    if (pushable.integrity !== null) {
+      this.pixels = createPixelBurst(COLLAPSE_PIXELS, COLLAPSE_FX.pixelSize, [pushable.object.color, 0xffffff]);
+      this.group.add(this.pixels);
+    }
   }
 
   /** @param {number} alpha interpolation factor 0..1 between the last two ticks */
   sync(alpha) {
     const { pushable } = this;
     const pos = lerpPosition(pushable.prev, pushable.pos, alpha);
+    if (this.pixels) {
+      const broken = pushable.state === 'broken';
+      this.block.visible = !broken;
+      placePixels(this.pixels, broken ? collapsePixels(pushable.timer + alpha) : [], pushable.pos);
+      if (broken) {
+        this.shadow.visible = false;
+        return;
+      }
+      const jolt = hitJolt(pushable.hitTicks === null ? null : pushable.hitTicks + alpha);
+      for (let i = 0; i < 3; i++) pos[i] += jolt[i];
+    }
     this.block.position.set(pos[0], pos[1], pos[2]);
     if (pushable.state === 'plugged' && !this.plugDrops) {
       const corners = [[0, 0], [1, 0], [0, 1], [1, 1]];

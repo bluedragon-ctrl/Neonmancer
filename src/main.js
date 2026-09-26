@@ -90,7 +90,8 @@ function boot() {
     debug.sync(game, alpha);
     renderer.setFade(game.fadeLevel(alpha));
     hud.setIntegrity(game.player.integrity, game.player.maxIntegrity);
-    hud.setEnergy(game.player.energy, game.player.maxEnergy, content.spells.zap.cost);
+    hud.setEnergy(game.player.energy, game.player.maxEnergy, content.spells[game.player.spell].cost);
+    hud.setSpell(game.player.spell, game.player.spells.length);
     hud.setMovementMode(game.movementMode);
     hud.setHintWanted(wantsFullscreenHint(renderer.stageHeight, window.devicePixelRatio, !!document.fullscreenElement));
     hud.update(dt);

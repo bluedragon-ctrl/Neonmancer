@@ -125,7 +125,7 @@
           "description": "Outline style."
         },
         "mark": {
-          "enum": ["none", "inset", "cross", "brackets"],
+          "enum": ["none", "inset", "cross", "brackets", "bits"],
           "default": "none",
           "description": "Pattern drawn on every face."
         },
@@ -140,6 +140,12 @@
           "maximum": 1,
           "default": 0.1,
           "description": "With tinted faces: share of the object color in the top face; the sides get less."
+        },
+        "integrity": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 15,
+          "description": "Pushable objects only: makes it destructible, taking this much spell damage (Zap: 1 per hit) before it breaks into pixels. It is drawn with its data bits with some missing (a grid of small squares, holes in it) instead of its mark, so it reads as breakable next to a crate with the whole grid. Without it the object is indestructible."
         }
       }
     }

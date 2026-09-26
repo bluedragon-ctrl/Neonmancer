@@ -97,6 +97,10 @@ export class Player {
     this.cooldown = 0;
     /** Ticks since his last cast (for the flare at his hands), or null. */
     this.castTicks = null;
+    /** Spells he knows, in switching order (Zap from the start; data disks add more in Phase 3). */
+    this.spells = ['zap'];
+    /** The selected spell, cast by the cast action. */
+    this.spell = this.spells[0];
     this.enter(pos, resetPoint);
   }
 
@@ -181,6 +185,19 @@ export class Player {
     this.cooldown = cooldownTicks;
     this.castTicks = 0;
     return 'cast';
+  }
+
+  /**
+   * Select the next (1) or previous (−1) spell he knows, wrapping round.
+   * @param {1|-1} step
+   * @returns {boolean} whether the selection changed (not with one spell)
+   */
+  selectSpell(step) {
+    const { spells } = this;
+    const next = spells[(spells.indexOf(this.spell) + step + spells.length) % spells.length];
+    if (next === this.spell) return false;
+    this.spell = next;
+    return true;
   }
 
   /** The way he aims: [dx, dz] of the direction he last walked (or turned) to, normalized. */

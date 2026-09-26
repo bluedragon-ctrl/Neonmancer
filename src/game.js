@@ -14,6 +14,15 @@ import { arrival, exitAt } from './world/exits.js';
 import { CELL, Grid } from './world/grid.js';
 import { buildRoom } from './world/room.js';
 
+/**
+ * What each spell does once cast (Player.cast() spent the energy), by
+ * spell id; `spell` is its tuning from defs.json.
+ */
+const SPELL_EFFECTS = {
+  /** A bolt from his hands the way he aims (entities/bolt.js). */
+  zap: (game, spell) => game.bolts.push(new Bolt(game.player.pos, game.player.aim(), spell)),
+};
+
 /** Terminal message for each way to die (Player.deathCause). */
 const DEATH_MESSAGES = { hole: 'msg.die', void: 'msg.void', damage: 'msg.derez' };
 
@@ -35,9 +44,11 @@ export const TRANSITION = {
  * Something that happened, for views, the HUD and (later) sound. Returned
  * by Game.update() for the tick it happened in.
  * @typedef {object} GameEvent
- * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'zap'|'hit'|'exit'|'room'} type
+ * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'exit'|'room'} type
+ * @property {string} [spell] the spell cast, failed or selected (cast, deny, spell)
  * @property {object} [object] the room object it happened to (push, plug,
- *   land of an object; shake, collapse and regrow of a collapsing block)
+ *   land of an object; shake, collapse and regrow of a collapsing block;
+ *   hit by a spell, break of a destructible one)
  * @property {object} [enemy] the enemy it happened to (pop, land of an
  *   enemy, bounce off it, hit by a spell) or that hurt the wizard (hurt)
  * @property {Bolt} [bolt] the bolt that stopped (zap), where it is now
@@ -156,31 +167,34 @@ export class Game {
   }
 
   /**
-   * The wizard casts Zap (the cast action): a bolt from his hands the way he
-   * aims, if he has the energy ('cast'); without it the cast fails ('deny').
-   * Nothing while he cools down from the last cast.
+   * The wizard casts his selected spell (the cast action), if he has the
+   * energy ('cast'); without it the cast fails ('deny'). Nothing while he
+   * cools down from the last cast.
    */
-  castZap() {
-    const zap = this.content.spells.zap;
-    const { player } = this;
-    const result = player.cast(zap.cost, Math.round(zap.cooldown / DT));
-    if (result === 'cast') this.bolts.push(new Bolt(player.pos, player.aim(), zap));
-    if (result) this.emit(result);
+  castSpell() {
+    const id = this.player.spell;
+    const spell = this.content.spells[id];
+    const result = this.player.cast(spell.cost, Math.round(spell.cooldown / DT));
+    if (result === 'cast') SPELL_EFFECTS[id](this, spell);
+    if (result) this.emit(result, { spell: id });
   }
 
   /**
    * Bolts fly on. One that stops is reported ('zap', for its sparks) and
-   * gone; if it stopped at an enemy, the enemy takes its damage ('hit', or
-   * 'pop' when that was its last integrity).
+   * gone; if it stopped at an enemy or a room object, that takes its damage:
+   * an enemy 'hit' or, with its last integrity, 'pop'; a destructible
+   * object 'hit' or 'break' (others shrug it off).
    */
   updateBolts() {
     for (const bolt of this.bolts) {
       if (!bolt.update(this)) continue;
       this.emit('zap', { bolt });
-      const event = bolt.target?.hit(bolt.damage, 'zap');
+      const { target } = bolt;
+      const event = target?.hit?.(bolt.damage, 'zap');
       if (!event) continue;
-      this.emit(event, { enemy: bolt.target });
-      if (event === 'pop') this.refreshBodies();
+      this.emit(event, target instanceof Enemy ? { enemy: target } : { object: target });
+      // Whatever stood on a broken crate falls from the next tick.
+      if (event === 'pop' || event === 'break') this.refreshBodies();
     }
     if (this.bolts.some((bolt) => bolt.stopped)) this.bolts = this.bolts.filter((bolt) => !bolt.stopped);
   }
@@ -265,7 +279,11 @@ export class Game {
     const hazard = player.dead ? null : touchedCell(player.box(), this.grid, CELL.hazard);
     if (hazard) this.hurt(this.room.blockTypes.hazard.damage, { cell: hazard });
 
-    if (!player.dead && input.pressed('cast')) this.castZap();
+    // Switch spells (Tab), then cast the selected one.
+    for (const [action, step] of [['spellNext', 1], ['spellPrev', -1]]) {
+      if (input.pressed(action) && player.selectSpell(step)) this.emit('spell', { spell: player.spell });
+    }
+    if (!player.dead && input.pressed('cast')) this.castSpell();
 
     const intent = player.pushIntent;
     if (intent && intent.body.push(intent.dir, this)) this.emit('push', { object: intent.body });
