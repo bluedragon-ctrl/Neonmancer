@@ -7,7 +7,7 @@ import { Pushable } from '../src/entities/pushable.js';
 import { Game, TRANSITION } from '../src/game.js';
 import { mergeUnitSegments } from '../src/render/edges.js';
 import { TUNNEL_DEPTH, doorwayTunnels, frontChevrons, wallLayout } from '../src/render/walls.js';
-import { EXIT_FX, exitStreamLayout, glideState } from '../src/render/exit-view.js';
+import { EXIT_FX, exitStreamLayout, glideState } from '../src/render/exit-layout.js';
 import { arrival, exitAt } from '../src/world/exits.js';
 import { Grid } from '../src/world/grid.js';
 
@@ -81,15 +81,14 @@ test('exitAt: only once the feet center is past the side, within the opening', (
 test('arrival keeps the offset along the edge and the height above the exit floor', () => {
   const from = withExitDefaults({ id: 'e', side: '+x', at: 3 });
   const to = withExitDefaults({ id: 'w', side: '-x', at: 1, y: 1 });
-  const { pos, spawn } = arrival(from, [8.1, 0.4, 4.2], to, [12, 4, 6]);
+  const pos = arrival(from, [8.1, 0.4, 4.2], to, [12, 4, 6]);
   assert.deepEqual(pos.map((v) => +v.toFixed(6)), [0.5, 1.4, 2.2]);
-  assert.deepEqual(spawn.map((v) => +v.toFixed(6)), [0.5, 1, 2.2]);
   // Near the edge of the opening the whole body stays inside it.
-  assert.equal(arrival(from, [8.1, 0, 3.05], to, [12, 4, 6]).pos[2], 1.3);
+  assert.equal(arrival(from, [8.1, 0, 3.05], to, [12, 4, 6])[2], 1.3);
   // Leaving through a -z side arrives at the +z side of the next room.
   const north = withExitDefaults({ id: 'n', side: '-z', at: 2 });
   const south = withExitDefaults({ id: 's', side: '+z', at: 5 });
-  assert.deepEqual(arrival(north, [3, 0, -0.1], south, [10, 4, 7]).pos, [6, 0, 6.5]);
+  assert.deepEqual(arrival(north, [3, 0, -0.1], south, [10, 4, 7]), [6, 0, 6.5]);
 });
 
 test('loadGameData links connected exits both ways', () => {

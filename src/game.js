@@ -44,7 +44,8 @@ export class Game {
    * wizard at `pos`; he respawns at the room's own `reset` point instead
    * (D39), wherever he entered.
    * @param {string} id room id
-   * @param {number[]} [pos] feet center to appear at; the room's own spawn by default
+   * @param {number[]} [pos] feet center to appear at (e.g. arriving through an
+   *   exit, mid-jump); the room's own spawn by default
    */
   enterRoom(id, pos) {
     // Announce the room when it is a different one (not on a respawn).
@@ -71,12 +72,9 @@ export class Game {
     const { pos, vy, facing } = this.player;
     const target = this.content.rooms.get(link.room);
     const to = withExitDefaults(target.exits.find((e) => e.id === link.exit));
-    const arrived = arrival(exit, pos, to, target.size);
 
-    this.enterRoom(link.room, arrived.spawn);
+    this.enterRoom(link.room, arrival(exit, pos, to, target.size));
     const player = this.player;
-    player.pos = arrived.pos;
-    player.prev = [...arrived.pos];
     player.vy = vy;
     player.facing = player.prevFacing = player.targetFacing = facing;
   }
@@ -126,7 +124,11 @@ export class Game {
     if (this.transition && ++this.transition.tick >= TRANSITION.inTicks) this.transition = null;
 
     const events = [];
-    const playerEvent = this.player.update(input, this.grid, this.pushables, this.invincible, this.movementMode);
+    const playerEvent = this.player.update(input, this.grid, {
+      bodies: this.pushables,
+      invincible: this.invincible,
+      movementMode: this.movementMode,
+    });
 
     // Falling into a hole drains all integrity. Respawning restores it and
     // resets the room, so no puzzle stays broken.

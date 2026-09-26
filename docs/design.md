@@ -115,7 +115,7 @@ drifting up and a thin neon outline. Proportions are `WIZARD` in
   doorway, dashes flow from the doorway into the dark tunnel along its
   corner edges and two lanes on its floor, fading to black. On a front exit,
   small arrows, one per tile of exit width and side by side, glide out to
-  the edge within the first row of tiles, fading in and out in two waves. Tuning values are `EXIT_FX` in `src/render/exit-view.js`; review
+  the edge within the first row of tiles, fading in and out in two waves. Tuning values are `EXIT_FX` in `src/render/exit-layout.js`; review
   them in the asset showcase (`/tools/showcase.html?asset=exits`).
 - An exit leads out once the wizard's feet center passes the side. The
   screen fades to black (0.2 s) while he walks on out and the world stands
@@ -169,7 +169,8 @@ F3 toggles debug mode; off by default. While it's on:
   wizard and every pushable, updated at the interpolated render position
   (`src/debug/overlay.js`).
 - The dev readout (top right, under the brand): room id, tick rate, frame
-  rate, render buffer size, held actions, the wizard's position and whether
+  rate, render buffer size, GPU resources (shaders, geometries, textures;
+  steady counts show rooms free what they use), held actions, the wizard's position and whether
   he's grounded, and whether invincibility is on.
 - `]` / `[` jump straight to the next/previous room in load order, skipping
   the exit transition (`Game.debugJumpRoom()`); ignored mid-transition.

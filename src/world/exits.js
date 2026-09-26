@@ -36,9 +36,8 @@ export function exitAt({ size, exits }, pos) {
  * @param {number[]} pos feet center when leaving
  * @param {object} to exit arrived at (defaults applied)
  * @param {number[]} size size of the room arrived in
- * @returns {{ pos: number[], spawn: number[] }} arrival position, and the
- *   same point snapped to the exit floor (passed to Game.enterRoom() as
- *   where he appears; not the death-respawn point, see `reset` in room data)
+ * @returns {number[]} arrival position (feet center); not the death-respawn
+ *   point, see `reset` in room data
  */
 export function arrival(from, pos, to, size) {
   const { cross, along } = sideAxes(to.side);
@@ -48,7 +47,5 @@ export function arrival(from, pos, to, size) {
   arrived[along] = Math.min(Math.max(to.at + offset, to.at + half), to.at + to.width - half);
   arrived[cross] = isBackSide(to.side) ? ARRIVAL_DEPTH : size[cross] - ARRIVAL_DEPTH;
   arrived[1] = to.y + Math.max(pos[1] - from.y, 0);
-  const spawn = [...arrived];
-  spawn[1] = to.y;
-  return { pos: arrived, spawn };
+  return arrived;
 }

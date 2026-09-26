@@ -16,6 +16,7 @@ import {
   OBJECT_STYLE_DEFAULTS,
   OPPOSITE_SIDE,
   blockCells,
+  cellKey,
   exitCells,
   holeTiles,
   sideLength,
@@ -86,158 +87,188 @@ function validateRoom(file, room, { objectTypes, biomes }, report) {
   const expectedId = roomIdFromFile(file);
   if (room.id !== expectedId) report(file, 'id', `"${room.id}" must match the file name ("${expectedId}")`);
 
-  const [w, h, d] = room.size;
+  const [w, , d] = room.size;
   if (w + d > MAX_ROOM_FOOTPRINT) {
     report(file, 'size', `width + depth is ${w + d}, at most ${MAX_ROOM_FOOTPRINT} fits the camera`);
   }
   if (!biomes[room.biome]) report(file, 'biome', `unknown biome "${room.biome}"`);
 
-  const inside = ([x, y, z]) => x < w && y < h && z < d;
-
-  // Exits.
-  const exitIds = new Set();
-  (room.exits ?? []).forEach((raw, i) => {
-    const path = `exits[${i}]`;
-    const exit = withExitDefaults(raw);
-    if (exitIds.has(exit.id)) report(file, path, `duplicate exit id "${exit.id}"`);
-    exitIds.add(exit.id);
-    const length = sideLength(exit.side, room.size);
-    if (exit.at + exit.width > length) {
-      report(file, path, `cells ${exit.at}–${exit.at + exit.width - 1} run past the side (length ${length})`);
-    }
-    if (exit.y + exit.height > h) report(file, path, `top (y ${exit.y + exit.height}) is above the room height ${h}`);
-  });
-
-  // Blocks and objects: inside the room, no two in the same cell.
-  const filled = new Map(); // "x,y,z" → what fills it
-  const fill = (cell, path) => {
-    if (!inside(cell)) {
-      report(file, path, `cell ${cellText(cell)} is outside size ${cellText(room.size)}`);
-      return false;
-    }
-    const key = cell.join(',');
-    if (filled.has(key)) {
-      report(file, path, `cell ${cellText(cell)} is already filled by ${filled.get(key)}`);
-      return false;
-    }
-    filled.set(key, path);
-    return true;
+  /** What the room checks share: errors go to this file; what fills each cell and tile. */
+  const checks = {
+    room,
+    report: (path, message) => report(file, path, message),
+    /** "x,y,z" → path of the block or object filling it */
+    filled: new Map(),
+    /** "x,z" → path of the hole entry */
+    holes: new Map(),
   };
+  const exits = (room.exits ?? []).map(withExitDefaults);
+  const exitFits = validateExitBounds(checks, exits);
+  validateBlocks(checks);
+  validateObjects(checks, objectTypes);
+  validateHoles(checks);
+  validateExitPassage(checks, exits, exitFits);
 
-  (room.blocks ?? []).forEach((block, i) => {
-    const path = `blocks[${i}]`;
-    if (block.to && block.to.some((v, axis) => v < block.at[axis])) {
-      report(file, path, `"to" ${cellText(block.to)} must not be below "at" ${cellText(block.at)} on any axis`);
-      return;
-    }
-    // Report only the first bad cell of a block, not one per cell.
-    for (const cell of blockCells(block)) if (!fill(cell, path)) break;
+  // Spawn and reset (D39). reset defaults to spawn (buildRoom does the
+  // same), so it only needs its own check when a room gives it explicitly.
+  validatePlayerPoint(checks, 'spawn', room.spawn);
+  if (room.reset) validatePlayerPoint(checks, 'reset', room.reset);
+}
+
+/**
+ * Exit ids are unique and every exit fits its side and the room height.
+ * @returns {boolean[]} per exit, whether it fits
+ */
+function validateExitBounds({ room, report }, exits) {
+  const ids = new Set();
+  const height = room.size[1];
+  return exits.map((exit, i) => {
+    const path = `exits[${i}]`;
+    if (ids.has(exit.id)) report(path, `duplicate exit id "${exit.id}"`);
+    ids.add(exit.id);
+    const length = sideLength(exit.side, room.size);
+    const fitsSide = exit.at + exit.width <= length;
+    const fitsHeight = exit.y + exit.height <= height;
+    if (!fitsSide) report(path, `cells ${exit.at}–${exit.at + exit.width - 1} run past the side (length ${length})`);
+    if (!fitsHeight) report(path, `top (y ${exit.y + exit.height}) is above the room height ${height}`);
+    return fitsSide && fitsHeight;
   });
+}
 
-  const objectIds = new Set();
-  (room.objects ?? []).forEach((object, i) => {
+/**
+ * Fill a cell for `path`: it must be inside the room and not filled yet.
+ * @returns {boolean} whether it was free
+ */
+function fillCell({ room, report, filled }, cell, path) {
+  const [w, h, d] = room.size;
+  const [x, y, z] = cell;
+  if (!(x < w && y < h && z < d)) {
+    report(path, `cell ${cellText(cell)} is outside size ${cellText(room.size)}`);
+    return false;
+  }
+  const key = cellKey(cell);
+  if (filled.has(key)) {
+    report(path, `cell ${cellText(cell)} is already filled by ${filled.get(key)}`);
+    return false;
+  }
+  filled.set(key, path);
+  return true;
+}
+
+/**
+ * A block or hole entry's "to" must not be below its "at" on any axis.
+ * @returns {boolean} whether the range is fine
+ */
+function validateRange(report, path, { at, to }) {
+  if (!to || to.every((v, axis) => v >= at[axis])) return true;
+  report(path, `"to" ${cellText(to)} must not be below "at" ${cellText(at)} on any axis`);
+  return false;
+}
+
+/** Blocks: inside the room, no two in the same cell. */
+function validateBlocks(checks) {
+  (checks.room.blocks ?? []).forEach((block, i) => {
+    const path = `blocks[${i}]`;
+    if (!validateRange(checks.report, path, block)) return;
+    // Report only the first bad cell of a block, not one per cell.
+    for (const cell of blockCells(block)) if (!fillCell(checks, cell, path)) break;
+  });
+}
+
+/** Objects: unique ids, known types, valid overrides, each in a free cell. */
+function validateObjects(checks, objectTypes) {
+  const { report } = checks;
+  const ids = new Set();
+  (checks.room.objects ?? []).forEach((object, i) => {
     const path = `objects[${i}]`;
-    if (objectIds.has(object.id)) report(file, path, `duplicate object id "${object.id}"`);
-    objectIds.add(object.id);
+    if (ids.has(object.id)) report(path, `duplicate object id "${object.id}"`);
+    ids.add(object.id);
 
     const type = objectTypes[object.type] && { ...OBJECT_STYLE_DEFAULTS, ...objectTypes[object.type] };
-    if (!type) {
-      report(file, path, `unknown object type "${object.type}"`);
-    } else {
-      // Overrides can only change existing properties, with valid values.
-      const overridesPath = `${path}.overrides`;
-      for (const [key, value] of Object.entries(object.overrides ?? {})) {
-        if (!(key in type)) report(file, overridesPath, `"${key}" is not a property of type "${object.type}"`);
-        else if (typeof value !== typeof type[key]) {
-          report(file, overridesPath, `"${key}" must be a ${typeof type[key]}`);
-        } else if (OBJECT_STYLES[key] && !OBJECT_STYLES[key].includes(value)) {
-          report(file, overridesPath, `"${key}" must be one of ${OBJECT_STYLES[key].join(', ')}`);
-        } else if (key === 'color' && !/^#[0-9a-fA-F]{6}$/.test(value)) {
-          report(file, overridesPath, `"color" must be #rrggbb`);
-        } else if (key === 'tint' && !(value >= 0 && value <= 1)) {
-          report(file, overridesPath, `"tint" must be between 0 and 1`);
-        }
-      }
-    }
-    fill(object.at, path);
+    if (!type) report(path, `unknown object type "${object.type}"`);
+    else validateOverrides(report, `${path}.overrides`, object, type);
+    fillCell(checks, object.at, path);
   });
+}
 
-  // Holes: floor tiles inside the room, nothing standing in them.
-  const holes = new Map(); // "x,z" → hole path
+/** Overrides can only change existing properties of the type, with valid values. */
+function validateOverrides(report, path, object, type) {
+  for (const [key, value] of Object.entries(object.overrides ?? {})) {
+    if (!(key in type)) report(path, `"${key}" is not a property of type "${object.type}"`);
+    else if (typeof value !== typeof type[key]) report(path, `"${key}" must be a ${typeof type[key]}`);
+    else if (OBJECT_STYLES[key] && !OBJECT_STYLES[key].includes(value)) {
+      report(path, `"${key}" must be one of ${OBJECT_STYLES[key].join(', ')}`);
+    } else if (key === 'color' && !/^#[0-9a-fA-F]{6}$/.test(value)) report(path, `"color" must be #rrggbb`);
+    else if (key === 'tint' && !(value >= 0 && value <= 1)) report(path, `"tint" must be between 0 and 1`);
+  }
+}
+
+/** Holes: floor tiles inside the room, nothing standing in them. */
+function validateHoles({ room, report, filled, holes }) {
+  const [w, , d] = room.size;
   (room.holes ?? []).forEach((hole, i) => {
     const path = `holes[${i}]`;
-    if (hole.to && hole.to.some((v, axis) => v < hole.at[axis])) {
-      report(file, path, `"to" ${cellText(hole.to)} must not be below "at" ${cellText(hole.at)} on any axis`);
-      return;
-    }
+    if (!validateRange(report, path, hole)) return;
     for (const [x, z] of holeTiles(hole)) {
       const tile = cellText([x, z]);
-      const key = `${x},${z}`;
+      const key = cellKey([x, z]);
+      const under = filled.get(cellKey([x, 0, z]));
       let problem = null;
       if (x >= w || z >= d) problem = `tile ${tile} is outside size ${cellText(room.size)}`;
       else if (holes.has(key)) problem = `tile ${tile} is already a hole in ${holes.get(key)}`;
-      else if (filled.has(`${x},0,${z}`)) problem = `tile ${tile} is under ${filled.get(`${x},0,${z}`)}`;
+      else if (under) problem = `tile ${tile} is under ${under}`;
       if (problem) {
-        report(file, path, problem);
+        report(path, problem);
         break; // one problem per entry is enough
       }
       holes.set(key, path);
     }
   });
+}
 
-  // Exits: the first row inside is free, so the wizard can pass and arrive.
-  (room.exits ?? []).forEach((raw, i) => {
-    const exit = withExitDefaults(raw);
-    if (exit.at + exit.width > sideLength(exit.side, room.size) || exit.y + exit.height > h) return; // reported above
+/** Exits: the first row inside is free, so the wizard can pass and arrive. */
+function validateExitPassage({ room, report, filled, holes }, exits, exitFits) {
+  exits.forEach((exit, i) => {
+    if (!exitFits[i]) return; // reported already
     const { inside } = exitCells(exit, room.size);
-    const blocked = inside.find((cell) => filled.has(cell.join(',')));
+    const blocked = inside.find((cell) => filled.has(cellKey(cell)));
     if (blocked) {
-      report(file, `exits[${i}]`, `cell ${cellText(blocked)} inside the exit is filled by ${filled.get(blocked.join(','))}`);
+      report(`exits[${i}]`, `cell ${cellText(blocked)} inside the exit is filled by ${filled.get(cellKey(blocked))}`);
       return;
     }
-    const pit = exit.y === 0 && inside.find(([x, , z]) => holes.has(`${x},${z}`));
-    if (pit) report(file, `exits[${i}]`, `tile ${cellText([pit[0], pit[2]])} inside the exit is a hole`);
+    const pit = exit.y === 0 && inside.find(([x, , z]) => holes.has(cellKey([x, z])));
+    if (pit) report(`exits[${i}]`, `tile ${cellText([pit[0], pit[2]])} inside the exit is a hole`);
   });
-
-  // Spawn and reset (D39): the whole player hitbox inside the room, clear of
-  // solids. reset defaults to spawn (buildRoom does the same), so it only
-  // needs its own check when a room gives it explicitly.
-  validatePlayerPoint(file, 'spawn', room.spawn, [w, h, d], filled, holes, report);
-  if (room.reset) validatePlayerPoint(file, 'reset', room.reset, [w, h, d], filled, holes, report);
 }
 
 /**
- * Does the player's hitbox fit at `point`, clear of solids and not hovering
- * over an unsupported hole? Used for both `spawn` and `reset`.
- * @param {string} file
+ * Does the player's hitbox fit at `point`, inside the room, clear of solids
+ * and not hovering over an unsupported hole? Used for both `spawn` and `reset`.
  * @param {string} path 'spawn' or 'reset'
  * @param {number[]} point feet center
- * @param {number[]} size room size [w, h, d]
- * @param {Map<string, string>} filled "x,y,z" → what fills it
- * @param {Map<string, string>} holes "x,z" → hole path
  */
-function validatePlayerPoint(file, path, point, [w, h, d], filled, holes, report) {
+function validatePlayerPoint({ room, report, filled, holes }, path, point) {
+  const [w, h, d] = room.size;
   const [px, py, pz] = point;
   const [hw, hh, hd] = PLAYER_HITBOX;
   const min = [px - hw / 2, py, pz - hd / 2];
   const max = [px + hw / 2, py + hh, pz + hd / 2];
   if (min.some((v) => v < 0) || max[0] > w || max[1] > h || max[2] > d) {
-    report(file, path, `the player (${hw}×${hh}×${hd}) at ${cellText(point)} does not fit inside the room`);
+    report(path, `the player (${hw}×${hh}×${hd}) at ${cellText(point)} does not fit inside the room`);
     return;
   }
   const overlapped = blockCells({
     at: min.map(Math.floor),
     to: max.map((v) => Math.ceil(v) - 1),
   });
-  const hit = overlapped.find((cell) => filled.has(cell.join(',')));
-  if (hit) report(file, path, `the player at ${cellText(point)} overlaps ${filled.get(hit.join(','))}`);
+  const hit = overlapped.find((cell) => filled.has(cellKey(cell)));
+  if (hit) report(path, `the player at ${cellText(point)} overlaps ${filled.get(cellKey(hit))}`);
 
   // Not above a hole unless a block below catches the player.
   const [cx, cz] = [Math.floor(px), Math.floor(pz)];
-  const caught = [...Array(Math.floor(py)).keys()].some((y) => filled.has(`${cx},${y},${cz}`));
-  if (holes.has(`${cx},${cz}`) && !caught) {
-    report(file, path, `the player at ${cellText(point)} would fall into ${holes.get(`${cx},${cz}`)}`);
-  }
+  const caught = [...Array(Math.floor(py)).keys()].some((y) => filled.has(cellKey([cx, y, cz])));
+  const hole = holes.get(cellKey([cx, cz]));
+  if (hole && !caught) report(path, `the player at ${cellText(point)} would fall into ${hole}`);
 }
 
 function validateWorld(world, rooms, report) {

@@ -6,19 +6,9 @@
 import { AdditiveBlending, Color, Group, Mesh, Plane, PlaneGeometry, ShaderMaterial, Vector3 } from 'three';
 import { PALETTE, shared } from './neon.js';
 import { fadingDrops } from './hole-view.js';
+import { lerpAngle, lerpPosition, shadowScale } from './interp.js';
 import { createObjectView } from './room-view.js';
 import { createWizard } from './wizard.js';
-
-/** Linear interpolation between two positions. */
-export function lerpPosition(prev, curr, alpha) {
-  return prev.map((p, i) => p + (curr[i] - p) * alpha);
-}
-
-/** Interpolate angles the short way round. */
-export function lerpAngle(a, b, t) {
-  const diff = Math.atan2(Math.sin(b - a), Math.cos(b - a));
-  return a + diff * t;
-}
 
 /** Shadow lift above the surface, so it never fights with the floor or block tops. */
 const SHADOW_LIFT = 0.01;
@@ -70,15 +60,6 @@ export function createDropShadow(color) {
 
 /** Unit plane shared by every drop shadow. */
 const SHADOW_PLANE = shared(new PlaneGeometry(1, 1));
-
-/**
- * Size and brightness of a drop shadow for a body `height` units above the
- * surface (pure, tested).
- */
-export function shadowScale(height) {
-  const t = Math.min(Math.max(height, 0) / 3, 1);
-  return { scale: 1 - 0.45 * t, opacity: 1 - 0.6 * t };
-}
 
 /**
  * Show a drop shadow on the surface at height `ground` under a body whose

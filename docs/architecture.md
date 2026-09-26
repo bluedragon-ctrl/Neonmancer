@@ -39,7 +39,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 
 | Module | Responsibility |
 |---|---|
-| `main.js` | Bootstrap: load and validate data, build systems, start the loop, error screen |
+| `main.js` | Bootstrap: load and validate data, build systems, route input, start the loop, error screen |
 | `game.js` | Owns game state; fixed-order `update()`; room switching |
 | `core/version.js` | Game and data-schema version numbers |
 | `core/loop.js` | Fixed 60 Hz timestep, step clamp, interpolation alpha |
@@ -61,16 +61,19 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/viewport.js` | Letterbox, buffer size and 1080p-relative sizing math (pure, tested) |
 | `render/renderer.js` | WebGLRenderer, 16:9 stage + HUD overlay, DPR cap, render scale, resize |
 | `render/camera.js` | Fixed isometric orthographic camera |
-| `render/neon.js` | Palette, line and face materials; line widths scaled by render height |
+| `render/neon.js` | Palette, line and face materials; line widths scaled by render height; `neonLines()`, `fadingLines()`, `shadedFaces()` builders; `disposeTree()` |
 | `render/post.js` | pmndrs postprocessing composer (bloom) |
 | `render/floor.js` | Infinite grid floor fading into darkness; hole tiles cut out via a mask texture |
 | `render/edges.js` | Visible block edges from grid occupancy; merging unit segments into runs (pure, tested) |
-| `render/exit-view.js` | Exit effect in the destination color: dashed stream into doorway tunnels, arrows gliding out of front exits (layout and timing pure, tested) |
+| `render/exit-view.js` | Exit effect in the destination color: dashed stream into doorway tunnels, arrows gliding out of front exits |
+| `render/exit-layout.js` | Exit effect layout and timing, `EXIT_FX` tuning (pure, tested) |
 | `render/walls.js` | Back walls with doorways and dark tunnels behind them, front edges with gaps, arrow shape for front exits (pure, tested) |
 | `render/marks.js` | Face-mark line patterns for object styles (pure, tested) |
 | `render/hole-view.js` | Hole pits: walls fading to black, rim, short fading corner lines; outline math (tested) |
 | `render/room-view.js` | Static blocks (merged edges + instanced occluder faces), back walls, styled object views |
-| `render/entity-view.js` | Player (later pushable) views, interpolation, glowing drop shadows |
+| `render/entity-view.js` | Player and pushable views, glowing drop shadows |
+| `render/interp.js` | Tick interpolation (positions, angles) and drop-shadow sizing (pure, tested) |
+| `render/room-scene.js` | The current room's views; rebuilds only the objects on a respawn |
 | `render/wizard.js` | Wizard model: parts as data (pure, tested), built in the hologram look |
 | `render/holo.js` | Hologram look for characters: rim-glow material, inverted-hull outline, eyes, shared clock |
 | `ui/hud.js` | DOM overlay: integrity bar, room banner, terminal messages, fullscreen hint |
@@ -82,7 +85,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `tools/vite-plugin-data.js` | Dev only: runs the check in the dev server and fails the build on errors |
 | `tools/validate-data.js` | Dev only: `npm run validate:data` for CI |
 | `tools/showcase.html`, `tools/showcase.js` | Asset showcase page: every look on a turntable with the real renderer (also deployed) |
-| `debug/debug.js` | Collision boxes, FPS, room jump, invincibility |
+| `debug/overlay.js` | Debug mode's wireframe collision boxes |
+| `debug/readout.js` | Debug mode's stats readout (rates, buffer, GPU resources, actions, position) |
 
 ## Input
 
@@ -143,8 +147,11 @@ a sinking or plugged object shows nothing below the floor.
 
 `Game.enterRoom()` rebuilds everything from data. It runs on entry and when
 the wizard respawns after dying (D24); `update()` then reports a `room`
-event and `main.js` rebuilds the room's views (`disposeTree()` frees the
-old ones).
+event and `RoomScene.show()` rebuilds the room's views. On a respawn the
+room is the same, so only the object views are rebuilt. The new views are
+compiled before `disposeTree()` frees the old ones, so shaders both use are
+kept, not compiled again; resources marked `shared()` (the unit box, the
+shadow plane) are never freed.
 
 ## Rendering
 
@@ -161,8 +168,11 @@ old ones).
   dark planes with a faint grid and a bright outline.
 - The floor is one large plane with a grid shader that fades with distance
   from the room and has the void color, so it melts into the background.
-- Composer: half-float buffers, 4× MSAA, render pass + one effect pass
-  (bloom with mipmap blur, which scales with resolution by itself) (D13).
+- Composer: half-float buffers, 4× MSAA (`?msaa=0` turns it off until
+  there are quality presets), render pass + one effect pass (bloom with
+  mipmap blur, which scales with resolution by itself) (D13).
+- Window resizing moves the stage at once; the drawing buffers are
+  reallocated only once resizing pauses (150 ms).
 
 ## Rooms and flip-screen exits
 
@@ -172,9 +182,9 @@ game.update: player moved ──► exitAt(room, pos)   feet center past a side,
                                 └─ travel(exit)   links "room.exit" → the connected exit
                                      arrival()    same offset along the edge and height above the
                                                   exit floor, half a cell inside the new room
-                                     enterRoom(id, spawn)   fresh room; spawn = arrival on the exit floor
+                                     enterRoom(id, pos)     fresh room, wizard at the arrival point
                                 └─ transition 'in' (TRANSITION.inTicks): game runs, veil lifts
-main.js: 'room' event ──► showRoom()              views rebuilt, camera reframed
+main.js: 'room' event ──► RoomScene.show()        views rebuilt, camera reframed
          every frame  ──► renderer.setFade(game.fadeLevel(alpha))   black veil under the HUD
                       ──► exitView.update(dt)                      stream flows, arrows glide
 ```
@@ -188,9 +198,9 @@ visual and never touch the simulation.
 
 `content.links` (built in `data/load.js`) maps every `"room.exit"` to the
 exit it connects to, both ways. The wizard keeps his fall speed and facing
-through the flip. Dying respawns him at the room's current spawn (the
-arrival point, or the room's own `spawn` in the start room) in a fresh copy
-of the room. The fade is timed in ticks, so it is part of the deterministic
+through the flip. Dying respawns him at the room's own `reset` point
+(D39; `spawn` when it has none), however he entered, in a fresh copy of
+the room. The fade is timed in ticks, so it is part of the deterministic
 simulation; views only read `fadeLevel()`.
 
 ## HUD

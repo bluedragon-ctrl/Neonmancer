@@ -110,12 +110,13 @@ export class Player {
    * One fixed tick.
    * @param {{ down(a: string): boolean, pressed(a: string): boolean }} input
    * @param {import('../world/grid.js').Grid} grid
-   * @param {Iterable<{ box(): number[][] }>} [bodies] pushable objects
-   * @param {boolean} [invincible] debug mode: holes never kill
-   * @param {'grid'|'screen'} [movementMode] which key → direction mapping to use (D38)
+   * @param {object} [options]
+   * @param {Iterable<{ box(): number[][] }>} [options.bodies] pushable objects
+   * @param {boolean} [options.invincible] debug mode: holes never kill
+   * @param {'grid'|'screen'} [options.movementMode] which key → direction mapping to use (D38)
    * @returns {string|null} event: 'jump', 'land', 'die', 'respawn' or null
    */
-  update(input, grid, bodies = [], invincible = false, movementMode = 'grid') {
+  update(input, grid, { bodies = [], invincible = false, movementMode = 'grid' } = {}) {
     this.prev = [...this.pos];
     this.prevFacing = this.facing;
     this.pushIntent = null;
@@ -137,10 +138,10 @@ export class Player {
     let event = null;
 
     // Walk along the grid axes, or screen-relative (D38); diagonals are normalised.
-    const DIRECTIONS = movementMode === 'screen' ? SCREEN_DIRECTIONS : GRID_DIRECTIONS;
+    const directions = movementMode === 'screen' ? SCREEN_DIRECTIONS : GRID_DIRECTIONS;
     let dx = 0;
     let dz = 0;
-    for (const [action, [ax, az]] of Object.entries(DIRECTIONS)) {
+    for (const [action, [ax, az]] of Object.entries(directions)) {
       if (input.down(action)) {
         dx += ax;
         dz += az;
