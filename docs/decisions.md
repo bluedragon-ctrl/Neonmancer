@@ -620,16 +620,14 @@ means a breakable crate can never look solid, nor a solid one breakable. `crate_
 keeps its id (stable IDs; room data uses it). The look was reviewed in
 the asset showcase before it went into the game.
 
-### D54 — 2026-09-26 — Cast on Ctrl or E; Tab switches spells; the selected spell under energy
-The cast action is bound to Ctrl (left and right) and E, replacing J;
-`spellNext` moves from E to Tab (`spellPrev` stays on Q). The selected
-spell's name shows in a tag under the energy bar, with the Tab hint once
-he knows more than one spell. Casting goes through the selected spell
-(`Player.spell`, `SPELL_EFFECTS`), so new spells plug in without new keys.
-Because Ctrl is a game key, the input takes Ctrl plus another bound key
-as play, and still leaves Ctrl plus unbound keys (Ctrl+R) to the browser.
-**Why:** author's request: fire on Ctrl or E and switch with Tab. Known
-risk: Ctrl+W closes the browser tab and a page can't block it (outside
-fullscreen keyboard lock), so casting while pressing W to move can close
-the game; the author was told and decides on a guard (e.g. a "leave
-page?" prompt) or another key.
+### D54 — 2026-09-26 — Cast on E or Numpad 0; Tab switches spells; the selected spell under energy
+The cast action is bound to E and Numpad 0, replacing J; `spellNext`
+moves from E to Tab (`spellPrev` stays on Q). The selected spell's name
+shows in a tag under the energy bar, with the Tab hint once he knows more
+than one spell. Casting goes through the selected spell (`Player.spell`,
+`SPELL_EFFECTS`), so new spells plug in without new keys.
+**Why:** author's request. Ctrl was tried first and dropped: Ctrl+W closes
+the browser tab and a page can't block it, so casting (Ctrl) while moving
+up (W) could close the game. No game key is a modifier, so Ctrl, Alt and
+Meta combinations all stay browser shortcuts. Numpad 0 fits players who
+move with the arrow keys.

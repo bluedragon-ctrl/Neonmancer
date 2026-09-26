@@ -51,8 +51,8 @@ test('key repeat does not re-trigger pressed', () => {
   assert.ok(input.down('cast') && !input.pressed('cast'));
 });
 
-test('Ctrl and E cast; Tab switches spells', () => {
-  for (const code of ['ControlLeft', 'ControlRight', 'KeyE']) {
+test('E and Numpad 0 cast; Tab switches spells', () => {
+  for (const code of ['KeyE', 'Numpad0']) {
     const input = new Input();
     input.keyDown(code);
     input.sample();
@@ -64,17 +64,12 @@ test('Ctrl and E cast; Tab switches spells', () => {
   assert.ok(input.pressed('spellNext'));
 });
 
-test('with Ctrl a game key, Ctrl plus a game key is play; other shortcuts go to the browser', () => {
+test('the game takes bound keys; shortcuts and unbound keys go to the browser', () => {
   const input = new Input();
-  assert.ok(input.takes({ code: 'ControlLeft', ctrlKey: true }));
-  assert.ok(input.takes({ code: 'KeyW', ctrlKey: true }), 'moving while casting');
-  assert.ok(!input.takes({ code: 'KeyR', ctrlKey: true }), 'Ctrl+R reloads');
-  assert.ok(!input.takes({ code: 'KeyW', altKey: true }));
-  assert.ok(!input.takes({ code: 'KeyW', metaKey: true }));
-  // Without Ctrl bound, any Ctrl combination is a browser shortcut.
-  const plain = new Input({ up: ['KeyW'] });
-  assert.ok(plain.takes({ code: 'KeyW' }));
-  assert.ok(!plain.takes({ code: 'KeyW', ctrlKey: true }));
+  assert.ok(input.takes({ code: 'KeyW' }));
+  assert.ok(input.takes({ code: 'Tab' }));
+  assert.ok(!input.takes({ code: 'KeyR' }));
+  for (const modifier of ['ctrlKey', 'altKey', 'metaKey']) assert.ok(!input.takes({ code: 'KeyW', [modifier]: true }), modifier);
 });
 
 test('releaseAll drops held keys (window blur)', () => {

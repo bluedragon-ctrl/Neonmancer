@@ -53,7 +53,7 @@ and the project uses [Semantic Versioning](https://semver.org/).
   collision boxes in debug mode. New test
   room Crawl Space behind a raised exit on Volatile Memory's high ledge;
   showcase `bug`, `bug-provoked`, `bug-peaceful`, `bug-bounce`, `bug-pop`.
-- Zap and energy (Phase 2 step 6): Ctrl or E fires a Zap bolt the
+- Zap and energy (Phase 2 step 6): E or Numpad 0 fires a Zap bolt the
   way the wizard aims, for 2 of his 10 energy (1 per second comes back, a
   0.25 s cooldown between casts). The bolt stops at the first enemy,
   block, object or room side; a hit takes 1 integrity and provokes the
@@ -61,8 +61,7 @@ and the project uses [Semantic Versioning](https://semver.org/).
   glitching, the second pops it. A lime energy bar under integrity, one
   segment per Zap, flashes when a cast fails. Spell tuning in `defs.json`
   `spells`; bolt boxes in debug mode. The selected spell shows in a tag
-  under the energy bar; Tab switches spells once there are more (D54).
-  Ctrl is now a game key: moving while holding it works. Crawl Space gets an amber bug with 4
+  under the energy bar; Tab switches spells once there are more (D54). Crawl Space gets an amber bug with 4
   integrity; showcase `zap-bolt`, `zap-bug`, `zap-crate`.
 - Destructible crates (D53): a pushable type with `integrity` breaks into
   pixels once Zaps have taken it all; what stood on it falls. `crate_cross`

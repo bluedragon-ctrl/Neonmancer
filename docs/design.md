@@ -10,8 +10,8 @@ for the current phase. Locked decisions live in CLAUDE.md; their reasons in
 |---|---|
 | Move | WASD / arrow keys; grid-aligned by default: Right ↗, Up ↖, Left ↙, Down ↘ |
 | Jump | Space |
-| Cast | J |
-| Cycle spell | Q / E |
+| Cast (the selected spell) | E / Numpad 0 |
+| Switch spell | Tab (next) / Q (previous) |
 | Pause | Esc / P |
 | Map | M |
 | Switch movement mode | G |
@@ -262,11 +262,11 @@ comes from data: its type in `defs.json` `enemies`, and the room's
   it carries over between rooms and is full again after a respawn. The
   HUD shows it under integrity as one lime segment per Zap (5), each
   filling as it recharges; a full segment glows.
-- **Casting:** Ctrl (left or right) or E casts the selected spell. Its name
+- **Casting:** E or Numpad 0 casts the selected spell. Its name
   shows in a lime tag under the energy bar (ZAP); Tab switches to the next
   spell he knows (Q back), and the tag flashes. With only Zap known, Tab
   does nothing and the tag shows no key hint (D54).
-- **Zap** (Ctrl or E): costs 2 energy, then 0.25 s before the next
+- **Zap** (E or Numpad 0): costs 2 energy, then 0.25 s before the next
   cast. The bolt flies at 12 units per second from his hands (0.48 above
   his feet, 0.34 in front) the way he aims: the direction he last walked
   or turned to, so diagonals too. It is a 0.3 box, low enough to hit a bug

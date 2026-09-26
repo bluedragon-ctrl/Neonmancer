@@ -34,7 +34,7 @@ export const DEFAULT_BINDINGS = {
   left: ['KeyA', 'ArrowLeft'],
   right: ['KeyD', 'ArrowRight'],
   jump: ['Space'],
-  cast: ['ControlLeft', 'ControlRight', 'KeyE'],
+  cast: ['KeyE', 'Numpad0'],
   spellNext: ['Tab'],
   spellPrev: ['KeyQ'],
   pause: ['Escape', 'KeyP'],

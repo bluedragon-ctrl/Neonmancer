@@ -120,11 +120,8 @@ physical key position, so WASD works on QWERTZ/AZERTY too). Once per tick
   pressed for one tick, so short taps are never lost.
 - Auto-repeat is ignored; window blur releases everything.
 - Bound keys have their browser default blocked (arrows/space scrolling,
-  F3 search, Tab focus), unless Alt/Meta is held, so browser shortcuts
-  still work (`Input.takes()`). Ctrl is a game key (cast, D54): Ctrl plus
-  another bound key is play (moving while casting), Ctrl plus an unbound
-  key (Ctrl+R) goes to the browser. Ctrl+W can't be blocked and closes the
-  tab.
+  F3 search, Tab focus), unless Ctrl/Alt/Meta is held, so browser
+  shortcuts still work (`Input.takes()`). No game key is a modifier (D54).
 - Bindings are a plain action → keys object (`core/bindings.js`), passed to
   the `Input` constructor; rebinding later just passes a different object.
 
