@@ -58,12 +58,19 @@ export class Input {
 
   /** Update action states. Call exactly once at the start of every tick. */
   sample() {
+    // Swap the two sets instead of making a new one every tick.
+    const previous = this.wasDown;
     this.wasDown = this.isDown;
-    this.isDown = new Set();
-    for (const code of [...this.held, ...this.tapped]) {
-      for (const action of this.keyActions.get(code) ?? []) this.isDown.add(action);
-    }
+    this.isDown = previous;
+    this.isDown.clear();
+    for (const code of this.held) this.addActions(code);
+    for (const code of this.tapped) this.addActions(code);
     this.tapped.clear();
+  }
+
+  /** Mark the actions bound to a key as down this tick. @param {string} code */
+  addActions(code) {
+    for (const action of this.keyActions.get(code) ?? []) this.isDown.add(action);
   }
 
   /** @param {string} action */

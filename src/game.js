@@ -57,6 +57,8 @@ export class Game {
     this.room = buildRoom(this.content.rooms.get(id), this.content);
     this.grid = new Grid(this.room);
     this.pushables = this.room.objects.filter((o) => o.kind === 'pushable').map((o) => new Pushable(o));
+    /** The pushables in update order, lowest first; re-sorted in place every tick. */
+    this.updateOrder = [...this.pushables];
     this.player = new Player(pos ?? this.room.spawn, this.room.reset);
     /** Everything objects collide with: the objects themselves and the wizard. */
     this.bodies = [...this.pushables, this.player];
@@ -154,8 +156,8 @@ export class Game {
     if (intent && intent.body.push(intent.dir, this)) events.push('push');
 
     // Lower objects first, so a stack settles in one tick.
-    const order = [...this.pushables].sort((a, b) => a.pos[1] - b.pos[1]);
-    for (const pushable of order) {
+    this.updateOrder.sort((a, b) => a.pos[1] - b.pos[1]);
+    for (const pushable of this.updateOrder) {
       const event = pushable.update(this);
       if (event) events.push(event);
       if (event === 'plug') say('msg.plug');
@@ -181,9 +183,8 @@ export class Game {
   fadeOut() {
     const { exit } = this.transition;
     const player = this.player;
-    player.prev = [...player.pos];
-    player.prevFacing = player.facing;
-    for (const pushable of this.pushables) pushable.prev = [...pushable.pos];
+    player.savePrevious();
+    for (const pushable of this.pushables) pushable.savePrevious();
 
     if (++this.transition.tick < TRANSITION.outTicks) {
       const { cross } = sideAxes(exit.side);
