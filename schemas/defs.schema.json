@@ -71,9 +71,18 @@
   "$defs": {
     "enemyType": {
       "type": "object",
-      "required": ["movement", "attack", "hostility", "integrity", "damage", "speed", "color"],
+      "description": "A base type has every required value; a template (\"extends\") only the ones it changes.",
+      "if": { "properties": { "extends": true }, "required": ["extends"] },
+      "else": {
+        "properties": { "movement": true, "attack": true, "hostility": true, "integrity": true, "damage": true, "speed": true, "color": true },
+        "required": ["movement", "attack", "hostility", "integrity", "damage", "speed", "color"]
+      },
       "additionalProperties": false,
       "properties": {
+        "extends": {
+          "$ref": "common.schema.json#/$defs/id",
+          "description": "Template (D58): the base enemy type (one without \"extends\") whose values and look it takes; its own values replace the base's. Saved from the room editor."
+        },
         "movement": {
           "enum": ["patrol", "stationary"],
           "description": "Movement behavior (src/ai/behaviors.js). patrol: walks its path (room data \"path\", required) cell by cell, turning back when blocked; stationary: stays in its cell (still falls and rides platforms)."

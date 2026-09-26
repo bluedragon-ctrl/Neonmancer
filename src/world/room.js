@@ -12,9 +12,9 @@ function blocksOfType(data, type) {
 
 /**
  * @param {object} data room file contents (validated)
- * @param {{ objectTypes: object, blockTypes: object, enemyTypes?: object, biomes: object }} content loaded game data
+ * @param {{ objectTypes: object, blockTypes: object, enemyTypes?: object, enemyModels?: Record<string, string>, biomes: object }} content loaded game data
  */
-export function buildRoom(data, { objectTypes, blockTypes, enemyTypes = {}, biomes }) {
+export function buildRoom(data, { objectTypes, blockTypes, enemyTypes = {}, enemyModels = {}, biomes }) {
   return {
     id: data.id,
     name: data.name,
@@ -53,6 +53,8 @@ export function buildRoom(data, { objectTypes, blockTypes, enemyTypes = {}, biom
       ...enemy.overrides,
       id: enemy.id,
       type: enemy.type,
+      /** The base type whose look it has (a template's base, D58). */
+      model: enemyModels[enemy.type] ?? enemy.type,
       at: [...enemy.at],
       ...(enemy.path && { path: structuredClone(enemy.path) }),
     })),

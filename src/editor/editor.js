@@ -1,25 +1,37 @@
 /**
- * The in-game room editor (CLAUDE.md §9, D56). F2 freezes the game and
+ * The in-game room editor (CLAUDE.md §9, D56, D57). F2 freezes the game and
  * edits the current room in place, in the real neon look: the room is
  * rebuilt from the edited data after every change. F2 again plays the
  * edited room from its start point (unsaved edits included), so editing
  * and testing take turns without a reload. Edits are kept per room until
- * the page is closed.
+ * the page is closed; the panel switches between rooms and makes new ones.
+ * Exit connections are edited in world.json, and enemy templates in
+ * defs.json (D58); both are saved with the rooms.
  *
  * The editor reads the mouse and its own keys directly, not through action
- * mapping (a tool, not the game; D56). Saving writes data/rooms/<id>.json
- * through the dev server; a build downloads the file instead.
+ * mapping (a tool, not the game; D56). Saving writes data/ through the dev
+ * server; a build downloads the files instead.
  */
 import { Plane, Raycaster, Vector2, Vector3 } from 'three';
 import { isTextField } from '../core/input.js';
+import { linkMap } from '../data/load.js';
+import { OPPOSITE_SIDE, enemyModels, resolveEnemyTypes, withExitDefaults } from '../data/room-data.js';
+import { validateData } from '../data/validate.js';
 import { formatJson } from './format-json.js';
 import { EditorOverlay } from './overlay.js';
 import { EditorPanel, TOOLS } from './panel.js';
-import { RoomEdit, roomErrors, sizeProblem } from './room-edit.js';
-import { downloadRoomFile, saveRoomFile } from './save.js';
+import { ID_PATTERN, RoomEdit, newRoom, roomIdProblem, sizeProblem } from './room-edit.js';
+import { downloadFile, saveFiles } from './save.js';
+import { WorldEdit } from './world-edit.js';
 
 /** Block tools and the block type they place. */
 const BLOCK_TOOLS = { block: 'block', hazard: 'hazard', void: 'void' };
+
+/** Tools a mouse drag paints with; the others act on the cell clicked only. */
+const PAINT_TOOLS = new Set(['block', 'hazard', 'void', 'hole', 'object']);
+
+/** Hint after placing something that can't do without a path yet. */
+const NEEDS_PATH = (id) => `${id} needs a path: pick the Path tool (7) and click cells.`;
 
 export class Editor {
   /**
@@ -27,8 +39,8 @@ export class Editor {
    * @param {import('../game.js').Game} options.game
    * @param {import('../render/renderer.js').Renderer} options.renderer
    * @param {Record<string, any>} options.files the data files as loaded,
-   *   keyed like data/; a saved room is updated in it
-   * @param {boolean} options.canSave the dev server can save rooms
+   *   keyed like data/; saved files are updated in it
+   * @param {boolean} options.canSave the dev server can save
    * @param {() => void} options.onRoom the game's room was rebuilt from
    *   edited data: show it again (static views included)
    */
@@ -39,16 +51,27 @@ export class Editor {
     this.canSave = canSave;
     this.onRoom = onRoom;
     this.active = false;
+    /** world.json being edited: the exits' connections. */
+    this.world = new WorldEdit(files['world.json']);
+    /** defs.json being edited (enemy templates, D58), and its text as last saved. */
+    this.defs = structuredClone(files['defs.json']);
+    this.defsSaved = formatJson(this.defs);
     /** Edited rooms by id, kept while the page is open. */
     this.sessions = new Map();
     /** @type {RoomEdit|null} the room being edited */
     this.edit = null;
     this.tool = 'block';
-    /** Object types the Object tool places: not platforms (they need a path, step 8b). */
-    this.objectTypes = Object.fromEntries(Object.entries(game.content.objectTypes).filter(([, type]) => type.kind !== 'platform'));
+    this.objectTypes = game.content.objectTypes;
     this.objectType = Object.keys(this.objectTypes)[0];
+    this.enemyTypes = game.content.enemyTypes;
+    /** Settings of new enemies (and of the picked one). */
+    this.enemy = { type: Object.keys(this.enemyTypes)[0], overrides: {} };
+    /** Shape of new exits. */
+    this.exitShape = { width: 2, height: 2 };
+    /** @type {{ kind: 'item'|'exit', id: string } | null} the picked object, enemy or exit */
+    this.selected = null;
     this.layer = 0;
-    /** Validation errors of the edited room; the server's too after a failed save. */
+    /** Validation errors of the edited data; the server's too after a failed save. */
     this.errors = [];
     this.serverErrors = [];
     this.status = '';
@@ -57,21 +80,31 @@ export class Editor {
     /** Mouse stroke in progress: 'place' or 'erase', and the last cell it acted on. */
     this.stroke = null;
     this.strokeCell = '';
-    /** Cell under the mouse, or null. */
+    /** Cell under the mouse, or null; and where the mouse ray met its layer. */
     this.hover = null;
+    this.hit = new Vector3();
 
     this.overlay = new EditorOverlay();
     renderer.scene.add(this.overlay.group);
     this.panel = new EditorPanel(renderer.stage, {
       objectTypes: this.objectTypes,
+      enemyTypes: this.enemyTypes,
       biomes: game.content.biomes,
       canSave,
       on: {
+        room: (id) => this.openRoom(id),
+        newRoom: (id) => this.createRoom(id),
         tool: (id) => this.setTool(id),
         objectType: (id) => {
           this.objectType = id;
           this.refresh();
         },
+        enemy: (field, value) => this.setEnemy(field, value),
+        saveTemplate: (name) => this.saveTemplate(name),
+        updateTemplate: () => this.updateTemplate(),
+        path: (field, value) => this.pathItem && this.change(() => this.edit.setPathOptions(this.pathItem.id, { [field]: value })),
+        clearPath: () => this.pathItem && this.change(() => this.edit.updateItem(this.pathItem.id, { path: undefined })),
+        exit: (field, value) => this.setExit(field, value),
         layer: (step) => this.setLayer(this.layer + step),
         name: (name) => name && this.change(() => this.edit.setName(name)),
         biome: (biome) => this.change(() => this.edit.setBiome(biome)),
@@ -82,6 +115,8 @@ export class Editor {
         revert: () => this.change(() => this.edit.revert()),
       },
     });
+
+    this.applyEnemyTypes();
 
     this.raycaster = new Raycaster();
     this.listen(renderer.webgl.domElement);
@@ -96,19 +131,15 @@ export class Editor {
   open() {
     // Not in the middle of a room transition.
     if (this.game.transition) return;
-    const id = this.game.room.id;
-    if (!this.sessions.has(id)) this.sessions.set(id, new RoomEdit(this.files[`rooms/${id}.json`]));
-    this.edit = this.sessions.get(id);
     this.active = true;
     this.status = '';
     this.renderer.stage.classList.add('editing');
     this.panel.setShown(true);
     this.overlay.group.visible = true;
-    this.setLayer(this.layer);
-    this.rebuild();
+    this.openRoom(this.game.room.id);
   }
 
-  /** Leave the editor and play the edited room from its start, if it is valid. */
+  /** Leave the editor and play the edited room from its start, if the data is valid. */
   close() {
     this.edit.end();
     this.stroke = null;
@@ -127,18 +158,70 @@ export class Editor {
     this.onRoom();
   }
 
+  /** The edit of a room, started the first time it is opened. */
+  session(id) {
+    if (!this.sessions.has(id)) this.sessions.set(id, new RoomEdit(this.files[`rooms/${id}.json`], { world: this.world }));
+    return this.sessions.get(id);
+  }
+
+  /** Edit another room (it shows in the game too). */
+  openRoom(id) {
+    this.edit?.end();
+    this.stroke = null;
+    this.selected = null;
+    this.status = '';
+    this.edit = this.session(id);
+    this.setLayer(this.layer);
+    this.rebuild();
+  }
+
+  /** Make a new, empty room and edit it. */
+  createRoom(id) {
+    const problem = roomIdProblem(id, this.roomIds());
+    if (problem) {
+      this.status = problem;
+      this.refresh();
+      return;
+    }
+    const data = newRoom(id, this.edit.data.biome);
+    this.sessions.set(id, new RoomEdit(data, { world: this.world, fresh: true }));
+    this.game.content.rooms.set(id, data);
+    this.openRoom(id);
+    this.panel.newRoomInput.value = '';
+    this.status = `New room ${id}: give it an exit (Exit tool, 8) and connect it, then save.`;
+    this.refresh();
+  }
+
+  /** Ids of every room, new ones included. */
+  roomIds() {
+    return [...new Set([...this.game.content.rooms.keys(), ...this.sessions.keys()])];
+  }
+
+  /** A room's data as edited so far. */
+  roomData(id) {
+    return this.sessions.get(id)?.data ?? this.game.content.rooms.get(id);
+  }
+
+  /** Every data file with the edits in: what saving would write. */
+  editedFiles() {
+    const files = { ...this.files, 'world.json': this.world.toData(), 'defs.json': structuredClone(this.defs) };
+    for (const [id, edit] of this.sessions) files[`rooms/${id}.json`] = edit.toData();
+    return files;
+  }
+
   /** Once per frame while editing: rebuild the room if it changed. */
   frame() {
     if (this.active && this.stale) this.rebuild();
   }
 
   /**
-   * Run an edit; if it changed the room, rebuild it (next frame).
+   * Run an edit; if it changed the data, rebuild the room (next frame).
    * @param {() => boolean} change
    */
   change(change) {
     if (!change()) return;
     this.serverErrors = [];
+    this.status = '';
     this.stale = true;
     this.setLayer(this.layer); // the height may have changed
     this.refresh();
@@ -146,14 +229,15 @@ export class Editor {
 
   /**
    * Show the edited data: check it, give it to the game (its rooms are
-   * looked up by id) and rebuild the room there, spawn and reset markers
-   * and the panel too.
+   * looked up by id, exits by their connections) and rebuild the room
+   * there, the editor's marks and the panel too.
    */
   rebuild() {
     this.stale = false;
     const data = this.edit.toData();
-    this.errors = roomErrors(this.files, data);
+    this.errors = validateData(this.editedFiles());
     this.game.content.rooms.set(data.id, data);
+    this.game.content.links = linkMap(this.world.connections);
     try {
       this.game.enterRoom(data.id);
       this.onRoom();
@@ -162,7 +246,7 @@ export class Editor {
       this.errors.unshift(`preview failed: ${err.message}`);
     }
     this.overlay.setPoints(data.spawn, data.reset);
-    this.refresh();
+    this.select(this.selected);
   }
 
   /** @param {string} id tool id (panel.js TOOLS) */
@@ -188,16 +272,186 @@ export class Editor {
     this.refresh();
   }
 
-  /** Save the room (dev server) or download it (build). */
-  async save() {
-    const data = this.edit.toData();
-    const { id } = data;
-    if (!this.canSave) {
-      downloadRoomFile(id, formatJson(data));
-      this.status = `Exported ${id}.json${this.errors.length > 0 ? ' (with errors)' : ''}.`;
+  // --- Picked things -----------------------------------------------------
+
+  /** Pick an object, enemy or exit (null: none); one that is gone is dropped. */
+  select(selected) {
+    const gone = selected?.kind === 'item' ? !this.edit.item(selected.id) : selected?.kind === 'exit' && !this.edit.exits.some((e) => e.id === selected.id);
+    this.selected = gone ? null : selected;
+    this.overlay.setMarks(this.edit.data, this.selected);
+    this.refresh();
+  }
+
+  /** The picked object or enemy, or null. */
+  get selectedItem() {
+    return this.selected?.kind === 'item' ? this.edit.item(this.selected.id) : null;
+  }
+
+  /** The picked enemy, or null. */
+  get selectedEnemy() {
+    const item = this.selectedItem;
+    return item && this.edit.data.enemies?.includes(item) ? item : null;
+  }
+
+  /** The picked platform or enemy, whose path the Path tool edits, or null. */
+  get pathItem() {
+    const item = this.selectedItem;
+    return item && (this.selectedEnemy || this.objectTypes[item.type]?.kind === 'platform') ? item : null;
+  }
+
+  /** The picked exit (as written), or null. */
+  get selectedExit() {
+    return this.selected?.kind === 'exit' ? (this.edit.exits.find((e) => e.id === this.selected.id) ?? null) : null;
+  }
+
+  /** Does this enemy (or new ones, with these settings) walk a path? */
+  patrols({ type, overrides = {} }) {
+    return (overrides.movement ?? this.enemyTypes[type]?.movement) === 'patrol';
+  }
+
+  /** An enemy setting changed in the panel: for new enemies, and the picked one. */
+  setEnemy(field, value) {
+    const enemy = this.selectedEnemy;
+    const settings = enemy ? { type: enemy.type, overrides: { ...enemy.overrides } } : this.enemy;
+    if (field === 'type') settings.type = value;
+    else if (value === undefined) delete settings.overrides[field];
+    else settings.overrides[field] = value;
+    this.enemy = structuredClone(settings);
+    if (enemy) {
+      const overrides = Object.keys(settings.overrides).length > 0 ? settings.overrides : undefined;
+      // A stationary enemy has no path.
+      const path = this.patrols(settings) ? enemy.path : undefined;
+      this.change(() => this.edit.updateItem(enemy.id, { type: settings.type, overrides, path }));
+    }
+    this.refresh();
+  }
+
+  /** The enemy settings the panel shows: the picked enemy's, or the ones for new enemies. */
+  get enemySettings() {
+    const enemy = this.selectedEnemy;
+    return enemy ? { id: enemy.id, type: enemy.type, overrides: enemy.overrides ?? {} } : this.enemy;
+  }
+
+  /**
+   * Save the enemy settings as a new enemy type in defs.json, a template
+   * of the base type (D58); the picked enemy becomes one of it, and so do
+   * new ones.
+   * @param {string} name the template's id
+   */
+  saveTemplate(name) {
+    if (!ID_PATTERN.test(name)) this.status = 'Template name: lowercase letters, digits and _, starting with a letter.';
+    else if (this.defs.enemies[name]) this.status = `Template name: "${name}" is taken.`;
+    else {
+      const { type, overrides } = this.enemySettings;
+      const { extends: base, ...own } = this.defs.enemies[type];
+      // A template of a template is one more template of the same base.
+      this.defs.enemies[name] = { extends: base ?? type, ...(base ? own : {}), ...structuredClone(overrides) };
+      this.useTemplate(name);
+      this.status = `Template ${name} added to defs.json; Save writes it.`;
+      this.panel.templateInput.value = '';
+    }
+    this.refresh();
+  }
+
+  /** Move the settings of an enemy of a template into the template: every enemy of it changes. */
+  updateTemplate() {
+    const { type, overrides } = this.enemySettings;
+    if (!this.defs.enemies[type]?.extends) return;
+    this.defs.enemies[type] = { ...this.defs.enemies[type], ...structuredClone(overrides) };
+    this.useTemplate(type);
+    this.status = `Template ${type} updated: every ${type} changes. Save writes defs.json.`;
+    this.refresh();
+  }
+
+  /** Enemy types changed: the picked enemy (and new ones) take template `type` with no overrides of their own. */
+  useTemplate(type) {
+    this.applyEnemyTypes();
+    this.enemy = { type, overrides: {} };
+    const enemy = this.selectedEnemy;
+    if (enemy) this.edit.updateItem(enemy.id, { type, overrides: undefined });
+    this.serverErrors = [];
+    this.stale = true;
+  }
+
+  /** Hand the edited enemy types (templates filled in) to the game and the panel. */
+  applyEnemyTypes() {
+    const types = this.defs.enemies ?? {};
+    this.enemyTypes = resolveEnemyTypes(types);
+    this.game.content.enemyTypes = this.enemyTypes;
+    this.game.content.enemyModels = enemyModels(types);
+    this.panel.setEnemyTypes(this.enemyTypes, this.game.content.enemyModels);
+  }
+
+  /** Are there unsaved enemy templates? */
+  get defsDirty() {
+    return formatJson(this.defs) !== this.defsSaved;
+  }
+
+  /** An exit field changed in the panel: for the picked exit, or new ones. */
+  setExit(field, value) {
+    const exit = this.selectedExit;
+    if (field === 'width' || field === 'height') value = Math.max(field === 'width' ? 1 : 2, Math.round(value));
+    if (!exit) {
+      if (field in this.exitShape) this.exitShape[field] = value;
       this.refresh();
       return;
     }
+    if (field === 'link') {
+      this.change(() => this.edit.linkExit(exit.id, value));
+    } else if (field === 'id') {
+      if (!ID_PATTERN.test(value)) this.status = 'Exit id: lowercase letters, digits and _, starting with a letter.';
+      else if (this.edit.exits.some((e) => e.id === value && e !== exit)) this.status = `Exit id: "${value}" is taken.`;
+      else if (this.edit.updateExit(exit.id, { id: value })) {
+        this.selected = { kind: 'exit', id: value };
+        this.change(() => true);
+      }
+    } else {
+      this.change(() => this.edit.updateExit(exit.id, { [field]: value }));
+    }
+    this.refresh();
+  }
+
+  /**
+   * Exits of other rooms the exit can lead to: in the opposite side,
+   * equally wide, not connected elsewhere.
+   * @param {object} exit as written
+   * @returns {string[]} "room.exit"
+   */
+  linkChoices(exit) {
+    const { side, width } = withExitDefaults(exit);
+    const ref = `${this.edit.id}.${exit.id}`;
+    const choices = [];
+    for (const id of this.roomIds()) {
+      if (id === this.edit.id) continue;
+      for (const other of this.roomData(id).exits ?? []) {
+        const to = `${id}.${other.id}`;
+        const partner = this.world.partner(to);
+        const fits = other.side === OPPOSITE_SIDE[side] && withExitDefaults(other).width === width;
+        if (fits && (partner === null || partner === ref)) choices.push(to);
+      }
+    }
+    return choices;
+  }
+
+  // --- Saving -------------------------------------------------------------
+
+  /** Save every edited room and world.json (dev server), or download them (build). */
+  async save() {
+    const rooms = [...this.sessions.values()].filter((edit) => edit.dirty);
+    const world = this.world.dirty ? this.world.toData() : undefined;
+    const defs = this.defsDirty ? structuredClone(this.defs) : undefined;
+    if (!this.canSave) {
+      // Nothing changed: export the room shown.
+      const exported = rooms.length > 0 || world || defs ? rooms : [this.edit];
+      for (const edit of exported) downloadFile(`${edit.id}.json`, edit.text());
+      if (world) downloadFile('world.json', formatJson(world));
+      if (defs) downloadFile('defs.json', formatJson(defs));
+      const names = [...exported.map((edit) => `${edit.id}.json`), ...(world ? ['world.json'] : []), ...(defs ? ['defs.json'] : [])];
+      this.status = `Exported ${names.join(', ')}${this.errors.length > 0 ? ' (with errors)' : ''}.`;
+      this.refresh();
+      return;
+    }
+    if (rooms.length === 0 && !world && !defs) return;
     if (this.errors.length > 0) {
       this.status = 'Not saved: fix the errors below first.';
       this.refresh();
@@ -205,13 +459,24 @@ export class Editor {
     }
     this.status = 'Saving…';
     this.refresh();
-    const result = await saveRoomFile(data);
-    const edit = this.sessions.get(id);
+    const sent = rooms.map((edit) => edit.toData());
+    const result = await saveFiles({ rooms: sent, world, defs });
     if (result.ok) {
       // Edits made while saving stay unsaved.
-      edit.savedText = formatJson(data);
-      this.files[`rooms/${id}.json`] = data;
-      this.status = `Saved data/rooms/${id}.json.`;
+      rooms.forEach((edit, i) => {
+        edit.savedText = formatJson(sent[i]);
+        edit.fresh = false;
+        this.files[`rooms/${edit.id}.json`] = sent[i];
+      });
+      if (world) {
+        this.world.savedText = formatJson(world);
+        this.files['world.json'] = world;
+      }
+      if (defs) {
+        this.defsSaved = formatJson(defs);
+        this.files['defs.json'] = defs;
+      }
+      this.status = `Saved ${result.files.join(', ')}.`;
     } else {
       this.serverErrors = result.errors;
       this.status = 'Not saved:';
@@ -219,21 +484,32 @@ export class Editor {
     this.refresh();
   }
 
-  /** Are there edits not saved yet, in any room? */
+  /** Are there edits not saved yet, in any room, world.json or defs.json? */
   get unsaved() {
-    return [...this.sessions.values()].some((edit) => edit.dirty);
+    return this.world.dirty || this.defsDirty || [...this.sessions.values()].some((edit) => edit.dirty);
   }
 
   refresh() {
     if (!this.active) return;
+    const enemy = this.selectedEnemy;
+    const exit = this.selectedExit;
+    const pathItem = this.pathItem;
     this.panel.show({
       edit: this.edit,
+      rooms: this.roomIds(),
       tool: this.tool,
       objectType: this.objectType,
       collapsing: this.objectTypes[this.objectType]?.kind === 'collapsing',
+      enemy: this.enemySettings,
+      pathItem,
+      pathItemIsEnemy: !!pathItem && pathItem === enemy,
+      exit: exit
+        ? { ...withExitDefaults(exit), link: this.world.partner(`${this.edit.id}.${exit.id}`), links: this.linkChoices(exit) }
+        : { id: null, ...this.exitShape, link: null, links: [] },
       layer: this.layer,
       errors: [...this.serverErrors, ...this.errors],
       status: this.status,
+      unsaved: this.unsaved,
     });
   }
 
@@ -241,7 +517,8 @@ export class Editor {
 
   /**
    * The cell of the current layer under the mouse (floor tile for the Hole
-   * tool: y 0), or null outside the room.
+   * tool: y 0), or null outside the room. Keeps where the ray met the layer
+   * in `this.hit`.
    * @param {PointerEvent|WheelEvent} event
    * @returns {number[]|null} [x, y, z]
    */
@@ -250,12 +527,23 @@ export class Editor {
     const ndc = new Vector2(((event.clientX - rect.left) / rect.width) * 2 - 1, -((event.clientY - rect.top) / rect.height) * 2 + 1);
     this.raycaster.setFromCamera(ndc, this.renderer.camera);
     const y = this.tool === 'hole' ? 0 : this.layer;
-    const point = this.raycaster.ray.intersectPlane(new Plane(new Vector3(0, 1, 0), -y), new Vector3());
-    if (!point) return null;
+    if (!this.raycaster.ray.intersectPlane(new Plane(new Vector3(0, 1, 0), -y), this.hit)) return null;
     const [w, , d] = this.edit.size;
-    const x = Math.floor(point.x);
-    const z = Math.floor(point.z);
+    const x = Math.floor(this.hit.x);
+    const z = Math.floor(this.hit.z);
     return x >= 0 && z >= 0 && x < w && z < d ? [x, y, z] : null;
+  }
+
+  /**
+   * The side an edge cell opens an exit in, or null inside the room; in a
+   * corner, the side whose wall the mouse is nearer.
+   * @param {number[]} cell
+   */
+  exitSide([x, , z]) {
+    const [w, , d] = this.edit.size;
+    const distance = { '-x': this.hit.x, '+x': w - this.hit.x, '-z': this.hit.z, '+z': d - this.hit.z };
+    const sides = [x === 0 && '-x', x === w - 1 && '+x', z === 0 && '-z', z === d - 1 && '+z'].filter(Boolean);
+    return sides.sort((a, b) => distance[a] - distance[b])[0] ?? null;
   }
 
   updateCursor() {
@@ -263,7 +551,7 @@ export class Editor {
   }
 
   /**
-   * Use the tool on a cell: place (left button) or erase (right button).
+   * Use the tool on a cell: place or pick (left button), or erase (right button).
    * @param {number[]} cell
    * @param {'place'|'erase'} mode
    */
@@ -272,15 +560,83 @@ export class Editor {
     const place = mode === 'place';
     const [x, y, z] = cell;
     const point = [x + 0.5, y, z + 0.5];
-    const extra = this.objectTypes[this.objectType]?.kind === 'collapsing' && this.panel.regrow ? { regrow: this.panel.regrow } : {};
-    this.change(() => {
-      if (BLOCK_TOOLS[tool]) return place ? edit.placeBlock(cell, BLOCK_TOOLS[tool]) : edit.erase(cell);
-      if (tool === 'hole') return edit.setHole([x, z], place);
-      if (tool === 'object') return place ? edit.placeObject(cell, this.objectType, extra) : edit.erase(cell);
-      if (tool === 'spawn') return place && edit.setPoint('spawn', point);
-      if (tool === 'reset') return edit.setPoint('reset', place ? point : null);
-      return false;
-    });
+    if (BLOCK_TOOLS[tool]) this.change(() => (place ? edit.placeBlock(cell, BLOCK_TOOLS[tool]) : edit.erase(cell)));
+    else if (tool === 'hole') this.change(() => edit.setHole([x, z], place));
+    else if (tool === 'object') this.useObject(cell, place);
+    else if (tool === 'enemy') this.useEnemy(cell, place);
+    else if (tool === 'path') this.usePath(cell, place);
+    else if (tool === 'exit') this.useExit(cell, place);
+    else if (tool === 'spawn') this.change(() => place && edit.setPoint('spawn', point));
+    else if (tool === 'reset') this.change(() => edit.setPoint('reset', place ? point : null));
+  }
+
+  useObject(cell, place) {
+    const { edit } = this;
+    if (!place) return this.change(() => edit.erase(cell));
+    const type = this.objectTypes[this.objectType];
+    const extra = type?.kind === 'collapsing' && this.panel.regrow ? { regrow: this.panel.regrow } : {};
+    this.change(() => edit.placeObject(cell, this.objectType, extra));
+    // A new platform is picked, ready for its path.
+    const here = edit.at(cell);
+    if (type?.kind === 'platform' && here?.kind === 'object' && !here.item.path) {
+      this.status = NEEDS_PATH(here.item.id);
+      this.select({ kind: 'item', id: here.item.id });
+    }
+  }
+
+  useEnemy(cell, place) {
+    const { edit } = this;
+    const here = edit.at(cell);
+    if (!place) return this.change(() => edit.erase(cell));
+    if (here?.kind === 'enemy') {
+      // Pick it: new enemies take its settings.
+      this.enemy = { type: here.item.type, overrides: structuredClone(here.item.overrides ?? {}) };
+      return this.select({ kind: 'item', id: here.item.id });
+    }
+    let id = null;
+    this.change(() => !!(id = edit.placeEnemy(cell, this.enemy.type, this.enemy.overrides)));
+    if (!id) return;
+    this.status = this.patrols(this.enemy) ? NEEDS_PATH(id) : '';
+    this.select({ kind: 'item', id });
+  }
+
+  usePath(cell, place) {
+    const { edit } = this;
+    const here = edit.at(cell);
+    const mover = here && (here.kind === 'enemy' || (here.kind === 'object' && this.objectTypes[here.item.type]?.kind === 'platform'));
+    const item = this.pathItem;
+    if (!place) {
+      if (item) this.change(() => edit.removeWaypoint(item.id));
+      return;
+    }
+    if (mover && here.item !== item) return this.select({ kind: 'item', id: here.item.id });
+    if (!item) {
+      this.status = 'Pick a platform or an enemy first: click it.';
+      return this.refresh();
+    }
+    // Enemies patrol level: their points stay at their own height.
+    const target = item === this.selectedEnemy ? [cell[0], item.at[1], cell[2]] : cell;
+    this.change(() => edit.addWaypoint(item.id, target));
+  }
+
+  useExit(cell, place) {
+    const { edit } = this;
+    const side = this.exitSide(cell);
+    if (!side) {
+      this.status = 'Exits go in the edge cells of the room.';
+      return this.refresh();
+    }
+    const exit = edit.exitAt(side, cell);
+    if (!place) {
+      if (exit) this.change(() => edit.removeExit(exit.id));
+      return;
+    }
+    if (exit) return this.select({ kind: 'exit', id: exit.id });
+    let id = null;
+    this.change(() => !!(id = edit.placeExit(side, cell, this.exitShape)));
+    this.status = id ? `Exit ${id}: pick where it leads (Leads to).` : 'Another exit is in the way.';
+    if (id) this.select({ kind: 'exit', id });
+    else this.refresh();
   }
 
   /** Mouse on the game canvas, keys on the window, a warning before closing with unsaved edits. */
@@ -303,7 +659,7 @@ export class Editor {
       this.hover = this.pick(e);
       this.updateCursor();
       // Painting: each new cell the stroke crosses.
-      if (this.stroke && this.hover && this.hover.join() !== this.strokeCell) {
+      if (this.stroke && PAINT_TOOLS.has(this.tool) && this.hover && this.hover.join() !== this.strokeCell) {
         this.strokeCell = this.hover.join();
         this.apply(this.hover, this.stroke);
       }
@@ -350,6 +706,7 @@ export class Editor {
       }
       const tool = TOOLS.find(({ key }) => e.code === `Digit${key}`);
       if (tool) this.setTool(tool.id);
+      if (e.code === 'Escape') this.select(null);
       if (e.code === 'PageUp' || e.code === 'PageDown') {
         e.preventDefault();
         this.setLayer(this.layer + (e.code === 'PageUp' ? 1 : -1));

@@ -2,6 +2,7 @@
  * Turn the raw data files into the game's content tables, after validating
  * them. Plain logic (no Vite features), so tests can call it with fixtures.
  */
+import { enemyModels, resolveEnemyTypes } from './room-data.js';
 import { validateData } from './validate.js';
 
 /** Thrown when the game data is invalid; `errors` lists every problem. */
@@ -16,7 +17,7 @@ export class DataError extends Error {
 
 /**
  * @param {Record<string, any>} files parsed JSON keyed by path relative to data/
- * @returns {{ objectTypes: object, blockTypes: object, enemyTypes: object, biomes: object, world: object, strings: Record<string, string>,
+ * @returns {{ objectTypes: object, blockTypes: object, enemyTypes: object, enemyModels: Record<string, string>, biomes: object, world: object, strings: Record<string, string>,
  *   rooms: Map<string, object>,
  *   links: Map<string, { room: string, exit: string }> }} `links` maps "room.exit" to the exit
  *   it is connected to (both ways round)
@@ -30,8 +31,29 @@ export function loadGameData(files) {
     if (file.startsWith('rooms/')) rooms.set(room.id, room);
   }
 
+  return {
+    objectTypes: files['defs.json'].objects,
+    blockTypes: files['defs.json'].blocks,
+    // Templates filled in from their base types (D58).
+    enemyTypes: resolveEnemyTypes(files['defs.json'].enemies ?? {}),
+    enemyModels: enemyModels(files['defs.json'].enemies ?? {}),
+    spells: files['defs.json'].spells,
+    biomes: files['biomes.json'].biomes,
+    world: files['world.json'],
+    strings: files['strings.json'].strings,
+    rooms,
+    links: linkMap(files['world.json'].connections),
+  };
+}
+
+/**
+ * Where each exit leads, both ways round.
+ * @param {string[][]} connections pairs of "room.exit" (world.json)
+ * @returns {Map<string, { room: string, exit: string }>} "room.exit" → the exit it is connected to
+ */
+export function linkMap(connections) {
   const links = new Map();
-  for (const pair of files['world.json'].connections) {
+  for (const pair of connections) {
     const [a, b] = pair.map((ref) => {
       const [room, exit] = ref.split('.');
       return { room, exit };
@@ -39,16 +61,5 @@ export function loadGameData(files) {
     links.set(pair[0], b);
     links.set(pair[1], a);
   }
-
-  return {
-    objectTypes: files['defs.json'].objects,
-    blockTypes: files['defs.json'].blocks,
-    enemyTypes: files['defs.json'].enemies ?? {},
-    spells: files['defs.json'].spells,
-    biomes: files['biomes.json'].biomes,
-    world: files['world.json'],
-    strings: files['strings.json'].strings,
-    rooms,
-    links,
-  };
+  return links;
 }

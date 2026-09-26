@@ -82,6 +82,22 @@ and the project uses [Semantic Versioning](https://semver.org/).
   all the data and writes `data/rooms/<id>.json`, keeping untouched block
   entries and the hand-written JSON style; the deployed build exports the
   file. Keys typed into the editor's fields no longer reach the game.
+- Room editor, moving part (Phase 2 step 8b, D57): Enemy, Path and Exit
+  tools (keys 6–8; Spawn and Reset move to 9 and 0). Place enemies with
+  their movement, hostility, bounce and solid settings, or click one to
+  pick and change it; draw platform and patrol paths cell by cell (corners
+  added, right click takes a point off; mode, speed and pause in the
+  panel), shown as dashed lines; open exits in edge cells and pick what
+  they lead to from the fitting exits of other rooms. Platforms can be
+  placed now. The panel lists every room to switch to and makes new, empty
+  ones. Save writes all edited rooms and `world.json` together once the
+  whole data checks out; the build exports each changed file.
+- Enemy templates (D58): an enemy type in `defs.json` can `extend` a base
+  type with only the values it changes, and looks like its base. The room
+  editor saves the Enemy panel's settings as a template, lists templates
+  in the Type list, and Update template moves an enemy's own settings into
+  its template; `defs.json` is saved with the rooms. The Enemy panel also
+  sets integrity, damage, speed and color.
 - Room design checklist in docs/design.md: reach, timing budgets,
   readability and soft-lock checks collected from playtests; the basis for
   the Phase 3 room design skill and level review subagent.

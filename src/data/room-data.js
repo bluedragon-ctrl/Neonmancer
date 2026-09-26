@@ -131,6 +131,35 @@ export const ENEMY_OPTIONS = {
  */
 export const ENEMY_DEFAULTS = { aggroRange: 0, bounce: false, solid: false };
 
+/** Enemy type fields a type needs (a template gets them from its base), as in the schema. */
+export const ENEMY_REQUIRED = ['movement', 'attack', 'hostility', 'integrity', 'damage', 'speed', 'color'];
+
+/**
+ * Enemy types with templates filled in (D58): a type with `extends` (a
+ * template, e.g. a tougher bug saved from the room editor) takes its base
+ * type's values, then its own. One level: a base type has no `extends`.
+ * @param {Record<string, object>} types defs.json `enemies`
+ * @returns {Record<string, object>} every type with all its values (no `extends`)
+ */
+export function resolveEnemyTypes(types) {
+  const out = {};
+  for (const [id, { extends: base, ...own }] of Object.entries(types)) {
+    const { extends: _, ...baseValues } = (base && types[base]) || {};
+    out[id] = { ...baseValues, ...own };
+  }
+  return out;
+}
+
+/**
+ * Which base type's look (render/entity-view.js ENEMY_MODELS) each enemy
+ * type uses: its own id, or a template's base.
+ * @param {Record<string, object>} types defs.json `enemies`
+ * @returns {Record<string, string>}
+ */
+export function enemyModels(types) {
+  return Object.fromEntries(Object.entries(types).map(([id, type]) => [id, type.extends ?? id]));
+}
+
 /**
  * Every floor tile a hole entry covers: just `at`, or the rectangle from
  * `at` to `to` (inclusive).

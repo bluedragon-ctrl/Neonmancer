@@ -344,8 +344,10 @@ export class EnemyView {
   constructor(game, enemy) {
     this.game = game;
     this.enemy = enemy;
-    this.kind = ENEMY_MODELS[enemy.type];
-    if (!this.kind) throw new Error(`No model for enemy type "${enemy.type}" (ENEMY_MODELS)`);
+    // Templates look like their base type (D58).
+    const model = enemy.data.model ?? enemy.type;
+    this.kind = ENEMY_MODELS[model];
+    if (!this.kind) throw new Error(`No model for enemy type "${model}" (ENEMY_MODELS)`);
     const { color } = enemy.data;
     this.model = this.kind.create(color);
     this.pixels = createPixelBurst(this.kind.pop.pixels, this.kind.pop.pixelSize, [color, 0xffffff]);

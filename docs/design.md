@@ -510,15 +510,18 @@ F2 opens the editor on the current room (not during a room transition);
 the game stands still meanwhile, and the HUD makes way for the editor's
 panel on the left (D56). The room is rebuilt in the real look after every
 change. F2 again plays the edited room from its spawn point, unsaved edits
-included, if it has no validation errors; otherwise the panel says so and
-the editor stays open. Edits are kept per room until the page is closed.
+included (walking through exits into other edited rooms too), if the data
+has no validation errors; otherwise the panel says so and the editor stays
+open. Edits are kept per room until the page is closed. The panel's room
+list switches to another room; New room makes an empty one (D57).
 
 | Input | What it does |
 |---|---|
-| Left click / drag | Place with the current tool (a drag paints; one undo step) |
+| Left click / drag | Place or pick with the current tool (a drag paints blocks, holes and objects; one undo step) |
 | Right click / drag | Erase with the current tool |
 | Mouse wheel, PgUp / PgDn | Height layer up / down (a grid shows it) |
-| 1–7 | Tool: Block, Hazard, Void, Hole, Object, Spawn, Reset |
+| 1–9, 0 | Tool: Block, Hazard, Void, Hole, Object, Enemy, Path, Exit, Spawn, Reset |
+| Esc | Drop the picked enemy, platform or exit |
 | Ctrl+Z, Ctrl+Y (Ctrl+Shift+Z) | Undo, redo |
 | Ctrl+S | Save (dev server) / export (build) |
 
@@ -527,25 +530,62 @@ the editor stays open. Edits are kept per room until the page is closed.
 - **Hole** works on floor tiles, whatever the layer: place makes a hole,
   erase fills it in.
 - **Object** places the type picked in the panel (its fields show only
-  while this tool is picked; every object type but
-  platforms, which need a path: step 8b), with the id `<type>_<n>`; a
-  collapsing block takes the panel's regrow time (blank: never). Erasing
-  removes an object or enemy standing in the cell (enemies can't be placed
-  yet).
+  while this tool is picked), with the id `<type>_<n>`; a collapsing block
+  takes the panel's regrow time (blank: never). A new platform is picked,
+  ready for its path. Erasing removes an object or enemy standing in the
+  cell.
+- **Enemy** places an enemy of the panel's type with its settings
+  (movement, hostility, bounce, solid: blank is the type's own; other
+  overrides written by hand stay), id `<type>_<n>`, and picks it. A click
+  on an enemy picks it: the fields then show and change it, and new
+  enemies get the same. A patrolling enemy needs a path (the panel says
+  so); making one stationary drops its path. Integrity, damage, speed and
+  color are typed in (blank: the type's).
+- **Enemy templates** (D58): Template + Save turns the current enemy
+  settings into a new enemy type in `defs.json` (`"extends"` its base
+  type, only the changed values), picked from the Type list from then on
+  (shown as `bug_tank (bug template)`); the picked enemy becomes one of
+  it. With an enemy of a template that has settings of its own, **Update
+  template** moves them into the template, changing every enemy of it.
+  Saved with Save, like the rooms.
+- **Path** works on a picked platform or enemy (click it). Each click on a
+  cell adds a point, with corners added so every leg runs along one axis
+  (x, then z, then y); an enemy's points stay at its own height, a
+  platform's may change layer (a lift). Right click takes the last point
+  off. The panel sets the mode (there and back, or loop), speed and pause
+  at the ends, or clears the path. Every path shows as a dashed line; the
+  picked one is white, with its points marked.
+- **Exit** opens an exit in the edge cell clicked (in a corner, in the
+  wall nearer the mouse), at the layer's height, with the panel's width
+  and height, id after the side (`north`, `east_2`...). A click on an exit
+  picks it: id, width, height and **Leads to** (the exits of other rooms
+  in the opposite side, equally wide and not connected yet). Right click
+  removes an exit and its connection. An exit must be connected before
+  the room plays or saves.
 - **Spawn, Reset** put the start or respawn point in the middle of the
   cell, standing on the layer; erasing with Reset removes the reset point
   (it falls back to spawn). Both show as dashed boxes of the wizard's size
   (spawn cyan, reset magenta).
-- The panel, from the top, sets the room's name, biome and size (applied
-  on Enter or leaving the field; 2–6 high, width + depth at most 32; a
-  smaller room drops what ends up outside) and the layer, and has Undo, Redo, Save or Export, and Revert
-  (back to the last save). Errors are listed live, the way the game would
-  report them at load time.
-- **Save** (dev server): the server checks the room with the rest of
-  `data/` and writes `data/rooms/<id>.json` only if everything passes;
-  the page doesn't reload. **Export** (deployed build) downloads the file.
-  Untouched block and hole entries keep their place and shape; edited cells
-  are merged into boxes.
+- The panel, from the top, picks the room (or makes a new one: an id,
+  then New; it starts empty, 12x4x12, in the current biome), sets the
+  room's name, biome and size (applied on Enter or leaving the field; 2–6
+  high, width + depth at most 32; a smaller room drops what ends up
+  outside) and the layer, and has Undo, Redo, Save or Export, and Revert
+  (back to the last save; undo and Revert take the room's connections
+  along). Errors of all the edited data are listed live, the way the game
+  would report them at load time.
+- **Save** (dev server): writes every edited room, `world.json` and
+  `defs.json` (templates) together, after the server checks them with the rest of `data/`; nothing
+  is written unless everything passes, and the page doesn't reload.
+  **Export** (deployed build) downloads each changed file. Untouched block
+  and hole entries keep their place and shape; edited cells are merged
+  into boxes.
+- **Sending the rooms in:** `tools\room-pr.bat ["what changed"]` (Windows)
+  puts only `data/rooms/` and `data/world.json` on a new branch
+  `feat/rooms-<date>` from `origin/main` (after `npm run validate:data`),
+  commits, pushes and opens the PR with the GitHub CLI, or prints a
+  compare link without it. Other uncommitted changes stay uncommitted; you
+  stay on the new branch.
 
 ---
 
@@ -571,7 +611,7 @@ Each step is one branch and one PR; the game runs after every step.
 Hazards, combat and the room editor. Each step is one branch and one PR
 against `main` (no stacked PRs); the game runs after every step, CI is
 green before a PR is called ready. Rules that apply across steps are in
-D43. **Next step: 8b** (8a, the static part of the editor, is in review).
+D43. **Next step: 9** (8b, the moving part of the editor, is in review).
 
 Every step also:
 - adds its new looks to the asset showcase (`tools/showcase.js`);
@@ -591,7 +631,7 @@ Every step also:
 | 6 | `feat/zap-and-mana` | Mana (energy) on the Player with slow recharge and a HUD bar; `cast` fires Zap the way the wizard faces (same directions as movement); the bolt stops at solids and pushables, a bug takes two hits (the second pops it into pixels). Zap is available from the start (data disks come in Phase 3). |
 | 7 | `feat/xray-outline` | Outline of the wizard drawn through blocks while he is hidden behind them. |
 | 8a | `feat/room-editor` | In-game editor on F2 (D56): pick a height layer, place and erase blocks (with type), holes, objects (not platforms), spawn and reset with the mouse in the real neon look; room name, biome and size; undo/redo; validate, then save straight to `data/rooms/*.json` through a dev-server endpoint; the deployed build exports JSON only. |
-| 8b | `feat/room-editor-paths` | Editor, moving part: enemies, platform and patrol paths, exits with their `world.json` connections, new rooms. |
+| 8b | `feat/room-editor-paths` | Editor, moving part (D57): enemies with their settings, platform and patrol paths, exits with their `world.json` connections, new rooms and a room list; Save writes the edited rooms and `world.json` together. |
 | 9 | `chore/release-0.2.0` | Docs pass, CHANGELOG, `v0.2.0` tag and GitHub Release (CLAUDE.md §10) |
 
 Moved out of Phase 2: biome environmental effects (Glitch Zone drain,
@@ -607,7 +647,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 | File | Contents |
 |---|---|
 | `data/rooms/<id>.json` | One room (id = file name) |
-| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; `collapsing`: collapsing block, magenta); `enemies`: enemy types (`bug`, see Enemies); `spells`: spell tuning (`zap`, see Zap and energy); `blocks`: look of the `hazard` and `void` block types and the hazard's `damage` |
+| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; `collapsing`: collapsing block, magenta); `enemies`: enemy types (`bug`, see Enemies) and templates that `extend` one (D58); `spells`: spell tuning (`zap`, see Zap and energy); `blocks`: look of the `hazard` and `void` block types and the hazard's `damage` |
 | `data/biomes.json` | Biome name and room color (`home_lattice`: amber) |
 | `data/world.json` | Start room and exit connections |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |

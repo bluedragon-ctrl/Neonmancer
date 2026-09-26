@@ -475,6 +475,20 @@ body {
   margin-bottom: calc(10 * var(--u));
 }
 
+.editor-hint {
+  margin-bottom: calc(6 * var(--u));
+  color: var(--amber);
+  font-size: calc(13 * var(--u));
+}
+
+.editor-group > .editor-action {
+  width: 100%;
+}
+
+.editor-group > .editor-action[hidden] {
+  display: none;
+}
+
 .editor-row {
   display: flex;
   align-items: center;
