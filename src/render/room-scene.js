@@ -40,7 +40,9 @@ export class RoomScene {
     const { renderer } = this;
     const old = [this.objectGroup];
     this.objectViews = game.objects.map((object) => new OBJECT_VIEWS[object.kind](game, object));
-    this.objectGroup = new Group().add(...this.objectViews.map((view) => view.group));
+    this.objectGroup = new Group();
+    // add() with no arguments logs an error (a room without objects).
+    if (this.objectViews.length > 0) this.objectGroup.add(...this.objectViews.map((view) => view.group));
     if (room.id !== this.roomId) {
       old.push(this.staticGroup);
       this.exitViews = room.exits.map((exit) => new ExitView(exit, room.size, game.destinationColor(exit)));

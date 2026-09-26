@@ -18,20 +18,25 @@
 import { exitCells } from '../data/room-data.js';
 
 /**
- * What fills a grid cell. Every type but `empty` is solid; Phase 2 adds
- * hazard and void blocks here (D40).
+ * What fills a grid cell. Every type but `empty` is solid (D40): `hazard`
+ * blocks hurt on touch, `void` blocks kill whoever lands on them.
  */
-export const CELL = { empty: 0, solid: 1 };
+export const CELL = { empty: 0, solid: 1, hazard: 2, void: 3 };
+
+/** The CELL type of each block type in room data ("type" of a block entry). */
+export const BLOCK_CELL = { block: CELL.solid, hazard: CELL.hazard, void: CELL.void };
 
 export class Grid {
   /**
    * @param {object} room runtime room (see world/room.js)
    * @param {number[]} room.size [x, y, z]
-   * @param {number[][]} room.cells static block cells [x, y, z]
+   * @param {number[][]} room.cells plain static block cells [x, y, z]
    * @param {number[][]} room.holes hole tiles [x, z]
    * @param {object[]} [room.exits] exits with defaults applied
+   * @param {Record<string, number[][]>} [room.typedCells] cells of the other
+   *   block types by type name (hazard, void), see BLOCK_CELL
    */
-  constructor({ size, cells, holes, exits = [] }) {
+  constructor({ size, cells, holes, exits = [], typedCells = {} }) {
     this.size = size;
     [this.w, this.h, this.d] = size;
     const { w, h, d } = this;
@@ -46,7 +51,11 @@ export class Grid {
     for (const exit of exits) {
       for (const [x, y, z] of exitCells(exit, size).outside) if (y >= 0 && y < h) this.cells[this.index(x, y, z)] = CELL.empty;
     }
-    for (const [x, y, z] of cells) if (this.isInside(x, z) && y >= 0 && y < h) this.cells[this.index(x, y, z)] = CELL.solid;
+    const fill = (list, type) => {
+      for (const [x, y, z] of list) if (this.isInside(x, z) && y >= 0 && y < h) this.cells[this.index(x, y, z)] = type;
+    };
+    fill(cells, CELL.solid);
+    for (const [name, list] of Object.entries(typedCells)) fill(list, BLOCK_CELL[name]);
 
     /** Floor tiles: 1 where there is a hole, index z * w + x. */
     this.holes = new Uint8Array(w * d);

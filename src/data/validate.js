@@ -101,6 +101,8 @@ function validateRoom(file, room, { objectTypes, biomes }, report) {
     filled: new Map(),
     /** "x,z" → path of the hole entry */
     holes: new Map(),
+    /** "x,y,z" → type of the special block filling it (hazard, void); plain blocks aren't listed */
+    blockTypes: new Map(),
   };
   const exits = (room.exits ?? []).map(withExitDefaults);
   const exitFits = validateExitBounds(checks, exits);
@@ -171,7 +173,10 @@ function validateBlocks(checks) {
     const path = `blocks[${i}]`;
     if (!validateRange(checks.report, path, block)) return;
     // Report only the first bad cell of a block, not one per cell.
-    for (const cell of blockCells(block)) if (!fillCell(checks, cell, path)) break;
+    for (const cell of blockCells(block)) {
+      if (!fillCell(checks, cell, path)) break;
+      if (block.type && block.type !== 'block') checks.blockTypes.set(cellKey(cell), block.type);
+    }
   });
 }
 
@@ -226,8 +231,11 @@ function validateHoles({ room, report, filled, holes }) {
   });
 }
 
-/** Exits: the first row inside is free, so the wizard can pass and arrive. */
-function validateExitPassage({ room, report, filled, holes }, exits, exitFits) {
+/**
+ * Exits: the first row inside is free, so the wizard can pass and arrive,
+ * and a raised exit's floor is no void block (he would die on arrival).
+ */
+function validateExitPassage({ room, report, filled, holes, blockTypes }, exits, exitFits) {
   exits.forEach((exit, i) => {
     if (!exitFits[i]) return; // reported already
     const { inside } = exitCells(exit, room.size);
@@ -238,16 +246,19 @@ function validateExitPassage({ room, report, filled, holes }, exits, exitFits) {
     }
     const pit = exit.y === 0 && inside.find(([x, , z]) => holes.has(cellKey([x, z])));
     if (pit) report(`exits[${i}]`, `tile ${cellText([pit[0], pit[2]])} inside the exit is a hole`);
+    const voidFloor = inside.find(([x, y, z]) => y === exit.y && blockTypes.get(cellKey([x, y - 1, z])) === 'void');
+    if (voidFloor) report(`exits[${i}]`, `the floor inside the exit is a void block at ${cellText([voidFloor[0], exit.y - 1, voidFloor[2]])}`);
   });
 }
 
 /**
- * Does the player's hitbox fit at `point`, inside the room, clear of solids
- * and not hovering over an unsupported hole? Used for both `spawn` and `reset`.
+ * Does the player's hitbox fit at `point`, inside the room, clear of solids,
+ * not hovering over an unsupported hole and not above a hazard or void block
+ * (he would land on it)? Used for both `spawn` and `reset`.
  * @param {string} path 'spawn' or 'reset'
  * @param {number[]} point feet center
  */
-function validatePlayerPoint({ room, report, filled, holes }, path, point) {
+function validatePlayerPoint({ room, report, filled, holes, blockTypes }, path, point) {
   const [w, h, d] = room.size;
   const [px, py, pz] = point;
   const [hw, hh, hd] = PLAYER_HITBOX;
@@ -266,9 +277,13 @@ function validatePlayerPoint({ room, report, filled, holes }, path, point) {
 
   // Not above a hole unless a block below catches the player.
   const [cx, cz] = [Math.floor(px), Math.floor(pz)];
-  const caught = [...Array(Math.floor(py)).keys()].some((y) => filled.has(cellKey([cx, y, cz])));
+  const below = [...Array(Math.floor(py)).keys()].reverse().find((y) => filled.has(cellKey([cx, y, cz])));
   const hole = holes.get(cellKey([cx, cz]));
-  if (hole && !caught) report(path, `the player at ${cellText(point)} would fall into ${hole}`);
+  if (hole && below === undefined) report(path, `the player at ${cellText(point)} would fall into ${hole}`);
+
+  // What he lands on: not a hazard or void block.
+  const landing = below !== undefined && blockTypes.get(cellKey([cx, below, cz]));
+  if (landing) report(path, `the player at ${cellText(point)} would land on a ${landing} block (${filled.get(cellKey([cx, below, cz]))})`);
 }
 
 function validateWorld(world, rooms, report) {

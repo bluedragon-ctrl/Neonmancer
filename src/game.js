@@ -7,13 +7,13 @@ import { announce, say } from './core/messages.js';
 import { isBackSide, sideAxes, withExitDefaults } from './data/room-data.js';
 import { createObject } from './entities/kinds.js';
 import { PLAYER, Player } from './entities/player.js';
-import { groundBelow, surfaceBelow } from './physics/collision.js';
+import { groundBelow, surfaceBelow, touchesCell } from './physics/collision.js';
 import { arrival, exitAt } from './world/exits.js';
-import { Grid } from './world/grid.js';
+import { CELL, Grid } from './world/grid.js';
 import { buildRoom } from './world/room.js';
 
 /** Terminal message for each way to die (Player.deathCause). */
-const DEATH_MESSAGES = { hole: 'msg.die', damage: 'msg.derez' };
+const DEATH_MESSAGES = { hole: 'msg.die', void: 'msg.void', damage: 'msg.derez' };
 
 /** Room transition timing in ticks (60 per second). */
 export const TRANSITION = {
@@ -30,7 +30,7 @@ export const TRANSITION = {
  * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'hurt'|'exit'|'room'} type
  * @property {object} [object] the room object it happened to (push, plug, and land of an object)
  * @property {number} [amount] integrity lost (hurt)
- * @property {'hole'|'damage'} [cause] how the wizard died (die)
+ * @property {'hole'|'void'|'damage'} [cause] how the wizard died (die)
  * @property {object} [exit] the exit walked out through (exit)
  */
 
@@ -38,7 +38,7 @@ export class Game {
   /** @param {object} content loaded game data (see data/load.js) */
   constructor(content) {
     this.content = content;
-    /** Debug mode: holes never kill and hurt() does nothing. */
+    /** Debug mode: holes and void blocks never kill and hurt() does nothing. */
     this.invincible = false;
     /** 'grid' (default, D23) or 'screen' (D38); toggled with G, not saved. */
     this.movementMode = 'grid';
@@ -100,8 +100,8 @@ export class Game {
   /**
    * The wizard loses integrity, unless invincible (debug mode) or still
    * invulnerable from the last hit; losing the last point kills him. Every
-   * damage source goes through here (D43): the debug test-damage key now,
-   * hazard blocks and enemies later in Phase 2. Reported
+   * damage source goes through here (D43): hazard blocks, the debug
+   * test-damage key, and enemies later in Phase 2. Reported
    * as a 'hurt' (and 'die') event with this tick's events, or the next
    * tick's when called outside update().
    * @param {number} [amount]
@@ -194,6 +194,9 @@ export class Game {
     }
     if (playerEvent === 'die') this.died();
     else if (playerEvent) this.emit(playerEvent);
+
+    // Touching a hazard block hurts (then he is invulnerable for a while).
+    if (!player.dead && touchesCell(player.box(), this.grid, CELL.hazard)) this.hurt(this.room.blockTypes.hazard.damage);
 
     const intent = player.pushIntent;
     if (intent && intent.body.push(intent.dir, this)) this.emit('push', { object: intent.body });

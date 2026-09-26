@@ -13,8 +13,15 @@ and the project uses [Semantic Versioning](https://semver.org/).
   the room's reset point. Death events name their cause (`hole` or
   `damage`), each with its own terminal line.
 - Asset showcase: `wizard-hit` loops the blink and the derez.
+- Hazard and void blocks (Phase 2 step 2): a `type` on room blocks, with
+  their looks and the hazard's damage in `defs.json` `blocks`. Touching a
+  hazard hurts; landing on void is instant death (cause `void`, own
+  terminal line). Validation keeps spawn and reset points off them and raised
+  exits off void. New test room Fault Line east of Stack Yard; showcase
+  `block-hazard` and `block-void`.
 
 ### Fixed
+- A room without objects logged a three.js error on entry.
 - `npm test` failed on Node 22+ (CI) after the Node 20 change: it now runs
   through `tools/run-tests.js`, which lists the test files itself.
 

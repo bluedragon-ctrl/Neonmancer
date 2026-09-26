@@ -430,3 +430,21 @@ room only counts down to death. Several Phase 2 mechanics were only named
 in CLAUDE.md; fixing their rules up front keeps each step's PR focused.
 Death at 0 integrity was implied by damage but not planned. The shared
 path format avoids two movement systems.
+
+### D44 — 2026-09-26 — Hazard and void contact rules; their looks in defs.json
+Hazard contact means the wizard's box overlaps the block on two axes and
+lies against or in it on the third (within 0.02 units): standing on it or
+leaning on a side counts, grazing a corner diagonally doesn't. The hit goes
+through `Game.hurt()`, so it repeats each time the invulnerability ends.
+Void kills when he is grounded with his feet center over a void cell,
+the same rule as holes; he derezzes on the spot (cause `void`). The two
+types are fixed keys in a `blocks` section of defs.json (look plus the
+hazard's `damage`), not open-ended types like objects, because their
+behavior is built into the engine. Where a special block meets a plain
+one, the special block's edge is drawn on top. Spawn and reset points
+can't be above either, and a raised exit can't stand on void.
+**Why:** the two-axis rule makes walls hurt on contact without punishing a
+near miss at a corner. Reusing the hole rule for void keeps "edge under one
+foot is safe" consistent across all falls to death. Keeping the looks in
+data lets them be tuned without code, and drawing special edges on top
+keeps the dangerous block readable, the point of giving it its own look.

@@ -353,3 +353,69 @@ test('buildRoom expands hole rectangles into tiles', () => {
     [1, 6],
   ]);
 });
+
+test('hazard and void blocks: the player must not spawn or respawn above one', () => {
+  assertError(
+    errorsAfter((f) => {
+      const room = f['rooms/alpha.json'];
+      room.blocks = [{ type: 'hazard', at: [1, 0, 1] }];
+      room.spawn = [1.5, 1, 1.5];
+    }),
+    'rooms/alpha.json › spawn',
+    'would land on a hazard block (blocks[0])',
+  );
+  assertError(
+    errorsAfter((f) => {
+      const room = f['rooms/alpha.json'];
+      room.blocks = [{ type: 'void', at: [4, 0, 4] }];
+      room.reset = [4.5, 2, 4.5];
+    }),
+    'rooms/alpha.json › reset',
+    'would land on a void block',
+  );
+  // A plain block on top of the void block catches him.
+  assert.deepEqual(
+    errorsAfter((f) => {
+      const room = f['rooms/alpha.json'];
+      room.blocks = [{ type: 'void', at: [4, 0, 4] }, { at: [4, 1, 4] }];
+      room.reset = [4.5, 2, 4.5];
+    }),
+    [],
+  );
+});
+
+test('hazard and void blocks: a raised exit must not stand on a void block', () => {
+  assertError(
+    errorsAfter((f) => {
+      const room = f['rooms/alpha.json'];
+      room.exits[0].y = 1;
+      room.blocks = [{ type: 'void', at: [7, 0, 3], to: [7, 0, 4] }];
+    }),
+    'rooms/alpha.json › exits[0]',
+    'void block at [7,0,3]',
+  );
+});
+
+test('buildRoom sorts blocks by type and carries the block type looks', () => {
+  const files = validFiles();
+  files['rooms/alpha.json'].blocks.push({ type: 'hazard', at: [1, 0, 6] }, { type: 'void', at: [6, 0, 1], to: [6, 0, 2] });
+  const content = loadGameData(files);
+  const room = buildRoom(content.rooms.get('alpha'), content);
+  assert.equal(room.cells.length, 4);
+  assert.deepEqual(room.typedCells, {
+    hazard: [[1, 0, 6]],
+    void: [
+      [6, 0, 1],
+      [6, 0, 2],
+    ],
+  });
+  assert.equal(room.blockTypes.hazard.damage, 1);
+  assert.equal(room.blockTypes.void.edges, 'solid'); // style defaults applied
+});
+
+test('block types: the schema requires both types and a hazard damage', () => {
+  const errors = errorsAfter((f) => delete f['defs.json'].blocks.hazard.damage);
+  assert.ok(errors.some((e) => e.includes('damage')), errors.join('\n'));
+  const unknown = errorsAfter((f) => (f['rooms/alpha.json'].blocks[0].type = 'lava'));
+  assert.ok(unknown.length > 0);
+});

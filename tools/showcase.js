@@ -20,7 +20,7 @@ import { createFloor } from '../src/render/floor.js';
 import { PALETTE } from '../src/render/neon.js';
 import { Renderer } from '../src/render/renderer.js';
 import { ASPECT } from '../src/render/viewport.js';
-import { createObjectView, createRoomView } from '../src/render/room-view.js';
+import { createBlockView, createObjectView, createRoomView } from '../src/render/room-view.js';
 import { ExitView } from '../src/render/exit-view.js';
 import { HOLO_TIME } from '../src/render/holo.js';
 import { createWizard } from '../src/render/wizard.js';
@@ -42,6 +42,15 @@ const ALL_ASSETS = [
     label: type,
     build: () => {
       const view = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...props, at: [0, 0, 0] });
+      view.position.set(-0.5, 0, -0.5);
+      return new Group().add(view);
+    },
+  })),
+  // Every special block type from defs.json (hazard, void), as the room draws it.
+  ...Object.entries(defs.blocks).map(([type, props]) => ({
+    label: `block-${type}`,
+    build: () => {
+      const view = createBlockView([[0, 0, 0]], { ...OBJECT_STYLE_DEFAULTS, ...props }, 3);
       view.position.set(-0.5, 0, -0.5);
       return new Group().add(view);
     },

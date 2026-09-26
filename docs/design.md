@@ -67,13 +67,13 @@ drifting up and a thin neon outline. Proportions are `WIZARD` in
 `src/render/wizard.js`; review looks in the asset showcase
 (`/tools/showcase.html?asset=wizard`).
 - Integrity (health) max 8, at most 15 (4 bits in the save key); it carries
-  over between rooms. Falling into a hole drains it all; respawning restores
-  it (D35).
+  over between rooms. Falling into a hole or landing on a void block drains
+  it all; respawning restores it (D35).
 
 ### Damage
 
-Every damage source calls `Game.hurt(amount)` (D43): the debug `H` key
-now, hazard blocks, platforms and enemies in later Phase 2 steps.
+Every damage source calls `Game.hurt(amount)` (D43): hazard blocks and the
+debug `H` key now, platforms and enemies in later Phase 2 steps.
 
 - A hit takes integrity, reports a `hurt` event (`amount` actually lost)
   and flashes the stage edges magenta (HUD). Then the wizard is
@@ -90,6 +90,29 @@ now, hazard blocks, platforms and enemies in later Phase 2 steps.
 - Tuning: `invulnerableTicks` and `deathTicks` in `PLAYER`; the look is
   `HIT_FX` in `src/render/hit-fx.js`, shown looping in the asset showcase
   (`/tools/showcase.html?asset=wizard-hit`).
+
+## Hazard and void blocks
+
+Static blocks of their own type (`"type"` on a room's block entry, D40,
+D44), solid like plain blocks, drawn in their own style from `defs.json`
+`blocks` instead of the room color, with their edges drawn over plain
+blocks' where they meet.
+
+- **Hazard** (red, crossed faces, tinted): touching one hurts, standing on
+  it or walking into any side of it (`damage` in defs.json, 1). The body
+  must overlap the block on two axes and lie against or in it (within 0.02),
+  so brushing past a corner diagonally doesn't count. Leaning on or
+  standing on one keeps hurting each time the 1 s invulnerability ends.
+- **Void** (violet, dashed edges, corner brackets): landing on top is
+  instant death (`die`, cause `void`), whatever the integrity; he derezzes
+  on the spot like a damage death. Only the block under his feet center
+  counts, like a hole, so an edge under one foot is safe; walking into its
+  sides is safe; a crate or plain block on top of one covers it.
+- Debug invincibility: hazards don't hurt, void blocks don't kill.
+- Validation: `spawn` and `reset` can't be above a hazard or void block
+  (he would land on it), and a raised exit's floor can't be a void block.
+- Tuning: looks and `damage` in `data/defs.json` `blocks`; review them in the
+  asset showcase (`/tools/showcase.html?asset=block-hazard,block-void`).
 
 ## Pushing
 
@@ -158,7 +181,8 @@ now, hazard blocks, platforms and enemies in later Phase 2 steps.
 |---|---|---|---|
 | `boot_sector` (start) | 12×12 | north doorway → Cache Hall; raised east exit on a ledge → Stack Yard | blocks, holes, two crates |
 | `cache_hall` | 16×8 | south (front) → Boot Sector | a 3-wide pit across the room: push a crate in, then jump the rest |
-| `stack_yard` | 8×8, Glitch Zone color | raised west doorway → Boot Sector | stacked crates, a 2-high block to climb via a crate |
+| `stack_yard` | 8×8, Glitch Zone color | raised west doorway → Boot Sector; east (front) → Fault Line | stacked crates, a 2-high block to climb via a crate |
+| `fault_line` (Phase 2) | 12×12 | west doorway → Stack Yard | a corridor between hazard walls, hazard blocks between two plain ones to walk across, a zigzag path of plain blocks through a field of void blocks up to a lookout |
 
 ## HUD
 
@@ -196,8 +220,8 @@ F3 toggles debug mode; off by default. While it's on:
   he's grounded, and whether invincibility is on.
 - `]` / `[` jump straight to the next/previous room in load order, skipping
   the exit transition (`Game.debugJumpRoom()`); ignored mid-transition.
-- `I` toggles invincibility (`Game.invincible`): holes never kill and
-  `Game.hurt()` does nothing.
+- `I` toggles invincibility (`Game.invincible`): holes and void blocks
+  never kill and `Game.hurt()` does nothing (so hazards don't hurt).
 - `H` calls `Game.hurt(1)`, the same path as every damage source: the
   wizard blinks while invulnerable, and at 0 integrity he derezzes.
 
@@ -227,7 +251,7 @@ Each step is one branch and one PR; the game runs after every step.
 Hazards, combat and the room editor. Each step is one branch and one PR
 against `main` (no stacked PRs); the game runs after every step, CI is
 green before a PR is called ready. Rules that apply across steps are in
-D43. **Next step: 2.**
+D43. **Next step: 3.**
 
 Every step also:
 - adds its new looks to the asset showcase (`tools/showcase.js`);
@@ -262,7 +286,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 | File | Contents |
 |---|---|
 | `data/rooms/<id>.json` | One room (id = file name) |
-| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, inset mark, dark faces; box variants `crate_plain`, `crate_cross`, `crate_dashed`) |
+| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, inset mark, dark faces; box variants `crate_plain`, `crate_cross`, `crate_dashed`); `blocks`: look of the `hazard` and `void` block types and the hazard's `damage` |
 | `data/biomes.json` | Biome name and room color (`home_lattice`: amber) |
 | `data/world.json` | Start room and exit connections |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |
@@ -301,7 +325,8 @@ Example room (12×12):
 - `exits` — `side` is `-x`, `+x`, `-z` or `+z`; `at` is the first cell along
   that side; `width` (default 2), `y` floor level (default 0), `height`
   (default 2).
-- `blocks` — anonymous static geometry; `to` fills a box (inclusive).
+- `blocks` — anonymous static geometry; `to` fills a box (inclusive);
+  `type` is `block` (default, room color), `hazard` or `void`.
 - `holes` — floor tiles `[x, z]` that are pits; `to` fills a rectangle.
 - `objects` — typed things with stable ids; `overrides` replace type defaults.
 - Object type style (D17): `edges` `solid`/`dashed`, `mark`

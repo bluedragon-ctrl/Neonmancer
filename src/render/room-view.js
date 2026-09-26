@@ -1,13 +1,15 @@
 /**
  * Static room geometry: blocks and the two back walls.
  *
- * Blocks are one instanced mesh of dark cubes (the occluding faces) plus one
- * merged set of neon edges from blockEdges(). Only the back walls (x = 0 and
+ * Each block type is one instanced mesh of cubes (the occluding faces) plus
+ * one merged set of neon edges from blockEdges(): plain blocks in the room
+ * color, hazard and void blocks in their own style from defs.json. Only the back walls (x = 0 and
  * z = 0) are drawn; the front sides stay open (CLAUDE.md §4). Exits are
  * doorways in the back walls and gaps in the front edges (render/walls.js).
  */
 import { BoxGeometry, BufferGeometry, Color, DoubleSide, Float32BufferAttribute, Group, InstancedMesh, Matrix4, Mesh } from 'three';
 import { blockEdges } from './edges.js';
+import { OBJECT_STYLE_DEFAULTS } from '../data/room-data.js';
 import { markSegments } from './marks.js';
 import { doorwayTunnels, wallLayout } from './walls.js';
 import {
@@ -27,33 +29,52 @@ const UNIT_BOX = shared(new BoxGeometry(1, 1, 1).translate(0.5, 0.5, 0.5));
 /**
  * @param {object} room
  * @param {number[]} room.size [x, y, z]
- * @param {number[][]} room.cells filled block cells as [x, y, z]
+ * @param {number[][]} room.cells plain block cells as [x, y, z]
  * @param {object[]} [room.exits] exits (defaults applied): doorways in the back walls, gaps in the front edges
  * @param {number|string} [room.color] room color (biome), amber by default
+ * @param {Record<string, number[][]>} [room.typedCells] hazard and void block cells, by type
+ * @param {Record<string, object>} [room.blockTypes] their looks (color and object style), by type
  */
-export function createRoomView({ size, cells, exits = [], color = PALETTE.amber }) {
+export function createRoomView({ size, cells, exits = [], color = PALETTE.amber, typedCells = {}, blockTypes = {} }) {
   const group = new Group();
   group.add(createWalls(size, exits, color));
-  if (cells.length > 0) group.add(createBlockView(cells, color));
+  if (cells.length > 0) group.add(createBlockView(cells, { ...OBJECT_STYLE_DEFAULTS, color }));
+  for (const [type, list] of Object.entries(typedCells)) {
+    // Drawn after the plain blocks, so where they meet the special block's edge wins.
+    if (list.length > 0) group.add(createBlockView(list, blockTypes[type], 3));
+  }
   return group;
 }
 
 /**
- * Dark occluding cubes with merged neon edges.
+ * Occluding cubes with merged neon edges, in an object style: dark or
+ * tinted faces, solid or dashed edges, a mark on every face.
  * @param {number[][]} cells [x, y, z] cells
- * @param {number|string} color
+ * @param {{ color: number|string, edges: string, mark: string, faces: string, tint: number }} style
+ * @param {number} [renderOrder] of the lines; 2 draws over wall lines lying in the same spot
  */
-export function createBlockView(cells, color) {
+export function createBlockView(cells, { color, edges, mark, faces, tint }, renderOrder = 2) {
   const group = new Group();
 
-  const faces = new InstancedMesh(UNIT_BOX, faceMaterial(), cells.length);
+  const materials = faces === 'tinted' ? tintedFaceMaterials(color, tint) : faceMaterial();
+  const boxes = new InstancedMesh(UNIT_BOX, materials, cells.length);
   const matrix = new Matrix4();
-  cells.forEach(([x, y, z], i) => faces.setMatrixAt(i, matrix.makeTranslation(x, y, z)));
-  group.add(faces);
+  cells.forEach(([x, y, z], i) => boxes.setMatrixAt(i, matrix.makeTranslation(x, y, z)));
+  group.add(boxes);
 
-  const edges = neonLines(blockEdges(cells), lineMaterial({ color, width: 2.5, brightness: 1.6 }));
-  edges.renderOrder = 2; // drawn over wall lines lying in the same spot
-  group.add(edges);
+  const dashed = edges === 'dashed';
+  const outline = neonLines(blockEdges(cells), lineMaterial({ color, width: 2.5, brightness: 1.6, dashed }));
+  outline.renderOrder = renderOrder;
+  group.add(outline);
+
+  if (mark !== 'none') {
+    const marks = neonLines(
+      cells.flatMap((cell) => markSegments(mark, cell)),
+      lineMaterial({ color, width: 1.5, brightness: 1 }),
+    );
+    marks.renderOrder = renderOrder;
+    group.add(marks);
+  }
   return group;
 }
 

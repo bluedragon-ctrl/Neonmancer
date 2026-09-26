@@ -52,6 +52,34 @@ export function overlapsSolid(box, grid) {
 }
 
 /**
+ * Does the box touch a cell of the given type: overlap it, or lie against
+ * one of its faces (within `reach`)? Standing on a block, or walking into
+ * its side, counts as touching it.
+ * @param {number[][]} box from bodyBox()
+ * @param {{ cellAt(x: number, y: number, z: number): number }} grid
+ * @param {number} type a CELL type (world/grid.js)
+ * @param {number} [reach] how far beyond the box faces still counts
+ */
+export function touchesCell(box, grid, type, reach = 0.02) {
+  const [x0, x1] = cellRange([box[0][0] - reach, box[0][1] + reach]);
+  const [y0, y1] = cellRange([box[1][0] - reach, box[1][1] + reach]);
+  const [z0, z1] = cellRange([box[2][0] - reach, box[2][1] + reach]);
+  for (let x = x0; x <= x1; x++) {
+    for (let y = y0; y <= y1; y++) {
+      for (let z = z0; z <= z1; z++) {
+        if (grid.cellAt(x, y, z) !== type) continue;
+        // Reaching past a corner diagonally doesn't count: the box must
+        // overlap the cell on at least two axes.
+        const cell = [x, y, z];
+        const inside = box.filter(([min, max], i) => overlaps([min, max], [cell[i], cell[i] + 1])).length;
+        if (inside >= 2) return true;
+      }
+    }
+  }
+  return false;
+}
+
+/**
  * Move a body along one axis, stopping at the first solid cell face or body.
  * Changes `pos` in place. Returns false if the move was free, the body that
  * stopped it, or true for a cell (a body wins if both touch).

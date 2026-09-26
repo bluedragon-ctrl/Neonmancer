@@ -2,9 +2,9 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "defs.schema.json",
   "title": "Type definitions (data/defs.json)",
-  "description": "Object types with their defaults. Enemy types and spells join in later phases.",
+  "description": "Object types with their defaults, and the look and rules of the special static block types. Enemy types and spells join in later phases.",
   "type": "object",
-  "required": ["schemaVersion", "objects"],
+  "required": ["schemaVersion", "objects", "blocks"],
   "additionalProperties": false,
   "properties": {
     "$schema": { "type": "string" },
@@ -13,6 +13,41 @@
       "type": "object",
       "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
       "additionalProperties": { "$ref": "#/$defs/objectType" }
+    },
+    "blocks": {
+      "type": "object",
+      "description": "Static block types other than plain blocks (which take the room color). Their behavior is built into the engine; this sets their look and tuning.",
+      "required": ["hazard", "void"],
+      "additionalProperties": false,
+      "properties": {
+        "hazard": {
+          "description": "Hurts the wizard when he touches it (stands on it or walks into it).",
+          "type": "object",
+          "required": ["color", "damage"],
+          "additionalProperties": false,
+          "properties": {
+            "color": { "$ref": "common.schema.json#/$defs/color" },
+            "edges": { "$ref": "#/$defs/objectType/properties/edges" },
+            "mark": { "$ref": "#/$defs/objectType/properties/mark" },
+            "faces": { "$ref": "#/$defs/objectType/properties/faces" },
+            "tint": { "$ref": "#/$defs/objectType/properties/tint" },
+            "damage": { "type": "integer", "minimum": 1, "description": "Integrity lost per hit." }
+          }
+        },
+        "void": {
+          "description": "Kills the wizard instantly when he lands on it.",
+          "type": "object",
+          "required": ["color"],
+          "additionalProperties": false,
+          "properties": {
+            "color": { "$ref": "common.schema.json#/$defs/color" },
+            "edges": { "$ref": "#/$defs/objectType/properties/edges" },
+            "mark": { "$ref": "#/$defs/objectType/properties/mark" },
+            "faces": { "$ref": "#/$defs/objectType/properties/faces" },
+            "tint": { "$ref": "#/$defs/objectType/properties/tint" }
+          }
+        }
+      }
     }
   },
   "$defs": {

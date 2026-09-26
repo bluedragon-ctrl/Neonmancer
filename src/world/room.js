@@ -5,11 +5,16 @@
  */
 import { OBJECT_STYLE_DEFAULTS, blockCells, holeTiles, withExitDefaults } from '../data/room-data.js';
 
+/** Cells of the room's blocks of one type ("type" defaults to "block"). */
+function blocksOfType(data, type) {
+  return (data.blocks ?? []).filter((block) => (block.type ?? 'block') === type).flatMap(blockCells);
+}
+
 /**
  * @param {object} data room file contents (validated)
- * @param {{ objectTypes: object, biomes: object }} content loaded game data
+ * @param {{ objectTypes: object, blockTypes: object, biomes: object }} content loaded game data
  */
-export function buildRoom(data, { objectTypes, biomes }) {
+export function buildRoom(data, { objectTypes, blockTypes, biomes }) {
   return {
     id: data.id,
     name: data.name,
@@ -20,8 +25,14 @@ export function buildRoom(data, { objectTypes, biomes }) {
     /** Where the wizard reappears after dying here, however he entered (D39). */
     reset: [...(data.reset ?? data.spawn)],
     exits: (data.exits ?? []).map(withExitDefaults),
-    /** Static block cells as [x, y, z]. */
-    cells: (data.blocks ?? []).flatMap(blockCells),
+    /** Plain static block cells as [x, y, z]. */
+    cells: blocksOfType(data, 'block'),
+    /** Cells of the other static block types (D40), by type. */
+    typedCells: { hazard: blocksOfType(data, 'hazard'), void: blocksOfType(data, 'void') },
+    /** Look and rules of those block types (defs.json "blocks"), style defaults applied. */
+    blockTypes: Object.fromEntries(
+      Object.entries(blockTypes).map(([type, props]) => [type, { ...OBJECT_STYLE_DEFAULTS, ...props }]),
+    ),
     /** Hole floor tiles as [x, z]. */
     holes: (data.holes ?? []).flatMap(holeTiles),
     /** Typed objects: type defaults merged with this object's overrides. */
