@@ -93,6 +93,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/room-scene.js` | The current room's views, object views by kind (`OBJECT_VIEWS`); rebuilds only the objects on a respawn |
 | `render/wizard.js` | Wizard model: parts as data (pure, tested), built in the hologram look |
 | `render/holo.js` | Hologram look for characters: rim-glow material, inverted-hull outline, eyes, shared clock |
+| `render/xray.js` | X-ray ghost of the wizard's hidden parts (reversed depth test), render orders of the ghost and the characters, `XRAY` tuning |
 | `ui/hud.js` | DOM overlay: integrity bar, energy bar, room banner, terminal messages, fullscreen hint |
 | `ui/energy-bar.js` | Energy bar: one segment per cast filling as it recharges; flashes on a denied cast |
 | `ui/terminal.js` | Terminal message queue (typing, hold, fade) and banner timing (pure, tested) |

@@ -28,6 +28,7 @@ import { lerpAngle, lerpPosition, shadowScale } from './interp.js';
 import { railSegments } from './rails.js';
 import { createObjectView } from './room-view.js';
 import { createWizard } from './wizard.js';
+import { addXray } from './xray.js';
 import { damagedGlitch, enemyHitLook } from './zap-fx.js';
 import { createCastFlare, placeCastFlare } from './zap-view.js';
 
@@ -168,6 +169,8 @@ export class PlayerView {
     this.game = game;
     this.group = new Group();
     this.wizard = createWizard();
+    /** Ghost of his parts hidden behind blocks (xray.js). */
+    this.xray = addXray(this.wizard);
     this.shadow = createDropShadow(PALETTE.cyan);
     this.pixels = createDerezPixels();
     this.flare = createCastFlare();
@@ -186,6 +189,8 @@ export class PlayerView {
     this.wizard.visible = look.visible;
     this.wizard.scale.set(...look.scale);
     showHitFlash(this.wizard, hitFlash(player));
+    // No ghost while dead: not of him falling into a pit, nor of the derez.
+    for (const ghost of this.xray) ghost.visible = !player.dead;
     const derezzing = player.dead && player.deathCause !== 'hole';
     placePixels(this.pixels, derezzing ? derezPixels(PLAYER.deathTicks - player.deathTimer + alpha) : [], pos);
 

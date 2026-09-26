@@ -286,6 +286,25 @@ comes from data: its type in `defs.json` `enemies`, and the room's
   `src/entities/bolt.js`; the look is `ZAP_FX` in `src/render/zap-fx.js`;
   review in the asset showcase (`/tools/showcase.html?asset=zap`).
 
+## X-ray outline
+
+The parts of the wizard hidden behind blocks, crates, platforms or enemies
+show through them as a ghost: nearly empty inside, a bright rim in his own
+colors (magenta body and hat, cyan head and hands) and faint bands drifting
+down through it. Only the hidden parts show it; the rest of him is drawn as
+usual, so half behind a wall he is half ghost (D55).
+
+- Each hologram part gets a ghost copy drawn with the depth test reversed,
+  after the world and before the wizard, so his own parts never hide each
+  other's ghost. Additive and without depth, so edges stay readable
+  through it.
+- It blinks with him while invulnerable and shows his hit flash; it is
+  hidden while he is dead (no ghost of a hole fall or a derez).
+- The wizard only for now (D43); enemies have none.
+- Tuning: `XRAY` in `src/render/xray.js`; review it in the asset showcase
+  (`/tools/showcase.html?asset=xray`), or behind the 2-high wall near
+  Boot Sector's front.
+
 ## Pushing
 
 - Push by walking into an object along a grid axis while standing on the
@@ -381,7 +400,7 @@ walking the whole world (new exits are added for that where needed, D49).
 
 | Room | Size | Exits | Shows |
 |---|---|---|---|
-| `boot_sector` (start, hub) | 12×12 | north doorway → Cache Hall; raised east exit on a ledge → Stack Yard; west doorway → Crawl Space; south (front) → Transit Bus | blocks, holes, two crates |
+| `boot_sector` (start, hub) | 12×12 | north doorway → Cache Hall; raised east exit on a ledge → Stack Yard; west doorway → Crawl Space; south (front) → Transit Bus | blocks, holes, two crates, a 2-high wall near the front to walk behind (X-ray outline) |
 | `cache_hall` | 16×8 | south (front) → Boot Sector | a 3-wide pit across the room: push a crate in, then jump the rest |
 | `stack_yard` | 8×8, Glitch Zone color | raised west doorway → Boot Sector; east (front) → Fault Line | stacked crates, a 2-high block to climb via a crate |
 | `fault_line` (Phase 2) | 12×12 | west doorway → Stack Yard; raised east exit on the lookout → Transit Bus | a corridor between hazard walls, hazard blocks between two plain ones to walk across, a zigzag path of plain blocks through a field of void blocks up to a lookout |
@@ -508,7 +527,7 @@ Each step is one branch and one PR; the game runs after every step.
 Hazards, combat and the room editor. Each step is one branch and one PR
 against `main` (no stacked PRs); the game runs after every step, CI is
 green before a PR is called ready. Rules that apply across steps are in
-D43. **Next step: 7.**
+D43. **Next step: 8.**
 
 Every step also:
 - adds its new looks to the asset showcase (`tools/showcase.js`);

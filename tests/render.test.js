@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { Vector3 } from 'three';
+import { GreaterDepth, Vector3 } from 'three';
 import {
   bufferSize,
   clampRenderScale,
@@ -16,6 +16,9 @@ import { OBJECT_KINDS } from '../src/entities/kinds.js';
 import DEFS from '../data/defs.json' with { type: 'json' };
 import DEFS_SCHEMA from '../schemas/defs.schema.json' with { type: 'json' };
 import { ENEMY_MODELS } from '../src/render/entity-view.js';
+import { createRoomView } from '../src/render/room-view.js';
+import { createWizard } from '../src/render/wizard.js';
+import { CHARACTER_ORDER, XRAY_ORDER, addXray } from '../src/render/xray.js';
 
 test('letterbox fills a 16:9 window exactly', () => {
   assert.deepEqual(fitLetterbox(1920, 1080), { x: 0, y: 0, width: 1920, height: 1080 });
@@ -145,4 +148,38 @@ test('every object kind in the schema has a logic class and a view', () => {
 
 test('every enemy type in defs.json has a model', () => {
   for (const type of Object.keys(DEFS.enemies)) assert.ok(ENEMY_MODELS[type], `no model for "${type}"`);
+});
+
+test('x-ray: every hologram part of the wizard gets a ghost', () => {
+  const wizard = createWizard();
+  const parts = [];
+  wizard.traverse((node) => node.userData.holoSolid && parts.push(node));
+  const ghosts = addXray(wizard);
+  assert.equal(ghosts.length, parts.length);
+  for (const ghost of ghosts) {
+    assert.equal(ghost.material.depthFunc, GreaterDepth, 'drawn only where the world is nearer');
+    assert.equal(ghost.material.depthWrite, false);
+    assert.equal(ghost.parent.userData.holoSolid.geometry, ghost.geometry, 'same shape as its part');
+  }
+});
+
+test('x-ray: ghosts draw after the world and before the wizard', () => {
+  const wizard = createWizard();
+  const ghosts = addXray(wizard);
+  wizard.traverse((node) => {
+    if (node.isMesh && !ghosts.includes(node)) assert.equal(node.renderOrder, CHARACTER_ORDER);
+  });
+  for (const ghost of ghosts) assert.equal(ghost.renderOrder, XRAY_ORDER);
+  assert.ok(XRAY_ORDER < CHARACTER_ORDER);
+  // Every world view that can hide him draws before the ghost.
+  const room = createRoomView({ size: [4, 3, 4], cells: [[0, 0, 0]], color: '#ffb020' });
+  room.traverse((node) => assert.ok(node.renderOrder < XRAY_ORDER, 'room view drawn before the ghost'));
+});
+
+test('x-ray: parts of one color share a ghost material with the wizard flash', () => {
+  const wizard = createWizard();
+  const ghosts = addXray(wizard);
+  const materials = new Set(ghosts.map((ghost) => ghost.material));
+  assert.equal(materials.size, 2, 'magenta body and hat, cyan head and hands');
+  for (const material of materials) assert.equal(material.uniforms.uFlash, wizard.userData.flash.amount);
 });

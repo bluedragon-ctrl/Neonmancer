@@ -68,6 +68,11 @@ and the project uses [Semantic Versioning](https://semver.org/).
   is destructible (1 Zap). Crates show data bits: the plain `crate` a
   whole grid of small pale squares on each face (new `bits` mark, tinted faces like `crate_cross`), a
   destructible one the grid with holes. Showcase `zap-break`.
+- X-ray outline (Phase 2 step 7): the parts of the wizard hidden behind
+  blocks, objects or enemies show through as a ghost with a bright rim in
+  his own colors (D55); it blinks and flashes with him and is hidden while
+  he is dead. Boot Sector gets a 2-high wall near the front to walk
+  behind; showcase `xray` (showcase assets can now stand still).
 - Room design checklist in docs/design.md: reach, timing budgets,
   readability and soft-lock checks collected from playtests; the basis for
   the Phase 3 room design skill and level review subagent.

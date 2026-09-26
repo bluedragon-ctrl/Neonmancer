@@ -7,7 +7,8 @@
  * Space pauses the turning; ←/→ turn by hand. `?asset=wizard` shows one
  * asset close up, `?asset=wizard,crate` a few side by side.
  * New assets (monsters, pickups) are added to ASSETS below. Assets can take
- * more room (`span`) and animate (`update(dt, time)`, called every frame).
+ * more room (`span`), animate (`update(dt, time)`, called every frame) and
+ * stand still instead of turning (`spin: false`).
  */
 import { Group, Vector3 } from 'three';
 import defs from '../data/defs.json';
@@ -37,6 +38,7 @@ import { COLLAPSE_FX, COLLAPSE_PIXELS, collapsePixels } from '../src/render/coll
 import { ExitView } from '../src/render/exit-view.js';
 import { HOLO_TIME } from '../src/render/holo.js';
 import { createWizard } from '../src/render/wizard.js';
+import { addXray } from '../src/render/xray.js';
 import { BUG, animateBug, createBug, popPixels, setEyeMood } from '../src/render/bug.js';
 import { ZAP_FX, damagedGlitch, enemyHitLook } from '../src/render/zap-fx.js';
 import { createBolt, createCastFlare, createSparks, placeBolt, placeCastFlare, placeSparks } from '../src/render/zap-view.js';
@@ -84,7 +86,40 @@ const ALL_ASSETS = [
   { label: 'zap-bug', group: 'zap', span: 6, build: buildZapBug },
   { label: 'zap-crate', group: 'zap', span: 5, build: buildZapCrate },
   { label: 'zap-break', group: 'zap', span: 5, build: buildZapBreak },
+  // X-ray (step 7): the wizard walking behind a wall shows through it; the
+  // turntable stands still so the wall stays in front.
+  { label: 'xray', span: 5.5, spin: false, build: buildXray },
 ];
+
+/**
+ * A 4×4 room corner with a 2-high wall and a crate along the front; the
+ * wizard walks back and forth behind them, hit now and then (the flash
+ * shows through too).
+ */
+function buildXray() {
+  const cells = [[1, 0, 3], [2, 0, 3], [1, 1, 3], [2, 1, 3]];
+  const room = new Group().add(createRoomView({ size: [4, 3, 4], cells, color: PALETTE.amber }));
+  const crate = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...defs.objects.crate, at: [0, 0, 3] });
+  const wizard = createWizard();
+  addXray(wizard);
+  room.add(crate, wizard);
+  room.position.set(-2, 0, -2);
+  const asset = new Group().add(room);
+  const loop = 360;
+  let tick = 0;
+  asset.userData.update = (dt) => {
+    tick = (tick + dt * 60) % loop;
+    // Back and forth along x, behind the crate and the wall.
+    const t = tick / loop;
+    const leg = t < 0.5 ? t * 2 : (t - 0.5) * 2;
+    const x = t < 0.5 ? 0.5 + leg * 3 : 3.5 - leg * 3;
+    wizard.position.set(x, 0, 2.2);
+    wizard.rotation.y = t < 0.5 ? Math.PI / 2 : -Math.PI / 2;
+    const hit = Math.floor(tick) % 180;
+    showHitFlash(wizard, hitFlash({ invulnerable: hit < 60 ? PLAYER.invulnerableTicks - hit : 0, dead: false }));
+  };
+  return asset;
+}
 
 /**
  * The wizard zapping a destructible crate (crate_cross): it breaks into
@@ -467,13 +502,14 @@ frameRoom(renderer.camera, size);
 renderer.camera.zoom = Math.min(6, (VIEW_HEIGHT * ASPECT) / (total + SPACING));
 renderer.camera.updateProjectionMatrix();
 
-const turntables = ASSETS.map(({ label, build, shadow }, i) => {
+const turntables = ASSETS.map(({ label, build, shadow, spin = true }, i) => {
   const turntable = new Group();
   const offset = spans.slice(0, i).reduce((sum, span) => sum + span, 0) + spans[i] / 2 - total / 2;
   const t = offset / Math.SQRT2;
   turntable.position.set(side / 2 + t, 0, side / 2 - t);
   const model = build();
   turntable.userData.update = model.userData.update;
+  turntable.userData.spin = spin;
   turntable.add(model);
   if (shadow) {
     const disc = createDropShadow(shadow);
@@ -516,7 +552,7 @@ function frame(now) {
   if (held.has('ArrowLeft')) turn -= 2;
   if (held.has('ArrowRight')) turn += 2;
   for (const turntable of turntables) {
-    turntable.rotation.y += turn * dt;
+    if (turntable.userData.spin) turntable.rotation.y += turn * dt;
     turntable.userData.update?.(dt, now / 1000);
   }
   renderer.render();
