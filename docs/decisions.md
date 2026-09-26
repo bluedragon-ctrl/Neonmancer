@@ -448,3 +448,12 @@ near miss at a corner. Reusing the hole rule for void keeps "edge under one
 foot is safe" consistent across all falls to death. Keeping the looks in
 data lets them be tuned without code, and drawing special edges on top
 keeps the dangerous block readable, the point of giving it its own look.
+
+### D45 — 2026-09-26 — Test rooms stay until content production
+The small rooms that each show one mechanic (Boot Sector, Cache Hall,
+Stack Yard, Fault Line, ...) stay in the world and keep growing with each
+step. The real rooms and puzzles of Phase 4 content production replace
+them, not earlier.
+**Why:** author's call. Until real rooms exist they are the only place to
+try a mechanic in isolation, and future spells and behaviors (Zap, Warp,
+Cut & Paste, enemy AI) will need them for testing too.

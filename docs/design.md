@@ -175,7 +175,12 @@ blocks' where they meet.
   at floor level, holes). A raised exit (`y` > 0) needs something to stand
   on in front of it, usually a ledge.
 
-### Test rooms (Phase 1)
+### Test rooms
+
+Test rooms stay in the world until content production (Phase 4) builds the
+real rooms and puzzles (D45). They are a test lab: each shows one mechanic
+in isolation, and later spells and enemy behaviors get tested in them too.
+New mechanics add or extend one (D43).
 
 | Room | Size | Exits | Shows |
 |---|---|---|---|
