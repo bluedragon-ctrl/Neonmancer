@@ -5,6 +5,7 @@
   "connections": [
     ["boot_sector.north", "cache_hall.south"],
     ["boot_sector.east", "stack_yard.west"],
-    ["stack_yard.east", "fault_line.west"]
+    ["stack_yard.east", "fault_line.west"],
+    ["fault_line.east", "transit_bus.west"]
   ]
 }

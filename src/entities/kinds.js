@@ -8,10 +8,12 @@
  * body others collide with) and `update(game)`, returning an event type or
  * null. Optional: `push(dir, game)` for objects the wizard can push.
  */
+import { Platform } from './platform.js';
 import { Pushable } from './pushable.js';
 
 export const OBJECT_KINDS = {
   pushable: Pushable,
+  platform: Platform,
 };
 
 /**

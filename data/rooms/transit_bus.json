@@ -1,0 +1,30 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "transit_bus",
+  "name": "Transit Bus",
+  "biome": "home_lattice",
+  "size": [12, 5, 12],
+  "spawn": [1, 0, 2],
+  "exits": [{ "id": "west", "side": "-x", "at": 1 }],
+  "blocks": [
+    { "at": [2, 0, 0], "to": [2, 0, 3] },
+    { "at": [7, 0, 0], "to": [7, 0, 3] },
+    { "at": [8, 0, 0], "to": [11, 2, 1] }
+  ],
+  "holes": [{ "at": [3, 0], "to": [6, 3] }],
+  "objects": [
+    { "id": "ferry", "type": "platform", "at": [3, 0, 1], "path": { "points": [[6, 0, 1]], "speed": 2, "pause": 0.8 } },
+    { "id": "lift", "type": "platform", "at": [8, 0, 2], "path": { "points": [[8, 2, 2]], "speed": 1.5, "pause": 1 } },
+    {
+      "id": "loop",
+      "type": "platform",
+      "at": [2, 0, 6],
+      "path": { "points": [[5, 0, 6], [5, 0, 9], [2, 0, 9]], "mode": "loop", "speed": 2, "pause": 0.5 }
+    },
+    { "id": "rider", "type": "crate", "at": [2, 1, 6] },
+    { "id": "press", "type": "platform", "at": [8, 2, 8], "path": { "points": [[8, 0, 8]], "speed": 3, "pause": 1.2 } },
+    { "id": "jam", "type": "crate", "at": [8, 0, 10] },
+    { "id": "pusher", "type": "platform", "at": [10, 0, 6], "path": { "points": [[10, 0, 11]], "speed": 2, "pause": 0.6 } }
+  ]
+}

@@ -48,7 +48,10 @@
       "required": ["kind", "color"],
       "additionalProperties": false,
       "properties": {
-        "kind": { "enum": ["pushable"], "description": "Which engine behavior the object uses." },
+        "kind": {
+          "enum": ["pushable", "platform"],
+          "description": "Which engine behavior the object uses. pushable: the wizard pushes it; platform: follows its path (room data \"path\") carrying the wizard and pushables."
+        },
         "color": { "$ref": "common.schema.json#/$defs/color" },
         "edges": {
           "enum": ["solid", "dashed"],

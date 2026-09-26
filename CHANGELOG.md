@@ -21,6 +21,16 @@ and the project uses [Semantic Versioning](https://semver.org/).
   Validation keeps spawn and reset points off them and raised exits off
   void. New test room Fault Line east of Stack Yard; showcase
   `block-hazard`, `block-void` and `blocks-in-room`.
+- Moving platforms (Phase 2 step 3): a `platform` object type following a
+  `path` in room data (from `at` through `points`, ping-pong or loop,
+  speed, pause at the ends), the format patrolling enemies will share. The
+  wizard and resting crates (and stacks) ride them; a crate in the way
+  makes a platform wait; the wizard in the way is shoved aside, or hurt if
+  there is no room, never killed outright. A glowing guide line through the
+  middle of each path.
+  Validation checks path legs, blocks on the path and exits. New test
+  room Transit Bus behind a raised exit on Fault Line's lookout; showcase
+  `platform` and `platforms`.
 
 ### Fixed
 - A room without objects logged a three.js error on entry.

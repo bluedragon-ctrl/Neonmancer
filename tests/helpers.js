@@ -9,6 +9,9 @@ import { Grid } from '../src/world/grid.js';
 /** A plain pushable crate type. */
 export const CRATE = { kind: 'pushable', color: '#b6ff3c' };
 
+/** A moving platform type (its path is on the room object). */
+export const LIFT = { kind: 'platform', color: '#00f0ff' };
+
 /** Looks and rules of the special block types, as in defs.json. */
 export const BLOCK_TYPES = { hazard: { color: '#ff3b30', damage: 1 }, void: { color: '#8a5cff' } };
 

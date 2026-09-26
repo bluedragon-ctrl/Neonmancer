@@ -7,7 +7,7 @@ import { DataError, loadGameData } from '../src/data/load.js';
 import { buildRoom } from '../src/world/room.js';
 import { OBJECT_STYLES } from '../src/data/room-data.js';
 import { MARKS } from '../src/render/marks.js';
-import { dataFiles, roomFile } from './helpers.js';
+import { LIFT, dataFiles, roomFile } from './helpers.js';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const schemas = readSchemas(root);
@@ -418,4 +418,45 @@ test('block types: the schema requires both types and a hazard damage', () => {
   assert.ok(errors.some((e) => e.includes('damage')), errors.join('\n'));
   const unknown = errorsAfter((f) => (f['rooms/alpha.json'].blocks[0].type = 'lava'));
   assert.ok(unknown.length > 0);
+});
+
+/** The valid game with a platform type and `object` added to room alpha. */
+function withPlatform(object, change = () => {}) {
+  return errorsAfter((f) => {
+    f['defs.json'].objects.lift = LIFT;
+    f['rooms/alpha.json'].objects.push(object);
+    change(f);
+  });
+}
+
+test('platforms: a valid path passes, and the platform needs one', () => {
+  assert.deepEqual(withPlatform({ id: 'p', type: 'lift', at: [1, 0, 3], path: { points: [[1, 2, 3], [3, 2, 3]], mode: 'loop' } }), [
+    'rooms/alpha.json › objects[1].path: a loop runs from [3,2,3] back to [1,0,3]: they must differ on exactly one axis',
+  ]);
+  assert.deepEqual(withPlatform({ id: 'p', type: 'lift', at: [1, 0, 3], path: { points: [[1, 2, 3], [3, 2, 3]] } }), []);
+  assertError(withPlatform({ id: 'p', type: 'lift', at: [1, 0, 3] }), 'objects[1]', 'a platform needs a "path"');
+  assertError(
+    errorsAfter((f) => (f['rooms/alpha.json'].objects[0].path = { points: [[3, 0, 5]] })),
+    'objects[0].path',
+    'only platforms follow a path',
+  );
+});
+
+test('platforms: each leg runs along one axis, inside the room, clear of blocks', () => {
+  assertError(withPlatform({ id: 'p', type: 'lift', at: [1, 0, 3], path: { points: [[2, 1, 3]] } }), 'objects[1].path.points[0]', 'exactly one axis');
+  assertError(withPlatform({ id: 'p', type: 'lift', at: [1, 0, 3], path: { points: [[9, 0, 3]] } }), 'objects[1].path.points[0]', 'outside size');
+  // Blocks fill [4..5, 0..1, 4].
+  assertError(withPlatform({ id: 'p', type: 'lift', at: [2, 1, 4], path: { points: [[6, 1, 4]] } }), 'objects[1].path', 'runs through cell [4,1,4], filled by blocks[0]');
+  // A crate on the path is fine: the platform waits for it.
+  assert.deepEqual(withPlatform({ id: 'p', type: 'lift', at: [0, 0, 5], path: { points: [[3, 0, 5]] } }), []);
+});
+
+test('platforms: no path through the first row inside an exit', () => {
+  // Exit east: +x side at z 3..4, so the cells x = 7, z 3..4 must stay free.
+  assertError(withPlatform({ id: 'p', type: 'lift', at: [7, 0, 0], path: { points: [[7, 0, 6]] } }), 'exits[0]', 'is on objects[1].path');
+});
+
+test('schema: path speed must be positive and mode known', () => {
+  assertError(withPlatform({ id: 'p', type: 'lift', at: [1, 0, 3], path: { points: [[1, 2, 3]], speed: 0 } }), 'objects[1].path.speed');
+  assertError(withPlatform({ id: 'p', type: 'lift', at: [1, 0, 3], path: { points: [[1, 2, 3]], mode: 'bounce' } }), 'objects[1].path.mode');
 });

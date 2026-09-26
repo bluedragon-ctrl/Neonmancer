@@ -5,7 +5,8 @@
     "crate": { "kind": "pushable", "color": "#b6ff3c", "mark": "inset" },
     "crate_plain": { "kind": "pushable", "color": "#b6ff3c" },
     "crate_cross": { "kind": "pushable", "color": "#b6ff3c", "mark": "cross", "faces": "tinted" },
-    "crate_dashed": { "kind": "pushable", "color": "#b6ff3c", "edges": "dashed" }
+    "crate_dashed": { "kind": "pushable", "color": "#b6ff3c", "edges": "dashed" },
+    "platform": { "kind": "platform", "color": "#00f0ff", "mark": "brackets", "faces": "tinted" }
   },
   "blocks": {
     "hazard": { "color": "#ff3b30", "damage": 1 },

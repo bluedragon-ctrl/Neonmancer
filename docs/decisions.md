@@ -464,3 +464,26 @@ them, not earlier.
 **Why:** author's call. Until real rooms exist they are the only place to
 try a mechanic in isolation, and future spells and behaviors (Zap, Warp,
 Cut & Paste, enemy AI) will need them for testing too.
+
+### D46 — 2026-09-26 — Moving platforms: path format, riding, waiting and squeezing
+Paths are given on the room object: the path starts at the object's `at`
+and runs through `points` (cells), each leg along one axis; `pingpong`
+(default) or `loop`, `speed` in units per second, `pause` at the ends
+(both ends of ping-pong, the start of a loop). The same format serves
+patrolling enemies later (`world/path.js`). A platform is a 1×1×1 room
+object; it carries the wizard, resting crates and stacks on them. It
+never pushes crates or other platforms: something in its way, or a
+carried crate that would hit something, makes it wait. The wizard is
+shoved clear by at most 0.35 units per tick (along the motion or aside);
+with no room it hurts him through `Game.hurt()` and waits. Paths must not
+cross static blocks or the first row inside an exit; crates on the path
+and holes under it are allowed.
+The path is drawn as one guide line through its middle (author's review:
+rails and guide posts were too busy).
+**Why:** axis-aligned legs keep the guide line, swept-cell validation and grid
+alignment simple, and match how blocks and pushing work. Starting at `at`
+avoids repeating the first point. Waiting instead of pushing crates keeps
+crates on the grid and never forces one into a wall; it also gives a
+puzzle (jam a lift with a crate). A shove limit stops the wizard from
+jumping a whole block in one tick; hurting and waiting when he is pinned
+follows D43 (never instant death) and always leaves him a way out.

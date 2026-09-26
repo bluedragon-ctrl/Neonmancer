@@ -14,7 +14,8 @@ import defs from '../data/defs.json';
 import { OBJECT_STYLE_DEFAULTS, withExitDefaults } from '../src/data/room-data.js';
 import { VIEW_HEIGHT, frameRoom } from '../src/render/camera.js';
 import { PLAYER } from '../src/entities/player.js';
-import { createDerezPixels, createDropShadow, placeDerezPixels, showHitFlash } from '../src/render/entity-view.js';
+import { createDerezPixels, createDropShadow, createRails, placeDerezPixels, showHitFlash } from '../src/render/entity-view.js';
+import { advance, buildTrack, positionOf, startState } from '../src/world/path.js';
 import { derezPixels, hitFlash, wizardLook } from '../src/render/hit-fx.js';
 import { createFloor } from '../src/render/floor.js';
 import { PALETTE } from '../src/render/neon.js';
@@ -53,6 +54,7 @@ const ALL_ASSETS = [
   { label: 'block-void', build: () => buildActiveBlock('void') },
   { label: 'blocks-in-room', span: 5.5, build: buildBlocksInRoom },
   { label: 'exits', span: 5.5, build: buildExits },
+  { label: 'platforms', span: 5.5, build: buildPlatforms },
 ];
 
 /**
@@ -113,6 +115,37 @@ function buildBlocksInRoom() {
   );
   room.position.set(-2, 0, -2);
   return new Group().add(room);
+}
+
+/**
+ * Moving platforms on their guide lines in a 4×4 room corner: one gliding round
+ * an L-shaped ping-pong path on the floor, a lift going up to a ledge.
+ */
+function buildPlatforms() {
+  const size = [4, 3, 4];
+  const color = defs.objects.platform.color;
+  const style = { ...OBJECT_STYLE_DEFAULTS, ...defs.objects.platform, at: [0, 0, 0] };
+  const paths = [
+    buildTrack([0, 0, 1], { points: [[2, 0, 1], [2, 0, 3]], pause: 0.6 }),
+    buildTrack([3, 0, 0], { points: [[3, 1, 0]], speed: 1.2, pause: 0.8 }),
+  ];
+  const room = new Group().add(createRoomView({ size, cells: [[2, 0, 0], [2, 1, 0], [1, 0, 0], [1, 1, 0], [0, 0, 0], [0, 1, 0]], color: PALETTE.amber }));
+  const movers = paths.map((track) => {
+    const block = createObjectView(style);
+    room.add(createRails(track, color), block);
+    return { track, block, state: startState() };
+  });
+  room.position.set(-2, 0, -2);
+  const asset = new Group().add(room);
+  let carry = 0;
+  asset.userData.update = (dt) => {
+    // Step in whole ticks, like the game.
+    for (carry += dt * 60; carry >= 1; carry--) {
+      for (const mover of movers) mover.state = advance(mover.track, mover.state, mover.track.speed / 60);
+    }
+    for (const { track, block, state } of movers) block.position.set(...positionOf(track, state));
+  };
+  return asset;
 }
 
 /**

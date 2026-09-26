@@ -113,6 +113,43 @@
         "overrides": {
           "type": "object",
           "description": "Values that replace the type defaults for this object only."
+        },
+        "path": {
+          "$ref": "#/$defs/path",
+          "description": "Required for platforms (and only allowed on them): the path they follow, starting at \"at\"."
+        }
+      }
+    },
+    "path": {
+      "description": "Path shared by moving platforms (and later patrolling enemies): from the object's \"at\" through \"points\", each leg along one axis.",
+      "type": "object",
+      "required": ["points"],
+      "additionalProperties": false,
+      "properties": {
+        "points": {
+          "description": "Waypoints after \"at\" (the object's lower corner); each differs from the one before on exactly one axis.",
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "common.schema.json#/$defs/cell" }
+        },
+        "mode": {
+          "enum": ["pingpong", "loop"],
+          "default": "pingpong",
+          "description": "pingpong: there and back; loop: from the last point straight back to \"at\" (also along one axis)."
+        },
+        "speed": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 8,
+          "default": 2,
+          "description": "Units per second."
+        },
+        "pause": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "default": 0,
+          "description": "Seconds of waiting at the ends: both ends of a ping-pong path, \"at\" on a loop."
         }
       }
     }

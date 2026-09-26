@@ -6,6 +6,12 @@
 /** Values used when an exit leaves them out (same as the schema defaults). */
 export const EXIT_DEFAULTS = { width: 2, y: 0, height: 2 };
 
+/**
+ * Values used when a path leaves them out (same as the schema defaults):
+ * speed in units per second, pause in seconds at the ends (D46).
+ */
+export const PATH_DEFAULTS = { mode: 'pingpong', speed: 2, pause: 0 };
+
 /** @param {object} exit exit from a room file */
 export function withExitDefaults(exit) {
   return { ...EXIT_DEFAULTS, ...exit };
