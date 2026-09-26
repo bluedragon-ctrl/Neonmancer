@@ -1,29 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import STRINGS from '../data/strings.json' with { type: 'json' };
 import { takeMessages } from '../src/core/messages.js';
-import { loadGameData } from '../src/data/load.js';
 import { Game } from '../src/game.js';
+import { gameData, roomFile } from './helpers.js';
 
 /** Three unconnected rooms, only for debugJumpRoom() to cycle through. */
 function content() {
-  const room = (id) => ({
-    schemaVersion: 1,
-    id,
-    name: id,
-    biome: 'home',
-    size: [8, 4, 8],
-    spawn: [1.5, 0, 1.5],
-  });
-  return loadGameData({
-    'defs.json': { schemaVersion: 1, objects: {} },
-    'biomes.json': { schemaVersion: 1, biomes: { home: { name: 'Home', color: '#ffb020' } } },
-    'world.json': { schemaVersion: 1, start: 'alpha', connections: [] },
-    'strings.json': structuredClone(STRINGS),
-    'rooms/alpha.json': room('alpha'),
-    'rooms/beta.json': room('beta'),
-    'rooms/gamma.json': room('gamma'),
-  });
+  return gameData({ rooms: ['alpha', 'beta', 'gamma'].map((id) => roomFile(id)) });
 }
 
 test('hurt() reduces integrity, floored at 0, and does nothing while invincible', () => {

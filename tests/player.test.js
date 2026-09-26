@@ -2,28 +2,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { groundBelow, moveAxis } from '../src/physics/collision.js';
 import { JUMP_SPEED, PLAYER, Player } from '../src/entities/player.js';
-import { Grid } from '../src/world/grid.js';
 import { lerpAngle, lerpPosition, shadowScale } from '../src/render/interp.js';
 import { WIZARD, wizardParts } from '../src/render/wizard.js';
+import { grid, input } from './helpers.js';
 
 const HITBOX = [0.6, 1.5, 0.6];
-
-/** A room with the given block cells and hole tiles. */
-function grid({ size = [8, 4, 8], cells = [], holes = [] } = {}) {
-  return new Grid({ size, cells, holes });
-}
-
-/** Fake input: `held` actions are down every tick; `tap` is pressed on the first tick only. */
-function input(held = [], tap = []) {
-  let first = true;
-  return {
-    down: (a) => held.includes(a) || (first && tap.includes(a)),
-    pressed: (a) => first && tap.includes(a),
-    next() {
-      first = false;
-    },
-  };
-}
 
 /** Run the player for `ticks` ticks; returns the events. */
 function run(player, g, inp, ticks) {
