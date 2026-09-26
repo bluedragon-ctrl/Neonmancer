@@ -28,6 +28,8 @@ export class Pushable {
   constructor(object) {
     this.object = object;
     this.id = object.id;
+    this.kind = object.kind;
+    this.size = [1, 1, 1];
     /** Lower corner [x, y, z]; x and z stay on the grid except while sliding. */
     this.pos = [...object.at];
     /** Position at the previous tick, for render interpolation. */

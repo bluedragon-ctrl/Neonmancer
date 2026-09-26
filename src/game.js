@@ -5,8 +5,8 @@
 import { DT } from './core/loop.js';
 import { announce, say } from './core/messages.js';
 import { isBackSide, sideAxes, withExitDefaults } from './data/room-data.js';
+import { createObject } from './entities/kinds.js';
 import { PLAYER, Player } from './entities/player.js';
-import { Pushable } from './entities/pushable.js';
 import { groundBelow, surfaceBelow } from './physics/collision.js';
 import { arrival, exitAt } from './world/exits.js';
 import { Grid } from './world/grid.js';
@@ -20,17 +20,28 @@ export const TRANSITION = {
   inTicks: 15,
 };
 
+/**
+ * Something that happened, for views, the HUD and (later) sound. Returned
+ * by Game.update() for the tick it happened in.
+ * @typedef {object} GameEvent
+ * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'hurt'|'exit'|'room'} type
+ * @property {object} [object] the room object it happened to (push, plug, and land of an object)
+ * @property {number} [amount] integrity lost (hurt)
+ * @property {object} [exit] the exit walked out through (exit)
+ */
+
 export class Game {
   /** @param {object} content loaded game data (see data/load.js) */
   constructor(content) {
     this.content = content;
-    /** Integrity (health); it carries over between rooms. */
-    this.maxIntegrity = PLAYER.maxIntegrity;
-    this.integrity = this.maxIntegrity;
     /** Debug mode: holes never kill and hurt() does nothing. */
     this.invincible = false;
     /** 'grid' (default, D23) or 'screen' (D38); toggled with G, not saved. */
     this.movementMode = 'grid';
+    /** @type {GameEvent[]} events of the tick in progress (see emit()) */
+    this.events = [];
+    /** The wizard, for the whole game; each room places him (enterRoom()). */
+    this.player = new Player([0, 0, 0]);
     this.enterRoom(content.world.start);
     /**
      * Room transition in progress, or null: { phase: 'out' | 'in', tick, exit }.
@@ -56,12 +67,13 @@ export class Game {
     }
     this.room = buildRoom(this.content.rooms.get(id), this.content);
     this.grid = new Grid(this.room);
-    this.pushables = this.room.objects.filter((o) => o.kind === 'pushable').map((o) => new Pushable(o));
-    /** The pushables in update order, lowest first; re-sorted in place every tick. */
-    this.updateOrder = [...this.pushables];
-    this.player = new Player(pos ?? this.room.spawn, this.room.reset);
+    /** The room's objects (pushables, later platforms and enemies), by kind (entities/kinds.js). */
+    this.objects = this.room.objects.map(createObject);
+    /** The objects in update order, lowest first; re-sorted in place every tick. */
+    this.updateOrder = [...this.objects];
+    this.player.enter(pos ?? this.room.spawn, this.room.reset);
     /** Everything objects collide with: the objects themselves and the wizard. */
-    this.bodies = [...this.pushables, this.player];
+    this.bodies = [...this.objects, this.player];
   }
 
   /**
@@ -82,13 +94,30 @@ export class Game {
   }
 
   /**
-   * Reduce integrity, unless invincible (debug mode). Used for now by the
-   * debug test-damage key; real hazards and enemies call it from Phase 2.
+   * The wizard loses integrity, unless invincible (debug mode). Used for now
+   * by the debug test-damage key; real hazards and enemies call it from
+   * Phase 2. Reported as a 'hurt' event with the next tick's events.
    * @param {number} [amount]
    */
   hurt(amount = 1) {
     if (this.invincible) return;
-    this.integrity = Math.max(0, this.integrity - amount);
+    const lost = this.player.hurt(amount);
+    if (lost > 0) this.emit('hurt', { amount: lost });
+  }
+
+  /**
+   * Record an event for this tick's (or, outside update(), the next tick's)
+   * list.
+   * @param {GameEvent['type']} type
+   * @param {Omit<GameEvent, 'type'>} [details]
+   */
+  emit(type, details) {
+    this.events.push({ type, ...details });
+  }
+
+  /** The events recorded so far, cleared. @returns {GameEvent[]} */
+  takeEvents() {
+    return this.events.splice(0);
   }
 
   /**
@@ -119,50 +148,49 @@ export class Game {
    * Walking out through an exit starts a transition: fade out (frozen
    * world), load the next room, fade in (running).
    * @param {import('./core/input.js').Input} input
-   * @returns {string[]} events this tick (e.g. 'jump', 'push', 'plug', 'die', 'respawn', 'exit', 'room')
+   * @returns {GameEvent[]} what happened this tick
    */
   update(input) {
     if (this.transition?.phase === 'out') return this.fadeOut();
     if (this.transition && ++this.transition.tick >= TRANSITION.inTicks) this.transition = null;
 
-    const events = [];
-    const playerEvent = this.player.update(input, this.grid, {
-      bodies: this.pushables,
+    const { player } = this;
+    const playerEvent = player.update(input, this.grid, {
+      bodies: this.objects,
       invincible: this.invincible,
       movementMode: this.movementMode,
     });
 
-    // Falling into a hole drains all integrity. Respawning restores it and
-    // resets the room, so no puzzle stays broken.
-    if (playerEvent === 'die') {
-      this.integrity = 0;
-      say('msg.die');
-    }
+    // Falling into a hole drained his integrity (Player). Respawning
+    // restores it and resets the room, so no puzzle stays broken.
+    if (playerEvent === 'die') say('msg.die');
     if (playerEvent === 'respawn') {
-      this.integrity = this.maxIntegrity;
       say('msg.respawn');
       this.enterRoom(this.room.id, this.room.reset);
-      return ['respawn', 'room'];
+      this.emit('respawn');
+      this.emit('room');
+      return this.takeEvents();
     }
 
-    const exit = this.player.dead ? null : exitAt(this.room, this.player.pos);
+    const exit = player.dead ? null : exitAt(this.room, player.pos);
     if (exit) {
       this.transition = { phase: 'out', tick: 0, exit };
-      return ['exit'];
+      this.emit('exit', { exit });
+      return this.takeEvents();
     }
-    if (playerEvent) events.push(playerEvent);
+    if (playerEvent) this.emit(playerEvent);
 
-    const intent = this.player.pushIntent;
-    if (intent && intent.body.push(intent.dir, this)) events.push('push');
+    const intent = player.pushIntent;
+    if (intent && intent.body.push(intent.dir, this)) this.emit('push', { object: intent.body });
 
     // Lower objects first, so a stack settles in one tick.
     this.updateOrder.sort((a, b) => a.pos[1] - b.pos[1]);
-    for (const pushable of this.updateOrder) {
-      const event = pushable.update(this);
-      if (event) events.push(event);
+    for (const object of this.updateOrder) {
+      const event = object.update(this);
+      if (event) this.emit(event, { object });
       if (event === 'plug') say('msg.plug');
     }
-    return events;
+    return this.takeEvents();
   }
 
   /**
@@ -178,22 +206,23 @@ export class Game {
   /**
    * One tick of fading out: the world stands still while the wizard walks on
    * out through the exit; then the next room loads and fades in.
-   * @returns {string[]} events
+   * @returns {GameEvent[]}
    */
   fadeOut() {
     const { exit } = this.transition;
     const player = this.player;
     player.savePrevious();
-    for (const pushable of this.pushables) pushable.savePrevious();
+    for (const object of this.objects) object.savePrevious();
 
     if (++this.transition.tick < TRANSITION.outTicks) {
       const { cross } = sideAxes(exit.side);
       player.pos[cross] += (isBackSide(exit.side) ? -1 : 1) * PLAYER.speed * DT;
-      return [];
+      return this.takeEvents();
     }
     this.travel(exit);
     this.transition = { phase: 'in', tick: 0 };
-    return ['room'];
+    this.emit('room');
+    return this.takeEvents();
   }
 
   /**
@@ -214,7 +243,7 @@ export class Game {
    * @param {number[]} size body size
    */
   shadowHeight(pos, size) {
-    const y = groundBelow(pos, size, this.grid, this.pushables);
+    const y = groundBelow(pos, size, this.grid, this.objects);
     if (y === 0 && this.grid.isHole(pos[0], pos[2])) return null;
     return y;
   }
@@ -222,13 +251,14 @@ export class Game {
   /**
    * Drop shadow height under a falling object at `pos` (lower corner), or
    * null above a hole.
-   * @param {import('./entities/pushable.js').Pushable} pushable
+   * @param {{ size: number[] }} object
    * @param {number[]} pos interpolated lower corner
    */
-  objectShadowHeight(pushable, pos) {
-    const box = pos.map((p) => [p, p + 1]);
-    const y = surfaceBelow(box, this.grid, this.bodies, pushable);
-    if (y === 0 && this.grid.isHole(pos[0] + 0.5, pos[2] + 0.5)) return null;
+  objectShadowHeight(object, pos) {
+    const box = pos.map((p, i) => [p, p + object.size[i]]);
+    const y = surfaceBelow(box, this.grid, this.bodies, object);
+    const [x, , z] = object.size;
+    if (y === 0 && this.grid.isHole(pos[0] + x / 2, pos[2] + z / 2)) return null;
     return y;
   }
 }

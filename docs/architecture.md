@@ -19,7 +19,7 @@ requestAnimationFrame(now)
   └─ FixedLoop.advance(elapsed): acc += elapsed
        while acc >= 1/60 (at most 5 steps, then the backlog is dropped):
           input.sample()          raw key state → actions {down, pressed, released}
-          game.update(input)      player → exits → his push → pushables (lowest first) → events
+          game.update(input)      player → exits → his push → room objects (lowest first) → GameEvent[]
           acc -= 1/60
        alpha = acc / (1/60)
        views.sync(alpha)          render position = lerp(prev, curr, alpha)
@@ -40,12 +40,11 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | Module | Responsibility |
 |---|---|
 | `main.js` | Bootstrap: load and validate data, build systems, route input, start the loop, error screen |
-| `game.js` | Owns game state; fixed-order `update()`; room switching |
+| `game.js` | Owns game state; fixed-order `update()` returning typed events; room switching |
 | `core/version.js` | Game and data-schema version numbers |
 | `core/loop.js` | Fixed 60 Hz timestep, step clamp, interpolation alpha |
 | `core/input.js` | Raw keys → action states once per tick |
 | `core/bindings.js` | Default key → action map (the only place raw key codes appear) |
-| `core/events.js` | Small pub/sub between simulation, HUD and debug *(planned)* |
 | `core/messages.js` | `say(key, values)` terminal messages and `announce(key, values, options)` banners from any module, queued until the HUD takes them |
 | `core/rules.js` | Shared rule constants (player hitbox, max room footprint) |
 | `data/bundle.js` | The only Vite-specific module: bundles `data/**/*.json`, imports dev schema errors |
@@ -56,7 +55,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `world/room.js` | Runtime room built fresh from data on every entry (type defaults + overrides) |
 | `world/exits.js` | Which exit the wizard left through; where he arrives in the connected room |
 | `physics/collision.js` | Axis-separated AABB movement against the grid; surface below a body |
-| `entities/player.js` | Movement, jump, gravity, turning, pushing, death in holes, respawn |
+| `entities/player.js` | Movement, jump, gravity, turning, pushing, integrity, death in holes, respawn; one wizard for the whole game |
+| `entities/kinds.js` | Object kind → logic class (`OBJECT_KINDS`); the room's objects are built from it |
 | `entities/pushable.js` | Rest → slide → fall → land / plug-a-hole state machine |
 | `render/viewport.js` | Letterbox, buffer size and 1080p-relative sizing math (pure, tested) |
 | `render/renderer.js` | WebGLRenderer, 16:9 stage + HUD overlay, DPR cap, render scale, resize |
@@ -73,7 +73,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/room-view.js` | Static blocks (merged edges + instanced occluder faces), back walls, styled object views |
 | `render/entity-view.js` | Player and pushable views, glowing drop shadows |
 | `render/interp.js` | Tick interpolation (positions, angles) and drop-shadow sizing (pure, tested) |
-| `render/room-scene.js` | The current room's views; rebuilds only the objects on a respawn |
+| `render/room-scene.js` | The current room's views, object views by kind (`OBJECT_VIEWS`); rebuilds only the objects on a respawn |
 | `render/wizard.js` | Wizard model: parts as data (pure, tested), built in the hologram look |
 | `render/holo.js` | Hologram look for characters: rim-glow material, inverted-hull outline, eyes, shared clock |
 | `ui/hud.js` | DOM overlay: integrity bar, room banner, terminal messages, fullscreen hint |
@@ -118,12 +118,17 @@ Landing sets `grounded`. Speeds stay below 0.35 units per tick, so no swept
 collision is needed. No auto step-up: the wizard jumps.
 
 Solid for the player: static blocks, the room sides (x/z outside the room)
-and everything below y = 0 (the grid), plus pushable objects as moving
-bodies; above the room height is open. At an exit the row of cells just
+and everything below y = 0 (the grid), plus room objects as moving bodies;
+above the room height is open. Grid cells hold a `CELL` type (only `empty`
+and `solid` so far); only blocks that never move or change are grid cells,
+everything that moves or disappears is a room object (D40). At an exit the row of cells just
 beyond the side is open (as high as the exit), so the wizard can walk
 through; pushables never move outside the room.
 
-Pushables are not grid cells: each is a body with a `box()`, and
+Room objects are built by kind (`entities/kinds.js`) and drawn by kind
+(`OBJECT_VIEWS` in `render/room-scene.js`); a test keeps both tables in
+step with the kinds in `schemas/defs.schema.json`. Pushables are not grid
+cells: each is a body with a `box()`, and
 `moveAxis` clamps against bodies like against cells and reports which body
 stopped the move. The player is a body too, so objects can rest on him and
 never slide into him.
@@ -143,10 +148,22 @@ that is −1, the object becomes `plugged` and `grid.fillHole()` turns the
 tile into floor. Object views are clipped at y = 0 (a clipping plane), so
 a sinking or plugged object shows nothing below the floor.
 
+## Game events
+
+`Game.update()` returns what happened during the tick as `GameEvent`
+objects (typedef in `game.js`): `{ type, ...details }`, e.g.
+`{ type: 'push', object }`, `{ type: 'exit', exit }`, `{ type: 'hurt', amount }`.
+Types so far: `jump`, `land`, `die`, `respawn`, `push`, `plug`, `hurt`,
+`exit`, `room`. Game code records them with `emit()`; events raised
+outside a tick (`hurt()` from the debug key) come out with the next tick's.
+`main.js` rebuilds the room's views on `room`; later, sound, screen shake
+and score popups read the same list (D41).
+
 ## Room reset
 
-`Game.enterRoom()` rebuilds everything from data. It runs on entry and when
-the wizard respawns after dying (D24); `update()` then reports a `room`
+`Game.enterRoom()` rebuilds the room and its objects from data and places
+the wizard (one `Player` for the whole game, D41). It runs on entry and
+when the wizard respawns after dying (D24); `update()` then reports a `room`
 event and `RoomScene.show()` rebuilds the room's views. On a respawn the
 room is the same, so only the object views are rebuilt. The new views are
 compiled before `disposeTree()` frees the old ones, so shaders both use are
@@ -210,7 +227,7 @@ content.strings (data/strings.json) ──► Hud(renderer.hud, strings)   all t
 any module: say(key, values) ──► queue (core/messages.js)   e.g. game.js on die, respawn, plug
             announce(key, values, { sub, subValues, color }) ──► queue   e.g. enterRoom() for a new room
        input.pressed('fullscreen') ──► toggleFullscreen()   within the key press's user activation
-frame: hud.setIntegrity(game.integrity, game.maxIntegrity)   cells rebuilt only on change
+frame: hud.setIntegrity(player.integrity, player.maxIntegrity)   cells rebuilt only on change
        hud.setHintWanted(wantsFullscreenHint(stage height, DPR, fullscreen?))
        hud.update(dt)   takeMessages() → Terminal.push(); takeAnnouncements() → last one shown;
                         Terminal.update / lines(), bannerState(t), scrambleText()
@@ -219,8 +236,8 @@ frame: hud.setIntegrity(game.integrity, game.maxIntegrity)   cells rebuilt only 
 The HUD is visual only and runs on frame time; it never feeds back into the
 simulation. Its timing (`Terminal`, `bannerState`) is plain logic, tested
 with made-up times; `hud.js` only moves the results into the DOM. Integrity
-lives on `Game` (not the per-room `Player`), so it carries over between
-rooms. A missing string shows as `[key]`; the schema lists every key the
+lives on the `Player`, which lasts the whole game (D41), so it carries over
+between rooms. A missing string shows as `[key]`; the schema lists every key the
 game uses, so the data check catches missing ones first, and a test checks
 that every key passed to `say()` or `announce()` in `src/` exists.
 

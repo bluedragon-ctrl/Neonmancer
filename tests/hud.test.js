@@ -8,6 +8,7 @@ import { loadGameData } from '../src/data/load.js';
 import { Game } from '../src/game.js';
 import { PLAYER } from '../src/entities/player.js';
 import { withExitDefaults } from '../src/data/room-data.js';
+import { eventTypes, idle } from './helpers.js';
 import { formatText, scrambleText } from '../src/ui/text.js';
 import { BANNER, TERMINAL, Terminal, bannerState } from '../src/ui/terminal.js';
 import { wantsFullscreenHint } from '../src/ui/fullscreen.js';
@@ -124,26 +125,27 @@ test('fullscreen hint below 1080 physical pixels, never in fullscreen', () => {
 
 test('integrity drains on a fatal fall, comes back on respawn and carries over between rooms', () => {
   const game = new Game(shipped());
-  assert.equal(game.integrity, PLAYER.maxIntegrity);
-  assert.equal(game.maxIntegrity, PLAYER.maxIntegrity);
+  const { player } = game;
+  assert.equal(player.integrity, PLAYER.maxIntegrity);
+  assert.equal(player.maxIntegrity, PLAYER.maxIntegrity);
 
   // Stand the wizard on a hole in the start room.
   const [hx, hz] = game.room.holes[0];
   game.player.pos = [hx + 0.5, 0, hz + 0.5];
-  const idle = { down: () => false, pressed: () => false };
   const events = [];
-  for (let i = 0; i < 3; i++) events.push(...game.update(idle));
+  for (let i = 0; i < 3; i++) events.push(...eventTypes(game.update(idle)));
   assert.ok(events.includes('die'), events.join());
-  assert.equal(game.integrity, 0);
+  assert.equal(player.integrity, 0);
   assert.deepEqual(takeMessages().map((m) => m.key), ['msg.die']);
 
-  for (let i = 0; i < PLAYER.deathTicks && !events.includes('respawn'); i++) events.push(...game.update(idle));
+  for (let i = 0; i < PLAYER.deathTicks && !events.includes('respawn'); i++) events.push(...eventTypes(game.update(idle)));
   assert.ok(events.includes('respawn'));
-  assert.equal(game.integrity, game.maxIntegrity);
+  assert.equal(player.integrity, player.maxIntegrity);
 
-  game.integrity = 3;
+  player.integrity = 3;
   const exit = withExitDefaults(game.room.exits[0]);
   game.travel(exit);
   assert.notEqual(game.room.id, game.content.world.start);
-  assert.equal(game.integrity, 3);
+  assert.equal(game.player, player); // one wizard for the whole game
+  assert.equal(player.integrity, 3);
 });
