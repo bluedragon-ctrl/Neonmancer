@@ -266,7 +266,7 @@ New mechanics add or extend one (D43).
 | `stack_yard` | 8×8, Glitch Zone color | raised west doorway → Boot Sector; east (front) → Fault Line | stacked crates, a 2-high block to climb via a crate |
 | `fault_line` (Phase 2) | 12×12 | west doorway → Stack Yard; raised east exit on the lookout → Transit Bus | a corridor between hazard walls, hazard blocks between two plain ones to walk across, a zigzag path of plain blocks through a field of void blocks up to a lookout |
 | `transit_bus` (Phase 2) | 12×12, 5 high | west doorway → Fault Line; raised east exit on the high ledge → Volatile Memory | a ferry across a pit between two ledges, a lift up to a high ledge, a loop carrying a crate, a press coming down (with a crate to jam it) and a pusher squeezing the wizard against the room's edge |
-| `volatile_memory` (Phase 2) | 12×12, 5 high | west doorway → Transit Bus | a pit across the room with two collapsing bridges: one regrowing after 3 s (the way back), one that stays gone, with a crate parked on it as a safe spot; two one-shot collapsing steps up to a high ledge |
+| `volatile_memory` (Phase 2) | 12×12, 5 high | west doorway → Transit Bus | a pit across the room with two collapsing bridges: one regrowing after 3 s (the way back), one that stays gone, with a crate on a plain ledge in front of it to push onto the bridge from solid ground (it doesn't trigger the blocks, so it is a safe spot to hop onto); two one-shot collapsing steps up to a high ledge |
 
 ## HUD
 
