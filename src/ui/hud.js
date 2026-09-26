@@ -1,6 +1,6 @@
 /**
  * The HUD: a DOM overlay on the stage with the integrity bar, the room name
- * banner, terminal messages, the fullscreen hint and the hit flash. It only shows state;
+ * banner, terminal messages and the fullscreen hint. It only shows state;
  * main.js feeds it every frame. Sizes use --u (one pixel at 1080p), so it
  * scales with the stage. All text comes from data/strings.json; terminal
  * messages and banners arrive through say() and announce()
@@ -24,8 +24,7 @@ export class Hud {
     this.strings = strings;
     root.insertAdjacentHTML(
       'beforeend',
-      `<div class="hud-hit"></div>
-      <div class="hud-integrity"><div class="hud-label"></div><div class="hud-cells"></div></div>
+      `<div class="hud-integrity"><div class="hud-label"></div><div class="hud-cells"></div></div>
       <div class="brand"><span class="brand-title"></span> <span class="brand-version"></span></div>
       <div class="hud-banner"><div class="hud-banner-title"></div><div class="hud-banner-sub"></div></div>
       <div class="hud-terminal"></div>
@@ -45,7 +44,6 @@ export class Hud {
     this.terminalBox = find('.hud-terminal');
     this.hint = find('.hud-hint');
     this.movementTag = find('.hud-movement');
-    this.hitFlash = find('.hud-hit');
     this.movementMode = null;
 
     this.cells = [];
@@ -89,14 +87,6 @@ export class Hud {
     });
     this.integrityBox.classList.toggle('low', value > 0 && value <= LOW_INTEGRITY);
     this.integrity = value;
-  }
-
-  /** Flash the stage edges: the wizard was just hurt. */
-  flashHit() {
-    // Restart the animation even if the last flash is still running.
-    this.hitFlash.classList.remove('flash');
-    void this.hitFlash.offsetWidth;
-    this.hitFlash.classList.add('flash');
   }
 
   /**

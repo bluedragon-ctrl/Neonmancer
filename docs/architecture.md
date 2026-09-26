@@ -77,7 +77,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/room-scene.js` | The current room's views, object views by kind (`OBJECT_VIEWS`); rebuilds only the objects on a respawn |
 | `render/wizard.js` | Wizard model: parts as data (pure, tested), built in the hologram look |
 | `render/holo.js` | Hologram look for characters: rim-glow material, inverted-hull outline, eyes, shared clock |
-| `ui/hud.js` | DOM overlay: integrity bar, room banner, terminal messages, fullscreen hint, hit flash |
+| `ui/hud.js` | DOM overlay: integrity bar, room banner, terminal messages, fullscreen hint |
 | `ui/terminal.js` | Terminal message queue (typing, hold, fade) and banner timing (pure, tested) |
 | `ui/text.js` | String lookup with `{name}` values; scrambled "decoding" text for the banner (pure, tested) |
 | `ui/fullscreen.js` | Fullscreen toggle and when to suggest it (below 1080 physical pixels; tested) |

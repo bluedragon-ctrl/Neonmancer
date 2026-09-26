@@ -35,7 +35,7 @@ export const PLAYER = {
   /** Share of the remaining turn done each tick. */
   turnRate: 0.35,
   /** Ticks between dying and respawning. */
-  deathTicks: 45,
+  deathTicks: 68,
   /** Integrity (health) at the start and after respawning; at most 15 fits the save key. */
   maxIntegrity: 8,
   /** Ticks after a hit during which nothing hurts him (he blinks, D43). */

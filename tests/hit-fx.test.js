@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { HIT_FX, derezPixels, wizardLook } from '../src/render/hit-fx.js';
+import { HIT_FX, derezPixels, hitFlash, wizardLook } from '../src/render/hit-fx.js';
 import { PLAYER } from '../src/entities/player.js';
 
 const alive = { invulnerable: 0, dead: false, deathCause: null, deathTimer: 0 };
@@ -37,4 +37,18 @@ test('derezPixels: one per pixel, rising and shrinking, gone before he respawns'
   assert.ok(mean(late, (p) => p.offset[1]) > mean(early, (p) => p.offset[1]));
   assert.ok(mean(late, (p) => p.scale) < mean(early, (p) => p.scale));
   assert.deepEqual(derezPixels(20), derezPixels(20), 'the same every time');
+});
+
+test('hitFlash: white-hot right after a hit, then fading magenta, then nothing; the wizard shows throughout', () => {
+  const after = (tick) => ({ ...alive, invulnerable: PLAYER.invulnerableTicks - tick });
+  assert.deepEqual(hitFlash(after(0)), { amount: 1, color: 'white' });
+  assert.equal(hitFlash(after(HIT_FX.flashHotTicks - 1)).color, 'white');
+  const fading = [HIT_FX.flashHotTicks, HIT_FX.flashTicks - 1].map((tick) => hitFlash(after(tick)));
+  assert.ok(fading.every((flash) => flash.color === 'magenta'));
+  assert.ok(fading[0].amount > fading[1].amount && fading[1].amount > 0);
+  assert.equal(hitFlash(after(HIT_FX.flashTicks)).amount, 0);
+  assert.equal(hitFlash(alive).amount, 0);
+  assert.equal(hitFlash(derez(0)).amount, 0);
+
+  for (let tick = 0; tick < HIT_FX.flashTicks; tick++) assert.equal(wizardLook(after(tick), PLAYER.deathTicks).visible, true);
 });

@@ -8,7 +8,7 @@
  * only, D3). The hands float a little outside the hitbox.
  */
 import { ConeGeometry, CylinderGeometry, Group, Mesh, SphereGeometry } from 'three';
-import { eyeMaterial, holoPart } from './holo.js';
+import { createFlash, eyeMaterial, holoPart } from './holo.js';
 import { PALETTE } from './neon.js';
 
 /** Proportions in world units. */
@@ -69,6 +69,8 @@ function createEyes() {
 
 /**
  * The wizard as a three.js group (origin at the feet, looking along +z).
+ * `userData.flash` holds his own flash uniforms (holo.js createFlash()):
+ * set `amount` and `color` to flash the whole hologram, e.g. on a hit.
  * @param {object} [colors]
  * @param {number|string} [colors.body] body cone
  * @param {number|string} [colors.head] head and hands
@@ -76,13 +78,15 @@ function createEyes() {
  */
 export function createWizard({ body = PALETTE.magenta, head = PALETTE.cyan, hat = PALETTE.magenta } = {}) {
   const colors = { body, head, hat };
+  const flash = createFlash();
   const build = (part) => {
-    const mesh = holoPart(geometryOf(part), colors[part.role]);
+    const mesh = holoPart(geometryOf(part), colors[part.role], flash);
     mesh.position.set(...part.center);
     return mesh;
   };
 
   const group = new Group();
+  group.userData.flash = flash;
   const parts = wizardParts();
   group.add(...parts.main.map(build), ...createEyes());
 

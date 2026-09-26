@@ -71,7 +71,6 @@ function boot() {
     }
     const events = game.update(input);
     if (events.some((event) => event.type === 'room')) showRoom();
-    if (events.some((event) => event.type === 'hurt')) hud.flashHit();
     readout.countTick();
   }
 
