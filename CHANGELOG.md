@@ -6,6 +6,15 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- Versioning (D42): `package.json` holds the phase (MAJOR.MINOR.0) and
+  the patch number counts pull requests merged since the phase's tag,
+  computed at build time.
+
+## [0.1.0] - 2026-09-26
+
+Phase 1 — Foundations.
+
 ### Added
 - Project scaffolding: Vite, placeholder title screen, unit tests with
   `node --test`, GitHub Actions CI (test + build), GitHub Pages deploy of
@@ -94,3 +103,6 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ### Removed
 - The four box-look crates in Boot Sector (the asset showcase shows them).
+
+[Unreleased]: https://github.com/bluedragon-ctrl/Neonmancer/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/bluedragon-ctrl/Neonmancer/releases/tag/v0.1.0

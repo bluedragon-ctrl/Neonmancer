@@ -5,14 +5,15 @@ zapped into the Grid, a neon digital kingdom where magic and code are the same
 thing. Explore rooms, solve block puzzles, fight corrupted programs with spells
 and collect key fragments to reboot the Grid.
 
-> Status: early development — Phase 1 (v0.1, foundations). The wizard walks,
-> jumps, pushes crates and explores three connected test rooms, with an
-> integrity HUD, room banners and terminal messages; no goal yet.
+> Status: early development. Phase 1 (v0.1.0, foundations) is done: the
+> wizard walks, jumps, pushes crates and explores three connected test
+> rooms, with an integrity HUD, room banners and terminal messages; no goal
+> yet. Next: Phase 2 (hazards, combat, room editor).
 > Latest `main` build: https://bluedragon-ctrl.github.io/Neonmancer/
 
 ## Requirements
 
-- Node.js 22 or newer (CI uses Node 24)
+- Node.js 22 or newer (CI uses Node 24; the tests also run on Node 20)
 - A desktop browser (Chrome, Firefox, Edge or Safari); 1920x1080 or larger recommended
 
 ## Getting started
@@ -48,6 +49,12 @@ The asset showcase shows every character and object look side by side:
 - [docs/architecture.md](docs/architecture.md) — how the code fits together
 - [docs/decisions.md](docs/decisions.md) — decision log with reasons
 - [CHANGELOG.md](CHANGELOG.md) — release notes
+
+## Versioning
+
+MAJOR.MINOR.PATCH: MINOR is the phase (0.1 = Phase 1), PATCH counts the
+pull requests merged since that phase's release, computed at build time;
+1.0.0 will be the first full release. See CLAUDE.md §10 and D42.
 
 ## Contributing
 

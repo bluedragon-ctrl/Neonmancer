@@ -41,7 +41,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 |---|---|
 | `main.js` | Bootstrap: load and validate data, build systems, route input, start the loop, error screen |
 | `game.js` | Owns game state; fixed-order `update()` returning typed events; room switching |
-| `core/version.js` | Game and data-schema version numbers |
+| `core/version.js` | Game and data-schema version numbers (the game's patch number comes from `tools/game-version.js`, D42) |
 | `core/loop.js` | Fixed 60 Hz timestep, step clamp, interpolation alpha |
 | `core/input.js` | Raw keys → action states once per tick |
 | `core/bindings.js` | Default key → action map (the only place raw key codes appear) |
@@ -84,6 +84,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `tools/check-data.js` | Dev only: Ajv schema check + semantic checks over `data/` |
 | `tools/vite-plugin-data.js` | Dev only: runs the check in the dev server and fails the build on errors |
 | `tools/validate-data.js` | Dev only: `npm run validate:data` for CI |
+| `tools/game-version.js` | Dev only: the game version for builds, PATCH counted from git merges since the phase tag (D42) |
 | `tools/showcase.html`, `tools/showcase.js` | Asset showcase page: every look on a turntable with the real renderer (also deployed) |
 | `debug/overlay.js` | Debug mode's wireframe collision boxes |
 | `debug/readout.js` | Debug mode's stats readout (rates, buffer, GPU resources, actions, position) |

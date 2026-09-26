@@ -22,6 +22,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history and tags: the patch version counts merges since the phase's tag (D42)
       - uses: actions/setup-node@v4
         with:
           node-version: 24
