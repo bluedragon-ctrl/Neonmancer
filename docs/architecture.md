@@ -59,6 +59,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `entities/kinds.js` | Object kind → logic class (`OBJECT_KINDS`); the room's objects are built from it |
 | `entities/pushable.js` | Rest → slide → fall → land / plug-a-hole state machine |
 | `entities/platform.js` | Moving platform: follows its path, carries riders, waits when blocked, shoves or squeezes the wizard (D46) |
+| `entities/collapsing.js` | Collapsing block: solid → shake (the wizard stood on it) → gone → optional regrow once its cell is clear (D47) |
 | `world/path.js` | Shared path format: legs from `at` through `points`, `advance()` / `positionOf()` on a small path state, swept cells |
 | `render/viewport.js` | Letterbox, buffer size and 1080p-relative sizing math (pure, tested) |
 | `render/renderer.js` | WebGLRenderer, 16:9 stage + HUD overlay, DPR cap, render scale, resize |
@@ -73,7 +74,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/marks.js` | Face-mark line patterns for object styles (pure, tested) |
 | `render/hole-view.js` | Hole pits: walls fading to black, rim, short fading corner lines; outline math (tested) |
 | `render/room-view.js` | Static blocks (merged edges + instanced occluder faces), back walls, styled object views |
-| `render/entity-view.js` | Player, pushable and platform views, glowing drop shadows, derez pixel burst, platform guide lines |
+| `render/entity-view.js` | Player, pushable, platform and collapsing-block views, glowing drop shadows, pixel bursts (derez, collapse), platform guide lines |
+| `render/collapse-fx.js` | Collapsing-block look: shake, pixels breaking off, regrow, `COLLAPSE_FX` tuning (pure, tested) |
 | `render/rails.js` | Guide line along a platform's path, `RAILS` tuning (pure, tested) |
 | `render/block-fx.js` | Animated looks of hazard and void blocks (face shaders in room coordinates, steady edges, hazard flare), `BLOCK_FX` tuning |
 | `render/hit-fx.js` | Damage look: blinking while invulnerable, derez flicker and pixel burst, `HIT_FX` tuning (pure, tested) |
@@ -170,13 +172,23 @@ at most `maxShove` along any axis. If none fits, it calls `Game.hurt()`
 and waits. Carried crates keep whole-cell positions at stops (a tiny
 rounding snap), and `push()` only moves a crate standing on whole cells.
 
+Collapsing blocks (D47) are room objects that never move but can vanish.
+Each tick one checks whether the wizard stands on it (alive, grounded, feet
+on its top, footprints overlapping); then it shakes for `shakeTicks` and
+vanishes. While gone its `solid` is false, and the game leaves it out of
+`Game.solids` (the objects others collide with) and `Game.bodies` (those
+plus the wizard): `refreshBodies()` rebuilds both right after a `collapse`
+or `regrow` event, inside the objects loop, so a crate resting on it falls
+in the same tick. A block with a regrow time grows back once the time is
+up and no body overlaps its cell.
+
 ## Game events
 
 `Game.update()` returns what happened during the tick as `GameEvent`
 objects (typedef in `game.js`): `{ type, ...details }`, e.g.
 `{ type: 'push', object }`, `{ type: 'exit', exit }`, `{ type: 'hurt', amount }`.
-Types so far: `jump`, `land`, `die`, `respawn`, `push`, `plug`, `hurt`,
-`exit`, `room`. Game code records them with `emit()`; events raised
+Types so far: `jump`, `land`, `die`, `respawn`, `push`, `plug`, `shake`,
+`collapse`, `regrow`, `hurt`, `exit`, `room`. Game code records them with `emit()`; events raised
 outside a tick (`hurt()` from the debug key) come out with the next tick's.
 `main.js` rebuilds the room's views on `room`; later, sound, screen shake
 and score popups read the same list (D41).

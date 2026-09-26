@@ -1,0 +1,28 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "volatile_memory",
+  "name": "Volatile Memory",
+  "biome": "home_lattice",
+  "size": [12, 5, 12],
+  "spawn": [1.5, 0, 2],
+  "exits": [{ "id": "west", "side": "-x", "at": 1 }],
+  "blocks": [
+    { "at": [10, 0, 3] },
+    { "at": [10, 0, 0], "to": [11, 2, 2] }
+  ],
+  "holes": [{ "at": [3, 0], "to": [6, 11] }],
+  "objects": [
+    { "id": "bridge_a", "type": "collapsing", "at": [3, 0, 2], "regrow": 3 },
+    { "id": "bridge_b", "type": "collapsing", "at": [4, 0, 2], "regrow": 3 },
+    { "id": "bridge_c", "type": "collapsing", "at": [5, 0, 2], "regrow": 3 },
+    { "id": "bridge_d", "type": "collapsing", "at": [6, 0, 2], "regrow": 3 },
+    { "id": "once_a", "type": "collapsing", "at": [3, 0, 8] },
+    { "id": "once_b", "type": "collapsing", "at": [4, 0, 8] },
+    { "id": "once_c", "type": "collapsing", "at": [5, 0, 8] },
+    { "id": "once_d", "type": "collapsing", "at": [6, 0, 8] },
+    { "id": "island", "type": "crate", "at": [5, 1, 8] },
+    { "id": "step_a", "type": "collapsing", "at": [10, 0, 4] },
+    { "id": "step_b", "type": "collapsing", "at": [10, 1, 3] }
+  ]
+}

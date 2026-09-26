@@ -7,7 +7,7 @@ import { DataError, loadGameData } from '../src/data/load.js';
 import { buildRoom } from '../src/world/room.js';
 import { OBJECT_STYLES } from '../src/data/room-data.js';
 import { MARKS } from '../src/render/marks.js';
-import { LIFT, dataFiles, roomFile } from './helpers.js';
+import { CRUMBLE, LIFT, dataFiles, roomFile } from './helpers.js';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const schemas = readSchemas(root);
@@ -459,4 +459,50 @@ test('platforms: no path through the first row inside an exit', () => {
 test('schema: path speed must be positive and mode known', () => {
   assertError(withPlatform({ id: 'p', type: 'lift', at: [1, 0, 3], path: { points: [[1, 2, 3]], speed: 0 } }), 'objects[1].path.speed');
   assertError(withPlatform({ id: 'p', type: 'lift', at: [1, 0, 3], path: { points: [[1, 2, 3]], mode: 'bounce' } }), 'objects[1].path.mode');
+});
+
+/** The valid game with a collapsing block type and `objects` and `holes` added to room alpha. */
+function withCollapsing(objects, { holes = [], spawn } = {}) {
+  return errorsAfter((f) => {
+    const room = f['rooms/alpha.json'];
+    f['defs.json'].objects.crumble = CRUMBLE;
+    room.objects.push(...objects);
+    room.holes = holes;
+    if (spawn) room.spawn = spawn;
+  });
+}
+
+test('collapsing blocks: may regrow; nothing else may', () => {
+  assert.deepEqual(withCollapsing([{ id: 'c', type: 'crumble', at: [1, 0, 3], regrow: 2.5 }, { id: 'd', type: 'crumble', at: [2, 0, 3] }]), []);
+  assertError(
+    errorsAfter((f) => (f['rooms/alpha.json'].objects[0].regrow = 2)),
+    'objects[0].regrow',
+    'only collapsing blocks grow back',
+  );
+  assertError(withCollapsing([{ id: 'c', type: 'crumble', at: [1, 0, 3], regrow: 0 }]), 'objects[1].regrow');
+});
+
+test('collapsing blocks: may stand in a hole (a bridge that gives way); crates may not', () => {
+  assert.deepEqual(withCollapsing([{ id: 'c', type: 'crumble', at: [6, 0, 6] }], { holes: [{ at: [6, 6] }] }), []);
+  assertError(
+    withCollapsing([{ id: 'c', type: 'crate', at: [6, 0, 6] }], { holes: [{ at: [6, 6] }] }),
+    'holes[0]',
+    'is under objects[1]',
+  );
+});
+
+test('collapsing blocks: a spawn on one over a hole would fall in', () => {
+  const errors = withCollapsing([{ id: 'c', type: 'crumble', at: [1, 0, 1] }], { holes: [{ at: [1, 1] }], spawn: [1.5, 1, 1.5] });
+  assertError(errors, 'spawn', 'would fall into holes[0]');
+});
+
+test('collapsing blocks: the room carries the regrow time', () => {
+  const files = validFiles();
+  files['defs.json'].objects.crumble = CRUMBLE;
+  files['rooms/alpha.json'].objects.push({ id: 'c', type: 'crumble', at: [1, 0, 3], regrow: 4 }, { id: 'd', type: 'crumble', at: [2, 0, 3] });
+  const content = loadGameData(files);
+  const [, c, d] = buildRoom(content.rooms.get('alpha'), content).objects;
+  assert.equal(c.kind, 'collapsing');
+  assert.equal(c.regrow, 4);
+  assert.equal('regrow' in d, false);
 });

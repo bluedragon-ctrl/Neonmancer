@@ -18,6 +18,7 @@ import {
   Vector3,
 } from 'three';
 import { PLAYER } from '../entities/player.js';
+import { COLLAPSE_FX, COLLAPSE_PIXELS, collapseLook, collapsePixels } from './collapse-fx.js';
 import { PALETTE, lineMaterial, neonLines, shared } from './neon.js';
 import { fadingDrops } from './hole-view.js';
 import { HIT_FX, derezPixels, hitFlash, wizardLook } from './hit-fx.js';
@@ -97,30 +98,38 @@ function placeShadow(shadow, x, z, bottom, ground, diameter) {
 }
 
 /**
- * The burst of glowing pixels a derezzing wizard leaves (see hit-fx.js):
- * small additive cubes in his colors, hidden unless he derezzes.
+ * A burst of glowing pixels: small additive cubes, taking turns in the
+ * given colors, hidden until placePixels() shows some.
+ * @param {number} count
+ * @param {number} size edge of one cube
+ * @param {(number|string)[]} colors
  */
-export function createDerezPixels() {
-  const geometry = new BoxGeometry(HIT_FX.pixelSize, HIT_FX.pixelSize, HIT_FX.pixelSize);
+export function createPixelBurst(count, size, colors) {
+  const geometry = new BoxGeometry(size, size, size);
   const material = new MeshBasicMaterial({ blending: AdditiveBlending, depthWrite: false, transparent: true });
-  const mesh = new InstancedMesh(geometry, material, HIT_FX.pixels);
-  const colors = [new Color(PALETTE.cyan), new Color(PALETTE.magenta)];
-  for (let i = 0; i < HIT_FX.pixels; i++) mesh.setColorAt(i, colors[i % 2].clone().multiplyScalar(1.6));
+  const mesh = new InstancedMesh(geometry, material, count);
+  const tints = colors.map((color) => new Color(color).multiplyScalar(1.6));
+  for (let i = 0; i < count; i++) mesh.setColorAt(i, tints[i % tints.length]);
   mesh.frustumCulled = false; // instances move far from the geometry's own bounds
   mesh.visible = false;
   return mesh;
 }
 
+/** The burst of pixels a derezzing wizard leaves (see hit-fx.js), in his colors. */
+export function createDerezPixels() {
+  return createPixelBurst(HIT_FX.pixels, HIT_FX.pixelSize, [PALETTE.cyan, PALETTE.magenta]);
+}
+
 const pixelMatrix = new Matrix4();
 
 /**
- * Show the derez pixels around the feet center `pos`, or hide them when
- * there are none.
- * @param {InstancedMesh} mesh from createDerezPixels()
- * @param {ReturnType<typeof derezPixels>} pixels
- * @param {number[]} pos feet center
+ * Show a pixel burst around `pos`, or hide it when there are no pixels.
+ * @param {InstancedMesh} mesh from createPixelBurst()
+ * @param {{ offset: number[], scale: number }[]} pixels offsets from `pos`
+ *   (e.g. from derezPixels() or collapsePixels())
+ * @param {number[]} pos
  */
-export function placeDerezPixels(mesh, pixels, pos) {
+export function placePixels(mesh, pixels, pos) {
   mesh.visible = pixels.length > 0;
   pixels.forEach(({ offset: [x, y, z], scale }, i) => {
     pixelMatrix.makeScale(scale, scale, scale).setPosition(pos[0] + x, pos[1] + y, pos[2] + z);
@@ -166,7 +175,7 @@ export class PlayerView {
     this.wizard.scale.set(...look.scale);
     showHitFlash(this.wizard, hitFlash(player));
     const derezzing = player.dead && player.deathCause !== 'hole';
-    placeDerezPixels(this.pixels, derezzing ? derezPixels(PLAYER.deathTicks - player.deathTimer + alpha) : [], pos);
+    placePixels(this.pixels, derezzing ? derezPixels(PLAYER.deathTicks - player.deathTimer + alpha) : [], pos);
 
     const ground = player.dead ? null : this.game.shadowHeight(pos, player.size);
     placeShadow(this.shadow, pos[0], pos[2], pos[1], ground, player.size[0] * 1.5);
@@ -239,6 +248,37 @@ export class PlatformView {
     const { platform } = this;
     const pos = lerpPosition(platform.prev, platform.pos, alpha);
     this.block.position.set(pos[0], pos[1], pos[2]);
+  }
+}
+
+export class CollapsingView {
+  /**
+   * @param {import('../game.js').Game} game
+   * @param {import('../entities/collapsing.js').Collapsing} block (or anything
+   *   with its `pos`, `state`, `timer`, `regrown` and `object`, as in the showcase)
+   */
+  constructor(game, block) {
+    this.block = block;
+    // The object view is built centered on the origin, so it can shrink
+    // around its center while it grows back.
+    this.view = createObjectView({ ...block.object, at: [0, 0, 0] });
+    this.view.position.set(-0.5, -0.5, -0.5);
+    this.center = new Group().add(this.view);
+    this.pixels = createPixelBurst(COLLAPSE_PIXELS, COLLAPSE_FX.pixelSize, [block.object.color]);
+    // Pixels falling into a pit disappear at the floor, like objects.
+    this.pixels.material.clippingPlanes = FLOOR_CLIP;
+    this.group = new Group().add(this.center, this.pixels);
+  }
+
+  /** @param {number} alpha interpolation factor 0..1 between the last two ticks */
+  sync(alpha) {
+    const { block } = this;
+    const [x, y, z] = block.pos;
+    const look = collapseLook(block, alpha);
+    this.center.visible = look.visible;
+    this.center.position.set(x + 0.5 + look.offset[0], y + 0.5 + look.offset[1], z + 0.5 + look.offset[2]);
+    this.center.scale.setScalar(look.scale);
+    placePixels(this.pixels, block.state === 'gone' ? collapsePixels(block.timer + alpha) : [], block.pos);
   }
 }
 

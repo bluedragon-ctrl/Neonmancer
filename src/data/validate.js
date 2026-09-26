@@ -106,6 +106,8 @@ function validateRoom(file, room, { objectTypes, biomes }, report) {
     blockTypes: new Map(),
     /** "x,y,z" → path of the platform whose path sweeps it */
     pathCells: new Map(),
+    /** "x,y,z" of every collapsing block */
+    collapsing: new Set(),
   };
   const exits = (room.exits ?? []).map(withExitDefaults);
   const exitFits = validateExitBounds(checks, exits);
@@ -201,6 +203,12 @@ function validateObjects(checks, objectTypes) {
     if (type?.kind === 'platform' && !object.path) report(path, 'a platform needs a "path"');
     if (type && type.kind !== 'platform' && object.path) report(`${path}.path`, `only platforms follow a path, not "${object.type}"`);
     if (type?.kind === 'platform' && object.path && inside) validatePath(checks, `${path}.path`, object);
+
+    // Collapsing blocks (D47) may grow back; nothing else does.
+    if (type && type.kind !== 'collapsing' && object.regrow !== undefined) {
+      report(`${path}.regrow`, `only collapsing blocks grow back, not "${object.type}"`);
+    }
+    if (type?.kind === 'collapsing' && inside) checks.collapsing.add(cellKey(object.at));
   });
 }
 
@@ -250,8 +258,8 @@ function validateOverrides(report, path, object, type) {
   }
 }
 
-/** Holes: floor tiles inside the room, nothing standing in them. */
-function validateHoles({ room, report, filled, holes, pathCells }) {
+/** Holes: floor tiles inside the room, nothing standing in them but platforms and collapsing blocks. */
+function validateHoles({ room, report, filled, holes, pathCells, collapsing }) {
   const [w, , d] = room.size;
   (room.holes ?? []).forEach((hole, i) => {
     const path = `holes[${i}]`;
@@ -259,8 +267,10 @@ function validateHoles({ room, report, filled, holes, pathCells }) {
     for (const [x, z] of holeTiles(hole)) {
       const tile = cellText([x, z]);
       const key = cellKey([x, z]);
-      // A platform may start over a hole: it carries the wizard across.
-    const under = !pathCells.has(cellKey([x, 0, z])) && filled.get(cellKey([x, 0, z]));
+      // A platform may start over a hole (it carries the wizard across), and
+      // a collapsing block may stand in one (a bridge that gives way).
+      const floor = cellKey([x, 0, z]);
+      const under = !pathCells.has(floor) && !collapsing.has(floor) && filled.get(floor);
       let problem = null;
       if (x >= w || z >= d) problem = `tile ${tile} is outside size ${cellText(room.size)}`;
       else if (holes.has(key)) problem = `tile ${tile} is already a hole in ${holes.get(key)}`;
@@ -307,7 +317,7 @@ function validateExitPassage({ room, report, filled, holes, blockTypes, pathCell
  * @param {string} path 'spawn' or 'reset'
  * @param {number[]} point feet center
  */
-function validatePlayerPoint({ room, report, filled, holes, blockTypes }, path, point) {
+function validatePlayerPoint({ room, report, filled, holes, blockTypes, collapsing }, path, point) {
   const [w, h, d] = room.size;
   const [px, py, pz] = point;
   const [hw, hh, hd] = PLAYER_HITBOX;
@@ -324,9 +334,11 @@ function validatePlayerPoint({ room, report, filled, holes, blockTypes }, path, 
   const hit = overlapped.find((cell) => filled.has(cellKey(cell)));
   if (hit) report(path, `the player at ${cellText(point)} overlaps ${filled.get(cellKey(hit))}`);
 
-  // Not above a hole unless a block below catches the player.
+  // Not above a hole unless a block below catches the player for good (a
+  // collapsing block gives way under him).
   const [cx, cz] = [Math.floor(px), Math.floor(pz)];
-  const below = [...Array(Math.floor(py)).keys()].reverse().find((y) => filled.has(cellKey([cx, y, cz])));
+  const catches = (y) => filled.has(cellKey([cx, y, cz])) && !collapsing.has(cellKey([cx, y, cz]));
+  const below = [...Array(Math.floor(py)).keys()].reverse().find(catches);
   const hole = holes.get(cellKey([cx, cz]));
   if (hole && below === undefined) report(path, `the player at ${cellText(point)} would fall into ${hole}`);
 

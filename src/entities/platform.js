@@ -57,7 +57,7 @@ export class Platform {
 
   /**
    * One fixed tick: move on along the path, carrying riders, or wait.
-   * @param {import('../game.js').Game} game grid, objects, player and hurt()
+   * @param {import('../game.js').Game} game grid, solid objects, player and hurt()
    * @returns {null} platforms report no events of their own (a squeeze is a 'hurt')
    */
   update(game) {
@@ -86,14 +86,14 @@ export class Platform {
    * @returns {{ ok: boolean, squeezed?: boolean, crates?: object[], player?: number[]|null }}
    *   `crates` ride along; `player` is the wizard's new feet center (null: he stays put)
    */
-  plan(to, delta, { grid, objects, player }) {
+  plan(to, delta, { grid, solids: objects, player }) {
     const box = boxAt(to);
     const alive = !player.dead;
     const { crates, carriesPlayer } = this.riders(objects, alive ? player : null);
     const moving = new Set([this, ...crates]);
     if (carriesPlayer) moving.add(player);
 
-    // Anything else in the way (a pushable, another platform) stops it.
+    // Anything else in the way (a pushable, another platform, a collapsing block) stops it.
     for (const object of objects) {
       if (!moving.has(object) && overlapsBox(box, object.box())) return { ok: false };
     }

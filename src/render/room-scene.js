@@ -5,7 +5,7 @@
  */
 import { Group } from 'three';
 import { frameRoom } from './camera.js';
-import { PlatformView, PushableView } from './entity-view.js';
+import { CollapsingView, PlatformView, PushableView } from './entity-view.js';
 import { ExitView } from './exit-view.js';
 import { createFloor } from './floor.js';
 import { createHoleView } from './hole-view.js';
@@ -20,6 +20,7 @@ import { createRoomView } from './room-view.js';
 export const OBJECT_VIEWS = {
   pushable: PushableView,
   platform: PlatformView,
+  collapsing: CollapsingView,
 };
 
 export class RoomScene {

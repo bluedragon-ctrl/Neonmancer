@@ -43,6 +43,8 @@ export function buildRoom(data, { objectTypes, blockTypes, biomes }) {
       ...object.overrides,
       // Moving platforms: the path they follow (world/path.js).
       ...(object.path && { path: structuredClone(object.path) }),
+      // Collapsing blocks: seconds until they grow back (none: they never do).
+      ...(object.regrow !== undefined && { regrow: object.regrow }),
     })),
   };
 }

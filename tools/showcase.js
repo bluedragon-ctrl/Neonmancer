@@ -14,7 +14,15 @@ import defs from '../data/defs.json';
 import { OBJECT_STYLE_DEFAULTS, withExitDefaults } from '../src/data/room-data.js';
 import { VIEW_HEIGHT, frameRoom } from '../src/render/camera.js';
 import { PLAYER } from '../src/entities/player.js';
-import { createDerezPixels, createDropShadow, createRails, placeDerezPixels, showHitFlash } from '../src/render/entity-view.js';
+import { COLLAPSING } from '../src/entities/collapsing.js';
+import {
+  CollapsingView,
+  createDerezPixels,
+  createDropShadow,
+  createRails,
+  placePixels,
+  showHitFlash,
+} from '../src/render/entity-view.js';
 import { advance, buildTrack, positionOf, startState } from '../src/world/path.js';
 import { derezPixels, hitFlash, wizardLook } from '../src/render/hit-fx.js';
 import { createFloor } from '../src/render/floor.js';
@@ -55,6 +63,7 @@ const ALL_ASSETS = [
   { label: 'blocks-in-room', span: 5.5, build: buildBlocksInRoom },
   { label: 'exits', span: 5.5, build: buildExits },
   { label: 'platforms', span: 5.5, build: buildPlatforms },
+  { label: 'collapsing-cycle', span: 4.5, build: buildCollapsingCycle },
 ];
 
 /**
@@ -82,7 +91,7 @@ function buildWizardHit() {
     wizard.visible = look.visible;
     wizard.scale.set(...look.scale);
     showHitFlash(wizard, hitFlash(player));
-    placeDerezPixels(pixels, dead ? derezPixels(derezTick) : [], [0, 0, 0]);
+    placePixels(pixels, dead ? derezPixels(derezTick) : [], [0, 0, 0]);
   };
   return asset;
 }
@@ -144,6 +153,36 @@ function buildPlatforms() {
       for (const mover of movers) mover.state = advance(mover.track, mover.state, mover.track.speed / 60);
     }
     for (const { track, block, state } of movers) block.position.set(...positionOf(track, state));
+  };
+  return asset;
+}
+
+/**
+ * A row of three collapsing blocks going through their states in a loop,
+ * one after the other like a bridge giving way under a runner: standing
+ * still, shaking, breaking into pixels, and after a while growing back.
+ */
+function buildCollapsingCycle() {
+  const object = { ...OBJECT_STYLE_DEFAULTS, ...defs.objects.collapsing };
+  const solidTicks = 40;
+  const goneTicks = 60;
+  const loop = solidTicks + COLLAPSING.shakeTicks + goneTicks;
+  const blocks = [0, 1, 2].map((i) => ({ object, pos: [i - 1.5, 0, -0.5], state: 'solid', timer: 0, regrown: false }));
+  const views = blocks.map((block) => new CollapsingView(null, block));
+  const asset = new Group().add(...views.map((view) => view.group));
+  let tick = 0;
+  asset.userData.update = (dt) => {
+    tick = (tick + dt * 60) % loop;
+    blocks.forEach((block, i) => {
+      // Each block starts shaking 12 ticks after the one before.
+      const t = (tick - i * 12 + loop) % loop;
+      const whole = Math.floor(t);
+      // Solid from the start of the loop: it just grew back.
+      if (whole < solidTicks) Object.assign(block, { state: 'solid', timer: whole, regrown: true });
+      else if (whole < solidTicks + COLLAPSING.shakeTicks) Object.assign(block, { state: 'shake', timer: whole - solidTicks });
+      else Object.assign(block, { state: 'gone', timer: whole - solidTicks - COLLAPSING.shakeTicks });
+    });
+    for (const view of views) view.sync(0);
   };
   return asset;
 }

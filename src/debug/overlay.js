@@ -77,6 +77,8 @@ export class DebugOverlay {
     place(this.playerBox, [pos[0] - player.size[0] / 2, pos[1], pos[2] - player.size[2] / 2], player.size);
 
     objects.forEach((object, i) => {
+      // A collapsed block has nothing to collide with.
+      this.objectBoxes[i].visible = object.solid !== false;
       place(this.objectBoxes[i], lerpPosition(object.prev, object.pos, alpha), object.size);
     });
   }

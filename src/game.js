@@ -27,8 +27,9 @@ export const TRANSITION = {
  * Something that happened, for views, the HUD and (later) sound. Returned
  * by Game.update() for the tick it happened in.
  * @typedef {object} GameEvent
- * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'hurt'|'exit'|'room'} type
- * @property {object} [object] the room object it happened to (push, plug, and land of an object)
+ * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'hurt'|'exit'|'room'} type
+ * @property {object} [object] the room object it happened to (push, plug,
+ *   land of an object; shake, collapse and regrow of a collapsing block)
  * @property {number} [amount] integrity lost (hurt)
  * @property {number[]} [cell] the hazard block that hurt him (hurt), [x, y, z]
  * @property {'hole'|'void'|'damage'} [cause] how the wizard died (die)
@@ -72,13 +73,23 @@ export class Game {
     }
     this.room = buildRoom(this.content.rooms.get(id), this.content);
     this.grid = new Grid(this.room);
-    /** The room's objects (pushables, later platforms and enemies), by kind (entities/kinds.js). */
+    /** The room's objects (pushables, platforms, collapsing blocks), by kind (entities/kinds.js). */
     this.objects = this.room.objects.map(createObject);
     /** The objects in update order, lowest first; re-sorted in place every tick. */
     this.updateOrder = [...this.objects];
     this.player.enter(pos ?? this.room.spawn, this.room.reset);
-    /** Everything objects collide with: the objects themselves and the wizard. */
-    this.bodies = [...this.objects, this.player];
+    this.refreshBodies();
+  }
+
+  /**
+   * Work out what there is to collide with, after an object appeared or
+   * vanished (a collapsing block).
+   */
+  refreshBodies() {
+    /** The objects that are there to collide with: all but collapsed blocks. */
+    this.solids = this.objects.filter((object) => object.solid !== false);
+    /** Everything objects collide with: the solid objects and the wizard. */
+    this.bodies = [...this.solids, this.player];
   }
 
   /**
@@ -174,7 +185,7 @@ export class Game {
 
     const { player } = this;
     const playerEvent = player.update(input, this.grid, {
-      bodies: this.objects,
+      bodies: this.solids,
       invincible: this.invincible,
       movementMode: this.movementMode,
     });
@@ -211,6 +222,8 @@ export class Game {
       const event = object.update(this);
       if (event) this.emit(event, { object });
       if (event === 'plug') say('msg.plug');
+      // Objects above it see the change this same tick (a crate on a collapsed block falls).
+      if (event === 'collapse' || event === 'regrow') this.refreshBodies();
     }
     return this.takeEvents();
   }
@@ -265,7 +278,7 @@ export class Game {
    * @param {number[]} size body size
    */
   shadowHeight(pos, size) {
-    const y = groundBelow(pos, size, this.grid, this.objects);
+    const y = groundBelow(pos, size, this.grid, this.solids);
     if (y === 0 && this.grid.isHole(pos[0], pos[2])) return null;
     return y;
   }

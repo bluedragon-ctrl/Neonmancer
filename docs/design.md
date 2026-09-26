@@ -164,6 +164,33 @@ follows a path given on the room object.
   `src/render/rails.js`; review in the asset showcase
   (`/tools/showcase.html?asset=platform,platforms`).
 
+## Collapsing blocks
+
+Room objects of kind `collapsing` (D40, D47): a 1×1×1 block in its own
+color (`collapsing` in `defs.json`: magenta, thin dashed edges, tinted faces)
+that gives way under the wizard.
+
+- **Trigger:** only the wizard standing on it (grounded, feet on its top,
+  any part of his footprint over it). Walking into its side, jumping past
+  it or a crate resting on it does nothing; a dead wizard doesn't trigger
+  it either.
+- **Shake, then gone:** it shakes for 0.5 s, harder towards the end, then
+  breaks into pixels that tumble down and fade, and is gone: whatever
+  stood on it falls (the wizard, crates). Once shaking it goes even if he
+  steps off. Running across a row of them is safe; stopping is not.
+- **Regrow** (optional, `regrow` seconds on the room object): that long
+  after vanishing it grows back from its center, but only once nothing is
+  in its cell (the wizard or a crate standing there makes it wait).
+  Without `regrow` it stays gone until the room resets.
+- **Over a hole:** a collapsing block may stand in a hole tile (a bridge
+  that gives way); when it goes, the wizard drops into the pit and a crate
+  plugs it.
+- Validation: `regrow` only on collapsing blocks; spawn and reset points
+  don't count a collapsing block as holding the wizard up over a hole.
+- Tuning: `COLLAPSING` in `src/entities/collapsing.js`, the look is
+  `COLLAPSE_FX` in `src/render/collapse-fx.js`; review in the asset
+  showcase (`/tools/showcase.html?asset=collapsing,collapsing-cycle`).
+
 ## Pushing
 
 - Push by walking into an object along a grid axis while standing on the
@@ -238,7 +265,8 @@ New mechanics add or extend one (D43).
 | `cache_hall` | 16×8 | south (front) → Boot Sector | a 3-wide pit across the room: push a crate in, then jump the rest |
 | `stack_yard` | 8×8, Glitch Zone color | raised west doorway → Boot Sector; east (front) → Fault Line | stacked crates, a 2-high block to climb via a crate |
 | `fault_line` (Phase 2) | 12×12 | west doorway → Stack Yard; raised east exit on the lookout → Transit Bus | a corridor between hazard walls, hazard blocks between two plain ones to walk across, a zigzag path of plain blocks through a field of void blocks up to a lookout |
-| `transit_bus` (Phase 2) | 12×12, 5 high | west doorway → Fault Line | a ferry across a pit between two ledges, a lift up to a high ledge, a loop carrying a crate, a press coming down (with a crate to jam it) and a pusher squeezing the wizard against the room's edge |
+| `transit_bus` (Phase 2) | 12×12, 5 high | west doorway → Fault Line; raised east exit on the high ledge → Volatile Memory | a ferry across a pit between two ledges, a lift up to a high ledge, a loop carrying a crate, a press coming down (with a crate to jam it) and a pusher squeezing the wizard against the room's edge |
+| `volatile_memory` (Phase 2) | 12×12, 5 high | west doorway → Transit Bus | a pit across the room with two collapsing bridges: one regrowing after 3 s (the way back), one that stays gone, with a crate parked on it as a safe spot; two one-shot collapsing steps up to a high ledge |
 
 ## HUD
 
@@ -306,7 +334,7 @@ Each step is one branch and one PR; the game runs after every step.
 Hazards, combat and the room editor. Each step is one branch and one PR
 against `main` (no stacked PRs); the game runs after every step, CI is
 green before a PR is called ready. Rules that apply across steps are in
-D43. **Next step: 4.**
+D43. **Next step: 5.**
 
 Every step also:
 - adds its new looks to the asset showcase (`tools/showcase.js`);
@@ -341,7 +369,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 | File | Contents |
 |---|---|
 | `data/rooms/<id>.json` | One room (id = file name) |
-| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, inset mark, dark faces; box variants `crate_plain`, `crate_cross`, `crate_dashed`; `platform`: moving platform, cyan); `blocks`: look of the `hazard` and `void` block types and the hazard's `damage` |
+| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, inset mark, dark faces; box variants `crate_plain`, `crate_cross`, `crate_dashed`; `platform`: moving platform, cyan; `collapsing`: collapsing block, magenta); `blocks`: look of the `hazard` and `void` block types and the hazard's `damage` |
 | `data/biomes.json` | Biome name and room color (`home_lattice`: amber) |
 | `data/world.json` | Start room and exit connections |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |
@@ -386,7 +414,8 @@ Example room (12×12):
 - `objects` — typed things with stable ids; `overrides` replace type defaults.
   Platforms also take a `path`:
   `{ "points": [[6, 0, 1]], "mode": "pingpong", "speed": 2, "pause": 0.8 }`
-  (see Moving platforms).
+  (see Moving platforms). Collapsing blocks may take `"regrow": 3`
+  (seconds; see Collapsing blocks).
 - Object type style (D17): `edges` `solid`/`dashed`, `mark`
   `none`/`inset`/`cross`/`brackets`, `faces` `dark`/`tinted` (defaults first),
   `tint` 0–1 (color share of a tinted top face, default 0.1).
