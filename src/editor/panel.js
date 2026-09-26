@@ -72,8 +72,9 @@ export class EditorPanel {
     this.objectSelect.addEventListener('change', () => on.objectType(this.objectSelect.value));
     this.regrowInput = Object.assign(el('input'), { type: 'number', min: '0', step: '0.5', placeholder: 'never' });
     this.regrowRow = this.row('Regrow (s)', this.regrowInput);
-    const objectRows = el('div', 'editor-group');
-    objectRows.append(this.row('Object', this.objectSelect), this.regrowRow);
+    // Fields of the current tool, shown only while it is picked (8b adds enemy fields).
+    this.objectRows = el('div', 'editor-group');
+    this.objectRows.append(this.row('Object', this.objectSelect), this.regrowRow);
 
     this.layerLabel = el('span', 'editor-value');
     const down = el('button', 'editor-small', '−');
@@ -119,7 +120,7 @@ export class EditorPanel {
     const help = el('div', 'editor-help');
     for (const line of HELP) help.append(el('div', '', line));
 
-    this.element.append(title, this.roomLabel, room, layer, tools, objectRows, actions, this.status, this.errors, help);
+    this.element.append(title, this.roomLabel, room, layer, tools, this.objectRows, actions, this.status, this.errors, help);
     root.append(this.element);
 
     // Controls let go of the keyboard once used, so the editor's keys (1–7
@@ -166,6 +167,7 @@ export class EditorPanel {
     const data = edit.data;
     this.roomLabel.textContent = `${data.id}${edit.dirty ? ' • unsaved' : ''}`;
     for (const [id, button] of this.toolButtons) button.classList.toggle('active', id === tool);
+    this.objectRows.hidden = tool !== 'object';
     this.objectSelect.value = objectType;
     this.regrowRow.hidden = !collapsing;
     this.layerLabel.textContent = `${layer} / ${data.size[1] - 1}`;

@@ -526,7 +526,8 @@ the editor stays open. Edits are kept per room until the page is closed.
   the current layer, replacing whatever is there; erasing empties the cell.
 - **Hole** works on floor tiles, whatever the layer: place makes a hole,
   erase fills it in.
-- **Object** places the type picked in the panel (every object type but
+- **Object** places the type picked in the panel (its fields show only
+  while this tool is picked; every object type but
   platforms, which need a path: step 8b), with the id `<type>_<n>`; a
   collapsing block takes the panel's regrow time (blank: never). Erasing
   removes an object or enemy standing in the cell (enemies can't be placed
