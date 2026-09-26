@@ -45,8 +45,11 @@ export class RoomScene {
   /**
    * Show the game's current room (call after it was built or rebuilt).
    * @param {import('../game.js').Game} game
+   * @param {object} [options]
+   * @param {boolean} [options.rebuild] rebuild the static views of the same
+   *   room too (its data changed in the room editor)
    */
-  show(game) {
+  show(game, { rebuild = false } = {}) {
     const { room } = game;
     const { renderer } = this;
     const old = [this.objectGroup];
@@ -57,7 +60,7 @@ export class RoomScene {
     // add() with no arguments logs an error (a room without objects).
     const views = [...this.objectViews, ...this.enemyViews];
     if (views.length > 0) this.objectGroup.add(...views.map((view) => view.group));
-    if (room.id !== this.roomId) {
+    if (rebuild || room.id !== this.roomId) {
       old.push(this.staticGroup);
       this.exitViews = room.exits.map((exit) => new ExitView(exit, room.size, game.destinationColor(exit)));
       const roomView = createRoomView(room);

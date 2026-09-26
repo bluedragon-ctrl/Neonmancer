@@ -643,3 +643,36 @@ wizard, so his own parts don't count as cover. Hidden while he is dead.
 an all-cyan ghost. Drawing only the hidden parts avoids a second outline
 doubling up on the visible wizard; keeping the inside dim leaves the
 blocks in front readable.
+
+### D56 — 2026-09-26 — Room editor: F2 in the game, save through the dev server, hand-written style kept
+The room editor is part of the game, not a separate page: F2 freezes the
+game and edits the current room in place, rebuilt in the real look after
+every change; F2 again plays the edited room from its start point, unsaved
+edits included, once it has no validation errors. Edits are kept per room
+until the page closes (a warning comes up before closing with unsaved
+ones). Editing works on one height layer at a time (a grid on that layer,
+mouse wheel or PgUp/PgDn); left click places, right click erases, a drag
+paints and is one undo step. Step 8 is split in two PRs: 8a (blocks with
+type, holes, objects but platforms, spawn and reset, room name, biome and
+size, save and export) and 8b (enemies, platform and patrol paths, exits
+with their world.json connections, new rooms).
+Saving posts the room to the dev server (`tools/room-save.js` through the
+data plugin), which checks it with the rest of `data/` (schemas and the
+game's checks) and writes `data/rooms/<id>.json` only if everything passes;
+only existing rooms for now. The file change right after a save doesn't
+reload the page. The deployed build downloads the file instead.
+Saved rooms look hand-written: box entries of `blocks` and `holes` nobody
+touched stay as they are, in order; edited cells are merged into as few
+boxes as a greedy pass finds (along x, then z, then y); the JSON is written
+in the data files' style (two-space indent, what fits in 120 columns on one
+line, lists of records one per line), which every data file already follows.
+The editor reads the mouse and its own keys (digits, PgUp/PgDn, Ctrl+Z/Y/S)
+directly instead of through action mapping, and its text is written in
+its code rather than `strings.json`, like the debug readout: it is a tool,
+not the game. Only F2 is an action.
+**Why:** author's choices before step 8 (in-game toggle for instant edit
+and test turns; a split into a static and a moving part; small diffs of
+hand-written rooms). Layer-by-layer picking is simple and exact on an
+isometric view, where clicking into depth is ambiguous. Checking on the
+server as well as in the page keeps invalid rooms off the disk even if the
+page's copy of the data is stale.

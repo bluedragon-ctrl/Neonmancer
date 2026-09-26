@@ -383,3 +383,159 @@ body {
   padding-left: 1.5em;
   line-height: 1.6;
 }
+
+/* Room editor (F2, src/editor/): the HUD makes way for the side panel. */
+.stage.editing .hud {
+  visibility: hidden;
+}
+
+.editor-panel {
+  position: absolute;
+  top: calc(24 * var(--u));
+  left: calc(24 * var(--u));
+  bottom: calc(24 * var(--u));
+  width: calc(330 * var(--u));
+  box-sizing: border-box;
+  padding: calc(16 * var(--u));
+  overflow-y: auto;
+  background: rgba(5, 6, 13, 0.88);
+  border: calc(1 * var(--u)) solid rgba(0, 240, 255, 0.45);
+  box-shadow: 0 0 calc(18 * var(--u)) rgba(0, 240, 255, 0.15);
+  color: #cfe9ff;
+  font-family: var(--terminal);
+  font-size: calc(15 * var(--u));
+  user-select: none;
+}
+
+.editor-panel[hidden] {
+  display: none;
+}
+
+.editor-title {
+  font-family: var(--arcade);
+  font-weight: 700;
+  font-size: calc(17 * var(--u));
+  letter-spacing: 0.15em;
+  color: var(--cyan);
+  text-shadow: 0 0 calc(8 * var(--u)) currentColor;
+}
+
+.editor-room {
+  margin: calc(4 * var(--u)) 0 calc(12 * var(--u));
+  color: var(--amber);
+}
+
+.editor-tools {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: calc(6 * var(--u));
+  margin-bottom: calc(10 * var(--u));
+}
+
+.editor-panel button,
+.editor-panel input,
+.editor-panel select {
+  font: inherit;
+  color: inherit;
+  background: #0b1020;
+  border: calc(1 * var(--u)) solid #2a3a55;
+  border-radius: calc(3 * var(--u));
+  padding: calc(4 * var(--u)) calc(6 * var(--u));
+  min-width: 0;
+}
+
+.editor-panel button {
+  cursor: pointer;
+}
+
+.editor-panel button:hover:not(:disabled) {
+  border-color: var(--cyan);
+}
+
+.editor-panel button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.editor-tool {
+  text-align: left;
+}
+
+.editor-tool.active {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  box-shadow: 0 0 calc(8 * var(--u)) rgba(0, 240, 255, 0.4);
+}
+
+.editor-key {
+  opacity: 0.55;
+}
+
+.editor-group {
+  margin-bottom: calc(10 * var(--u));
+}
+
+.editor-row {
+  display: flex;
+  align-items: center;
+  gap: calc(6 * var(--u));
+  margin-bottom: calc(6 * var(--u));
+}
+
+.editor-layer {
+  margin-bottom: calc(12 * var(--u));
+}
+
+.editor-row[hidden] {
+  display: none;
+}
+
+.editor-row > input,
+.editor-row > select {
+  flex: 1;
+}
+
+.editor-label {
+  flex: 0 0 calc(80 * var(--u));
+  opacity: 0.7;
+}
+
+.editor-row > .editor-size {
+  flex: 1;
+  width: calc(40 * var(--u));
+}
+
+.editor-value {
+  min-width: calc(50 * var(--u));
+  text-align: center;
+}
+
+.editor-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: calc(6 * var(--u));
+  margin: calc(12 * var(--u)) 0 calc(8 * var(--u));
+}
+
+.editor-status {
+  min-height: 1.2em;
+  color: var(--lime);
+}
+
+.editor-errors {
+  margin: calc(6 * var(--u)) 0;
+  padding-left: calc(18 * var(--u));
+  color: #ff6b60;
+  font-size: calc(13 * var(--u));
+}
+
+.editor-errors li {
+  margin-bottom: calc(4 * var(--u));
+}
+
+.editor-help {
+  margin-top: calc(12 * var(--u));
+  opacity: 0.55;
+  font-size: calc(13 * var(--u));
+  line-height: 1.5;
+}

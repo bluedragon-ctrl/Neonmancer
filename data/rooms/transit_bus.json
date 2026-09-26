@@ -29,6 +29,11 @@
     { "id": "rider", "type": "crate", "at": [2, 1, 6] },
     { "id": "press", "type": "platform", "at": [8, 2, 8], "path": { "points": [[8, 0, 8]], "speed": 3, "pause": 1.2 } },
     { "id": "jam", "type": "crate", "at": [8, 0, 10] },
-    { "id": "pusher", "type": "platform", "at": [10, 0, 6], "path": { "points": [[10, 0, 11]], "speed": 2, "pause": 0.6 } }
+    {
+      "id": "pusher",
+      "type": "platform",
+      "at": [10, 0, 6],
+      "path": { "points": [[10, 0, 11]], "speed": 2, "pause": 0.6 }
+    }
   ]
 }

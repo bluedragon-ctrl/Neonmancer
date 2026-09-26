@@ -1,7 +1,8 @@
 /**
  * The only module that uses Vite features (D7): bundles every JSON file in
- * data/ at build time and imports the schema errors found by the dev-server
- * data check (tools/vite-plugin-data.js).
+ * data/ at build time, imports the schema errors found by the dev-server
+ * data check (tools/vite-plugin-data.js) and tells whether this is the dev
+ * server.
  */
 import schemaErrors from 'virtual:data-schema-errors';
 
@@ -11,6 +12,12 @@ const modules = import.meta.glob('../../data/**/*.json', { eager: true, import: 
 export const DATA_FILES = Object.fromEntries(
   Object.entries(modules).map(([path, data]) => [path.replace('../../data/', ''), data]),
 );
+
+/**
+ * Running in the dev server (not a build): the room editor can save rooms
+ * straight to data/rooms/ there (D56).
+ */
+export const DEV_SERVER = import.meta.env.DEV;
 
 /**
  * JSON Schema errors (dev server only; a build with schema errors fails,

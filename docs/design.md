@@ -16,6 +16,7 @@ for the current phase. Locked decisions live in CLAUDE.md; their reasons in
 | Map | M |
 | Switch movement mode | G |
 | Debug mode | F3 |
+| Room editor | F2 (see Room editor) |
 | Fullscreen | F |
 
 Debug mode only, once toggled on with F3:
@@ -503,6 +504,49 @@ F3 toggles debug mode; off by default. While it's on:
 
 Rooms fully reset on a debug room jump, same as walking through an exit.
 
+## Room editor
+
+F2 opens the editor on the current room (not during a room transition);
+the game stands still meanwhile, and the HUD makes way for the editor's
+panel on the left (D56). The room is rebuilt in the real look after every
+change. F2 again plays the edited room from its spawn point, unsaved edits
+included, if it has no validation errors; otherwise the panel says so and
+the editor stays open. Edits are kept per room until the page is closed.
+
+| Input | What it does |
+|---|---|
+| Left click / drag | Place with the current tool (a drag paints; one undo step) |
+| Right click / drag | Erase with the current tool |
+| Mouse wheel, PgUp / PgDn | Height layer up / down (a grid shows it) |
+| 1–7 | Tool: Block, Hazard, Void, Hole, Object, Spawn, Reset |
+| Ctrl+Z, Ctrl+Y (Ctrl+Shift+Z) | Undo, redo |
+| Ctrl+S | Save (dev server) / export (build) |
+
+- **Block, Hazard, Void** put a static block of that type in the cell of
+  the current layer, replacing whatever is there; erasing empties the cell.
+- **Hole** works on floor tiles, whatever the layer: place makes a hole,
+  erase fills it in.
+- **Object** places the type picked in the panel (its fields show only
+  while this tool is picked; every object type but
+  platforms, which need a path: step 8b), with the id `<type>_<n>`; a
+  collapsing block takes the panel's regrow time (blank: never). Erasing
+  removes an object or enemy standing in the cell (enemies can't be placed
+  yet).
+- **Spawn, Reset** put the start or respawn point in the middle of the
+  cell, standing on the layer; erasing with Reset removes the reset point
+  (it falls back to spawn). Both show as dashed boxes of the wizard's size
+  (spawn cyan, reset magenta).
+- The panel, from the top, sets the room's name, biome and size (applied
+  on Enter or leaving the field; 2–6 high, width + depth at most 32; a
+  smaller room drops what ends up outside) and the layer, and has Undo, Redo, Save or Export, and Revert
+  (back to the last save). Errors are listed live, the way the game would
+  report them at load time.
+- **Save** (dev server): the server checks the room with the rest of
+  `data/` and writes `data/rooms/<id>.json` only if everything passes;
+  the page doesn't reload. **Export** (deployed build) downloads the file.
+  Untouched block and hole entries keep their place and shape; edited cells
+  are merged into boxes.
+
 ---
 
 ## Phase 1 (v0.1) plan
@@ -527,7 +571,7 @@ Each step is one branch and one PR; the game runs after every step.
 Hazards, combat and the room editor. Each step is one branch and one PR
 against `main` (no stacked PRs); the game runs after every step, CI is
 green before a PR is called ready. Rules that apply across steps are in
-D43. **Next step: 8.**
+D43. **Next step: 8b** (8a, the static part of the editor, is in review).
 
 Every step also:
 - adds its new looks to the asset showcase (`tools/showcase.js`);
@@ -546,7 +590,8 @@ Every step also:
 | 5 | `feat/bugs` | Enemy types in `defs.json` (speed, health, behavior, color) and an `enemies` list in room data; AI as named behavior modules (`src/ai/`, first `patrol` on the shared path format); bugs don't block movement, touching one hurts; hologram bug model (D22) with a bouncy walk; reset with the room. |
 | 6 | `feat/zap-and-mana` | Mana (energy) on the Player with slow recharge and a HUD bar; `cast` fires Zap the way the wizard faces (same directions as movement); the bolt stops at solids and pushables, a bug takes two hits (the second pops it into pixels). Zap is available from the start (data disks come in Phase 3). |
 | 7 | `feat/xray-outline` | Outline of the wizard drawn through blocks while he is hidden behind them. |
-| 8 | `feat/room-editor` | In-game editor (dev server): pick a height layer, place and erase blocks (with type), objects, holes, exits, enemies and paths with the mouse in the real neon look; validate, then save straight to `data/rooms/*.json` through a dev-server endpoint; the deployed build exports JSON only. May be split into two PRs (blocks/objects/holes/exits, then enemies/paths). |
+| 8a | `feat/room-editor` | In-game editor on F2 (D56): pick a height layer, place and erase blocks (with type), holes, objects (not platforms), spawn and reset with the mouse in the real neon look; room name, biome and size; undo/redo; validate, then save straight to `data/rooms/*.json` through a dev-server endpoint; the deployed build exports JSON only. |
+| 8b | `feat/room-editor-paths` | Editor, moving part: enemies, platform and patrol paths, exits with their `world.json` connections, new rooms. |
 | 9 | `chore/release-0.2.0` | Docs pass, CHANGELOG, `v0.2.0` tag and GitHub Release (CLAUDE.md §10) |
 
 Moved out of Phase 2: biome environmental effects (Glitch Zone drain,

@@ -25,6 +25,7 @@ export const ACTIONS = [
   'debugInvincible',
   'debugDamage',
   'fullscreen',
+  'editor',
 ];
 
 /** @type {Record<string, string[]>} */
@@ -47,4 +48,6 @@ export const DEFAULT_BINDINGS = {
   debugInvincible: ['KeyI'],
   debugDamage: ['KeyH'],
   fullscreen: ['KeyF'],
+  // The room editor (src/editor/); its own keys are in src/editor/editor.js.
+  editor: ['F2'],
 };
