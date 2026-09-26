@@ -65,6 +65,9 @@ and the project uses [Semantic Versioning](https://semver.org/).
   through `tools/run-tests.js`, which lists the test files itself.
 
 ### Changed
+- Test rooms hang off Boot Sector instead of one long row (D49): new west
+  and south exits lead to Crawl Space and Transit Bus, so every test room
+  is at most two rooms from the start.
 - Phase 2 planned step by step (docs/design.md, D43); biome environmental
   effects moved to Phase 4.
 - Versioning (D42): `package.json` holds the phase (MAJOR.MINOR.0) and

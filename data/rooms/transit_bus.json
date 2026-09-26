@@ -8,6 +8,7 @@
   "spawn": [1, 0, 2],
   "exits": [
     { "id": "west", "side": "-x", "at": 1 },
+    { "id": "north", "side": "-z", "at": 0 },
     { "id": "east", "side": "+x", "at": 0, "y": 3 }
   ],
   "blocks": [

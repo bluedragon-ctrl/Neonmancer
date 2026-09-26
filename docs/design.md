@@ -309,17 +309,19 @@ comes from data: its type in `defs.json` `enemies`, and the room's
 Test rooms stay in the world until content production (Phase 4) builds the
 real rooms and puzzles (D45). They are a test lab: each shows one mechanic
 in isolation, and later spells and enemy behaviors get tested in them too.
-New mechanics add or extend one (D43).
+New mechanics add or extend one (D43). Boot Sector, the start, is the
+hub: every test room is at most two rooms away from it, so no test means
+walking the whole world (new exits are added for that where needed, D49).
 
 | Room | Size | Exits | Shows |
 |---|---|---|---|
-| `boot_sector` (start) | 12×12 | north doorway → Cache Hall; raised east exit on a ledge → Stack Yard | blocks, holes, two crates |
+| `boot_sector` (start, hub) | 12×12 | north doorway → Cache Hall; raised east exit on a ledge → Stack Yard; west doorway → Crawl Space; south (front) → Transit Bus | blocks, holes, two crates |
 | `cache_hall` | 16×8 | south (front) → Boot Sector | a 3-wide pit across the room: push a crate in, then jump the rest |
 | `stack_yard` | 8×8, Glitch Zone color | raised west doorway → Boot Sector; east (front) → Fault Line | stacked crates, a 2-high block to climb via a crate |
 | `fault_line` (Phase 2) | 12×12 | west doorway → Stack Yard; raised east exit on the lookout → Transit Bus | a corridor between hazard walls, hazard blocks between two plain ones to walk across, a zigzag path of plain blocks through a field of void blocks up to a lookout |
-| `transit_bus` (Phase 2) | 12×12, 5 high | west doorway → Fault Line; raised east exit on the high ledge → Volatile Memory | a ferry across a pit between two ledges, a lift up to a high ledge, a loop carrying a crate, a press coming down (with a crate to jam it) and a pusher squeezing the wizard against the room's edge |
+| `transit_bus` (Phase 2) | 12×12, 5 high | west doorway → Fault Line; north doorway → Boot Sector; raised east exit on the high ledge → Volatile Memory | a ferry across a pit between two ledges, a lift up to a high ledge, a loop carrying a crate, a press coming down (with a crate to jam it) and a pusher squeezing the wizard against the room's edge |
 | `volatile_memory` (Phase 2) | 12×12, 5 high | west doorway → Transit Bus; raised east exit on the high ledge → Crawl Space | a pit across the room with two collapsing bridges: one regrowing after 3 s (the way back), one that stays gone, with a crate on a plain ledge in front of it to push onto the bridge from solid ground (it doesn't trigger the blocks, so it is a safe spot to hop onto); two one-shot collapsing steps up to a high ledge |
-| `crawl_space` (Phase 2) | 12×12 | west doorway → Volatile Memory | bugs: a sentry crossing the entrance lane, one walking off a ledge and patrolling the floor below, a lane with a crate to push in its way, a provoked one circling a pillar, a peaceful bouncy one to reach a 2-high ledge |
+| `crawl_space` (Phase 2) | 12×12 | west doorway → Volatile Memory; east (front) → Boot Sector | bugs: a sentry crossing the entrance lane, one walking off a ledge and patrolling the floor below, a lane with a crate to push in its way, a provoked one circling a pillar, a peaceful bouncy one to reach a 2-high ledge |
 
 ### Room design checklist
 

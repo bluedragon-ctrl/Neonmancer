@@ -541,3 +541,13 @@ author asked; a mood color keeps peaceful and provoked readable. A bounce
 higher than a jump turns bouncy enemies into a way up (the reachability
 checker must learn it); keeping it harmless and limited to the top keeps
 hostile bouncy enemies dangerous from the sides.
+
+### D49 — 2026-09-26 — Test rooms hang off Boot Sector, not in one row
+Boot Sector (the start) is a hub for the test rooms: new west and south
+exits lead to Crawl Space and Transit Bus, so every test room is at most
+two rooms from the start (Cache Hall and Stack Yard directly, Fault Line
+behind Stack Yard, Volatile Memory behind Transit Bus). The old chain
+stays, so the rooms also form loops. New test rooms connect near the hub,
+adding exits to existing rooms where needed.
+**Why:** author's request: with every room in one row, testing the newest
+mechanic meant walking through all the others first.
