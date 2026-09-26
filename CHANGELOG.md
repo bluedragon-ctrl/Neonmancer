@@ -45,12 +45,13 @@ and the project uses [Semantic Versioning](https://semver.org/).
   on the shared path format, `stationary`). Enemies step cell by cell,
   turn back when blocked, walk off ledges and fall, ride platforms, and pop
   in holes and on void blocks; crates rest on them. The wizard walks
-  through them; touching a hostile one hurts, and bouncy ones launch him 2
-  blocks up. The bug: a mint-green hologram ball whose eyes show its mood
-  (red hostile, amber provoked, cyan peaceful), hopping as it walks; a pad
-  ring marks bouncy ones. Enemy collision boxes in debug mode. New test
+  through them; touching a hostile one hurts, and landing on a bouncy one
+  (every bug by default) launches him 2 blocks up. The bug: a mint-green
+  hologram ball whose eyes show its mood (red hostile, amber provoked,
+  cyan peaceful), hopping as it walks and squashing when bounced on. Enemy
+  collision boxes in debug mode. New test
   room Crawl Space behind a raised exit on Volatile Memory's high ledge;
-  showcase `bug`, `bug-provoked`, `bug-peaceful`, `bug-bouncy`, `bug-pop`.
+  showcase `bug`, `bug-provoked`, `bug-peaceful`, `bug-bounce`, `bug-pop`.
 - Room design checklist in docs/design.md: reach, timing budgets,
   readability and soft-lock checks collected from playtests; the basis for
   the Phase 3 room design skill and level review subagent.
@@ -64,6 +65,9 @@ and the project uses [Semantic Versioning](https://semver.org/).
   through `tools/run-tests.js`, which lists the test files itself.
 
 ### Changed
+- Drop shadows only under the wizard for now (D50): falling crates' shadow
+  is switched off (`DROP_SHADOWS` in `render/entity-view.js`); enemies
+  have none.
 - Test rooms hang off Boot Sector instead of one long row (D49): new west
   and south exits lead to Crawl Space and Transit Bus, so every test room
   is at most two rooms from the start.

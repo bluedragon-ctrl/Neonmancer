@@ -79,7 +79,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/room-view.js` | Static blocks (merged edges + instanced occluder faces), back walls, styled object views |
 | `render/entity-view.js` | Player, pushable, platform, collapsing-block and enemy views, glowing drop shadows, pixel bursts (derez, collapse), platform guide lines |
 | `render/collapse-fx.js` | Collapsing-block look: shake, pixels breaking off, regrow, `COLLAPSE_FX` tuning (pure, tested) |
-| `render/bug.js` | Bug model (ball, eyes colored by mood, pad ring if bouncy), hop pose, bounce squash, pop pixels, `BUG` tuning (pure parts tested) |
+| `render/bug.js` | Bug model (ball, eyes colored by mood), hop pose, bounce squash, pop pixels, `BUG` tuning (pure parts tested) |
 | `render/rails.js` | Guide line along a platform's path, `RAILS` tuning (pure, tested) |
 | `render/block-fx.js` | Animated looks of hazard and void blocks (face shaders in room coordinates, steady edges, hazard flare), `BLOCK_FX` tuning |
 | `render/hit-fx.js` | Damage look: blinking while invulnerable, derez flicker and pixel burst, `HIT_FX` tuning (pure, tested) |
@@ -149,7 +149,9 @@ cells: each is a body with a `box()`, and
 stopped the move. The player is a body too, so objects can rest on him and
 never slide into him.
 
-The drop shadow sits on the highest surface under the footprint
+Only the wizard has a drop shadow for now (D50): falling objects' shadow is
+behind `DROP_SHADOWS.fallingObjects` in `render/entity-view.js` (off), and
+enemies have none. The drop shadow sits on the highest surface under the footprint
 (`surfaceBelow`: cells, bodies, floor), computed from the interpolated
 render position; over a hole at floor level there is no shadow.
 

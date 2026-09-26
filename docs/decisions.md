@@ -551,3 +551,14 @@ stays, so the rooms also form loops. New test rooms connect near the hub,
 adding exits to existing rooms where needed.
 **Why:** author's request: with every room in one row, testing the newest
 mechanic meant walking through all the others first.
+
+### D50 — 2026-09-26 — Every bug bounces; a drop shadow only under the wizard
+Supersedes the pad ring of D48. `bounce` is true on the `bug` type, so
+every bug is a trampoline unless a room overrides it; the ring that marked
+bouncy bugs is gone. Drop shadows are drawn only under the wizard for now:
+bugs have none, and falling objects' shadow (CLAUDE.md §4) is switched off
+behind `DROP_SHADOWS.fallingObjects` in `render/entity-view.js`, so it can
+come back in one line.
+**Why:** author's review: the ball shape already says "bouncy", so a mark
+is not needed and every bug should bounce. The author wants to try a
+single shadow under the wizard to see whether it reads more clearly.

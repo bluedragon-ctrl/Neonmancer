@@ -124,8 +124,8 @@ test('a bug without a contact attack never hurts', () => {
   assert.ok(!eventTypes(run(game, idle, 5)).includes('hurt'));
 });
 
-test('landing on a bouncy bug bounces the wizard up, clearing 2 blocks, without hurting him', () => {
-  const game = gameWith({ enemies: [sitter([3, 0, 3], 'b', { bounce: true })], pos: [3.5, 2, 3.5] });
+test('landing on a bug bounces the wizard up, clearing 2 blocks, without hurting him', () => {
+  const game = gameWith({ enemies: [sitter([3, 0, 3])], pos: [3.5, 2, 3.5] });
   const events = run(game, idle, 30);
   const bounce = events.find((e) => e.type === 'bounce');
   assert.equal(bounce?.enemy, game.enemies[0]);
@@ -140,10 +140,10 @@ test('landing on a bouncy bug bounces the wizard up, clearing 2 blocks, without 
   assert.ok(BOUNCE_SPEED > 0);
 });
 
-test('a hostile bouncy bug still hurts from the side; a plain bug hurts from the top', () => {
-  const side = gameWith({ enemies: [sitter([3, 0, 3], 'b', { bounce: true })], pos: [2.2, 0, 3.5] });
+test('a hostile bug still hurts from the side; one without bounce hurts from the top', () => {
+  const side = gameWith({ enemies: [sitter([3, 0, 3])], pos: [2.2, 0, 3.5] });
   assert.ok(eventTypes(run(side, hold('down'), 20)).includes('hurt'));
-  const top = gameWith({ enemies: [sitter([3, 0, 3])], pos: [3.5, 2, 3.5] });
+  const top = gameWith({ enemies: [sitter([3, 0, 3], 'b', { bounce: false })], pos: [3.5, 2, 3.5] });
   const events = run(top, idle, 30);
   assert.ok(!eventTypes(events).includes('bounce'));
   assert.ok(eventTypes(events).includes('hurt'));

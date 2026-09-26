@@ -28,6 +28,13 @@ import { railSegments } from './rails.js';
 import { createObjectView } from './room-view.js';
 import { createWizard } from './wizard.js';
 
+/**
+ * Which bodies get a drop shadow besides the wizard (who always has one).
+ * Falling objects' shadows are off while the author tries a shadow under
+ * the wizard only (D50); enemies have none.
+ */
+export const DROP_SHADOWS = { fallingObjects: false };
+
 /** Shadow lift above the surface, so it never fights with the floor or block tops. */
 const SHADOW_LIFT = 0.01;
 
@@ -223,8 +230,9 @@ export class PushableView {
       this.group.add(this.plugDrops);
     }
 
-    // Drop shadow only while falling (CLAUDE.md §4).
-    const ground = pushable.state === 'fall' ? this.game.objectShadowHeight(pushable, pos) : null;
+    // Drop shadow only while falling, if falling objects have one (DROP_SHADOWS).
+    const falling = DROP_SHADOWS.fallingObjects && pushable.state === 'fall';
+    const ground = falling ? this.game.objectShadowHeight(pushable, pos) : null;
     placeShadow(this.shadow, pos[0] + 0.5, pos[2] + 0.5, pos[1], ground, 1.3);
   }
 }
@@ -304,12 +312,11 @@ export class EnemyView {
   constructor(game, enemy) {
     this.game = game;
     this.enemy = enemy;
-    const { color, bounce } = enemy.data;
-    this.model = (ENEMY_MODELS[enemy.type] ?? createBug)(color, { bounce });
-    this.shadow = createDropShadow(color);
+    const { color } = enemy.data;
+    this.model = (ENEMY_MODELS[enemy.type] ?? createBug)(color);
     this.pixels = createPixelBurst(BUG.pop.pixels, BUG.pop.pixelSize, [color, 0xffffff]);
     this.mood = null;
-    this.group = new Group().add(this.model, this.shadow, this.pixels);
+    this.group = new Group().add(this.model, this.pixels);
     /** Angle the model faces now; it turns towards the enemy's facing. */
     this.angle = enemy.facing;
     /** Seconds, for the hop while standing. */
@@ -328,7 +335,6 @@ export class EnemyView {
     this.model.visible = !dead;
     // Popped in a pit: the burst comes out at the floor.
     placePixels(this.pixels, dead ? popPixels(enemy.timer + alpha) : [], [feet[0], Math.max(feet[1], 0), feet[2]]);
-    this.shadow.visible = !dead;
     if (dead) return;
 
     this.time += dt;
@@ -348,9 +354,6 @@ export class EnemyView {
 
     const mood = eyeMood(enemy);
     if (mood !== this.mood) setEyeMood(this.model, (this.mood = mood));
-
-    const ground = this.game.shadowHeight(feet, enemy.size);
-    placeShadow(this.shadow, feet[0], feet[2], pos[1], ground, 1.1);
   }
 }
 

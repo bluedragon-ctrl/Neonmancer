@@ -206,7 +206,7 @@ comes from data: its type in `defs.json` `enemies`, and the room's
 | `integrity` | 1–15 | hits it takes (spells, from step 6). |
 | `damage` | ≥ 1 | integrity the wizard loses per attack. |
 | `speed` | units/s | walking speed; a path's own `speed` overrides it. |
-| `bounce` | true / false | trampoline top (below). |
+| `bounce` | true / false (default false; bug: true) | trampoline top (below). |
 | `color` | #rrggbb | hologram color. |
 
 - **Moving:** an enemy stands in a grid cell (hitbox 0.6 × 0.6 × 0.6,
@@ -228,14 +228,15 @@ comes from data: its type in `defs.json` `enemies`, and the room's
   blocks.
 - **The wizard** walks through enemies. Touching a hostile one with a
   contact attack hurts him (`Game.hurt()`, then the usual invulnerability).
-  Landing on top of a **bouncy** one bounces him up 2.2 above its top
-  (clears 2 blocks) without hurting him; its sides still hurt if it is
-  hostile. Other enemies can't be stood on.
+  Landing on top of a **bouncy** one (every bug by default: a round ball
+  reads as bouncy) bounces him up 2.2 above its top (clears 2 blocks)
+  without hurting him; its sides still hurt if it is hostile. Enemies
+  with `bounce` false can't be stood on.
 - **Look (bug):** a mint-green hologram ball with two slanted eyes whose
   color shows its mood: red hostile, amber calm until provoked, cyan
-  peaceful. A bouncy bug wears a white pad ring on top and squashes when
-  bounced on. It hops as it walks, bobs while standing, turns towards
-  where it walks and pops into pixels.
+  peaceful. It squashes when bounced on, hops as it walks, bobs while
+  standing, turns towards where it walks and pops into pixels. No drop
+  shadow (D50).
 - Validation: known type, valid overrides, a free cell of its own not over
   a hole, ids unique among objects and enemies, a patrol has a level path
   clear of static blocks, a stationary enemy has none.
@@ -255,7 +256,8 @@ comes from data: its type in `defs.json` `enemies`, and the room's
 - The target cell must be free: no block, room side, object or wizard.
 - A pushed object slides one cell, then falls at once if nothing supports
   it; it lands on blocks, other objects or the floor, so objects stack.
-  Falling objects show a drop shadow in their own color.
+  Falling objects' drop shadow (in their own color) is switched off for
+  now: only the wizard has one (D50, `DROP_SHADOWS`).
 - An object falling onto the wizard rests on his head and falls on when he
   steps away.
 - Tuning values: `PUSHABLE` in `src/entities/pushable.js`, `pushDelay` in
@@ -321,7 +323,7 @@ walking the whole world (new exits are added for that where needed, D49).
 | `fault_line` (Phase 2) | 12×12 | west doorway → Stack Yard; raised east exit on the lookout → Transit Bus | a corridor between hazard walls, hazard blocks between two plain ones to walk across, a zigzag path of plain blocks through a field of void blocks up to a lookout |
 | `transit_bus` (Phase 2) | 12×12, 5 high | west doorway → Fault Line; north doorway → Boot Sector; raised east exit on the high ledge → Volatile Memory | a ferry across a pit between two ledges, a lift up to a high ledge, a loop carrying a crate, a press coming down (with a crate to jam it) and a pusher squeezing the wizard against the room's edge |
 | `volatile_memory` (Phase 2) | 12×12, 5 high | west doorway → Transit Bus; raised east exit on the high ledge → Crawl Space | a pit across the room with two collapsing bridges: one regrowing after 3 s (the way back), one that stays gone, with a crate on a plain ledge in front of it to push onto the bridge from solid ground (it doesn't trigger the blocks, so it is a safe spot to hop onto); two one-shot collapsing steps up to a high ledge |
-| `crawl_space` (Phase 2) | 12×12 | west doorway → Volatile Memory; east (front) → Boot Sector | bugs: a sentry crossing the entrance lane, one walking off a ledge and patrolling the floor below, a lane with a crate to push in its way, a provoked one circling a pillar, a peaceful bouncy one to reach a 2-high ledge |
+| `crawl_space` (Phase 2) | 12×12 | west doorway → Volatile Memory; east (front) → Boot Sector | bugs: a sentry crossing the entrance lane, one walking off a ledge and patrolling the floor below, a lane with a crate to push in its way, a provoked one circling a pillar, a peaceful stationary one to bounce up to a 2-high ledge |
 
 ### Room design checklist
 

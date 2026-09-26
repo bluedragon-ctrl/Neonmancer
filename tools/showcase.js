@@ -66,28 +66,28 @@ const ALL_ASSETS = [
   { label: 'exits', span: 5.5, build: buildExits },
   { label: 'platforms', span: 5.5, build: buildPlatforms },
   { label: 'collapsing-cycle', span: 4.5, build: buildCollapsingCycle },
-  // Bugs (D48): walking hops in each mood, a bouncy one being bounced on, a pop.
-  { label: 'bug', group: 'bugs', build: () => buildBug('hostile'), shadow: defs.enemies.bug.color },
-  { label: 'bug-provoked', group: 'bugs', build: () => buildBug('provoked'), shadow: defs.enemies.bug.color },
-  { label: 'bug-peaceful', group: 'bugs', build: () => buildBug('peaceful'), shadow: defs.enemies.bug.color },
-  { label: 'bug-bouncy', group: 'bugs', build: () => buildBug('peaceful', { bounce: true }), shadow: defs.enemies.bug.color },
+  // Bugs (D48): walking hops in each mood, one being bounced on, a pop.
+  { label: 'bug', group: 'bugs', build: () => buildBug('hostile') },
+  { label: 'bug-provoked', group: 'bugs', build: () => buildBug('provoked') },
+  { label: 'bug-peaceful', group: 'bugs', build: () => buildBug('peaceful') },
+  { label: 'bug-bounce', group: 'bugs', build: () => buildBug('hostile', { bounced: true }) },
   { label: 'bug-pop', group: 'bugs', build: buildBugPop },
 ];
 
 /**
- * A bug in a mood, hopping as it walks (3 cells per second); a bouncy one
- * stands still and gets bounced on every 1.2 s instead.
+ * A bug in a mood, hopping as it walks (3 cells per second); `bounced`:
+ * it stands still and the wizard bounces off it every 1.2 s instead.
  * @param {'hostile'|'provoked'|'peaceful'} mood
  */
-function buildBug(mood, { bounce = false } = {}) {
+function buildBug(mood, { bounced = false } = {}) {
   const { color, speed } = defs.enemies.bug;
-  const bug = createBug(color, { bounce });
+  const bug = createBug(color);
   setEyeMood(bug, mood);
   const asset = new Group().add(bug);
   asset.userData.update = (dt, time) => {
     const { body } = bug.userData;
-    const pose = bounce ? bugPose(time * BUG.idleRate, BUG.idleLift) : bugPose(time * speed);
-    const squash = bounce ? bounceSquash(((time % 1.2) / 1.2) * 72) : 0;
+    const pose = bounced ? bugPose(time * BUG.idleRate, BUG.idleLift) : bugPose(time * speed);
+    const squash = bounced ? bounceSquash(((time % 1.2) / 1.2) * 72) : 0;
     body.position.y = pose.lift;
     body.scale.set(pose.scale[0] * (1 + squash * 0.5), pose.scale[1] * (1 - squash), pose.scale[2] * (1 + squash * 0.5));
   };

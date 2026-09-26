@@ -31,7 +31,7 @@
       "id": "spring",
       "type": "bug",
       "at": [2, 0, 1],
-      "overrides": { "movement": "stationary", "hostility": "peaceful", "bounce": true }
+      "overrides": { "movement": "stationary", "hostility": "peaceful" }
     }
   ]
 }

@@ -87,7 +87,8 @@ mobile/touch support, backend or accounts.
 - Blocks rendered with instanced or merged geometry for performance.
 
 ### Depth readability
-- Glowing drop shadow directly under the player and falling objects.
+- Glowing drop shadow directly under the player (falling objects' shadow
+  is off for now, D50).
 - Only back walls rendered; front walls omitted.
 - Neon edges are drawn over dark occluding faces, so hidden edges never show.
 - X-ray outline when the player is hidden behind blocks.

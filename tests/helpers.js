@@ -24,7 +24,7 @@ export const BUG = {
   integrity: 1,
   damage: 1,
   speed: 3,
-  bounce: false,
+  bounce: true,
   color: '#2bff88',
 };
 

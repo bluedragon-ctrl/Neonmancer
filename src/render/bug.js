@@ -2,13 +2,13 @@
  * The bug model in the hologram look (D22, D48): a plain ball with two
  * slanted eyes whose color shows its mood (red: hostile, amber: calm until
  * provoked, cyan: peaceful), hopping from cell to cell with squash and
- * stretch. A bouncy bug wears a glowing pad ring on top. Pure pose and pop
+ * stretch; it squashes when the wizard bounces off it. Pure pose and pop
  * functions are tested.
  *
  * The model stands on y = 0 around the y axis and looks along +z. The ball
  * is as big as the hitbox (0.6); the hop lifts it only for show.
  */
-import { Color, Group, Mesh, MeshBasicMaterial, SphereGeometry, TorusGeometry } from 'three';
+import { Group, Mesh, MeshBasicMaterial, SphereGeometry } from 'three';
 import { holoPart } from './holo.js';
 
 /** Proportions (world units) and animation tuning. */
@@ -18,8 +18,6 @@ export const BUG = {
   eyes: { x: 0.1, y: 0.36, size: [0.06, 0.04, 0.03], slant: 0.45 },
   /** Eye color by mood (see eyeMood()). */
   moods: { hostile: 0xff2a3a, provoked: 0xffb020, peaceful: 0x00f0ff },
-  /** Pad ring on top of a bouncy bug: radius, tube thickness, color. */
-  pad: { r: 0.16, tube: 0.022, color: 0xffffff },
   /** Squash when the wizard bounces off it: ticks and depth. */
   bounceSquash: { ticks: 14, depth: 0.35 },
   /** One hop per cell: in the air for the first `air` of it, then squashed on landing. */
@@ -40,10 +38,9 @@ const SEGMENTS = 32;
  * +z). Its `userData.body` is the part that hops (see bugPose()),
  * `userData.eyes` the eye material (see setEyeMood()).
  * @param {number|string} color
- * @param {{ bounce?: boolean }} [options] bounce: wear the pad ring
  */
-export function createBug(color, { bounce = false } = {}) {
-  const { r, eyes, pad } = BUG;
+export function createBug(color) {
+  const { r, eyes } = BUG;
   const body = new Group();
   const ball = holoPart(new SphereGeometry(r, SEGMENTS, SEGMENTS / 2), color);
   ball.position.y = r;
@@ -59,13 +56,6 @@ export function createBug(color, { bounce = false } = {}) {
     eye.scale.set(...eyes.size);
     eye.rotation.set(-0.3, side * 0.35, side * eyes.slant);
     body.add(eye);
-  }
-
-  if (bounce) {
-    const ring = new Mesh(new TorusGeometry(pad.r, pad.tube, 8, SEGMENTS), new MeshBasicMaterial({ color: new Color(pad.color).multiplyScalar(1.6) }));
-    ring.rotation.x = Math.PI / 2;
-    ring.position.y = r + Math.sqrt(r ** 2 - pad.r ** 2);
-    body.add(ring);
   }
 
   const group = new Group().add(body);
