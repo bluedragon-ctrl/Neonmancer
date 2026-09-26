@@ -631,3 +631,15 @@ the browser tab and a page can't block it, so casting (Ctrl) while moving
 up (W) could close the game. No game key is a modifier, so Ctrl, Alt and
 Meta combinations all stay browser shortcuts. Numpad 0 fits players who
 move with the arrow keys.
+
+### D55 — 2026-09-26 — X-ray outline: a ghost of the hidden parts, in his own colors
+Only the parts of the wizard that something nearer hides are drawn as a
+ghost (reversed depth test), not the whole wizard on top of everything:
+half behind a wall, he is half ghost, which also shows how far behind he
+is. The ghost keeps his colors (magenta body and hat, cyan head and hands):
+a rim with a nearly empty inside and faint bands. It is drawn before the
+wizard, so his own parts don't count as cover. Hidden while he is dead.
+**Why:** author's choice in the asset showcase between his own colors and
+an all-cyan ghost. Drawing only the hidden parts avoids a second outline
+doubling up on the visible wizard; keeping the inside dim leaves the
+blocks in front readable.

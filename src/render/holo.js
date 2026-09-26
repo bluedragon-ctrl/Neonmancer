@@ -120,7 +120,10 @@ export function holoPart(geometry, color, flash = NO_FLASH) {
   }
   const { solid, outline } = materials.get(key);
   const group = new Group();
-  group.add(new Mesh(geometry, solid), new Mesh(geometry, outline));
+  const core = new Mesh(geometry, solid);
+  group.add(core, new Mesh(geometry, outline));
+  /** The glowing solid, for effects built on the part's shape (xray.js). */
+  group.userData.holoSolid = core;
   return group;
 }
 
