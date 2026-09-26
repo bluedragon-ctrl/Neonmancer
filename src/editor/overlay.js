@@ -1,12 +1,15 @@
 /**
- * What the room editor draws over the room (D56): the grid of the height
- * layer being edited, the cursor on the cell under the mouse, and markers
- * for the start (spawn) and respawn (reset) points. Neon lines like the
+ * What the room editor draws over the room (D56, D57): the grid of the
+ * height layer being edited, the cursor on the cell under the mouse,
+ * markers for the start (spawn) and respawn (reset) points, the paths of
+ * platforms and enemies, and a box around what is selected. Neon lines like the
  * room, so they glow and scale the same; the cursor and markers are drawn
  * through blocks, so they never get lost behind one.
  */
 import { Group } from 'three';
 import { PLAYER_HITBOX } from '../core/rules.js';
+import { exitCells, withExitDefaults } from '../data/room-data.js';
+import { buildTrack } from '../world/path.js';
 import { PALETTE, disposeTree, lineMaterial, neonLines } from '../render/neon.js';
 
 /** Colors and widths (pixels at 1080p). */
@@ -17,7 +20,16 @@ export const EDITOR_LOOK = {
   cursor: { place: 0xffffff, erase: 0xff3b30, width: 2.5, brightness: 1.4 },
   spawn: { color: PALETTE.cyan, width: 2 },
   reset: { color: PALETTE.magenta, width: 2 },
+  /**
+   * Paths, dashed: dim when not picked; the picked thing's bright white, with
+   * its points marked and a box around it (white: rooms come in every color).
+   */
+  path: { color: 0x9fb4d0, width: 2, brightness: 0.9, dashed: true },
+  selected: { color: 0xffffff, width: 2.5, brightness: 1.2, dashed: true },
 };
+
+/** Half the size of a path point's cross. */
+const POINT_MARK = 0.18;
 
 /** Drawn after everything else (the x-ray ghost included). */
 const OVERLAY_ORDER = 100;
@@ -59,7 +71,9 @@ export class EditorOverlay {
     };
     this.spawn = marker(EDITOR_LOOK.spawn);
     this.reset = marker(EDITOR_LOOK.reset);
-    this.group.add(this.gridGroup, this.cube, this.tile, this.spawn, this.reset);
+    /** Paths and the selection box, rebuilt with setMarks(). */
+    this.marks = new Group();
+    this.group.add(this.gridGroup, this.cube, this.tile, this.spawn, this.reset, this.marks);
   }
 
   /**
@@ -97,6 +111,43 @@ export class EditorOverlay {
     if (!cell) return;
     (flat ? this.tile : this.cube).position.set(cell[0], cell[1] + (flat ? 0.004 : 0), cell[2]);
     this.cursorMaterial.color.set(erase ? EDITOR_LOOK.cursor.erase : EDITOR_LOOK.cursor.place).multiplyScalar(EDITOR_LOOK.cursor.brightness);
+  }
+
+  /**
+   * Draw the paths of the room's platforms and enemies (through the middle
+   * of the cells they pass) and a box around the selected thing.
+   * @param {object} room room data
+   * @param {{ kind: 'item'|'exit', id: string } | null} selected
+   */
+  setMarks(room, selected) {
+    this.group.remove(this.marks);
+    disposeTree(this.marks);
+    this.marks = new Group();
+    this.group.add(this.marks);
+    const lines = { path: [], selected: [] };
+    for (const item of [...(room.objects ?? []), ...(room.enemies ?? [])]) {
+      const chosen = selected?.kind === 'item' && selected.id === item.id;
+      if (chosen) lines.selected.push(...boxSegments(item.at, item.at.map((v) => v + 1)));
+      if (!item.path) continue;
+      const out = chosen ? lines.selected : lines.path;
+      const mid = (p) => p.map((v) => v + 0.5);
+      for (const { from, to } of buildTrack(item.at, item.path).legs) out.push([mid(from), mid(to)]);
+      if (!chosen) continue;
+      for (const point of item.path.points) {
+        const [x, y, z] = mid(point);
+        out.push([[x - POINT_MARK, y, z], [x + POINT_MARK, y, z]], [[x, y - POINT_MARK, z], [x, y + POINT_MARK, z]], [[x, y, z - POINT_MARK], [x, y, z + POINT_MARK]]);
+      }
+    }
+    const exit = selected?.kind === 'exit' && (room.exits ?? []).find((e) => e.id === selected.id);
+    if (exit) {
+      const { inside } = exitCells(withExitDefaults(exit), room.size);
+      const lo = [0, 1, 2].map((axis) => Math.min(...inside.map((cell) => cell[axis])));
+      const hi = [0, 1, 2].map((axis) => Math.max(...inside.map((cell) => cell[axis])) + 1);
+      lines.selected.push(...boxSegments(lo, hi));
+    }
+    for (const [key, segments] of Object.entries(lines)) {
+      if (segments.length > 0) this.marks.add(onTop(neonLines(segments, lineMaterial(EDITOR_LOOK[key]))));
+    }
   }
 
   /**

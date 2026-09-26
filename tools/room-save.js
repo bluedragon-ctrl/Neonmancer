@@ -1,15 +1,15 @@
 /**
- * Saving a room from the in-game editor (dev server only, D56): the room
- * is checked with the rest of data/ (schemas, then the game's own checks)
- * and written to data/rooms/<id>.json only if everything passes. Only
- * rooms that already exist can be saved for now.
+ * Saving from the in-game editor (dev server only, D56, D57): the edited
+ * rooms and world.json are checked together with the rest of data/
+ * (schemas, then the game's own checks) and written only if everything
+ * passes. New rooms get a new file.
  */
-import { existsSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { formatJson } from '../src/editor/format-json.js';
 import { checkFiles, readDataFiles, readSchemas } from './check-data.js';
 
-export { SAVE_ROOM_URL } from '../src/editor/save.js';
+export { SAVE_URL } from '../src/editor/save.js';
 
 /**
  * Why a save request is refused, as an HTTP status, or 0 to go ahead. Only
@@ -28,21 +28,28 @@ export function refuseSaveRequest({ method, headers }) {
 }
 
 /**
- * Check a room against the data on disk and write it if it is valid.
+ * Check edited rooms and world.json against the data on disk and write
+ * them if everything is valid.
  * @param {string} root project root
- * @param {any} room room data from the editor
- * @returns {{ ok: boolean, errors: string[], file?: string }} `file`: the path written, relative to root
+ * @param {{ rooms?: any[], world?: any }} edits from the editor: whole room files, and world.json if it changed
+ * @returns {{ ok: boolean, errors: string[], files: string[] }} `files`: the paths written, relative to root
  */
-export function saveRoom(root, room) {
-  const id = room?.id;
-  if (typeof id !== 'string' || !/^[a-z][a-z0-9_]*$/.test(id)) return { ok: false, errors: ['the room has no valid id'] };
-  const name = `rooms/${id}.json`;
-  if (!existsSync(join(root, 'data', name))) return { ok: false, errors: [`${name}: no such room (the editor only saves existing rooms)`] };
-
+export function saveEdits(root, { rooms = [], world } = {}) {
+  if (!Array.isArray(rooms) || (rooms.length === 0 && !world)) return { ok: false, errors: ['nothing to save'], files: [] };
   const { files, errors: readErrors } = readDataFiles(root);
-  files[name] = room;
+  const names = [];
+  for (const room of rooms) {
+    const id = room?.id;
+    if (typeof id !== 'string' || !/^[a-z][a-z0-9_]*$/.test(id)) return { ok: false, errors: ['a room has no valid id'], files: [] };
+    names.push(`rooms/${id}.json`);
+    files[`rooms/${id}.json`] = room;
+  }
+  if (world) {
+    names.push('world.json');
+    files['world.json'] = world;
+  }
   const errors = [...readErrors, ...checkFiles(files, readSchemas(root))];
-  if (errors.length > 0) return { ok: false, errors };
-  writeFileSync(join(root, 'data', name), formatJson(room));
-  return { ok: true, errors: [], file: `data/${name}` };
+  if (errors.length > 0) return { ok: false, errors, files: [] };
+  for (const name of names) writeFileSync(join(root, 'data', name), formatJson(files[name]));
+  return { ok: true, errors: [], files: names.map((name) => `data/${name}`) };
 }

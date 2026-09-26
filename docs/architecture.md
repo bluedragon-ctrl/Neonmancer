@@ -106,14 +106,16 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `tools/run-tests.js` | `npm test`: runs `node --test` on an explicit list of `tests/*.test.js` (works on Node 20 and 22+, Windows and Linux) |
 | `tools/game-version.js` | Dev only: the game version for builds, PATCH counted from git merges since the phase tag (D42) |
 | `tools/showcase.html`, `tools/showcase.js` | Asset showcase page: every look on a turntable with the real renderer (also deployed) |
-| `editor/editor.js` | Room editor (F2, D56): opens on the current room, mouse picking on a height layer, tools, keys, rebuilding the room from the edited data, save or export |
-| `editor/room-edit.js` | One room being edited: place/erase edits, spawn/reset, name, biome, size, undo/redo, dirty state; `roomErrors()` (pure, tested) |
+| `editor/editor.js` | Room editor (F2, D56, D57): opens on the current room, switches rooms and makes new ones, mouse picking on a height layer, tools, picking things, keys, rebuilding the room from the edited data, save or export |
+| `editor/room-edit.js` | One room being edited: place/erase edits, enemies, paths, exits and their connections, spawn/reset, name, biome, size, undo/redo, dirty state; `roomErrors()`, `newRoom()` (pure, tested) |
+| `editor/world-edit.js` | `world.json` being edited: connecting, disconnecting and renaming exits, a room's connections for its undo steps (pure, tested) |
 | `editor/boxes.js` | `blocks`/`holes` entries edited cell by cell: untouched entries kept, loose cells merged greedily into boxes (pure, tested) |
 | `editor/format-json.js` | JSON in the data files' hand-written style (pure, tested against every data file) |
-| `editor/overlay.js` | Editor gizmos: layer grid, cursor, spawn and reset markers, `EDITOR_LOOK` |
-| `editor/panel.js` | Editor side panel (DOM): tools, layer, room settings, actions, errors |
-| `editor/save.js` | Posting a room to the dev server; downloading it in a build |
-| `tools/room-save.js` | Dev only: checks a room from the editor with the rest of `data/` and writes it |
+| `editor/overlay.js` | Editor gizmos: layer grid, cursor, spawn and reset markers, paths, the picked thing's box, `EDITOR_LOOK` |
+| `editor/panel.js` | Editor side panel (DOM): room list, tools and their fields, layer, room settings, actions, errors |
+| `editor/save.js` | Posting edited files to the dev server; downloading them in a build |
+| `tools/room-save.js` | Dev only: checks edited rooms and `world.json` with the rest of `data/` and writes them |
+| `tools/room-pr.bat` | Windows: opens a PR with only `data/rooms/` and `data/world.json` changes (validates first) |
 | `debug/overlay.js` | Debug mode's wireframe collision boxes |
 | `debug/readout.js` | Debug mode's stats readout (rates, buffer, GPU resources, actions, position) |
 
@@ -385,17 +387,20 @@ If the game cannot start, `ui/error-screen.js` lists them.
 ### Saving from the room editor
 
 ```
-editor (page) ──POST /__editor/save-room {room}──► tools/vite-plugin-data.js
-                                                    └─ tools/room-save.js: read data/, swap in the room,
-                                                       schema + semantic checks, write data/rooms/<id>.json
-editor ◄── { ok, errors } ──────────────────────────┘  (no page reload for that write)
+editor (page) ──POST /__editor/save {rooms, world?}──► tools/vite-plugin-data.js
+                                                       └─ tools/room-save.js: read data/, swap in the edited files,
+                                                          schema + semantic checks, write them all or none
+editor ◄── { ok, errors, files } ──────────────────────┘  (no page reload for those writes)
 ```
 
-While editing, the page checks the room with `validateData()` against its
-own copy of the data after every change (`roomErrors()`), and hands the
-edited data to the game (`content.rooms`) so `Game.enterRoom()` rebuilds it
-and `RoomScene.show(game, { rebuild: true })` redraws the static views too.
-Only the dev server writes files; a build downloads the room instead. The
+While editing, the page checks all its edited data (every edited room and
+`world.json`, D57) with `validateData()` against its own copy of the rest
+after every change, and hands the edited data to the game
+(`content.rooms`, `content.links` from `linkMap()`) so `Game.enterRoom()`
+rebuilds it and `RoomScene.show(game, { rebuild: true })` redraws the
+static views too; walking through an exit reaches other edited or new
+rooms. An exit not connected yet streams its own room's color.
+Only the dev server writes files; a build downloads the files instead. The
 endpoint takes only a JSON POST whose `Origin` (if any) is the dev server
 itself (`refuseSaveRequest()`), so another site open in the browser can't
 post a room to it.

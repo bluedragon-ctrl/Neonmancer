@@ -5,11 +5,11 @@
  * - Dev server: errors are printed in the terminal and passed to the game
  *   through the virtual module `virtual:data-schema-errors`, so its error
  *   screen can list them. Editing data or schemas reloads the page, except
- *   a room the room editor just saved (the editor already shows it).
- * - Dev server: the room editor saves rooms through SAVE_ROOM_URL (D56).
+ *   a file the room editor just saved (the editor already shows it).
+ * - Dev server: the room editor saves rooms and world.json through SAVE_URL (D56, D57).
  */
 import { checkData, relativeTo } from './check-data.js';
-import { SAVE_ROOM_URL, refuseSaveRequest, saveRoom } from './room-save.js';
+import { SAVE_URL, refuseSaveRequest, saveEdits } from './room-save.js';
 
 const VIRTUAL_ID = 'virtual:data-schema-errors';
 const RESOLVED_ID = '\0' + VIRTUAL_ID;
@@ -37,7 +37,7 @@ export function dataValidation() {
     },
 
     configureServer(server) {
-      server.middlewares.use(SAVE_ROOM_URL, (req, res) => {
+      server.middlewares.use(SAVE_URL, (req, res) => {
         const refused = refuseSaveRequest(req);
         if (refused) {
           res.statusCode = refused;
@@ -49,13 +49,13 @@ export function dataValidation() {
         req.on('end', () => {
           let result;
           try {
-            result = saveRoom(root, JSON.parse(body));
+            result = saveEdits(root, JSON.parse(body));
           } catch (err) {
-            result = { ok: false, errors: [`could not save (${err.message})`] };
+            result = { ok: false, errors: [`could not save (${err.message})`], files: [] };
           }
-          if (result.ok) {
-            saved.set(result.file, Date.now());
-            console.log(`[editor] saved ${result.file}`);
+          for (const file of result.files) {
+            saved.set(file, Date.now());
+            console.log(`[editor] saved ${file}`);
           }
           res.setHeader('Content-Type', 'application/json');
           res.end(JSON.stringify(result));

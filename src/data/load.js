@@ -30,16 +30,6 @@ export function loadGameData(files) {
     if (file.startsWith('rooms/')) rooms.set(room.id, room);
   }
 
-  const links = new Map();
-  for (const pair of files['world.json'].connections) {
-    const [a, b] = pair.map((ref) => {
-      const [room, exit] = ref.split('.');
-      return { room, exit };
-    });
-    links.set(pair[0], b);
-    links.set(pair[1], a);
-  }
-
   return {
     objectTypes: files['defs.json'].objects,
     blockTypes: files['defs.json'].blocks,
@@ -49,6 +39,24 @@ export function loadGameData(files) {
     world: files['world.json'],
     strings: files['strings.json'].strings,
     rooms,
-    links,
+    links: linkMap(files['world.json'].connections),
   };
+}
+
+/**
+ * Where each exit leads, both ways round.
+ * @param {string[][]} connections pairs of "room.exit" (world.json)
+ * @returns {Map<string, { room: string, exit: string }>} "room.exit" → the exit it is connected to
+ */
+export function linkMap(connections) {
+  const links = new Map();
+  for (const pair of connections) {
+    const [a, b] = pair.map((ref) => {
+      const [room, exit] = ref.split('.');
+      return { room, exit };
+    });
+    links.set(pair[0], b);
+    links.set(pair[1], a);
+  }
+  return links;
 }

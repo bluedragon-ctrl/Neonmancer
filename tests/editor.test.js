@@ -6,9 +6,11 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Boxes } from '../src/editor/boxes.js';
 import { formatJson } from '../src/editor/format-json.js';
-import { RoomEdit, roomErrors, sizeProblem } from '../src/editor/room-edit.js';
-import { refuseSaveRequest, saveRoom } from '../tools/room-save.js';
-import { CRUMBLE, dataFiles, roomFile } from './helpers.js';
+import { RoomEdit, newRoom, roomErrors, roomIdProblem, sizeProblem } from '../src/editor/room-edit.js';
+import { WorldEdit } from '../src/editor/world-edit.js';
+import { validateData } from '../src/data/validate.js';
+import { refuseSaveRequest, saveEdits } from '../tools/room-save.js';
+import { CRUMBLE, LIFT, dataFiles, roomFile } from './helpers.js';
 
 const dataDir = fileURLToPath(new URL('../data/', import.meta.url));
 
@@ -201,7 +203,7 @@ test('roomErrors checks the edited room with the rest of the data', () => {
   assert.match(roomErrors(files, edit.toData())[0], /rooms\/lab\.json › spawn: the player .* overlaps blocks\[/);
 });
 
-test('saveRoom writes a valid room and refuses an invalid, unknown or badly named one', () => {
+test('saveEdits writes valid rooms and world.json together, and refuses invalid data', () => {
   const root = mkdtempSync(join(tmpdir(), 'neonmancer-'));
   try {
     for (const dir of ['data', 'schemas']) cpSync(fileURLToPath(new URL(`../${dir}`, import.meta.url)), join(root, dir), { recursive: true });
@@ -211,20 +213,27 @@ test('saveRoom writes a valid room and refuses an invalid, unknown or badly name
 
     // Invalid: a block where the wizard spawns. Nothing is written.
     const blocked = { ...room, blocks: [...room.blocks, { at: room.spawn.map(Math.floor) }] };
-    const refused = saveRoom(root, blocked);
+    const refused = saveEdits(root, { rooms: [blocked] });
     assert.equal(refused.ok, false);
     assert.match(refused.errors.join('\n'), /rooms\/boot_sector\.json › spawn/);
     assert.equal(readFileSync(file, 'utf8'), before);
 
-    // Schema errors count too.
-    assert.equal(saveRoom(root, { ...room, size: [12, 9, 12] }).ok, false);
-    assert.equal(saveRoom(root, { ...room, id: 'no_such_room' }).ok, false);
-    assert.equal(saveRoom(root, { ...room, id: '../world' }).ok, false);
+    // Schema errors count too; so do bad ids and a new room's unconnected exit.
+    assert.equal(saveEdits(root, { rooms: [{ ...room, size: [12, 9, 12] }] }).ok, false);
+    assert.equal(saveEdits(root, { rooms: [{ ...room, id: '../world' }] }).ok, false);
+    assert.equal(saveEdits(root, {}).ok, false);
+    const annex = { ...newRoom('annex', 'home_lattice'), exits: [{ id: 'west', side: '-x', at: 2 }] };
+    assert.match(saveEdits(root, { rooms: [annex] }).errors.join('\n'), /exit "annex\.west" is not connected/);
 
-    // Valid: written in the data file style.
-    const renamed = { ...room, name: 'Boot Sector Two' };
-    assert.deepEqual(saveRoom(root, renamed), { ok: true, errors: [], file: 'data/rooms/boot_sector.json' });
-    assert.equal(readFileSync(file, 'utf8'), formatJson(renamed));
+    // Valid: a new room with an exit into Boot Sector's new east exit, and world.json connecting them.
+    const world = JSON.parse(readFileSync(join(root, 'data/world.json'), 'utf8'));
+    const exitFree = { ...room, name: 'Boot Sector Two', exits: [...room.exits, { id: 'east_2', side: '+x', at: 8 }] };
+    world.connections.push(['boot_sector.east_2', 'annex.west']);
+    const saved = saveEdits(root, { rooms: [exitFree, annex], world });
+    assert.deepEqual(saved, { ok: true, errors: [], files: ['data/rooms/boot_sector.json', 'data/rooms/annex.json', 'data/world.json'] });
+    assert.equal(readFileSync(file, 'utf8'), formatJson(exitFree));
+    assert.equal(readFileSync(join(root, 'data/rooms/annex.json'), 'utf8'), formatJson(annex));
+    assert.equal(readFileSync(join(root, 'data/world.json'), 'utf8'), formatJson(world));
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -248,4 +257,121 @@ test('sizeProblem keeps room sizes within the schema and camera limits', () => {
   assert.match(sizeProblem([20, 4, 13]), /width \+ depth/);
   assert.match(sizeProblem([0, 4, 8]), /at least 1/);
   assert.match(sizeProblem([8.5, 4, 8]), /whole numbers/);
+});
+
+/** Two rooms side by side (lab east of hall), connected; a platform and a bug in lab. */
+function twoRooms() {
+  return dataFiles({
+    rooms: [
+      roomFile('hall', { exits: [{ id: 'east', side: '+x', at: 3 }] }),
+      roomFile('lab', {
+        exits: [{ id: 'west', side: '-x', at: 3 }],
+        objects: [{ id: 'lift', type: 'platform', at: [5, 0, 5], path: { points: [[5, 2, 5]] } }],
+        enemies: [{ id: 'bug_1', type: 'bug', at: [2, 0, 6], path: { points: [[6, 0, 6]] } }],
+      }),
+    ],
+    objects: { crate: { kind: 'pushable', color: '#b6ff3c' }, platform: LIFT },
+    connections: [['hall.east', 'lab.west']],
+  });
+}
+
+/** The data with an edited room and world put in. */
+const withEdits = (files, world, ...edits) => ({ ...files, 'world.json': world.toData(), ...Object.fromEntries(edits.map((e) => [`rooms/${e.id}.json`, e.toData()])) });
+
+test('WorldEdit connects, disconnects and renames exits; setLinks keeps the order', () => {
+  const world = new WorldEdit({ schemaVersion: 1, start: 'a', connections: [['a.n', 'b.s'], ['b.e', 'c.w'], ['a.e', 'c.x']] });
+  assert.equal(world.partner('b.s'), 'a.n');
+  assert.equal(world.partner('a.w'), null);
+  assert.equal(world.dirty, false);
+  assert.equal(world.connect('a.n', 'b.s'), false);
+  assert.equal(world.connect('a.n', 'c.w'), true, 'drops both old connections');
+  assert.deepEqual(world.connections, [['a.e', 'c.x'], ['a.n', 'c.w']]);
+  world.rename('a.e', 'a.east');
+  assert.deepEqual(world.linksOf('a'), [['a.east', 'c.x'], ['a.n', 'c.w']]);
+  assert.deepEqual(world.savedLinksOf('a'), [['a.n', 'b.s'], ['a.e', 'c.x']]);
+  // Back to the saved links of room a: b.e–c.w stays gone (it isn't room a's).
+  world.setLinks('a', world.savedLinksOf('a'));
+  assert.deepEqual(world.connections, [['a.n', 'b.s'], ['a.e', 'c.x']]);
+  assert.equal(world.disconnect('a.n'), true);
+  assert.equal(world.disconnect('a.n'), false);
+  assert.equal(world.dirty, true);
+});
+
+test('RoomEdit places enemies and edits them; paths get corners and lose points', () => {
+  const files = twoRooms();
+  const edit = new RoomEdit(files['rooms/lab.json']);
+  assert.equal(edit.placeEnemy([2, 0, 6], 'bug'), null, 'an enemy is there');
+  assert.equal(edit.placeEnemy([1, 0, 4], 'bug', { movement: 'stationary' }), 'bug_2');
+  assert.deepEqual(edit.item('bug_2'), { id: 'bug_2', type: 'bug', at: [1, 0, 4], overrides: { movement: 'stationary' } });
+  assert.equal(edit.updateItem('bug_2', { overrides: undefined }), true);
+  assert.equal(edit.updateItem('bug_2', { overrides: undefined }), false);
+
+  // A click off both axes adds a corner: along x first, then z.
+  assert.equal(edit.addWaypoint('bug_2', [4, 0, 1]), true);
+  assert.deepEqual(edit.item('bug_2').path, { points: [[4, 0, 4], [4, 0, 1]] });
+  assert.equal(edit.addWaypoint('bug_2', [4, 0, 1]), false, 'already the last point');
+  assert.equal(edit.setPathOptions('bug_2', { mode: 'loop', pause: 0.5 }), true);
+  assert.equal(edit.removeWaypoint('bug_2'), true);
+  assert.deepEqual(edit.item('bug_2').path, { points: [[4, 0, 4]], mode: 'loop', pause: 0.5 });
+  assert.equal(edit.removeWaypoint('bug_2'), true);
+  assert.equal('path' in edit.item('bug_2'), false, 'the last point takes the path with it');
+  assert.equal(edit.setPathOptions('bug_2', { mode: 'loop' }), false, 'no path to set');
+
+  // A lift up: points differ on y only. Hand-written key order stays.
+  assert.equal(edit.addWaypoint('lift', [5, 3, 5]), true);
+  assert.deepEqual(edit.item('lift').path.points, [[5, 2, 5], [5, 3, 5]]);
+  edit.removeWaypoint('lift');
+  assert.equal(edit.addWaypoint('bug_2', [1, 0, 7]), true);
+  assert.deepEqual(validateData({ ...files, 'rooms/lab.json': edit.toData() }), []);
+});
+
+test('RoomEdit opens, edits and removes exits, with their connections', () => {
+  const files = twoRooms();
+  const world = new WorldEdit(files['world.json']);
+  const hall = new RoomEdit(files['rooms/hall.json'], { world });
+  const lab = new RoomEdit(files['rooms/lab.json'], { world });
+
+  // An edge cell in the east side opens a second east exit there; one near the end shifts back to fit.
+  assert.equal(hall.exitAt('+x', [7, 0, 4]).id, 'east');
+  assert.equal(hall.exitAt('+x', [7, 2, 4]), null, 'above the opening');
+  assert.equal(hall.placeExit('+x', [7, 0, 4]), null, 'clashes with east');
+  assert.equal(hall.placeExit('+x', [7, 0, 7]), 'east_2');
+  assert.deepEqual(hall.exits[1], { id: 'east_2', side: '+x', at: 6 });
+  assert.equal(hall.placeExit('-z', [2, 1, 0], { width: 3, height: 2 }), 'north');
+  assert.deepEqual(hall.exits[2], { id: 'north', side: '-z', at: 2, width: 3, y: 1 });
+  assert.match(validateData(withEdits(files, world, hall)).join('\n'), /exit "hall\.east_2" is not connected/);
+
+  // Renaming an exit renames its connection; linking moves it.
+  assert.equal(hall.updateExit('east', { id: 'door' }), true);
+  assert.deepEqual(world.connections, [['hall.door', 'lab.west']]);
+  assert.equal(hall.linkExit('east_2', 'lab.west'), true);
+  assert.deepEqual(world.connections, [['hall.east_2', 'lab.west']]);
+  hall.removeExit('door');
+  hall.removeExit('north');
+  assert.deepEqual(validateData(withEdits(files, world, hall, lab)), []);
+
+  // Undo takes the connections along: back to hall.door ↔ lab.west.
+  hall.undo();
+  hall.undo();
+  hall.undo();
+  assert.deepEqual(world.connections, [['hall.door', 'lab.west']]);
+  assert.equal(hall.revert(), true);
+  assert.deepEqual(world.connections, [['hall.east', 'lab.west']]);
+  assert.deepEqual(hall.exits, [{ id: 'east', side: '+x', at: 3 }]);
+  assert.equal(hall.dirty, false);
+  assert.equal(world.dirty, false);
+});
+
+test('newRoom is a valid empty room; roomIdProblem refuses bad and taken ids', () => {
+  const room = newRoom('data_vault', 'home');
+  assert.equal(room.name, 'Data Vault');
+  assert.deepEqual(validateData(dataFiles({ rooms: [room] })), []);
+  const edit = new RoomEdit(room, { fresh: true });
+  assert.equal(edit.dirty, true, 'a new room is unsaved');
+  edit.markSaved();
+  assert.equal(edit.dirty, false);
+  assert.equal(roomIdProblem('data_vault', ['hall']), null);
+  assert.match(roomIdProblem('hall', ['hall']), /taken/);
+  assert.match(roomIdProblem('Data Vault', []), /lowercase/);
+  assert.match(roomIdProblem('../world', []), /lowercase/);
 });

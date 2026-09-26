@@ -676,3 +676,30 @@ hand-written rooms). Layer-by-layer picking is simple and exact on an
 isometric view, where clicking into depth is ambiguous. Checking on the
 server as well as in the page keeps invalid rooms off the disk even if the
 page's copy of the data is stale.
+
+### D57 — 2026-09-26 — Room editor, moving part: pick, then edit; world.json saved with the rooms
+Step 8b adds enemies, platform and patrol paths, exits and new rooms to the
+editor (D56). Things that have more to them than a cell are picked, then
+edited: a left click on an enemy (Enemy tool), a platform or enemy (Path
+tool) or an exit (Exit tool) picks it, and the tool's panel fields show and
+change it; a white dashed box marks it, Esc drops it. The fields also hold
+the settings for new ones (a picked enemy's settings carry over to the next
+placed). Paths grow by clicking cells: the editor adds corners so each leg
+runs along one axis (x, then z, then y), enemies' points stay at their own
+height, a right click takes the last point off. Exits open by clicking an
+edge cell of the current layer (in a corner, the wall nearer the mouse);
+their connection is picked from the exits of other rooms that fit (the
+opposite side, equally wide, not connected yet). New rooms get an id and
+start empty (12x4x12); the panel's room list switches between rooms.
+Connections live in `world.json`, which the editor edits too: an exit's
+id change or removal takes its connection along, and a room's undo steps
+and Revert take that room's connections back as well (connections of other
+rooms stay). Save writes every edited room and `world.json` at once, after
+the server checks them all together, since a connection is only valid with
+both rooms; a build exports each changed file. The editor still refuses to
+save or play while any file has errors, an unconnected exit included.
+**Why:** a click on the cell of a mover is how you find it on the screen;
+building paths leg by leg with automatic corners can't make an invalid
+diagonal leg. Checking and saving the rooms and `world.json` together is
+the only way a new exit and its connection pass validation (every exit must
+be connected), and keeps half a connection off the disk.
