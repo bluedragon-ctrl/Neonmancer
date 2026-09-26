@@ -703,3 +703,24 @@ building paths leg by leg with automatic corners can't make an invalid
 diagonal leg. Checking and saving the rooms and `world.json` together is
 the only way a new exit and its connection pass validation (every exit must
 be connected), and keeps half a connection off the disk.
+
+### D58 — 2026-09-26 — Enemy templates are enemy types that extend a base type
+An enemy setup worth reusing (a tougher amber bug, a peaceful solid
+mount) is saved from the room editor as a template: a new enemy type in
+`defs.json` with `"extends"` naming its base type and only the values it
+changes, e.g. `"bug_tank": { "extends": "bug", "integrity": 4 }`. Rooms
+place it like any type (`"type": "bug_tank"`). At load time a template is
+filled in from its base (`resolveEnemyTypes()`), and it uses its base's
+look (`enemyModels()`, `ENEMY_MODELS`). Templates are one level deep: a
+base has no `extends`; saving a template of a template extends the same
+base. In the editor, Save as template turns the Enemy panel's settings
+into a template and makes the picked enemy one of it; Update template
+moves an enemy's own settings into its template, which changes every
+enemy of it. The Enemy panel also sets integrity, damage, speed and color
+now. `defs.json` is saved with the rooms and `world.json`. Template
+changes are not part of a room's undo steps.
+**Why:** author's choice: linked templates kept in the repo, so changing
+one changes every enemy placed from it, on every computer. Making them
+enemy types keeps rooms short and needs no new room format; `extends`
+instead of a full copy means a change to the base type reaches its
+templates too.

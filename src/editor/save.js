@@ -9,7 +9,8 @@ export const SAVE_URL = '/__editor/save';
 
 /**
  * Send edited files to the dev server to be checked and written.
- * @param {{ rooms: object[], world?: object }} edits whole room files, and world.json if it changed
+ * @param {{ rooms: object[], world?: object, defs?: object }} edits whole room files, and world.json and
+ *   defs.json if they changed
  * @returns {Promise<{ ok: boolean, errors: string[], files: string[] }>}
  */
 export async function saveFiles(edits) {

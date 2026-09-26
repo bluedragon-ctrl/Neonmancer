@@ -1,6 +1,6 @@
 /**
- * Saving from the in-game editor (dev server only, D56, D57): the edited
- * rooms and world.json are checked together with the rest of data/
+ * Saving from the in-game editor (dev server only, D56, D57, D58): the
+ * edited rooms, world.json and defs.json (enemy templates) are checked together with the rest of data/
  * (schemas, then the game's own checks) and written only if everything
  * passes. New rooms get a new file.
  */
@@ -28,14 +28,15 @@ export function refuseSaveRequest({ method, headers }) {
 }
 
 /**
- * Check edited rooms and world.json against the data on disk and write
- * them if everything is valid.
+ * Check edited rooms, world.json and defs.json against the data on disk
+ * and write them if everything is valid.
  * @param {string} root project root
- * @param {{ rooms?: any[], world?: any }} edits from the editor: whole room files, and world.json if it changed
+ * @param {{ rooms?: any[], world?: any, defs?: any }} edits from the editor: whole room files, and world.json
+ *   and defs.json if they changed
  * @returns {{ ok: boolean, errors: string[], files: string[] }} `files`: the paths written, relative to root
  */
-export function saveEdits(root, { rooms = [], world } = {}) {
-  if (!Array.isArray(rooms) || (rooms.length === 0 && !world)) return { ok: false, errors: ['nothing to save'], files: [] };
+export function saveEdits(root, { rooms = [], world, defs } = {}) {
+  if (!Array.isArray(rooms) || (rooms.length === 0 && !world && !defs)) return { ok: false, errors: ['nothing to save'], files: [] };
   const { files, errors: readErrors } = readDataFiles(root);
   const names = [];
   for (const room of rooms) {
@@ -44,9 +45,10 @@ export function saveEdits(root, { rooms = [], world } = {}) {
     names.push(`rooms/${id}.json`);
     files[`rooms/${id}.json`] = room;
   }
-  if (world) {
-    names.push('world.json');
-    files['world.json'] = world;
+  for (const [name, data] of [['world.json', world], ['defs.json', defs]]) {
+    if (!data) continue;
+    names.push(name);
+    files[name] = data;
   }
   const errors = [...readErrors, ...checkFiles(files, readSchemas(root))];
   if (errors.length > 0) return { ok: false, errors, files: [] };

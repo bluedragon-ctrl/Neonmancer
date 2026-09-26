@@ -14,6 +14,7 @@ import { MAX_ROOM_FOOTPRINT, PLAYER_HITBOX } from '../core/rules.js';
 import {
   ENEMY_DEFAULTS,
   ENEMY_OPTIONS,
+  ENEMY_REQUIRED,
   OBJECT_STYLES,
   OBJECT_STYLE_DEFAULTS,
   OPPOSITE_SIDE,
@@ -22,6 +23,7 @@ import {
   exitCells,
   holeTiles,
   sideLength,
+  resolveEnemyTypes,
   withExitDefaults,
 } from './room-data.js';
 import { legAxis, pathCells } from '../world/path.js';
@@ -69,9 +71,11 @@ export function validateData(files) {
     }
   }
 
+  const enemies = files['defs.json'].enemies ?? {};
+  validateTemplates(enemies, report);
   const context = {
     objectTypes: files['defs.json'].objects ?? {},
-    enemyTypes: files['defs.json'].enemies ?? {},
+    enemyTypes: resolveEnemyTypes(enemies),
     biomes: files['biomes.json'].biomes ?? {},
   };
   /** room id (from the file name) → room data */
@@ -83,6 +87,23 @@ export function validateData(files) {
   }
   guarded('world.json', report, () => validateWorld(files['world.json'], rooms, report));
   return errors;
+}
+
+/**
+ * Enemy templates (D58): `extends` names a base type (one without
+ * `extends`), and the type is complete once filled in from it.
+ */
+function validateTemplates(enemies, report) {
+  const resolved = resolveEnemyTypes(enemies);
+  for (const [id, type] of Object.entries(enemies)) {
+    const path = `enemies.${id}`;
+    if (type.extends === undefined) continue;
+    const base = enemies[type.extends];
+    if (!base) report('defs.json', `${path}.extends`, `unknown enemy type "${type.extends}"`);
+    else if (base.extends !== undefined) report('defs.json', `${path}.extends`, `"${type.extends}" is a template itself; extend its base "${base.extends}"`);
+    const missing = ENEMY_REQUIRED.filter((key) => resolved[id][key] === undefined);
+    if (base && missing.length > 0) report('defs.json', path, `missing ${missing.join(', ')}`);
+  }
 }
 
 /** Run a check; turn a crash on malformed data into an error message. */

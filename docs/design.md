@@ -539,7 +539,15 @@ list switches to another room; New room makes an empty one (D57).
   overrides written by hand stay), id `<type>_<n>`, and picks it. A click
   on an enemy picks it: the fields then show and change it, and new
   enemies get the same. A patrolling enemy needs a path (the panel says
-  so); making one stationary drops its path.
+  so); making one stationary drops its path. Integrity, damage, speed and
+  color are typed in (blank: the type's).
+- **Enemy templates** (D58): Template + Save turns the current enemy
+  settings into a new enemy type in `defs.json` (`"extends"` its base
+  type, only the changed values), picked from the Type list from then on
+  (shown as `bug_tank (bug template)`); the picked enemy becomes one of
+  it. With an enemy of a template that has settings of its own, **Update
+  template** moves them into the template, changing every enemy of it.
+  Saved with Save, like the rooms.
 - **Path** works on a picked platform or enemy (click it). Each click on a
   cell adds a point, with corners added so every leg runs along one axis
   (x, then z, then y); an enemy's points stay at its own height, a
@@ -566,8 +574,8 @@ list switches to another room; New room makes an empty one (D57).
   (back to the last save; undo and Revert take the room's connections
   along). Errors of all the edited data are listed live, the way the game
   would report them at load time.
-- **Save** (dev server): writes every edited room and `world.json`
-  together, after the server checks them with the rest of `data/`; nothing
+- **Save** (dev server): writes every edited room, `world.json` and
+  `defs.json` (templates) together, after the server checks them with the rest of `data/`; nothing
   is written unless everything passes, and the page doesn't reload.
   **Export** (deployed build) downloads each changed file. Untouched block
   and hole entries keep their place and shape; edited cells are merged
@@ -639,7 +647,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 | File | Contents |
 |---|---|
 | `data/rooms/<id>.json` | One room (id = file name) |
-| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; `collapsing`: collapsing block, magenta); `enemies`: enemy types (`bug`, see Enemies); `spells`: spell tuning (`zap`, see Zap and energy); `blocks`: look of the `hazard` and `void` block types and the hazard's `damage` |
+| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; `collapsing`: collapsing block, magenta); `enemies`: enemy types (`bug`, see Enemies) and templates that `extend` one (D58); `spells`: spell tuning (`zap`, see Zap and energy); `blocks`: look of the `hazard` and `void` block types and the hazard's `damage` |
 | `data/biomes.json` | Biome name and room color (`home_lattice`: amber) |
 | `data/world.json` | Start room and exit connections |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |

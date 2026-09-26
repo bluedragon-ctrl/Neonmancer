@@ -25,13 +25,16 @@ export const TOOLS = [
   { id: 'reset', label: 'Reset', key: '0' },
 ];
 
-/** Enemy settings the panel sets (overrides of the type's values); blank is the type's own. */
+/** Enemy settings the panel sets as lists (overrides of the type's values); blank is the type's own. */
 export const ENEMY_FIELDS = {
   movement: ENEMY_OPTIONS.movement,
   hostility: ENEMY_OPTIONS.hostility,
   bounce: [true, false],
   solid: [true, false],
 };
+
+/** Enemy settings typed in as numbers: [min, step] (the schema's limits are checked on validation). */
+export const ENEMY_NUMBERS = { integrity: [1, 1], damage: [1, 1], speed: [0.5, 0.5] };
 
 const HELP = [
   'Left click: place / pick · Right click: erase',
@@ -89,11 +92,11 @@ export class EditorPanel {
    * @param {Record<string, { name: string }>} options.biomes
    * @param {boolean} options.canSave the dev server can save; a build only exports
    * @param {Record<string, Function>} options.on callbacks: room(id), newRoom(id), tool(id), objectType(id),
-   *   enemy(field, value), path(field, value), clearPath(), exit(field, value), layer(step), name(text),
+   *   enemy(field, value), saveTemplate(name), updateTemplate(), path(field, value), clearPath(), exit(field, value),
+   *   layer(step), name(text),
    *   biome(id), size([x, y, z]), undo(), redo(), save(), revert()
    */
   constructor(root, { objectTypes, enemyTypes, biomes, canSave, on }) {
-    this.enemyTypes = enemyTypes;
     this.canSave = canSave;
     this.element = el('div', 'editor-panel');
     this.element.hidden = true;
@@ -162,17 +165,40 @@ export class EditorPanel {
     this.objectRows.append(this.row('Object', this.objectSelect), this.regrowRow);
 
     this.hints = {};
-    this.enemyType = select(Object.keys(enemyTypes).map((id) => [id, id]));
+    this.enemyType = el('select');
     this.enemyType.addEventListener('change', () => on.enemy('type', this.enemyType.value));
     this.enemySelects = {};
     this.enemyRows = this.group('enemy');
     this.enemyRows.append(this.row('Type', this.enemyType));
+    const label = (field) => field[0].toUpperCase() + field.slice(1);
     for (const [field, values] of Object.entries(ENEMY_FIELDS)) {
       const node = select([['', ''], ...values.map((value) => [String(value), yesNo(value)])]);
       node.addEventListener('change', () => on.enemy(field, node.value === '' ? undefined : values.find((v) => String(v) === node.value)));
       this.enemySelects[field] = node;
-      this.enemyRows.append(this.row(field[0].toUpperCase() + field.slice(1), node));
+      this.enemyRows.append(this.row(label(field), node));
     }
+    this.enemyNumbers = {};
+    for (const [field, [min, step]] of Object.entries(ENEMY_NUMBERS)) {
+      const node = numberInput({ min, step });
+      node.addEventListener('change', () => on.enemy(field, numberValue(node)));
+      this.enemyNumbers[field] = node;
+      this.enemyRows.append(this.row(label(field), node));
+    }
+    this.enemyColor = Object.assign(el('input'), { type: 'text' });
+    this.enemyColor.addEventListener('change', () => on.enemy('color', this.enemyColor.value.trim() || undefined));
+    this.enemyRows.append(this.row('Color', this.enemyColor));
+    // Templates (D58): these settings as a new enemy type, or into the type they are of.
+    this.templateInput = Object.assign(el('input'), { type: 'text', placeholder: 'template_name' });
+    const saveTemplate = () => this.templateInput.value.trim() && on.saveTemplate(this.templateInput.value.trim());
+    const templateButton = el('button', 'editor-small', 'Save');
+    templateButton.addEventListener('click', saveTemplate);
+    this.templateInput.addEventListener('keydown', (e) => e.key === 'Enter' && saveTemplate());
+    const templateRow = el('div', 'editor-row');
+    templateRow.append(el('span', 'editor-label', 'Template'), this.templateInput, templateButton);
+    this.updateTemplate = el('button', 'editor-action');
+    this.updateTemplate.addEventListener('click', () => on.updateTemplate());
+    this.enemyRows.append(templateRow, this.updateTemplate);
+    this.setEnemyTypes(enemyTypes, {});
 
     this.pathMode = select([['pingpong', 'there and back'], ['loop', 'loop']]);
     this.pathMode.addEventListener('change', () => on.path('mode', this.pathMode.value === PATH_DEFAULTS.mode ? undefined : this.pathMode.value));
@@ -241,6 +267,19 @@ export class EditorPanel {
     return group;
   }
 
+  /**
+   * The enemy types to pick from; templates show their base.
+   * @param {Record<string, object>} types enemy types, templates filled in
+   * @param {Record<string, string>} models each type's base type (itself for a base)
+   */
+  setEnemyTypes(types, models) {
+    this.enemyTypes = types;
+    this.enemyModels = models;
+    this.enemyType.replaceChildren(
+      ...Object.keys(types).map((id) => option(id, models[id] && models[id] !== id ? `${id} (${models[id]} template)` : id)),
+    );
+  }
+
   /** @param {boolean} shown */
   setShown(shown) {
     this.element.hidden = !shown;
@@ -295,6 +334,16 @@ export class EditorPanel {
       node.options[0].textContent = `type's (${yesNo(typeValues[field] ?? false)})`;
       node.value = field in enemy.overrides ? String(enemy.overrides[field]) : '';
     }
+    for (const [field, node] of Object.entries(this.enemyNumbers)) {
+      node.placeholder = `type's (${typeValues[field]})`;
+      this.setNumber(node, enemy.overrides[field]);
+    }
+    this.enemyColor.placeholder = `type's (${typeValues.color})`;
+    if (document.activeElement !== this.enemyColor) this.enemyColor.value = enemy.overrides.color ?? '';
+    // An enemy of a template with settings of its own can move them into the template.
+    const template = this.enemyModels[enemy.type] && this.enemyModels[enemy.type] !== enemy.type;
+    this.updateTemplate.hidden = !template || Object.keys(enemy.overrides).length === 0;
+    this.updateTemplate.textContent = `Update template ${enemy.type}`;
 
     const path = pathItem?.path;
     for (const node of [this.pathMode, this.pathSpeed, this.pathPause, this.clearPath]) node.disabled = !path;

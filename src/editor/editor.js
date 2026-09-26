@@ -5,7 +5,8 @@
  * edited room from its start point (unsaved edits included), so editing
  * and testing take turns without a reload. Edits are kept per room until
  * the page is closed; the panel switches between rooms and makes new ones.
- * Exit connections are edited in world.json, which is saved with the rooms.
+ * Exit connections are edited in world.json, and enemy templates in
+ * defs.json (D58); both are saved with the rooms.
  *
  * The editor reads the mouse and its own keys directly, not through action
  * mapping (a tool, not the game; D56). Saving writes data/ through the dev
@@ -14,7 +15,7 @@
 import { Plane, Raycaster, Vector2, Vector3 } from 'three';
 import { isTextField } from '../core/input.js';
 import { linkMap } from '../data/load.js';
-import { OPPOSITE_SIDE, withExitDefaults } from '../data/room-data.js';
+import { OPPOSITE_SIDE, enemyModels, resolveEnemyTypes, withExitDefaults } from '../data/room-data.js';
 import { validateData } from '../data/validate.js';
 import { formatJson } from './format-json.js';
 import { EditorOverlay } from './overlay.js';
@@ -52,6 +53,9 @@ export class Editor {
     this.active = false;
     /** world.json being edited: the exits' connections. */
     this.world = new WorldEdit(files['world.json']);
+    /** defs.json being edited (enemy templates, D58), and its text as last saved. */
+    this.defs = structuredClone(files['defs.json']);
+    this.defsSaved = formatJson(this.defs);
     /** Edited rooms by id, kept while the page is open. */
     this.sessions = new Map();
     /** @type {RoomEdit|null} the room being edited */
@@ -96,6 +100,8 @@ export class Editor {
           this.refresh();
         },
         enemy: (field, value) => this.setEnemy(field, value),
+        saveTemplate: (name) => this.saveTemplate(name),
+        updateTemplate: () => this.updateTemplate(),
         path: (field, value) => this.pathItem && this.change(() => this.edit.setPathOptions(this.pathItem.id, { [field]: value })),
         clearPath: () => this.pathItem && this.change(() => this.edit.updateItem(this.pathItem.id, { path: undefined })),
         exit: (field, value) => this.setExit(field, value),
@@ -109,6 +115,8 @@ export class Editor {
         revert: () => this.change(() => this.edit.revert()),
       },
     });
+
+    this.applyEnemyTypes();
 
     this.raycaster = new Raycaster();
     this.listen(renderer.webgl.domElement);
@@ -196,7 +204,7 @@ export class Editor {
 
   /** Every data file with the edits in: what saving would write. */
   editedFiles() {
-    const files = { ...this.files, 'world.json': this.world.toData() };
+    const files = { ...this.files, 'world.json': this.world.toData(), 'defs.json': structuredClone(this.defs) };
     for (const [id, edit] of this.sessions) files[`rooms/${id}.json`] = edit.toData();
     return files;
   }
@@ -318,6 +326,67 @@ export class Editor {
     this.refresh();
   }
 
+  /** The enemy settings the panel shows: the picked enemy's, or the ones for new enemies. */
+  get enemySettings() {
+    const enemy = this.selectedEnemy;
+    return enemy ? { id: enemy.id, type: enemy.type, overrides: enemy.overrides ?? {} } : this.enemy;
+  }
+
+  /**
+   * Save the enemy settings as a new enemy type in defs.json, a template
+   * of the base type (D58); the picked enemy becomes one of it, and so do
+   * new ones.
+   * @param {string} name the template's id
+   */
+  saveTemplate(name) {
+    if (!ID_PATTERN.test(name)) this.status = 'Template name: lowercase letters, digits and _, starting with a letter.';
+    else if (this.defs.enemies[name]) this.status = `Template name: "${name}" is taken.`;
+    else {
+      const { type, overrides } = this.enemySettings;
+      const { extends: base, ...own } = this.defs.enemies[type];
+      // A template of a template is one more template of the same base.
+      this.defs.enemies[name] = { extends: base ?? type, ...(base ? own : {}), ...structuredClone(overrides) };
+      this.useTemplate(name);
+      this.status = `Template ${name} added to defs.json; Save writes it.`;
+      this.panel.templateInput.value = '';
+    }
+    this.refresh();
+  }
+
+  /** Move the settings of an enemy of a template into the template: every enemy of it changes. */
+  updateTemplate() {
+    const { type, overrides } = this.enemySettings;
+    if (!this.defs.enemies[type]?.extends) return;
+    this.defs.enemies[type] = { ...this.defs.enemies[type], ...structuredClone(overrides) };
+    this.useTemplate(type);
+    this.status = `Template ${type} updated: every ${type} changes. Save writes defs.json.`;
+    this.refresh();
+  }
+
+  /** Enemy types changed: the picked enemy (and new ones) take template `type` with no overrides of their own. */
+  useTemplate(type) {
+    this.applyEnemyTypes();
+    this.enemy = { type, overrides: {} };
+    const enemy = this.selectedEnemy;
+    if (enemy) this.edit.updateItem(enemy.id, { type, overrides: undefined });
+    this.serverErrors = [];
+    this.stale = true;
+  }
+
+  /** Hand the edited enemy types (templates filled in) to the game and the panel. */
+  applyEnemyTypes() {
+    const types = this.defs.enemies ?? {};
+    this.enemyTypes = resolveEnemyTypes(types);
+    this.game.content.enemyTypes = this.enemyTypes;
+    this.game.content.enemyModels = enemyModels(types);
+    this.panel.setEnemyTypes(this.enemyTypes, this.game.content.enemyModels);
+  }
+
+  /** Are there unsaved enemy templates? */
+  get defsDirty() {
+    return formatJson(this.defs) !== this.defsSaved;
+  }
+
   /** An exit field changed in the panel: for the picked exit, or new ones. */
   setExit(field, value) {
     const exit = this.selectedExit;
@@ -370,16 +439,19 @@ export class Editor {
   async save() {
     const rooms = [...this.sessions.values()].filter((edit) => edit.dirty);
     const world = this.world.dirty ? this.world.toData() : undefined;
+    const defs = this.defsDirty ? structuredClone(this.defs) : undefined;
     if (!this.canSave) {
       // Nothing changed: export the room shown.
-      for (const edit of rooms.length > 0 || world ? rooms : [this.edit]) downloadFile(`${edit.id}.json`, edit.text());
+      const exported = rooms.length > 0 || world || defs ? rooms : [this.edit];
+      for (const edit of exported) downloadFile(`${edit.id}.json`, edit.text());
       if (world) downloadFile('world.json', formatJson(world));
-      const names = [...(rooms.length > 0 || world ? rooms : [this.edit]).map((edit) => `${edit.id}.json`), ...(world ? ['world.json'] : [])];
+      if (defs) downloadFile('defs.json', formatJson(defs));
+      const names = [...exported.map((edit) => `${edit.id}.json`), ...(world ? ['world.json'] : []), ...(defs ? ['defs.json'] : [])];
       this.status = `Exported ${names.join(', ')}${this.errors.length > 0 ? ' (with errors)' : ''}.`;
       this.refresh();
       return;
     }
-    if (rooms.length === 0 && !world) return;
+    if (rooms.length === 0 && !world && !defs) return;
     if (this.errors.length > 0) {
       this.status = 'Not saved: fix the errors below first.';
       this.refresh();
@@ -388,7 +460,7 @@ export class Editor {
     this.status = 'Saving…';
     this.refresh();
     const sent = rooms.map((edit) => edit.toData());
-    const result = await saveFiles({ rooms: sent, world });
+    const result = await saveFiles({ rooms: sent, world, defs });
     if (result.ok) {
       // Edits made while saving stay unsaved.
       rooms.forEach((edit, i) => {
@@ -400,6 +472,10 @@ export class Editor {
         this.world.savedText = formatJson(world);
         this.files['world.json'] = world;
       }
+      if (defs) {
+        this.defsSaved = formatJson(defs);
+        this.files['defs.json'] = defs;
+      }
       this.status = `Saved ${result.files.join(', ')}.`;
     } else {
       this.serverErrors = result.errors;
@@ -408,9 +484,9 @@ export class Editor {
     this.refresh();
   }
 
-  /** Are there edits not saved yet, in any room or world.json? */
+  /** Are there edits not saved yet, in any room, world.json or defs.json? */
   get unsaved() {
-    return this.world.dirty || [...this.sessions.values()].some((edit) => edit.dirty);
+    return this.world.dirty || this.defsDirty || [...this.sessions.values()].some((edit) => edit.dirty);
   }
 
   refresh() {
@@ -424,7 +500,7 @@ export class Editor {
       tool: this.tool,
       objectType: this.objectType,
       collapsing: this.objectTypes[this.objectType]?.kind === 'collapsing',
-      enemy: enemy ? { id: enemy.id, type: enemy.type, overrides: enemy.overrides ?? {} } : this.enemy,
+      enemy: this.enemySettings,
       pathItem,
       pathItemIsEnemy: !!pathItem && pathItem === enemy,
       exit: exit

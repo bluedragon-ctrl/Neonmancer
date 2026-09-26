@@ -92,6 +92,12 @@ and the project uses [Semantic Versioning](https://semver.org/).
   placed now. The panel lists every room to switch to and makes new, empty
   ones. Save writes all edited rooms and `world.json` together once the
   whole data checks out; the build exports each changed file.
+- Enemy templates (D58): an enemy type in `defs.json` can `extend` a base
+  type with only the values it changes, and looks like its base. The room
+  editor saves the Enemy panel's settings as a template, lists templates
+  in the Type list, and Update template moves an enemy's own settings into
+  its template; `defs.json` is saved with the rooms. The Enemy panel also
+  sets integrity, damage, speed and color.
 - Room design checklist in docs/design.md: reach, timing budgets,
   readability and soft-lock checks collected from playtests; the basis for
   the Phase 3 room design skill and level review subagent.

@@ -114,7 +114,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `editor/overlay.js` | Editor gizmos: layer grid, cursor, spawn and reset markers, paths, the picked thing's box, `EDITOR_LOOK` |
 | `editor/panel.js` | Editor side panel (DOM): room list, tools and their fields, layer, room settings, actions, errors |
 | `editor/save.js` | Posting edited files to the dev server; downloading them in a build |
-| `tools/room-save.js` | Dev only: checks edited rooms and `world.json` with the rest of `data/` and writes them |
+| `tools/room-save.js` | Dev only: checks edited rooms, `world.json` and `defs.json` with the rest of `data/` and writes them |
 | `tools/room-pr.bat` | Windows: opens a PR with only `data/rooms/` and `data/world.json` changes (validates first) |
 | `debug/overlay.js` | Debug mode's wireframe collision boxes |
 | `debug/readout.js` | Debug mode's stats readout (rates, buffer, GPU resources, actions, position) |
@@ -387,7 +387,7 @@ If the game cannot start, `ui/error-screen.js` lists them.
 ### Saving from the room editor
 
 ```
-editor (page) ──POST /__editor/save {rooms, world?}──► tools/vite-plugin-data.js
+editor (page) ──POST /__editor/save {rooms, world?, defs?}──► tools/vite-plugin-data.js
                                                        └─ tools/room-save.js: read data/, swap in the edited files,
                                                           schema + semantic checks, write them all or none
 editor ◄── { ok, errors, files } ──────────────────────┘  (no page reload for those writes)

@@ -485,6 +485,10 @@ body {
   width: 100%;
 }
 
+.editor-group > .editor-action[hidden] {
+  display: none;
+}
+
 .editor-row {
   display: flex;
   align-items: center;

@@ -9,8 +9,12 @@ import { formatJson } from '../src/editor/format-json.js';
 import { RoomEdit, newRoom, roomErrors, roomIdProblem, sizeProblem } from '../src/editor/room-edit.js';
 import { WorldEdit } from '../src/editor/world-edit.js';
 import { validateData } from '../src/data/validate.js';
+import { loadGameData } from '../src/data/load.js';
+import { enemyModels, resolveEnemyTypes } from '../src/data/room-data.js';
+import { buildRoom } from '../src/world/room.js';
+import { checkSchemas, readSchemas } from '../tools/check-data.js';
 import { refuseSaveRequest, saveEdits } from '../tools/room-save.js';
-import { CRUMBLE, LIFT, dataFiles, roomFile } from './helpers.js';
+import { BUG, CRUMBLE, LIFT, dataFiles, roomFile } from './helpers.js';
 
 const dataDir = fileURLToPath(new URL('../data/', import.meta.url));
 
@@ -234,6 +238,14 @@ test('saveEdits writes valid rooms and world.json together, and refuses invalid 
     assert.equal(readFileSync(file, 'utf8'), formatJson(exitFree));
     assert.equal(readFileSync(join(root, 'data/rooms/annex.json'), 'utf8'), formatJson(annex));
     assert.equal(readFileSync(join(root, 'data/world.json'), 'utf8'), formatJson(world));
+
+    // A template in defs.json and an enemy of it, saved together.
+    const defs = JSON.parse(readFileSync(join(root, 'data/defs.json'), 'utf8'));
+    defs.enemies.tank = { extends: 'bug', integrity: 4 };
+    const guarded = { ...annex, enemies: [{ id: 'tank_1', type: 'tank', at: [3, 0, 3], overrides: { movement: 'stationary' } }] };
+    assert.equal(saveEdits(root, { rooms: [guarded] }).ok, false, 'unknown type without the new defs');
+    assert.deepEqual(saveEdits(root, { rooms: [guarded], defs }).files, ['data/rooms/annex.json', 'data/defs.json']);
+    assert.equal(readFileSync(join(root, 'data/defs.json'), 'utf8'), formatJson(defs));
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -374,4 +386,25 @@ test('newRoom is a valid empty room; roomIdProblem refuses bad and taken ids', (
   assert.match(roomIdProblem('hall', ['hall']), /taken/);
   assert.match(roomIdProblem('Data Vault', []), /lowercase/);
   assert.match(roomIdProblem('../world', []), /lowercase/);
+});
+
+test('enemy templates take their base type values and look; validation checks them', () => {
+  const types = { bug: BUG, tank: { extends: 'bug', integrity: 4, color: '#ffb020' } };
+  const resolved = resolveEnemyTypes(types);
+  assert.deepEqual(resolved.tank, { ...BUG, integrity: 4, color: '#ffb020' });
+  assert.deepEqual(enemyModels(types), { bug: 'bug', tank: 'bug' });
+
+  const room = roomFile('lab', { enemies: [{ id: 'tank_1', type: 'tank', at: [4, 0, 4], overrides: { movement: 'stationary' } }] });
+  const files = dataFiles({ rooms: [room], enemies: types });
+  assert.deepEqual(validateData(files), []);
+  assert.deepEqual(checkSchemas(files, readSchemas(fileURLToPath(new URL('..', import.meta.url)))), [], 'a template needs only what it changes');
+  const built = buildRoom(room, loadGameData(files));
+  assert.equal(built.enemies[0].model, 'bug');
+  assert.equal(built.enemies[0].integrity, 4);
+
+  const bad = (enemies) => validateData(dataFiles({ rooms: [roomFile('lab')], enemies })).join('\n');
+  assert.match(bad({ bug: BUG, tank: { extends: 'beetle' } }), /enemies\.tank\.extends: unknown enemy type "beetle"/);
+  assert.match(bad({ bug: BUG, tank: { extends: 'bug' }, boss: { extends: 'tank' } }), /"tank" is a template itself/);
+  const { color, ...colorless } = BUG;
+  assert.match(bad({ bug: colorless, tank: { extends: 'bug' } }), /enemies\.tank: missing color/);
 });
