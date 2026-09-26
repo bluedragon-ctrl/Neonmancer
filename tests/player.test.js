@@ -115,6 +115,31 @@ test('diagonal movement is not faster than straight movement', () => {
   assert.ok(Math.abs(distance - PLAYER.speed / 2) < 1e-6);
 });
 
+test('screen-relative movement: up moves straight up-screen (both −x and −z)', () => {
+  const g = grid({ size: [16, 4, 16] });
+  const player = standing(g, [8, 0, 8]);
+  const inp = input(['up']);
+  for (let i = 0; i < 30; i++) {
+    player.update(inp, g, [], false, 'screen');
+    inp.next();
+  }
+  assert.ok(player.pos[0] < 8 && player.pos[2] < 8, 'moved toward -x and -z');
+  assert.ok(Math.abs((8 - player.pos[0]) - (8 - player.pos[2])) < 1e-9, 'equal parts of each axis');
+});
+
+test('screen-relative movement: two adjacent screen keys collapse to one grid axis', () => {
+  const g = grid({ size: [16, 4, 16] });
+  const player = standing(g, [8, 0, 8]);
+  const inp = input(['up', 'right']); // screen up-right collapses to grid Right (−z only)
+  for (let i = 0; i < 30; i++) {
+    player.update(inp, g, [], false, 'screen');
+    inp.next();
+  }
+  assert.equal(player.pos[0], 8);
+  assert.ok(player.pos[2] < 8);
+  assert.ok(Math.abs((8 - player.pos[2]) - PLAYER.speed / 2) < 1e-6, 'full grid-axis speed, not slower');
+});
+
 test('a jump peaks at jumpHeight: clears one block, never two (D3)', () => {
   assert.ok(Math.abs(JUMP_SPEED ** 2 / (2 * PLAYER.gravity) - PLAYER.jumpHeight) < 1e-9);
 
@@ -164,6 +189,20 @@ test('standing on a hole kills the player, who respawns at the spawn', () => {
   assert.ok(later.includes('respawn'));
   assert.equal(player.dead, false);
   assert.deepEqual(player.pos, [3.5, 0, 4.5]);
+});
+
+test('debug invincibility: standing on a hole never kills', () => {
+  const g = grid({ holes: [[5, 4]] });
+  const player = standing(g, [3.5, 0, 4.5]);
+  const events = [];
+  const inp = input(['down']);
+  for (let i = 0; i < 40; i++) {
+    events.push(player.update(inp, g, [], true)); // Down = +x, invincible
+    inp.next();
+  }
+  assert.ok(!events.includes('die'));
+  assert.equal(player.dead, false);
+  assert.ok(player.pos[0] > 5, 'walked straight across the hole');
 });
 
 test('grazing a hole edge is safe, and jumping over one is too', () => {

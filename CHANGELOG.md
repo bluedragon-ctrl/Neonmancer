@@ -14,7 +14,6 @@ and the project uses [Semantic Versioning](https://semver.org/).
   alpha for rendering, capped catch-up).
 - Action-mapped keyboard input with default bindings; taps shorter than a
   tick are never lost.
-- Temporary on-screen readout of TPS, FPS, buffer size and active actions.
 - Isometric neon renderer: letterboxed 16:9 stage, capped pixel ratio and
   render scale (`?scale=0.5`), fixed isometric camera, thick neon edges
   scaled with render height, bloom, amber room grid on a fading dark-gray
@@ -66,6 +65,14 @@ and the project uses [Semantic Versioning](https://semver.org/).
   terminal message or show a banner (used for room names).
 - Integrity: falling into a hole drains it, respawning restores it; it
   carries over between rooms.
+- Debug mode (F3): wireframe collision boxes for blocks, the wizard and
+  pushables; a stats readout (room, tick/frame rate, buffer size, actions,
+  position); jumping straight to the next/previous room (`]` / `[`);
+  toggling invincibility (`I`); and a key to test damage (`H`) through the
+  same `Game.hurt()` real hazards will use later.
+- Screen-relative movement as an alternative to the default grid-aligned
+  keys: `G` switches between them, with a terminal message and a small
+  permanent HUD tag (bottom right) naming the active mode.
 
 ### Removed
 - The four box-look crates in Boot Sector (the asset showcase shows them).

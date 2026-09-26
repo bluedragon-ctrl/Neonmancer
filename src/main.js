@@ -1,11 +1,11 @@
 // Entry point: load and validate the game data, show the start room, run
 // the loop. Any startup problem shows the error screen instead.
-// The readout is temporary and moves into debug mode later.
 import { Group } from 'three';
 import { FixedLoop } from './core/loop.js';
 import { Input } from './core/input.js';
 import { DATA_FILES, SCHEMA_ERRORS } from './data/bundle.js';
 import { DataError, loadGameData } from './data/load.js';
+import { DebugOverlay } from './debug/overlay.js';
 import { Game } from './game.js';
 import { Renderer } from './render/renderer.js';
 import { frameRoom } from './render/camera.js';
@@ -44,6 +44,9 @@ function boot() {
   renderer.hud.insertAdjacentHTML('beforeend', '<pre class="readout"></pre>');
   const readout = renderer.hud.querySelector('.readout');
 
+  const debug = new DebugOverlay();
+  renderer.scene.add(debug.group);
+
   // The room's views are rebuilt whenever the game rebuilds the room.
   let roomScene = new Group();
   let pushableViews = [];
@@ -63,6 +66,7 @@ function boot() {
     );
     renderer.scene.add(roomScene);
     frameRoom(renderer.camera, room.size);
+    debug.setRoom(room, game.pushables);
   }
   showRoom();
   const playerView = new PlayerView(game);
@@ -85,6 +89,14 @@ function boot() {
   function update() {
     input.sample();
     if (input.pressed('fullscreen')) toggleFullscreen(document.documentElement);
+    if (input.pressed('movementMode')) game.toggleMovementMode();
+    if (input.pressed('debug')) debug.toggle();
+    if (debug.active) {
+      if (input.pressed('debugRoomNext') && game.debugJumpRoom(1)) showRoom();
+      if (input.pressed('debugRoomPrev') && game.debugJumpRoom(-1)) showRoom();
+      if (input.pressed('debugInvincible')) game.invincible = !game.invincible;
+      if (input.pressed('debugDamage')) game.hurt(1);
+    }
     if (game.update(input).includes('room')) showRoom();
     ticksThisSecond++;
   }
@@ -92,12 +104,14 @@ function boot() {
   function render(alpha) {
     playerView.sync(alpha);
     for (const view of pushableViews) view.sync(alpha);
+    debug.sync(game, alpha);
     renderer.setFade(game.fadeLevel(alpha));
     const time = performance.now() / 1000;
     const dt = Math.min(time - lastFrame, 0.1);
     lastFrame = time;
     for (const view of exitViews) view.update(dt);
     hud.setIntegrity(game.integrity, game.maxIntegrity);
+    hud.setMovementMode(game.movementMode);
     hud.setHintWanted(wantsFullscreenHint(renderer.stageHeight, window.devicePixelRatio, !!document.fullscreenElement));
     hud.update(dt);
     HOLO_TIME.value = time;
@@ -112,13 +126,17 @@ function boot() {
       secondStart = now;
     }
 
-    const actions = input.activeActions().join(' ') || '-';
-    readout.textContent =
-      `> ROOM ${game.room.id}\n` +
-      `> TICK/S ${tps}  FPS ${fps}  ALPHA ${alpha.toFixed(2)}\n` +
-      `> BUFFER ${renderer.bufferWidth}x${renderer.bufferHeight}\n` +
-      `> ACTIONS ${actions}\n` +
-      `> POS ${game.player.pos.map((v) => v.toFixed(2)).join(' ')}${game.player.grounded ? '  GROUNDED' : ''}`;
+    readout.classList.toggle('shown', debug.active);
+    if (debug.active) {
+      const actions = input.activeActions().join(' ') || '-';
+      readout.textContent =
+        `> ROOM ${game.room.id}${game.invincible ? '  INVINCIBLE' : ''}\n` +
+        `> TICK/S ${tps}  FPS ${fps}  ALPHA ${alpha.toFixed(2)}\n` +
+        `> BUFFER ${renderer.bufferWidth}x${renderer.bufferHeight}\n` +
+        `> ACTIONS ${actions}\n` +
+        `> POS ${game.player.pos.map((v) => v.toFixed(2)).join(' ')}${game.player.grounded ? '  GROUNDED' : ''}\n` +
+        `> [/] ROOM  I INVINCIBLE  H DAMAGE`;
+    }
   }
 
   new FixedLoop({ update, render }).start();

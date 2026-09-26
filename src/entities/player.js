@@ -41,10 +41,19 @@ export const PLAYER = {
 export const JUMP_SPEED = Math.sqrt(2 * PLAYER.gravity * PLAYER.jumpHeight);
 
 /**
- * Movement [dx, dz] per action along the grid axes (D23): Right = −z (screen
- * up-right), Up = −x (screen up-left), Left = +z, Down = +x.
+ * Movement [dx, dz] per action along the grid axes, the default (D23):
+ * Right = −z (screen up-right), Up = −x (screen up-left), Left = +z, Down = +x.
  */
-const DIRECTIONS = { up: [-1, 0], down: [1, 0], left: [0, 1], right: [0, -1] };
+const GRID_DIRECTIONS = { up: [-1, 0], down: [1, 0], left: [0, 1], right: [0, -1] };
+
+/**
+ * Movement [dx, dz] per action relative to the screen (D38): each key moves
+ * the wizard that way on screen instead of along a single grid axis. Every
+ * vector is the sum of the two grid axes that make up that screen direction
+ * (e.g. screen "up" = grid Up + grid Right), so combining two keys collapses
+ * to a single grid axis, as classic isometric controls do.
+ */
+const SCREEN_DIRECTIONS = { up: [-1, -1], down: [1, 1], left: [-1, 1], right: [1, -1] };
 
 /** Feet this close to y = 0 count as standing on the floor. */
 const FLOOR_EPS = 1e-4;
@@ -91,9 +100,11 @@ export class Player {
    * @param {{ down(a: string): boolean, pressed(a: string): boolean }} input
    * @param {import('../world/grid.js').Grid} grid
    * @param {Iterable<{ box(): number[][] }>} [bodies] pushable objects
+   * @param {boolean} [invincible] debug mode: holes never kill
+   * @param {'grid'|'screen'} [movementMode] which key → direction mapping to use (D38)
    * @returns {string|null} event: 'jump', 'land', 'die', 'respawn' or null
    */
-  update(input, grid, bodies = []) {
+  update(input, grid, bodies = [], invincible = false, movementMode = 'grid') {
     this.prev = [...this.pos];
     this.prevFacing = this.facing;
     this.pushIntent = null;
@@ -114,7 +125,8 @@ export class Player {
 
     let event = null;
 
-    // Walk along the grid axes; diagonals are normalised.
+    // Walk along the grid axes, or screen-relative (D38); diagonals are normalised.
+    const DIRECTIONS = movementMode === 'screen' ? SCREEN_DIRECTIONS : GRID_DIRECTIONS;
     let dx = 0;
     let dz = 0;
     for (const [action, [ax, az]] of Object.entries(DIRECTIONS)) {
@@ -163,7 +175,7 @@ export class Player {
     if (this.grounded && !wasGrounded) event = 'land';
 
     // Standing on a hole at floor level: fall in (D18).
-    if (this.grounded && this.pos[1] < FLOOR_EPS && grid.isHole(this.pos[0], this.pos[2])) {
+    if (this.grounded && this.pos[1] < FLOOR_EPS && grid.isHole(this.pos[0], this.pos[2]) && !invincible) {
       this.dead = true;
       this.deathTimer = PLAYER.deathTicks;
       this.grounded = false;
