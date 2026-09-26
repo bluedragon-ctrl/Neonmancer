@@ -1,12 +1,15 @@
 /**
  * Static room geometry: blocks and the two back walls.
  *
- * Blocks are one instanced mesh of dark cubes (the occluding faces) plus one
- * merged set of neon edges from blockEdges(). Only the back walls (x = 0 and
- * z = 0) are drawn; the front sides stay open (CLAUDE.md §4). Exits are
- * doorways in the back walls and gaps in the front edges (render/walls.js).
+ * Plain blocks are one instanced mesh of dark cubes (the occluding faces)
+ * plus one merged set of neon edges from blockEdges(), in the room color;
+ * hazard and void blocks get their own animated look (block-fx.js). Only
+ * the back walls (x = 0 and z = 0) are drawn; the front sides stay open
+ * (CLAUDE.md §4). Exits are doorways in the back walls and gaps in the
+ * front edges (render/walls.js).
  */
 import { BoxGeometry, BufferGeometry, Color, DoubleSide, Float32BufferAttribute, Group, InstancedMesh, Matrix4, Mesh } from 'three';
+import { createActiveBlockView } from './block-fx.js';
 import { blockEdges } from './edges.js';
 import { markSegments } from './marks.js';
 import { doorwayTunnels, wallLayout } from './walls.js';
@@ -27,14 +30,26 @@ const UNIT_BOX = shared(new BoxGeometry(1, 1, 1).translate(0.5, 0.5, 0.5));
 /**
  * @param {object} room
  * @param {number[]} room.size [x, y, z]
- * @param {number[][]} room.cells filled block cells as [x, y, z]
+ * @param {number[][]} room.cells plain block cells as [x, y, z]
  * @param {object[]} [room.exits] exits (defaults applied): doorways in the back walls, gaps in the front edges
  * @param {number|string} [room.color] room color (biome), amber by default
+ * @param {Record<string, number[][]>} [room.typedCells] hazard and void block cells, by type
+ * @param {Record<string, { color: string }>} [room.blockTypes] their colors, by type
+ * @returns {Group} with `userData.hazardFaces`, the hazard face material
+ *   (for flareHazard()), or null without hazard blocks
  */
-export function createRoomView({ size, cells, exits = [], color = PALETTE.amber }) {
+export function createRoomView({ size, cells, exits = [], color = PALETTE.amber, typedCells = {}, blockTypes = {} }) {
   const group = new Group();
   group.add(createWalls(size, exits, color));
   if (cells.length > 0) group.add(createBlockView(cells, color));
+  group.userData.hazardFaces = null;
+  for (const [type, list] of Object.entries(typedCells)) {
+    if (list.length === 0) continue;
+    // Animated look (block-fx.js), drawn after the plain blocks, so where they meet its edge wins.
+    const view = createActiveBlockView(list, type, blockTypes[type].color);
+    if (type === 'hazard') group.userData.hazardFaces = view.userData.faces;
+    group.add(view);
+  }
   return group;
 }
 

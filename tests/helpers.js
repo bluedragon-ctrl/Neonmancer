@@ -9,6 +9,9 @@ import { Grid } from '../src/world/grid.js';
 /** A plain pushable crate type. */
 export const CRATE = { kind: 'pushable', color: '#b6ff3c' };
 
+/** Looks and rules of the special block types, as in defs.json. */
+export const BLOCK_TYPES = { hazard: { color: '#ff3b30', damage: 1 }, void: { color: '#8a5cff' } };
+
 /**
  * A room file with defaults (8×4×8, biome "home", spawn near a corner);
  * `props` overrides or adds anything.
@@ -30,7 +33,7 @@ export function roomFile(id, props = {}) {
  */
 export function dataFiles({ rooms, objects = { crate: CRATE }, connections = [], start = rooms[0].id }) {
   return structuredClone({
-    'defs.json': { schemaVersion: 1, objects },
+    'defs.json': { schemaVersion: 1, objects, blocks: BLOCK_TYPES },
     'biomes.json': { schemaVersion: 1, biomes: { home: { name: 'Home', color: '#ffb020' } } },
     'world.json': { schemaVersion: 1, start, connections },
     'strings.json': STRINGS,
@@ -43,9 +46,9 @@ export function gameData(options) {
   return loadGameData(dataFiles(options));
 }
 
-/** A grid for a room of `size` with the given block cells, hole tiles and exits. */
-export function grid({ size = [8, 4, 8], cells = [], holes = [], exits = [] } = {}) {
-  return new Grid({ size, cells, holes, exits });
+/** A grid for a room of `size` with the given block cells, hole tiles, exits and hazard/void cells. */
+export function grid({ size = [8, 4, 8], cells = [], holes = [], exits = [], typedCells = {} } = {}) {
+  return new Grid({ size, cells, holes, exits, typedCells });
 }
 
 /** Just the types of a list of game events, e.g. ['exit'], for short assertions. */

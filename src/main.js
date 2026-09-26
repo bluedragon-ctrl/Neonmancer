@@ -71,6 +71,7 @@ function boot() {
     }
     const events = game.update(input);
     if (events.some((event) => event.type === 'room')) showRoom();
+    for (const event of events) if (event.type === 'hurt' && event.cell) roomScene.flareHazard(event.cell);
     readout.countTick();
   }
 

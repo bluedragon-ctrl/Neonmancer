@@ -72,6 +72,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/hole-view.js` | Hole pits: walls fading to black, rim, short fading corner lines; outline math (tested) |
 | `render/room-view.js` | Static blocks (merged edges + instanced occluder faces), back walls, styled object views |
 | `render/entity-view.js` | Player and pushable views, glowing drop shadows, derez pixel burst |
+| `render/block-fx.js` | Animated looks of hazard and void blocks (face shaders in room coordinates, steady edges, hazard flare), `BLOCK_FX` tuning |
 | `render/hit-fx.js` | Damage look: blinking while invulnerable, derez flicker and pixel burst, `HIT_FX` tuning (pure, tested) |
 | `render/interp.js` | Tick interpolation (positions, angles) and drop-shadow sizing (pure, tested) |
 | `render/room-scene.js` | The current room's views, object views by kind (`OBJECT_VIEWS`); rebuilds only the objects on a respawn |
@@ -122,8 +123,11 @@ collision is needed. No auto step-up: the wizard jumps.
 
 Solid for the player: static blocks, the room sides (x/z outside the room)
 and everything below y = 0 (the grid), plus room objects as moving bodies;
-above the room height is open. Grid cells hold a `CELL` type (only `empty`
-and `solid` so far); only blocks that never move or change are grid cells,
+above the room height is open. Grid cells hold a `CELL` type (`empty`,
+`solid`, `hazard`, `void`; all but `empty` are solid). What a hazard or
+void block does is asked of the grid after the move: `touchesCell()` in
+`physics/collision.js` for hazards (Game, each tick), the cell under the
+feet center for void (Player, on landing). Only blocks that never move or change are grid cells,
 everything that moves or disappears is a room object (D40). At an exit the row of cells just
 beyond the side is open (as high as the exit), so the wizard can walk
 through; pushables never move outside the room.

@@ -1,13 +1,14 @@
 /**
  * The wizard: movement along the grid axes, jump, gravity, pushing,
- * integrity (health), invulnerability after a hit, death (in a hole, or
- * with no integrity left) and respawn. Pure logic, one call to
+ * integrity (health), invulnerability after a hit, death (in a hole, on a
+ * void block, or with no integrity left) and respawn. Pure logic, one call to
  * update() per fixed tick. One Player lasts the whole game: entering a room
  * places him (enter()), so integrity carries over.
  */
 import { DT } from '../core/loop.js';
 import { PLAYER_HITBOX } from '../core/rules.js';
 import { bodyBox, moveAxis } from '../physics/collision.js';
+import { CELL } from '../world/grid.js';
 
 /** Tuning values (units, seconds, ticks). */
 export const PLAYER = {
@@ -116,13 +117,13 @@ export class Player {
 
   /**
    * Die: all integrity gone; he respawns after PLAYER.deathTicks.
-   * @param {'hole'|'damage'} cause a hole drops him into the pit; otherwise
-   *   he derezzes where he is
+   * @param {'hole'|'void'|'damage'} cause a hole drops him into the pit;
+   *   otherwise he derezzes where he is
    */
   die(cause) {
     this.integrity = 0;
     this.dead = true;
-    /** Why he died, while dead: 'hole' or 'damage'. */
+    /** Why he died, while dead: 'hole', 'void' or 'damage'. */
     this.deathCause = cause;
     this.deathTimer = PLAYER.deathTicks;
     this.grounded = false;
@@ -171,7 +172,7 @@ export class Player {
    * @param {import('../world/grid.js').Grid} grid
    * @param {object} [options]
    * @param {Iterable<{ box(): number[][] }>} [options.bodies] pushable objects
-   * @param {boolean} [options.invincible] debug mode: holes never kill
+   * @param {boolean} [options.invincible] debug mode: holes and void blocks never kill
    * @param {'grid'|'screen'} [options.movementMode] which key → direction mapping to use (D38)
    * @returns {string|null} event: 'jump', 'land', 'die', 'respawn' or null
    */
@@ -248,13 +249,29 @@ export class Player {
     }
     if (this.grounded && !wasGrounded) event = 'land';
 
-    // Standing on a hole at floor level: fall in (D18), which drains all
-    // integrity. Respawning restores it.
-    if (this.grounded && this.pos[1] < FLOOR_EPS && grid.isHole(this.pos[0], this.pos[2]) && !invincible) {
-      this.die('hole');
-      return 'die';
+    // Standing on a hole at floor level: fall in (D18); standing on a void
+    // block: derez. Both drain all integrity; respawning restores it. Only
+    // the tile under his center counts, so grazing an edge is safe.
+    if (this.grounded && !invincible) {
+      if (this.pos[1] < FLOOR_EPS && grid.isHole(this.pos[0], this.pos[2])) {
+        this.die('hole');
+        return 'die';
+      }
+      if (this.standingOn(grid) === CELL.void) {
+        this.die('void');
+        return 'die';
+      }
     }
     return event;
+  }
+
+  /**
+   * The grid cell type right under his feet center: CELL.empty when he
+   * stands on an object, CELL.solid on the floor.
+   * @param {import('../world/grid.js').Grid} grid
+   */
+  standingOn(grid) {
+    return grid.cellAt(Math.floor(this.pos[0]), Math.round(this.pos[1]) - 1, Math.floor(this.pos[2]));
   }
 
   /**
