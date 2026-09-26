@@ -430,3 +430,37 @@ room only counts down to death. Several Phase 2 mechanics were only named
 in CLAUDE.md; fixing their rules up front keeps each step's PR focused.
 Death at 0 integrity was implied by damage but not planned. The shared
 path format avoids two movement systems.
+
+### D44 — 2026-09-26 — Hazard and void contact rules and animated looks
+Hazard contact means the wizard's box overlaps the block on two axes and
+lies against or in it on the third (within 0.02 units): standing on it or
+leaning on a side counts, grazing a corner diagonally doesn't. The hit goes
+through `Game.hurt()`, so it repeats each time the invulnerability ends.
+Void kills when he is grounded with his feet center over a void cell,
+the same rule as holes; he derezzes on the spot (cause `void`). The two
+types are fixed keys in a `blocks` section of defs.json (color plus the
+hazard's `damage`), not open-ended types like objects, because their
+behavior is built into the engine. Their looks are animated shaders
+(`render/block-fx.js`): hazard pixels switching on and off, void grains
+sinking inside the block, stronger through the top. Edges stay steady and
+all motion is slow. Where a special block meets a plain one, the special
+block's edge is drawn on top. A hazard block that hurts the wizard
+flares. Spawn and reset points can't be above either, and a raised exit
+can't stand on void.
+**Why:** the two-axis rule makes walls hurt on contact without punishing a
+near miss at a corner. Reusing the hole rule for void keeps "edge under one
+foot is safe" consistent across all falls to death. Author's review of
+the looks: damaging blocks should read as active, not as colored crates.
+Steady edges keep the hitbox exact, and slow motion keeps the room calm.
+The void's grains lie inside the block so it reads as a hole, not a
+surface. Drawing special edges on top keeps the dangerous block
+readable.
+
+### D45 — 2026-09-26 — Test rooms stay until content production
+The small rooms that each show one mechanic (Boot Sector, Cache Hall,
+Stack Yard, Fault Line, ...) stay in the world and keep growing with each
+step. The real rooms and puzzles of Phase 4 content production replace
+them, not earlier.
+**Why:** author's call. Until real rooms exist they are the only place to
+try a mechanic in isolation, and future spells and behaviors (Zap, Warp,
+Cut & Paste, enemy AI) will need them for testing too.

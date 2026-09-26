@@ -39,7 +39,7 @@
       "items": { "$ref": "#/$defs/exit" }
     },
     "blocks": {
-      "description": "Anonymous static blocks.",
+      "description": "Anonymous static blocks: plain (room color), hazard (hurts on touch) or void (kills on landing).",
       "type": "array",
       "items": { "$ref": "#/$defs/block" }
     },
@@ -78,7 +78,11 @@
       "required": ["at"],
       "additionalProperties": false,
       "properties": {
-        "type": { "enum": ["block"], "default": "block" },
+        "type": {
+          "enum": ["block", "hazard", "void"],
+          "default": "block",
+          "description": "block: plain; hazard: hurts the wizard on touch; void: kills him when he lands on it. Looks are in defs.json \"blocks\"."
+        },
         "at": { "$ref": "common.schema.json#/$defs/cell" },
         "to": {
           "$ref": "common.schema.json#/$defs/cell",

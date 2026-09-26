@@ -1,0 +1,27 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "fault_line",
+  "name": "Fault Line",
+  "biome": "home_lattice",
+  "size": [12, 4, 12],
+  "spawn": [1.5, 0, 6],
+  "exits": [{ "id": "west", "side": "-x", "at": 5 }],
+  "blocks": [
+    { "type": "hazard", "at": [2, 0, 4], "to": [6, 0, 4] },
+    { "type": "hazard", "at": [2, 0, 7], "to": [6, 0, 7] },
+    { "at": [2, 0, 1] },
+    { "type": "hazard", "at": [3, 0, 1], "to": [4, 0, 1] },
+    { "at": [5, 0, 1] },
+    { "at": [7, 0, 5], "to": [7, 0, 6] },
+    { "at": [8, 0, 6], "to": [9, 0, 6] },
+    { "at": [9, 0, 7], "to": [9, 0, 9] },
+    { "at": [10, 0, 9] },
+    { "at": [11, 0, 9], "to": [11, 1, 10] },
+    { "type": "void", "at": [7, 0, 1], "to": [10, 0, 4] },
+    { "type": "void", "at": [8, 0, 5], "to": [10, 0, 5] },
+    { "type": "void", "at": [10, 0, 6], "to": [10, 0, 8] },
+    { "type": "void", "at": [7, 0, 7], "to": [8, 0, 9] },
+    { "type": "void", "at": [7, 0, 10], "to": [10, 0, 10] }
+  ]
+}

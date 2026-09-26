@@ -20,6 +20,7 @@ import { createFloor } from '../src/render/floor.js';
 import { PALETTE } from '../src/render/neon.js';
 import { Renderer } from '../src/render/renderer.js';
 import { ASPECT } from '../src/render/viewport.js';
+import { createActiveBlockView, flareHazard } from '../src/render/block-fx.js';
 import { createObjectView, createRoomView } from '../src/render/room-view.js';
 import { ExitView } from '../src/render/exit-view.js';
 import { HOLO_TIME } from '../src/render/holo.js';
@@ -46,6 +47,11 @@ const ALL_ASSETS = [
       return new Group().add(view);
     },
   })),
+  // Animated looks of the damaging block types (block-fx.js); the hazard
+  // flares every 2 s as if it just hurt the wizard.
+  { label: 'block-hazard', build: () => buildActiveBlock('hazard') },
+  { label: 'block-void', build: () => buildActiveBlock('void') },
+  { label: 'blocks-in-room', span: 5.5, build: buildBlocksInRoom },
   { label: 'exits', span: 5.5, build: buildExits },
 ];
 
@@ -76,6 +82,36 @@ function buildWizardHit() {
     placeDerezPixels(pixels, dead ? derezPixels(derezTick) : [], [0, 0, 0]);
   };
   return asset;
+}
+
+/** One block of a damaging type in its animated look. */
+function buildActiveBlock(type) {
+  const view = createActiveBlockView([[0, 0, 0]], type, defs.blocks[type].color);
+  view.position.set(-0.5, 0, -0.5);
+  const asset = new Group().add(view);
+  if (type === 'hazard') {
+    let time = 0;
+    asset.userData.update = (dt) => {
+      time = (time + dt) % 2;
+      flareHazard(view.userData.faces, [0, 0, 0], time);
+    };
+  }
+  return asset;
+}
+
+/**
+ * The animated looks in context: a 4×4 room corner with plain blocks, a
+ * hazard wall and a void patch crossed by a plain path.
+ */
+function buildBlocksInRoom() {
+  const size = [4, 3, 4];
+  const room = new Group().add(
+    createRoomView({ size, cells: [[0, 0, 0], [1, 0, 0], [0, 1, 0], [2, 0, 2], [2, 0, 3], [3, 0, 3]], color: PALETTE.amber }),
+    createActiveBlockView([[0, 0, 2], [0, 0, 3], [1, 0, 3]], 'hazard', defs.blocks.hazard.color),
+    createActiveBlockView([[2, 0, 1], [3, 0, 1], [3, 0, 2], [2, 0, 0]], 'void', defs.blocks.void.color),
+  );
+  room.position.set(-2, 0, -2);
+  return new Group().add(room);
 }
 
 /**
