@@ -41,6 +41,12 @@
       "path": { "points": [[8, 0, 7], [8, 0, 10], [5, 0, 10]], "mode": "loop", "speed": 2 }
     },
     {
+      "id": "tank",
+      "type": "bug",
+      "at": [7, 0, 2],
+      "overrides": { "movement": "stationary", "integrity": 4, "color": "#ffb020" }
+    },
+    {
       "id": "spring",
       "type": "bug",
       "at": [2, 0, 1],

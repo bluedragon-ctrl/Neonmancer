@@ -53,6 +53,15 @@ and the project uses [Semantic Versioning](https://semver.org/).
   collision boxes in debug mode. New test
   room Crawl Space behind a raised exit on Volatile Memory's high ledge;
   showcase `bug`, `bug-provoked`, `bug-peaceful`, `bug-bounce`, `bug-pop`.
+- Zap and energy (Phase 2 step 6): the cast key (J) fires a Zap bolt the
+  way the wizard aims, for 2 of his 10 energy (1 per second comes back, a
+  0.25 s cooldown between casts). The bolt stops at the first enemy,
+  block, object or room side; a hit takes 1 integrity and provokes the
+  enemy. A bug now takes two hits (D52): the first flashes it and leaves it
+  glitching, the second pops it. A lime energy bar under integrity, one
+  segment per Zap, flashes when a cast fails. Spell tuning in `defs.json`
+  `spells`; bolt boxes in debug mode. Crawl Space gets an amber bug with 4
+  integrity; showcase `zap-bolt`, `zap-bug`, `zap-crate`.
 - Room design checklist in docs/design.md: reach, timing budgets,
   readability and soft-lock checks collected from playtests; the basis for
   the Phase 3 room design skill and level review subagent.

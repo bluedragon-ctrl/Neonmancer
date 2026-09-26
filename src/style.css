@@ -112,6 +112,66 @@ body {
   }
 }
 
+/* Energy: a label over slanted segments (one per cast) under integrity. */
+.hud-energy {
+  position: absolute;
+  top: calc(126 * var(--u));
+  left: calc(44 * var(--u));
+  color: var(--lime);
+}
+
+.hud-segments {
+  display: flex;
+  gap: calc(7 * var(--u));
+}
+
+.hud-segments i {
+  position: relative;
+  width: calc(39 * var(--u));
+  height: calc(14 * var(--u));
+  transform: skewX(-18deg);
+  box-sizing: border-box;
+  border: calc(2 * var(--u)) solid color-mix(in srgb, currentColor 35%, transparent);
+  overflow: hidden;
+}
+
+/* The filling part: dim while it recharges, glowing once the segment is full. */
+.hud-segments b {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: currentColor;
+  opacity: 0.4;
+}
+
+.hud-segments i.full {
+  border-color: currentColor;
+  box-shadow:
+    0 0 calc(10 * var(--u)) currentColor,
+    inset 0 0 calc(4 * var(--u)) #fff8;
+}
+
+.hud-segments i.full b {
+  opacity: 1;
+}
+
+/* A cast without enough energy: the bar flashes magenta and jolts. */
+.hud-energy.denied {
+  animation: energy-denied 0.4s steps(4, jump-none);
+}
+
+@keyframes energy-denied {
+  0%,
+  50% {
+    color: var(--magenta);
+    transform: translateX(calc(4 * var(--u)));
+  }
+  25%,
+  75% {
+    color: var(--magenta);
+    transform: translateX(calc(-4 * var(--u)));
+  }
+}
+
 .hud-integrity.low {
   color: var(--magenta);
   animation: integrity-low 0.8s steps(2, jump-none) infinite;

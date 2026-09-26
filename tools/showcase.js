@@ -11,6 +11,7 @@
  */
 import { Group, Vector3 } from 'three';
 import defs from '../data/defs.json';
+import strings from '../data/strings.json';
 import { OBJECT_STYLE_DEFAULTS, withExitDefaults } from '../src/data/room-data.js';
 import { VIEW_HEIGHT, frameRoom } from '../src/render/camera.js';
 import { PLAYER } from '../src/entities/player.js';
@@ -36,6 +37,9 @@ import { ExitView } from '../src/render/exit-view.js';
 import { HOLO_TIME } from '../src/render/holo.js';
 import { createWizard } from '../src/render/wizard.js';
 import { BUG, animateBug, createBug, popPixels, setEyeMood } from '../src/render/bug.js';
+import { ZAP_FX, damagedGlitch, enemyHitLook } from '../src/render/zap-fx.js';
+import { createBolt, createCastFlare, createSparks, placeBolt, placeCastFlare, placeSparks } from '../src/render/zap-view.js';
+import { EnergyBar } from '../src/ui/energy-bar.js';
 
 /** Units between two assets (the default span of an asset). */
 const SPACING = 3;
@@ -72,7 +76,171 @@ const ALL_ASSETS = [
   { label: 'bug-peaceful', group: 'bugs', build: () => buildBug('peaceful') },
   { label: 'bug-bounce', group: 'bugs', build: () => buildBug('hostile', { bounced: true }) },
   { label: 'bug-pop', group: 'bugs', build: buildBugPop },
+  // Zap (step 6): the bolt close up, two hits on a bug (the second pops
+  // it), and rapid fire at a crate until the energy bar runs dry.
+  { label: 'zap-bolt', group: 'zap', build: buildZapBolt },
+  { label: 'zap-bug', group: 'zap', span: 6, build: buildZapBug },
+  { label: 'zap-crate', group: 'zap', span: 5, build: buildZapCrate },
 ];
+
+/** A Zap bolt flying back and forth through the turntable's middle. */
+function buildZapBolt() {
+  const bolt = createBolt();
+  const asset = new Group().add(bolt);
+  let tick = 0;
+  asset.userData.update = (dt) => {
+    tick += dt * 60;
+    const traveled = ((tick * defs.spells.zap.speed) / 60) % 3;
+    placeBolt(bolt, [0, ZAP_FX.height, traveled - 1.5], [0, 1], tick, traveled);
+  };
+  return asset;
+}
+
+/**
+ * The wizard at `x0` facing +x, casting bolts that fly until they reach
+ * `stopX` (the target's face) and burst into sparks there. Steps in whole
+ * ticks, like the game.
+ */
+class Zapper {
+  constructor(parent, x0, stopX) {
+    this.x0 = x0;
+    this.stopX = stopX;
+    this.wizard = createWizard();
+    this.wizard.position.x = x0;
+    this.wizard.rotation.y = Math.PI / 2;
+    this.flare = createCastFlare();
+    this.bolts = [0, 1, 2, 3].map(() => ({ view: createBolt(), live: false, age: 0, traveled: 0 }));
+    this.sparks = [0, 1, 2, 3].map(() => ({ view: createSparks(), tick: Infinity, x: 0 }));
+    this.castTick = Infinity;
+    parent.add(this.wizard, this.flare, ...this.bolts.map((b) => b.view), ...this.sparks.map((s) => s.view));
+  }
+
+  cast() {
+    this.castTick = 0;
+    const bolt = this.bolts.find((b) => !b.live);
+    if (bolt) Object.assign(bolt, { live: true, age: 0, traveled: 0 });
+  }
+
+  /** One tick; returns how many bolts hit the target. */
+  tick() {
+    this.castTick++;
+    let hits = 0;
+    for (const spark of this.sparks) spark.tick++;
+    for (const bolt of this.bolts) {
+      if (!bolt.live) continue;
+      bolt.age++;
+      bolt.traveled += defs.spells.zap.speed / 60;
+      if (this.x0 + ZAP_FX.reach + bolt.traveled >= this.stopX) {
+        bolt.live = false;
+        hits++;
+        const spark = this.sparks.reduce((a, b) => (a.tick > b.tick ? a : b));
+        Object.assign(spark, { tick: 0, x: this.stopX });
+      }
+    }
+    return hits;
+  }
+
+  sync() {
+    placeCastFlare(this.flare, [this.x0, 0, 0], Math.PI / 2, this.castTick);
+    for (const bolt of this.bolts) {
+      bolt.view.visible = bolt.live;
+      if (bolt.live) placeBolt(bolt.view, [this.x0 + ZAP_FX.reach + bolt.traveled, ZAP_FX.height, 0], [1, 0], bolt.age, bolt.traveled);
+    }
+    for (const spark of this.sparks) placeSparks(spark.view, [spark.x, ZAP_FX.height, 0], [1, 0], spark.tick);
+  }
+}
+
+/**
+ * The wizard zapping a bug (integrity 2): the first hit flashes and squashes
+ * it and leaves it glitching now and then; the second pops it. It comes back
+ * for the next round.
+ */
+function buildZapBug() {
+  const asset = new Group();
+  const zapper = new Zapper(asset, -2.2, 1.5 - ENEMY_HALF);
+  const { color, integrity } = defs.enemies.bug;
+  const bug = createBug(color);
+  bug.position.x = 1.5;
+  bug.rotation.y = -Math.PI / 2;
+  const pixels = createPixelBurst(BUG.pop.pixels, BUG.pop.pixelSize, [color, 0xffffff]);
+  pixels.position.x = 1.5;
+  asset.add(bug, pixels);
+
+  const loop = 220;
+  let carry = 0;
+  let tick = 0;
+  let hp = integrity;
+  let hitTick = null;
+  let popTick = Infinity;
+  asset.userData.update = (dt, time) => {
+    for (carry += dt * 60; carry >= 1; carry--) {
+      tick = (tick + 1) % loop;
+      if (tick === 0) [hp, hitTick, popTick] = [integrity, null, Infinity];
+      if (tick === 20 || tick === 90) zapper.cast();
+      if (hitTick !== null) hitTick++;
+      popTick++;
+      if (zapper.tick() && hp > 0) {
+        hp--;
+        hitTick = 0;
+        if (hp === 0) popTick = 0;
+      }
+    }
+    zapper.sync();
+    bug.visible = hp > 0;
+    const hit = enemyHitLook(hitTick);
+    const glitch = hp > 0 && hp < integrity && hit.flash === 0 ? damagedGlitch(tick, 1) : { shift: 0, flash: 0 };
+    animateBug(bug, { time, squash: hit.squash, shift: glitch.shift });
+    const flash = Math.max(hit.flash, glitch.flash);
+    bug.userData.flash.amount.value = flash;
+    bug.userData.flash.color.value.set(hit.flash > 0 && hit.color === 'white' ? 0xffffff : PALETTE.cyan);
+    placePixels(pixels, popPixels(popTick), [0, 0, 0]);
+  };
+  return asset;
+}
+
+/** Half the enemy hitbox width: where a bolt meets a bug. */
+const ENEMY_HALF = 0.3;
+
+/**
+ * Rapid fire at a crate, one bolt per cooldown, draining the energy bar
+ * (top left); with too little left the cast fails (the bar flashes), and
+ * he waits until it has recharged completely.
+ */
+function buildZapCrate() {
+  const asset = new Group();
+  const zapper = new Zapper(asset, -1.8, 0.8);
+  const crate = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...defs.objects.crate, at: [0, 0, 0] });
+  crate.position.set(0.8, 0, -0.5);
+  asset.add(crate);
+
+  const { cost, cooldown } = defs.spells.zap;
+  const bar = new EnergyBar(renderer.hud, strings.strings['hud.energy']);
+  let energy = PLAYER.maxEnergy;
+  let wait = 30;
+  let recharging = false;
+  let carry = 0;
+  asset.userData.update = (dt) => {
+    for (carry += dt * 60; carry >= 1; carry--) {
+      energy = Math.min(PLAYER.maxEnergy, energy + PLAYER.energyRecharge / 60);
+      zapper.tick();
+      if (recharging) {
+        if (energy >= PLAYER.maxEnergy) [recharging, wait] = [false, 30];
+      } else if (--wait <= 0) {
+        if (energy >= cost) {
+          energy -= cost;
+          zapper.cast();
+          wait = Math.round(cooldown * 60) + 2;
+        } else {
+          bar.deny();
+          recharging = true;
+        }
+      }
+    }
+    zapper.sync();
+    bar.set(energy, PLAYER.maxEnergy, cost);
+  };
+  return asset;
+}
 
 /**
  * A bug in a mood, hopping as it walks (3 cells per second); `bounced`:

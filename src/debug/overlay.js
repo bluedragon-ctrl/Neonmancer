@@ -1,11 +1,12 @@
 /**
  * Debug mode (F3, CLAUDE.md §9): wireframe collision boxes for the static
- * blocks, the wizard, every room object and enemy, plus the stats readout in
+ * blocks, the wizard, every room object, enemy and bolt, plus the stats readout in
  * src/main.js. Room jump, invincibility and the test-damage key are actions
  * on the Game (see debugJumpRoom() and hurt() in src/game.js); this module
  * only draws the boxes and tracks whether the mode is on.
  */
 import { BoxGeometry, EdgesGeometry, Group, LineBasicMaterial, LineSegments } from 'three';
+import { BOLT } from '../entities/bolt.js';
 import { enemyBox } from '../entities/enemy.js';
 import { lerpPosition } from '../render/interp.js';
 import { PALETTE } from '../render/neon.js';
@@ -39,6 +40,8 @@ export class DebugOverlay {
     this.playerBox = box(materials.body);
     this.objectBoxes = [];
     this.enemyBoxes = [];
+    /** Boxes for bolts in flight, reused (their number changes all the time). */
+    this.boltBoxes = [];
     this.bodyGroup = new Group().add(this.playerBox);
     this.group.add(this.cellGroup, this.bodyGroup);
   }
@@ -80,7 +83,7 @@ export class DebugOverlay {
    */
   sync(game, alpha) {
     if (!this.active) return;
-    const { player, objects, enemies } = game;
+    const { player, objects, enemies, bolts } = game;
     const pos = lerpPosition(player.prev, player.pos, alpha);
     place(this.playerBox, [pos[0] - player.size[0] / 2, pos[1], pos[2] - player.size[2] / 2], player.size);
 
@@ -93,6 +96,17 @@ export class DebugOverlay {
       this.enemyBoxes[i].visible = enemy.alive;
       const corner = enemyBox(lerpPosition(enemy.prev, enemy.pos, alpha), enemy.size).map(([min]) => min);
       place(this.enemyBoxes[i], corner, enemy.size);
+    });
+    while (this.boltBoxes.length < bolts.length) {
+      this.boltBoxes.push(box(materials.enemy));
+      this.bodyGroup.add(this.boltBoxes.at(-1));
+    }
+    this.boltBoxes.forEach((mesh, i) => {
+      mesh.visible = i < bolts.length;
+      if (!mesh.visible) return;
+      const { size } = BOLT;
+      const middle = lerpPosition(bolts[i].prev, bolts[i].pos, alpha);
+      place(mesh, middle.map((p) => p - size / 2), [size, size, size]);
     });
   }
 }

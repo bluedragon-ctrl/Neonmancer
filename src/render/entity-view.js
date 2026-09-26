@@ -27,6 +27,8 @@ import { lerpAngle, lerpPosition, shadowScale } from './interp.js';
 import { railSegments } from './rails.js';
 import { createObjectView } from './room-view.js';
 import { createWizard } from './wizard.js';
+import { damagedGlitch, enemyHitLook } from './zap-fx.js';
+import { createCastFlare, placeCastFlare } from './zap-view.js';
 
 /**
  * Which bodies get a drop shadow besides the wizard (who always has one).
@@ -167,7 +169,8 @@ export class PlayerView {
     this.wizard = createWizard();
     this.shadow = createDropShadow(PALETTE.cyan);
     this.pixels = createDerezPixels();
-    this.group.add(this.wizard, this.shadow, this.pixels);
+    this.flare = createCastFlare();
+    this.group.add(this.wizard, this.shadow, this.pixels, this.flare);
   }
 
   /** @param {number} alpha interpolation factor 0..1 between the last two ticks */
@@ -184,6 +187,9 @@ export class PlayerView {
     showHitFlash(this.wizard, hitFlash(player));
     const derezzing = player.dead && player.deathCause !== 'hole';
     placePixels(this.pixels, derezzing ? derezPixels(PLAYER.deathTicks - player.deathTimer + alpha) : [], pos);
+
+    // The flare at his hands, the way the bolt flies (his aim, not his turning body).
+    placeCastFlare(this.flare, pos, player.targetFacing, player.castTicks === null || player.dead ? Infinity : player.castTicks + alpha);
 
     const ground = player.dead ? null : this.game.shadowHeight(pos, player.size);
     placeShadow(this.shadow, pos[0], pos[2], pos[1], ground, player.size[0] * 1.5);
@@ -303,7 +309,8 @@ export function createRails(track, color) {
 
 /**
  * The model of each enemy type (defs.json "enemies"), by type id: how to
- * build, color, animate and pop it (see BUG_MODEL in bug.js).
+ * build, color, animate and pop it (see BUG_MODEL in bug.js). A model has
+ * its own flash uniforms (`userData.flash`, holo.js) for spell hits.
  */
 export const ENEMY_MODELS = { bug: BUG_MODEL };
 
@@ -322,6 +329,8 @@ export class EnemyView {
     this.pixels = createPixelBurst(this.kind.pop.pixels, this.kind.pop.pixelSize, [color, 0xffffff]);
     this.mood = null;
     this.group = new Group().add(this.model, this.pixels);
+    /** Its own offset into the glitch rhythm of damaged enemies, so they don't glitch in step. */
+    this.seed = game.enemies.indexOf(enemy);
     /** Angle the model faces now; it turns towards the enemy's facing. */
     this.angle = enemy.facing;
     /** Seconds, for the hop while standing. */
@@ -352,12 +361,20 @@ export class EnemyView {
     // Walked: the distance from the cell it left, for one hop per cell.
     const { from } = enemy;
     const walking = enemy.state === 'walk' && from;
+    // A spell hit flashes and squashes it; while damaged it glitches now and then.
+    const hit = enemyHitLook(enemy.hitTicks === null ? null : enemy.hitTicks + alpha);
+    const glitch = enemy.damaged && hit.flash === 0 ? damagedGlitch(this.time * 60, this.seed) : { shift: 0, flash: 0 };
     kind.animate(this.model, {
       state: walking || enemy.state === 'fall' ? enemy.state : 'rest',
       walked: walking ? Math.abs(pos[0] - from[0]) + Math.abs(pos[2] - from[2]) : 0,
       time: this.time,
       bounced: enemy.bounced === null ? null : enemy.bounced + alpha,
+      squash: hit.squash,
+      shift: glitch.shift,
     });
+    const flash = this.model.userData.flash;
+    flash.amount.value = Math.max(hit.flash, glitch.flash);
+    flash.color.value.set(hit.flash > 0 && hit.color === 'white' ? 0xffffff : PALETTE.cyan);
 
     const mood = eyeMood(enemy);
     if (mood !== this.mood) kind.setMood(this.model, (this.mood = mood));

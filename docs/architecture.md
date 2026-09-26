@@ -19,11 +19,12 @@ requestAnimationFrame(now)
   └─ FixedLoop.advance(elapsed): acc += elapsed
        while acc >= 1/60 (at most 5 steps, then the backlog is dropped):
           input.sample()          raw key state → actions {down, pressed, released}
-          game.update(input)      player → exits → his push → room objects (lowest first) → GameEvent[]
+          game.update(input)      player → exits → his cast → his push → room objects (lowest first)
+                                  → enemies → bolts → enemy contact → GameEvent[]
           acc -= 1/60
        alpha = acc / (1/60)
        views.sync(alpha)          render position = lerp(prev, curr, alpha)
-       hud.update(dt)             integrity, banner, terminal, fullscreen hint (frame time)
+       hud.update(dt)             integrity, energy, banner, terminal, fullscreen hint (frame time)
        renderer.render()          composer: render pass + one effect pass (bloom)
 ```
 
@@ -61,6 +62,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `entities/platform.js` | Moving platform: follows its path, carries riders, waits when blocked, shoves or squeezes the wizard (D46) |
 | `entities/collapsing.js` | Collapsing block: solid → shake (the wizard stood on it) → gone → optional regrow once its cell is clear (D47) |
 | `entities/enemy.js` | Enemy body: steps cell by cell where its movement behavior leads, turns back when blocked, falls, rides platforms, pops in holes and on void; hostility, provoke, bounce state (D48) |
+| `entities/bolt.js` | Zap bolt: flies level in sub-steps, stops at the first enemy, block, object or room side (`BOLT` tuning) |
 | `ai/behaviors.js` | Movement behaviors by name (`BEHAVIORS`: `patrol`, `stationary`), as enemy types refer to them |
 | `ai/patrol.js` | Patrol: next step towards the next waypoint column, pauses at the ends, turns back (pure, tested) |
 | `world/path.js` | Shared path format: legs from `at` through `points`, `advance()` / `positionOf()` on a small path state, swept cells |
@@ -77,7 +79,9 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/marks.js` | Face-mark line patterns for object styles (pure, tested) |
 | `render/hole-view.js` | Hole pits: walls fading to black, rim, short fading corner lines; outline math (tested) |
 | `render/room-view.js` | Static blocks (merged edges + instanced occluder faces), back walls, styled object views |
-| `render/entity-view.js` | Player, pushable, platform, collapsing-block and enemy views (enemy models by type: `ENEMY_MODELS`), glowing drop shadows, pixel bursts (derez, collapse), platform guide lines |
+| `render/entity-view.js` | Player (with the cast flare), pushable, platform, collapsing-block and enemy views (enemy models by type: `ENEMY_MODELS`; spell-hit flash and glitch), glowing drop shadows, pixel bursts (derez, collapse), platform guide lines |
+| `render/zap-fx.js` | Zap look: trail zigzags, bolt flicker, cast flare, sparks, enemy hit flash and damaged glitch, `ZAP_FX` tuning (pure, tested) |
+| `render/zap-view.js` | Zap meshes: bolt, cast flare, sparks; `ZapView` keeps a room's bolts and sparks (pooled) |
 | `render/collapse-fx.js` | Collapsing-block look: shake, pixels breaking off, regrow, `COLLAPSE_FX` tuning (pure, tested) |
 | `render/bug.js` | Bug model (ball, eyes colored by mood), hop pose, bounce squash, pop pixels, `BUG` tuning (pure parts tested); `BUG_MODEL` for `EnemyView` |
 | `render/hash.js` | Fixed pseudo-random numbers for pixel bursts (pure) |
@@ -88,7 +92,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/room-scene.js` | The current room's views, object views by kind (`OBJECT_VIEWS`); rebuilds only the objects on a respawn |
 | `render/wizard.js` | Wizard model: parts as data (pure, tested), built in the hologram look |
 | `render/holo.js` | Hologram look for characters: rim-glow material, inverted-hull outline, eyes, shared clock |
-| `ui/hud.js` | DOM overlay: integrity bar, room banner, terminal messages, fullscreen hint |
+| `ui/hud.js` | DOM overlay: integrity bar, energy bar, room banner, terminal messages, fullscreen hint |
+| `ui/energy-bar.js` | Energy bar: one segment per cast filling as it recharges; flashes on a denied cast |
 | `ui/terminal.js` | Terminal message queue (typing, hold, fade) and banner timing (pure, tested) |
 | `ui/text.js` | String lookup with `{name}` values; scrambled "decoding" text for the banner (pure, tested) |
 | `ui/fullscreen.js` | Fullscreen toggle and when to suggest it (below 1080 physical pixels; tested) |
@@ -214,14 +219,30 @@ calls `hurt()` for the first hostile contact-attack enemy he touches
 (`touchesBox()`: overlapping, or against a solid one within 0.02 on two
 axes), skipping the one he just bounced off.
 
+Zap: on the cast action `Game.castZap()` asks `Player.cast(cost,
+cooldown)`: while dead or cooling down nothing happens; without the energy
+it reports `deny`; else it spends the energy and `Game.bolts` gets a
+`Bolt` at his hands, aimed along `Player.aim()` (his `targetFacing`). Bolts
+update after the enemies (`updateBolts()`), in sub-steps of at most 0.1,
+and stop at the first live enemy, solid cell, solid object or room side;
+a stopped bolt is reported (`zap`, with the bolt, for the sparks) and
+dropped. The enemy it stopped at takes `Enemy.hit(damage, 'zap')`: it is
+provoked and loses integrity, `hit` or, at 0, `pop` (then
+`refreshBodies()`), before `touchEnemies()` runs, so a popped enemy can't
+hurt him that tick. Bolts belong to the room: `enterRoom()` clears them.
+Energy recharges in `Player.update()` and lives on the `Player`, so it
+carries over between rooms.
+
 ## Game events
 
 `Game.update()` returns what happened during the tick as `GameEvent`
 objects (typedef in `game.js`): `{ type, ...details }`, e.g.
 `{ type: 'push', object }`, `{ type: 'exit', exit }`, `{ type: 'hurt', amount }`.
 Types so far: `jump`, `land`, `die`, `respawn`, `push`, `plug`, `shake`,
-`collapse`, `regrow`, `pop`, `bounce`, `hurt`, `exit`, `room`; enemy events
-(and a hurt by an enemy) carry the `enemy`. Game code records them with `emit()`; events raised
+`collapse`, `regrow`, `pop`, `bounce`, `hurt`, `cast`, `deny`, `zap`, `hit`,
+`exit`, `room`; enemy events (and a hurt by an enemy) carry the `enemy`,
+`zap` the stopped `bolt`. `main.js` passes `zap` to `RoomScene.sparks()`
+and `deny` to the HUD's energy bar. Game code records them with `emit()`; events raised
 outside a tick (`hurt()` from the debug key) come out with the next tick's.
 `main.js` rebuilds the room's views on `room`; later, sound, screen shake
 and score popups read the same list (D41).
@@ -295,6 +316,7 @@ any module: say(key, values) ──► queue (core/messages.js)   e.g. game.js o
             announce(key, values, { sub, subValues, color }) ──► queue   e.g. enterRoom() for a new room
        input.pressed('fullscreen') ──► toggleFullscreen()   within the key press's user activation
 frame: hud.setIntegrity(player.integrity, player.maxIntegrity)   cells rebuilt only on change
+       hud.setEnergy(player.energy, player.maxEnergy, zap cost)   segments written only on change
        hud.setHintWanted(wantsFullscreenHint(stage height, DPR, fullscreen?))
        hud.update(dt)   takeMessages() → Terminal.push(); takeAnnouncements() → last one shown;
                         Terminal.update / lines(), bannerState(t), scrambleText()

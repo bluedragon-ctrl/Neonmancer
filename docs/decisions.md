@@ -579,3 +579,21 @@ simpler "it waits while he stands on it". Turning back when he is pinned
 keeps "never killed outright by being squeezed" from D46, and contact
 damage already covers hostile ones. With `stationary` movement, a turret
 needs only a projectile attack (Pop-ups), no new movement code.
+
+### D52 — 2026-09-26 — Zap and energy: numbers, aim, what stops a bolt; bugs take two hits
+Energy: 10, recharging 1 per second, full after a respawn, carried
+between rooms. Zap costs 2 (5 in a row), 0.25 s cooldown, bolt speed 12,
+damage 1; the numbers are in `defs.json` `spells.zap` (required) and
+`PLAYER`. The bolt flies level from his hands the way he aims (the
+direction he last walked or turned to, diagonals included) and stops at
+the first live enemy, block, room object or the room's side. It hits
+every enemy, peaceful ones too, and provokes it. A bug's integrity is 2,
+so it takes two Zaps; a hit flashes it and it glitches while damaged, so
+the first hit reads as damage and not a miss. A failed cast flashes the
+energy bar instead of printing a terminal line. The looks were reviewed
+in the asset showcase before they went into the game.
+**Why:** the step plan said one hit kills a bug; the author asked for two.
+A bar of one segment per cast shows how many Zaps are left at a glance.
+Aiming the way he last walked keeps the controls to one cast key.
+Stopping at crates keeps them useful as cover, and a bolt at hand height
+passing over enemies below a ledge follows from flying level.

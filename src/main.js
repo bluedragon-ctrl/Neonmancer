@@ -71,7 +71,11 @@ function boot() {
     }
     const events = game.update(input);
     if (events.some((event) => event.type === 'room')) showRoom();
-    for (const event of events) if (event.type === 'hurt' && event.cell) roomScene.flareHazard(event.cell);
+    for (const event of events) {
+      if (event.type === 'hurt' && event.cell) roomScene.flareHazard(event.cell);
+      if (event.type === 'zap') roomScene.sparks(event.bolt);
+      if (event.type === 'deny') hud.denyEnergy();
+    }
     readout.countTick();
   }
 
@@ -86,6 +90,7 @@ function boot() {
     debug.sync(game, alpha);
     renderer.setFade(game.fadeLevel(alpha));
     hud.setIntegrity(game.player.integrity, game.player.maxIntegrity);
+    hud.setEnergy(game.player.energy, game.player.maxEnergy, content.spells.zap.cost);
     hud.setMovementMode(game.movementMode);
     hud.setHintWanted(wantsFullscreenHint(renderer.stageHeight, window.devicePixelRatio, !!document.fullscreenElement));
     hud.update(dt);

@@ -1,6 +1,6 @@
 /**
- * The HUD: a DOM overlay on the stage with the integrity bar, the room name
- * banner, terminal messages and the fullscreen hint. It only shows state;
+ * The HUD: a DOM overlay on the stage with the integrity bar, the energy
+ * bar, the room name banner, terminal messages and the fullscreen hint. It only shows state;
  * main.js feeds it every frame. Sizes use --u (one pixel at 1080p), so it
  * scales with the stage. All text comes from data/strings.json; terminal
  * messages and banners arrive through say() and announce()
@@ -8,6 +8,7 @@
  */
 import { takeAnnouncements, takeMessages } from '../core/messages.js';
 import { GAME_VERSION } from '../core/version.js';
+import { EnergyBar } from './energy-bar.js';
 import { HINT_SECONDS } from './fullscreen.js';
 import { Terminal, bannerState } from './terminal.js';
 import { formatText, scrambleText } from './text.js';
@@ -45,6 +46,7 @@ export class Hud {
     this.hint = find('.hud-hint');
     this.movementTag = find('.hud-movement');
     this.movementMode = null;
+    this.energy = new EnergyBar(root, this.text('hud.energy'));
 
     this.cells = [];
     this.integrity = null;
@@ -87,6 +89,21 @@ export class Hud {
     });
     this.integrityBox.classList.toggle('low', value > 0 && value <= LOW_INTEGRITY);
     this.integrity = value;
+  }
+
+  /**
+   * Show energy in segments of one cast each.
+   * @param {number} value
+   * @param {number} max
+   * @param {number} cost energy per cast
+   */
+  setEnergy(value, max, cost) {
+    this.energy.set(value, max, cost);
+  }
+
+  /** A cast failed for lack of energy: flash the energy bar. */
+  denyEnergy() {
+    this.energy.deny();
   }
 
   /**

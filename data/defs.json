@@ -15,13 +15,16 @@
       "attack": "contact",
       "hostility": "hostile",
       "aggroRange": 0,
-      "integrity": 1,
+      "integrity": 2,
       "damage": 1,
       "speed": 3,
       "bounce": true,
       "solid": false,
       "color": "#2bff88"
     }
+  },
+  "spells": {
+    "zap": { "cost": 2, "cooldown": 0.25, "speed": 12, "damage": 1 }
   },
   "blocks": {
     "hazard": { "color": "#ff3b30", "damage": 1 },

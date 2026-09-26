@@ -44,6 +44,7 @@ export function loadGameData(files) {
     objectTypes: files['defs.json'].objects,
     blockTypes: files['defs.json'].blocks,
     enemyTypes: files['defs.json'].enemies ?? {},
+    spells: files['defs.json'].spells,
     biomes: files['biomes.json'].biomes,
     world: files['world.json'],
     strings: files['strings.json'].strings,

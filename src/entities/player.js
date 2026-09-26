@@ -1,9 +1,10 @@
 /**
  * The wizard: movement along the grid axes, jump, gravity, pushing,
- * integrity (health), invulnerability after a hit, death (in a hole, on a
- * void block, or with no integrity left) and respawn. Pure logic, one call to
- * update() per fixed tick. One Player lasts the whole game: entering a room
- * places him (enter()), so integrity carries over.
+ * integrity (health), invulnerability after a hit, energy (mana) for
+ * spells, death (in a hole, on a void block, or with no integrity left) and
+ * respawn. Pure logic, one call to update() per fixed tick. One Player lasts
+ * the whole game: entering a room places him (enter()), so integrity and
+ * energy carry over.
  */
 import { DT } from '../core/loop.js';
 import { PLAYER_HITBOX } from '../core/rules.js';
@@ -46,6 +47,9 @@ export const PLAYER = {
   maxIntegrity: 8,
   /** Ticks after a hit during which nothing hurts him (he blinks, D43). */
   invulnerableTicks: 60,
+  /** Energy (mana) for spells: the most he holds, and how much comes back per second. */
+  maxEnergy: 10,
+  energyRecharge: 1,
 };
 
 /** Take-off speed that reaches exactly jumpHeight: v = √(2gh). */
@@ -86,6 +90,13 @@ export class Player {
     this.integrity = this.maxIntegrity;
     /** Ticks left in which he can't be hurt (after a hit); carries over between rooms. */
     this.invulnerable = 0;
+    this.maxEnergy = PLAYER.maxEnergy;
+    /** Energy for spells, 0..maxEnergy, recharging slowly; it carries over between rooms. */
+    this.energy = this.maxEnergy;
+    /** Ticks left before he can cast again. */
+    this.cooldown = 0;
+    /** Ticks since his last cast (for the flare at his hands), or null. */
+    this.castTicks = null;
     this.enter(pos, resetPoint);
   }
 
@@ -104,6 +115,9 @@ export class Player {
   respawn() {
     this.integrity = this.maxIntegrity;
     this.invulnerable = 0;
+    this.energy = this.maxEnergy;
+    this.cooldown = 0;
+    this.castTicks = null;
     this.place(this.resetPoint);
   }
 
@@ -149,6 +163,29 @@ export class Player {
     this.grounded = false;
     this.coyote = 0;
     this.jumpBuffer = 0;
+  }
+
+  /**
+   * Try to cast a spell costing `cost` energy: nothing while dead or cooling
+   * down; without enough energy it fails ('deny'); else the energy is spent
+   * and he waits `cooldownTicks` before the next cast.
+   * @param {number} cost
+   * @param {number} cooldownTicks
+   * @returns {'cast'|'deny'|null}
+   */
+  cast(cost, cooldownTicks) {
+    if (this.dead || this.cooldown > 0) return null;
+    // Recharging adds up small float steps: allow for the rounding.
+    if (this.energy < cost - 1e-9) return 'deny';
+    this.energy = Math.max(0, this.energy - cost);
+    this.cooldown = cooldownTicks;
+    this.castTicks = 0;
+    return 'cast';
+  }
+
+  /** The way he aims: [dx, dz] of the direction he last walked (or turned) to, normalized. */
+  aim() {
+    return [Math.sin(this.targetFacing), Math.cos(this.targetFacing)];
   }
 
   /** Appear at `pos`, alive, still and facing the camera. */
@@ -220,6 +257,9 @@ export class Player {
 
     let event = null;
     if (this.invulnerable > 0) this.invulnerable--;
+    if (this.cooldown > 0) this.cooldown--;
+    if (this.castTicks !== null) this.castTicks++;
+    this.energy = Math.min(this.maxEnergy, this.energy + PLAYER.energyRecharge * DT);
 
     // Walk along the grid axes, or screen-relative (D38); diagonals are normalised.
     const directions = movementMode === 'screen' ? SCREEN_DIRECTIONS : GRID_DIRECTIONS;
