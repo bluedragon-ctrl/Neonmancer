@@ -51,7 +51,6 @@ and the project uses [Semantic Versioning](https://semver.org/).
   ring marks bouncy ones. Enemy collision boxes in debug mode. New test
   room Crawl Space behind a raised exit on Volatile Memory's high ledge;
   showcase `bug`, `bug-provoked`, `bug-peaceful`, `bug-bouncy`, `bug-pop`.
-
 - Room design checklist in docs/design.md: reach, timing budgets,
   readability and soft-lock checks collected from playtests; the basis for
   the Phase 3 room design skill and level review subagent.
