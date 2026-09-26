@@ -14,7 +14,7 @@
  *   no room for that it hurts him and waits. It never kills outright.
  */
 import { DT } from '../core/loop.js';
-import { bodyBox, moveAxis, overlaps, overlapsSolid } from '../physics/collision.js';
+import { moveAxis, overlaps, overlapsBox, overlapsSolid, shoveClear } from '../physics/collision.js';
 import { advance, buildTrack, positionOf, startState } from '../world/path.js';
 
 /** Tuning values (units, integrity). */
@@ -91,7 +91,7 @@ export class Platform {
   plan(to, delta, { grid, solids, liveEnemies = [], player }) {
     const box = boxAt(to);
     const alive = !player.dead;
-    const objects = [...solids, ...liveEnemies];
+    const objects = [...new Set([...solids, ...liveEnemies])];
     const { crates, carriesPlayer, stepping } = this.riders(objects, alive ? player : null);
     if (stepping) return { ok: false };
     const moving = new Set([this, ...crates]);
@@ -148,28 +148,13 @@ export class Platform {
   }
 
   /**
-   * The wizard's feet center clear of the platform box `box`: `pos` itself
-   * if it already is, else the smallest shove (at most PLATFORM.maxShove,
-   * along any axis) that fits, or null if none does.
-   * @param {number[]} pos feet center
-   * @param {number[]} size
-   * @param {number[][]} box the platform's new box
+   * The wizard's feet center clear of the platform box `box`, shoved by at
+   * most PLATFORM.maxShove, or null if he is pinned (physics/collision.js).
    */
   shove(pos, size, box, grid, others, player) {
-    const current = bodyBox(pos, size);
-    if (!overlapsBox(current, box)) return pos;
-    const shoves = [];
-    for (const axis of [0, 1, 2]) {
-      shoves.push([axis, box[axis][1] - current[axis][0]], [axis, box[axis][0] - current[axis][1]]);
-    }
-    shoves.sort((a, b) => Math.abs(a[1]) - Math.abs(b[1]));
-    for (const [axis, amount] of shoves) {
-      if (Math.abs(amount) > PLATFORM.maxShove) break;
-      const moved = [...pos];
-      if (moveAxis(moved, size, axis, amount, grid, others, player) === false && !overlapsBox(bodyBox(moved, size), box)) return moved;
-    }
-    return null;
+    return shoveClear(pos, size, box, grid, others, player, PLATFORM.maxShove);
   }
+
 }
 
 /** Box of a unit block with its lower corner at `pos`. */
@@ -179,11 +164,6 @@ function boxAt([x, y, z]) {
     [y, y + 1],
     [z, z + 1],
   ];
-}
-
-/** Do two boxes overlap (more than touching)? */
-function overlapsBox(a, b) {
-  return a.every((range, i) => overlaps(range, b[i]));
 }
 
 /** Does box `a` rest on top of box `b`: bottom on its top, footprints overlapping? */

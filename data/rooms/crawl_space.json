@@ -19,7 +19,20 @@
   "enemies": [
     { "id": "sentry", "type": "bug", "at": [3, 0, 2], "path": { "points": [[3, 0, 10]], "pause": 0.4 } },
     { "id": "diver", "type": "bug", "at": [10, 1, 1], "path": { "points": [[5, 1, 1]], "pause": 0.4 } },
-    { "id": "lane", "type": "bug", "at": [5, 0, 4], "path": { "points": [[11, 0, 4]], "pause": 0.4 } },
+    {
+      "id": "lane",
+      "type": "bug",
+      "at": [5, 0, 4],
+      "overrides": { "solid": true },
+      "path": { "points": [[11, 0, 4]], "pause": 0.4 }
+    },
+    {
+      "id": "mount",
+      "type": "bug",
+      "at": [5, 0, 11],
+      "overrides": { "solid": true, "bounce": false, "hostility": "peaceful" },
+      "path": { "points": [[10, 0, 11]], "pause": 1 }
+    },
     {
       "id": "circler",
       "type": "bug",

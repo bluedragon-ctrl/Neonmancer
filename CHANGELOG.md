@@ -46,7 +46,8 @@ and the project uses [Semantic Versioning](https://semver.org/).
   turn back when blocked, walk off ledges and fall, ride platforms, and pop
   in holes and on void blocks; crates rest on them. The wizard walks
   through them; touching a hostile one hurts, and landing on a bouncy one
-  (every bug by default) launches him 2 blocks up. The bug: a mint-green
+  (every bug by default) launches him 2 blocks up. `solid` enemies block
+  him, carry him when he stands on them and shove him (D51). The bug: a mint-green
   hologram ball whose eyes show its mood (red hostile, amber provoked,
   cyan peaceful), hopping as it walks and squashing when bounced on. Enemy
   collision boxes in debug mode. New test

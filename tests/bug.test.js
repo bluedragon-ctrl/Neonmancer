@@ -295,3 +295,50 @@ test('look: a pop bursts out from the ball and is over after its time', () => {
   assert.ok(popPixels(BUG_LOOK.pop.ticks - 1).every(({ scale }) => scale < 0.1));
   assert.deepEqual(popPixels(BUG_LOOK.pop.ticks), []);
 });
+
+test('a solid bug blocks the wizard; leaning on a hostile one hurts', () => {
+  const game = gameWith({ enemies: [sitter([3, 0, 3], 'b', { solid: true })], pos: [1.5, 0, 3.5] });
+  const events = run(game, hold('down'), 40);
+  assert.ok(game.player.pos[0] <= 3.2 - 0.3 + 1e-6, `stopped at its side: ${game.player.pos}`);
+  assert.ok(eventTypes(events).includes('hurt'));
+});
+
+test('the wizard stands on a solid bug that does not bounce and rides along', () => {
+  const game = gameWith({
+    enemies: [bug([1, 0, 1], [4, 0, 1], 'mount')].map((e) => ({ ...e, overrides: { solid: true, bounce: false, hostility: 'peaceful' } })),
+    pos: [1.5, 0.6, 1.5],
+  });
+  run(game, idle, 3 * CELL_TICKS);
+  assert.deepEqual(game.enemies[0].pos, [4, 0, 1]);
+  assert.ok(Math.abs(game.player.pos[0] - 4.5) < 1e-6, `carried: ${game.player.pos}`);
+  assert.equal(game.player.pos[1], ENEMY.size[1]);
+});
+
+test('a solid bug shoves the wizard along, and turns back when he is pinned', () => {
+  const peaceful = { solid: true, hostility: 'peaceful' };
+  const free = gameWith({ enemies: [{ ...bug([1, 0, 3], [5, 0, 3]), overrides: peaceful }], pos: [2.5, 0, 3.5] });
+  run(free, idle, 30);
+  assert.ok(free.player.pos[0] > 2.5, `shoved: ${free.player.pos}`);
+
+  // Pinned against a block at x = 3.
+  const pinned = gameWith({
+    enemies: [{ ...bug([1, 0, 3], [2, 0, 3]), overrides: peaceful }],
+    blocks: [{ at: [3, 0, 2], to: [3, 0, 4] }],
+    pos: [2.7, 0, 3.5],
+  });
+  const [enemy] = pinned.enemies;
+  let furthest = 0;
+  for (let i = 0; i < 60; i++) {
+    pinned.update(idle);
+    furthest = Math.max(furthest, enemy.pos[0]);
+  }
+  assert.ok(furthest < 2, `never crushed him: ${furthest}`);
+  assert.equal(pinned.player.dead, false);
+});
+
+test('landing on a solid bouncy bug bounces the wizard too', () => {
+  const game = gameWith({ enemies: [sitter([3, 0, 3], 'b', { solid: true })], pos: [3.5, 2, 3.5] });
+  const events = run(game, idle, 30);
+  assert.ok(eventTypes(events).includes('bounce'));
+  assert.ok(!eventTypes(events).includes('hurt'));
+});

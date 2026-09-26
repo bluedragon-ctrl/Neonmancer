@@ -125,8 +125,11 @@ export const ENEMY_OPTIONS = {
   hostility: ['hostile', 'peaceful', 'provoked'],
 };
 
-/** Enemy type fields that may be left out: aggro range (units) and bounce (a trampoline top). */
-export const ENEMY_DEFAULTS = { aggroRange: 0, bounce: false };
+/**
+ * Enemy type fields that may be left out: aggro range (units), bounce (a
+ * trampoline top) and solid (blocks, carries and shoves the wizard).
+ */
+export const ENEMY_DEFAULTS = { aggroRange: 0, bounce: false, solid: false };
 
 /**
  * Every floor tile a hole entry covers: just `at`, or the rectangle from

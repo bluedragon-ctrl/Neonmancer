@@ -8,7 +8,7 @@ import { isBackSide, sideAxes, withExitDefaults } from './data/room-data.js';
 import { Enemy } from './entities/enemy.js';
 import { createObject } from './entities/kinds.js';
 import { PLAYER, Player } from './entities/player.js';
-import { groundBelow, overlaps, surfaceBelow, touchedCell } from './physics/collision.js';
+import { groundBelow, overlaps, surfaceBelow, touchedCell, touchesBox } from './physics/collision.js';
 import { arrival, exitAt } from './world/exits.js';
 import { CELL, Grid } from './world/grid.js';
 import { buildRoom } from './world/room.js';
@@ -97,12 +97,13 @@ export class Game {
    * vanished (a collapsing block, a popped enemy).
    */
   refreshBodies() {
-    /** The objects that are there to collide with: all but collapsed blocks. */
-    this.solids = this.objects.filter((object) => object.solid !== false);
+    const objects = this.objects.filter((object) => object.solid !== false);
     /** The enemies still alive. */
     this.liveEnemies = this.enemies.filter((enemy) => enemy.alive);
-    /** What enemies collide with: the solid objects and the other live enemies (not the wizard). */
-    this.obstacles = [...this.solids, ...this.liveEnemies];
+    /** What the wizard collides with: objects (all but collapsed blocks) and solid enemies. */
+    this.solids = [...objects, ...this.liveEnemies.filter((enemy) => enemy.solid)];
+    /** What enemies collide with: the objects and the other live enemies (not the wizard). */
+    this.obstacles = [...objects, ...this.liveEnemies];
     /** Everything objects collide with: the solid objects, live enemies and the wizard. */
     this.bodies = [...this.obstacles, this.player];
   }
@@ -250,42 +251,48 @@ export class Game {
       if (event) this.emit(event, { enemy });
       if (event === 'pop') this.refreshBodies();
     }
-    this.bounceOffEnemies();
-    this.touchEnemies();
+    const bounced = this.bounceOffEnemies();
+    this.touchEnemies(bounced);
     return this.takeEvents();
   }
 
   /**
    * Falling onto the top of a bouncy enemy bounces the wizard up (D48),
    * harmlessly: his feet were above its top last tick and are at or below
-   * it now, over its footprint.
+   * it now (on it, if it is solid), over its footprint.
+   * @returns {Enemy|null} the enemy he bounced off
    */
   bounceOffEnemies() {
     const { player } = this;
-    if (player.dead || player.vy >= 0) return;
+    if (player.dead || player.pos[1] >= player.prev[1]) return null;
     const [px, , pz] = player.box();
     for (const enemy of this.liveEnemies) {
       if (!enemy.data.bounce) continue;
       const [bx, by, bz] = enemy.box();
       const top = by[1];
-      if (player.prev[1] >= top - BOUNCE_REACH && player.pos[1] <= top && overlaps(px, bx) && overlaps(pz, bz)) {
+      if (player.prev[1] >= top - BOUNCE_REACH && player.pos[1] <= top + 1e-6 && overlaps(px, bx) && overlaps(pz, bz)) {
         player.bounce(top);
         enemy.bounced = 0;
         this.emit('bounce', { enemy });
-        return;
+        return enemy;
       }
     }
+    return null;
   }
 
-  /** Touching a hostile enemy with a contact attack hurts the wizard (D43); he walks through them. */
-  touchEnemies() {
+  /**
+   * Touching a hostile enemy with a contact attack hurts the wizard (D43):
+   * overlapping it, or leaning on or standing on a solid one (the hazard
+   * rule, D44). Not the enemy he just bounced off.
+   * @param {Enemy|null} bounced
+   */
+  touchEnemies(bounced) {
     const { player } = this;
     if (player.dead) return;
     const box = player.box();
     for (const enemy of this.liveEnemies) {
-      if (!enemy.hurtsOnContact) continue;
-      const other = enemy.box();
-      if (box.every((range, i) => overlaps(range, other[i]))) {
+      if (!enemy.hurtsOnContact || enemy === bounced) continue;
+      if (touchesBox(box, enemy.box())) {
         this.hurt(enemy.data.damage, { enemy });
         return;
       }

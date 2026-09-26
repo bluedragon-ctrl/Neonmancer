@@ -199,7 +199,7 @@ comes from data: its type in `defs.json` `enemies`, and the room's
 
 | Field | Values | Meaning |
 |---|---|---|
-| `movement` | `patrol`, `stationary` | patrol walks the enemy's `path` (required); stationary stays in its cell (no path). Chasing comes with Viruses (Phase 3). |
+| `movement` | `patrol`, `stationary` | patrol walks the enemy's `path` (required); stationary stays in its cell (no path). Chasing comes with Viruses (Phase 3); a turret is a stationary enemy with a projectile attack (Pop-ups). |
 | `attack` | `contact`, `none` | contact: touching it hurts while it is hostile. Projectiles come with Pop-ups. |
 | `hostility` | `hostile`, `peaceful`, `provoked` | hostile attacks; peaceful never does; provoked is peaceful until a spell hits it (Zap, step 6), then hostile. |
 | `aggroRange` | units (default 0) | how far a hostile enemy notices the wizard; used by chasing and shooting later, no effect on patrol and contact. |
@@ -207,7 +207,8 @@ comes from data: its type in `defs.json` `enemies`, and the room's
 | `damage` | ≥ 1 | integrity the wizard loses per attack. |
 | `speed` | units/s | walking speed; a path's own `speed` overrides it. |
 | `bounce` | true / false (default false; bug: true) | trampoline top (below). |
-| `color` | #rrggbb | hologram color. |
+| `solid` | true / false (default false) | blocks the wizard, carries him and shoves him (below). |
+| `color` | #rrggbb | body color; the eyes always show hostility, so a room can recolor one enemy with `overrides` without a new type or model. |
 
 - **Moving:** an enemy stands in a grid cell (hitbox 0.6 × 0.6 × 0.6,
   centered) and steps one cell at a time with one hop per cell (bug: 3
@@ -226,12 +227,18 @@ comes from data: its type in `defs.json` `enemies`, and the room's
   landing on a void block pops it into pixels; it stays gone until the
   room resets. Hazard blocks don't hurt it; it never triggers collapsing
   blocks.
-- **The wizard** walks through enemies. Touching a hostile one with a
-  contact attack hurts him (`Game.hurt()`, then the usual invulnerability).
+- **The wizard** walks through enemies unless they are **solid**. A solid
+  enemy blocks him like a crate; he can stand on it (if it doesn't bounce)
+  and it carries him as it walks, walls scraping him off; walking into him
+  it shoves him along (at most 0.35 per tick), and if he is pinned it
+  turns back instead. A crate resting on a solid enemy holds it in place.
+- Touching a hostile enemy with a contact attack hurts him (`Game.hurt()`,
+  then the usual invulnerability): overlapping it, or for a solid one
+  leaning on it or standing on it (the hazard rule, D44).
   Landing on top of a **bouncy** one (every bug by default: a round ball
   reads as bouncy) bounces him up 2.2 above its top (clears 2 blocks)
-  without hurting him; its sides still hurt if it is hostile. Enemies
-  with `bounce` false can't be stood on.
+  without hurting him; its sides still hurt if it is hostile. Enemies with
+  `bounce` false can be stood on only if they are solid.
 - **Look (bug):** a mint-green hologram ball with two slanted eyes whose
   color shows its mood: red hostile, amber calm until provoked, cyan
   peaceful. It squashes when bounced on, hops as it walks, bobs while
@@ -323,7 +330,7 @@ walking the whole world (new exits are added for that where needed, D49).
 | `fault_line` (Phase 2) | 12×12 | west doorway → Stack Yard; raised east exit on the lookout → Transit Bus | a corridor between hazard walls, hazard blocks between two plain ones to walk across, a zigzag path of plain blocks through a field of void blocks up to a lookout |
 | `transit_bus` (Phase 2) | 12×12, 5 high | west doorway → Fault Line; north doorway → Boot Sector; raised east exit on the high ledge → Volatile Memory | a ferry across a pit between two ledges, a lift up to a high ledge, a loop carrying a crate, a press coming down (with a crate to jam it) and a pusher squeezing the wizard against the room's edge |
 | `volatile_memory` (Phase 2) | 12×12, 5 high | west doorway → Transit Bus; raised east exit on the high ledge → Crawl Space | a pit across the room with two collapsing bridges: one regrowing after 3 s (the way back), one that stays gone, with a crate on a plain ledge in front of it to push onto the bridge from solid ground (it doesn't trigger the blocks, so it is a safe spot to hop onto); two one-shot collapsing steps up to a high ledge |
-| `crawl_space` (Phase 2) | 12×12 | west doorway → Volatile Memory; east (front) → Boot Sector | bugs: a sentry crossing the entrance lane, one walking off a ledge and patrolling the floor below, a lane with a crate to push in its way, a provoked one circling a pillar, a peaceful stationary one to bounce up to a 2-high ledge |
+| `crawl_space` (Phase 2) | 12×12 | west doorway → Volatile Memory; east (front) → Boot Sector | bugs: a sentry crossing the entrance lane, one walking off a ledge and patrolling the floor below, a solid one shoving along a lane with a crate to push in its way, a provoked one circling a pillar, a peaceful stationary one to bounce up to a 2-high ledge, a solid peaceful one along the front edge to ride |
 
 ### Room design checklist
 

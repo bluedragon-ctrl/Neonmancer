@@ -81,7 +81,12 @@
           "default": false,
           "description": "Trampoline top: landing on it bounces the wizard up (clearing 2 blocks) without hurting him; its sides still hurt if it is hostile."
         },
-        "color": { "$ref": "common.schema.json#/$defs/color", "description": "Hologram color." }
+        "solid": {
+          "type": "boolean",
+          "default": false,
+          "description": "Solid: the wizard can not walk through it; he stands on it and rides along, and it shoves him when it walks into him (turning back if he is pinned). Touching it counts when he leans against it. Not solid: he walks through it."
+        },
+        "color": { "$ref": "common.schema.json#/$defs/color", "description": "Body (hologram) color; the eyes show hostility." }
       }
     },
     "objectType": {

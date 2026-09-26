@@ -199,13 +199,19 @@ or step up in the way turns it back (`turnBack()`, then `turnTicks` of
 waiting). Unsupported, it falls; landing at −1 (a hole) or on a void cell
 pops it (`dead`, gone until the room resets; `refreshBodies()` drops it).
 Enemies are in `Game.obstacles` (what enemies collide with: solid objects
-and live enemies) and in `Game.bodies` (what objects collide with), but not
-in `Game.solids`, so the wizard walks through them and crates land on them
-and can't be pushed into them. Platforms carry resting enemies like crates
-and wait while one is stepping on or off. After the enemies,
+and live enemies) and in `Game.bodies` (what objects collide with), so
+crates land on them and can't be pushed into them. Only solid enemies are
+in `Game.solids` (what the wizard collides with); he walks through the
+rest. A solid enemy moving carries the wizard standing on it (`moveAxis`,
+so walls scrape him off) and shoves him clear of its new box with
+`shoveClear()` (physics/collision.js, shared with platforms); if he is
+pinned it turns back. Platforms carry resting enemies like crates and wait
+while one is stepping on or off. After the enemies,
 `bounceOffEnemies()` launches the wizard up (`Player.bounce()`) when his
 feet crossed the top of a bouncy enemy this tick, and `touchEnemies()`
-calls `hurt()` for the first hostile contact-attack enemy he overlaps.
+calls `hurt()` for the first hostile contact-attack enemy he touches
+(`touchesBox()`: overlapping, or against a solid one within 0.02 on two
+axes), skipping the one he just bounced off.
 
 ## Game events
 

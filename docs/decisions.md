@@ -562,3 +562,20 @@ come back in one line.
 **Why:** author's review: the ball shape already says "bouncy", so a mark
 is not needed and every bug should bounce. The author wants to try a
 single shadow under the wizard to see whether it reads more clearly.
+
+### D51 — 2026-09-26 — Solid enemies block, carry and shove the wizard
+A `solid` enemy type field (default false, overridable per enemy). A
+solid enemy is one of the bodies the wizard collides with: he can't walk
+through it, can stand on it (unless it bounces) and is carried as it
+walks, and it shoves him when it walks into him (at most 0.35 per tick,
+as platforms do, with the same `shoveClear()`); if he is pinned it turns
+back instead of hurting him. A crate on top holds it in place. Touching a
+hostile solid enemy uses the hazard rule (leaning or standing on it
+counts). Body color stays the `color` field, overridable per enemy; the
+eyes keep showing hostility.
+**Why:** author's request: enemies the wizard must avoid or ride, set by
+data rather than new code. Carrying like a platform was preferred over a
+simpler "it waits while he stands on it". Turning back when he is pinned
+keeps "never killed outright by being squeezed" from D46, and contact
+damage already covers hostile ones. With `stationary` movement, a turret
+needs only a projectile attack (Pop-ups), no new movement code.
