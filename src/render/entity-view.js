@@ -3,9 +3,24 @@
  * place their meshes at the interpolated position between the last two
  * ticks, so motion is smooth at any refresh rate.
  */
-import { AdditiveBlending, Color, Group, Mesh, Plane, PlaneGeometry, ShaderMaterial, Vector3 } from 'three';
+import {
+  AdditiveBlending,
+  BoxGeometry,
+  Color,
+  Group,
+  InstancedMesh,
+  Matrix4,
+  Mesh,
+  MeshBasicMaterial,
+  Plane,
+  PlaneGeometry,
+  ShaderMaterial,
+  Vector3,
+} from 'three';
+import { PLAYER } from '../entities/player.js';
 import { PALETTE, shared } from './neon.js';
 import { fadingDrops } from './hole-view.js';
+import { HIT_FX, derezPixels, wizardLook } from './hit-fx.js';
 import { lerpAngle, lerpPosition, shadowScale } from './interp.js';
 import { createObjectView } from './room-view.js';
 import { createWizard } from './wizard.js';
@@ -80,6 +95,39 @@ function placeShadow(shadow, x, z, bottom, ground, diameter) {
   shadow.material.uniforms.uOpacity.value = opacity;
 }
 
+/**
+ * The burst of glowing pixels a derezzing wizard leaves (see hit-fx.js):
+ * small additive cubes in his colors, hidden unless he derezzes.
+ */
+export function createDerezPixels() {
+  const geometry = new BoxGeometry(HIT_FX.pixelSize, HIT_FX.pixelSize, HIT_FX.pixelSize);
+  const material = new MeshBasicMaterial({ blending: AdditiveBlending, depthWrite: false, transparent: true });
+  const mesh = new InstancedMesh(geometry, material, HIT_FX.pixels);
+  const colors = [new Color(PALETTE.cyan), new Color(PALETTE.magenta)];
+  for (let i = 0; i < HIT_FX.pixels; i++) mesh.setColorAt(i, colors[i % 2].clone().multiplyScalar(1.6));
+  mesh.frustumCulled = false; // instances move far from the geometry's own bounds
+  mesh.visible = false;
+  return mesh;
+}
+
+const pixelMatrix = new Matrix4();
+
+/**
+ * Show the derez pixels around the feet center `pos`, or hide them when
+ * there are none.
+ * @param {InstancedMesh} mesh from createDerezPixels()
+ * @param {ReturnType<typeof derezPixels>} pixels
+ * @param {number[]} pos feet center
+ */
+export function placeDerezPixels(mesh, pixels, pos) {
+  mesh.visible = pixels.length > 0;
+  pixels.forEach(({ offset: [x, y, z], scale }, i) => {
+    pixelMatrix.makeScale(scale, scale, scale).setPosition(pos[0] + x, pos[1] + y, pos[2] + z);
+    mesh.setMatrixAt(i, pixelMatrix);
+  });
+  mesh.instanceMatrix.needsUpdate = true;
+}
+
 export class PlayerView {
   /**
    * @param {import('../game.js').Game} game
@@ -89,7 +137,8 @@ export class PlayerView {
     this.group = new Group();
     this.wizard = createWizard();
     this.shadow = createDropShadow(PALETTE.cyan);
-    this.group.add(this.wizard, this.shadow);
+    this.pixels = createDerezPixels();
+    this.group.add(this.wizard, this.shadow, this.pixels);
   }
 
   /** @param {number} alpha interpolation factor 0..1 between the last two ticks */
@@ -99,6 +148,12 @@ export class PlayerView {
 
     this.wizard.position.set(pos[0], pos[1], pos[2]);
     this.wizard.rotation.y = lerpAngle(player.prevFacing, player.facing, alpha);
+    // Blinking after a hit; derezzing when he dies out of a hole.
+    const look = wizardLook(player, PLAYER.deathTicks);
+    this.wizard.visible = look.visible;
+    this.wizard.scale.set(...look.scale);
+    const derezzing = player.dead && player.deathCause !== 'hole';
+    placeDerezPixels(this.pixels, derezzing ? derezPixels(PLAYER.deathTicks - player.deathTimer + alpha) : [], pos);
 
     const ground = player.dead ? null : this.game.shadowHeight(pos, player.size);
     placeShadow(this.shadow, pos[0], pos[2], pos[1], ground, player.size[0] * 1.5);

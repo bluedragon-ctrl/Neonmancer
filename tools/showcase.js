@@ -13,7 +13,9 @@ import { Group, Vector3 } from 'three';
 import defs from '../data/defs.json';
 import { OBJECT_STYLE_DEFAULTS, withExitDefaults } from '../src/data/room-data.js';
 import { VIEW_HEIGHT, frameRoom } from '../src/render/camera.js';
-import { createDropShadow } from '../src/render/entity-view.js';
+import { PLAYER } from '../src/entities/player.js';
+import { createDerezPixels, createDropShadow, placeDerezPixels } from '../src/render/entity-view.js';
+import { derezPixels, wizardLook } from '../src/render/hit-fx.js';
 import { createFloor } from '../src/render/floor.js';
 import { PALETTE } from '../src/render/neon.js';
 import { Renderer } from '../src/render/renderer.js';
@@ -34,6 +36,7 @@ const SPIN = 0.6;
  */
 const ALL_ASSETS = [
   { label: 'wizard', build: () => createWizard(), shadow: PALETTE.cyan },
+  { label: 'wizard-hit', build: buildWizardHit, shadow: PALETTE.cyan },
   // Every object type from defs.json, in its own style.
   ...Object.entries(defs.objects).map(([type, props]) => ({
     label: type,
@@ -45,6 +48,35 @@ const ALL_ASSETS = [
   })),
   { label: 'exits', span: 5.5, build: buildExits },
 ];
+
+/**
+ * The wizard getting hurt, in a loop: hit (blinking while invulnerable),
+ * a pause, then losing his last point (derez into pixels), then back.
+ */
+function buildWizardHit() {
+  const wizard = createWizard();
+  const pixels = createDerezPixels();
+  const asset = new Group().add(wizard, pixels);
+  const hitTicks = PLAYER.invulnerableTicks + 30;
+  const loop = hitTicks + PLAYER.deathTicks + 30;
+  let tick = 0;
+  asset.userData.update = (dt) => {
+    tick = (tick + dt * 60) % loop;
+    const derezTick = tick - hitTicks;
+    const dead = derezTick >= 0 && derezTick < PLAYER.deathTicks;
+    const player = {
+      invulnerable: Math.max(0, PLAYER.invulnerableTicks - Math.floor(tick)),
+      dead,
+      deathCause: dead ? 'damage' : null,
+      deathTimer: dead ? PLAYER.deathTicks - Math.floor(derezTick) : 0,
+    };
+    const look = wizardLook(player, PLAYER.deathTicks);
+    wizard.visible = look.visible;
+    wizard.scale.set(...look.scale);
+    placeDerezPixels(pixels, dead ? derezPixels(derezTick) : [], [0, 0, 0]);
+  };
+  return asset;
+}
 
 /**
  * A 3×3 room corner with a back doorway leading to a magenta room and a

@@ -12,6 +12,9 @@ import { arrival, exitAt } from './world/exits.js';
 import { Grid } from './world/grid.js';
 import { buildRoom } from './world/room.js';
 
+/** Terminal message for each way to die (Player.deathCause). */
+const DEATH_MESSAGES = { hole: 'msg.die', damage: 'msg.derez' };
+
 /** Room transition timing in ticks (60 per second). */
 export const TRANSITION = {
   /** Fade to black while the wizard walks on through the exit; the world is frozen. */
@@ -27,6 +30,7 @@ export const TRANSITION = {
  * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'hurt'|'exit'|'room'} type
  * @property {object} [object] the room object it happened to (push, plug, and land of an object)
  * @property {number} [amount] integrity lost (hurt)
+ * @property {'hole'|'damage'} [cause] how the wizard died (die)
  * @property {object} [exit] the exit walked out through (exit)
  */
 
@@ -94,15 +98,26 @@ export class Game {
   }
 
   /**
-   * The wizard loses integrity, unless invincible (debug mode). Used for now
-   * by the debug test-damage key; real hazards and enemies call it from
-   * Phase 2. Reported as a 'hurt' event with the next tick's events.
+   * The wizard loses integrity, unless invincible (debug mode) or still
+   * invulnerable from the last hit; losing the last point kills him. Every
+   * damage source goes through here (D43): the debug test-damage key now,
+   * hazard blocks and enemies later in Phase 2. Reported
+   * as a 'hurt' (and 'die') event with this tick's events, or the next
+   * tick's when called outside update().
    * @param {number} [amount]
    */
   hurt(amount = 1) {
     if (this.invincible) return;
     const lost = this.player.hurt(amount);
     if (lost > 0) this.emit('hurt', { amount: lost });
+    if (this.player.dead) this.died();
+  }
+
+  /** The wizard just died: report it, with a message naming the cause. */
+  died() {
+    const cause = this.player.deathCause;
+    say(DEATH_MESSAGES[cause]);
+    this.emit('die', { cause });
   }
 
   /**
@@ -161,9 +176,8 @@ export class Game {
       movementMode: this.movementMode,
     });
 
-    // Falling into a hole drained his integrity (Player). Respawning
-    // restores it and resets the room, so no puzzle stays broken.
-    if (playerEvent === 'die') say('msg.die');
+    // Dying drained his integrity (Player). Respawning restores it and
+    // resets the room, so no puzzle stays broken.
     if (playerEvent === 'respawn') {
       say('msg.respawn');
       this.enterRoom(this.room.id, this.room.reset);
@@ -178,7 +192,8 @@ export class Game {
       this.emit('exit', { exit });
       return this.takeEvents();
     }
-    if (playerEvent) this.emit(playerEvent);
+    if (playerEvent === 'die') this.died();
+    else if (playerEvent) this.emit(playerEvent);
 
     const intent = player.pushIntent;
     if (intent && intent.body.push(intent.dir, this)) this.emit('push', { object: intent.body });
