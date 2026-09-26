@@ -8,7 +8,7 @@
  *                               └─into a hole──► plugged (floor from now on)
  */
 import { DT } from '../core/loop.js';
-import { overlaps, surfaceBelow } from '../physics/collision.js';
+import { REST_EPS, cellBox, overlapsBox, restsOn, surfaceBelow } from '../physics/collision.js';
 
 /** Tuning values (units, seconds). */
 export const PUSHABLE = {
@@ -17,9 +17,6 @@ export const PUSHABLE = {
   gravity: 30,
   maxFall: 18,
 };
-
-/** Heights closer than this count as equal. */
-const EPS = 1e-4;
 
 export class Pushable {
   /**
@@ -48,7 +45,7 @@ export class Pushable {
 
   /** Collision box [[minX, maxX], [minY, maxY], [minZ, maxZ]]. */
   box() {
-    return boxAt(this.pos);
+    return cellBox(this.pos);
   }
 
   /**
@@ -57,11 +54,9 @@ export class Pushable {
    * @param {Iterable<{ box(): number[][] }>} bodies
    */
   hasLoad(bodies) {
-    const [bx, by, bz] = this.box();
+    const box = this.box();
     for (const body of bodies) {
-      if (body === this) continue;
-      const [ox, oy, oz] = body.box();
-      if (Math.abs(oy[0] - by[1]) < EPS && overlaps(bx, ox) && overlaps(bz, oz)) return true;
+      if (body !== this && restsOn(body.box(), box)) return true;
     }
     return false;
   }
@@ -82,8 +77,8 @@ export class Pushable {
     if (!this.pos.every(Number.isInteger) || grid.isSolid(...target)) return false;
     // Objects never leave through an exit: rooms reset, so they would be lost.
     if (!grid.isInside(target[0], target[2])) return false;
-    if (this.support(grid, bodies) < y - EPS) return false; // about to fall
-    if (overlapsAny(boxAt(target), bodies, this)) return false;
+    if (this.support(grid, bodies) < y - REST_EPS) return false; // about to fall
+    if (overlapsAny(cellBox(target), bodies, this)) return false;
     this.state = 'slide';
     this.target = target;
     return true;
@@ -104,7 +99,7 @@ export class Pushable {
         return Math.abs(t - p) <= step ? t : p + Math.sign(t - p) * step;
       });
       // Something stepped into the way (the player jumping in): wait.
-      if (overlapsAny(boxAt(next), bodies, this)) return null;
+      if (overlapsAny(cellBox(next), bodies, this)) return null;
       this.pos = next;
       if (next.every((p, i) => p === this.target[i])) {
         this.state = 'rest';
@@ -144,7 +139,7 @@ export class Pushable {
 
   /** Start falling if nothing holds the object up. */
   startFalling(grid, bodies) {
-    if (this.support(grid, bodies) < this.pos[1] - EPS) {
+    if (this.support(grid, bodies) < this.pos[1] - REST_EPS) {
       this.state = 'fall';
       this.vy = 0;
     }
@@ -162,21 +157,11 @@ export class Pushable {
   }
 }
 
-/** Box of a unit block with its lower corner at `pos`. */
-function boxAt([x, y, z]) {
-  return [
-    [x, x + 1],
-    [y, y + 1],
-    [z, z + 1],
-  ];
-}
-
 /** Does the box overlap any body except `self`? */
 function overlapsAny(box, bodies, self) {
   for (const body of bodies) {
     if (body === self) continue;
-    const other = body.box();
-    if (box.every((range, i) => overlaps(range, other[i]))) return true;
+    if (overlapsBox(box, body.box())) return true;
   }
   return false;
 }

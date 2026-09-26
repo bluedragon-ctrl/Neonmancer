@@ -18,7 +18,7 @@ import {
   Vector3,
 } from 'three';
 import { PLAYER } from '../entities/player.js';
-import { BUG, bounceSquash, bugPose, createBug, eyeMood, popPixels, setEyeMood } from './bug.js';
+import { BUG_MODEL, eyeMood } from './bug.js';
 import { COLLAPSE_FX, COLLAPSE_PIXELS, collapseLook, collapsePixels } from './collapse-fx.js';
 import { PALETTE, lineMaterial, neonLines, shared } from './neon.js';
 import { fadingDrops } from './hole-view.js';
@@ -301,8 +301,11 @@ export function createRails(track, color) {
   return neonLines(railSegments(track), lineMaterial({ color, width: 1.5, brightness: 0.55 }));
 }
 
-/** The model of each enemy type (defs.json "enemies"), by type id. */
-export const ENEMY_MODELS = { bug: createBug };
+/**
+ * The model of each enemy type (defs.json "enemies"), by type id: how to
+ * build, color, animate and pop it (see BUG_MODEL in bug.js).
+ */
+export const ENEMY_MODELS = { bug: BUG_MODEL };
 
 export class EnemyView {
   /**
@@ -312,9 +315,11 @@ export class EnemyView {
   constructor(game, enemy) {
     this.game = game;
     this.enemy = enemy;
+    this.kind = ENEMY_MODELS[enemy.type];
+    if (!this.kind) throw new Error(`No model for enemy type "${enemy.type}" (ENEMY_MODELS)`);
     const { color } = enemy.data;
-    this.model = (ENEMY_MODELS[enemy.type] ?? createBug)(color);
-    this.pixels = createPixelBurst(BUG.pop.pixels, BUG.pop.pixelSize, [color, 0xffffff]);
+    this.model = this.kind.create(color);
+    this.pixels = createPixelBurst(this.kind.pop.pixels, this.kind.pop.pixelSize, [color, 0xffffff]);
     this.mood = null;
     this.group = new Group().add(this.model, this.pixels);
     /** Angle the model faces now; it turns towards the enemy's facing. */
@@ -328,36 +333,33 @@ export class EnemyView {
    * @param {number} dt seconds since the last frame
    */
   sync(alpha, dt) {
-    const { enemy } = this;
+    const { enemy, kind } = this;
     const pos = lerpPosition(enemy.prev, enemy.pos, alpha);
     const feet = [pos[0] + 0.5, pos[1], pos[2] + 0.5];
-    const dead = enemy.state === 'dead';
-    this.model.visible = !dead;
-    // Popped in a pit: the burst comes out at the floor.
-    placePixels(this.pixels, dead ? popPixels(enemy.timer + alpha) : [], [feet[0], Math.max(feet[1], 0), feet[2]]);
-    if (dead) return;
+    if (enemy.state === 'dead') {
+      this.model.visible = false;
+      // Popped in a pit: the burst comes out at the floor. Once it is over
+      // (hidden by an empty burst), there is nothing left to update.
+      if (enemy.timer <= kind.pop.ticks) placePixels(this.pixels, kind.popPixels(enemy.timer + alpha), [feet[0], Math.max(feet[1], 0), feet[2]]);
+      return;
+    }
 
     this.time += dt;
-    this.angle += wrapAngle(enemy.facing - this.angle) * Math.min(1, dt * BUG.turnRate);
+    this.angle = lerpAngle(this.angle, enemy.facing, Math.min(1, dt * kind.turnRate));
     this.model.position.set(...feet);
     this.model.rotation.y = this.angle;
 
-    // One hop per cell while walking (the distance from the cell it left), small ones while standing.
+    // Walked: the distance from the cell it left, for one hop per cell.
     const { from } = enemy;
-    const walked = enemy.state === 'walk' && from ? Math.abs(pos[0] - from[0]) + Math.abs(pos[2] - from[2]) : null;
-    const pose =
-      enemy.state === 'fall' ? { lift: 0, scale: [0.92, 1.15, 0.92] } : walked !== null ? bugPose(walked) : bugPose(this.time * BUG.idleRate, BUG.idleLift);
-    const squash = bounceSquash(enemy.bounced === null ? null : enemy.bounced + alpha);
-    const body = this.model.userData.body;
-    body.position.y = pose.lift;
-    body.scale.set(pose.scale[0] * (1 + squash * 0.5), pose.scale[1] * (1 - squash), pose.scale[2] * (1 + squash * 0.5));
+    const walking = enemy.state === 'walk' && from;
+    kind.animate(this.model, {
+      state: walking || enemy.state === 'fall' ? enemy.state : 'rest',
+      walked: walking ? Math.abs(pos[0] - from[0]) + Math.abs(pos[2] - from[2]) : 0,
+      time: this.time,
+      bounced: enemy.bounced === null ? null : enemy.bounced + alpha,
+    });
 
     const mood = eyeMood(enemy);
-    if (mood !== this.mood) setEyeMood(this.model, (this.mood = mood));
+    if (mood !== this.mood) kind.setMood(this.model, (this.mood = mood));
   }
-}
-
-/** An angle difference brought into −π..π, so turning takes the short way round. */
-function wrapAngle(a) {
-  return a - Math.PI * 2 * Math.round(a / (Math.PI * 2));
 }

@@ -22,7 +22,7 @@
  */
 import { DT } from '../core/loop.js';
 import { BEHAVIORS } from '../ai/behaviors.js';
-import { moveAxis, overlaps, overlapsSolid, shoveClear, surfaceBelow } from '../physics/collision.js';
+import { REST_EPS, moveAxis, overlapsBox, overlapsSolid, restsOn, shoveClear, surfaceBelow } from '../physics/collision.js';
 import { CELL } from '../world/grid.js';
 
 /** Tuning values (units, ticks). */
@@ -37,8 +37,6 @@ export const ENEMY = {
   maxShove: 0.35,
 };
 
-/** Heights closer than this count as equal. */
-const EPS = 1e-4;
 /** A step this close to done counts as done. */
 const SNAP = 1e-9;
 
@@ -62,6 +60,8 @@ export class Enemy {
     this.from = null;
     this.target = null;
     this.walked = 0;
+    /** Scratch position for the step being tried (walk()), reused every tick. */
+    this.next = [0, 0, 0];
     /** Direction it faces, radians around y (0 looks along +z, like the models). */
     this.facing = 0;
     /** Walking speed in units per second: the path's own, else its type's. */
@@ -113,7 +113,7 @@ export class Enemy {
 
   /** Collision box [[minX, maxX], [minY, maxY], [minZ, maxZ]]. */
   box() {
-    return boxAt(this.pos, this.size);
+    return enemyBox(this.pos, this.size);
   }
 
   /**
@@ -135,14 +135,8 @@ export class Enemy {
 
   /** Standing: fall if unsupported, die on void, else take the next step. */
   rest(game) {
-    const { grid } = game;
-    const support = this.support(game);
-    if (support < this.pos[1] - EPS) {
-      this.state = 'fall';
-      this.vy = 0;
-      return this.fall(game);
-    }
-    if (this.onVoid(grid)) return this.die('void');
+    if (this.startFalling(game)) return this.fall(game);
+    if (this.onVoid(game.grid)) return this.die('void');
     if (this.wait > 0) {
       this.wait--;
       return null;
@@ -172,34 +166,39 @@ export class Enemy {
     // Distance from the cell it left, counted on its own so that whole
     // cells are exact (adding up small float steps drifts).
     const walked = Math.min(this.walked + this.speed * DT, 1);
-    const next = this.from.map((f, i) => (walked >= 1 - SNAP ? this.target[i] : f + (this.target[i] - f) * walked));
-    if (this.blockedAt(next, game)) {
-      [this.from, this.target] = [this.target, this.from];
-      this.walked = 1 - this.walked;
-      this.facing = Math.atan2(this.target[0] - this.from[0], this.target[2] - this.from[2]);
-      this.behavior.turnBack();
+    const arrived = walked >= 1 - SNAP;
+    const { from, target, next } = this;
+    for (let i = 0; i < 3; i++) next[i] = arrived ? target[i] : from[i] + (target[i] - from[i]) * walked;
+    // Something in the way, or (solid) the wizard pinned: turn back instead of crushing him.
+    if (this.blockedAt(next, game) || (this.solid && !this.carryPlayer(next, game))) {
+      this.turnAround();
       return null;
     }
-    if (this.solid && !this.carryPlayer(next, game)) {
-      // The wizard is pinned: turn back instead of crushing him.
-      [this.from, this.target] = [this.target, this.from];
-      this.walked = 1 - this.walked;
-      this.facing = Math.atan2(this.target[0] - this.from[0], this.target[2] - this.from[2]);
-      this.behavior.turnBack();
-      return null;
-    }
-    this.pos = next;
+    for (let i = 0; i < 3; i++) this.pos[i] = next[i];
     this.walked = walked;
-    if (walked >= 1 - SNAP) {
+    if (arrived) {
       this.state = 'rest';
       this.from = this.target = null;
       // Off a ledge or onto a hole: fall right away.
-      if (this.support(game) < this.pos[1] - EPS) {
-        this.state = 'fall';
-        this.vy = 0;
-      } else if (this.onVoid(game.grid)) return this.die('void');
+      if (!this.startFalling(game) && this.onVoid(game.grid)) return this.die('void');
     }
     return null;
+  }
+
+  /** Mid-step, head back to the cell it left. */
+  turnAround() {
+    [this.from, this.target] = [this.target, this.from];
+    this.walked = 1 - this.walked;
+    this.facing = Math.atan2(this.target[0] - this.from[0], this.target[2] - this.from[2]);
+    this.behavior.turnBack();
+  }
+
+  /** Start falling if nothing holds it up. @returns {boolean} whether it did */
+  startFalling(game) {
+    if (this.support(game) >= this.pos[1] - REST_EPS) return false;
+    this.state = 'fall';
+    this.vy = 0;
+    return true;
   }
 
   /** Falling whole cells straight down; a hole or a void block below is its end. */
@@ -235,13 +234,17 @@ export class Enemy {
    */
   carryPlayer(next, { grid, solids, player }) {
     if (player.dead) return true;
+    const newBox = enemyBox(next, this.size);
+    const playerBox = player.box();
+    const riding = restsOn(playerBox, this.box());
+    if (!riding && !overlapsBox(playerBox, newBox)) return true; // not in its way
     const others = solids.filter((body) => body !== this);
     const pos = [...player.pos];
-    if (restsOn(player.box(), this.box())) {
+    if (riding) {
       moveAxis(pos, player.size, 0, next[0] - this.pos[0], grid, others, player);
       moveAxis(pos, player.size, 2, next[2] - this.pos[2], grid, others, player);
     }
-    const shoved = shoveClear(pos, player.size, boxAt(next, this.size), grid, others, player, ENEMY.maxShove);
+    const shoved = shoveClear(pos, player.size, newBox, grid, others, player, ENEMY.maxShove);
     if (!shoved) return false;
     player.pos = shoved;
     return true;
@@ -260,10 +263,10 @@ export class Enemy {
 
   /** Would its box at `pos` run into a block, a solid object or another enemy? */
   blockedAt(pos, { grid, obstacles }) {
-    const box = boxAt(pos, this.size);
+    const box = enemyBox(pos, this.size);
     if (overlapsSolid(box, grid)) return true;
     for (const body of obstacles) {
-      if (body !== this && box.every((range, i) => overlaps(range, body.box()[i]))) return true;
+      if (body !== this && overlapsBox(box, body.box())) return true;
     }
     return false;
   }
@@ -274,8 +277,9 @@ export class Enemy {
    * above a hole.
    */
   support({ grid, obstacles, player }) {
-    let top = surfaceBelow(this.box(), grid, obstacles, this);
-    if (this.solid && !player.dead) top = Math.max(top, surfaceBelow(this.box(), grid, [player], this));
+    const box = this.box();
+    let top = surfaceBelow(box, grid, obstacles, this);
+    if (this.solid && !player.dead) top = Math.max(top, surfaceBelow(box, grid, [player], this));
     const [x, , z] = this.pos;
     if (top === 0 && grid.isHole(x + 0.5, z + 0.5)) return -1;
     return top;
@@ -288,13 +292,13 @@ export class Enemy {
   }
 }
 
-/** Does box `a` rest on top of box `b`: bottom on its top, footprints overlapping? */
-function restsOn(a, b) {
-  return Math.abs(a[1][0] - b[1][1]) < EPS && overlaps(a[0], b[0]) && overlaps(a[2], b[2]);
-}
-
-/** Box of an enemy of `size` in the cell with its lower corner at `pos`: centered, on the cell floor. */
-function boxAt([x, y, z], [w, h, d]) {
+/**
+ * Box of an enemy of `size` in the cell with its lower corner at `pos`:
+ * centered, on the cell floor.
+ * @param {number[]} pos
+ * @param {number[]} size
+ */
+export function enemyBox([x, y, z], [w, h, d]) {
   const mx = (1 - w) / 2;
   const mz = (1 - d) / 2;
   return [

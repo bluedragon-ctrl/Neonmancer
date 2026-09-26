@@ -224,15 +224,23 @@ function validateObjects(checks, objectTypes) {
  */
 function validatePath({ room, report, filled, pathCells: swept }, path, { at, path: { points, mode } }) {
   if (!validatePathShape(room, report, path, at, points, mode)) return;
-  for (const cell of pathCells(at, { points, mode })) {
-    const key = cellKey(cell);
-    const by = filled.get(key);
+  for (const cell of clearPathCells(filled, report, path, at, { points, mode }) ?? []) swept.set(cellKey(cell), path);
+}
+
+/**
+ * The cells a path sweeps, or null (reported) if it runs through a static block.
+ * @returns {number[][]|null}
+ */
+function clearPathCells(filled, report, path, at, { points, mode }) {
+  const cells = pathCells(at, { points, mode });
+  for (const cell of cells) {
+    const by = filled.get(cellKey(cell));
     if (by?.startsWith('blocks')) {
       report(path, `it runs through cell ${cellText(cell)}, filled by ${by}`);
-      return;
+      return null;
     }
-    swept.set(key, path);
   }
+  return cells;
 }
 
 /**
@@ -299,13 +307,7 @@ function validateEnemies(checks, enemyTypes) {
     if (!enemy.path) return;
     const { points, mode } = enemy.path;
     if (!validatePathShape(room, report, `${path}.path`, enemy.at, points, mode, true)) return;
-    for (const cell of pathCells(enemy.at, { points, mode })) {
-      const by = filled.get(cellKey(cell));
-      if (by?.startsWith('blocks')) {
-        report(`${path}.path`, `it runs through cell ${cellText(cell)}, filled by ${by}`);
-        return;
-      }
-    }
+    clearPathCells(filled, report, `${path}.path`, enemy.at, { points, mode });
   });
 }
 

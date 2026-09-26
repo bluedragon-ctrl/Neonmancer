@@ -9,7 +9,9 @@
  * is as big as the hitbox (0.6); the hop lifts it only for show.
  */
 import { Group, Mesh, MeshBasicMaterial, SphereGeometry } from 'three';
+import { hash } from './hash.js';
 import { holoPart } from './holo.js';
+import { shared } from './neon.js';
 
 /** Proportions (world units) and animation tuning. */
 export const BUG = {
@@ -33,6 +35,13 @@ export const BUG = {
 
 const SEGMENTS = 32;
 
+/** Geometry every bug shares (never disposed with a room, see shared()). */
+const BALL = shared(new SphereGeometry(BUG.r, SEGMENTS, SEGMENTS / 2));
+const EYE = shared(new SphereGeometry(1, 12, 8));
+
+/** Pose while falling: stretched tall. */
+const FALL_POSE = { lift: 0, scale: [0.92, 1.15, 0.92] };
+
 /**
  * The bug as a three.js group (origin at the feet center, looking along
  * +z). Its `userData.body` is the part that hops (see bugPose()),
@@ -42,16 +51,15 @@ const SEGMENTS = 32;
 export function createBug(color) {
   const { r, eyes } = BUG;
   const body = new Group();
-  const ball = holoPart(new SphereGeometry(r, SEGMENTS, SEGMENTS / 2), color);
+  const ball = holoPart(BALL, color);
   ball.position.y = r;
   body.add(ball);
 
   // Bright (above 1, for bloom), flattened and slanted into a frown.
   const material = new MeshBasicMaterial();
-  const geometry = new SphereGeometry(1, 12, 8);
   const z = Math.sqrt(r ** 2 - eyes.x ** 2 - (eyes.y - r) ** 2) - 0.005;
   for (const side of [-1, 1]) {
-    const eye = new Mesh(geometry, material);
+    const eye = new Mesh(EYE, material);
     eye.position.set(side * eyes.x, eyes.y, z);
     eye.scale.set(...eyes.size);
     eye.rotation.set(-0.3, side * 0.35, side * eyes.slant);
@@ -115,10 +123,23 @@ export function bugPose(phase, size = 1) {
   return { lift: 0, scale: [1 + down * squash, 1 - down * squash * 1.2, 1 + down * squash] };
 }
 
-/** A small deterministic hash in 0..1, so every pop looks the same. */
-function hash(i, k) {
-  const v = Math.sin(i * 127.1 + k * 311.7) * 43758.5453;
-  return v - Math.floor(v);
+/**
+ * Pose a bug's body for this frame: a hop per cell while walking, small
+ * hops while standing, stretched while falling, plus the squash of a
+ * bounce.
+ * @param {Group} bug from createBug()
+ * @param {object} state
+ * @param {string} [state.state] the enemy's state ('rest', 'walk', 'fall')
+ * @param {number} [state.walked] cells walked (while walking)
+ * @param {number} [state.time] seconds (for the standing hops)
+ * @param {number|null} [state.bounced] ticks since the wizard bounced off it
+ */
+export function animateBug(bug, { state = 'rest', walked = 0, time = 0, bounced = null }) {
+  const pose = state === 'fall' ? FALL_POSE : state === 'walk' ? bugPose(walked) : bugPose(time * BUG.idleRate, BUG.idleLift);
+  const squash = bounceSquash(bounced);
+  const { body } = bug.userData;
+  body.position.y = pose.lift;
+  body.scale.set(pose.scale[0] * (1 + squash * 0.5), pose.scale[1] * (1 - squash), pose.scale[2] * (1 + squash * 0.5));
 }
 
 /**
@@ -141,3 +162,16 @@ export function popPixels(tick) {
   }
   return out;
 }
+
+/**
+ * Everything EnemyView needs to show a bug: build it, color its eyes,
+ * animate it, and its pop.
+ */
+export const BUG_MODEL = {
+  create: createBug,
+  setMood: setEyeMood,
+  animate: animateBug,
+  popPixels,
+  pop: BUG.pop,
+  turnRate: BUG.turnRate,
+};

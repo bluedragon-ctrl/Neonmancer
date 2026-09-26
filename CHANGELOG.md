@@ -64,8 +64,17 @@ and the project uses [Semantic Versioning](https://semver.org/).
 - A room without objects logged a three.js error on entry.
 - `npm test` failed on Node 22+ (CI) after the Node 20 change: it now runs
   through `tools/run-tests.js`, which lists the test files itself.
+- A moving platform could carry a solid enemy into the wizard (mid-jump
+  beside it); it now waits, as it does for crates.
+- Room resets no longer free the hologram materials that the new views
+  share, so enemy shaders aren't compiled again after each death or
+  re-entry.
 
 ### Changed
+- Enemy code cleanup: shared collision helpers (`restsOn()`, `cellBox()`,
+  `REST_EPS`) replace copies in every entity; `EnemyView` draws any enemy
+  type through `ENEMY_MODELS` (the bug is `BUG_MODEL`); fewer allocations
+  per enemy per tick; shared bug geometry.
 - Drop shadows only under the wizard for now (D50): falling crates' shadow
   is switched off (`DROP_SHADOWS` in `render/entity-view.js`); enemies
   have none.

@@ -8,6 +8,7 @@
  * scale with the render height by themselves.
  */
 import { BackSide, Color, Group, Mesh, MeshBasicMaterial, ShaderMaterial } from 'three';
+import { shared } from './neon.js';
 
 /** Shared clock in seconds for the scanlines; advance it once per frame. */
 export const HOLO_TIME = { value: 0 };
@@ -114,7 +115,8 @@ export function holoPart(geometry, color, flash = NO_FLASH) {
   const materials = cache.get(flash);
   const key = new Color(color).getHexString();
   if (!materials.has(key)) {
-    materials.set(key, { solid: holoMaterial(color, flash), outline: outlineMaterial(color, OUTLINE_WIDTH, flash) });
+    // Shared: views are thrown away with their room, the cache outlives them.
+    materials.set(key, { solid: shared(holoMaterial(color, flash)), outline: shared(outlineMaterial(color, OUTLINE_WIDTH, flash)) });
   }
   const { solid, outline } = materials.get(key);
   const group = new Group();
