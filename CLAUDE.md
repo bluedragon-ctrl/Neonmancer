@@ -262,7 +262,9 @@ not critical.
   rooms. Used by CI, the editor, and design skills/subagents.
 - **Claude Code skills and subagents** (Phase 3+, once schemas are
   stable): room design and enemy design skills (schema, rules, annotated
-  examples); room-drafting and level-review subagents.
+  examples); room-drafting and level-review subagents. They start from the
+  room design checklist in docs/design.md; check new rooms against it
+  until then.
 
 ---
 
