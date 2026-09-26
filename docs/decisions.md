@@ -383,3 +383,18 @@ would split the wizard's state across two objects. Damage, pickups and
 later sound and effects need details (amount, which object, where), which
 plain strings can't carry; changing the event shape now touches three
 consumers instead of every Phase 2 system.
+
+### D42 — 2026-09-26 — Version: phase in MINOR, merged PRs in PATCH, computed from git
+The game version is MAJOR.MINOR.PATCH. MAJOR stays 0 until the author
+declares the first full release (1.0.0). MINOR is the phase, raised when a
+phase is closed with a `chore/release-0.X.0` PR, a `v0.X.0` tag and a
+GitHub Release. PATCH counts the pull requests merged into `main` since
+that tag: `tools/game-version.js` counts the first-parent commits after
+`vMAJOR.MINOR.0` when Vite starts, and the build shows it (HUD brand). The
+deploy workflow checks out full history for it; without the tag or git the
+version is `package.json`'s MAJOR.MINOR.0.
+**Why:** the version never moved (0.0.1 through all of Phase 1) because no
+step owned it. The author wants every merge to show up as a new patch
+number. Bumping `package.json` in each PR would make every open PR
+conflict on the same line (stacked PRs always would); counting merges
+from git needs no manual step and cannot be forgotten.

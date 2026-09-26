@@ -1,6 +1,6 @@
 {
   "name": "neonmancer",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Isometric flip-screen neon adventure for desktop browsers.",
   "private": true,
   "type": "module",

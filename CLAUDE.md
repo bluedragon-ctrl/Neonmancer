@@ -279,9 +279,19 @@ not critical.
   working rules here, not in machine-local notes.
 - Conventional Commits (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`).
 - PR template: summary, how it was tested, docs updated.
-- Semantic Versioning: 0.x during development (0.1 = Phase 1, ...),
-  1.0.0 for the first full release. Git tags, GitHub Releases,
-  CHANGELOG.md.
+- Semantic Versioning, MAJOR.MINOR.PATCH (D42):
+  - MAJOR: 0 during development; 1.0.0 for the first full release. Only
+    the author decides a major bump.
+  - MINOR: the phase (0.1 = Phase 1, 0.2 = Phase 2, ...), raised when the
+    author declares a phase finished.
+  - PATCH: counts pull requests merged into `main` since the phase's tag;
+    computed at build time (`tools/game-version.js`), never edited by hand.
+    `package.json` always holds MAJOR.MINOR.0.
+- Closing a phase: a `chore/release-0.X.0` PR sets `package.json` to
+  0.X.0 (`npm version 0.X.0 --no-git-tag-version`), turns CHANGELOG's
+  Unreleased section into `[0.X.0] - date` and does a docs pass. After the
+  author merges it: tag the merge commit `v0.X.0`, push the tag, and create
+  the GitHub Release from that CHANGELOG section.
 - Separate version numbers for: game (package.json), save-key format, data
   schema (`src/core/version.js`).
 - CI (GitHub Actions): on PR run tests, data validation and build;
