@@ -89,6 +89,7 @@ function boot() {
   function update() {
     input.sample();
     if (input.pressed('fullscreen')) toggleFullscreen(document.documentElement);
+    if (input.pressed('movementMode')) game.toggleMovementMode();
     if (input.pressed('debug')) debug.toggle();
     if (debug.active) {
       if (input.pressed('debugRoomNext') && game.debugJumpRoom(1)) showRoom();
@@ -110,6 +111,7 @@ function boot() {
     lastFrame = time;
     for (const view of exitViews) view.update(dt);
     hud.setIntegrity(game.integrity, game.maxIntegrity);
+    hud.setMovementMode(game.movementMode);
     hud.setHintWanted(wantsFullscreenHint(renderer.stageHeight, window.devicePixelRatio, !!document.fullscreenElement));
     hud.update(dt);
     HOLO_TIME.value = time;

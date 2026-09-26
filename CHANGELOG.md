@@ -70,6 +70,9 @@ and the project uses [Semantic Versioning](https://semver.org/).
   position); jumping straight to the next/previous room (`]` / `[`);
   toggling invincibility (`I`); and a key to test damage (`H`) through the
   same `Game.hurt()` real hazards will use later.
+- Screen-relative movement as an alternative to the default grid-aligned
+  keys: `G` switches between them, with a terminal message and a small
+  permanent HUD tag (bottom right) naming the active mode.
 
 ### Removed
 - The four box-look crates in Boot Sector (the asset showcase shows them).

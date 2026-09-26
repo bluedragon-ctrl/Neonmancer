@@ -8,12 +8,13 @@ for the current phase. Locked decisions live in CLAUDE.md; their reasons in
 
 | Action | Keys |
 |---|---|
-| Move | WASD / arrow keys along the grid axes: Right ↗, Up ↖, Left ↙, Down ↘ |
+| Move | WASD / arrow keys; grid-aligned by default: Right ↗, Up ↖, Left ↙, Down ↘ |
 | Jump | Space |
 | Cast | J |
 | Cycle spell | Q / E |
 | Pause | Esc / P |
 | Map | M |
+| Switch movement mode | G |
 | Debug mode | F3 |
 | Fullscreen | F |
 
@@ -31,13 +32,30 @@ same on QWERTY, QWERTZ and AZERTY keyboards.
 ## Player
 
 - Hitbox 0.6 × 1.5 × 0.6 (hat is visual only) — needs 2 blocks of headroom.
-- Walks at 4.5 units/s along the grid axes; diagonals are normalised.
+- Walks at 4.5 units/s along the grid axes (default) or screen-relative
+  (G toggles); diagonals are normalised either way.
 - Jump clears exactly one block (`jumpHeight` 1.2). Every jump has the same
   height (no short hops), so the block rule never depends on timing (D19).
 - Forgiveness: a jump still works 6 ticks after walking off a ledge, and a
   jump pressed up to 6 ticks before landing happens on landing.
 - Turns smoothly towards the walking direction; starts facing the camera.
 - Tuning values live in `PLAYER` in `src/entities/player.js`.
+
+### Movement mode
+
+G switches between the two key → direction mappings (D38), announced with a
+terminal message and shown as a small permanent tag, bottom right:
+
+- **Grid** (default, D23): each key moves along one grid axis, which looks
+  diagonal on screen (Right ↗, Up ↖, Left ↙, Down ↘).
+- **Screen**: each key moves the wizard that way on screen instead —
+  straight up/down/left/right — by combining both grid axes. Holding two
+  adjacent screen directions (e.g. Up + Right) then collapses to a single
+  grid axis, same as pressing one key in grid mode.
+
+Not saved: it always starts in grid mode. `GRID_DIRECTIONS` and
+`SCREEN_DIRECTIONS` in `src/entities/player.js` are the two key → [dx, dz]
+tables; `Game.movementMode` picks between them each tick.
 
 ### Look
 
@@ -130,9 +148,10 @@ A DOM overlay on the stage, sized in 1080p pixels (`--u`), all text from
 |---|---|
 | Top left | Integrity: label over a row of slanted cyan cells, one per point. A lost cell flashes white and empties; at 2 or less the bar turns magenta and blinks. |
 | Top center | Banner: a title decoding from glyphs (0.45 s), holding (1.8 s) and fading (0.7 s), with an optional smaller line below, in its own color. On entering a room (not on respawn) it shows the room name and the biome name in the biome color; later pickups (e.g. a spell installed) use it too. A new banner replaces the one showing. |
-| Top right | Game name and version; for now the dev readout below it (moves to debug mode in step 8). |
+| Top right | Game name and version; the debug readout (F3) shows below it. |
 | Bottom left | Terminal: lime lines typed at 40 characters/s with a block cursor, kept 4 s, then faded; at most 4 lines. Printed on start, death, respawn and when a crate plugs a hole. |
 | Bottom center | Fullscreen hint while the stage has fewer than 1080 physical pixels of height and the page is not fullscreen; shown for 8 s each time it becomes needed. F toggles fullscreen. |
+| Bottom right | Movement mode tag (see below), always shown; G switches modes. |
 
 Any module prints through `src/core/messages.js`: `say('msg.plug')` for a
 terminal line, `announce('banner.room', { room }, { sub, subValues, color })`

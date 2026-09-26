@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import STRINGS from '../data/strings.json' with { type: 'json' };
+import { takeMessages } from '../src/core/messages.js';
 import { loadGameData } from '../src/data/load.js';
 import { Game } from '../src/game.js';
 
@@ -56,4 +57,18 @@ test('debugJumpRoom is ignored during a room transition', () => {
   game.transition = { phase: 'out', tick: 0, exit: {} };
   assert.equal(game.debugJumpRoom(1), false);
   assert.equal(game.room.id, 'alpha');
+});
+
+test('toggleMovementMode starts grid, flips both ways and announces the change (D38)', () => {
+  const game = new Game(content());
+  takeMessages();
+  assert.equal(game.movementMode, 'grid');
+
+  game.toggleMovementMode();
+  assert.equal(game.movementMode, 'screen');
+  assert.deepEqual(takeMessages(), [{ key: 'msg.movementScreen', values: undefined }]);
+
+  game.toggleMovementMode();
+  assert.equal(game.movementMode, 'grid');
+  assert.deepEqual(takeMessages(), [{ key: 'msg.movementGrid', values: undefined }]);
 });

@@ -5,6 +5,8 @@
     "game.title": "NEONMANCER",
     "game.version": "v{version}",
     "hud.integrity": "INTEGRITY",
+    "hud.movementGrid": "GRID MOVE (G)",
+    "hud.movementScreen": "SCREEN MOVE (G)",
     "hint.fullscreen": "PRESS F FOR FULLSCREEN",
     "banner.room": "{room}",
     "banner.biome": "{biome}",
@@ -12,6 +14,8 @@
     "msg.welcome": "> WELCOME, WIZARD. MIND THE GAPS.",
     "msg.die": "> FATAL: WIZARD FELL OUT OF BOUNDS",
     "msg.respawn": "> RECOMPILING WIZARD... OK",
-    "msg.plug": "> HOLE PATCHED"
+    "msg.plug": "> HOLE PATCHED",
+    "msg.movementGrid": "> MOVEMENT: GRID-ALIGNED",
+    "msg.movementScreen": "> MOVEMENT: SCREEN-RELATIVE"
   }
 }

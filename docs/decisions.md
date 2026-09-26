@@ -331,3 +331,16 @@ exactly like a normal entry.
 **Why:** Phase 2's hazards and enemies will call the same `hurt()`, so the
 debug key exercises the real damage path instead of a separate one that
 could drift from it.
+
+### D38 — 2026-09-26 — G toggles screen-relative movement, arrives ahead of the settings menu
+A second key → direction table (`SCREEN_DIRECTIONS` in
+`src/entities/player.js`) moves the wizard the way the key points on screen
+instead of along one grid axis. `G` toggles `Game.movementMode` between
+`'grid'` (default) and `'screen'`; it is not saved and always starts in grid
+mode. A terminal message and a small permanent HUD tag (bottom right) show
+the active mode, since it changes how every key behaves.
+**Why:** D23 already flagged screen-relative movement as a possible option
+"with the settings menu"; the author wants it sooner, as a plain toggle, for
+players who find grid-aligned controls harder to read. Not saving it keeps
+the access-key format (CLAUDE.md §8) untouched; it can move into a real
+settings menu in Phase 4 without changing the underlying direction tables.

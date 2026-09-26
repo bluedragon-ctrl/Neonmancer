@@ -18,6 +18,7 @@ export const ACTIONS = [
   'spellPrev',
   'pause',
   'map',
+  'movementMode',
   'debug',
   'debugRoomNext',
   'debugRoomPrev',
@@ -38,6 +39,7 @@ export const DEFAULT_BINDINGS = {
   spellPrev: ['KeyQ'],
   pause: ['Escape', 'KeyP'],
   map: ['KeyM'],
+  movementMode: ['KeyG'],
   debug: ['F3'],
   // Only acted on while debug mode is on (src/debug/overlay.js).
   debugRoomNext: ['BracketRight'],

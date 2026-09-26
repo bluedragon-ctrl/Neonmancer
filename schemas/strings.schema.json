@@ -18,6 +18,8 @@
         "game.title",
         "game.version",
         "hud.integrity",
+        "hud.movementGrid",
+        "hud.movementScreen",
         "hint.fullscreen",
         "banner.room",
         "banner.biome",
@@ -25,12 +27,16 @@
         "msg.welcome",
         "msg.die",
         "msg.respawn",
-        "msg.plug"
+        "msg.plug",
+        "msg.movementGrid",
+        "msg.movementScreen"
       ],
       "properties": {
         "game.title": { "type": "string", "description": "Game name in the HUD corner." },
         "game.version": { "type": "string", "description": "Version next to the name; {version} is the game version." },
         "hud.integrity": { "type": "string", "description": "Label of the integrity (health) bar." },
+        "hud.movementGrid": { "type": "string", "description": "Persistent HUD tag while movement is grid-aligned (default)." },
+        "hud.movementScreen": { "type": "string", "description": "Persistent HUD tag while movement is screen-relative." },
         "hint.fullscreen": { "type": "string", "description": "Hint shown while the game is drawn below 1080 pixels high." },
         "banner.room": { "type": "string", "description": "Banner on entering a room; {room} is the room name." },
         "banner.biome": { "type": "string", "description": "Line under the room banner; {biome} is the biome name." },
@@ -38,7 +44,9 @@
         "msg.welcome": { "type": "string", "description": "Second terminal message when the game starts." },
         "msg.die": { "type": "string", "description": "Terminal message when the wizard dies." },
         "msg.respawn": { "type": "string", "description": "Terminal message when the wizard recompiles at the room entrance." },
-        "msg.plug": { "type": "string", "description": "Terminal message when a pushed object fills a hole." }
+        "msg.plug": { "type": "string", "description": "Terminal message when a pushed object fills a hole." },
+        "msg.movementGrid": { "type": "string", "description": "Terminal message when movement switches to grid-aligned." },
+        "msg.movementScreen": { "type": "string", "description": "Terminal message when movement switches to screen-relative." }
       }
     }
   }

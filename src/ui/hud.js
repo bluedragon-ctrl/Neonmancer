@@ -28,7 +28,8 @@ export class Hud {
       <div class="brand"><span class="brand-title"></span> <span class="brand-version"></span></div>
       <div class="hud-banner"><div class="hud-banner-title"></div><div class="hud-banner-sub"></div></div>
       <div class="hud-terminal"></div>
-      <div class="hud-hint"></div>`,
+      <div class="hud-hint"></div>
+      <div class="hud-movement"></div>`,
     );
     const find = (selector) => root.querySelector(selector);
     find('.hud-label').textContent = this.text('hud.integrity');
@@ -42,6 +43,8 @@ export class Hud {
     this.bannerSub = find('.hud-banner-sub');
     this.terminalBox = find('.hud-terminal');
     this.hint = find('.hud-hint');
+    this.movementTag = find('.hud-movement');
+    this.movementMode = null;
 
     this.cells = [];
     this.integrity = null;
@@ -84,6 +87,16 @@ export class Hud {
     });
     this.integrityBox.classList.toggle('low', value > 0 && value <= LOW_INTEGRITY);
     this.integrity = value;
+  }
+
+  /**
+   * Persistent corner tag naming the active movement scheme (D38).
+   * @param {'grid'|'screen'} mode
+   */
+  setMovementMode(mode) {
+    if (mode === this.movementMode) return;
+    this.movementMode = mode;
+    this.movementTag.textContent = this.text(mode === 'screen' ? 'hud.movementScreen' : 'hud.movementGrid');
   }
 
   /**
