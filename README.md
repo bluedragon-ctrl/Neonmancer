@@ -8,7 +8,8 @@ and collect key fragments to reboot the Grid.
 > Status: early development. Phase 1 (v0.1.0, foundations) is done: the
 > wizard walks, jumps, pushes crates and explores three connected test
 > rooms, with an integrity HUD, room banners and terminal messages; no goal
-> yet. Next: Phase 2 (hazards, combat, room editor).
+> yet. Next: Phase 2 (hazards, combat, room editor), planned step by step in
+> [docs/design.md](docs/design.md#phase-2-v02-plan).
 > Latest `main` build: https://bluedragon-ctrl.github.io/Neonmancer/
 
 ## Requirements

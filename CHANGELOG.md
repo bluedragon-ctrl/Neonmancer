@@ -11,6 +11,8 @@ and the project uses [Semantic Versioning](https://semver.org/).
   through `tools/run-tests.js`, which lists the test files itself.
 
 ### Changed
+- Phase 2 planned step by step (docs/design.md, D43); biome environmental
+  effects moved to Phase 4.
 - Versioning (D42): `package.json` holds the phase (MAJOR.MINOR.0) and
   the patch number counts pull requests merged since the phase's tag,
   computed at build time.
