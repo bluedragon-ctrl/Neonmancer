@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { groundBelow, moveAxis } from '../src/physics/collision.js';
 import { JUMP_SPEED, PLAYER, Player } from '../src/entities/player.js';
 import { Grid } from '../src/world/grid.js';
-import { lerpAngle, lerpPosition, shadowScale } from '../src/render/entity-view.js';
+import { lerpAngle, lerpPosition, shadowScale } from '../src/render/interp.js';
 import { WIZARD, wizardParts } from '../src/render/wizard.js';
 
 const HITBOX = [0.6, 1.5, 0.6];
@@ -120,7 +120,7 @@ test('screen-relative movement: up moves straight up-screen (both −x and −z)
   const player = standing(g, [8, 0, 8]);
   const inp = input(['up']);
   for (let i = 0; i < 30; i++) {
-    player.update(inp, g, [], false, 'screen');
+    player.update(inp, g, { movementMode: 'screen' });
     inp.next();
   }
   assert.ok(player.pos[0] < 8 && player.pos[2] < 8, 'moved toward -x and -z');
@@ -132,7 +132,7 @@ test('screen-relative movement: two adjacent screen keys collapse to one grid ax
   const player = standing(g, [8, 0, 8]);
   const inp = input(['up', 'right']); // screen up-right collapses to grid Right (−z only)
   for (let i = 0; i < 30; i++) {
-    player.update(inp, g, [], false, 'screen');
+    player.update(inp, g, { movementMode: 'screen' });
     inp.next();
   }
   assert.equal(player.pos[0], 8);
@@ -218,7 +218,7 @@ test('debug invincibility: standing on a hole never kills', () => {
   const events = [];
   const inp = input(['down']);
   for (let i = 0; i < 40; i++) {
-    events.push(player.update(inp, g, [], true)); // Down = +x, invincible
+    events.push(player.update(inp, g, { invincible: true })); // Down = +x, invincible
     inp.next();
   }
   assert.ok(!events.includes('die'));

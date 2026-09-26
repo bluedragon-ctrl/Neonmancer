@@ -44,7 +44,7 @@ export const JUMP_SPEED = Math.sqrt(2 * PLAYER.gravity * PLAYER.jumpHeight);
  * Movement [dx, dz] per action along the grid axes, the default (D23):
  * Right = −z (screen up-right), Up = −x (screen up-left), Left = +z, Down = +x.
  */
-const GRID_DIRECTIONS = { up: [-1, 0], down: [1, 0], left: [0, 1], right: [0, -1] };
+const GRID_DIRECTIONS = Object.entries({ up: [-1, 0], down: [1, 0], left: [0, 1], right: [0, -1] });
 
 /**
  * Movement [dx, dz] per action relative to the screen (D38): each key moves
@@ -53,7 +53,7 @@ const GRID_DIRECTIONS = { up: [-1, 0], down: [1, 0], left: [0, 1], right: [0, -1
  * (e.g. screen "up" = grid Up + grid Right), so combining two keys collapses
  * to a single grid axis, as classic isometric controls do.
  */
-const SCREEN_DIRECTIONS = { up: [-1, -1], down: [1, 1], left: [-1, 1], right: [1, -1] };
+const SCREEN_DIRECTIONS = Object.entries({ up: [-1, -1], down: [1, 1], left: [-1, 1], right: [1, -1] });
 
 /** Feet this close to y = 0 count as standing on the floor. */
 const FLOOR_EPS = 1e-4;
@@ -101,6 +101,12 @@ export class Player {
     this.pushIntent = null;
   }
 
+  /** Keep this tick's start for render interpolation (copied in place: no new array every tick). */
+  savePrevious() {
+    for (let i = 0; i < 3; i++) this.prev[i] = this.pos[i];
+    this.prevFacing = this.facing;
+  }
+
   /** Collision box, so objects can rest on and avoid the wizard. */
   box() {
     return bodyBox(this.pos, this.size);
@@ -110,14 +116,14 @@ export class Player {
    * One fixed tick.
    * @param {{ down(a: string): boolean, pressed(a: string): boolean }} input
    * @param {import('../world/grid.js').Grid} grid
-   * @param {Iterable<{ box(): number[][] }>} [bodies] pushable objects
-   * @param {boolean} [invincible] debug mode: holes never kill
-   * @param {'grid'|'screen'} [movementMode] which key → direction mapping to use (D38)
+   * @param {object} [options]
+   * @param {Iterable<{ box(): number[][] }>} [options.bodies] pushable objects
+   * @param {boolean} [options.invincible] debug mode: holes never kill
+   * @param {'grid'|'screen'} [options.movementMode] which key → direction mapping to use (D38)
    * @returns {string|null} event: 'jump', 'land', 'die', 'respawn' or null
    */
-  update(input, grid, bodies = [], invincible = false, movementMode = 'grid') {
-    this.prev = [...this.pos];
-    this.prevFacing = this.facing;
+  update(input, grid, { bodies = [], invincible = false, movementMode = 'grid' } = {}) {
+    this.savePrevious();
     this.pushIntent = null;
 
     if (this.dead) {
@@ -137,10 +143,10 @@ export class Player {
     let event = null;
 
     // Walk along the grid axes, or screen-relative (D38); diagonals are normalised.
-    const DIRECTIONS = movementMode === 'screen' ? SCREEN_DIRECTIONS : GRID_DIRECTIONS;
+    const directions = movementMode === 'screen' ? SCREEN_DIRECTIONS : GRID_DIRECTIONS;
     let dx = 0;
     let dz = 0;
-    for (const [action, [ax, az]] of Object.entries(DIRECTIONS)) {
+    for (const [action, [ax, az]] of directions) {
       if (input.down(action)) {
         dx += ax;
         dz += az;

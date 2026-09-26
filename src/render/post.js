@@ -10,13 +10,14 @@ import { BloomEffect, EffectComposer, EffectPass, RenderPass } from 'postprocess
  * @param {import('three').WebGLRenderer} renderer
  * @param {import('three').Scene} scene
  * @param {import('three').Camera} camera
+ * @param {{ multisampling?: number }} [options] MSAA samples, 0 for none
  */
-export function createComposer(renderer, scene, camera) {
+export function createComposer(renderer, scene, camera, { multisampling = 4 } = {}) {
   // Half float keeps colors brighter than 1 for the bloom; multisampling
   // smooths the line edges.
   const composer = new EffectComposer(renderer, {
     frameBufferType: HalfFloatType,
-    multisampling: 4,
+    multisampling,
   });
   composer.addPass(new RenderPass(scene, camera));
 

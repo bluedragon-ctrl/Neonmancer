@@ -4,7 +4,7 @@
  */
 import { DT } from './core/loop.js';
 import { announce, say } from './core/messages.js';
-import { sideAxes, withExitDefaults } from './data/room-data.js';
+import { isBackSide, sideAxes, withExitDefaults } from './data/room-data.js';
 import { PLAYER, Player } from './entities/player.js';
 import { Pushable } from './entities/pushable.js';
 import { groundBelow, surfaceBelow } from './physics/collision.js';
@@ -44,7 +44,8 @@ export class Game {
    * wizard at `pos`; he respawns at the room's own `reset` point instead
    * (D39), wherever he entered.
    * @param {string} id room id
-   * @param {number[]} [pos] feet center to appear at; the room's own spawn by default
+   * @param {number[]} [pos] feet center to appear at (e.g. arriving through an
+   *   exit, mid-jump); the room's own spawn by default
    */
   enterRoom(id, pos) {
     // Announce the room when it is a different one (not on a respawn).
@@ -56,6 +57,8 @@ export class Game {
     this.room = buildRoom(this.content.rooms.get(id), this.content);
     this.grid = new Grid(this.room);
     this.pushables = this.room.objects.filter((o) => o.kind === 'pushable').map((o) => new Pushable(o));
+    /** The pushables in update order, lowest first; re-sorted in place every tick. */
+    this.updateOrder = [...this.pushables];
     this.player = new Player(pos ?? this.room.spawn, this.room.reset);
     /** Everything objects collide with: the objects themselves and the wizard. */
     this.bodies = [...this.pushables, this.player];
@@ -71,12 +74,9 @@ export class Game {
     const { pos, vy, facing } = this.player;
     const target = this.content.rooms.get(link.room);
     const to = withExitDefaults(target.exits.find((e) => e.id === link.exit));
-    const arrived = arrival(exit, pos, to, target.size);
 
-    this.enterRoom(link.room, arrived.spawn);
+    this.enterRoom(link.room, arrival(exit, pos, to, target.size));
     const player = this.player;
-    player.pos = arrived.pos;
-    player.prev = [...arrived.pos];
     player.vy = vy;
     player.facing = player.prevFacing = player.targetFacing = facing;
   }
@@ -126,7 +126,11 @@ export class Game {
     if (this.transition && ++this.transition.tick >= TRANSITION.inTicks) this.transition = null;
 
     const events = [];
-    const playerEvent = this.player.update(input, this.grid, this.pushables, this.invincible, this.movementMode);
+    const playerEvent = this.player.update(input, this.grid, {
+      bodies: this.pushables,
+      invincible: this.invincible,
+      movementMode: this.movementMode,
+    });
 
     // Falling into a hole drains all integrity. Respawning restores it and
     // resets the room, so no puzzle stays broken.
@@ -152,8 +156,8 @@ export class Game {
     if (intent && intent.body.push(intent.dir, this)) events.push('push');
 
     // Lower objects first, so a stack settles in one tick.
-    const order = [...this.pushables].sort((a, b) => a.pos[1] - b.pos[1]);
-    for (const pushable of order) {
+    this.updateOrder.sort((a, b) => a.pos[1] - b.pos[1]);
+    for (const pushable of this.updateOrder) {
       const event = pushable.update(this);
       if (event) events.push(event);
       if (event === 'plug') say('msg.plug');
@@ -179,13 +183,12 @@ export class Game {
   fadeOut() {
     const { exit } = this.transition;
     const player = this.player;
-    player.prev = [...player.pos];
-    player.prevFacing = player.facing;
-    for (const pushable of this.pushables) pushable.prev = [...pushable.pos];
+    player.savePrevious();
+    for (const pushable of this.pushables) pushable.savePrevious();
 
     if (++this.transition.tick < TRANSITION.outTicks) {
       const { cross } = sideAxes(exit.side);
-      player.pos[cross] += (exit.side.startsWith('-') ? -1 : 1) * PLAYER.speed * DT;
+      player.pos[cross] += (isBackSide(exit.side) ? -1 : 1) * PLAYER.speed * DT;
       return [];
     }
     this.travel(exit);

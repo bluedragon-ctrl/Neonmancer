@@ -4,19 +4,9 @@
  * a bright rim and short corner lines that quickly fade to black for depth.
  * There is no real space below the floor: the pit is only a look.
  */
-import {
-  BufferGeometry,
-  Color,
-  DoubleSide,
-  Float32BufferAttribute,
-  Group,
-  Mesh,
-  MeshBasicMaterial,
-} from 'three';
-import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
-import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
-import { flattenSegments } from './edges.js';
-import { PALETTE, lineMaterial } from './neon.js';
+import { Color, Group } from 'three';
+import { cellKey } from '../data/room-data.js';
+import { PALETTE, fadingLines, lineMaterial, neonLines, shadedFaces } from './neon.js';
 
 /** How far the pit walls reach below the floor, in blocks. */
 const PIT_DEPTH = 1.2;
@@ -31,13 +21,14 @@ export const DROP_LENGTH = 0.45;
  * @returns {number[][][]} sides as [[x1, z1], [x2, z2]] on the floor
  */
 export function holeSides(holes) {
-  const isHole = new Set(holes.map(([x, z]) => `${x},${z}`));
+  const hole = new Set(holes.map(cellKey));
+  const isHole = (x, z) => hole.has(cellKey([x, z]));
   const sides = [];
   for (const [x, z] of holes) {
-    if (!isHole.has(`${x - 1},${z}`)) sides.push([[x, z], [x, z + 1]]);
-    if (!isHole.has(`${x + 1},${z}`)) sides.push([[x + 1, z], [x + 1, z + 1]]);
-    if (!isHole.has(`${x},${z - 1}`)) sides.push([[x, z], [x + 1, z]]);
-    if (!isHole.has(`${x},${z + 1}`)) sides.push([[x, z + 1], [x + 1, z + 1]]);
+    if (!isHole(x - 1, z)) sides.push([[x, z], [x, z + 1]]);
+    if (!isHole(x + 1, z)) sides.push([[x + 1, z], [x + 1, z + 1]]);
+    if (!isHole(x, z - 1)) sides.push([[x, z], [x + 1, z]]);
+    if (!isHole(x, z + 1)) sides.push([[x, z + 1], [x + 1, z + 1]]);
   }
   return sides;
 }
@@ -79,29 +70,18 @@ export function createHoleView(holes, color) {
     vertex(x + 1, y, z + 1, black);
     vertex(x, y, z + 1, black);
   }
-  const pit = new BufferGeometry();
-  pit.setAttribute('position', new Float32BufferAttribute(positions, 3));
-  pit.setAttribute('color', new Float32BufferAttribute(colors, 3));
-  const pitMaterial = new MeshBasicMaterial({
-    vertexColors: true,
-    side: DoubleSide,
-    polygonOffset: true,
-    polygonOffsetFactor: 1,
-    polygonOffsetUnits: 1,
-  });
-  group.add(new Mesh(pit, pitMaterial));
+  group.add(shadedFaces(positions, colors));
 
   // Bright rim along the floor edge of the hole.
-  const rim = new LineSegmentsGeometry();
-  rim.setPositions(flattenSegments(sides.map(([[x1, z1], [x2, z2]]) => [[x1, 0, z1], [x2, 0, z2]])));
-  const rimLines = new LineSegments2(rim, lineMaterial({ color, width: 2.5, brightness: 1.6 }));
+  const rim = sides.map(([[x1, z1], [x2, z2]]) => [[x1, 0, z1], [x2, 0, z2]]);
+  const rimLines = neonLines(rim, lineMaterial({ color, width: 2.5, brightness: 1.6 }));
   rimLines.renderOrder = 2;
   group.add(rimLines);
 
   // Short vertical lines at the rim corners, fading to black quickly: the
   // eye reads them as depth.
   const corners = new Map();
-  for (const side of sides) for (const [x, z] of side) corners.set(`${x},${z}`, [x, z]);
+  for (const side of sides) for (const corner of side) corners.set(cellKey(corner), corner);
   group.add(fadingDrops([...corners.values()], 0, color, 0.6));
 
   return group;
@@ -118,11 +98,6 @@ export function createHoleView(holes, color) {
  * @param {number} [width] in pixels at 1080p
  */
 export function fadingDrops(corners, top, color, brightness, width = 1.5) {
-  const glow = new Color(color).multiplyScalar(brightness);
-  const drops = new LineSegmentsGeometry();
-  drops.setPositions(flattenSegments(corners.map(([x, z]) => [[x, top, z], [x, top - DROP_LENGTH, z]])));
-  drops.setColors(corners.flatMap(() => [glow.r, glow.g, glow.b, 0, 0, 0]));
-  const material = lineMaterial({ color: 0xffffff, width });
-  material.vertexColors = true;
-  return new LineSegments2(drops, material);
+  const drops = corners.map(([x, z]) => [[x, top, z], [x, top - DROP_LENGTH, z]]);
+  return fadingLines(drops, { color, width, brightness });
 }

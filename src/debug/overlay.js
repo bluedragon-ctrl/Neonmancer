@@ -6,7 +6,7 @@
  * only draws the boxes and tracks whether the mode is on.
  */
 import { BoxGeometry, EdgesGeometry, Group, LineBasicMaterial, LineSegments } from 'three';
-import { lerpPosition } from '../render/entity-view.js';
+import { lerpPosition } from '../render/interp.js';
 import { PALETTE } from '../render/neon.js';
 
 /** Unit cube edges, reused for every box: only position/scale differ. */

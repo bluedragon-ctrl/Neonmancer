@@ -14,7 +14,7 @@ function world({ size = [8, 4, 8], cells = [], holes = [], crates = [], spawn = 
   const player = new Player(spawn);
   const w = { grid, pushables, player, bodies: [...pushables, player], events: [] };
   w.tick = (inp = idle) => {
-    const e = player.update(inp, grid, pushables);
+    const e = player.update(inp, grid, { bodies: pushables });
     if (e) w.events.push(e);
     if (player.pushIntent && player.pushIntent.body.push(player.pushIntent.dir, w)) w.events.push('push');
     for (const p of [...pushables].sort((a, b) => a.pos[1] - b.pos[1])) {

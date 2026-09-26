@@ -4,21 +4,11 @@
  * ticks, so motion is smooth at any refresh rate.
  */
 import { AdditiveBlending, Color, Group, Mesh, Plane, PlaneGeometry, ShaderMaterial, Vector3 } from 'three';
-import { PALETTE } from './neon.js';
+import { PALETTE, shared } from './neon.js';
 import { fadingDrops } from './hole-view.js';
+import { lerpAngle, lerpPosition, shadowScale } from './interp.js';
 import { createObjectView } from './room-view.js';
 import { createWizard } from './wizard.js';
-
-/** Linear interpolation between two positions. */
-export function lerpPosition(prev, curr, alpha) {
-  return prev.map((p, i) => p + (curr[i] - p) * alpha);
-}
-
-/** Interpolate angles the short way round. */
-export function lerpAngle(a, b, t) {
-  const diff = Math.atan2(Math.sin(b - a), Math.cos(b - a));
-  return a + diff * t;
-}
 
 /** Shadow lift above the surface, so it never fights with the floor or block tops. */
 const SHADOW_LIFT = 0.01;
@@ -62,19 +52,32 @@ export function createDropShadow(color) {
     depthWrite: false,
     blending: AdditiveBlending,
   });
-  const mesh = new Mesh(new PlaneGeometry(1, 1), material);
+  const mesh = new Mesh(SHADOW_PLANE, material);
   mesh.rotation.x = -Math.PI / 2;
   mesh.renderOrder = 1;
   return mesh;
 }
 
+/** Unit plane shared by every drop shadow. */
+const SHADOW_PLANE = shared(new PlaneGeometry(1, 1));
+
 /**
- * Size and brightness of a drop shadow for a body `height` units above the
- * surface (pure, tested).
+ * Show a drop shadow on the surface at height `ground` under a body whose
+ * bottom is at `bottom`, or hide it when there is none (ground null).
+ * @param {Mesh} shadow from createDropShadow()
+ * @param {number} x center of the shadow
+ * @param {number} z
+ * @param {number} bottom height of the body's bottom
+ * @param {number|null} ground
+ * @param {number} diameter at the surface
  */
-export function shadowScale(height) {
-  const t = Math.min(Math.max(height, 0) / 3, 1);
-  return { scale: 1 - 0.45 * t, opacity: 1 - 0.6 * t };
+function placeShadow(shadow, x, z, bottom, ground, diameter) {
+  shadow.visible = ground !== null;
+  if (ground === null) return;
+  const { scale, opacity } = shadowScale(bottom - ground);
+  shadow.position.set(x, ground + SHADOW_LIFT, z);
+  shadow.scale.set(diameter * scale, diameter * scale, 1);
+  shadow.material.uniforms.uOpacity.value = opacity;
 }
 
 export class PlayerView {
@@ -98,14 +101,7 @@ export class PlayerView {
     this.wizard.rotation.y = lerpAngle(player.prevFacing, player.facing, alpha);
 
     const ground = player.dead ? null : this.game.shadowHeight(pos, player.size);
-    this.shadow.visible = ground !== null;
-    if (ground !== null) {
-      const { scale, opacity } = shadowScale(pos[1] - ground);
-      const diameter = player.size[0] * 1.5 * scale;
-      this.shadow.position.set(pos[0], ground + SHADOW_LIFT, pos[2]);
-      this.shadow.scale.set(diameter, diameter, 1);
-      this.shadow.material.uniforms.uOpacity.value = opacity;
-    }
+    placeShadow(this.shadow, pos[0], pos[2], pos[1], ground, player.size[0] * 1.5);
   }
 }
 
@@ -132,11 +128,9 @@ export class PushableView {
       for (const material of [node.material ?? []].flat()) material.clippingPlanes = FLOOR_CLIP;
     });
     this.shadow = createDropShadow(pushable.object.color);
-    // Shown once the object plugs a hole: its vertical edges fade into the pit.
-    const corners = [[0, 0], [1, 0], [0, 1], [1, 1]];
-    this.plugDrops = fadingDrops(corners, 1, pushable.object.color, 1, 2.5);
-    this.plugDrops.visible = false;
-    this.group.add(this.block, this.shadow, this.plugDrops);
+    /** Made once the object plugs a hole (most never do): its vertical edges fade into the pit. */
+    this.plugDrops = null;
+    this.group.add(this.block, this.shadow);
   }
 
   /** @param {number} alpha interpolation factor 0..1 between the last two ticks */
@@ -144,18 +138,15 @@ export class PushableView {
     const { pushable } = this;
     const pos = lerpPosition(pushable.prev, pushable.pos, alpha);
     this.block.position.set(pos[0], pos[1], pos[2]);
-    this.plugDrops.visible = pushable.state === 'plugged';
-    this.plugDrops.position.set(pos[0], pos[1], pos[2]);
+    if (pushable.state === 'plugged' && !this.plugDrops) {
+      const corners = [[0, 0], [1, 0], [0, 1], [1, 1]];
+      this.plugDrops = fadingDrops(corners, 1, pushable.object.color, 1, 2.5);
+      this.plugDrops.position.set(...pushable.pos); // a plugged object never moves again
+      this.group.add(this.plugDrops);
+    }
 
     // Drop shadow only while falling (CLAUDE.md §4).
     const ground = pushable.state === 'fall' ? this.game.objectShadowHeight(pushable, pos) : null;
-    this.shadow.visible = ground !== null;
-    if (ground !== null) {
-      const { scale, opacity } = shadowScale(pos[1] - ground);
-      const diameter = 1.3 * scale;
-      this.shadow.position.set(pos[0] + 0.5, ground + SHADOW_LIFT, pos[2] + 0.5);
-      this.shadow.scale.set(diameter, diameter, 1);
-      this.shadow.material.uniforms.uOpacity.value = opacity;
-    }
+    placeShadow(this.shadow, pos[0] + 0.5, pos[2] + 0.5, pos[1], ground, 1.3);
   }
 }

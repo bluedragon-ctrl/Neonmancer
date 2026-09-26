@@ -39,14 +39,14 @@ export class Pushable {
     this.target = null;
   }
 
+  /** Keep this tick's start for render interpolation (copied in place: no new array every tick). */
+  savePrevious() {
+    for (let i = 0; i < 3; i++) this.prev[i] = this.pos[i];
+  }
+
   /** Collision box [[minX, maxX], [minY, maxY], [minZ, maxZ]]. */
   box() {
-    const [x, y, z] = this.pos;
-    return [
-      [x, x + 1],
-      [y, y + 1],
-      [z, z + 1],
-    ];
+    return boxAt(this.pos);
   }
 
   /**
@@ -92,7 +92,7 @@ export class Pushable {
    * @returns {string|null} event: 'land', 'plug' or null
    */
   update({ grid, bodies }) {
-    this.prev = [...this.pos];
+    this.savePrevious();
 
     if (this.state === 'slide') {
       const step = PUSHABLE.slideSpeed * DT;
