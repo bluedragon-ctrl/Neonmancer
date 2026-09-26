@@ -535,8 +535,9 @@ the editor stays open. Edits are kept per room until the page is closed.
   cell, standing on the layer; erasing with Reset removes the reset point
   (it falls back to spawn). Both show as dashed boxes of the wizard's size
   (spawn cyan, reset magenta).
-- The panel also sets the room's name, biome and size (a smaller room drops
-  what ends up outside), and has Undo, Redo, Save or Export, and Revert
+- The panel, from the top, sets the room's name, biome and size (applied
+  on Enter or leaving the field; 2–6 high, width + depth at most 32; a
+  smaller room drops what ends up outside) and the layer, and has Undo, Redo, Save or Export, and Revert
   (back to the last save). Errors are listed live, the way the game would
   report them at load time.
 - **Save** (dev server): the server checks the room with the rest of

@@ -3,6 +3,7 @@
  * editor's tools make to it, undo and redo, and whether it changed since
  * it was last saved. Plain logic, no browser, so tests can drive it.
  */
+import { MAX_ROOM_FOOTPRINT } from '../core/rules.js';
 import { validateData } from '../data/validate.js';
 import { Boxes } from './boxes.js';
 import { formatJson } from './format-json.js';
@@ -296,4 +297,17 @@ function pick(item, keys) {
  */
 export function roomErrors(files, room) {
   return validateData({ ...files, [`rooms/${room.id}.json`]: room });
+}
+
+/**
+ * Why a room size can't be used, or null: the limits of the room schema
+ * and the camera (CLAUDE.md §4).
+ * @param {number[]} size [x, y, z]
+ */
+export function sizeProblem([w, h, d]) {
+  if (![w, h, d].every(Number.isInteger)) return 'Size: whole numbers only.';
+  if (h < 2 || h > 6) return 'Size: height is 2 to 6.';
+  if (w < 1 || d < 1) return 'Size: width and depth are at least 1.';
+  if (w + d > MAX_ROOM_FOOTPRINT) return `Size: width + depth is at most ${MAX_ROOM_FOOTPRINT}.`;
+  return null;
 }

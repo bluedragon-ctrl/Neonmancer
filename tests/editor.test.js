@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Boxes } from '../src/editor/boxes.js';
 import { formatJson } from '../src/editor/format-json.js';
-import { RoomEdit, roomErrors } from '../src/editor/room-edit.js';
+import { RoomEdit, roomErrors, sizeProblem } from '../src/editor/room-edit.js';
 import { saveRoom } from '../tools/room-save.js';
 import { CRUMBLE, dataFiles, roomFile } from './helpers.js';
 
@@ -217,4 +217,14 @@ test('saveRoom writes a valid room and refuses an invalid, unknown or badly name
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
+});
+
+test('sizeProblem keeps room sizes within the schema and camera limits', () => {
+  assert.equal(sizeProblem([12, 5, 12]), null);
+  assert.equal(sizeProblem([16, 6, 16]), null);
+  assert.match(sizeProblem([12, 7, 12]), /height/);
+  assert.match(sizeProblem([12, 1, 12]), /height/);
+  assert.match(sizeProblem([20, 4, 13]), /width \+ depth/);
+  assert.match(sizeProblem([0, 4, 8]), /at least 1/);
+  assert.match(sizeProblem([8.5, 4, 8]), /whole numbers/);
 });

@@ -92,11 +92,17 @@ export class EditorPanel {
       this.biomeSelect.append(option);
     }
     this.biomeSelect.addEventListener('change', () => on.biome(this.biomeSelect.value));
+    // A size takes effect as soon as a field is committed (Enter, or leaving it).
     this.sizeInputs = ['x', 'y', 'z'].map(() => Object.assign(el('input', 'editor-size'), { type: 'number', min: '1', step: '1' }));
+    for (const input of this.sizeInputs) {
+      input.addEventListener('change', () => {
+        // Let go first, so a refused size snaps back to the room's own.
+        input.blur();
+        on.size(this.sizeInputs.map((field) => Number(field.value)));
+      });
+    }
     const sizeRow = el('div', 'editor-row');
-    const apply = el('button', 'editor-small', 'Set');
-    apply.addEventListener('click', () => on.size(this.sizeInputs.map((input) => Number(input.value))));
-    sizeRow.append(el('span', 'editor-label', 'Size'), ...this.sizeInputs, apply);
+    sizeRow.append(el('span', 'editor-label', 'Size'), ...this.sizeInputs);
     const room = el('div', 'editor-group');
     room.append(this.row('Name', this.nameInput), this.row('Biome', this.biomeSelect), sizeRow);
 

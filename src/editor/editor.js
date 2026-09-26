@@ -15,7 +15,7 @@ import { isTextField } from '../core/input.js';
 import { formatJson } from './format-json.js';
 import { EditorOverlay } from './overlay.js';
 import { EditorPanel, TOOLS } from './panel.js';
-import { RoomEdit, roomErrors } from './room-edit.js';
+import { RoomEdit, roomErrors, sizeProblem } from './room-edit.js';
 import { downloadRoomFile, saveRoomFile } from './save.js';
 
 /** Block tools and the block type they place. */
@@ -178,14 +178,12 @@ export class Editor {
     this.refresh();
   }
 
-  /** @param {number[]} size */
+  /** @param {number[]} size [x, y, z] as typed in the panel */
   resize(size) {
-    if (!size.every(Number.isInteger)) {
-      this.status = 'Size: whole numbers only.';
-      this.refresh();
-      return;
-    }
-    this.change(() => this.edit.resize(size));
+    const problem = sizeProblem(size);
+    this.status = problem ?? '';
+    if (!problem) this.change(() => this.edit.resize(size));
+    this.refresh();
   }
 
   /** Save the room (dev server) or download it (build). */
