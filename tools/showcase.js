@@ -118,7 +118,7 @@ function buildBlocksInRoom() {
 }
 
 /**
- * Moving platforms on their rails in a 4×4 room corner: one gliding round
+ * Moving platforms on their guide lines in a 4×4 room corner: one gliding round
  * an L-shaped ping-pong path on the floor, a lift going up to a ledge.
  */
 function buildPlatforms() {

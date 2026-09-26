@@ -58,14 +58,16 @@ test('path: the cells a path sweeps, each once', () => {
   ]);
 });
 
-test('rails: two rails with ties along the ground, guide posts up a lift, each drawn once', () => {
-  const across = railSegments(buildTrack([1, 0, 1], { points: [[4, 0, 1]] }));
-  assert.equal(across.length, 4); // 2 rails + 2 ties, though ping-pong runs the leg twice
-  assert.ok(across.every(([a, b]) => a[1] === b[1] && a[1] > 0 && a[1] < 0.1));
+test('guide line: one line through the middle of the path, each leg drawn once', () => {
+  const across = railSegments(buildTrack([1, 0, 1], { points: [[4, 0, 1], [4, 0, 3]] }));
+  assert.equal(across.length, 2); // though ping-pong runs each leg twice
+  const [[a, b]] = across;
+  assert.deepEqual([a[0], a[2], b[0], b[2]], [1.5, 1.5, 4.5, 1.5]);
+  assert.ok(a[1] > 0 && a[1] < 0.1);
 
-  const lift = railSegments(buildTrack([1, 0, 1], { points: [[1, 2, 1]] }));
-  assert.equal(lift.length, 2);
-  for (const [a, b] of lift) assert.deepEqual([a[1], b[1]], [0, 3]); // bottom to the top of the platform at y 2
+  const [[low, high]] = railSegments(buildTrack([1, 0, 1], { points: [[1, 2, 1]] }));
+  assert.deepEqual([low[0], low[2], high[0], high[2]], [1.5, 1.5, 1.5, 1.5]);
+  assert.ok(near(high[1] - low[1], 2));
 });
 
 /**

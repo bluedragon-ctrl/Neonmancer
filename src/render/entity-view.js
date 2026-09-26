@@ -227,8 +227,8 @@ export class PlatformView {
   constructor(game, platform) {
     this.platform = platform;
     this.group = new Group();
-    // The block is built at the origin and moved as a whole; the rails stay
-    // in room coordinates.
+    // The block is built at the origin and moved as a whole; the guide line
+    // stays in room coordinates.
     this.block = createObjectView({ ...platform.object, at: [0, 0, 0] });
     this.rails = createRails(platform.track, platform.object.color);
     this.group.add(this.rails, this.block);
@@ -243,7 +243,7 @@ export class PlatformView {
 }
 
 /**
- * The glowing rails a platform glides on (render/rails.js), dimmer than its
+ * The glowing guide line along a platform's path (render/rails.js), dimmer than its
  * edges so the platform itself stands out.
  * @param {Parameters<typeof railSegments>[0]} track
  * @param {number|string} color

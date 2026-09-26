@@ -154,9 +154,9 @@ follows a path given on the room object.
   and waits; it never kills outright, and he can walk out.
 - Crates on a platform can be pushed only while it stands at a stop (on
   whole cells).
-- **Rails:** dim glowing rails in the platform color along its path: two
-  rails with a cross tie at every point on horizontal legs, two guide
-  posts at the side corners on vertical ones.
+- **Guide line:** one dim glowing line in the platform color through the
+  middle of its path, at the height of its bottom face: a projection of
+  where it moves (a vertical leg runs up through the middle of its column).
 - Validation: points inside the room, legs along one axis, nothing static
   on the path, and no path through the first row inside an exit. Crates on
   the path and holes under it are fine.
@@ -320,7 +320,7 @@ Every step also:
 |---|---|---|
 | 1 | `feat/damage` | Damage from any source through `Game.hurt()`: invulnerability after a hit (~1 s) with the wizard blinking, `hurt` event, HUD hit flash. Integrity 0 kills: the wizard derezzes into pixels (placeholder effect is fine) and recompiles at the room's reset point, like a hole death. |
 | 2 | `feat/hazard-void-blocks` | Hazard and void block types as grid cell types (D40): room data gets a block type, `CELL` codes, their own neon looks. Hazard: touching from any side or standing on it deals 1 damage (then invulnerability). Void: landing on top is instant death; touching a side is safe. |
-| 3 | `feat/moving-blocks` | Shared path format (waypoints, speed, optional pause at ends, loop or ping-pong) in room data; moving platforms as a room object kind (D40) that the wizard and pushables ride; a platform that would push the wizard into something solid pushes him aside, or hurts him if there is no room (never instant death); glowing rails along the path. |
+| 3 | `feat/moving-blocks` | Shared path format (waypoints, speed, optional pause at ends, loop or ping-pong) in room data; moving platforms as a room object kind (D40) that the wizard and pushables ride; a platform that would push the wizard into something solid pushes him aside, or hurts him if there is no room (never instant death); a glowing guide line along the path. |
 | 4 | `feat/collapsing-blocks` | Collapsing blocks as a room object kind: the wizard standing on one starts a short shake, then it vanishes; optional regrow after N seconds (room data). Pushables don't trigger them. |
 | 5 | `feat/bugs` | Enemy types in `defs.json` (speed, health, behavior, color) and an `enemies` list in room data; AI as named behavior modules (`src/ai/`, first `patrol` on the shared path format); bugs don't block movement, touching one hurts; hologram bug model (D22) with a bouncy walk; reset with the room. |
 | 6 | `feat/zap-and-mana` | Mana (energy) on the Player with slow recharge and a HUD bar; `cast` fires Zap the way the wizard faces (same directions as movement); the bolt stops at solids and pushables, one hit kills a bug (pops into pixels). Zap is available from the start (data disks come in Phase 3). |

@@ -478,7 +478,9 @@ shoved clear by at most 0.35 units per tick (along the motion or aside);
 with no room it hurts him through `Game.hurt()` and waits. Paths must not
 cross static blocks or the first row inside an exit; crates on the path
 and holes under it are allowed.
-**Why:** axis-aligned legs keep rails, swept-cell validation and grid
+The path is drawn as one guide line through its middle (author's review:
+rails and guide posts were too busy).
+**Why:** axis-aligned legs keep the guide line, swept-cell validation and grid
 alignment simple, and match how blocks and pushing work. Starting at `at`
 avoids repeating the first point. Waiting instead of pushing crates keeps
 crates on the grid and never forces one into a wall; it also gives a
