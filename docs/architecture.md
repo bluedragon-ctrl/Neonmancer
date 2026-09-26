@@ -84,6 +84,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `tools/check-data.js` | Dev only: Ajv schema check + semantic checks over `data/` |
 | `tools/vite-plugin-data.js` | Dev only: runs the check in the dev server and fails the build on errors |
 | `tools/validate-data.js` | Dev only: `npm run validate:data` for CI |
+| `tools/run-tests.js` | `npm test`: runs `node --test` on an explicit list of `tests/*.test.js` (works on Node 20 and 22+, Windows and Linux) |
 | `tools/game-version.js` | Dev only: the game version for builds, PATCH counted from git merges since the phase tag (D42) |
 | `tools/showcase.html`, `tools/showcase.js` | Asset showcase page: every look on a turntable with the real renderer (also deployed) |
 | `debug/overlay.js` | Debug mode's wireframe collision boxes |

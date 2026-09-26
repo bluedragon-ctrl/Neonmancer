@@ -6,6 +6,10 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- `npm test` failed on Node 22+ (CI) after the Node 20 change: it now runs
+  through `tools/run-tests.js`, which lists the test files itself.
+
 ### Changed
 - Versioning (D42): `package.json` holds the phase (MAJOR.MINOR.0) and
   the patch number counts pull requests merged since the phase's tag,
