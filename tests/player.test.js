@@ -166,6 +166,20 @@ test('standing on a hole kills the player, who respawns at the spawn', () => {
   assert.deepEqual(player.pos, [3.5, 0, 4.5]);
 });
 
+test('debug invincibility: standing on a hole never kills', () => {
+  const g = grid({ holes: [[5, 4]] });
+  const player = standing(g, [3.5, 0, 4.5]);
+  const events = [];
+  const inp = input(['down']);
+  for (let i = 0; i < 40; i++) {
+    events.push(player.update(inp, g, [], true)); // Down = +x, invincible
+    inp.next();
+  }
+  assert.ok(!events.includes('die'));
+  assert.equal(player.dead, false);
+  assert.ok(player.pos[0] > 5, 'walked straight across the hole');
+});
+
 test('grazing a hole edge is safe, and jumping over one is too', () => {
   const g = grid({ holes: [[5, 4]] });
   // Center stays on x < 5: the hitbox overlaps the hole but the player lives.

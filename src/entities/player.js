@@ -91,9 +91,10 @@ export class Player {
    * @param {{ down(a: string): boolean, pressed(a: string): boolean }} input
    * @param {import('../world/grid.js').Grid} grid
    * @param {Iterable<{ box(): number[][] }>} [bodies] pushable objects
+   * @param {boolean} [invincible] debug mode: holes never kill
    * @returns {string|null} event: 'jump', 'land', 'die', 'respawn' or null
    */
-  update(input, grid, bodies = []) {
+  update(input, grid, bodies = [], invincible = false) {
     this.prev = [...this.pos];
     this.prevFacing = this.facing;
     this.pushIntent = null;
@@ -163,7 +164,7 @@ export class Player {
     if (this.grounded && !wasGrounded) event = 'land';
 
     // Standing on a hole at floor level: fall in (D18).
-    if (this.grounded && this.pos[1] < FLOOR_EPS && grid.isHole(this.pos[0], this.pos[2])) {
+    if (this.grounded && this.pos[1] < FLOOR_EPS && grid.isHole(this.pos[0], this.pos[2]) && !invincible) {
       this.dead = true;
       this.deathTimer = PLAYER.deathTicks;
       this.grounded = false;

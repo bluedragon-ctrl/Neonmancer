@@ -223,7 +223,7 @@ body {
   }
 }
 
-/* Temporary dev readout (moves into debug mode), under the brand. */
+/* Debug mode readout (F3), under the brand: hidden until debug mode is on. */
 .readout {
   position: absolute;
   top: calc(84 * var(--u));
@@ -233,7 +233,13 @@ body {
   font-size: calc(17 * var(--u));
   text-align: right;
   color: var(--lime);
-  opacity: 0.6;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.readout.shown {
+  opacity: 0.7;
+  visibility: visible;
 }
 
 /* Startup error screen (e.g. invalid data). Uses vh units: the stage and

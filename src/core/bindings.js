@@ -19,6 +19,10 @@ export const ACTIONS = [
   'pause',
   'map',
   'debug',
+  'debugRoomNext',
+  'debugRoomPrev',
+  'debugInvincible',
+  'debugDamage',
   'fullscreen',
 ];
 
@@ -35,5 +39,10 @@ export const DEFAULT_BINDINGS = {
   pause: ['Escape', 'KeyP'],
   map: ['KeyM'],
   debug: ['F3'],
+  // Only acted on while debug mode is on (src/debug/overlay.js).
+  debugRoomNext: ['BracketRight'],
+  debugRoomPrev: ['BracketLeft'],
+  debugInvincible: ['KeyI'],
+  debugDamage: ['KeyH'],
   fullscreen: ['KeyF'],
 };

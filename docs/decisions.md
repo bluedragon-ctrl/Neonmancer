@@ -322,3 +322,12 @@ full jump reaches ~1.65 units: enough for a 1-tile gap or hole, not for a
 2-tile one at the same level.
 **Why:** at full speed a jump covered ~2.55 units and cleared 2-tile holes,
 which broke the rule that gaps are a puzzle limit (like D3 for height).
+
+### D37 — 2026-09-26 — Debug mode: a Game.hurt() method, no fake hazards
+The test-damage key calls a new `Game.hurt(amount)` that respects
+invincibility; it doesn't spawn a fake hazard or enemy. Room jump
+(`Game.debugJumpRoom()`) reuses `enterRoom()`, so a jumped-to room resets
+exactly like a normal entry.
+**Why:** Phase 2's hazards and enemies will call the same `hurt()`, so the
+debug key exercises the real damage path instead of a separate one that
+could drift from it.

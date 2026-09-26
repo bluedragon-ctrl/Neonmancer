@@ -27,6 +27,8 @@ export class Game {
     /** Integrity (health); it carries over between rooms. */
     this.maxIntegrity = PLAYER.maxIntegrity;
     this.integrity = this.maxIntegrity;
+    /** Debug mode: holes never kill and hurt() does nothing. */
+    this.invincible = false;
     this.enterRoom(content.world.start);
     /**
      * Room transition in progress, or null: { phase: 'out' | 'in', tick, exit }.
@@ -77,6 +79,30 @@ export class Game {
   }
 
   /**
+   * Reduce integrity, unless invincible (debug mode). Used for now by the
+   * debug test-damage key; real hazards and enemies call it from Phase 2.
+   * @param {number} [amount]
+   */
+  hurt(amount = 1) {
+    if (this.invincible) return;
+    this.integrity = Math.max(0, this.integrity - amount);
+  }
+
+  /**
+   * Debug mode: jump straight to another room, skipping the exit transition.
+   * Ignored mid-transition, so it never interrupts a fade.
+   * @param {1|-1} direction next or previous room, in load order
+   * @returns {boolean} whether it jumped
+   */
+  debugJumpRoom(direction) {
+    if (this.transition) return false;
+    const ids = [...this.content.rooms.keys()];
+    const next = ids[(ids.indexOf(this.room.id) + direction + ids.length) % ids.length];
+    this.enterRoom(next);
+    return true;
+  }
+
+  /**
    * One fixed tick: player → exits → his push → objects → events.
    * Walking out through an exit starts a transition: fade out (frozen
    * world), load the next room, fade in (running).
@@ -88,7 +114,7 @@ export class Game {
     if (this.transition && ++this.transition.tick >= TRANSITION.inTicks) this.transition = null;
 
     const events = [];
-    const playerEvent = this.player.update(input, this.grid, this.pushables);
+    const playerEvent = this.player.update(input, this.grid, this.pushables, this.invincible);
 
     // Falling into a hole drains all integrity. Respawning restores it and
     // resets the room, so no puzzle stays broken.

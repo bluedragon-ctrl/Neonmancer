@@ -17,6 +17,14 @@ for the current phase. Locked decisions live in CLAUDE.md; their reasons in
 | Debug mode | F3 |
 | Fullscreen | F |
 
+Debug mode only, once toggled on with F3:
+
+| Action | Keys |
+|---|---|
+| Jump to the next/previous room | ] / [ |
+| Toggle invincibility | I |
+| Test damage (−1 integrity) | H |
+
 Keys are physical positions (`KeyboardEvent.code`), so the layout is the
 same on QWERTY, QWERTZ and AZERTY keyboards.
 
@@ -133,6 +141,25 @@ for a banner. Both take string keys and values for `{placeholders}`.
 Fonts are bundled (Fontsource, no CDN): Orbitron for labels, the banner and
 the hint, Share Tech Mono for terminal lines (both Latin only). Timing values are `TERMINAL`
 and `BANNER` in `src/ui/terminal.js`.
+
+## Debug mode
+
+F3 toggles debug mode; off by default. While it's on:
+
+- Wireframe collision boxes: cyan for static block cells, lime for the
+  wizard and every pushable, updated at the interpolated render position
+  (`src/debug/overlay.js`).
+- The dev readout (top right, under the brand): room id, tick rate, frame
+  rate, render buffer size, held actions, the wizard's position and whether
+  he's grounded, and whether invincibility is on.
+- `]` / `[` jump straight to the next/previous room in load order, skipping
+  the exit transition (`Game.debugJumpRoom()`); ignored mid-transition.
+- `I` toggles invincibility (`Game.invincible`): holes never kill and
+  `Game.hurt()` does nothing.
+- `H` calls `Game.hurt(1)` to test the integrity HUD; real hazards and
+  enemies call the same method from Phase 2.
+
+Rooms fully reset on a debug room jump, same as walking through an exit.
 
 ---
 
