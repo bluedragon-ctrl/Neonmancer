@@ -13,6 +13,7 @@
     "msg.boot": "> GRID LINK ESTABLISHED",
     "msg.welcome": "> WELCOME, WIZARD. MIND THE GAPS.",
     "msg.die": "> FATAL: WIZARD FELL OUT OF BOUNDS",
+    "msg.derez": "> FATAL: INTEGRITY 0. WIZARD DEREZZED",
     "msg.respawn": "> RECOMPILING WIZARD... OK",
     "msg.plug": "> HOLE PATCHED",
     "msg.movementGrid": "> MOVEMENT: GRID-ALIGNED",

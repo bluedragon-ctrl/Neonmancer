@@ -1,6 +1,7 @@
 /**
  * The wizard: movement along the grid axes, jump, gravity, pushing,
- * integrity (health), death in holes and respawn. Pure logic, one call to
+ * integrity (health), invulnerability after a hit, death (in a hole, or
+ * with no integrity left) and respawn. Pure logic, one call to
  * update() per fixed tick. One Player lasts the whole game: entering a room
  * places him (enter()), so integrity carries over.
  */
@@ -37,6 +38,8 @@ export const PLAYER = {
   deathTicks: 45,
   /** Integrity (health) at the start and after respawning; at most 15 fits the save key. */
   maxIntegrity: 8,
+  /** Ticks after a hit during which nothing hurts him (he blinks, D43). */
+  invulnerableTicks: 60,
 };
 
 /** Take-off speed that reaches exactly jumpHeight: v = √(2gh). */
@@ -72,6 +75,8 @@ export class Player {
     this.maxIntegrity = PLAYER.maxIntegrity;
     /** Integrity (health), 0..maxIntegrity; it carries over between rooms. */
     this.integrity = this.maxIntegrity;
+    /** Ticks left in which he can't be hurt (after a hit); carries over between rooms. */
+    this.invulnerable = 0;
     this.enter(pos, resetPoint);
   }
 
@@ -89,18 +94,39 @@ export class Player {
   /** Put the wizard back at the room's reset point, alive, still and whole. */
   respawn() {
     this.integrity = this.maxIntegrity;
+    this.invulnerable = 0;
     this.place(this.resetPoint);
   }
 
   /**
-   * Lose integrity (at least 0 left).
+   * Lose integrity (at least 0 left), then stay invulnerable for a while.
+   * Nothing happens while invulnerable or dead. Losing the last point kills
+   * him (he derezzes). No knockback (D43).
    * @param {number} amount
    * @returns {number} how much was actually lost
    */
   hurt(amount) {
+    if (this.dead || this.invulnerable > 0 || amount <= 0) return 0;
     const lost = Math.min(amount, this.integrity);
     this.integrity -= lost;
+    this.invulnerable = PLAYER.invulnerableTicks;
+    if (this.integrity === 0) this.die('damage');
     return lost;
+  }
+
+  /**
+   * Die: all integrity gone; he respawns after PLAYER.deathTicks.
+   * @param {'hole'|'damage'} cause a hole drops him into the pit; otherwise
+   *   he derezzes where he is
+   */
+  die(cause) {
+    this.integrity = 0;
+    this.dead = true;
+    /** Why he died, while dead: 'hole' or 'damage'. */
+    this.deathCause = cause;
+    this.deathTimer = PLAYER.deathTicks;
+    this.grounded = false;
+    this.vy = 0;
   }
 
   /** Appear at `pos`, alive, still and facing the camera. */
@@ -117,6 +143,7 @@ export class Player {
     this.targetFacing = this.facing;
     this.moving = false;
     this.dead = false;
+    this.deathCause = null;
     this.deathTimer = 0;
     this.coyote = 0;
     this.jumpBuffer = 0;
@@ -153,13 +180,16 @@ export class Player {
     this.pushIntent = null;
 
     if (this.dead) {
-      // Drop into the pit (drifting to the middle of the hole tile, so the
-      // body doesn't hang over the rim), then recompile at the spawn.
-      this.vy = Math.max(this.vy - PLAYER.gravity * DT, -PLAYER.maxFall);
-      this.pos[1] += this.vy * DT;
-      for (const axis of [0, 2]) {
-        const middle = Math.floor(this.prev[axis]) + 0.5;
-        this.pos[axis] += (middle - this.pos[axis]) * 0.25;
+      // In a hole, drop into the pit (drifting to the middle of the hole
+      // tile, so the body doesn't hang over the rim); otherwise derez on the
+      // spot. Then recompile at the reset point.
+      if (this.deathCause === 'hole') {
+        this.vy = Math.max(this.vy - PLAYER.gravity * DT, -PLAYER.maxFall);
+        this.pos[1] += this.vy * DT;
+        for (const axis of [0, 2]) {
+          const middle = Math.floor(this.prev[axis]) + 0.5;
+          this.pos[axis] += (middle - this.pos[axis]) * 0.25;
+        }
       }
       if (--this.deathTimer > 0) return null;
       this.respawn();
@@ -167,6 +197,7 @@ export class Player {
     }
 
     let event = null;
+    if (this.invulnerable > 0) this.invulnerable--;
 
     // Walk along the grid axes, or screen-relative (D38); diagonals are normalised.
     const directions = movementMode === 'screen' ? SCREEN_DIRECTIONS : GRID_DIRECTIONS;
@@ -220,11 +251,7 @@ export class Player {
     // Standing on a hole at floor level: fall in (D18), which drains all
     // integrity. Respawning restores it.
     if (this.grounded && this.pos[1] < FLOOR_EPS && grid.isHole(this.pos[0], this.pos[2]) && !invincible) {
-      this.integrity = 0;
-      this.dead = true;
-      this.deathTimer = PLAYER.deathTicks;
-      this.grounded = false;
-      this.vy = 0;
+      this.die('hole');
       return 'die';
     }
     return event;

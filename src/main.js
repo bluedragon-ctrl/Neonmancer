@@ -69,7 +69,9 @@ function boot() {
       if (input.pressed('debugInvincible')) game.invincible = !game.invincible;
       if (input.pressed('debugDamage')) game.hurt(1);
     }
-    if (game.update(input).some((event) => event.type === 'room')) showRoom();
+    const events = game.update(input);
+    if (events.some((event) => event.type === 'room')) showRoom();
+    if (events.some((event) => event.type === 'hurt')) hud.flashHit();
     readout.countTick();
   }
 

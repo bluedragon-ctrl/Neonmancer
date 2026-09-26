@@ -6,6 +6,14 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Damage (Phase 2 step 1): every source goes through `Game.hurt()`; after
+  a hit the wizard is invulnerable for 1 s and blinks, and the stage edges
+  flash magenta. At 0 integrity he derezzes into pixels and recompiles at
+  the room's reset point. Death events name their cause (`hole` or
+  `damage`), each with its own terminal line.
+- Asset showcase: `wizard-hit` loops the blink and the derez.
+
 ### Fixed
 - `npm test` failed on Node 22+ (CI) after the Node 20 change: it now runs
   through `tools/run-tests.js`, which lists the test files itself.
