@@ -120,13 +120,16 @@ function createTunnels({ quads, lines: corners }, color) {
   return new Group().add(shadedFaces(positions, colors), fadingLines(corners, { color, width: 1.5, brightness: 0.6 }));
 }
 
+/** Outline width by object kind, where it differs: collapsing blocks look fragile. */
+const EDGE_WIDTH = { collapsing: 1.5 };
+
 /**
  * View of one typed object: a single cell drawn in the object's style
  * (edges, face mark, faces), so types differ by more than color. Kept
  * separate from the static blocks because objects move (D40).
- * @param {{ at: number[], color: string, edges: string, mark: string, faces: string, tint: number }} object
+ * @param {{ at: number[], kind?: string, color: string, edges: string, mark: string, faces: string, tint: number }} object
  */
-export function createObjectView({ at, color, edges, mark, faces, tint }) {
+export function createObjectView({ at, kind, color, edges, mark, faces, tint }) {
   const group = new Group();
 
   const materials = faces === 'tinted' ? tintedFaceMaterials(color, tint) : faceMaterial();
@@ -135,7 +138,7 @@ export function createObjectView({ at, color, edges, mark, faces, tint }) {
   group.add(box);
 
   const dashed = edges === 'dashed';
-  const outline = neonLines(blockEdges([at]), lineMaterial({ color, width: 2.5, brightness: 1.6, dashed }));
+  const outline = neonLines(blockEdges([at]), lineMaterial({ color, width: EDGE_WIDTH[kind] ?? 2.5, brightness: 1.6, dashed }));
   outline.renderOrder = 2;
   group.add(outline);
 

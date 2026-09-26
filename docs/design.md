@@ -167,7 +167,7 @@ follows a path given on the room object.
 ## Collapsing blocks
 
 Room objects of kind `collapsing` (D40, D47): a 1×1×1 block in its own
-color (`collapsing` in `defs.json`: magenta, dashed edges, tinted faces)
+color (`collapsing` in `defs.json`: magenta, thin dashed edges, tinted faces)
 that gives way under the wizard.
 
 - **Trigger:** only the wizard standing on it (grounded, feet on its top,

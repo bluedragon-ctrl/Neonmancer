@@ -499,7 +499,7 @@ gone until the room resets. A vanished block is left out of the bodies
 everything collides with (`Game.solids`, `Game.bodies`, refreshed on
 `collapse` and `regrow`), rather than every collision check skipping it.
 It may stand in a hole tile (a bridge that gives way), and spawn and reset
-points don't count it as ground over a hole. Look: magenta, dashed edges,
+points don't count it as ground over a hole. Look: magenta, thin dashed edges,
 tinted faces; it rattles, breaks into falling pixels, and grows back from
 its center.
 **Why:** 0.5 s lets the wizard run across a row (a block takes ~0.22 s at
@@ -509,4 +509,4 @@ Waiting for a clear cell stops a regrowing block from trapping the wizard
 or a crate inside it. One refreshed list keeps the collision code free of
 special cases. Bridges over pits are the classic use; a spawn on one would
 drop the wizard to his death on every respawn. Dashed edges read as
-fragile; magenta is the one palette color objects did not use yet.
+fragile (thinner than other objects', author's review); magenta is the one palette color objects did not use yet.
