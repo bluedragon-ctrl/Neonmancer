@@ -314,7 +314,7 @@ enemies).
   the spawn. Taking it shows the banner `ZAP / SPELL INSTALLED`, the
   terminal line `> SPELL INSTALLED: ZAP`, selects the spell and brings up
   the energy bar and the spell tag in the HUD (both hidden until then:
-  energy is only for spells).
+  energy is only for spells; see Zap and energy).
 - **Save bits in blocks:** spells 0–15, buffs 16–31, equipment 32–47,
   fragments 48–111; 112 in all. The index comes from what the item
   unlocks: a spell's `slot` in `defs.json` for its disk (Zap: 0); later a
@@ -327,7 +327,7 @@ enemies).
 - **Found before:** a permanent pickup whose bit is set shows as a ghost
   (gray, dashed, standing still) and can't be taken again (D67).
 - **Temporary: refills.** `refill_integrity` (+3) and `refill_energy`
-  (+6), up to the wizard's maximum; a refill is left lying while that stat
+  (+30), up to the wizard's maximum; a refill is left lying while that stat
   is full. No save bit: it comes back when the room resets (entering it,
   or dying in it). Terminal lines `> INTEGRITY RESTORED` and `> ENERGY
   RECHARGED`.
@@ -354,16 +354,22 @@ enemies).
 
 ## Zap and energy
 
-- **Energy** (mana): the wizard holds 10 and gets 1 back per second;
-  it carries over between rooms and is full again after a respawn. The
-  HUD shows it under integrity as one lime segment per Zap (5), each
-  filling as it recharges; a full segment glows.
+- **Energy** (mana, D72): whole units; the wizard holds 50 and gets one
+  unit back every 12 ticks (5 per second, empty to full in 10 s). It
+  carries over between rooms and is full again after a respawn. The
+  maximum and the recharge rate are the wizard's own, so buffs
+  (permanent and temporary) can raise them later.
+- **Energy bar:** under integrity, one thin lime tick per unit, lighting
+  one by one as energy comes back; the bar's shape never changes with the
+  spell. A notch under it marks the selected spell's cost (the tick that
+  pays for one cast): dim below it, glowing once he can cast. Switching
+  spells only moves the notch. The bar is hidden until he knows a spell.
 - **Casting:** once he has found a data disk (see Pickups and
   progress), E or Numpad 0 casts the selected spell. Its name
   shows in a lime tag under the energy bar (ZAP); Tab switches to the next
   spell he knows (Q back), and the tag flashes. With only Zap known, Tab
   does nothing and the tag shows no key hint (D54).
-- **Zap** (E or Numpad 0): costs 2 energy, then 0.25 s before the next
+- **Zap** (E or Numpad 0): costs 10 energy, then 0.25 s before the next
   cast. The bolt flies at 12 units per second from his hands (0.48 above
   his feet, 0.34 in front) the way he aims: the direction he last walked
   or turned to, so diagonals too. It is a 0.3 box, low enough to hit a bug

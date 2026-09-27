@@ -1043,3 +1043,17 @@ Phase 3 step 2's open questions, settled with the author:
 leave room per kind; a bit per item (not per place) lets a disk wait in
 two places, e.g. on both sides of a gate. Showing the slot as one bit
 makes each disk the save bit it sets, and the 16 spells fill the 4×4 grid.
+
+### D72 — 2026-09-27 — Energy in whole units, a bar of ticks with a cost notch
+Replaces the energy numbers of D52 and the segment-per-cast bar. Energy is
+whole units: the wizard holds 50 and gets one back every 12 ticks (5 per
+second, still full in 10 s); Zap costs 10 (the same share as 2 of 10);
+the energy refill gives 30. The HUD bar has one thin tick per unit,
+lighting one by one, and a notch at the selected spell's cost. The
+maximum and the recharge rate live on the wizard, so energy buffs
+(permanent and temporary, author's note) can raise them; a larger
+maximum just adds ticks. The bar is hidden until he knows a spell.
+**Why:** author's request. A bar split by the selected spell's cost
+changes shape when switching between spells of different costs; a fixed
+bar with a moving notch doesn't, and whole units recharging one by one
+read better.

@@ -432,9 +432,11 @@ function buildZapCrate() {
   let wait = 30;
   let recharging = false;
   let carry = 0;
+  let charge = 0;
   asset.userData.update = (dt) => {
     for (carry += dt * 60; carry >= 1; carry--) {
-      energy = Math.min(PLAYER.maxEnergy, energy + PLAYER.energyRecharge / 60);
+      // One unit every energyTicks, as the wizard recharges.
+      if (energy < PLAYER.maxEnergy && ++charge >= PLAYER.energyTicks) [energy, charge] = [energy + 1, 0];
       zapper.tick();
       if (recharging) {
         if (energy >= PLAYER.maxEnergy) [recharging, wait] = [false, 30];

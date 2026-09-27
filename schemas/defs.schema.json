@@ -33,7 +33,7 @@
           "additionalProperties": false,
           "properties": {
             "slot": { "$ref": "#/$defs/slot", "description": "Its bit in the save's spell block (D71), also the lit bit on its data disk; unique among spells." },
-            "cost": { "type": "number", "exclusiveMinimum": 0, "description": "Energy per cast." },
+            "cost": { "type": "integer", "minimum": 1, "description": "Energy per cast, in whole units (the wizard holds 50)." },
             "cooldown": { "type": "number", "minimum": 0, "maximum": 5, "description": "Seconds before he can cast it again." },
             "speed": { "type": "number", "exclusiveMinimum": 0, "maximum": 50, "description": "Bolt speed in units per second." },
             "damage": { "type": "integer", "minimum": 1, "description": "Integrity an enemy loses per hit." }

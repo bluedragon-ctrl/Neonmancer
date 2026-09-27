@@ -16,6 +16,7 @@ and the project uses [Semantic Versioning](https://semver.org/).
   Integrity and energy refills (Fault Line, Crawl Space) come back with
   the room. Looks in the showcase (`?asset=disks`, `?asset=refills`);
   validation and room editor support (pickups in the Object tool).
+
 - World map tool (Phase 3 step 1, D66, D70): `/tools/world-map.html` in
   the dev server (not built, never shown to players) draws every room as a
   node in its biome color on a map grid, with lines between connected
@@ -34,11 +35,12 @@ and the project uses [Semantic Versioning](https://semver.org/).
   or the world map (`map`) or the asset showcase (`showcase`).
 
 ### Changed
+- Energy in whole units (D72): 50 at most, one back every 0.2 s, Zap
+  costs 10. The HUD energy bar is a row of ticks, one per unit, with a
+  notch at the selected spell's cost; hidden until the first spell.
 - `tools\room-pr.bat` is now `tools\map-pr.bat`: one PR for room and
   world map changes (branch `feat/map-<date>`, title `feat(map): …`); its
   summary says whether rooms, the map or enemy templates changed.
-
-### Changed
 - Phase plan (D65): the old Phase 3 splits into Phase 3 (v0.3, spells and
   pickups) and Phase 4 (v0.4, Wardens, saves, map, tooling); polish moves
   to Phase 5. Phase 3 step plan in docs/design.md: a world map tool for

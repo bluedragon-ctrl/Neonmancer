@@ -28,13 +28,13 @@ export const BUG = {
 };
 
 /** Spell tuning, as in defs.json. */
-export const SPELLS = { zap: { slot: 0, cost: 2, cooldown: 0.25, speed: 12, damage: 1 } };
+export const SPELLS = { zap: { slot: 0, cost: 10, cooldown: 0.25, speed: 12, damage: 1 } };
 
 /** Pickup types (D71): the Zap disk and both refills. */
 export const PICKUPS = {
   disk_zap: { kind: 'disk', spell: 'zap' },
   refill_integrity: { kind: 'refill', stat: 'integrity', amount: 2 },
-  refill_energy: { kind: 'refill', stat: 'energy', amount: 4 },
+  refill_energy: { kind: 'refill', stat: 'energy', amount: 30 },
 };
 
 /** Block types, as in defs.json (D60): plain, hazard, void, collapsing and a variant that grows back after 3 s. */

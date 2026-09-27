@@ -1,8 +1,9 @@
 /**
- * The energy (mana) bar of the HUD: a label over a row of slanted
- * segments, one per cast of the current spell, each filling up as energy
- * recharges. A full segment glows; the one filling up is dim. A cast
- * without enough energy flashes the bar (deny()).
+ * The energy (mana) bar of the HUD: a label over a row of thin ticks, one
+ * per unit of energy, lighting one by one as energy recharges, so the bar
+ * never changes shape. A notch under the bar marks the selected spell's
+ * cost: once the lit ticks reach it, he can cast. Switching spells only
+ * moves the notch. A cast without enough energy flashes the bar (deny()).
  */
 export class EnergyBar {
   /**
@@ -10,39 +11,32 @@ export class EnergyBar {
    * @param {string} label
    */
   constructor(root, label) {
-    root.insertAdjacentHTML('beforeend', '<div class="hud-energy"><div class="hud-label"></div><div class="hud-segments"></div></div>');
+    root.insertAdjacentHTML('beforeend', '<div class="hud-energy"><div class="hud-label"></div><div class="hud-ticks"></div><div class="hud-cost"></div></div>');
     this.box = root.lastElementChild;
     this.box.querySelector('.hud-label').textContent = label;
-    this.row = this.box.querySelector('.hud-segments');
-    /** One { segment, fill } per cast. */
-    this.segments = [];
+    this.row = this.box.querySelector('.hud-ticks');
+    this.notch = this.box.querySelector('.hud-cost');
+    /** One element per unit. */
+    this.ticks = [];
     this.shown = null;
   }
 
   /**
-   * Show `value` of `max` energy in segments of `cost` (one cast each).
-   * @param {number} value
+   * Show `value` of `max` energy, and the cost of one cast.
+   * @param {number} value whole units
    * @param {number} max
-   * @param {number} cost
+   * @param {number} cost energy per cast of the selected spell
    */
   set(value, max, cost) {
-    const key = `${value.toFixed(3)}/${max}/${cost}`;
+    const key = `${value}/${max}/${cost}`;
     if (key === this.shown) return;
     this.shown = key;
-    const count = Math.max(1, Math.round(max / cost));
-    while (this.segments.length < count) {
-      const segment = document.createElement('i');
-      const fill = document.createElement('b');
-      segment.append(fill);
-      this.row.append(segment);
-      this.segments.push({ segment, fill });
-    }
-    while (this.segments.length > count) this.segments.pop().segment.remove();
-    this.segments.forEach(({ segment, fill }, i) => {
-      const part = Math.min(1, Math.max(0, (value - i * cost) / cost));
-      fill.style.width = `${part * 100}%`;
-      segment.classList.toggle('full', part >= 1);
-    });
+    while (this.ticks.length < max) this.ticks.push(this.row.appendChild(document.createElement('i')));
+    while (this.ticks.length > max) this.ticks.pop().remove();
+    this.ticks.forEach((tick, i) => tick.classList.toggle('on', i < value));
+    // The notch sits under the tick that completes one cast.
+    this.notch.style.setProperty('--at', String(Math.min(cost, max)));
+    this.box.classList.toggle('ready', value >= cost);
   }
 
   /** A cast failed for lack of energy: flash the bar. */

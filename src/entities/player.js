@@ -46,9 +46,12 @@ export const PLAYER = {
   maxIntegrity: 8,
   /** Ticks after a hit during which nothing hurts him (he blinks, D43). */
   invulnerableTicks: 60,
-  /** Energy (mana) for spells: the most he holds, and how much comes back per second. */
-  maxEnergy: 10,
-  energyRecharge: 1,
+  /**
+   * Energy (mana) for spells, in whole units: the most he holds, and the
+   * ticks it takes to get one unit back (12: 5 per second, full in 10 s).
+   */
+  maxEnergy: 50,
+  energyTicks: 12,
 };
 
 /** Take-off speed that reaches exactly jumpHeight: v = √(2gh). */
@@ -90,8 +93,12 @@ export class Player {
     /** Ticks left in which he can't be hurt (after a hit); carries over between rooms. */
     this.invulnerable = 0;
     this.maxEnergy = PLAYER.maxEnergy;
-    /** Energy for spells, 0..maxEnergy, recharging slowly; it carries over between rooms. */
+    /** Energy for spells, whole units 0..maxEnergy, recharging one at a time; it carries over between rooms. */
     this.energy = this.maxEnergy;
+    /** Ticks per unit of energy recharged (buffs may change it, like maxEnergy). */
+    this.energyTicks = PLAYER.energyTicks;
+    /** Ticks towards the next unit of energy. */
+    this.charge = 0;
     /** Ticks left before he can cast again. */
     this.cooldown = 0;
     /** Ticks since his last cast (for the flare at his hands), or null. */
@@ -119,6 +126,7 @@ export class Player {
     this.integrity = this.maxIntegrity;
     this.invulnerable = 0;
     this.energy = this.maxEnergy;
+    this.charge = 0;
     this.cooldown = 0;
     this.castTicks = null;
     this.place(this.resetPoint);
@@ -179,11 +187,22 @@ export class Player {
   cast(cost, cooldownTicks) {
     if (this.dead || this.cooldown > 0) return null;
     // Recharging adds up small float steps: allow for the rounding.
-    if (this.energy < cost - 1e-9) return 'deny';
-    this.energy = Math.max(0, this.energy - cost);
+    if (this.energy < cost) return 'deny';
+    this.energy -= cost;
     this.cooldown = cooldownTicks;
     this.castTicks = 0;
     return 'cast';
+  }
+
+  /** One tick of recharging: a unit of energy every energyTicks, up to the maximum. */
+  rechargeEnergy() {
+    if (this.energy >= this.maxEnergy) {
+      this.charge = 0;
+      return;
+    }
+    if (++this.charge < this.energyTicks) return;
+    this.charge = 0;
+    this.energy++;
   }
 
   /**
@@ -276,7 +295,7 @@ export class Player {
     if (this.invulnerable > 0) this.invulnerable--;
     if (this.cooldown > 0) this.cooldown--;
     if (this.castTicks !== null) this.castTicks++;
-    this.energy = Math.min(this.maxEnergy, this.energy + PLAYER.energyRecharge * DT);
+    this.rechargeEnergy();
 
     // Walk along the grid axes, or screen-relative (D38); diagonals are normalised.
     const directions = movementMode === 'screen' ? SCREEN_DIRECTIONS : GRID_DIRECTIONS;
