@@ -5,11 +5,14 @@ zapped into the Grid, a neon digital kingdom where magic and code are the same
 thing. Explore rooms, solve block puzzles, fight corrupted programs with spells
 and collect key fragments to reboot the Grid.
 
-> Status: early development. Phase 1 (v0.1.0, foundations) is done: the
-> wizard walks, jumps, pushes crates and explores three connected test
-> rooms, with an integrity HUD, room banners and terminal messages; no goal
-> yet. Next: Phase 2 (hazards, combat, room editor), planned step by step in
-> [docs/design.md](docs/design.md#phase-2-v02-plan).
+> Status: early development. Phase 2 (v0.2.0, hazards, combat, editor) is
+> done: on top of Phase 1's walking, jumping and crate pushing, the wizard
+> takes damage and derezzes, crosses hazard and void blocks, rides moving
+> platforms, runs over collapsing blocks, fights bugs with the Zap spell and
+> shows through walls as an X-ray outline, across seven test rooms. Rooms
+> are made in the in-game room editor (F2), with open, data-driven block
+> types and six biome looks. No goal yet. Next: Phase 3 (game structure:
+> more enemies and spells, fragments and the core, saves, the map).
 > Latest `main` build: https://bluedragon-ctrl.github.io/Neonmancer/
 
 ## Requirements
@@ -32,6 +35,10 @@ The asset showcase shows every character and object look side by side:
 `/tools/showcase.html` in the dev server or on the deployed site
 (`?asset=wizard` for a close-up).
 
+The room editor opens with F2 in the game: in the dev server it saves
+straight to `data/`, in a build it exports the room JSON (docs/design.md,
+Room editor).
+
 ## Project layout
 
 | Path | Contents |
@@ -53,7 +60,7 @@ The asset showcase shows every character and object look side by side:
 
 ## Versioning
 
-MAJOR.MINOR.PATCH: MINOR is the phase (0.1 = Phase 1), PATCH counts the
+MAJOR.MINOR.PATCH: MINOR is the phase (0.2 = Phase 2), PATCH counts the
 pull requests merged since that phase's release, computed at build time;
 1.0.0 will be the first full release. See CLAUDE.md §10 and D42.
 

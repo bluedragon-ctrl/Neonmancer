@@ -6,6 +6,10 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-27
+
+Phase 2 — Hazards, combat, editor.
+
 ### Added
 - Damage (Phase 2 step 1): every source goes through `Game.hurt()`; after
   a hit his hologram flashes white, then magenta, and he is invulnerable
@@ -278,5 +282,6 @@ Phase 1 — Foundations.
 ### Removed
 - The four box-look crates in Boot Sector (the asset showcase shows them).
 
-[Unreleased]: https://github.com/bluedragon-ctrl/Neonmancer/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/bluedragon-ctrl/Neonmancer/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/bluedragon-ctrl/Neonmancer/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/bluedragon-ctrl/Neonmancer/releases/tag/v0.1.0
