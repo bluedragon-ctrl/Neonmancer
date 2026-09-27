@@ -849,8 +849,12 @@ Neighbouring blocks of the same type never get an edge between them (the
 corner rule, D12), and neither do neighbouring blocks of different plain
 types: all plain blocks are one mass for the corner rule, and each edge
 takes the color of a type around it, the later one in `defs.json` where
-types meet. The hazard and void looks outline themselves, drawn over the
-plain edges, so a seam always shows where a dangerous block starts.
+types meet. The hazard and void looks outline themselves, and a line
+they share with plain blocks is drawn once, by the dangerous look alone
+(lethal types over hurting ones), so a seam always shows where a
+dangerous block starts. Drawing it on top was not enough: the void frame
+is thinner and dimmer than plain edges, so the amber line showed around
+the violet one and the glow mixed them (author's playtest).
 Collapsing blocks keep an outline around every cell.
 **Why:** author's choice. Plain types only differ in color, so a seam
 between them would cut shapes apart for nothing; blocks that hurt or kill

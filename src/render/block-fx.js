@@ -237,10 +237,11 @@ export function voidFaceMaterial(color) {
  * @param {number[][]} cells [x, y, z] cells
  * @param {'hazard'|'void'} look a block type's look (defs.json "blocks", D60)
  * @param {number|string} color
+ * @param {Set<string>} [claimed] unit edges drawn by a more dangerous type, left out (edges.js)
  */
-export function activeBlockEdges(cells, look, color) {
+export function activeBlockEdges(cells, look, color, claimed = null) {
   const { edgeWidth: width, edgeBrightness: brightness } = BLOCK_FX[look];
-  return neonLines(blockEdges(cells), lineMaterial({ color, width, brightness }));
+  return neonLines(blockEdges(cells, claimed), lineMaterial({ color, width, brightness }));
 }
 
 /**
@@ -263,13 +264,14 @@ const UNIT_BOX = shared(new BoxGeometry(1, 1, 1).translate(0.5, 0.5, 0.5));
  * @param {number[][]} cells [x, y, z] cells
  * @param {'hazard'|'void'} look a block type's look (defs.json "blocks", D60)
  * @param {number|string} color
+ * @param {Set<string>} [claimed] unit edges drawn by a more dangerous type, left out (edges.js)
  */
-export function createActiveBlockView(cells, look, color) {
+export function createActiveBlockView(cells, look, color, claimed = null) {
   const faces = look === 'hazard' ? hazardFaceMaterial(color) : voidFaceMaterial(color);
   const boxes = new InstancedMesh(UNIT_BOX, faces, cells.length);
   const matrix = new Matrix4();
   cells.forEach(([x, y, z], i) => boxes.setMatrixAt(i, matrix.makeTranslation(x, y, z)));
-  const edges = activeBlockEdges(cells, look, color);
+  const edges = activeBlockEdges(cells, look, color, claimed);
   edges.renderOrder = 3; // over plain block and wall lines lying in the same spot
   const group = new Group().add(boxes, edges);
   group.userData.faces = faces;

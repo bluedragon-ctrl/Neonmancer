@@ -6,15 +6,16 @@
  * occluding faces) plus neon edges worked out for them as one mass, so
  * neighbours never get an edge between them, whatever their type; each
  * edge takes the color of a type around it (D64). The hazard and void
- * looks are animated (block-fx.js) and outline themselves, drawn over the
- * plain edges, so where they meet plain blocks the seam is theirs. Only
+ * looks are animated (block-fx.js) and outline themselves; a line they
+ * share with plain blocks (or a lethal type with a hurting one) is drawn
+ * once, by the more dangerous look, so the seam is theirs alone. Only
  * the back walls (x = 0 and z = 0) are drawn; the front sides stay open
  * (CLAUDE.md §4). Exits are doorways in the back walls and gaps in the
  * front edges (render/walls.js).
  */
 import { BoxGeometry, BufferGeometry, Color, DoubleSide, Float32BufferAttribute, Group, InstancedMesh, Matrix4, Mesh } from 'three';
 import { createActiveBlockView } from './block-fx.js';
-import { blockEdges, groupedBlockEdges } from './edges.js';
+import { blockEdges, edgeUnitKeys, groupedBlockEdges } from './edges.js';
 import { BITS, markSegments } from './marks.js';
 import { doorwayTunnels, wallLayout } from './walls.js';
 import {
@@ -47,18 +48,23 @@ export function createRoomView({ size, blocks, blockTypes, exits = [], color = P
   const group = new Group();
   group.add(createWalls(size, exits, color, roomLook(look).wallGrid));
   group.userData.flares = new Map();
-  // In defs.json order: where plain types meet, the later one's color wins the edge.
   const types = Object.values(blockTypes).filter((type) => blocks[type.id]?.length > 0);
-  const plain = types.filter((type) => type.look === 'plain');
-  if (plain.length > 0) group.add(createBlockView(plain.map((type) => ({ cells: blocks[type.id], color: type.color ?? color }))));
-  // The animated looks after the plain blocks, so where they meet their edge wins.
-  for (const type of types) {
-    if (type.look === 'plain') continue;
+  // A line two looks would both draw is drawn once, by the more dangerous
+  // one (D64): lethal types first, then those that hurt; each leaves out
+  // the lines already claimed, and plain blocks come last.
+  const danger = (type) => (type.lethal ? 2 : type.damage ? 1 : 0);
+  const active = types.filter((type) => type.look !== 'plain').sort((a, b) => danger(b) - danger(a));
+  const claimed = new Set();
+  for (const type of active) {
     const cells = blocks[type.id];
-    const view = createActiveBlockView(cells, type.look, type.color ?? color);
+    const view = createActiveBlockView(cells, type.look, type.color ?? color, claimed);
     if (type.look === 'hazard') for (const cell of cells) group.userData.flares.set(cell.join(), view.userData.faces);
     group.add(view);
+    for (const key of edgeUnitKeys(cells)) claimed.add(key);
   }
+  // In defs.json order: where plain types meet, the later one's color wins the edge.
+  const plain = types.filter((type) => type.look === 'plain');
+  if (plain.length > 0) group.add(createBlockView(plain.map((type) => ({ cells: blocks[type.id], color: type.color ?? color })), claimed));
   return group;
 }
 
@@ -66,8 +72,9 @@ export function createRoomView({ size, blocks, blockTypes, exits = [], color = P
  * Dark occluding cubes with neon edges, for plain blocks of one or more
  * types drawn as one mass (edges.js groupedBlockEdges()).
  * @param {{ cells: number[][], color: number|string }[]} groups cells and edge color of each type, lowest rank first
+ * @param {Set<string>} [claimed] unit edges drawn by an animated look, left out (edges.js)
  */
-export function createBlockView(groups) {
+export function createBlockView(groups, claimed = new Set()) {
   const group = new Group();
   const cells = groups.flatMap((g) => g.cells);
 
@@ -76,7 +83,7 @@ export function createBlockView(groups) {
   cells.forEach(([x, y, z], i) => faces.setMatrixAt(i, matrix.makeTranslation(x, y, z)));
   group.add(faces);
 
-  groupedBlockEdges(groups.map((g) => g.cells)).forEach((segments, i) => {
+  groupedBlockEdges(groups.map((g) => g.cells), claimed).forEach((segments, i) => {
     if (segments.length === 0) return;
     const edges = neonLines(segments, lineMaterial({ color: groups[i].color, width: 2.5, brightness: 1.6 }));
     edges.renderOrder = 2; // drawn over wall lines lying in the same spot

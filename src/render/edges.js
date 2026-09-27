@@ -18,10 +18,29 @@ const OTHER_AXES = [
 
 /**
  * @param {Iterable<number[]>} cells filled cells as [x, y, z]
+ * @param {Set<string>} [claimed] unit edges (edgeUnitKeys()) drawn by
+ *   something else, left out
  * @returns {number[][][]} segments as [[x1, y1, z1], [x2, y2, z2]]
  */
-export function blockEdges(cells) {
-  return mergeUnitSegments(cornerUnits(cells).map(({ segment }) => segment));
+export function blockEdges(cells, claimed = null) {
+  const units = cornerUnits(cells).map(({ segment }) => segment);
+  return mergeUnitSegments(claimed ? units.filter((unit) => !claimed.has(unitKey(unit))) : units);
+}
+
+/**
+ * Keys of the unit edges blockEdges() draws for `cells`, so blocks drawn
+ * after them can leave those out (D64: where two looks would draw the same
+ * line, only one does).
+ * @param {Iterable<number[]>} cells
+ * @returns {Set<string>}
+ */
+export function edgeUnitKeys(cells) {
+  return new Set(cornerUnits(cells).map(({ segment }) => unitKey(segment)));
+}
+
+/** Key of a unit segment: its axis and start corner. */
+function unitKey([start, end]) {
+  return `${start.findIndex((v, i) => v !== end[i])}:${start}`;
 }
 
 /**
@@ -30,15 +49,18 @@ export function blockEdges(cells) {
  * neighbours of different types either; each edge goes to the highest
  * ranked type among the filled cells around it (later groups rank higher).
  * @param {number[][][]} groups cells of each type, lowest rank first
+ * @param {Set<string>} [claimed] unit edges (edgeUnitKeys()) drawn by
+ *   something else, left out
  * @returns {number[][][][]} merged segments of each group, in the same order
  */
-export function groupedBlockEdges(groups) {
+export function groupedBlockEdges(groups, claimed = new Set()) {
   const rank = new Map();
   groups.forEach((cells, i) => {
     for (const cell of cells) rank.set(cellKey(cell), i);
   });
   const units = groups.map(() => []);
   for (const { segment, around } of cornerUnits(groups.flat())) {
+    if (claimed.has(unitKey(segment))) continue;
     const owner = Math.max(...around.map((cell) => rank.get(cellKey(cell)) ?? -1));
     units[owner].push(segment);
   }
