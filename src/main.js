@@ -55,7 +55,7 @@ function boot() {
   renderer.scene.add(playerView.group);
 
   // F2: the room editor (saves in the dev server, exports in a build).
-  const editor = new Editor({ game, renderer, files: DATA_FILES, canSave: DEV_SERVER, onRoom: () => showRoom({ rebuild: true }) });
+  const editor = new Editor({ game, renderer, files: DATA_FILES, canSave: DEV_SERVER, onRoom: (options) => showRoom({ rebuild: true, ...options }) });
 
   say('msg.boot');
   say('msg.welcome');

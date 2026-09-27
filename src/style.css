@@ -547,6 +547,52 @@ body {
   margin-bottom: calc(4 * var(--u));
 }
 
+/* A file's errors follow its name; a click on one goes to what it is about. */
+.editor-errors .editor-error-file {
+  list-style: none;
+  margin-left: calc(-18 * var(--u));
+  color: #cfe9ff;
+  opacity: 0.7;
+}
+
+.editor-errors .editor-error-link {
+  cursor: pointer;
+  text-decoration: underline dotted;
+}
+
+.editor-errors .editor-error-link:hover {
+  color: #ffb0a8;
+}
+
+.editor-hover {
+  min-height: 1.2em;
+  margin: calc(-6 * var(--u)) 0 calc(10 * var(--u));
+  color: var(--cyan);
+  font-size: calc(13 * var(--u));
+}
+
+.editor-check {
+  display: flex;
+  align-items: center;
+  gap: calc(4 * var(--u));
+  margin-left: auto;
+  font-size: calc(13 * var(--u));
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+.editor-panel .editor-check input {
+  padding: 0;
+  margin: 0;
+}
+
+.editor-grow {
+  flex: 1;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .editor-help {
   margin-top: calc(12 * var(--u));
   opacity: 0.55;

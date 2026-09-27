@@ -107,8 +107,10 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `tools/game-version.js` | Dev only: the game version for builds, PATCH counted from git merges since the phase tag (D42) |
 | `tools/showcase.html`, `tools/showcase.js` | Asset showcase page: every look on a turntable with the real renderer (also deployed) |
 | `editor/editor.js` | Room editor (F2, D56, D57): opens on the current room, switches rooms and makes new ones, mouse picking on a height layer, tools, picking things, keys, rebuilding the room from the edited data, save or export |
-| `editor/room-edit.js` | One room being edited: place/erase edits, enemies, paths, exits and their connections, spawn/reset, name, biome, size, undo/redo, dirty state; `roomErrors()`, `newRoom()` (pure, tested) |
-| `editor/world-edit.js` | `world.json` being edited: connecting, disconnecting and renaming exits, a room's connections for its undo steps (pure, tested) |
+| `editor/room-edit.js` | One room being edited: place/erase edits, enemies, paths, exits and their connections, spawn/reset, name, biome, size (with a report), undo/redo (with the step's template changes), dirty state, cell descriptions; `roomErrors()`, `newRoom()` (pure, tested) |
+| `editor/world-edit.js` | `world.json` being edited: connecting, disconnecting and renaming exits, a room's connections for its undo steps; `linkChoices()` (pure, tested) |
+| `editor/defs-edit.js` | `defs.json` being edited: enemy templates added, updated, renamed and deleted; a step's template changes applied again for undo/redo (pure, tested) |
+| `editor/errors.js` | The error list: errors grouped by file, and the room, tool and thing each one points at (pure, tested) |
 | `editor/boxes.js` | `blocks`/`holes` entries edited cell by cell: untouched entries kept, loose cells merged greedily into boxes (pure, tested) |
 | `editor/format-json.js` | JSON in the data files' hand-written style (pure, tested against every data file) |
 | `editor/overlay.js` | Editor gizmos: layer grid, cursor, spawn and reset markers, paths, the picked thing's box, `EDITOR_LOOK` |

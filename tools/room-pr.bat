@@ -1,6 +1,7 @@
 @echo off
-rem Open a pull request with the room and map changes: data\rooms\*.json
-rem and data\world.json (saved from the room editor, D56).
+rem Open a pull request with the room and map changes: data\rooms\*.json,
+rem data\world.json and data\defs.json (enemy templates), saved from the
+rem room editor (D56, D58).
 rem
 rem Usage: tools\room-pr.bat ["what changed"]
 rem
@@ -21,9 +22,9 @@ setlocal EnableDelayedExpansion
 
 rem Anything to send?
 set "CHANGED="
-for /f "delims=" %%f in ('git status --porcelain -- data/rooms data/world.json') do set "CHANGED=1"
+for /f "delims=" %%f in ('git status --porcelain -- data/rooms data/world.json data/defs.json') do set "CHANGED=1"
 if not defined CHANGED (
-  echo No changes in data\rooms or data\world.json: nothing to send.
+  echo No changes in data\rooms, data\world.json or data\defs.json: nothing to send.
   exit /b 1
 )
 
@@ -46,7 +47,7 @@ if errorlevel 1 (
   exit /b 1
 )
 
-git add -A -- data/rooms data/world.json || exit /b 1
+git add -A -- data/rooms data/world.json data/defs.json || exit /b 1
 
 set "BODY=%TEMP%\neonmancer-room-pr.md"
 > "%BODY%" echo ## Summary

@@ -98,6 +98,19 @@ and the project uses [Semantic Versioning](https://semver.org/).
   in the Type list, and Update template moves an enemy's own settings into
   its template; `defs.json` is saved with the rooms. The Enemy panel also
   sets integrity, damage, speed and color.
+- Room editor improvements (second review, D59): **hide above** draws the
+  room without what is above the edited layer; a line names what is in
+  the cell under the mouse; Delete removes the picked object, enemy or
+  exit; a picked exit's position and floor level are set in the panel,
+  and a new width goes to the exit it leads to too; an enemy's editor-made
+  id follows its type (`bug_1` → `virus_1`); errors are grouped by file
+  and a click goes to the room, tool, thing and layer; a new room never
+  saved can be discarded; templates can be renamed and deleted, and
+  template changes are undo steps of their room; shrinking a room moves
+  spawn and reset inside and lists what was dropped. Editor logic moved
+  into tested modules (`defs-edit.js`, `errors.js`, `linkChoices()`), and
+  a room's text is kept until it changes, so the unsaved check doesn't
+  re-format every open room on each painted cell.
 - Room design checklist in docs/design.md: reach, timing budgets,
   readability and soft-lock checks collected from playtests; the basis for
   the Phase 3 room design skill and level review subagent.
@@ -121,6 +134,17 @@ and the project uses [Semantic Versioning](https://semver.org/).
   only as a JSON POST from the game's own page, so other sites open in the
   browser can't overwrite rooms; `tools/room-pr.bat` takes a description
   with `( ) & < > |` in it.
+- Room editor, second review: a click with the Object tool on a platform of
+  the same type no longer replaces it and drops its path (an object of
+  the same type only takes the regrow time); the Path tool no longer gives
+  a stationary enemy an invalid path; Save checks an edit made that same
+  frame and ignores a second click while saving; Ctrl+S in a panel field
+  saves instead of opening the browser's Save Page; the cursor follows a
+  layer or tool change without moving the mouse; blanking the room name
+  shows the name again; Revert is enabled only when the room or its own
+  connections changed, and a room whose connections changed shows as
+  unsaved; `tools/room-pr.bat` sends `data/defs.json` (enemy templates)
+  too.
 
 ### Changed
 - Enemy code cleanup: shared collision helpers (`restsOn()`, `cellBox()`,

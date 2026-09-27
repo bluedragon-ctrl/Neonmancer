@@ -2,8 +2,9 @@
  * One room being edited (room editor, D56, D57): the room data, the edits
  * the editor's tools make to it, undo and redo, and whether it changed since
  * it was last saved. The room's exit connections live in world.json
- * (WorldEdit); its undo steps take them along. Plain logic, no browser, so
- * tests can drive it.
+ * (WorldEdit); its undo steps take them along, and the enemy templates in
+ * defs.json (DefsEdit) of the steps that changed them. Plain logic, no
+ * browser, so tests can drive it.
  */
 import { MAX_ROOM_FOOTPRINT } from '../core/rules.js';
 import { DATA_SCHEMA_VERSION } from '../core/version.js';
@@ -34,10 +35,12 @@ export class RoomEdit {
    * @param {object} data room file contents
    * @param {object} [options]
    * @param {import('./world-edit.js').WorldEdit} [options.world] world.json being edited (exit connections)
+   * @param {import('./defs-edit.js').DefsEdit} [options.defs] defs.json being edited (enemy templates)
    * @param {boolean} [options.fresh] a new room, not saved yet
    */
-  constructor(data, { world = null, fresh = false } = {}) {
+  constructor(data, { world = null, defs = null, fresh = false } = {}) {
     this.world = world;
+    this.defs = defs;
     this.fresh = fresh;
     this.load(data);
     /** Text of the room as last saved (or loaded), to tell unsaved changes. */
@@ -51,6 +54,8 @@ export class RoomEdit {
 
   /** Take `data` as the current state (a fresh copy). */
   load(data) {
+    /** text() until the next change. */
+    this.cachedText = null;
     this.data = structuredClone(data);
     this.blocks = new Boxes(data.blocks ?? [], { dims: 3, defaultType: 'block' });
     this.holes = new Boxes(data.holes ?? [], { dims: 2, defaultType: 'hole' });
@@ -78,7 +83,8 @@ export class RoomEdit {
 
   /** The room file's text (see format-json.js). */
   text() {
-    return formatJson(this.toData());
+    this.cachedText ??= formatJson(this.toData());
+    return this.cachedText;
   }
 
   /** Are there changes since the last save (a new room always has)? */
@@ -92,16 +98,19 @@ export class RoomEdit {
     this.fresh = false;
   }
 
-  /** The room and its connections, for undo. */
+  /** The room, its connections and the enemy templates, for undo. */
   snapshot() {
-    return JSON.stringify({ room: this.text(), links: this.world?.linksOf(this.id) ?? [] });
+    return { room: this.text(), links: JSON.stringify(this.world?.linksOf(this.id) ?? []), defs: this.defs?.text() ?? null };
   }
 
-  /** Go back to a snapshot(). */
-  restore(snapshot) {
-    const { room, links } = JSON.parse(snapshot);
+  /**
+   * Go back to an undo or redo step: the room and its connections, and the
+   * template changes of the step if it made any (`defs`, from `defsAfter`).
+   */
+  restore({ room, links, defs, defsAfter }) {
     this.load(JSON.parse(room));
-    this.world?.setLinks(this.id, links);
+    this.world?.setLinks(this.id, JSON.parse(links));
+    if (defs !== null) this.defs?.applyChange(defsAfter, defs);
   }
 
   // --- Undo -------------------------------------------------------------
@@ -119,7 +128,11 @@ export class RoomEdit {
     if (this.pending === null) return;
     const before = this.pending;
     this.pending = null;
-    if (before === this.snapshot()) return;
+    const now = this.snapshot();
+    if (before.room === now.room && before.links === now.links && before.defs === now.defs) return;
+    // Only a step that changed the templates takes those changes back (other rooms' stay).
+    if (before.defs === now.defs) before.defs = null;
+    else before.defsAfter = now.defs;
     this.undoStack.push(before);
     if (this.undoStack.length > UNDO_LIMIT) this.undoStack.shift();
     this.redoStack = [];
@@ -135,6 +148,7 @@ export class RoomEdit {
     const outer = this.pending !== null;
     this.begin();
     const result = change();
+    this.cachedText = null;
     if (!outer) this.end();
     return result;
   }
@@ -151,8 +165,11 @@ export class RoomEdit {
 
   step(from, to) {
     if (this.pending !== null || from.length === 0) return false;
-    to.push(this.snapshot());
-    this.restore(from.pop());
+    const target = from.pop();
+    // The way back of this step: its template changes turned round.
+    const now = { ...this.snapshot(), defs: target.defs === null ? null : target.defsAfter, defsAfter: target.defs };
+    to.push(now);
+    this.restore(target);
     return true;
   }
 
@@ -171,6 +188,28 @@ export class RoomEdit {
     if (enemy) return { kind: 'enemy', item: enemy };
     const type = this.blocks.get(cell);
     return type ? { kind: 'block', type } : null;
+  }
+
+  /**
+   * What is in a cell, in words, for the panel: `3, 1, 4: crate_1 (crate)`;
+   * `tile 3, 4: hole` for a floor tile. An exit there is named too.
+   * @param {number[]} cell [x, y, z]
+   * @param {{ tile?: boolean }} [options] describe the floor tile [x, z]
+   */
+  describe(cell, { tile = false } = {}) {
+    const [x, y, z] = cell;
+    if (tile) return `tile ${x}, ${z}: ${this.isHole([x, z]) ? 'hole' : 'floor'}`;
+    const here = this.at(cell);
+    const what = [];
+    if (here?.kind === 'block') what.push(here.type === 'block' ? 'block' : `${here.type} block`);
+    else if (here) what.push(`${here.item.id} (${here.item.type})`);
+    const [w, , d] = this.size;
+    const edges = { '-x': x === 0, '+x': x === w - 1, '-z': z === 0, '+z': z === d - 1 };
+    for (const side of Object.keys(edges).filter((key) => edges[key])) {
+      const exit = this.exitAt(side, cell);
+      if (exit) what.push(`exit ${exit.id}`);
+    }
+    return `${x}, ${y}, ${z}: ${what.join(', ') || 'empty'}`;
   }
 
   /** Is the floor tile [x, z] a hole? */
@@ -204,19 +243,22 @@ export class RoomEdit {
 
   /**
    * Put a new object of `type` in a cell, replacing whatever was there. Its
-   * id is the type name with the first free number (`crate_1`).
+   * id is the type name with the first free number (`crate_1`). An object of
+   * the same type there only takes the `extra` fields, keeping its id and
+   * the rest (a platform its path).
    * @param {number[]} cell
    * @param {string} type object type id (defs.json)
-   * @param {object} [extra] more fields for the room object, e.g. `{ regrow: 3 }`
+   * @param {object} [extra] more fields for the room object, e.g. `{ regrow: 3 }`;
+   *   `undefined` removes a field
    * @returns {boolean} whether anything changed
    */
   placeObject(cell, type, extra = {}) {
     if (!this.inside(cell)) return false;
     const here = this.at(cell);
-    if (here?.kind === 'object' && here.item.type === type && sameFields(settings(here.item), extra)) return false;
+    if (here?.kind === 'object' && here.item.type === type) return this.updateItem(here.item.id, extra);
     return this.edit(() => {
       this.remove(cell);
-      this.data.objects = [...(this.data.objects ?? []), { id: this.freeId(type), type, at: [...cell], ...structuredClone(extra) }];
+      this.data.objects = [...(this.data.objects ?? []), withFields({ id: this.freeId(type), type, at: [...cell] }, extra)];
       return true;
     });
   }
@@ -271,31 +313,57 @@ export class RoomEdit {
   }
 
   /**
-   * Change the room size; blocks, holes, objects and enemies that end up
-   * outside are dropped (exits, spawn and reset are left to validation).
+   * Change the room size: blocks, holes, objects and enemies that end up
+   * outside are dropped, spawn and reset move inside (exits and paths are
+   * left to validation).
    * @param {number[]} size [x, y, z]
+   * @returns {{ dropped: string[], moved: string[] } | false} what was dropped
+   *   ("3 blocks", item ids) and moved ("spawn"), or false if the size is the same
    */
   resize(size) {
     if (sameCell(size, this.size)) return false;
-    return this.edit(() => {
+    const dropped = [];
+    const moved = [];
+    this.edit(() => {
       this.data.size = [...size];
+      const count = (boxes) => boxes.cells().length;
+      const [blocks, holes] = [count(this.blocks), count(this.holes)];
       this.blocks.clip(size);
       this.holes.clip([size[0], size[2]]);
+      const lost = { block: blocks - count(this.blocks), hole: holes - count(this.holes) };
+      for (const [what, n] of Object.entries(lost)) if (n > 0) dropped.push(`${n} ${what}${n > 1 ? 's' : ''}`);
       for (const key of ['objects', 'enemies']) {
-        if (this.data[key]) this.data[key] = this.data[key].filter((item) => this.inside(item.at));
+        if (!this.data[key]) continue;
+        dropped.push(...this.data[key].filter((item) => !this.inside(item.at)).map((item) => item.id));
+        this.data[key] = this.data[key].filter((item) => this.inside(item.at));
+      }
+      const [w, h, d] = size;
+      for (const key of ['spawn', 'reset']) {
+        const point = this.data[key];
+        if (!point) continue;
+        // Feet center: in the middle of a cell at most, with the wizard's 2 cells of headroom.
+        const inside = [Math.min(point[0], w - 0.5), Math.min(point[1], h - 2), Math.min(point[2], d - 0.5)];
+        if (sameCell(inside, point)) continue;
+        this.data[key] = inside;
+        moved.push(key);
       }
       return true;
     });
+    return { dropped, moved };
+  }
+
+  /** Are the room's connections (world.json) not the ones last saved? */
+  get linksChanged() {
+    if (!this.world) return false;
+    return JSON.stringify(this.world.linksOf(this.id)) !== JSON.stringify(this.world.savedLinksOf(this.id));
   }
 
   /** Go back to the room and its connections as last saved (one undo step); a new room starts over. */
   revert() {
-    const links = this.world?.savedLinksOf(this.id) ?? [];
-    const now = this.world?.linksOf(this.id) ?? [];
-    if (this.text() === this.savedText && JSON.stringify(now) === JSON.stringify(links)) return false;
+    if (this.text() === this.savedText && !this.linksChanged) return false;
     return this.edit(() => {
       this.load(JSON.parse(this.savedText));
-      this.world?.setLinks(this.id, links);
+      this.world?.setLinks(this.id, this.world.savedLinksOf(this.id));
       return true;
     });
   }
@@ -308,6 +376,43 @@ export class RoomEdit {
    */
   item(id) {
     return [...(this.data.objects ?? []), ...(this.data.enemies ?? [])].find((item) => item.id === id) ?? null;
+  }
+
+  /**
+   * Remove an object or enemy.
+   * @param {string} id
+   * @returns {boolean} whether it was there
+   */
+  removeItem(id) {
+    const item = this.item(id);
+    return !!item && this.erase(item.at);
+  }
+
+  /**
+   * The id an object or enemy should have as one of `type`: one the editor
+   * made (`bug_1`) follows the type (`virus_1`); one written by hand stays.
+   * @param {object} item
+   * @param {string} type
+   */
+  idForType(item, type) {
+    if (type === item.type || !new RegExp(`^${item.type}_\\d+$`).test(item.id)) return item.id;
+    return this.freeId(type);
+  }
+
+  /**
+   * Give an enemy a type and overrides (none: `{}`); its id follows the type
+   * (idForType()), and one that doesn't patrol loses its path.
+   * @param {string} id
+   * @param {{ type: string, overrides: object }} settings
+   * @param {boolean} patrols it walks a path with these settings
+   * @returns {string|null} its id afterwards, or null if nothing changed
+   */
+  setEnemy(id, { type, overrides }, patrols) {
+    const enemy = this.item(id);
+    if (!enemy) return null;
+    const next = this.idForType(enemy, type);
+    const fields = { id: next, type, overrides: Object.keys(overrides).length > 0 ? overrides : undefined, path: patrols ? enemy.path : undefined };
+    return this.updateItem(id, fields) ? next : null;
   }
 
   /**
@@ -435,10 +540,23 @@ export class RoomEdit {
   }
 
   /**
-   * Change an exit's id, width, height or floor level; its connection
-   * follows a new id.
+   * Would the exit, changed by `fields`, share an opening cell with another
+   * exit in its side?
    * @param {string} id
-   * @param {{ id?: string, width?: number, height?: number, y?: number }} fields
+   * @param {object} fields
+   */
+  exitClashes(id, fields) {
+    const exit = this.exits.find((e) => e.id === id);
+    if (!exit) return false;
+    const next = withExitDefaults({ ...exit, ...fields });
+    return this.exits.some((other) => other !== exit && other.side === next.side && overlaps(withExitDefaults(other), next));
+  }
+
+  /**
+   * Change an exit's id, position along its side (`at`), width, height or
+   * floor level; its connection follows a new id.
+   * @param {string} id
+   * @param {{ id?: string, at?: number, width?: number, height?: number, y?: number }} fields
    * @returns {boolean} whether anything changed
    */
   updateExit(id, fields) {
@@ -529,17 +647,6 @@ function overlaps(a, b) {
   return a.at < b.at + b.width && b.at < a.at + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
 }
 
-/** A room object's own settings: every field but its id, type and cell (e.g. `regrow`). */
-function settings({ id, type, at, ...rest }) {
-  return rest;
-}
-
-/** Do two objects have the same fields with the same values, in any key order? */
-function sameFields(a, b) {
-  const keys = Object.keys(a);
-  return keys.length === Object.keys(b).length && keys.every((key) => key in b && JSON.stringify(a[key]) === JSON.stringify(b[key]));
-}
-
 /**
  * Check a room as edited against the rest of the game data, the way the
  * game checks it at load time.
@@ -583,6 +690,18 @@ export function roomIdProblem(id, taken) {
   if (!ID_PATTERN.test(id)) return 'Room id: lowercase letters, digits and _, starting with a letter.';
   if (new Set(taken).has(id)) return `Room id: "${id}" is taken.`;
   return null;
+}
+
+/**
+ * A line about a resize (RoomEdit.resize()).
+ * @param {number[]} size
+ * @param {{ dropped: string[], moved: string[] }} report
+ */
+export function resizeText(size, { dropped, moved }) {
+  const parts = [`Size ${size.join('×')}`];
+  if (dropped.length > 0) parts.push(`dropped ${dropped.join(', ')}`);
+  if (moved.length > 0) parts.push(`moved ${moved.join(' and ')} inside`);
+  return `${parts.join('; ')}.`;
 }
 
 /**

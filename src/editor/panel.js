@@ -39,7 +39,7 @@ export const ENEMY_NUMBERS = { integrity: [1, 1], damage: [1, 1], speed: [0.5, 0
 const HELP = [
   'Left click: place / pick · Right click: erase',
   'Wheel or PgUp/PgDn: layer · 1–9, 0: tool',
-  'Esc: drop the selection',
+  'Esc: drop the selection · Del: remove it',
   'Ctrl+Z / Ctrl+Y: undo / redo · Ctrl+S: save',
   'F2: play the room · F3: debug',
 ];
@@ -92,12 +92,13 @@ export class EditorPanel {
    * @param {Record<string, { name: string }>} options.biomes
    * @param {boolean} options.canSave the dev server can save; a build only exports
    * @param {Record<string, Function>} options.on callbacks: room(id), newRoom(id), tool(id), objectType(id),
-   *   enemy(field, value), saveTemplate(name), updateTemplate(), path(field, value), clearPath(), exit(field, value),
-   *   layer(step), name(text),
+   *   enemy(field, value), saveTemplate(name), updateTemplate(), renameTemplate(name), deleteTemplate(),
+   *   path(field, value), clearPath(), exit(field, value), layer(step), cut(on), discard(), error(text), name(text),
    *   biome(id), size([x, y, z]), undo(), redo(), save(), revert()
    */
   constructor(root, { objectTypes, enemyTypes, biomes, canSave, on }) {
     this.canSave = canSave;
+    this.on = on;
     this.element = el('div', 'editor-panel');
     this.element.hidden = true;
     // Keep clicks and the wheel on the panel from reaching the game canvas.
@@ -135,16 +136,25 @@ export class EditorPanel {
     }
     const sizeRow = el('div', 'editor-row');
     sizeRow.append(el('span', 'editor-label', 'Size'), ...this.sizeInputs);
+    // A new room that was never saved can be thrown away.
+    this.discardButton = el('button', 'editor-action', 'Discard new room');
+    this.discardButton.addEventListener('click', () => on.discard());
     const room = el('div', 'editor-group');
-    room.append(this.row('Room', this.roomSelect), newRoomRow, this.row('Name', this.nameInput), this.row('Biome', this.biomeSelect), sizeRow);
+    room.append(this.row('Room', this.roomSelect), newRoomRow, this.row('Name', this.nameInput), this.row('Biome', this.biomeSelect), sizeRow, this.discardButton);
 
     this.layerLabel = el('span', 'editor-value');
     const down = el('button', 'editor-small', '−');
     const up = el('button', 'editor-small', '+');
     down.addEventListener('click', () => on.layer(-1));
     up.addEventListener('click', () => on.layer(1));
+    this.cutInput = Object.assign(el('input'), { type: 'checkbox' });
+    this.cutInput.addEventListener('change', () => on.cut(this.cutInput.checked));
+    const cut = el('label', 'editor-check');
+    cut.append(this.cutInput, ' hide above');
     const layer = el('div', 'editor-row editor-layer');
-    layer.append(el('span', 'editor-label', 'Layer'), down, this.layerLabel, up);
+    layer.append(el('span', 'editor-label', 'Layer'), down, this.layerLabel, up, cut);
+    /** What is in the cell under the mouse. */
+    this.hoverLine = el('div', 'editor-hover');
 
     this.toolButtons = new Map();
     const tools = el('div', 'editor-tools');
@@ -189,15 +199,24 @@ export class EditorPanel {
     this.enemyRows.append(this.row('Color', this.enemyColor));
     // Templates (D58): these settings as a new enemy type, or into the type they are of.
     this.templateInput = Object.assign(el('input'), { type: 'text', placeholder: 'template_name' });
-    const saveTemplate = () => this.templateInput.value.trim() && on.saveTemplate(this.templateInput.value.trim());
+    const templateName = () => this.templateInput.value.trim();
+    const saveTemplate = () => templateName() && on.saveTemplate(templateName());
     const templateButton = el('button', 'editor-small', 'Save');
     templateButton.addEventListener('click', saveTemplate);
     this.templateInput.addEventListener('keydown', (e) => e.key === 'Enter' && saveTemplate());
     const templateRow = el('div', 'editor-row');
     templateRow.append(el('span', 'editor-label', 'Template'), this.templateInput, templateButton);
+    // The template the settings are of: another name (typed above), or gone.
+    this.renameTemplate = Object.assign(el('button', 'editor-small', 'Rename'), { title: 'Rename it to the name typed in Template' });
+    this.renameTemplate.addEventListener('click', () => templateName() && on.renameTemplate(templateName()));
+    this.deleteTemplate = el('button', 'editor-small', 'Delete');
+    this.deleteTemplate.addEventListener('click', () => on.deleteTemplate());
+    this.templateOfRow = el('div', 'editor-row');
+    this.templateOf = el('span', 'editor-value editor-grow');
+    this.templateOfRow.append(el('span', 'editor-label', 'Its template'), this.templateOf, this.renameTemplate, this.deleteTemplate);
     this.updateTemplate = el('button', 'editor-action');
     this.updateTemplate.addEventListener('click', () => on.updateTemplate());
-    this.enemyRows.append(templateRow, this.updateTemplate);
+    this.enemyRows.append(templateRow, this.templateOfRow, this.updateTemplate);
     this.setEnemyTypes(enemyTypes, {});
 
     this.pathMode = select([['pingpong', 'there and back'], ['loop', 'loop']]);
@@ -217,12 +236,19 @@ export class EditorPanel {
     this.exitWidth.addEventListener('change', () => on.exit('width', numberValue(this.exitWidth) ?? EXIT_DEFAULTS.width));
     this.exitHeight = numberInput({ min: 2, step: 1 });
     this.exitHeight.addEventListener('change', () => on.exit('height', numberValue(this.exitHeight) ?? EXIT_DEFAULTS.height));
+    // Where a picked exit is: along its side, and its floor level.
+    this.exitAt = numberInput({ min: 0, step: 1 });
+    this.exitAt.addEventListener('change', () => numberValue(this.exitAt) !== undefined && on.exit('at', numberValue(this.exitAt)));
+    this.exitY = numberInput({ min: 0, step: 1 });
+    this.exitY.addEventListener('change', () => on.exit('y', numberValue(this.exitY) ?? EXIT_DEFAULTS.y));
+    this.exitAtRow = this.row('Position', this.exitAt);
+    this.exitYRow = this.row('Floor (y)', this.exitY);
     this.exitLink = el('select');
     this.exitLink.addEventListener('change', () => on.exit('link', this.exitLink.value || null));
     this.exitIdRow = this.row('Id', this.exitId);
     this.exitLinkRow = this.row('Leads to', this.exitLink);
     this.exitRows = this.group('exit');
-    this.exitRows.append(this.exitIdRow, this.row('Width', this.exitWidth), this.row('Height', this.exitHeight), this.exitLinkRow);
+    this.exitRows.append(this.exitIdRow, this.exitAtRow, this.exitYRow, this.row('Width', this.exitWidth), this.row('Height', this.exitHeight), this.exitLinkRow);
 
     const actions = el('div', 'editor-actions');
     this.buttons = {};
@@ -237,7 +263,7 @@ export class EditorPanel {
     const help = el('div', 'editor-help');
     for (const line of HELP) help.append(el('div', '', line));
 
-    this.element.append(title, this.roomLabel, room, layer, tools, this.objectRows, this.enemyRows, this.pathRows, this.exitRows, actions, this.status, this.errors, help);
+    this.element.append(title, this.roomLabel, room, layer, this.hoverLine, tools, this.objectRows, this.enemyRows, this.pathRows, this.exitRows, actions, this.status, this.errors, help);
     root.append(this.element);
 
     // Controls let go of the keyboard once used, so the editor's keys (the
@@ -280,6 +306,11 @@ export class EditorPanel {
     );
   }
 
+  /** @param {string|null} text what is in the cell under the mouse, or null (none) */
+  setHover(text) {
+    this.hoverLine.textContent = text ?? '';
+  }
+
   /** @param {boolean} shown */
   setShown(shown) {
     this.element.hidden = !shown;
@@ -300,18 +331,22 @@ export class EditorPanel {
    * @param {string} state.objectType
    * @param {boolean} state.collapsing the object type is a collapsing block (it may regrow)
    * @param {{ id?: string, type: string, overrides: object }} state.enemy enemy settings: the picked enemy's (with its id), or for new ones
+   * @param {boolean} state.template their type is a template (it can be renamed or deleted)
    * @param {object|null} state.pathItem the platform or enemy whose path is edited
    * @param {boolean} state.pathItemIsEnemy it is an enemy (its speed defaults to its type's)
    * @param {{ id: string|null, width: number, height: number, link: string|null, links: string[] }} state.exit
    *   the picked exit (id null: the settings for new ones) and the exits it can lead to
    * @param {number} state.layer
-   * @param {string[]} state.errors
+   * @param {boolean} state.cut what is above the layer is hidden
+   * @param {{ file: string, errors: { error: string, text: string, target: boolean }[] }[]} state.errors
+   *   by file; `target`: a click goes to it
    * @param {string} state.status a line about the last action
    * @param {boolean} state.unsaved there are unsaved edits (any room, or world.json)
    */
-  show({ edit, rooms, tool, objectType, collapsing, enemy, pathItem, pathItemIsEnemy, exit, layer, errors, status, unsaved }) {
+  show({ edit, rooms, tool, objectType, collapsing, enemy, template, pathItem, pathItemIsEnemy, exit, layer, cut, errors, status, unsaved }) {
     const data = edit.data;
-    this.roomLabel.textContent = `${data.id}${edit.dirty ? ' • unsaved' : unsaved ? ' • other rooms unsaved' : ''}`;
+    const changed = edit.dirty || edit.linksChanged;
+    this.roomLabel.textContent = `${data.id}${changed ? ' • unsaved' : unsaved ? ' • other rooms unsaved' : ''}`;
     if (this.roomSelect.options.length !== rooms.length || rooms.some((id, i) => this.roomSelect.options[i].value !== id)) {
       this.roomSelect.replaceChildren(...rooms.map((id) => option(id, id)));
     }
@@ -341,9 +376,10 @@ export class EditorPanel {
     this.enemyColor.placeholder = `type's (${typeValues.color})`;
     if (document.activeElement !== this.enemyColor) this.enemyColor.value = enemy.overrides.color ?? '';
     // An enemy of a template with settings of its own can move them into the template.
-    const template = this.enemyModels[enemy.type] && this.enemyModels[enemy.type] !== enemy.type;
     this.updateTemplate.hidden = !template || Object.keys(enemy.overrides).length === 0;
     this.updateTemplate.textContent = `Update template ${enemy.type}`;
+    this.templateOfRow.hidden = !template;
+    this.templateOf.textContent = enemy.type;
 
     const path = pathItem?.path;
     for (const node of [this.pathMode, this.pathSpeed, this.pathPause, this.clearPath]) node.disabled = !path;
@@ -352,7 +388,9 @@ export class EditorPanel {
     this.setNumber(this.pathSpeed, path?.speed);
     this.setNumber(this.pathPause, path?.pause);
 
-    this.exitIdRow.hidden = this.exitLinkRow.hidden = !exit.id;
+    this.exitIdRow.hidden = this.exitLinkRow.hidden = this.exitAtRow.hidden = this.exitYRow.hidden = !exit.id;
+    this.setNumber(this.exitAt, exit.at);
+    this.setNumber(this.exitY, exit.y);
     if (document.activeElement !== this.exitId) this.exitId.value = exit.id ?? '';
     this.setNumber(this.exitWidth, exit.width);
     this.setNumber(this.exitHeight, exit.height);
@@ -360,6 +398,8 @@ export class EditorPanel {
     this.exitLink.value = exit.link ?? '';
 
     this.layerLabel.textContent = `${layer} / ${data.size[1] - 1}`;
+    this.cutInput.checked = cut;
+    this.discardButton.hidden = !edit.fresh;
     // Don't overwrite a field while it is being typed in.
     if (document.activeElement !== this.nameInput) this.nameInput.value = data.name;
     this.biomeSelect.value = data.biome;
@@ -368,10 +408,19 @@ export class EditorPanel {
     });
     this.buttons.undo.disabled = edit.undoStack.length === 0;
     this.buttons.redo.disabled = edit.redoStack.length === 0;
-    this.buttons.revert.disabled = !edit.dirty && !edit.world?.dirty;
+    this.buttons.revert.disabled = !changed;
     this.buttons.save.disabled = this.canSave && !unsaved;
     this.status.textContent = status;
-    this.errors.replaceChildren(...errors.map((error) => el('li', '', error)));
+    this.errors.replaceChildren(
+      ...errors.flatMap(({ file, errors: list }) => [
+        ...(file ? [el('li', 'editor-error-file', file)] : []),
+        ...list.map(({ error, text, target }) => {
+          const item = el('li', target ? 'editor-error-link' : '', text);
+          if (target) item.addEventListener('click', () => this.on.error(error));
+          return item;
+        }),
+      ]),
+    );
   }
 
   /** Put a number in a field (blank for undefined), unless it is being typed in. */

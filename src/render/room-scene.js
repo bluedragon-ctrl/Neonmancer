@@ -24,6 +24,18 @@ export const OBJECT_VIEWS = {
   collapsing: CollapsingView,
 };
 
+/**
+ * The room without its blocks above height layer `layer` (the edges of the
+ * rest are worked out anew, so the cut shows as block tops).
+ * @param {object} room built room (world/room.js)
+ * @param {number} layer
+ */
+export function cutRoom(room, layer) {
+  const below = (cells) => cells.filter((cell) => cell[1] <= layer);
+  const typedCells = Object.fromEntries(Object.entries(room.typedCells ?? {}).map(([type, cells]) => [type, below(cells)]));
+  return { ...room, cells: below(room.cells), typedCells };
+}
+
 export class RoomScene {
   /** @param {import('./renderer.js').Renderer} renderer */
   constructor(renderer) {
@@ -31,6 +43,8 @@ export class RoomScene {
     this.staticGroup = new Group();
     this.objectGroup = new Group();
     this.roomId = null;
+    /** Height layer above which nothing is drawn (room editor), or null. */
+    this.cutAbove = null;
     this.objectViews = [];
     this.enemyViews = [];
     this.exitViews = [];
@@ -48,22 +62,25 @@ export class RoomScene {
    * @param {object} [options]
    * @param {boolean} [options.rebuild] rebuild the static views of the same
    *   room too (its data changed in the room editor)
+   * @param {number|null} [options.cutAbove] leave out blocks, objects and
+   *   enemies above this height layer (the room editor's layer), or null
    */
-  show(game, { rebuild = false } = {}) {
+  show(game, { rebuild = false, cutAbove = null } = {}) {
     const { room } = game;
     const { renderer } = this;
     const old = [this.objectGroup];
-    this.objectViews = game.objects.map((object) => new OBJECT_VIEWS[object.kind](game, object));
-    this.enemyViews = game.enemies.map((enemy) => new EnemyView(game, enemy));
+    const shown = (thing) => cutAbove === null || Math.floor(thing.pos[1]) <= cutAbove;
+    this.objectViews = game.objects.filter(shown).map((object) => new OBJECT_VIEWS[object.kind](game, object));
+    this.enemyViews = game.enemies.filter(shown).map((enemy) => new EnemyView(game, enemy));
     this.zapView = new ZapView(game);
     this.objectGroup = new Group().add(this.zapView.group);
     // add() with no arguments logs an error (a room without objects).
     const views = [...this.objectViews, ...this.enemyViews];
     if (views.length > 0) this.objectGroup.add(...views.map((view) => view.group));
-    if (rebuild || room.id !== this.roomId) {
+    if (rebuild || room.id !== this.roomId || cutAbove !== this.cutAbove) {
       old.push(this.staticGroup);
       this.exitViews = room.exits.map((exit) => new ExitView(exit, room.size, game.destinationColor(exit)));
-      const roomView = createRoomView(room);
+      const roomView = createRoomView(cutAbove === null ? room : cutRoom(room, cutAbove));
       this.hazardFaces = roomView.userData.hazardFaces;
       this.flare = null;
       this.staticGroup = new Group().add(
@@ -74,6 +91,7 @@ export class RoomScene {
       );
       frameRoom(renderer.camera, room.size);
       this.roomId = room.id;
+      this.cutAbove = cutAbove;
     }
     renderer.scene.add(this.staticGroup, this.objectGroup);
     // Compile the new views before freeing the old ones, so shaders they
