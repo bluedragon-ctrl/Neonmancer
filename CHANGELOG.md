@@ -6,6 +6,12 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- Phase plan (D65): the old Phase 3 splits into Phase 3 (v0.3, spells and
+  pickups) and Phase 4 (v0.4, Wardens, saves, map, tooling); polish moves
+  to Phase 5. Phase 3 step plan in docs/design.md, with a spell roster
+  discussion step and a world-targets discussion opening the score step.
+
 ## [0.2.0] - 2026-09-27
 
 Phase 2 — Hazards, combat, editor.

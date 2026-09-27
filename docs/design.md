@@ -86,7 +86,7 @@ steps.
 - Losing the last point kills him (`die` event, cause `damage`): he
   derezzes on the spot, flickering and squeezing into a thin beam while
   a burst of cyan and magenta pixels drifts up out of him (placeholder
-  until the Phase 4 juice pass), then recompiles at the room's reset point
+  until the Phase 5 juice pass), then recompiles at the room's reset point
   after about 1.1 s, like a hole death (cause `hole`, dropping into the pit).
   Each cause prints its own terminal line.
 - Nothing hurts a dead wizard; debug invincibility blocks all damage.
@@ -437,7 +437,7 @@ usual, so half behind a wall he is half ghost (D55).
 
 ### Test rooms
 
-Test rooms stay in the world until content production (Phase 4) builds the
+Test rooms stay in the world until content production (Phase 5) builds the
 real rooms and puzzles (D45). They are a test lab: each shows one mechanic
 in isolation, and later spells and enemy behaviors get tested in them too.
 New mechanics add or extend one (D43). Boot Sector, the start, is the
@@ -459,7 +459,7 @@ walking the whole world (new exits are added for that where needed, D49).
 What to check when building or reviewing a room, beyond what validation
 catches (validation: bounds, overlaps, exits, spawn and reset points). It
 collects problems found in playtests; the room design skill and the level
-review subagent planned for Phase 3 (CLAUDE.md §9) start from it, and the
+review subagent planned for Phase 4 (CLAUDE.md §9) start from it, and the
 reachability checker will automate the reach and timing checks. Numbers
 come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
 `COLLAPSING`); update them here when those change.
@@ -514,7 +514,7 @@ for secrets and rooms reached by backtracking. A biome sets the room color
 (block edges, walls, floor grid), the name in the room banner and the
 room's surroundings (`look`, D62); floor patterns, particles and the
 signature effects in the table are planned, and gameplay effects wait for
-Phase 4.
+Phase 5.
 
 | Biome | Color | Floor | Particles | Signature |
 |---|---|---|---|---|
@@ -743,8 +743,71 @@ Every step also:
 
 Moved out of Phase 2: biome environmental effects (Glitchmire drain,
 Frostbyte low-res, Abyssal low gravity) and the health pickups and safe
-rooms that balance them are specific content, planned for Phase 4 (content
-production). Biomes stay look-only (name, color, surroundings) until then.
+rooms that balance them are specific content, planned for content
+production (Phase 5 since D65). Biomes stay look-only (name, color, surroundings) until then.
+
+## Phase 3 (v0.3) plan
+
+Spells and pickups (D65). Each step is one branch and one PR against
+`main` (no stacked PRs); the game runs after every step, CI is green before
+a PR is called ready. Every step also does what the Phase 2 steps did:
+showcase entries for new looks, a test room (or an extended one) connected
+to the world, unit tests, the editor palette for any new type, docs,
+CHANGELOG and decisions.
+
+A step starts by settling its open questions (listed below the table) with
+the author; the answers are recorded as decisions before the code lands.
+
+| # | Branch | Delivers |
+|---|---|---|
+| 1 | `feat/pickups-and-progress` | A generic pickup object (kind, look, stable id) in `defs.json` and room data, and a `Progress` model (collected ids, known spells) that survives room resets and death: collected pickups stay gone. Pickup burst and banner; editor and validation support. |
+| 2 | `feat/data-disks` | Data-disk pickups that unlock a spell: install animation, `> SPELL INSTALLED: …` banner, spell switching (Tab / Q) with more than one spell. |
+| 3 | `feat/viruses` | A `chase` movement behavior: a hostile Virus follows the wizard while it sees him within `aggroRange` and gives up when line of sight breaks. |
+| 4 | `feat/popups` | A projectile attack: Pop-ups are stationary enemies firing slow shots; a projectile entity with its own rules for what stops it. |
+| 5 | `feat/firewall-spell` | Firewall: a brief shield that blocks projectiles. |
+| 6 | `feat/pause-spell` | Pause: freezes an enemy for a while; a frozen enemy is a solid platform (reusing the solid-enemy rules, D51). |
+| 7 | `feat/warp-spell` | Warp: a short teleport through gaps or past hazards, with an afterimage. |
+| 8 | `feat/cut-paste-spell` | Cut & Paste: cut one object into a one-slot inventory, paste it at a valid grid cell in front of the wizard. |
+| 9 | `docs/spell-roster` | Discussion step, docs only: further spells, or upgrades of the five, now that they can be played. Accepted ones get their own steps (in this phase or later) and CLAUDE.md §5 is updated; the result is a decision. |
+| 10 | `feat/score-and-bits` | Starts with a discussion of the world targets (below). Then: bonus bits (up to 4 slots per room), secrets, score for bits, enemies, secrets and pickups, floating score popups, HUD score, the "all bits collected" room bonus, local high score. |
+| 11 | `feat/fragments-and-core` | Fragment pickups, the fragment count and locations in `world.json`, the central core that takes them, `> FRAGMENT n/N GET!`, and the end of the game. |
+| 12 | `chore/release-0.3.0` | Docs pass, CHANGELOG, `v0.3.0` tag and GitHub Release (CLAUDE.md §10) |
+
+Open questions, settled at the start of their step:
+- **2 Data disks:** does Zap stay known from the start, or become the first
+  disk (in or near Boot Sector)?
+- **3 Viruses:** what blocks line of sight (blocks, crates, height
+  differences); what a Virus does after giving up (stops, returns to its
+  post or path); chase speed.
+- **4 Pop-ups:** aimed at the wizard or in a fixed direction; fire rate,
+  shot speed and range; what stops a shot (blocks, crates, Zap).
+- **5 Firewall:** duration and cost; does it also stop contact damage?
+- **6 Pause:** duration and cost; how it picks its target (a bolt, or the
+  nearest enemy in front); does it work on Wardens (Phase 4)?
+- **7 Warp:** distance and direction; through a one-block wall, or only
+  across gaps and hazards; where it lands when the target cell is taken.
+- **8 Cut & Paste:** what can be cut (objects only, enemies, a crate with
+  something on it); does the cut object leave the room with the wizard or
+  go back on reset?
+- **10 Score and bits — world targets:** target number of rooms (40–60 in
+  CLAUDE.md), spells (and upgrades, from step 9) and items; what an item
+  is (the key layout reserves 8 bits); bits per room; score values; what
+  counts as a secret. These numbers also fix the access-key bit layout
+  (Phase 4).
+- **11 Fragments:** fragment count in the test world; a placeholder win
+  screen or a real ending (final score, credits).
+- **Test world:** each step adds a test room (D45), so the world grows to
+  about 15 rooms; a second hub may be needed to keep every test room at
+  most two rooms from Boot Sector (D49).
+
+## Phase 4 (v0.4) outline
+
+Guardians, saves and tooling (D65); planned in detail when Phase 3 is
+released. Firewall Wardens; title screen and pause menu (the save UI needs
+both); access-key codec with tests; URL saves and localStorage autosave;
+map screen; reachability checker; design skills and subagents. Open so
+far: what writes a save (save shrines, room entry, or both), and how deep
+the reachability checker searches pushables and spells.
 
 ## Data formats
 

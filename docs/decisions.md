@@ -861,3 +861,27 @@ between them would cut shapes apart for nothing; blocks that hurt or kill
 must read at their exact boundary; each collapsing block gives way on its
 own, so its cell outline is information, not noise.
 
+
+### D65 — 2026-09-27 — Phase 3 splits in two; spells get a discussion step
+The old Phase 3 (game structure) becomes two phases, and polish moves to
+Phase 5 (v0.5+):
+- **Phase 3 (v0.3), spells and pickups:** pickups and progress, data
+  disks, Viruses, Pop-ups, the Firewall, Pause, Warp and Cut & Paste
+  spells, a spell roster discussion, score with bonus bits and secrets,
+  fragments and the core.
+- **Phase 4 (v0.4), guardians, saves, tooling:** Firewall Wardens, title
+  screen and pause menu, access keys and saves, the map, the reachability
+  checker, design skills and subagents.
+
+Two steps are discussions first: `docs/spell-roster` (further spells or
+upgrades of the five, docs only) and the start of `feat/score-and-bits`
+(target number of rooms, spells and items, bits per room, score values).
+Every other step settles its open questions with the author before its
+code lands. Step plan in docs/design.md.
+**Why:** author's review of the Phase 3 proposal. As defined, Phase 3 was
+about 17 PRs, twice Phase 2. Wardens guard key rooms, so they belong with
+the world structure of Phase 4. The five spells were named before any of
+them could be played; once they can, it is worth asking what else (or
+what upgrade) the game needs. Score and bits depend on how big the world
+is and how many spells and items it has, and those numbers also fix the
+access-key bit layout, so they are decided in the step, not up front.

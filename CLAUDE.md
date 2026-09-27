@@ -162,7 +162,7 @@ defined in data and combinable. Health pickups and safe rooms balance
 drain effects. Six biomes (D61): one core, four side sectors, one special.
 Room colors stay clear of the gameplay colors (lime crates, cyan
 platforms, magenta collapsing, red hazard, violet void, green bugs).
-Behaviors below are ideas for Phase 4; for now biomes are look only.
+Behaviors below are ideas for Phase 5; for now biomes are look only.
 - **Home Lattice** (core) — amber (the default room color), clean square
   grid, warm rising motes; safe; holds the central core
 - **Glitchmire** — hot pink, torn offset floor tiles, pixel bubbles, edges
@@ -280,10 +280,10 @@ not critical.
   visual asset (monsters, pickups) to it.
 - **Room editor** (in-game, Phase 2): place blocks, enemies and pickups
   with the mouse, preview in the real neon look, export room JSON.
-- **Reachability checker** (Phase 3): script that searches the grid with
+- **Reachability checker** (Phase 4): script that searches the grid with
   jump height, pushable objects and available spells to flag unsolvable
   rooms. Used by CI, the editor, and design skills/subagents.
-- **Claude Code skills and subagents** (Phase 3+, once schemas are
+- **Claude Code skills and subagents** (Phase 4+, once schemas are
   stable): room design and enemy design skills (schema, rules, annotated
   examples); room-drafting and level-review subagents. They start from the
   room design checklist in docs/design.md; check new rooms against it
@@ -350,13 +350,19 @@ Damage, invulnerability and death at 0 integrity. Moving, collapsing,
 hazard and void blocks. Bugs enemy. Zap spell and mana. X-ray outline.
 In-game room editor with JSON export. Step plan: docs/design.md (D43).
 
-**Phase 3 (v0.3) — Game structure**
-Viruses, Pop-ups, Firewall Wardens. Firewall, Pause, Warp, Cut & Paste
-spells and data disks. Fragments and the core. Score, bonus bits,
-secrets. Access keys, URL saves, localStorage autosave, tests. Map
-screen. Reachability checker. Design skills and subagents.
+**Phase 3 (v0.3) — Spells and pickups**
+Pickups and a progress model, data disks. Viruses and Pop-ups. Firewall,
+Pause, Warp and Cut & Paste spells. A discussion step on further spells
+or spell upgrades. Score, bonus bits and secrets, starting with the world
+targets (rooms, spells, items). Fragments and the core. Step plan:
+docs/design.md (D65).
 
-**Phase 4 (v0.4+) — Polish**
+**Phase 4 (v0.4) — Guardians, saves, tooling**
+Firewall Wardens. Title screen and pause menu. Access keys, URL saves,
+localStorage autosave, tests. Map screen. Reachability checker. Design
+skills and subagents.
+
+**Phase 5 (v0.5+) — Polish**
 Full post-processing, juice pass, music and SFX, audio-reactive visuals,
 settings menu with quality presets, fullscreen, gamepad, key rebinding.
 Then content production toward 1.0.0, including biome environmental

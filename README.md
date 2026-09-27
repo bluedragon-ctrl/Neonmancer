@@ -11,8 +11,10 @@ and collect key fragments to reboot the Grid.
 > platforms, runs over collapsing blocks, fights bugs with the Zap spell and
 > shows through walls as an X-ray outline, across seven test rooms. Rooms
 > are made in the in-game room editor (F2), with open, data-driven block
-> types and six biome looks. No goal yet. Next: Phase 3 (game structure:
-> more enemies and spells, fragments and the core, saves, the map).
+> types and six biome looks. No goal yet. Next: Phase 3 (spells and
+> pickups: data disks, Viruses and Pop-ups, four more spells, score and
+> bonus bits, fragments and the core), then Phase 4 (Wardens, saves, the
+> map, tooling).
 > Latest `main` build: https://bluedragon-ctrl.github.io/Neonmancer/
 
 ## Requirements
