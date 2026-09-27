@@ -6,6 +6,26 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- Phase plan (D65): the old Phase 3 splits into Phase 3 (v0.3, spells and
+  pickups) and Phase 4 (v0.4, Wardens, saves, map, tooling); polish moves
+  to Phase 5. Phase 3 step plan in docs/design.md: a world map tool for
+  the developer first (its own page, room positions in `world.json`,
+  D66), a spell roster discussion step, and a world-targets discussion
+  opening the score step.
+- Design direction (D67): exploring is part of the game, so development
+  tools stay hidden from players; the world is a maze with backtracking,
+  so a room need not be fully solvable on first arrival; later spells let
+  the wizard speedrun simple rooms or solve them differently; every
+  permanent pickup is one save bit and shows grayed out on revisits.
+- Switches (D69): pressure plates held by a crate and targets hit by a
+  bolt unlock exits; a new Phase 3 step after data disks.
+- World targets (D68): towards 128 rooms (more small rooms), up to 16
+  spells including upgrades, buff items (integrity, energy, jump) and
+  access levels locking areas; stronger spells and buffs skip rooms and
+  open areas; saves keep what the wizard has, no per-room data. Phase 3
+  gains a buff-items step and access levels.
+
 ## [0.2.0] - 2026-09-27
 
 Phase 2 — Hazards, combat, editor.

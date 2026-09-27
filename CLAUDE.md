@@ -70,14 +70,18 @@ mobile/touch support, backend or accounts.
 - Coordinates: y is up; room size is [x, y, z] = [width, height, depth];
   the floor is at y = 0; back walls are the x = 0 and z = 0 planes.
 - 1 block = 1 unit (1x1x1). Player jump height: 1 unit (clears exactly one
-  block, never two).
+  block, never two). A jump buff item raises it later, to skip easier
+  rooms or reach areas closed before (D68).
 - Player hitbox 0.6 x 1.5 x 0.6 (the hat is visual only), so the wizard
   needs 2 blocks of headroom.
 - Blocks snap to the grid; player and enemies move freely (sub-grid).
 - Room size: width + depth <= 32, height <= 6 (max 16x16; also e.g.
   20x12, 24x8). Mix of small (8x8), standard (12x12) and large (16x16).
 - Every room fits the fixed camera framing without scrolling.
-- World target: 40–60 rooms.
+- World target: towards 128 rooms, more small rooms rather than a few
+  very complex ones (D68). Some areas are locked behind an access level,
+  probably linked to fragments; others open only to a stronger spell or
+  a buff (e.g. a higher jump).
 
 ### Engine
 - Fixed-timestep loop: 60 logic updates per second, rendering
@@ -99,6 +103,8 @@ mobile/touch support, backend or accounts.
 - Types: static, pushable, moving (paths or up/down cycles; player rides
   them), collapsing (vanish after being stepped on, optional respawn),
   hazard (deals damage), void (instant death when the player falls onto it).
+- Switches unlock exits: a pressure plate held down by a crate, or a
+  target hit by a bolt (D69).
 - Holes: floor tiles (at y = 0) drawn as black pits. The player dies falling
   in (a trap, no way back out); a block pushed into a hole drops in and fills
   it, turning it into walkable floor. Holes never lead to another room.
@@ -122,7 +128,15 @@ mobile/touch support, backend or accounts.
 - Rooms fully reset on re-entry (enemies, blocks, moving platforms).
 - Collected things stay collected: fragments, spells, scrolls, secrets,
   and bonus bits.
-- Each room has up to 4 bonus slots, tracked per room in the save.
+- The save holds what the wizard has (fragments, spells, items), not the
+  state of rooms: no per-room data such as bonus slots or the map (D68).
+  Each room has up to 4 bonus slots.
+- Every permanent pickup (fragments, data disks, buff items, secrets) is
+  one bit in the save, found or not; there are only a limited number of
+  them. A found one shows grayed out when its room is revisited (D67).
+  Temporary pickups (e.g. refills) are not saved and come back with the
+  room. Death resets the wizard to his base state, so a detour for a
+  temporary pickup can be worth it.
 
 ---
 
@@ -139,7 +153,18 @@ Move, jump, gravity, push objects, health ("integrity") and mana ("energy").
 - **Cut & Paste** — cut one object into inventory, paste it at a valid
   grid spot in front of the wizard
 
+Up to 16 spells in all (D68): new ones, some letting the wizard skip
+easier rooms, and upgrades of the basic ones. Buff items make the wizard
+himself stronger: more integrity, more energy, a higher jump. Stronger
+spells and buffs both let him skip easier rooms and reach areas he
+couldn't before.
+
 Mana recharges slowly. Installing a spell plays a short animation.
+Later spells and upgrades are stronger: they let the wizard speedrun
+simple rooms or solve them differently. The world is a maze, not a line:
+a room need not be fully solvable on first arrival, and some of its exits
+and pickups wait for a spell or buff found later (backtracking, D67). He
+can always leave it again the way he came.
 
 ### Enemies (corrupted programs; cute but clearly dangerous)
 - **Bugs** — patrol fixed paths
@@ -162,7 +187,7 @@ defined in data and combinable. Health pickups and safe rooms balance
 drain effects. Six biomes (D61): one core, four side sectors, one special.
 Room colors stay clear of the gameplay colors (lime crates, cyan
 platforms, magenta collapsing, red hazard, violet void, green bugs).
-Behaviors below are ideas for Phase 4; for now biomes are look only.
+Behaviors below are ideas for Phase 5; for now biomes are look only.
 - **Home Lattice** (core) — amber (the default room color), clean square
   grid, warm rising motes; safe; holds the central core
 - **Glitchmire** — hot pink, torn offset floor tiles, pixel bubbles, edges
@@ -187,6 +212,9 @@ in rooms; "all bits collected" room bonus. High score stored locally.
 
 ### Map
 Map screen showing visited rooms, connections and fragment markers.
+Current plan, not final: the map covers the current run only and is
+cleared when a save is loaded (the full map is never saved); save shrines
+show a map of the surrounding area (decided with the Phase 4 map step).
 
 ---
 
@@ -227,8 +255,9 @@ The engine is generic; all content lives in data.
   environmental effects
 - `data/rooms/*.json` — one file per room: biome, size [x, y, z], exits,
   objects, enemies, bonus slots; only overrides of type defaults
-- `data/world.json` — room connections, start room, fragment locations,
-  number of fragments required, core location
+- `data/world.json` — room connections, room positions on the world map,
+  start room, fragment locations, number of fragments required, core
+  location
 - `data/strings.json` — all UI text
 - `data/audio.json` — named audio events mapped to files
   (e.g. "jump", "pickup", "music:glitchmire")
@@ -251,10 +280,12 @@ Rules:
 Keys are copied, pasted and bookmarked — never memorized — so length is
 not critical.
 
-- Bit layout (one versioned module, spare bits reserved):
-  format version 4, room 7, spells 5, items 8, fragments 8, health 4,
-  score 20, secrets 16, bonus slots 4 per room (reserve for 64 rooms =
-  256), checksum 16.
+- Bit layout (one versioned module, spare bits reserved), sized for the
+  world targets (D68) and finalized with the access-key step:
+  format version 4, room 8, pickups 64 (one bit per permanent pickup:
+  fragments, data disks, buff items, secrets; known spells and buffs
+  follow from them), health 4, score 20, checksum 16. No per-room data
+  (bonus slots, map).
 - Encoding: Base32 without ambiguous characters (no 0/O, 1/I/L), shown
   in groups (e.g. `KX7M-Q4RP-...`). Input tolerates spaces, dashes and
   lowercase.
@@ -280,10 +311,15 @@ not critical.
   visual asset (monsters, pickups) to it.
 - **Room editor** (in-game, Phase 2): place blocks, enemies and pickups
   with the mouse, preview in the real neon look, export room JSON.
-- **Reachability checker** (Phase 3): script that searches the grid with
+- **World map tool** (`tools/world-map.html`, Phase 3, D66): every room
+  as a node on a simple map grid (positions in `world.json`), with its
+  connections; drag rooms and save; flags rooms not reachable from the
+  start; opens a room in the room editor. Dev server only, never shown to
+  players: exploring is part of the game (D67).
+- **Reachability checker** (Phase 4): script that searches the grid with
   jump height, pushable objects and available spells to flag unsolvable
   rooms. Used by CI, the editor, and design skills/subagents.
-- **Claude Code skills and subagents** (Phase 3+, once schemas are
+- **Claude Code skills and subagents** (Phase 4+, once schemas are
   stable): room design and enemy design skills (schema, rules, annotated
   examples); room-drafting and level-review subagents. They start from the
   room design checklist in docs/design.md; check new rooms against it
@@ -350,13 +386,20 @@ Damage, invulnerability and death at 0 integrity. Moving, collapsing,
 hazard and void blocks. Bugs enemy. Zap spell and mana. X-ray outline.
 In-game room editor with JSON export. Step plan: docs/design.md (D43).
 
-**Phase 3 (v0.3) — Game structure**
-Viruses, Pop-ups, Firewall Wardens. Firewall, Pause, Warp, Cut & Paste
-spells and data disks. Fragments and the core. Score, bonus bits,
-secrets. Access keys, URL saves, localStorage autosave, tests. Map
-screen. Reachability checker. Design skills and subagents.
+**Phase 3 (v0.3) — Spells and pickups**
+World map tool for the developer. Pickups and a progress model, data
+disks. Switches (pressure plates, bolt targets) unlocking exits. Viruses
+and Pop-ups. Firewall, Pause, Warp and Cut & Paste spells.
+A discussion step on further spells, spell upgrades and buff items; the
+first buff items. Score, bonus bits and secrets. Fragments, access levels
+and the core. Step plan: docs/design.md (D65).
 
-**Phase 4 (v0.4+) — Polish**
+**Phase 4 (v0.4) — Guardians, saves, tooling**
+Firewall Wardens. Title screen and pause menu. Access keys, URL saves,
+localStorage autosave, tests. Map screen. Reachability checker. Design
+skills and subagents.
+
+**Phase 5 (v0.5+) — Polish**
 Full post-processing, juice pass, music and SFX, audio-reactive visuals,
 settings menu with quality presets, fullscreen, gamepad, key rebinding.
 Then content production toward 1.0.0, including biome environmental

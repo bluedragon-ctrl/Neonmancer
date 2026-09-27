@@ -3,7 +3,7 @@
  * flash of his hologram on a hit, blinking while invulnerable after it,
  * and the derez when he dies anywhere but
  * in a hole: he flickers and squeezes into a thin beam while a burst of
- * pixels drifts up out of him and fades. A placeholder until the Phase 4
+ * pixels drifts up out of him and fades. A placeholder until the Phase 5
  * juice pass.
  */
 

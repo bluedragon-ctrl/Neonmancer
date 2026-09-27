@@ -861,3 +861,131 @@ between them would cut shapes apart for nothing; blocks that hurt or kill
 must read at their exact boundary; each collapsing block gives way on its
 own, so its cell outline is information, not noise.
 
+
+### D65 — 2026-09-27 — Phase 3 splits in two; spells get a discussion step
+The old Phase 3 (game structure) becomes two phases, and polish moves to
+Phase 5 (v0.5+):
+- **Phase 3 (v0.3), spells and pickups:** a world map tool for the
+  developer, pickups and progress, data disks, Viruses, Pop-ups, the Firewall, Pause, Warp and Cut & Paste
+  spells, a spell roster discussion, score with bonus bits and secrets,
+  fragments and the core.
+- **Phase 4 (v0.4), guardians, saves, tooling:** Firewall Wardens, title
+  screen and pause menu, access keys and saves, the map, the reachability
+  checker, design skills and subagents.
+
+Two steps are discussions first: `docs/spell-roster` (further spells or
+upgrades of the five, docs only) and the start of `feat/score-and-bits`
+(target number of rooms, spells and items, bits per room, score values).
+Every other step settles its open questions with the author before its
+code lands. Step plan in docs/design.md.
+**Why:** author's review of the Phase 3 proposal. As defined, Phase 3 was
+about 17 PRs, twice Phase 2. Wardens guard key rooms, so they belong with
+the world structure of Phase 4. The five spells were named before any of
+them could be played; once they can, it is worth asking what else (or
+what upgrade) the game needs. Score and bits depend on how big the world
+is and how many spells and items it has, and those numbers also fix the
+access-key bit layout, so they are decided in the step, not up front.
+The world map tool comes first: every step adds a test room, and the
+room editor shows one room at a time, so nothing gives an overview of the
+growing world or catches rooms cut off from the start.
+
+### D66 — 2026-09-27 — World map tool: its own page, room positions in world.json
+The developer world map tool (Phase 3 step 1) is a separate page,
+`tools/world-map.html`, not a view inside the room editor, and only the
+dev server serves it (it is not deployed). Room positions on the map are
+stored in `data/world.json`, not computed from the connections:
+- The map is a simple grid of virtual nodes, one room per cell; a room's
+  size and its exits' tiles don't have to match its neighbours'.
+- Rooms are dragged to another free cell and saved through the dev
+  server. The tool shows connections; the room editor edits them (editing
+  them on the map can come later).
+- A new room from the room editor gets the nearest free cell next to the
+  room it was created from, and is moved afterwards.
+**Why:** author's choice. A page of its own keeps the room editor
+focused on one room and can show the whole world without the game
+running. It is a development tool, never visible to players: finding
+what is where is part of the game (D67).
+Nodes on a grid are enough to see the structure; matching tiles would
+make every room size a layout constraint. Stored positions give one layout that the tool and the player's
+map screen (Phase 4) share; an automatic layout can't place the test
+world, whose shortcuts (D49) don't fit a flat grid, and would shift
+whenever a connection changes.
+
+### D67 — 2026-09-27 — Exploration is part of the game; a maze with backtracking
+Finding what is where is part of the game, as in the 1980s isometric
+games that inspired it: nothing made for development (the world map tool,
+debug room jumps) reaches the player. The world is a maze, not a linear
+progression, and the wizard grows stronger: later spells and upgrades let
+him speedrun simple rooms, solve them differently, and reach what he
+couldn't before. So:
+- A room need not be fully solvable on first arrival: some exits and
+  pickups may wait for a spell or buff found later, and the player comes
+  back (backtracking). He can always leave the way he came.
+- With later spells, shortcuts and other solutions are intended, not bugs
+  to design out.
+- The spell roster step (Phase 3 step 11) looks for spells and upgrades
+  that open shortcuts and new areas, not only for new puzzle types.
+- The reachability checker (Phase 4) works out which abilities each exit
+  and pickup of a room needs, and checks that the whole world can be
+  finished in some order.
+- Every permanent pickup (fragments, data disks, buff items, secrets) is
+  one bit in the save, found or not; there are only a limited number of
+  them. A found one stays in its room as a grayed-out ghost when the room
+  is revisited, so the player sees he has been there. Temporary pickups
+  (e.g. refills) are not saved and come back with the room; death resets
+  the wizard, so a trip to one can be worth making.
+**Why:** author's direction for the game. Exploring the Grid and mastering
+it are the reward: discovering the layout matters, a gate seen early is a
+reason to come back, and a room that took a puzzle the first time can
+become a quick run later. Grayed-out pickups keep a maze readable
+without a saved map; one bit each is cheap because permanent pickups are
+few.
+
+### D68 — 2026-09-27 — World targets: towards 128 rooms, 16 spells, buff items, access levels
+The author's targets for the finished game, replacing the 40–60 rooms of
+CLAUDE.md:
+- **Rooms:** towards 128, more small rooms rather than a few very
+  complex ones.
+- **Access levels:** some areas are locked behind an access level,
+  probably linked to fragments (settled in the fragments step).
+- **Spells:** up to 16 in all: new spells, some letting the wizard skip
+  easier rooms, and upgrades of the basic ones (the roster is the Phase 3
+  spell-roster step).
+- **Buff items:** pickups that make the wizard stronger: more integrity,
+  more energy, a higher jump. The one-block jump stays the base; a jump
+  buff raises it (how high is decided with its step).
+- **Ability gates:** stronger spells and buffs let the wizard skip easier
+  rooms and reach areas he couldn't before, so an area can be gated by
+  an ability as well as by an access level, and the player backtracks
+  to it once he has that ability (D67).
+- **Saves hold the wizard, not rooms:** the access key stores what he
+  has (fragments, spells, items, secrets, score, health) and where he
+  is, but no per-room data: no bonus slots, no map.
+
+The access-key layout follows (CLAUDE.md §8, finalized in Phase 4): room
+8 bits (7 would allow exactly 128), one bit per permanent pickup (64
+reserved; spells and buffs follow from the disks and items found, D67),
+and no bonus-slot bits.
+The score step no longer discusses world targets (D65); it keeps
+bits per room, score values and secrets. A buff-items step joins Phase 3,
+and access levels join the fragments step.
+**Why:** author's direction. Many small rooms suit the flip-screen style
+and make exploring (D67) the core of the game; more spells and buffs give
+the player a growing toolset that opens shortcuts through rooms already
+solved and new areas; access levels give a large world its structure.
+Leaving room state out keeps the key short (512 bits of bonus slots
+would have been most of it).
+
+### D69 — 2026-09-27 — Switches unlock exits
+A new Phase 3 step (`feat/switches`, step 4, after data disks): switches
+that unlock a room's exits. Two kinds to start: a pressure plate held
+down by a crate, and a target that a Zap bolt hits. An exit can be locked
+until its switches are on; a locked exit looks closed and is solid.
+Switch state resets with the room like everything else in it. The locked
+exit is shared with access levels (fragments step). The step settles
+first whether the wizard presses plates himself, whether switches latch,
+how several switches and exits combine, and how a locked exit keeps the
+way back open (D67).
+**Why:** author's request. Crates and Zap exist already, so switches turn
+them into puzzle keys with little new machinery, and a locked exit is
+needed for access levels anyway.
