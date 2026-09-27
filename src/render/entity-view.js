@@ -31,6 +31,8 @@ import { createWizard } from './wizard.js';
 import { addXray } from './xray.js';
 import { damagedGlitch, enemyHitLook } from './zap-fx.js';
 import { createCastFlare, placeCastFlare } from './zap-view.js';
+import { createInstall, placeInstall } from './install-view.js';
+import { createShield, placeShield } from './shield-view.js';
 
 /**
  * Which bodies get a drop shadow besides the wizard (who always has one).
@@ -175,6 +177,21 @@ export class PlayerView {
     this.pixels = createDerezPixels();
     this.flare = createCastFlare();
     this.group.add(this.wizard, this.shadow, this.pixels, this.flare);
+    /** Install animations by spell id, made when first needed (D73). */
+    this.installs = new Map();
+    /** The Shield, made when first cast. */
+    this.shield = null;
+  }
+
+  /** The install animation of `spell`, made on first use. */
+  installView(spell) {
+    let view = this.installs.get(spell);
+    if (!view) {
+      view = createInstall(this.game.content.spells[spell]);
+      this.installs.set(spell, view);
+      this.group.add(view);
+    }
+    return view;
   }
 
   /** @param {number} alpha interpolation factor 0..1 between the last two ticks */
@@ -189,6 +206,14 @@ export class PlayerView {
     this.wizard.visible = look.visible;
     this.wizard.scale.set(...look.scale);
     showHitFlash(this.wizard, hitFlash(player));
+    // Installing a spell: the disk's bits flow into him (and tint him; nothing hurts him meanwhile).
+    const { install, shield } = player;
+    for (const [spell, view] of this.installs) view.visible = install?.spell === spell;
+    if (install) placeInstall(this.installView(install.spell), this.wizard, pos, install.tick + alpha, install.from);
+    if (shield) {
+      if (!this.shield) this.group.add((this.shield = createShield(this.game.content.spells.shield.color)));
+      placeShield(this.shield, pos, shield.tick + alpha, shield.ticks);
+    } else if (this.shield) this.shield.visible = false;
     // No ghost while dead: not of him falling into a pit, nor of the derez.
     for (const ghost of this.xray) ghost.visible = !player.dead;
     const derezzing = player.dead && player.deathCause !== 'hole';

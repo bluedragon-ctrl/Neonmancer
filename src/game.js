@@ -23,6 +23,8 @@ import { buildRoom } from './world/room.js';
 const SPELL_EFFECTS = {
   /** A bolt from his hands the way he aims (entities/bolt.js). */
   zap: (game, spell) => game.bolts.push(new Bolt(game.player.pos, game.player.aim(), spell)),
+  /** A ring of electricity round him for a while (D73). */
+  shield: (game, spell) => game.player.raiseShield(Math.round(spell.duration / DT)),
 };
 
 /** Terminal message for each way to die (Player.deathCause). */
@@ -331,7 +333,8 @@ export class Game {
 
   /**
    * The wizard takes the pickups he touches (D71), if they are any use: a
-   * data disk installs its spell for good; a refill restores integrity or
+   * data disk installs its spell for good (he freezes for the install
+   * animation, D73); a refill restores integrity or
    * energy, and is left lying while that is full. Reported as 'pickup'.
    */
   takePickups() {
@@ -358,8 +361,10 @@ export class Game {
     if (data.kind === 'disk') {
       this.progress.collect(bit);
       this.learnSpells(data.spell);
+      const [x, y, z] = data.at;
+      player.startInstall(data.spell, [x + 0.5, y + 0.5, z + 0.5]);
       const name = this.content.strings[`spell.${data.spell}`] ?? data.spell.toUpperCase();
-      announce('banner.spell', { spell: name }, { sub: 'banner.spellSub', color: '#00f0ff' });
+      announce('banner.spell', { spell: name }, { sub: 'banner.spellSub', color: this.content.spells[data.spell].color });
       say('msg.spellInstalled', { spell: name });
       return true;
     }

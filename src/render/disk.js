@@ -47,8 +47,6 @@ export const DISK = {
   collect: { riseTicks: 10, rise: 0.4, pixels: 24, pixelSize: 0.06, pixelTicks: 36, spread: 0.8, lift: 0.5 },
 };
 
-/** Each spell's color on its disk (the color of its bolt or effect). */
-export const SPELL_COLORS = { zap: PALETTE.cyan };
 
 
 /** Line segments of a closed polygon at depth z. */
@@ -62,12 +60,12 @@ let bitEdges = null;
  * The disk model, centered on its middle, facing +z; pose it with
  * poseDisk(diskMotion()).
  * @param {object} [options]
- * @param {string} [options.spell] its spell, for the bits' color (SPELL_COLORS key)
+ * @param {number|string} [options.color] its spell's color (defs.json spells), for the lit bit
  * @param {number} [options.slot] the spell's slot, 0-15: the one bit lit, row
  *   by row from the top left (the save bit the disk sets)
  * @param {boolean} [options.ghost] a disk already found
  */
-export function createDisk({ spell = 'zap', slot = 0, ghost = false } = {}) {
+export function createDisk({ color = PALETTE.cyan, slot = 0, ghost = false } = {}) {
   const s = DISK.size / 2;
   const t = DISK.thickness / 2;
   const c = DISK.corner;
@@ -75,7 +73,7 @@ export function createDisk({ spell = 'zap', slot = 0, ghost = false } = {}) {
   const outline = [[-s, -s], [s, -s], [s, s - c], [s - c, s], [-s + c, s], [-s, s - c]];
 
   const bodyColor = ghost ? DISK.ghost.color : DISK.color;
-  const bitColor = ghost ? DISK.ghost.color : (SPELL_COLORS[spell] ?? PALETTE.cyan);
+  const bitColor = ghost ? DISK.ghost.color : color;
   const glow = ghost ? DISK.ghost.brightness : DISK.brightness;
 
   const shape = new Shape(outline.map(([x, y]) => ({ x, y })));

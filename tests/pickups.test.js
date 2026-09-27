@@ -4,6 +4,7 @@ import { loadGameData } from '../src/data/load.js';
 import { validateData } from '../src/data/validate.js';
 import { RoomEdit } from '../src/editor/room-edit.js';
 import { Game } from '../src/game.js';
+import { PLAYER } from '../src/entities/player.js';
 import { DISK, diskMotion, diskPixels } from '../src/render/disk.js';
 import { PICKUP_BITS, Progress, SAVE_BLOCKS, pickupBit, saveBit } from '../src/world/progress.js';
 import { PICKUPS, SPELLS, dataFiles, eventTypes, gameData, idle, roomFile } from './helpers.js';
@@ -61,6 +62,8 @@ test('taking the Zap disk installs Zap for good: it survives death and room rese
   assert.ok(game.progress.has(0));
   assert.deepEqual(game.player.spells, ['zap']);
   assert.equal(game.player.spell, 'zap');
+  // Once the install animation is over (D73), he can cast it.
+  for (let i = 0; i < PLAYER.installTicks; i++) game.update(idle);
   assert.ok(eventTypes(game.update(cast)).includes('cast'));
 
   // Death resets the room and the wizard; the disk is a ghost and he still knows Zap.

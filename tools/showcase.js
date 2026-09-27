@@ -45,6 +45,9 @@ import { createBolt, createCastFlare, createSparks, placeBolt, placeCastFlare, p
 import { EnergyBar } from '../src/ui/energy-bar.js';
 import { DISK, createDisk, diskMotion, diskPixels, poseDisk } from '../src/render/disk.js';
 import { createRefill, refillMotion } from '../src/render/refill.js';
+import { INSTALL_FX } from '../src/render/install-fx.js';
+import { createInstall, placeInstall } from '../src/render/install-view.js';
+import { createShield, placeShield } from '../src/render/shield-view.js';
 
 /** Block types with variants filled in (D60). */
 const BLOCK_TYPES = resolveBlockTypes(defs.blocks);
@@ -102,6 +105,11 @@ const ALL_ASSETS = [
   { label: 'disk-collect', group: 'disks', spin: false, build: buildDiskCollect },
   { label: 'disk-in-room', group: 'disks', span: 5.5, spin: false, build: buildDiskInRoom },
   { label: 'disk-slots', group: 'disks', span: 6, spin: false, build: buildDiskSlots },
+  { label: 'disk-shield', group: 'disks', spin: false, build: () => buildDisk(defs.spells.shield) },
+  // Installing a spell (Phase 3 step 3, D73): Zap, then Shield, in a loop.
+  { label: 'install', spin: false, shadow: PALETTE.cyan, build: buildInstall },
+  // Shield (D73): up for its duration, blinking before it ends.
+  { label: 'shield', spin: false, shadow: PALETTE.cyan, build: buildShield },
   // Refills (temporary pickups): integrity and energy, hovering and spinning
   // like a disk; picked up the same way; beside a disk and the wizard for scale.
   { label: 'refill-integrity', group: 'refills', spin: false, build: () => buildRefill('integrity') },
@@ -109,6 +117,44 @@ const ALL_ASSETS = [
   { label: 'refill-collect', group: 'refills', spin: false, build: buildRefillCollect },
   { label: 'pickups-in-room', group: 'refills', span: 5.5, spin: false, build: buildPickupsInRoom },
 ];
+
+/** The wizard installing Zap, then Shield, in a loop. */
+function buildInstall() {
+  const wizard = createWizard();
+  wizard.rotation.y = Math.PI / 4;
+  const views = [createInstall(defs.spells.zap), createInstall(defs.spells.shield)];
+  for (const view of views) view.rotation.y = Math.PI / 4;
+  const asset = new Group().add(wizard, ...views);
+  const loop = INSTALL_FX.ticks + 50;
+  let tick = 0;
+  let round = 0;
+  asset.userData.update = (dt) => {
+    tick += dt * 60;
+    if (tick >= loop) [tick, round] = [tick - loop, round + 1];
+    const shown = views[round % 2];
+    for (const view of views) view.visible = view === shown;
+    // Before it starts: the disk still hanging in front of him.
+    placeInstall(shown, wizard, [0, 0, 0], Math.max(0, tick - 20));
+    if (tick >= 20 + INSTALL_FX.ticks) wizard.userData.flash.amount.value = 0;
+  };
+  return asset;
+}
+
+/** The wizard casting Shield: up for its duration, then down for a moment. */
+function buildShield() {
+  const wizard = createWizard();
+  wizard.rotation.y = Math.PI / 4;
+  const shield = createShield(defs.spells.shield.color);
+  const asset = new Group().add(wizard, shield);
+  const ticks = Math.round(defs.spells.shield.duration * 60);
+  const loop = ticks + 50;
+  let tick = 0;
+  asset.userData.update = (dt) => {
+    tick = (tick + dt * 60) % loop;
+    placeShield(shield, [0, 0, 0], tick, ticks);
+  };
+  return asset;
+}
 
 /** For scale: a disk on the floor and one on a block, the wizard and a crate beside them, in a 4×4 room corner. */
 function buildDiskInRoom() {

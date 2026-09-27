@@ -1,7 +1,9 @@
 /**
  * A room pickup's view (D71): a data disk (disk.js) or a refill
  * (refill.js), hovering and spinning in its cell; a found disk as a ghost;
- * once taken, the pick-up effect and its pixel burst, then nothing.
+ * once taken, a refill's pick-up effect and its pixel burst, then nothing;
+ * a taken disk goes at once, as the install animation on the wizard takes
+ * it over (install-view.js, D73).
  */
 import { Group } from 'three';
 import { DISK, createDisk, diskMotion, diskPixels, poseDisk } from './disk.js';
@@ -20,7 +22,7 @@ export class PickupView {
     this.refill = data.kind === 'refill';
     this.model = this.refill
       ? createRefill(data.stat)
-      : createDisk({ spell: data.spell, slot: game.content.spells[data.spell].slot, ghost: pickup.state === 'ghost' });
+      : createDisk({ ...game.content.spells[data.spell], ghost: pickup.state === 'ghost' });
     const [x, y, z] = data.at;
     this.model.position.set(x + 0.5, y, z + 0.5);
     const { pixels, pixelSize } = DISK.collect;
@@ -37,6 +39,10 @@ export class PickupView {
   sync(alpha, dt) {
     this.time += dt;
     const { state, takenTicks } = this.pickup;
+    if (!this.refill && takenTicks !== null) {
+      this.group.visible = false;
+      return;
+    }
     const collected = takenTicks === null ? undefined : takenTicks + alpha;
     const motion = diskMotion({ time: this.time, ghost: state === 'ghost', collected });
     const pose = this.refill ? refillMotion(motion) : motion;

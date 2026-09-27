@@ -151,7 +151,9 @@ The wizard starts with none; the first data disk (Zap) lies in Boot
 Sector. Each spell has a slot (0–15), its save bit, shown as the one lit
 bit on its disk (D71).
 - **Zap** — fast bolt, short cooldown
-- **Firewall** — brief shield that blocks projectiles
+- **Shield** — a crackling electric ring round the wizard for a while;
+  blocks projectiles (D73)
+- **Firewall** — a shield that also damages (details at its step, D73)
 - **Pause** — freezes an enemy; frozen enemies act as platforms
 - **Warp** — short teleport through gaps or past hazards
 - **Cut & Paste** — cut one object into inventory, paste it at a valid
@@ -393,7 +395,7 @@ In-game room editor with JSON export. Step plan: docs/design.md (D43).
 **Phase 3 (v0.3) — Spells and pickups**
 World map tool for the developer. Pickups and a progress model, data
 disks. Switches (pressure plates, bolt targets) unlocking exits. Viruses
-and Pop-ups. Firewall, Pause, Warp and Cut & Paste spells.
+and Pop-ups. Shield, Firewall, Pause, Warp and Cut & Paste spells.
 A discussion step on further spells, spell upgrades and buff items; the
 first buff items. Score, bonus bits and secrets. Fragments, access levels
 and the core. Step plan: docs/design.md (D65).

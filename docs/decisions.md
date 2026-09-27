@@ -1059,3 +1059,25 @@ changes shape when switching between spells of different costs; fixed
 segments of 10 don't, and still read as casts. A bar of one thin tick
 per unit with a notch at the cost was tried and dropped: the segments
 read better.
+
+### D73 — 2026-09-27 — Data disks: install animation, the Shield spell
+Phase 3 step 3, settled with the author:
+- Install animation (picked from three showcase variants: a download
+  beam, a scan, an orbiting bit): **scan**. The disk shrinks where it
+  hung, its bits spiral into the wizard, three rings in the spell's color
+  sweep up his body, tinting him, and he flashes white. It lasts 1 s, and
+  he is frozen and unhurt meanwhile (a reward moment; he still falls).
+- The second spell, for trying spell switching now, is **Shield** (slot
+  1): a crackling ring of lightning round him at hand height (picked over
+  a cage of three rings), neon blue `#3b82ff`. 20 energy, 5 s (the
+  author raised it from 3 s), recast starts it over. It blocks
+  projectiles once there are any (steps 6–7); until then it only shows.
+- **Firewall** stays a spell, but becomes a similar shield that also
+  damages; its details are settled at step 7. Shield takes over
+  "a brief shield that blocks projectiles" (CLAUDE.md §5).
+- Each spell has a `color` in `defs.json` (its disk bit, install
+  animation and banner), instead of a table in the renderer.
+**Why:** author's choices. Shield keeps the name Firewall free for a
+stronger, damaging version later, and a real second spell tests
+switching and the install animation with a second color. Colors in data
+keep spells data-driven like enemies.

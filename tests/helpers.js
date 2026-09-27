@@ -28,11 +28,15 @@ export const BUG = {
 };
 
 /** Spell tuning, as in defs.json. */
-export const SPELLS = { zap: { slot: 0, cost: 10, cooldown: 0.25, speed: 12, damage: 1 } };
+export const SPELLS = {
+  zap: { slot: 0, color: '#00f0ff', cost: 10, cooldown: 0.25, speed: 12, damage: 1 },
+  shield: { slot: 1, color: '#3b82ff', cost: 20, cooldown: 0.25, duration: 5 },
+};
 
-/** Pickup types (D71): the Zap disk and both refills. */
+/** Pickup types (D71): both data disks and both refills. */
 export const PICKUPS = {
   disk_zap: { kind: 'disk', spell: 'zap' },
+  disk_shield: { kind: 'disk', spell: 'shield' },
   refill_integrity: { kind: 'refill', stat: 'integrity', amount: 2 },
   refill_energy: { kind: 'refill', stat: 'energy', amount: 30 },
 };
