@@ -787,3 +787,22 @@ data-driven rule (CLAUDE.md §7) asks. Collapsing blocks: author's choice to wri
 them like blocks (a bridge is one line, not four objects) while keeping
 them objects inside, since a grid cell with its own timer would mean
 rebuilding the merged block mesh (D12) on every collapse.
+
+### D61 — 2026-09-27 — Six biomes: a core, four side sectors, one special
+The world has six biomes: Home Lattice (core, amber), Glitchmire (hot
+pink), Frostbyte Wastes (pale ice), Abyssal Buffer (cobalt), Firewall
+Citadel (ember orange) and Phantom Partition (silver-white, the special
+sector for secrets and rooms reached by backtracking). All six are in
+`data/biomes.json` with name and color; each look also plans a floor
+pattern, particles and one signature effect (docs/design.md, Biomes),
+added later. Glitch Zone becomes Glitchmire (id `glitchmire`, pink instead
+of magenta); Low-Res Zone and Zero-G Sector stop being biomes of their own,
+and their effects become Phase 4 candidates for Frostbyte Wastes and
+Abyssal Buffer. This decision covers looks only; gameplay effects are
+decided with Phase 4.
+**Why:** author's request: one core, four side biomes and one special,
+visual only for now, with fantasy cyberspace names. Room colors avoid the
+gameplay colors (lime, cyan, magenta, red, violet, green) so crates,
+platforms, collapsing, hazard and void blocks, and bugs never blend into
+the room; that moved the glitch sector off magenta, the color of
+collapsing blocks.

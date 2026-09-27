@@ -3,6 +3,10 @@
   "schemaVersion": 1,
   "biomes": {
     "home_lattice": { "name": "Home Lattice", "color": "#ffb020" },
-    "glitch_zone": { "name": "Glitch Zone", "color": "#ff2bd6" }
+    "glitchmire": { "name": "Glitchmire", "color": "#ff5fa8" },
+    "frostbyte_wastes": { "name": "Frostbyte Wastes", "color": "#cfe9ff" },
+    "abyssal_buffer": { "name": "Abyssal Buffer", "color": "#3a6bff" },
+    "firewall_citadel": { "name": "Firewall Citadel", "color": "#ff6a1f" },
+    "phantom_partition": { "name": "Phantom Partition", "color": "#e8eaff" }
   }
 }

@@ -410,7 +410,7 @@ walking the whole world (new exits are added for that where needed, D49).
 |---|---|---|---|
 | `boot_sector` (start, hub) | 12×12 | north doorway → Cache Hall; raised east exit on a ledge → Stack Yard; west doorway → Crawl Space; south (front) → Transit Bus | blocks, holes, two crates, a 2-high wall near the front to walk behind (X-ray outline) |
 | `cache_hall` | 16×8 | south (front) → Boot Sector | a 3-wide pit across the room: push a crate in, then jump the rest |
-| `stack_yard` | 8×8, Glitch Zone color | raised west doorway → Boot Sector; east (front) → Fault Line | stacked crates, a 2-high block to climb via a crate |
+| `stack_yard` | 8×8, Glitchmire color | raised west doorway → Boot Sector; east (front) → Fault Line | stacked crates, a 2-high block to climb via a crate |
 | `fault_line` (Phase 2) | 12×12 | west doorway → Stack Yard; raised east exit on the lookout → Transit Bus | a corridor between hazard walls, hazard blocks between two plain ones to walk across, a zigzag path of plain blocks through a field of void blocks up to a lookout |
 | `transit_bus` (Phase 2) | 12×12, 5 high | west doorway → Fault Line; north doorway → Boot Sector; raised east exit on the high ledge → Volatile Memory | a ferry across a pit between two ledges, a lift up to a high ledge, a loop carrying a crate, a press coming down (with a crate to jam it) and a pusher squeezing the wizard against the room's edge |
 | `volatile_memory` (Phase 2) | 12×12, 5 high | west doorway → Transit Bus; raised east exit on the high ledge → Crawl Space | a pit across the room with two collapsing bridges: one regrowing after 3 s (the way back), one that stays gone, with a crate on a plain ledge in front of it to push onto the bridge from solid ground (it doesn't trigger the blocks, so it is a safe spot to hop onto); two one-shot collapsing steps up to a high ledge |
@@ -468,6 +468,28 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
   re-entry and respawn, so no puzzle stays broken for good.
 - `reset` (the respawn point) must be safe to land on and let him walk
   away: not on a collapsing block, not under a platform's path.
+
+## Biomes
+
+Six Grid sectors (D61): one core, four side sectors and one special sector
+for secrets and rooms reached by backtracking. Today a biome sets only the
+room color (block edges, walls, floor grid) and the name in the room
+banner; the rest of each look below is planned (floor patterns, particles,
+one signature effect), and gameplay effects wait for Phase 4.
+
+| Biome | Color | Floor | Particles | Signature |
+|---|---|---|---|---|
+| Home Lattice (core) | amber `#ffb020` | clean square grid | warm motes rising slowly | calm, steady glow |
+| Glitchmire | hot pink `#ff5fa8` | torn tiles, slightly offset | pixel bubbles popping up | edges jitter for a frame now and then |
+| Frostbyte Wastes | pale ice `#cfe9ff` | hex crystal pattern | 0/1 flakes falling | soft, frosty bloom |
+| Abyssal Buffer | cobalt `#3a6bff` | wavy caustics | bubbles rising slowly | gentle sway |
+| Firewall Citadel | ember orange `#ff6a1f` | brick pattern | sparks rising | warm edge flicker |
+| Phantom Partition (special) | silver-white `#e8eaff` | sparse dots, a starfield | faint glints | edges shimmer slowly through the hues |
+
+Room colors keep clear of the gameplay colors (lime crates, cyan
+platforms, magenta collapsing blocks, red hazards, violet void, green bugs),
+so those always stand out from the room. The two blues are far apart in
+lightness.
 
 ## HUD
 
@@ -659,10 +681,10 @@ Every step also:
 | 8b | `feat/room-editor-paths` | Editor, moving part (D57): enemies with their settings, platform and patrol paths, exits with their `world.json` connections, new rooms and a room list; Save writes the edited rooms and `world.json` together. |
 | 9 | `chore/release-0.2.0` | Docs pass, CHANGELOG, `v0.2.0` tag and GitHub Release (CLAUDE.md §10) |
 
-Moved out of Phase 2: biome environmental effects (Glitch Zone drain,
-Low-Res, Zero-G) and the health pickups and safe rooms that balance them
-are specific content, planned for Phase 4 (content production). Biomes stay
-look-only (name, color) until then.
+Moved out of Phase 2: biome environmental effects (Glitchmire drain,
+Frostbyte low-res, Abyssal low gravity) and the health pickups and safe
+rooms that balance them are specific content, planned for Phase 4 (content
+production). Biomes stay look-only (name, color) until then.
 
 ## Data formats
 
@@ -673,7 +695,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 |---|---|
 | `data/rooms/<id>.json` | One room (id = file name) |
 | `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; `collapsing`: collapsing block, magenta); `enemies`: enemy types (`bug`, see Enemies) and templates that `extend` one (D58); `spells`: spell tuning (`zap`, see Zap and energy); `blocks`: look of the `hazard` and `void` block types and the hazard's `damage` |
-| `data/biomes.json` | Biome name and room color (`home_lattice`: amber) |
+| `data/biomes.json` | Biome name and room color: `home_lattice` (core, amber), `glitchmire` (pink), `frostbyte_wastes` (pale ice), `abyssal_buffer` (cobalt), `firewall_citadel` (ember orange), `phantom_partition` (special, silver-white); see Biomes (D61) |
 | `data/world.json` | Start room and exit connections |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |
 
