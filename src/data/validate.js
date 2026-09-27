@@ -1,6 +1,7 @@
 /**
  * Semantic data checks: the rules JSON Schema cannot express (room bounds,
- * overlaps, known types and biomes, exits and connections, map positions).
+ * overlaps, known types and biomes, exits and connections, map positions,
+ * spell slots and pickups).
  *
  * Runs at load time in the game and, after the schema pass, in the dev
  * server, the build and CI. Assumes the data already matches the schemas;
@@ -79,8 +80,11 @@ export function validateData(files) {
   validateTemplates(enemies, report);
   const blocks = files['defs.json'].blocks ?? {};
   validateBlockTypes(blocks, report);
+  const pickupTypes = files['defs.json'].pickups ?? {};
+  validateSpellsAndPickups(files['defs.json'].spells ?? {}, pickupTypes, files['defs.json'].objects ?? {}, report);
   const context = {
     objectTypes: files['defs.json'].objects ?? {},
+    pickupTypes,
     blockTypes: resolveBlockTypes(blocks),
     enemyTypes: resolveEnemyTypes(enemies),
     biomes: files['biomes.json'].biomes ?? {},
@@ -110,6 +114,24 @@ function validateTemplates(enemies, report) {
     else if (base.extends !== undefined) report('defs.json', `${path}.extends`, `"${type.extends}" is a template itself; extend its base "${base.extends}"`);
     const missing = ENEMY_REQUIRED.filter((key) => resolved[id][key] === undefined);
     if (base && missing.length > 0) report('defs.json', path, `missing ${missing.join(', ')}`);
+  }
+}
+
+/**
+ * Spell slots are unique (each is a save bit, D71), a data disk names a
+ * known spell, and pickup type ids differ from object type ids (the room
+ * editor lists both under its Object tool).
+ */
+function validateSpellsAndPickups(spells, pickupTypes, objectTypes, report) {
+  /** slot → spell id */
+  const slots = new Map();
+  for (const [id, spell] of Object.entries(spells)) {
+    if (slots.has(spell.slot)) report('defs.json', `spells.${id}.slot`, `slot ${spell.slot} is taken by "${slots.get(spell.slot)}"`);
+    else slots.set(spell.slot, id);
+  }
+  for (const [id, type] of Object.entries(pickupTypes)) {
+    if (type.kind === 'disk' && !spells[type.spell]) report('defs.json', `pickups.${id}.spell`, `unknown spell "${type.spell}"`);
+    if (objectTypes[id]) report('defs.json', `pickups.${id}`, `"${id}" is an object type too`);
   }
 }
 
@@ -158,7 +180,7 @@ function guarded(file, report, check) {
   }
 }
 
-function validateRoom(file, room, { objectTypes, blockTypes, enemyTypes, biomes }, report) {
+function validateRoom(file, room, { objectTypes, pickupTypes, blockTypes, enemyTypes, biomes }, report) {
   const expectedId = roomIdFromFile(file);
   if (room.id !== expectedId) report(file, 'id', `"${room.id}" must match the file name ("${expectedId}")`);
 
@@ -182,7 +204,7 @@ function validateRoom(file, room, { objectTypes, blockTypes, enemyTypes, biomes 
     pathCells: new Map(),
     /** "x,y,z" of every collapsing block */
     collapsing: new Set(),
-    /** Ids of objects and enemies (one namespace per room) */
+    /** Ids of objects, enemies and pickups (one namespace per room) */
     ids: new Set(),
   };
   const exits = (room.exits ?? []).map(withExitDefaults);
@@ -191,6 +213,7 @@ function validateRoom(file, room, { objectTypes, blockTypes, enemyTypes, biomes 
   validateObjects(checks, objectTypes);
   validateHoles(checks);
   validateEnemies(checks, enemyTypes);
+  validatePickups(checks, pickupTypes);
   validateExitPassage(checks, exits, exitFits);
 
   // Spawn and reset (D39). reset defaults to spawn (buildRoom does the
@@ -380,6 +403,27 @@ function validateEnemies(checks, enemyTypes) {
     const { points, mode } = enemy.path;
     if (!validatePathShape(room, report, `${path}.path`, enemy.at, points, mode, true)) return;
     clearPathCells(filled, report, `${path}.path`, enemy.at, { points, mode });
+  });
+}
+
+/**
+ * Pickups (D71): unique ids (shared with objects and enemies), known types,
+ * inside the room in a cell no block or object fills, one per cell.
+ */
+function validatePickups({ room, report, ids, filled }, pickupTypes) {
+  const [w, h, d] = room.size;
+  const taken = new Map();
+  (room.pickups ?? []).forEach((pickup, i) => {
+    const path = `pickups[${i}]`;
+    if (ids.has(pickup.id)) report(path, `duplicate id "${pickup.id}"`);
+    ids.add(pickup.id);
+    if (!pickupTypes[pickup.type]) report(`${path}.type`, `unknown pickup type "${pickup.type}"`);
+    const [x, y, z] = pickup.at;
+    const key = cellKey(pickup.at);
+    if (!(x < w && y < h && z < d)) report(path, `cell ${cellText(pickup.at)} is outside size ${cellText(room.size)}`);
+    else if (filled.has(key)) report(path, `cell ${cellText(pickup.at)} is filled by ${filled.get(key)}`);
+    else if (taken.has(key)) report(path, `cell ${cellText(pickup.at)} is taken by ${taken.get(key)}`);
+    taken.set(key, path);
   });
 }
 

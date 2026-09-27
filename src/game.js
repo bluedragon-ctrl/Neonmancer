@@ -8,10 +8,12 @@ import { isBackSide, sideAxes, withExitDefaults } from './data/room-data.js';
 import { Bolt } from './entities/bolt.js';
 import { Enemy } from './entities/enemy.js';
 import { createObject } from './entities/kinds.js';
+import { Pickup } from './entities/pickup.js';
 import { PLAYER, Player } from './entities/player.js';
-import { groundBelow, overlaps, surfaceBelow, touchedCell, touchesBox } from './physics/collision.js';
+import { groundBelow, overlaps, overlapsBox, surfaceBelow, touchedCell, touchesBox } from './physics/collision.js';
 import { arrival, exitAt } from './world/exits.js';
 import { Grid } from './world/grid.js';
+import { Progress, pickupBit } from './world/progress.js';
 import { buildRoom } from './world/room.js';
 
 /**
@@ -61,10 +63,14 @@ export const TRANSITION = {
 export class Game {
   /**
    * @param {object} content loaded game data (see data/load.js)
-   * @param {string} [start] room to start in; world.json's start by default
+   * @param {object} [options]
+   * @param {string} [options.start] room to start in; world.json's start by default
+   * @param {Progress} [options.progress] what he has found (a loaded save); nothing by default
    */
-  constructor(content, start = content.world.start) {
+  constructor(content, { start = content.world.start, progress = new Progress() } = {}) {
     this.content = content;
+    /** Permanent pickups found, for the whole game (D71): room resets and death leave it alone. */
+    this.progress = progress;
     /** Debug mode: holes and lethal blocks never kill and hurt() does nothing. */
     this.invincible = false;
     /** 'grid' (default, D23) or 'screen' (D38); toggled with G, not saved. */
@@ -73,6 +79,7 @@ export class Game {
     this.events = [];
     /** The wizard, for the whole game; each room places him (enterRoom()). */
     this.player = new Player([0, 0, 0]);
+    this.learnSpells();
     this.enterRoom(start);
     /**
      * Room transition in progress, or null: { phase: 'out' | 'in', tick, exit }.
@@ -106,6 +113,11 @@ export class Game {
     this.enemies = this.room.enemies.map((enemy) => new Enemy(enemy));
     /** Zap bolts in flight (entities/bolt.js); a room starts without any. */
     this.bolts = [];
+    /** The room's pickups (entities/pickup.js): found permanent ones as ghosts, refills back again. */
+    this.pickups = this.room.pickups.map((data) => {
+      const bit = pickupBit(data, this.content.spells);
+      return new Pickup(data, bit, bit !== null && this.progress.has(bit));
+    });
     this.player.enter(pos ?? this.room.spawn, this.room.reset);
     this.refreshBodies();
   }
@@ -176,6 +188,7 @@ export class Game {
    */
   castSpell() {
     const id = this.player.spell;
+    if (!id) return;
     const spell = this.content.spells[id];
     const result = this.player.cast(spell.cost, Math.round(spell.cooldown / DT));
     if (result === 'cast') SPELL_EFFECTS[id](this, spell);
@@ -312,7 +325,62 @@ export class Game {
     this.updateBolts();
     const bounced = this.bounceOffEnemies();
     this.touchEnemies(bounced);
+    this.takePickups();
     return this.takeEvents();
+  }
+
+  /**
+   * The wizard takes the pickups he touches (D71), if they are any use: a
+   * data disk installs its spell for good; a refill restores integrity or
+   * energy, and is left lying while that is full. Reported as 'pickup'.
+   */
+  takePickups() {
+    for (const pickup of this.pickups) pickup.update();
+    const { player } = this;
+    if (player.dead) return;
+    const box = player.box();
+    for (const pickup of this.pickups) {
+      if (pickup.state !== 'idle' || !overlapsBox(box, pickup.box())) continue;
+      if (!this.use(pickup.data, pickup.bit)) continue;
+      pickup.take();
+      this.emit('pickup', { pickup });
+    }
+  }
+
+  /**
+   * What a pickup does.
+   * @param {object} data the pickup (buildRoom()): kind, spell or stat and amount
+   * @param {number|null} bit its save bit
+   * @returns {boolean} whether he took it
+   */
+  use(data, bit) {
+    const { player } = this;
+    if (data.kind === 'disk') {
+      this.progress.collect(bit);
+      this.learnSpells(data.spell);
+      const name = this.content.strings[`spell.${data.spell}`] ?? data.spell.toUpperCase();
+      announce('banner.spell', { spell: name }, { sub: 'banner.spellSub', color: '#00f0ff' });
+      say('msg.spellInstalled', { spell: name });
+      return true;
+    }
+    // A refill: integrity or energy, up to his maximum.
+    const max = data.stat === 'integrity' ? player.maxIntegrity : player.maxEnergy;
+    if (player[data.stat] >= max) return false;
+    player[data.stat] = Math.min(max, player[data.stat] + data.amount);
+    say(data.stat === 'integrity' ? 'msg.refillIntegrity' : 'msg.refillEnergy');
+    return true;
+  }
+
+  /**
+   * Give the wizard the spells of the data disks found (in slot order) and
+   * select `select` (a spell just installed); he keeps his selection otherwise.
+   * @param {string} [select]
+   */
+  learnSpells(select) {
+    const { player } = this;
+    player.spells = this.progress.knownSpells(this.content.spells);
+    if (select) player.spell = select;
+    else if (!player.spells.includes(player.spell)) player.spell = player.spells[0] ?? null;
   }
 
   /**

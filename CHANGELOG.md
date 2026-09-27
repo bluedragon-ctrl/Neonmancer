@@ -7,6 +7,15 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Pickups and progress (Phase 3 step 2, D71): pickup types in
+  `defs.json` and rooms; a `Progress` model of save bits found (112, in
+  blocks: spells, buffs, equipment, fragments) that room resets and death
+  leave alone. The first data disk: the wizard starts without Zap and
+  learns it from a disk in Boot Sector (banner and terminal line; the HUD
+  spell tag appears). A found disk is a gray ghost on revisits.
+  Integrity and energy refills (Fault Line, Crawl Space) come back with
+  the room. Looks in the showcase (`?asset=disks`, `?asset=refills`);
+  validation and room editor support (pickups in the Object tool).
 - World map tool (Phase 3 step 1, D66, D70): `/tools/world-map.html` in
   the dev server (not built, never shown to players) draws every room as a
   node in its biome color on a map grid, with lines between connected

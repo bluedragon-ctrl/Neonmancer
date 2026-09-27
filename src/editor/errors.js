@@ -64,7 +64,7 @@ export function errorTarget(error, { roomData, connections }) {
   const data = roomFile && roomData(roomFile[1]);
   if (!data) return null;
   const room = roomFile[1];
-  const item = /^(objects|enemies|exits)\[(\d+)\](\.path)?/.exec(path);
+  const item = /^(objects|enemies|pickups|exits)\[(\d+)\](\.path)?/.exec(path);
   if (item) {
     const [, key, index, onPath] = item;
     const id = data[key]?.[Number(index)]?.id;

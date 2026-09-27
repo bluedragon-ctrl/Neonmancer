@@ -13,6 +13,8 @@
     "hint.fullscreen": "PRESS F FOR FULLSCREEN",
     "banner.room": "{room}",
     "banner.biome": "{biome}",
+    "banner.spell": "{spell}",
+    "banner.spellSub": "SPELL INSTALLED",
     "msg.boot": "> GRID LINK ESTABLISHED",
     "msg.welcome": "> WELCOME, WIZARD. MIND THE GAPS.",
     "msg.die": "> FATAL: WIZARD FELL OUT OF BOUNDS",
@@ -20,6 +22,9 @@
     "msg.derez": "> FATAL: INTEGRITY 0. WIZARD DEREZZED",
     "msg.respawn": "> RECOMPILING WIZARD... OK",
     "msg.plug": "> HOLE PATCHED",
+    "msg.spellInstalled": "> SPELL INSTALLED: {spell}",
+    "msg.refillIntegrity": "> INTEGRITY RESTORED",
+    "msg.refillEnergy": "> ENERGY RECHARGED",
     "msg.movementGrid": "> MOVEMENT: GRID-ALIGNED",
     "msg.movementScreen": "> MOVEMENT: SCREEN-RELATIVE"
   }

@@ -302,13 +302,64 @@ comes from data: its type in `defs.json` `enemies`, and the room's
   look is `BUG` in `src/render/bug.js`; review in the asset showcase
   (`/tools/showcase.html?asset=bugs`).
 
+## Pickups and progress
+
+Things the wizard takes by touching them (D71). Types live in
+`defs.json` `pickups`, placed in rooms as `"pickups": [{ "id", "type",
+"at" }]` (a cell; they hover in its middle, ids shared with objects and
+enemies).
+
+- **Permanent: data disks.** A disk teaches a spell for good. The wizard
+  starts with no spell; the Zap disk lies in Boot Sector, two steps from
+  the spawn. Taking it shows the banner `ZAP / SPELL INSTALLED`, the
+  terminal line `> SPELL INSTALLED: ZAP`, selects the spell and brings up
+  its HUD tag (hidden until then; the energy bar shows one segment per
+  energy unit until a spell sets its cost).
+- **Save bits in blocks:** spells 0–15, buffs 16–31, equipment 32–47,
+  fragments 48–111; 112 in all. The index comes from what the item
+  unlocks: a spell's `slot` in `defs.json` for its disk (Zap: 0); later a
+  buff's or piece of equipment's slot on its pickup type, and a
+  fragment's number on the placement. A bit is the item, not the place:
+  the same disk may lie in several rooms, and finding one grays out all.
+- **Progress** (`src/world/progress.js`) holds the bits found for the
+  whole game; room resets and death leave it alone. Known spells follow
+  from it (in slot order). The save key (Phase 4) will hold these bits.
+- **Found before:** a permanent pickup whose bit is set shows as a ghost
+  (gray, dashed, standing still) and can't be taken again (D67).
+- **Temporary: refills.** `refill_integrity` (+3) and `refill_energy`
+  (+6), up to the wizard's maximum; a refill is left lying while that stat
+  is full. No save bit: it comes back when the room resets (entering it,
+  or dying in it). Terminal lines `> INTEGRITY RESTORED` and `> ENERGY
+  RECHARGED`.
+- **Look:** a data disk is an abstract white slab with both top corners
+  clipped, hovering half a block up, spinning (a turn every ~4 s) and
+  bobbing; both faces carry a 4×4 bit grid whose one lit cube, in the
+  spell's color, is the spell's slot (row by row from the top left). The
+  integrity refill is a cyan plus of five voxels, the energy refill a lime
+  crystal (the HUD bars' colors), smaller and lower than a disk. Taking
+  one lifts it, spins it up and flashes it white (10 ticks), then bursts it
+  into pixels in its colors. Tuning: `DISK` in `src/render/disk.js`,
+  `REFILL` in `src/render/refill.js`; showcase `?asset=disks` and
+  `?asset=refills`.
+- **Rules:** he takes a pickup when his box overlaps its box (its cell,
+  0.2 in from the sides, 0.1 from bottom and top); not while dead. Nothing
+  else takes pickups, and they don't block anything.
+- **Validation:** known type, inside the room, in a cell no block or
+  object fills, one pickup per cell, ids unique among objects, enemies
+  and pickups; spell slots unique; a disk names a known spell; pickup and
+  object type ids differ.
+- **Editor:** pickup types are in the Object tool's list; placing one
+  puts it in the room's `pickups`, and picking, erasing, Delete and
+  resizing treat it like an object.
+
 ## Zap and energy
 
 - **Energy** (mana): the wizard holds 10 and gets 1 back per second;
   it carries over between rooms and is full again after a respawn. The
   HUD shows it under integrity as one lime segment per Zap (5), each
   filling as it recharges; a full segment glows.
-- **Casting:** E or Numpad 0 casts the selected spell. Its name
+- **Casting:** once he has found a data disk (see Pickups and
+  progress), E or Numpad 0 casts the selected spell. Its name
   shows in a lime tag under the energy bar (ZAP); Tab switches to the next
   spell he knows (Q back), and the tag flashes. With only Zap known, Tab
   does nothing and the tag shows no key hint (D54).
@@ -447,13 +498,13 @@ The world map tool flags any room further out.
 
 | Room | Size | Exits | Shows |
 |---|---|---|---|
-| `boot_sector` (start, hub) | 12×12 | north doorway → Cache Hall; raised east exit on a ledge → Stack Yard; west doorway → Crawl Space; south (front) → Transit Bus | blocks, holes, two crates, a 2-high wall near the front to walk behind (X-ray outline) |
+| `boot_sector` (start, hub) | 12×12 | north doorway → Cache Hall; raised east exit on a ledge → Stack Yard; west doorway → Crawl Space; south (front) → Transit Bus | blocks, holes, two crates, a 2-high wall near the front to walk behind (X-ray outline); the Zap data disk two steps from the spawn (Phase 3) |
 | `cache_hall` | 16×8 | south (front) → Boot Sector | a 3-wide pit across the room: push a crate in, then jump the rest |
 | `stack_yard` | 8×8, Glitchmire color | raised west doorway → Boot Sector; east (front) → Fault Line | stacked crates, a 2-high block to climb via a crate |
-| `fault_line` (Phase 2) | 12×12 | west doorway → Stack Yard; raised east exit on the lookout → Transit Bus | a corridor between hazard walls, hazard blocks between two plain ones to walk across, a zigzag path of plain blocks through a field of void blocks up to a lookout |
+| `fault_line` (Phase 2) | 12×12 | west doorway → Stack Yard; raised east exit on the lookout → Transit Bus | a corridor between hazard walls with an integrity refill at its end (Phase 3), hazard blocks between two plain ones to walk across, a zigzag path of plain blocks through a field of void blocks up to a lookout |
 | `transit_bus` (Phase 2) | 12×12, 5 high | west doorway → Fault Line; north doorway → Boot Sector; raised east exit on the high ledge → Volatile Memory | a ferry across a pit between two ledges, a lift up to a high ledge, a loop carrying a crate, a press coming down (with a crate to jam it) and a pusher squeezing the wizard against the room's edge |
 | `volatile_memory` (Phase 2) | 12×12, 5 high | west doorway → Transit Bus; raised east exit on the high ledge → Crawl Space | a pit across the room with two collapsing bridges: one regrowing after 3 s (the way back), one that stays gone, with a crate on a plain ledge in front of it to push onto the bridge from solid ground (it doesn't trigger the blocks, so it is a safe spot to hop onto); two one-shot collapsing steps up to a high ledge |
-| `crawl_space` (Phase 2) | 12×12 | west doorway → Volatile Memory; east (front) → Boot Sector | bugs: a sentry crossing the entrance lane, one walking off a ledge and patrolling the floor below, a solid one shoving along a lane with a crate to push in its way, a provoked one circling a pillar, a peaceful stationary one to bounce up to a 2-high ledge, a solid peaceful one along the front edge to ride; Zap targets: the provoked one turns hostile when hit, and an amber stationary one with 4 integrity |
+| `crawl_space` (Phase 2) | 12×12 | west doorway → Volatile Memory; east (front) → Boot Sector | bugs: a sentry crossing the entrance lane, one walking off a ledge and patrolling the floor below, a solid one shoving along a lane with a crate to push in its way, a provoked one circling a pillar, a peaceful stationary one to bounce up to a 2-high ledge, a solid peaceful one along the front edge to ride; Zap targets: the provoked one turns hostile when hit, and an amber stationary one with 4 integrity; an energy refill near the entrance (Phase 3) |
 
 ### Room design checklist
 
@@ -816,8 +867,8 @@ the author; the answers are recorded as decisions before the code lands.
 | # | Branch | Delivers |
 |---|---|---|
 | 1 | `feat/world-map-tool` | A developer overview of the whole world on its own page, `tools/world-map.html`, served by the dev server only (D66). Every room is a node in its biome color on a simple map grid, one room per cell, at its position in `world.json`; lines show the connections between exits, and the start room is marked. Rooms are dragged to another free cell and saved through the dev server; connections are shown, and edited in the room editor. A new room from the room editor gets the nearest free cell next to the room it was created from, to be moved afterwards. Validation: every room has a position, no two share one. The tool flags what room validation can't see: rooms not reachable from the start through exits, and test rooms more than two rooms from Boot Sector (D49). Clicking a room opens it in the room editor. |
-| 2 | `feat/pickups-and-progress` | A generic pickup object (kind, look, stable id) in `defs.json` and room data, and a `Progress` model (collected ids, known spells) that survives room resets and death: permanent pickups (fragments, data disks, buff items, secrets) have a stable save-bit index, validated unique, and stay collected as grayed-out ghosts on revisits; temporary pickups (refills) have no bit and come back with the room (D67). Pickup burst and banner; editor and validation support. |
-| 3 | `feat/data-disks` | Data-disk pickups that unlock a spell: install animation, `> SPELL INSTALLED: …` banner, spell switching (Tab / Q) with more than one spell. |
+| 2 | `feat/pickups-and-progress` | Pickup types in `defs.json` and room data, and a `Progress` model (save bits found, known spells) that survives room resets and death: permanent pickups have a save bit in blocks (D71) and stay as grayed-out ghosts once found; temporary pickups (integrity and energy refills) have none and come back with the room (D67). The first data disk: Zap is no longer known from the start, its disk lies in Boot Sector (`> SPELL INSTALLED: ZAP` banner). Pickup burst; editor and validation support. |
+| 3 | `feat/data-disks` | More disks: an install animation on the wizard, spell switching (Tab / Q) tried with a second spell once there is one (Firewall, step 7, may be the first). |
 | 4 | `feat/switches` | Switches that unlock exits: a pressure plate held down by a crate, and a target that a Zap bolt hits. An exit in room data can be locked until its switches are on; a locked exit looks closed and is solid. Switch state resets with the room. The locked exit is the same mechanism access levels use later (step 14). Editor, validation (switches point at exits that exist), showcase, a test room. |
 | 5 | `feat/viruses` | A `chase` movement behavior: a hostile Virus follows the wizard while it sees him within `aggroRange` and gives up when line of sight breaks. |
 | 6 | `feat/popups` | A projectile attack: Pop-ups are stationary enemies firing slow shots; a projectile entity with its own rules for what stops it. |
@@ -832,10 +883,7 @@ the author; the answers are recorded as decisions before the code lands.
 | 15 | `chore/release-0.3.0` | Docs pass, CHANGELOG, `v0.3.0` tag and GitHub Release (CLAUDE.md §10) |
 
 Open questions, settled at the start of their step:
-- **2 Pickups:** where the save-bit index lives (on the pickup in room
-  data, or a list in `world.json`); which temporary pickups exist.
-- **3 Data disks:** does Zap stay known from the start, or become the first
-  disk (in or near Boot Sector)?
+- **2 Pickups** and **3 Data disks:** settled (D71).
 - **4 Switches:** does the wizard's own weight (or an enemy's) press a
   plate, or only crates; does a plate hold the exit open only while it is
   pressed, or latch; does a bolt target latch, toggle or stay on for a

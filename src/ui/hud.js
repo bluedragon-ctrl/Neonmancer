@@ -109,15 +109,18 @@ export class Hud {
 
   /**
    * The selected spell, under the energy bar; the switch key shows only
-   * when he knows more than one. A new selection flashes.
-   * @param {string} spell spell id (its name is the string "spell.<id>")
+   * when he knows more than one. A new selection flashes. Hidden while he
+   * knows no spell (before the first data disk).
+   * @param {string|null} spell spell id (its name is the string "spell.<id>")
    * @param {number} known how many spells he knows
    */
   setSpell(spell, known) {
     this.spellKey.hidden = known < 2;
+    this.spellBox.hidden = spell === null;
     if (spell === this.spell) return;
     const first = this.spell === null;
     this.spell = spell;
+    if (spell === null) return;
     this.spellName.textContent = this.text(`spell.${spell}`);
     if (first) return;
     this.spellBox.classList.remove('switched');

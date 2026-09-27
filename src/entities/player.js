@@ -96,10 +96,10 @@ export class Player {
     this.cooldown = 0;
     /** Ticks since his last cast (for the flare at his hands), or null. */
     this.castTicks = null;
-    /** Spells he knows, in switching order (Zap from the start; data disks add more in Phase 3). */
-    this.spells = ['zap'];
-    /** The selected spell, cast by the cast action. */
-    this.spell = this.spells[0];
+    /** Spells he knows, in switching order (slot order): the Game sets them from the data disks found (D71). */
+    this.spells = [];
+    /** The selected spell, cast by the cast action; null while he knows none. */
+    this.spell = null;
     this.enter(pos, resetPoint);
   }
 
@@ -193,6 +193,7 @@ export class Player {
    */
   selectSpell(step) {
     const { spells } = this;
+    if (spells.length === 0) return false;
     const next = spells[(spells.indexOf(this.spell) + step + spells.length) % spells.length];
     if (next === this.spell) return false;
     this.spell = next;

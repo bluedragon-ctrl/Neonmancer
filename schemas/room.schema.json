@@ -57,6 +57,11 @@
       "description": "Enemies with stable ids (types from defs.json \"enemies\"); ids are shared with objects.",
       "type": "array",
       "items": { "$ref": "#/$defs/enemy" }
+    },
+    "pickups": {
+      "description": "Pickups with stable ids (types from defs.json \"pickups\"), hovering in their cell; ids are shared with objects and enemies.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/pickup" }
     }
   },
   "$defs": {
@@ -123,6 +128,16 @@
           "$ref": "#/$defs/path",
           "description": "Required for platforms (and only allowed on them): the path they follow, starting at \"at\"."
         }
+      }
+    },
+    "pickup": {
+      "type": "object",
+      "required": ["id", "type", "at"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/id" },
+        "type": { "$ref": "common.schema.json#/$defs/id", "description": "Pickup type from defs.json." },
+        "at": { "$ref": "common.schema.json#/$defs/cell", "description": "Cell it hovers in; the wizard takes it by touching that cell's middle." }
       }
     },
     "enemy": {

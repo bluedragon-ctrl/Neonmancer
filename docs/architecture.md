@@ -65,6 +65,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `entities/bolt.js` | Zap bolt: flies level in sub-steps, stops at the first enemy, block, object or room side (`BOLT` tuning) |
 | `ai/behaviors.js` | Movement behaviors by name (`BEHAVIORS`: `patrol`, `stationary`), as enemy types refer to them |
 | `ai/patrol.js` | Patrol: next step towards the next waypoint column, pauses at the ends, turns back (pure, tested) |
+| `world/progress.js` | What the wizard has for the whole game (D71): save bits in blocks (`SAVE_BLOCKS`, `saveBit()`, `pickupBit()`), `Progress` (bits found, known spells) (pure, tested) |
+| `entities/pickup.js` | A pickup in a room: its box, save bit, state (idle, ghost, taken) and pick-up ticks (pure, tested) |
 | `world/map.js` | The world map (D66): `nearestFreeCell()` for new rooms, `roomDistances()` from the start, `mapWarnings()` (unreachable rooms, test rooms too far out, D49) (pure, tested) |
 | `world/path.js` | Shared path format: legs from `at` through `points`, `advance()` / `positionOf()` on a small path state, swept cells |
 | `render/viewport.js` | Letterbox, buffer size and 1080p-relative sizing math (pure, tested) |
@@ -106,6 +108,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `tools/validate-data.js` | Dev only: `npm run validate:data` for CI |
 | `tools/run-tests.js` | `npm test`: runs `node --test` on an explicit list of `tests/*.test.js` (works on Node 20 and 22+, Windows and Linux) |
 | `tools/game-version.js` | Dev only: the game version for builds, PATCH counted from git merges since the phase tag (D42) |
+| `render/disk.js`, `render/refill.js` | Pickup looks: the data disk (bit grid showing the spell's slot, ghost, pick-up and pixel burst; motion pure, tested) and the refills |
+| `render/pickup-view.js` | A room pickup's view: its look, idle motion, ghost, pick-up effect |
 | `tools/showcase.html`, `tools/showcase.js` | Asset showcase page: every look on a turntable with the real renderer (also deployed) |
 | `tools/world-map.html`, `tools/world-map.js`, `tools/world-map.css` | World map tool (D66, D70): every room on the map grid with its connections and checks; drag rooms and save their positions; click to open a room in the editor. Dev server only, not built |
 | `editor/editor.js` | Room editor (F2, D56, D57): opens on the current room, switches rooms and makes new ones, mouse picking on a height layer, tools, picking things, keys, rebuilding the room from the edited data, save or export |

@@ -166,6 +166,11 @@ body {
   color: var(--lime);
 }
 
+/* No spell yet (before the first data disk). */
+.hud-spell[hidden] {
+  display: none;
+}
+
 .hud-spell-name {
   font-weight: 700;
   font-size: calc(20 * var(--u));

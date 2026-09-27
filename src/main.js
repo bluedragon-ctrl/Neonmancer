@@ -34,7 +34,7 @@ function boot() {
   // Dev server only (never for players, D67): ?room=<id> starts in that
   // room and ?edit opens the room editor on it (the world map tool's links).
   const devRoom = DEV_SERVER && content.rooms.has(params.get('room')) ? params.get('room') : undefined;
-  const game = new Game(content, devRoom);
+  const game = new Game(content, { start: devRoom });
 
   // ?scale=0.5 tries a lower render scale and ?msaa=0 turns multisampling
   // off, until there is a settings menu with quality presets.
@@ -106,7 +106,8 @@ function boot() {
     debug.sync(game, alpha);
     renderer.setFade(game.fadeLevel(alpha));
     hud.setIntegrity(game.player.integrity, game.player.maxIntegrity);
-    hud.setEnergy(game.player.energy, game.player.maxEnergy, content.spells[game.player.spell].cost);
+    // Energy in segments of one cast of the selected spell (of one unit before he knows any).
+    hud.setEnergy(game.player.energy, game.player.maxEnergy, content.spells[game.player.spell]?.cost ?? 1);
     hud.setSpell(game.player.spell, game.player.spells.length);
     hud.setMovementMode(game.movementMode);
     hud.setHintWanted(wantsFullscreenHint(renderer.stageHeight, window.devicePixelRatio, !!document.fullscreenElement));

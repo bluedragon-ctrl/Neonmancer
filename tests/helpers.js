@@ -28,7 +28,14 @@ export const BUG = {
 };
 
 /** Spell tuning, as in defs.json. */
-export const SPELLS = { zap: { cost: 2, cooldown: 0.25, speed: 12, damage: 1 } };
+export const SPELLS = { zap: { slot: 0, cost: 2, cooldown: 0.25, speed: 12, damage: 1 } };
+
+/** Pickup types (D71): the Zap disk and both refills. */
+export const PICKUPS = {
+  disk_zap: { kind: 'disk', spell: 'zap' },
+  refill_integrity: { kind: 'refill', stat: 'integrity', amount: 2 },
+  refill_energy: { kind: 'refill', stat: 'energy', amount: 4 },
+};
 
 /** Block types, as in defs.json (D60): plain, hazard, void, collapsing and a variant that grows back after 3 s. */
 export const BLOCK_TYPES = {
@@ -57,6 +64,7 @@ export function roomFile(id, props = {}) {
  * @param {Record<string, object>} [options.objects] object types; a crate by default
  * @param {Record<string, object>} [options.enemies] enemy types; a bug by default
  * @param {Record<string, object>} [options.blocks] block types; BLOCK_TYPES by default
+ * @param {Record<string, object>} [options.pickups] pickup types; PICKUPS by default
  * @param {string[][]} [options.connections] pairs of "room.exit"
  * @param {string} [options.start] start room; the first room by default
  * @param {Record<string, number[]>} [options.positions] map cells; the rooms in a row by default
@@ -66,12 +74,13 @@ export function dataFiles({
   objects = { crate: CRATE },
   enemies = { bug: BUG },
   blocks = BLOCK_TYPES,
+  pickups = PICKUPS,
   connections = [],
   start = rooms[0].id,
   positions = Object.fromEntries(rooms.map((room, i) => [room.id, [i, 0]])),
 }) {
   return structuredClone({
-    'defs.json': { schemaVersion: 1, objects, enemies, spells: SPELLS, blocks },
+    'defs.json': { schemaVersion: 1, objects, enemies, spells: SPELLS, pickups, blocks },
     'biomes.json': { schemaVersion: 1, biomes: { home: { name: 'Home', color: '#ffb020' } } },
     'world.json': { schemaVersion: 1, start, connections, positions },
     'strings.json': STRINGS,
