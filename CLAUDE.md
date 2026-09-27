@@ -190,6 +190,8 @@ in rooms; "all bits collected" room bonus. High score stored locally.
 
 ### Map
 Map screen showing visited rooms, connections and fragment markers.
+Current plan, not final: the map covers the current run only and is
+cleared when a save is loaded (decided with the Phase 4 map step).
 
 ---
 

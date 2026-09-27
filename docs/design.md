@@ -816,6 +816,9 @@ far: what writes a save (save shrines, room entry, or both); how deep
 the reachability checker searches pushables and spells, and the spell
 order along the world it checks against (D67); how much the player's map
 screen reveals, given that finding what is where is part of the game.
+The author's current plan for the map: it records the rooms visited in
+this run only and is cleared when a save is loaded, so the access key
+carries no map data; the final decision comes with the map step.
 
 ## Data formats
 
