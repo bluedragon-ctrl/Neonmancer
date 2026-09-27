@@ -923,7 +923,7 @@ couldn't before. So:
   back (backtracking). He can always leave the way he came.
 - With later spells, shortcuts and other solutions are intended, not bugs
   to design out.
-- The spell roster step (Phase 3 step 10) looks for spells and upgrades
+- The spell roster step (Phase 3 step 11) looks for spells and upgrades
   that open shortcuts and new areas, not only for new puzzle types.
 - The reachability checker (Phase 4) works out which abilities each exit
   and pickup of a room needs, and checks that the whole world can be
@@ -975,3 +975,17 @@ the player a growing toolset that opens shortcuts through rooms already
 solved and new areas; access levels give a large world its structure.
 Leaving room state out keeps the key short (512 bits of bonus slots
 would have been most of it).
+
+### D69 — 2026-09-27 — Switches unlock exits
+A new Phase 3 step (`feat/switches`, step 4, after data disks): switches
+that unlock a room's exits. Two kinds to start: a pressure plate held
+down by a crate, and a target that a Zap bolt hits. An exit can be locked
+until its switches are on; a locked exit looks closed and is solid.
+Switch state resets with the room like everything else in it. The locked
+exit is shared with access levels (fragments step). The step settles
+first whether the wizard presses plates himself, whether switches latch,
+how several switches and exits combine, and how a locked exit keeps the
+way back open (D67).
+**Why:** author's request. Crates and Zap exist already, so switches turn
+them into puzzle keys with little new machinery, and a locked exit is
+needed for access levels anyway.

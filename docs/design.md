@@ -777,47 +777,55 @@ the author; the answers are recorded as decisions before the code lands.
 | 1 | `feat/world-map-tool` | A developer overview of the whole world on its own page, `tools/world-map.html`, served by the dev server only (D66). Every room is a node in its biome color on a simple map grid, one room per cell, at its position in `world.json`; lines show the connections between exits, and the start room is marked. Rooms are dragged to another free cell and saved through the dev server; connections are shown, and edited in the room editor. A new room from the room editor gets the nearest free cell next to the room it was created from, to be moved afterwards. Validation: every room has a position, no two share one. The tool flags what room validation can't see: rooms not reachable from the start through exits, and test rooms more than two rooms from Boot Sector (D49). Clicking a room opens it in the room editor. |
 | 2 | `feat/pickups-and-progress` | A generic pickup object (kind, look, stable id) in `defs.json` and room data, and a `Progress` model (collected ids, known spells) that survives room resets and death: permanent pickups (fragments, data disks, buff items, secrets) have a stable save-bit index, validated unique, and stay collected as grayed-out ghosts on revisits; temporary pickups (refills) have no bit and come back with the room (D67). Pickup burst and banner; editor and validation support. |
 | 3 | `feat/data-disks` | Data-disk pickups that unlock a spell: install animation, `> SPELL INSTALLED: …` banner, spell switching (Tab / Q) with more than one spell. |
-| 4 | `feat/viruses` | A `chase` movement behavior: a hostile Virus follows the wizard while it sees him within `aggroRange` and gives up when line of sight breaks. |
-| 5 | `feat/popups` | A projectile attack: Pop-ups are stationary enemies firing slow shots; a projectile entity with its own rules for what stops it. |
-| 6 | `feat/firewall-spell` | Firewall: a brief shield that blocks projectiles. |
-| 7 | `feat/pause-spell` | Pause: freezes an enemy for a while; a frozen enemy is a solid platform (reusing the solid-enemy rules, D51). |
-| 8 | `feat/warp-spell` | Warp: a short teleport through gaps or past hazards, with an afterimage. |
-| 9 | `feat/cut-paste-spell` | Cut & Paste: cut one object into a one-slot inventory, paste it at a valid grid cell in front of the wizard. |
-| 10 | `docs/spell-roster` | Discussion step, docs only: the roster towards 16 spells (D68) — new spells, some letting the wizard skip easier rooms, and upgrades of the basic ones — and the buff items, now that the first five spells can be played; stronger ones should let the wizard speedrun simple rooms or solve them differently (D67). Accepted spells get their own steps (in this phase or later) and CLAUDE.md §5 is updated; the result is a decision. |
-| 11 | `feat/buff-items` | The first buff items from the roster: pickups that raise the wizard's maximum integrity or energy, or his jump height, kept in `Progress`; HUD bars grow with them. |
-| 12 | `feat/score-and-bits` | Starts with a short discussion (below). Then: bonus bits (up to 4 slots per room), secrets, score for bits, enemies, secrets and pickups, floating score popups, HUD score, the "all bits collected" room bonus, local high score. |
-| 13 | `feat/fragments-and-access` | Fragment pickups, the fragment count and locations in `world.json`, the central core that takes them, `> FRAGMENT n/N GET!`, found fragments grayed out on revisits (D67), access levels that lock areas until the wizard's level is high enough, and the end of the game. |
-| 14 | `chore/release-0.3.0` | Docs pass, CHANGELOG, `v0.3.0` tag and GitHub Release (CLAUDE.md §10) |
+| 4 | `feat/switches` | Switches that unlock exits: a pressure plate held down by a crate, and a target that a Zap bolt hits. An exit in room data can be locked until its switches are on; a locked exit looks closed and is solid. Switch state resets with the room. The locked exit is the same mechanism access levels use later (step 14). Editor, validation (switches point at exits that exist), showcase, a test room. |
+| 5 | `feat/viruses` | A `chase` movement behavior: a hostile Virus follows the wizard while it sees him within `aggroRange` and gives up when line of sight breaks. |
+| 6 | `feat/popups` | A projectile attack: Pop-ups are stationary enemies firing slow shots; a projectile entity with its own rules for what stops it. |
+| 7 | `feat/firewall-spell` | Firewall: a brief shield that blocks projectiles. |
+| 8 | `feat/pause-spell` | Pause: freezes an enemy for a while; a frozen enemy is a solid platform (reusing the solid-enemy rules, D51). |
+| 9 | `feat/warp-spell` | Warp: a short teleport through gaps or past hazards, with an afterimage. |
+| 10 | `feat/cut-paste-spell` | Cut & Paste: cut one object into a one-slot inventory, paste it at a valid grid cell in front of the wizard. |
+| 11 | `docs/spell-roster` | Discussion step, docs only: the roster towards 16 spells (D68) — new spells, some letting the wizard skip easier rooms, and upgrades of the basic ones — and the buff items, now that the first five spells can be played; stronger ones should let the wizard speedrun simple rooms or solve them differently (D67). Accepted spells get their own steps (in this phase or later) and CLAUDE.md §5 is updated; the result is a decision. |
+| 12 | `feat/buff-items` | The first buff items from the roster: pickups that raise the wizard's maximum integrity or energy, or his jump height, kept in `Progress`; HUD bars grow with them. |
+| 13 | `feat/score-and-bits` | Starts with a short discussion (below). Then: bonus bits (up to 4 slots per room), secrets, score for bits, enemies, secrets and pickups, floating score popups, HUD score, the "all bits collected" room bonus, local high score. |
+| 14 | `feat/fragments-and-access` | Fragment pickups, the fragment count and locations in `world.json`, the central core that takes them, `> FRAGMENT n/N GET!`, found fragments grayed out on revisits (D67), access levels that lock areas until the wizard's level is high enough (locked exits from step 4), and the end of the game. |
+| 15 | `chore/release-0.3.0` | Docs pass, CHANGELOG, `v0.3.0` tag and GitHub Release (CLAUDE.md §10) |
 
 Open questions, settled at the start of their step:
 - **2 Pickups:** where the save-bit index lives (on the pickup in room
   data, or a list in `world.json`); which temporary pickups exist.
 - **3 Data disks:** does Zap stay known from the start, or become the first
   disk (in or near Boot Sector)?
-- **4 Viruses:** what blocks line of sight (blocks, crates, height
+- **4 Switches:** does the wizard's own weight (or an enemy's) press a
+  plate, or only crates; does a plate hold the exit open only while it is
+  pressed, or latch; does a bolt target latch, toggle or stay on for a
+  time; can one exit need several switches (all of them) and one switch
+  open several exits; can switches later drive other things (blocks,
+  platforms); is the connected exit in the next room locked too (the
+  player must always be able to leave the way he came, D67).
+- **5 Viruses:** what blocks line of sight (blocks, crates, height
   differences); what a Virus does after giving up (stops, returns to its
   post or path); chase speed.
-- **5 Pop-ups:** aimed at the wizard or in a fixed direction; fire rate,
+- **6 Pop-ups:** aimed at the wizard or in a fixed direction; fire rate,
   shot speed and range; what stops a shot (blocks, crates, Zap).
-- **6 Firewall:** duration and cost; does it also stop contact damage?
-- **7 Pause:** duration and cost; how it picks its target (a bolt, or the
+- **7 Firewall:** duration and cost; does it also stop contact damage?
+- **8 Pause:** duration and cost; how it picks its target (a bolt, or the
   nearest enemy in front); does it work on Wardens (Phase 4)?
-- **8 Warp:** distance and direction; through a one-block wall, or only
+- **9 Warp:** distance and direction; through a one-block wall, or only
   across gaps and hazards; where it lands when the target cell is taken.
-- **9 Cut & Paste:** what can be cut (objects only, enemies, a crate with
+- **10 Cut & Paste:** what can be cut (objects only, enemies, a crate with
   something on it); does the cut object leave the room with the wizard or
   go back on reset?
-- **10 Roster:** which spells and upgrades (up to 16 in all), which buff
+- **11 Roster:** which spells and upgrades (up to 16 in all), which buff
   items and how many of each, and the order they appear in the world.
-- **11 Buff items:** how much each raises (e.g. +2 integrity, +2 energy);
+- **12 Buff items:** how much each raises (e.g. +2 integrity, +2 energy);
   the jump buff (it opens areas and skips rooms, D68): how high, and does
   it stack; the access-key health field (4 bits) must hold the highest
   maximum.
-- **12 Score and bits:** the world targets are set (D68); what is left is
+- **13 Score and bits:** the world targets are set (D68); what is left is
   how many bits a room typically has, score values, and what counts as a
   secret. Bonus bits are not saved (D68): are they back after a load, and
   if so, how does saved score avoid counting them twice?
-- **13 Fragments and access:** fragment count (in the world and the test
+- **14 Fragments and access:** fragment count (in the world and the test
   world); how access levels link to fragments (the level is the number of
   fragments delivered, or collected, or its own reward); what a locked
   exit looks like; a placeholder win screen or a real ending (final score,

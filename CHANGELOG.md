@@ -18,6 +18,8 @@ and the project uses [Semantic Versioning](https://semver.org/).
   so a room need not be fully solvable on first arrival; later spells let
   the wizard speedrun simple rooms or solve them differently; every
   permanent pickup is one save bit and shows grayed out on revisits.
+- Switches (D69): pressure plates held by a crate and targets hit by a
+  bolt unlock exits; a new Phase 3 step after data disks.
 - World targets (D68): towards 128 rooms (more small rooms), up to 16
   spells including upgrades, buff items (integrity, energy, jump) and
   access levels locking areas; stronger spells and buffs skip rooms and

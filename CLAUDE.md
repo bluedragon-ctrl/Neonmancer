@@ -103,6 +103,8 @@ mobile/touch support, backend or accounts.
 - Types: static, pushable, moving (paths or up/down cycles; player rides
   them), collapsing (vanish after being stepped on, optional respawn),
   hazard (deals damage), void (instant death when the player falls onto it).
+- Switches unlock exits: a pressure plate held down by a crate, or a
+  target hit by a bolt (D69).
 - Holes: floor tiles (at y = 0) drawn as black pits. The player dies falling
   in (a trap, no way back out); a block pushed into a hole drops in and fills
   it, turning it into walkable floor. Holes never lead to another room.
@@ -386,7 +388,8 @@ In-game room editor with JSON export. Step plan: docs/design.md (D43).
 
 **Phase 3 (v0.3) — Spells and pickups**
 World map tool for the developer. Pickups and a progress model, data
-disks. Viruses and Pop-ups. Firewall, Pause, Warp and Cut & Paste spells.
+disks. Switches (pressure plates, bolt targets) unlocking exits. Viruses
+and Pop-ups. Firewall, Pause, Warp and Cut & Paste spells.
 A discussion step on further spells, spell upgrades and buff items; the
 first buff items. Score, bonus bits and secrets. Fragments, access levels
 and the core. Step plan: docs/design.md (D65).
