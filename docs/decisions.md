@@ -928,14 +928,17 @@ couldn't before. So:
 - The reachability checker (Phase 4) works out which abilities each exit
   and pickup of a room needs, and checks that the whole world can be
   finished in some order.
-- Each fragment is one bit in the save, found or not. A found fragment
-  stays in its room as a grayed-out ghost when the room is revisited, so
-  the player sees he has been there.
+- Every permanent pickup (fragments, data disks, buff items, secrets) is
+  one bit in the save, found or not; there are only a limited number of
+  them. A found one stays in its room as a grayed-out ghost when the room
+  is revisited, so the player sees he has been there. Temporary pickups
+  (e.g. refills) are not saved and come back with the room.
 **Why:** author's direction for the game. Exploring the Grid and mastering
 it are the reward: discovering the layout matters, a gate seen early is a
 reason to come back, and a room that took a puzzle the first time can
-become a quick run later. The grayed fragment keeps a maze readable
-without a saved map.
+become a quick run later. Grayed-out pickups keep a maze readable
+without a saved map; one bit each is cheap because permanent pickups are
+few.
 
 ### D68 — 2026-09-27 — World targets: towards 128 rooms, 16 spells, buff items, access levels
 The author's targets for the finished game, replacing the 40–60 rooms of
@@ -959,7 +962,9 @@ CLAUDE.md:
   is, but no per-room data: no bonus slots, no map.
 
 The access-key layout follows (CLAUDE.md §8, finalized in Phase 4): room
-8 bits (7 would allow exactly 128), spells 16, and no bonus-slot bits.
+8 bits (7 would allow exactly 128), one bit per permanent pickup (64
+reserved; spells and buffs follow from the disks and items found, D67),
+and no bonus-slot bits.
 The score step no longer discusses world targets (D65); it keeps
 bits per room, score values and secrets. A buff-items step joins Phase 3,
 and access levels join the fragments step.

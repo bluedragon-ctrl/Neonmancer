@@ -129,8 +129,11 @@ mobile/touch support, backend or accounts.
 - The save holds what the wizard has (fragments, spells, items), not the
   state of rooms: no per-room data such as bonus slots or the map (D68).
   Each room has up to 4 bonus slots.
-- Each fragment is one bit in the save, found or not; a found fragment
-  shows grayed out when its room is revisited (D67).
+- Every permanent pickup (fragments, data disks, buff items, secrets) is
+  one bit in the save, found or not; there are only a limited number of
+  them. A found one shows grayed out when its room is revisited (D67).
+  Temporary pickups (e.g. refills) are not saved and come back with the
+  room.
 
 ---
 
@@ -276,9 +279,10 @@ not critical.
 
 - Bit layout (one versioned module, spare bits reserved), sized for the
   world targets (D68) and finalized with the access-key step:
-  format version 4, room 8, spells 16, items 8, fragments 8 (one bit
-  each), health 4,
-  score 20, secrets 16, checksum 16. No per-room data (bonus slots, map).
+  format version 4, room 8, pickups 64 (one bit per permanent pickup:
+  fragments, data disks, buff items, secrets; known spells and buffs
+  follow from them), health 4, score 20, checksum 16. No per-room data
+  (bonus slots, map).
 - Encoding: Base32 without ambiguous characters (no 0/O, 1/I/L), shown
   in groups (e.g. `KX7M-Q4RP-...`). Input tolerates spaces, dashes and
   lowercase.

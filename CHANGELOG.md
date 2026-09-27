@@ -16,8 +16,8 @@ and the project uses [Semantic Versioning](https://semver.org/).
 - Design direction (D67): exploring is part of the game, so development
   tools stay hidden from players; the world is a maze with backtracking,
   so a room need not be fully solvable on first arrival; later spells let
-  the wizard speedrun simple rooms or solve them differently; a found
-  fragment shows grayed out on revisits.
+  the wizard speedrun simple rooms or solve them differently; every
+  permanent pickup is one save bit and shows grayed out on revisits.
 - World targets (D68): towards 128 rooms (more small rooms), up to 16
   spells including upgrades, buff items (integrity, energy, jump) and
   access levels locking areas; stronger spells and buffs skip rooms and

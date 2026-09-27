@@ -772,7 +772,7 @@ the author; the answers are recorded as decisions before the code lands.
 | # | Branch | Delivers |
 |---|---|---|
 | 1 | `feat/world-map-tool` | A developer overview of the whole world on its own page, `tools/world-map.html`, served by the dev server only (D66). Every room is a node in its biome color on a simple map grid, one room per cell, at its position in `world.json`; lines show the connections between exits, and the start room is marked. Rooms are dragged to another free cell and saved through the dev server; connections are shown, and edited in the room editor. A new room from the room editor gets the nearest free cell next to the room it was created from, to be moved afterwards. Validation: every room has a position, no two share one. The tool flags what room validation can't see: rooms not reachable from the start through exits, and test rooms more than two rooms from Boot Sector (D49). Clicking a room opens it in the room editor. |
-| 2 | `feat/pickups-and-progress` | A generic pickup object (kind, look, stable id) in `defs.json` and room data, and a `Progress` model (collected ids, known spells) that survives room resets and death: collected pickups stay collected (a found fragment shows as a grayed-out ghost on revisits, D67). Pickup burst and banner; editor and validation support. |
+| 2 | `feat/pickups-and-progress` | A generic pickup object (kind, look, stable id) in `defs.json` and room data, and a `Progress` model (collected ids, known spells) that survives room resets and death: permanent pickups (fragments, data disks, buff items, secrets) have a stable save-bit index, validated unique, and stay collected as grayed-out ghosts on revisits; temporary pickups (refills) have no bit and come back with the room (D67). Pickup burst and banner; editor and validation support. |
 | 3 | `feat/data-disks` | Data-disk pickups that unlock a spell: install animation, `> SPELL INSTALLED: …` banner, spell switching (Tab / Q) with more than one spell. |
 | 4 | `feat/viruses` | A `chase` movement behavior: a hostile Virus follows the wizard while it sees him within `aggroRange` and gives up when line of sight breaks. |
 | 5 | `feat/popups` | A projectile attack: Pop-ups are stationary enemies firing slow shots; a projectile entity with its own rules for what stops it. |
@@ -783,12 +783,12 @@ the author; the answers are recorded as decisions before the code lands.
 | 10 | `docs/spell-roster` | Discussion step, docs only: the roster towards 16 spells (D68) — new spells, some letting the wizard skip easier rooms, and upgrades of the basic ones — and the buff items, now that the first five spells can be played; stronger ones should let the wizard speedrun simple rooms or solve them differently (D67). Accepted spells get their own steps (in this phase or later) and CLAUDE.md §5 is updated; the result is a decision. |
 | 11 | `feat/buff-items` | The first buff items from the roster: pickups that raise the wizard's maximum integrity or energy, or his jump height, kept in `Progress`; HUD bars grow with them. |
 | 12 | `feat/score-and-bits` | Starts with a short discussion (below). Then: bonus bits (up to 4 slots per room), secrets, score for bits, enemies, secrets and pickups, floating score popups, HUD score, the "all bits collected" room bonus, local high score. |
-| 13 | `feat/fragments-and-access` | Fragment pickups, the fragment count and locations in `world.json`, the central core that takes them, `> FRAGMENT n/N GET!`, one save bit per fragment, found fragments grayed out on revisits (D67), access levels that lock areas until the wizard's level is high enough, and the end of the game. |
+| 13 | `feat/fragments-and-access` | Fragment pickups, the fragment count and locations in `world.json`, the central core that takes them, `> FRAGMENT n/N GET!`, found fragments grayed out on revisits (D67), access levels that lock areas until the wizard's level is high enough, and the end of the game. |
 | 14 | `chore/release-0.3.0` | Docs pass, CHANGELOG, `v0.3.0` tag and GitHub Release (CLAUDE.md §10) |
 
 Open questions, settled at the start of their step:
-- **2 Pickups:** do all collected pickups (disks, items, bits) stay as
-  grayed-out ghosts like fragments, or vanish?
+- **2 Pickups:** where the save-bit index lives (on the pickup in room
+  data, or a list in `world.json`); which temporary pickups exist.
 - **3 Data disks:** does Zap stay known from the start, or become the first
   disk (in or near Boot Sector)?
 - **4 Viruses:** what blocks line of sight (blocks, crates, height
