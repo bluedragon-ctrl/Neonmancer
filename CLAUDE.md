@@ -281,10 +281,10 @@ not critical.
   visual asset (monsters, pickups) to it.
 - **Room editor** (in-game, Phase 2): place blocks, enemies and pickups
   with the mouse, preview in the real neon look, export room JSON.
-- **World map tool** (`tools/world-map.html`, Phase 3, D66): developer
-  overview of every room at its position from `world.json`, its exits and
-  connections; flags rooms not reachable from the start; opens a room in
-  the room editor.
+- **World map tool** (`tools/world-map.html`, dev server only, Phase 3,
+  D66): every room as a node on a simple map grid (positions in
+  `world.json`), with its connections; drag rooms and save; flags rooms
+  not reachable from the start; opens a room in the room editor.
 - **Reachability checker** (Phase 4): script that searches the grid with
   jump height, pushable objects and available spells to flag unsolvable
   rooms. Used by CI, the editor, and design skills/subagents.
@@ -357,10 +357,10 @@ In-game room editor with JSON export. Step plan: docs/design.md (D43).
 
 **Phase 3 (v0.3) — Spells and pickups**
 World map tool for the developer. Pickups and a progress model, data
-disks. Viruses and Pop-ups. Firewall, Pause, Warp and Cut & Paste spells. A discussion step on further spells
-or spell upgrades. Score, bonus bits and secrets, starting with the world
-targets (rooms, spells, items). Fragments and the core. Step plan:
-docs/design.md (D65).
+disks. Viruses and Pop-ups. Firewall, Pause, Warp and Cut & Paste spells.
+A discussion step on further spells or spell upgrades. Score, bonus bits
+and secrets, starting with the world targets (rooms, spells, items).
+Fragments and the core. Step plan: docs/design.md (D65).
 
 **Phase 4 (v0.4) — Guardians, saves, tooling**
 Firewall Wardens. Title screen and pause menu. Access keys, URL saves,

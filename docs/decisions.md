@@ -891,12 +891,21 @@ growing world or catches rooms cut off from the start.
 
 ### D66 — 2026-09-27 — World map tool: its own page, room positions in world.json
 The developer world map tool (Phase 3 step 1) is a separate page,
-`tools/world-map.html`, like the asset showcase, not a view inside the
-room editor. Room positions on the map are stored in `data/world.json`,
-not computed from the connections.
+`tools/world-map.html`, not a view inside the room editor, and only the
+dev server serves it (it is not deployed). Room positions on the map are
+stored in `data/world.json`, not computed from the connections:
+- The map is a simple grid of virtual nodes, one room per cell; a room's
+  size and its exits' tiles don't have to match its neighbours'.
+- Rooms are dragged to another free cell and saved through the dev
+  server. Connections are read-only in the tool; the room editor edits
+  them.
+- A new room from the room editor gets the nearest free cell next to the
+  room it was created from, and is moved afterwards.
 **Why:** author's choice. A page of its own keeps the room editor
 focused on one room and can show the whole world without the game
-running. Stored positions give one layout that the tool and the player's
+running. It is a development tool, so it stays off the public site.
+Nodes on a grid are enough to see the structure; matching tiles would
+make every room size a layout constraint. Stored positions give one layout that the tool and the player's
 map screen (Phase 4) share; an automatic layout can't place the test
 world, whose shortcuts (D49) don't fit a flat grid, and would shift
 whenever a connection changes.

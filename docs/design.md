@@ -760,7 +760,7 @@ the author; the answers are recorded as decisions before the code lands.
 
 | # | Branch | Delivers |
 |---|---|---|
-| 1 | `feat/world-map-tool` | A developer overview of the whole world on its own page, `tools/world-map.html` (D66): every room as its footprint in its biome color at its position stored in `world.json`, its exits and the connections between them, the start room. It flags what room validation can't see: rooms not reachable from the start through exits, and test rooms more than two rooms from Boot Sector (D49). Clicking a room opens it in the room editor. |
+| 1 | `feat/world-map-tool` | A developer overview of the whole world on its own page, `tools/world-map.html`, served by the dev server only (D66). Every room is a node in its biome color on a simple map grid, one room per cell, at its position in `world.json`; lines show the connections between exits, and the start room is marked. Rooms are dragged to another free cell and saved through the dev server; connections are read-only here (they are edited in the room editor). A new room from the room editor gets the nearest free cell next to the room it was created from, to be moved afterwards. Validation: every room has a position, no two share one. The tool flags what room validation can't see: rooms not reachable from the start through exits, and test rooms more than two rooms from Boot Sector (D49). Clicking a room opens it in the room editor. |
 | 2 | `feat/pickups-and-progress` | A generic pickup object (kind, look, stable id) in `defs.json` and room data, and a `Progress` model (collected ids, known spells) that survives room resets and death: collected pickups stay gone. Pickup burst and banner; editor and validation support. |
 | 3 | `feat/data-disks` | Data-disk pickups that unlock a spell: install animation, `> SPELL INSTALLED: …` banner, spell switching (Tab / Q) with more than one spell. |
 | 4 | `feat/viruses` | A `chase` movement behavior: a hostile Virus follows the wizard while it sees him within `aggroRange` and gives up when line of sight breaks. |
@@ -775,10 +775,6 @@ the author; the answers are recorded as decisions before the code lands.
 | 13 | `chore/release-0.3.0` | Docs pass, CHANGELOG, `v0.3.0` tag and GitHub Release (CLAUDE.md §10) |
 
 Open questions, settled at the start of their step:
-- **1 World map tool:** view only, or also moving rooms (saving their
-  positions through the dev server) and editing connections; the position
-  format (world units or a coarser map grid); where a new room from the
-  room editor is placed; whether the page is deployed like the showcase.
 - **3 Data disks:** does Zap stay known from the start, or become the first
   disk (in or near Boot Sector)?
 - **4 Viruses:** what blocks line of sight (blocks, crates, height
