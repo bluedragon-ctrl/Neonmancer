@@ -1091,5 +1091,7 @@ After playtesting step 3 (D73), the author's changes:
 - A lit bit on a data disk glows brighter the darker its color is, so
   Shield's neon blue reads as well as Zap's cyan on the white disk, and
   the empty squares of the bit grid are dark gray (were dim white).
+- A found disk's ghost spins like a live disk, without the bob (it stood
+  still).
 **Why:** author's playtest. The freeze interrupted the flow of play;
 5 s felt short; the blue bit was hard to see.

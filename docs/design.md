@@ -337,7 +337,8 @@ enemies).
   `#00f0ff`, Shield neon blue `#3b82ff`): its disk's lit bit, its
   install animation and its banner.
 - **Found before:** a permanent pickup whose bit is set shows as a ghost
-  (gray, dashed, standing still) and can't be taken again (D67).
+  (gray, dashed, spinning without the bob, D74) and can't be taken again
+  (D67).
 - **Temporary: refills.** `refill_integrity` (+3) and `refill_energy`
   (+30), up to the wizard's maximum; a refill is left lying while that stat
   is full. No save bit: it comes back when the room resets (entering it,

@@ -5,7 +5,7 @@
  * carry a 4×4 grid of data bits (like a destructible crate's) showing the
  * spell's slot, one of the 16 spell bits of the save: set bits are small
  * raised cubes in the spell's color, the others dim squares. A disk already
- * found is a gray, dashed ghost standing still (D67). Picking one up lifts
+ * found is a gray, dashed ghost, spinning without the bob (D67, D74). Picking one up lifts
  * it, flashes it and bursts its bits into pixels.
  *
  * Looks are reviewed in the asset showcase (`?asset=disks`) before they go
@@ -159,13 +159,13 @@ function edgePairs(edges) {
  * Where the disk is and how it looks this frame (pure).
  * @param {object} state
  * @param {number} state.time seconds, for the idle motion
- * @param {boolean} [state.ghost] found already: stands still at its hover height
+ * @param {boolean} [state.ghost] found already: spins at its hover height, without the bob
  * @param {number} [state.collected] ticks since it was picked up (undefined: not picked up)
  * @returns {{ visible: boolean, y: number, angle: number, scale: number, flash: number }}
  *   y: center height above the floor; flash 0..1 towards white
  */
 export function diskMotion({ time, ghost = false, collected }) {
-  if (ghost) return { visible: true, y: DISK.hover, angle: Math.PI / 4, scale: 1, flash: 0 };
+  if (ghost) return { visible: true, y: DISK.hover, angle: time * DISK.turn, scale: 1, flash: 0 };
   const y = DISK.hover + DISK.bob * Math.sin((time / DISK.bobPeriod) * 2 * Math.PI);
   const angle = time * DISK.turn;
   if (collected === undefined) return { visible: true, y, angle, scale: 1, flash: 0 };

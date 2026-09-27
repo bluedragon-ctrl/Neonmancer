@@ -177,7 +177,7 @@ function buildDiskInRoom() {
   return asset;
 }
 
-/** A data disk idling (or standing still as a ghost). */
+/** A data disk idling (a ghost spins without the bob). */
 function buildDisk(options = {}) {
   const disk = createDisk(options);
   const asset = new Group().add(disk);
@@ -255,7 +255,7 @@ function buildDiskSlots() {
     const along = ((slot % 4) - 1.5) * 1.1;
     const row = Math.floor(slot / 4) - 1.5;
     disk.position.set(along + row * 1.1, 0, -along + row * 1.1);
-    poseDisk(disk, diskMotion({ time: 0, ghost: true }));
+    poseDisk(disk, { ...diskMotion({ time: 0, ghost: true }), angle: Math.PI / 4 });
     asset.add(disk);
   }
   return asset;

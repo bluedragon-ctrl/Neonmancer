@@ -144,9 +144,11 @@ test('defs: spell slots are unique, a disk names a known spell, pickup and objec
   assert.match(errors, /pickups\.crate: "crate" is an object type too/);
 });
 
-test('disk look: a ghost stands still; a pick-up rises and flashes, then its pixels fly and fade', () => {
+test('disk look: a ghost spins without the bob; a pick-up rises and flashes, then its pixels fly and fade', () => {
   const ghost = diskMotion({ time: 3, ghost: true });
-  assert.deepEqual(ghost, diskMotion({ time: 7, ghost: true }));
+  const later = diskMotion({ time: 3.7, ghost: true });
+  assert.equal(ghost.y, later.y, 'no bob');
+  assert.notEqual(ghost.angle, later.angle, 'it spins');
   assert.equal(diskMotion({ time: 1, collected: 0 }).flash, 0);
   const rising = diskMotion({ time: 1, collected: DISK.collect.riseTicks / 2 });
   assert.ok(rising.visible && rising.y > diskMotion({ time: 1 }).y);
