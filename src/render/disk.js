@@ -40,6 +40,8 @@ export const DISK = {
   /** Lit bits: line width and glow, and the share of their color in their faces. */
   bitWidth: 1.8,
   bitBrightness: 2,
+  /** A darker spell color glows brighter, up to this many times, so every lit bit reads like Zap's cyan (D74). */
+  bitBoost: 2.5,
   bitTint: 0.35,
   /** A found disk: gray, dim, dashed and still. */
   ghost: { color: 0x9aa0b8, brightness: 0.9 },
@@ -48,6 +50,23 @@ export const DISK = {
 };
 
 
+
+/** Relative luminance of a color (linear RGB weights). */
+const luminance = (color) => {
+  const { r, g, b } = new Color(color);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+
+/**
+ * How bright a lit bit in `color` glows: DISK.bitBrightness for a color as
+ * light as Zap's cyan or lighter, more for darker ones (up to bitBoost
+ * times), so a dark blue bit stands out on the white disk as well (D74).
+ * @param {number|string} color
+ */
+export function bitGlow(color) {
+  const boost = luminance(PALETTE.cyan) / Math.max(luminance(color), 1e-3);
+  return DISK.bitBrightness * Math.min(DISK.bitBoost, Math.max(1, boost));
+}
 
 /** Line segments of a closed polygon at depth z. */
 const loop = (points, z) => points.map((p, i) => [[...p, z], [...points[(i + 1) % points.length], z]]);
@@ -92,7 +111,7 @@ export function createDisk({ color = PALETTE.cyan, slot = 0, ghost = false } = {
   bitGeometry ??= new BoxGeometry(2 * half, 2 * half, DISK.raise);
   bitEdges ??= new EdgesGeometry(bitGeometry);
   const zeroMaterial = lineMaterial({ color: bodyColor, width: 1.2, brightness: glow * DISK.zero, dashed: ghost });
-  const litLines = lineMaterial({ color: bitColor, width: DISK.bitWidth, brightness: ghost ? glow : DISK.bitBrightness });
+  const litLines = lineMaterial({ color: bitColor, width: DISK.bitWidth, brightness: ghost ? glow : bitGlow(bitColor) });
   const litFaces = faceMaterial(new Color(PALETTE.face).lerp(new Color(bitColor), ghost ? 0.1 : DISK.bitTint));
   const edgeSegments = edgePairs(bitEdges);
   const cells = [];

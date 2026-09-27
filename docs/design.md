@@ -324,10 +324,11 @@ enemies).
 - **Progress** (`src/world/progress.js`) holds the bits found for the
   whole game; room resets and death leave it alone. Known spells follow
   from it (in slot order). The save key (Phase 4) will hold these bits.
-- **Installing** (D73): taking a disk freezes the wizard for 1 s
-  (`PLAYER.installTicks`, 60 ticks): no walking, jumping, pushing, casting
-  or switching, and nothing hurts him; he still falls if he was in the
-  air. The disk shrinks where it hung and its bits spiral into him, three
+- **Installing** (D73): taking a disk plays a 1 s animation on the
+  wizard (`PLAYER.installTicks`, 60 ticks). It doesn't hold him up: he
+  walks, casts (the new spell at once) and can be hurt meanwhile (D74).
+  The disk shrinks where it hung and its bits spiral into him, wherever
+  he goes, three
   rings in the spell's color sweep up from his feet to his hat, tinting
   his hologram, and he flashes white at the end. The banner shows at
   once. Tuning: `INSTALL_FX` in `src/render/install-fx.js`; showcase
@@ -407,7 +408,7 @@ enemies).
 The second spell (D73), from a data disk in Cache Hall (slot 1).
 
 - Cast (E) with Shield selected: costs 20 energy, then 0.25 s before the
-  next cast. It stays up for 5 s; casting it again while it is up starts
+  next cast. It stays up for 7 s (D74); casting it again while it is up starts
   it over. Death ends it; it carries over between rooms.
 - For now it only shows: it blocks projectiles once there are any (Pop-ups,
   step 6; blocking with step 7). Contact damage is still open.

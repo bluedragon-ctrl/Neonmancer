@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PLAYER } from '../src/entities/player.js';
 import { Game } from '../src/game.js';
+import { DISK, bitGlow } from '../src/render/disk.js';
 import { INSTALL_FX, installLook } from '../src/render/install-fx.js';
 import { SHIELD_FX, arcPoints, shieldLook } from '../src/render/shield-fx.js';
 import { Progress } from '../src/world/progress.js';
@@ -27,25 +28,22 @@ function take(game, [x, y, z]) {
   return events;
 }
 
-test('taking a disk freezes the wizard for the install: no walking, casting, switching or damage (D73)', () => {
+test('the install animation does not hold the wizard up: he walks, casts, switches and can be hurt (D74)', () => {
   const game = twoDisks({ progress: new Progress([0]) });
   game.player.place([6.5, 0, 4.5]);
   game.update(idle);
   const { player } = game;
-  assert.equal(player.install.spell, 'shield');
-  assert.ok(Math.abs(player.install.from[1] - 0.5) < 1e-9, 'from: the disk relative to his feet');
+  assert.deepEqual(player.install, { spell: 'shield', at: [6.5, 0.5, 4.5], tick: 0 });
   const x = player.pos[0];
-  for (const action of ['down', 'jump', 'cast', 'spellNext']) {
-    const events = eventTypes(game.update(press(action)));
-    assert.ok(!events.includes('jump') && !events.includes('cast') && !events.includes('spell'), action);
-  }
-  assert.equal(player.pos[0], x, 'he does not walk');
-  game.hurt(1);
-  assert.equal(player.integrity, player.maxIntegrity, 'nothing hurts him meanwhile');
-  for (let i = 0; i < PLAYER.installTicks; i++) game.update(idle);
-  assert.equal(player.install, null);
   game.update(hold('down'));
-  assert.notEqual(player.pos[0], x, 'free again');
+  assert.notEqual(player.pos[0], x, 'he walks');
+  assert.ok(eventTypes(game.update(press('cast'))).includes('cast'));
+  assert.ok(eventTypes(game.update(press('spellNext'))).includes('spell'));
+  game.hurt(1);
+  assert.equal(player.integrity, player.maxIntegrity - 1, 'he can be hurt');
+  assert.ok(player.install, 'the animation runs on');
+  for (let i = 0; i < PLAYER.installTicks; i++) game.update(idle);
+  assert.equal(player.install, null, 'over after installTicks');
 });
 
 test('with two disks Tab switches between Zap and Shield; installing selects the new spell', () => {
@@ -91,7 +89,7 @@ test('install look: the disk shrinks, bits spiral in, rings sweep up, a flash at
   assert.equal(installLook(INSTALL_FX.flashAt).flash, 1);
   const done = installLook(INSTALL_FX.ticks);
   assert.ok(done.done && done.pixels.length === 0 && done.rings.length === 0 && done.flash === 0);
-  assert.equal(INSTALL_FX.ticks, PLAYER.installTicks, 'the look lasts as long as the freeze');
+  assert.equal(INSTALL_FX.ticks, PLAYER.installTicks);
 });
 
 test('shield look: pops up, flickers between zigzags, blinks before it ends', () => {
@@ -110,4 +108,11 @@ test('shield look: pops up, flickers between zigzags, blinks before it ends', ()
     assert.ok(Math.abs(Math.hypot(x, z) - SHIELD_FX.radius) <= SHIELD_FX.jitter + 1e-9);
     assert.ok(Math.abs(y) <= SHIELD_FX.jitter);
   }
+});
+
+test('a lit disk bit in a darker spell color glows brighter, within bounds (D74)', () => {
+  assert.equal(bitGlow(SPELLS.zap.color), DISK.bitBrightness, 'cyan as it is');
+  assert.equal(bitGlow('#ffffff'), DISK.bitBrightness, 'never dimmer');
+  const blue = bitGlow(SPELLS.shield.color);
+  assert.ok(blue > DISK.bitBrightness && blue <= DISK.bitBrightness * DISK.bitBoost);
 });

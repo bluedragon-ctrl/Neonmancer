@@ -333,8 +333,8 @@ export class Game {
 
   /**
    * The wizard takes the pickups he touches (D71), if they are any use: a
-   * data disk installs its spell for good (he freezes for the install
-   * animation, D73); a refill restores integrity or
+   * data disk installs its spell for good (with an install animation
+   * on him, D73); a refill restores integrity or
    * energy, and is left lying while that is full. Reported as 'pickup'.
    */
   takePickups() {
