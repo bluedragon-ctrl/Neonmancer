@@ -140,6 +140,9 @@ Move, jump, gravity, push objects, health ("integrity") and mana ("energy").
   grid spot in front of the wizard
 
 Mana recharges slowly. Installing a spell plays a short animation.
+Later spells and upgrades are stronger: they let the wizard speedrun
+simple rooms or solve them differently. A room must be solvable with the
+spells he can have on first arrival (D67).
 
 ### Enemies (corrupted programs; cute but clearly dangerous)
 - **Bugs** — patrol fixed paths
@@ -281,10 +284,11 @@ not critical.
   visual asset (monsters, pickups) to it.
 - **Room editor** (in-game, Phase 2): place blocks, enemies and pickups
   with the mouse, preview in the real neon look, export room JSON.
-- **World map tool** (`tools/world-map.html`, dev server only, Phase 3,
-  D66): every room as a node on a simple map grid (positions in
-  `world.json`), with its connections; drag rooms and save; flags rooms
-  not reachable from the start; opens a room in the room editor.
+- **World map tool** (`tools/world-map.html`, Phase 3, D66): every room
+  as a node on a simple map grid (positions in `world.json`), with its
+  connections; drag rooms and save; flags rooms not reachable from the
+  start; opens a room in the room editor. Dev server only, never shown to
+  players: exploring is part of the game (D67).
 - **Reachability checker** (Phase 4): script that searches the grid with
   jump height, pushable objects and available spells to flag unsolvable
   rooms. Used by CI, the editor, and design skills/subagents.

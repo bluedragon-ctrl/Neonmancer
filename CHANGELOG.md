@@ -13,6 +13,10 @@ and the project uses [Semantic Versioning](https://semver.org/).
   the developer first (its own page, room positions in `world.json`,
   D66), a spell roster discussion step, and a world-targets discussion
   opening the score step.
+- Design direction (D67): exploring is part of the game, so development
+  tools stay hidden from players; later spells let the wizard speedrun
+  simple rooms or solve them differently, and a room must be solvable
+  with the spells he can have on first arrival.
 
 ## [0.2.0] - 2026-09-27
 

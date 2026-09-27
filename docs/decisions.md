@@ -897,15 +897,34 @@ stored in `data/world.json`, not computed from the connections:
 - The map is a simple grid of virtual nodes, one room per cell; a room's
   size and its exits' tiles don't have to match its neighbours'.
 - Rooms are dragged to another free cell and saved through the dev
-  server. Connections are read-only in the tool; the room editor edits
-  them.
+  server. The tool shows connections; the room editor edits them (editing
+  them on the map can come later).
 - A new room from the room editor gets the nearest free cell next to the
   room it was created from, and is moved afterwards.
 **Why:** author's choice. A page of its own keeps the room editor
 focused on one room and can show the whole world without the game
-running. It is a development tool, so it stays off the public site.
+running. It is a development tool, never visible to players: finding
+what is where is part of the game (D67).
 Nodes on a grid are enough to see the structure; matching tiles would
 make every room size a layout constraint. Stored positions give one layout that the tool and the player's
 map screen (Phase 4) share; an automatic layout can't place the test
 world, whose shortcuts (D49) don't fit a flat grid, and would shift
 whenever a connection changes.
+
+### D67 — 2026-09-27 — Exploration is part of the game; later spells open shortcuts
+Finding what is where is part of the game, as in the 1980s isometric
+games that inspired it: nothing made for development (the world map tool,
+debug room jumps) reaches the player. And the wizard grows stronger:
+later spells and upgrades let him speedrun simple rooms or solve them
+differently. So:
+- A room must be solvable with the spells the player can have when he
+  first reaches it. With later spells, shortcuts and other solutions are
+  intended, not bugs to design out.
+- The spell roster step (Phase 3 step 10) looks for spells and upgrades
+  that open such shortcuts, not only for new puzzle types.
+- The reachability checker (Phase 4) checks a room with the spells
+  available on first arrival; that needs an order of spells along the
+  world.
+**Why:** author's direction for the game. Exploring the Grid and mastering
+it are the reward: discovering the layout matters, and a room that took
+a puzzle the first time can become a quick run later.

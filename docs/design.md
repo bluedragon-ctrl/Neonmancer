@@ -497,6 +497,11 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
 - Each mechanic should be seen before it matters: a pit, a hazard or a
   collapsing bridge in view from where the wizard enters.
 
+**Spells** (D67)
+- The room must be solvable with the spells the player can have when he
+  first reaches it. Later spells may open shortcuts or other solutions;
+  that is intended, so don't block them without a reason.
+
 **No soft-locks**
 - Every one-shot change (a collapsing block without `regrow`, a crate
   pushed into a hole or into a corner) must leave a way back to an exit, or
@@ -760,7 +765,7 @@ the author; the answers are recorded as decisions before the code lands.
 
 | # | Branch | Delivers |
 |---|---|---|
-| 1 | `feat/world-map-tool` | A developer overview of the whole world on its own page, `tools/world-map.html`, served by the dev server only (D66). Every room is a node in its biome color on a simple map grid, one room per cell, at its position in `world.json`; lines show the connections between exits, and the start room is marked. Rooms are dragged to another free cell and saved through the dev server; connections are read-only here (they are edited in the room editor). A new room from the room editor gets the nearest free cell next to the room it was created from, to be moved afterwards. Validation: every room has a position, no two share one. The tool flags what room validation can't see: rooms not reachable from the start through exits, and test rooms more than two rooms from Boot Sector (D49). Clicking a room opens it in the room editor. |
+| 1 | `feat/world-map-tool` | A developer overview of the whole world on its own page, `tools/world-map.html`, served by the dev server only (D66). Every room is a node in its biome color on a simple map grid, one room per cell, at its position in `world.json`; lines show the connections between exits, and the start room is marked. Rooms are dragged to another free cell and saved through the dev server; connections are shown, and edited in the room editor. A new room from the room editor gets the nearest free cell next to the room it was created from, to be moved afterwards. Validation: every room has a position, no two share one. The tool flags what room validation can't see: rooms not reachable from the start through exits, and test rooms more than two rooms from Boot Sector (D49). Clicking a room opens it in the room editor. |
 | 2 | `feat/pickups-and-progress` | A generic pickup object (kind, look, stable id) in `defs.json` and room data, and a `Progress` model (collected ids, known spells) that survives room resets and death: collected pickups stay gone. Pickup burst and banner; editor and validation support. |
 | 3 | `feat/data-disks` | Data-disk pickups that unlock a spell: install animation, `> SPELL INSTALLED: …` banner, spell switching (Tab / Q) with more than one spell. |
 | 4 | `feat/viruses` | A `chase` movement behavior: a hostile Virus follows the wizard while it sees him within `aggroRange` and gives up when line of sight breaks. |
@@ -769,7 +774,7 @@ the author; the answers are recorded as decisions before the code lands.
 | 7 | `feat/pause-spell` | Pause: freezes an enemy for a while; a frozen enemy is a solid platform (reusing the solid-enemy rules, D51). |
 | 8 | `feat/warp-spell` | Warp: a short teleport through gaps or past hazards, with an afterimage. |
 | 9 | `feat/cut-paste-spell` | Cut & Paste: cut one object into a one-slot inventory, paste it at a valid grid cell in front of the wizard. |
-| 10 | `docs/spell-roster` | Discussion step, docs only: further spells, or upgrades of the five, now that they can be played. Accepted ones get their own steps (in this phase or later) and CLAUDE.md §5 is updated; the result is a decision. |
+| 10 | `docs/spell-roster` | Discussion step, docs only: further spells, or upgrades of the five, now that they can be played; stronger ones should let the wizard speedrun simple rooms or solve them differently (D67). Accepted ones get their own steps (in this phase or later) and CLAUDE.md §5 is updated; the result is a decision. |
 | 11 | `feat/score-and-bits` | Starts with a discussion of the world targets (below). Then: bonus bits (up to 4 slots per room), secrets, score for bits, enemies, secrets and pickups, floating score popups, HUD score, the "all bits collected" room bonus, local high score. |
 | 12 | `feat/fragments-and-core` | Fragment pickups, the fragment count and locations in `world.json`, the central core that takes them, `> FRAGMENT n/N GET!`, and the end of the game. |
 | 13 | `chore/release-0.3.0` | Docs pass, CHANGELOG, `v0.3.0` tag and GitHub Release (CLAUDE.md §10) |
@@ -807,8 +812,10 @@ Guardians, saves and tooling (D65); planned in detail when Phase 3 is
 released. Firewall Wardens; title screen and pause menu (the save UI needs
 both); access-key codec with tests; URL saves and localStorage autosave;
 map screen; reachability checker; design skills and subagents. Open so
-far: what writes a save (save shrines, room entry, or both), and how deep
-the reachability checker searches pushables and spells.
+far: what writes a save (save shrines, room entry, or both); how deep
+the reachability checker searches pushables and spells, and the spell
+order along the world it checks against (D67); how much the player's map
+screen reveals, given that finding what is where is part of the game.
 
 ## Data formats
 
