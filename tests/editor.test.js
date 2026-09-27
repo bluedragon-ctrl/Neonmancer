@@ -6,8 +6,11 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Boxes } from '../src/editor/boxes.js';
 import { formatJson } from '../src/editor/format-json.js';
-import { RoomEdit, newRoom, roomErrors, roomIdProblem, sizeProblem } from '../src/editor/room-edit.js';
-import { WorldEdit } from '../src/editor/world-edit.js';
+import { RoomEdit, newRoom, resizeText, roomErrors, roomIdProblem, sizeProblem } from '../src/editor/room-edit.js';
+import { WorldEdit, linkChoices } from '../src/editor/world-edit.js';
+import { DefsEdit } from '../src/editor/defs-edit.js';
+import { errorTarget, groupErrors } from '../src/editor/errors.js';
+import { cutRoom } from '../src/render/room-scene.js';
 import { validateData } from '../src/data/validate.js';
 import { loadGameData } from '../src/data/load.js';
 import { enemyModels, resolveEnemyTypes } from '../src/data/room-data.js';
@@ -185,15 +188,20 @@ test('RoomEdit moves spawn and reset; no reset falls back to spawn', () => {
   assert.equal('reset' in edit.toData(), false);
 });
 
-test('RoomEdit.resize drops what ends up outside', () => {
-  const edit = new RoomEdit(sampleRoom());
-  assert.equal(edit.resize([5, 3, 5]), true);
+test('RoomEdit.resize drops what ends up outside, moves spawn and reset in and says so', () => {
+  const edit = new RoomEdit({ ...sampleRoom(), spawn: [6.5, 0, 1.5], reset: [2.5, 3, 2.5] });
+  const report = edit.resize([5, 3, 5]);
+  assert.deepEqual(report, { dropped: ['1 block', 'sentry'], moved: ['spawn', 'reset'] });
+  assert.equal(resizeText([5, 3, 5], report), 'Size 5×3×5; dropped 1 block, sentry; moved spawn and reset inside.');
   const data = edit.toData();
   assert.deepEqual(data.size, [5, 3, 5]);
   assert.deepEqual(data.blocks, [{ at: [0, 0, 0], to: [1, 0, 0] }]);
   assert.deepEqual(data.holes, [{ at: [4, 4] }]);
   assert.deepEqual(data.objects, [{ id: 'crate_1', type: 'crate', at: [3, 0, 3] }]);
   assert.equal(data.enemies, undefined);
+  assert.deepEqual([data.spawn, data.reset], [[4.5, 0, 1.5], [2.5, 1, 2.5]]);
+  assert.equal(edit.resize([5, 3, 5]), false);
+  assert.deepEqual(edit.resize([6, 3, 5]), { dropped: [], moved: [] });
 });
 
 test('RoomEdit undoes and redoes; a stroke is one step', () => {
@@ -433,4 +441,155 @@ test('enemy templates take their base type values and look; validation checks th
   assert.match(bad({ bug: BUG, tank: { extends: 'bug' }, boss: { extends: 'tank' } }), /"tank" is a template itself/);
   const { color, ...colorless } = BUG;
   assert.match(bad({ bug: colorless, tank: { extends: 'bug' } }), /enemies\.tank: missing color/);
+});
+
+test('RoomEdit removes items, and ids the editor made follow a new type', () => {
+  const files = twoRooms();
+  const edit = new RoomEdit(files['rooms/lab.json']);
+  assert.equal(edit.idForType(edit.item('bug_1'), 'bug'), 'bug_1');
+  assert.equal(edit.idForType(edit.item('bug_1'), 'bug_tank'), 'bug_tank_1');
+  assert.equal(edit.idForType(edit.item('lift'), 'crate'), 'lift', 'written by hand: stays');
+
+  // A new type renames it; a stationary one loses its path; the same settings change nothing.
+  assert.equal(edit.setEnemy('bug_1', { type: 'virus', overrides: { movement: 'stationary' } }, false), 'virus_1');
+  assert.deepEqual(edit.item('virus_1'), { id: 'virus_1', type: 'virus', at: [2, 0, 6], overrides: { movement: 'stationary' } });
+  assert.equal(edit.setEnemy('virus_1', { type: 'virus', overrides: { movement: 'stationary' } }, false), null);
+  assert.equal(edit.setEnemy('virus_1', { type: 'virus', overrides: {} }, true), 'virus_1');
+  assert.equal('overrides' in edit.item('virus_1'), false);
+
+  assert.equal(edit.removeItem('virus_1'), true);
+  assert.equal(edit.removeItem('virus_1'), false);
+  assert.equal(edit.item('virus_1'), null);
+  edit.undo();
+  assert.equal(edit.item('virus_1').type, 'virus');
+});
+
+test('RoomEdit moves exits along their side and up, not onto another exit', () => {
+  const files = twoRooms();
+  const hall = new RoomEdit(files['rooms/hall.json']);
+  hall.placeExit('+x', [7, 0, 0]);
+  assert.deepEqual(hall.exits[1], { id: 'east_2', side: '+x', at: 0 });
+  assert.equal(hall.exitClashes('east_2', { at: 2 }), true, 'runs into east (3–4)');
+  assert.equal(hall.exitClashes('east_2', { at: 1 }), false);
+  assert.equal(hall.exitClashes('east_2', { y: 2 }), false, 'above east');
+  assert.equal(hall.updateExit('east_2', { at: 5, y: 1 }), true);
+  assert.deepEqual(hall.exits[1], { id: 'east_2', side: '+x', at: 5, y: 1 });
+});
+
+test('RoomEdit.describe says what is in a cell', () => {
+  const edit = new RoomEdit({ ...sampleRoom(), exits: [{ id: 'west', side: '-x', at: 3 }] });
+  assert.equal(edit.describe([3, 0, 3]), '3, 0, 3: crate_1 (crate)');
+  assert.equal(edit.describe([6, 0, 6]), '6, 0, 6: hazard block');
+  assert.equal(edit.describe([0, 0, 0]), '0, 0, 0: block');
+  assert.equal(edit.describe([0, 1, 4]), '0, 1, 4: exit west');
+  assert.equal(edit.describe([2, 2, 2]), '2, 2, 2: empty');
+  assert.equal(edit.describe([4, 0, 4], { tile: true }), 'tile 4, 4: hole');
+  assert.equal(edit.describe([3, 2, 3], { tile: true }), 'tile 3, 3: floor');
+});
+
+test('RoomEdit keeps its text until the next change', () => {
+  const edit = new RoomEdit(sampleRoom());
+  const text = edit.text();
+  assert.equal(edit.text(), text);
+  edit.placeBlock([2, 2, 2], 'block');
+  assert.notEqual(edit.text(), text);
+  edit.undo();
+  assert.equal(edit.text(), text);
+  edit.begin();
+  edit.placeBlock([2, 2, 2], 'block');
+  assert.notEqual(edit.text(), text, 'within a stroke too');
+  edit.end();
+});
+
+test('DefsEdit adds, updates, renames and deletes enemy templates', () => {
+  const defs = new DefsEdit({ enemies: { bug: BUG, virus: BUG } });
+  assert.match(defs.addTemplate('Tank', 'bug', {}), /lowercase/);
+  assert.match(defs.addTemplate('virus', 'bug', {}), /taken/);
+  assert.equal(defs.addTemplate('tank', 'bug', { integrity: 4 }), null);
+  // A template of a template extends the same base, with the values of both.
+  assert.equal(defs.addTemplate('big_tank', 'tank', { damage: 2 }), null);
+  assert.deepEqual(defs.enemies.big_tank, { extends: 'bug', integrity: 4, damage: 2 });
+  assert.equal(defs.isTemplate('tank'), true);
+  assert.equal(defs.isTemplate('bug'), false);
+
+  assert.equal(defs.updateTemplate('tank', { color: '#ffb020' }), true);
+  assert.equal(defs.updateTemplate('bug', { color: '#ffb020' }), false, 'not a template');
+  assert.equal(defs.updateTemplate('tank', {}), false);
+
+  assert.match(defs.renameTemplate('bug', 'bugs'), /not a template/);
+  assert.match(defs.renameTemplate('tank', 'virus'), /taken/);
+  assert.equal(defs.renameTemplate('tank', 'heavy'), null);
+  assert.deepEqual(Object.keys(defs.enemies), ['bug', 'virus', 'heavy', 'big_tank'], 'in its place');
+  assert.equal(defs.deleteTemplate('bug'), false);
+  assert.equal(defs.deleteTemplate('heavy'), true);
+  assert.equal(defs.dirty, true);
+});
+
+test('undo takes back the template changes of its step only', () => {
+  const files = twoRooms();
+  const defs = new DefsEdit(files['defs.json']);
+  const lab = new RoomEdit(files['rooms/lab.json'], { defs });
+  const hall = new RoomEdit(files['rooms/hall.json'], { defs });
+  lab.edit(() => defs.addTemplate('tank', 'bug', { integrity: 4 }) === null && !!lab.setEnemy('bug_1', { type: 'tank', overrides: {} }, true));
+  lab.placeBlock([1, 0, 1], 'block');
+  hall.edit(() => defs.addTemplate('scout', 'bug', { speed: 5 }) === null);
+
+  // Undoing the block keeps both templates; undoing the template step takes tank back (not scout).
+  lab.undo();
+  assert.deepEqual(Object.keys(defs.enemies), ['bug', 'tank', 'scout']);
+  lab.undo();
+  assert.deepEqual(Object.keys(defs.enemies), ['bug', 'scout']);
+  assert.equal(lab.item('bug_1').type, 'bug');
+  lab.redo();
+  assert.deepEqual(Object.keys(defs.enemies), ['bug', 'tank', 'scout']);
+  assert.equal(lab.item('tank_1').type, 'tank');
+});
+
+test('linkChoices lists free exits of other rooms in the opposite side, equally wide', () => {
+  const rooms = {
+    a: { exits: [{ id: 'e', side: '+x', at: 0 }] },
+    b: { exits: [{ id: 'w', side: '-x', at: 0 }, { id: 'w2', side: '-x', at: 4, width: 3 }, { id: 'n', side: '-z', at: 0 }] },
+    c: { exits: [{ id: 'w', side: '-x', at: 0 }] },
+  };
+  const world = new WorldEdit({ start: 'a', connections: [['c.w', 'b.x']] });
+  const choices = (exit) => linkChoices(world, Object.keys(rooms), (id) => rooms[id], 'a', exit);
+  assert.deepEqual(choices(rooms.a.exits[0]), ['b.w']);
+  world.connect('a.e', 'c.w');
+  assert.deepEqual(choices(rooms.a.exits[0]), ['b.w', 'c.w'], 'its own partner too');
+});
+
+test('errors are grouped by file and point at what they are about', () => {
+  const rooms = {
+    lab: { exits: [{ id: 'west', side: '-x', at: 3 }], objects: [{ id: 'lift', type: 'platform', at: [1, 0, 1] }], enemies: [{ id: 'bug_1', type: 'bug', at: [2, 0, 2] }] },
+  };
+  const context = { roomData: (id) => rooms[id], connections: [['lab.west', 'hall.east']] };
+  const target = (error) => errorTarget(error, context);
+  assert.deepEqual(target('rooms/lab.json › enemies[0]: a patrolling enemy needs a "path"'), { room: 'lab', tool: 'enemy', selected: { kind: 'item', id: 'bug_1' } });
+  assert.deepEqual(target('rooms/lab.json › objects[0].path.points[1]: cell [9,0,1] is outside size [8,4,8]'), {
+    room: 'lab',
+    tool: 'path',
+    selected: { kind: 'item', id: 'lift' },
+  });
+  assert.deepEqual(target('rooms/lab.json › exits[0]: cells 3–4 run past the side (length 4)'), { room: 'lab', tool: 'exit', selected: { kind: 'exit', id: 'west' } });
+  assert.deepEqual(target('rooms/lab.json › spawn: the player at [1,0,1] overlaps a block'), { room: 'lab', tool: 'spawn' });
+  assert.deepEqual(target('rooms/lab.json › size: width + depth is 40, at most 32 fits the camera'), { room: 'lab' });
+  assert.deepEqual(target('world.json › connections: exit "lab.west" is not connected'), { room: 'lab', tool: 'exit', selected: { kind: 'exit', id: 'west' } });
+  assert.deepEqual(target('world.json › connections[0]: exits must be equally wide (2 and 3)'), { room: 'lab', tool: 'exit', selected: { kind: 'exit', id: 'west' } });
+  assert.equal(target('defs.json › enemies.tank.extends: unknown enemy type "tonk"'), null);
+  assert.equal(target('rooms/gone.json › size: bad'), null);
+  assert.equal(target('preview failed: boom'), null);
+
+  const groups = groupErrors(['preview failed: boom', 'rooms/lab.json › spawn: a', 'world.json: b', 'rooms/lab.json: c']);
+  assert.deepEqual(
+    groups.map(({ file, errors }) => [file, errors.map((e) => e.text)]),
+    [['', ['preview failed: boom']], ['rooms/lab.json', ['spawn: a', 'c']], ['world.json', ['b']]],
+  );
+});
+
+test('cutRoom leaves out the blocks above a layer', () => {
+  const room = { size: [4, 4, 4], cells: [[0, 0, 0], [0, 1, 0], [0, 2, 0]], typedCells: { hazard: [[1, 3, 1]], void: [[2, 0, 2]] } };
+  const cut = cutRoom(room, 1);
+  assert.deepEqual(cut.cells, [[0, 0, 0], [0, 1, 0]]);
+  assert.deepEqual(cut.typedCells, { hazard: [], void: [[2, 0, 2]] });
+  assert.equal(room.cells.length, 3, 'the room itself stays whole');
 });

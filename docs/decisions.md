@@ -724,3 +724,21 @@ one changes every enemy placed from it, on every computer. Making them
 enemy types keeps rooms short and needs no new room format; `extends`
 instead of a full copy means a change to the base type reaches its
 templates too.
+
+### D59 — 2026-09-27 — Room editor: template changes are undo steps; the view cuts at the layer
+Changes to enemy templates (save, update, rename, delete) are now undo
+steps of the room they were made in, together with what they do to that
+room's enemies (this replaces D58's "not part of a room's undo steps").
+Undo and redo apply only the template entries that step changed, so a
+template made meanwhile from another room stays. Rename is allowed only
+for a template no other room uses, and delete for one no enemy uses, so
+no room is left with enemies of a type that is gone. The editor draws the
+room without the blocks, objects and enemies above the layer being edited
+(**hide above**, on by default; `RoomScene.show({ cutAbove })`); the game
+itself keeps the whole room.
+**Why:** from the second editor review (author's picks). Undoing a
+template by hand was error-prone; restoring all of `defs.json` on undo
+would throw away other rooms' templates. On an isometric view, blocks in
+front of higher layers hid the cells being edited; leaving them out of
+the drawing (edges worked out anew, so the cut reads as block tops) is
+cleaner than clipping planes, which would leave open, edge-cut blocks.

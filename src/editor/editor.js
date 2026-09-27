@@ -15,14 +15,16 @@
 import { Plane, Raycaster, Vector2, Vector3 } from 'three';
 import { isTextField } from '../core/input.js';
 import { linkMap } from '../data/load.js';
-import { OPPOSITE_SIDE, enemyModels, resolveEnemyTypes, withExitDefaults } from '../data/room-data.js';
+import { enemyModels, resolveEnemyTypes, sideLength, withExitDefaults } from '../data/room-data.js';
 import { validateData } from '../data/validate.js';
+import { DefsEdit } from './defs-edit.js';
+import { errorTarget, groupErrors } from './errors.js';
 import { formatJson } from './format-json.js';
 import { EditorOverlay } from './overlay.js';
 import { EditorPanel, TOOLS } from './panel.js';
-import { ID_PATTERN, RoomEdit, newRoom, roomIdProblem, sizeProblem } from './room-edit.js';
+import { ID_PATTERN, RoomEdit, newRoom, resizeText, roomIdProblem, sizeProblem } from './room-edit.js';
 import { downloadFile, saveFiles } from './save.js';
-import { WorldEdit } from './world-edit.js';
+import { WorldEdit, linkChoices } from './world-edit.js';
 
 /** Block tools and the block type they place. */
 const BLOCK_TOOLS = { block: 'block', hazard: 'hazard', void: 'void' };
@@ -41,8 +43,9 @@ export class Editor {
    * @param {Record<string, any>} options.files the data files as loaded,
    *   keyed like data/; saved files are updated in it
    * @param {boolean} options.canSave the dev server can save
-   * @param {() => void} options.onRoom the game's room was rebuilt from
-   *   edited data: show it again (static views included)
+   * @param {(options?: { cutAbove?: number|null }) => void} options.onRoom the
+   *   game's room was rebuilt from edited data: show it again (static views
+   *   included), without what is above layer `cutAbove` if given
    */
   constructor({ game, renderer, files, canSave, onRoom }) {
     this.game = game;
@@ -53,9 +56,9 @@ export class Editor {
     this.active = false;
     /** world.json being edited: the exits' connections. */
     this.world = new WorldEdit(files['world.json']);
-    /** defs.json being edited (enemy templates, D58), and its text as last saved. */
-    this.defs = structuredClone(files['defs.json']);
-    this.defsSaved = formatJson(this.defs);
+    /** defs.json being edited (enemy templates, D58), and its text as the game last got it. */
+    this.defs = new DefsEdit(files['defs.json']);
+    this.defsApplied = '';
     /** Edited rooms by id, kept while the page is open. */
     this.sessions = new Map();
     /** @type {RoomEdit|null} the room being edited */
@@ -71,6 +74,10 @@ export class Editor {
     /** @type {{ kind: 'item'|'exit', id: string } | null} the picked object, enemy or exit */
     this.selected = null;
     this.layer = 0;
+    /** Hide blocks, objects and enemies above the layer. */
+    this.cut = true;
+    /** The room edited before this one (where discarding a new room goes back to). */
+    this.lastRoom = null;
     /** Validation errors of the edited data; the server's too after a failed save. */
     this.errors = [];
     this.serverErrors = [];
@@ -106,10 +113,15 @@ export class Editor {
         enemy: (field, value) => this.setEnemy(field, value),
         saveTemplate: (name) => this.saveTemplate(name),
         updateTemplate: () => this.updateTemplate(),
+        renameTemplate: (name) => this.renameTemplate(name),
+        deleteTemplate: () => this.deleteTemplate(),
         path: (field, value) => this.pathItem && this.change(() => this.edit.setPathOptions(this.pathItem.id, { [field]: value })),
         clearPath: () => this.pathItem && this.change(() => this.edit.updateItem(this.pathItem.id, { path: undefined })),
         exit: (field, value) => this.setExit(field, value),
         layer: (step) => this.setLayer(this.layer + step),
+        cut: (on) => this.setCut(on),
+        discard: () => this.discardRoom(),
+        error: (error) => this.goTo(error),
         name: (name) => (name ? this.change(() => this.edit.setName(name)) : this.refresh()),
         biome: (biome) => this.change(() => this.edit.setBiome(biome)),
         size: (size) => this.resize(size),
@@ -164,13 +176,14 @@ export class Editor {
 
   /** The edit of a room, started the first time it is opened. */
   session(id) {
-    if (!this.sessions.has(id)) this.sessions.set(id, new RoomEdit(this.files[`rooms/${id}.json`], { world: this.world }));
+    if (!this.sessions.has(id)) this.sessions.set(id, new RoomEdit(this.files[`rooms/${id}.json`], { world: this.world, defs: this.defs }));
     return this.sessions.get(id);
   }
 
   /** Edit another room (it shows in the game too). */
   openRoom(id) {
     this.edit?.end();
+    if (this.edit && this.edit.id !== id) this.lastRoom = this.edit.id;
     this.stroke = null;
     this.selected = null;
     this.status = '';
@@ -188,11 +201,27 @@ export class Editor {
       return;
     }
     const data = newRoom(id, this.edit.data.biome);
-    this.sessions.set(id, new RoomEdit(data, { world: this.world, fresh: true }));
+    this.sessions.set(id, new RoomEdit(data, { world: this.world, defs: this.defs, fresh: true }));
     this.game.content.rooms.set(id, data);
     this.openRoom(id);
     this.panel.newRoomInput.value = '';
     this.status = `New room ${id}: give it an exit (Exit tool, 8) and connect it, then save.`;
+    this.refresh();
+  }
+
+  /** Throw away the new room being edited (never saved), with its connections, and go back. */
+  discardRoom() {
+    const { id, fresh } = this.edit;
+    if (!fresh) return;
+    this.edit.end();
+    this.sessions.delete(id);
+    this.game.content.rooms.delete(id);
+    this.world.setLinks(id, []);
+    const back = this.lastRoom && this.lastRoom !== id && this.roomData(this.lastRoom) ? this.lastRoom : this.game.content.world.start;
+    this.edit = null;
+    this.lastRoom = null;
+    this.openRoom(back);
+    this.status = `Room ${id} discarded.`;
     this.refresh();
   }
 
@@ -208,7 +237,7 @@ export class Editor {
 
   /** Every data file with the edits in: what saving would write. */
   editedFiles() {
-    const files = { ...this.files, 'world.json': this.world.toData(), 'defs.json': structuredClone(this.defs) };
+    const files = { ...this.files, 'world.json': this.world.toData(), 'defs.json': this.defs.toData() };
     for (const [id, edit] of this.sessions) files[`rooms/${id}.json`] = edit.toData();
     return files;
   }
@@ -240,11 +269,13 @@ export class Editor {
     this.stale = false;
     const data = this.edit.toData();
     this.errors = validateData(this.editedFiles());
+    // Undo and redo may have changed the templates.
+    if (this.defs.text() !== this.defsApplied) this.applyEnemyTypes();
     this.game.content.rooms.set(data.id, data);
     this.game.content.links = linkMap(this.world.connections);
     try {
       this.game.enterRoom(data.id);
-      this.onRoom();
+      this.onRoom({ cutAbove: this.cutLayer });
     } catch (err) {
       // Data the game can't build yet (it is invalid anyway): keep the last view.
       this.errors.unshift(`preview failed: ${err.message}`);
@@ -262,17 +293,37 @@ export class Editor {
 
   /** @param {number} layer height layer to edit, clamped to the room */
   setLayer(layer) {
+    const before = this.layer;
     this.layer = Math.max(0, Math.min(layer, this.edit.size[1] - 1));
     this.overlay.setLayer(this.edit.size, this.layer);
+    if (this.layer !== before && this.cut) this.showCut();
     this.updateCursor();
     this.refresh();
+  }
+
+  /** @param {boolean} on hide what is above the layer */
+  setCut(on) {
+    this.cut = on;
+    this.showCut();
+    this.refresh();
+  }
+
+  /** The layer above which the room isn't drawn, or null. */
+  get cutLayer() {
+    return this.cut ? this.layer : null;
+  }
+
+  /** Draw the room again, cut at the layer (a rebuild due anyway does it). */
+  showCut() {
+    if (this.active && !this.stale && this.game.room.id === this.edit.id) this.onRoom({ cutAbove: this.cutLayer });
   }
 
   /** @param {number[]} size [x, y, z] as typed in the panel */
   resize(size) {
     const problem = sizeProblem(size);
-    this.status = problem ?? '';
-    if (!problem) this.change(() => this.edit.resize(size));
+    let report = false;
+    if (!problem) this.change(() => (report = this.edit.resize(size)));
+    this.status = problem ?? (report ? resizeText(size, report) : '');
     this.refresh();
   }
 
@@ -321,13 +372,16 @@ export class Editor {
     else if (value === undefined) delete settings.overrides[field];
     else settings.overrides[field] = value;
     this.enemy = structuredClone(settings);
-    if (enemy) {
-      const overrides = Object.keys(settings.overrides).length > 0 ? settings.overrides : undefined;
-      // A stationary enemy has no path.
-      const path = this.patrols(settings) ? enemy.path : undefined;
-      this.change(() => this.edit.updateItem(enemy.id, { type: settings.type, overrides, path }));
-    }
+    if (enemy) this.retype(enemy, settings);
     this.refresh();
+  }
+
+  /** Give an enemy these settings (its id follows the type; a stationary one loses its path) and keep it picked. */
+  retype(enemy, settings) {
+    const wasPicked = this.selected?.id === enemy.id;
+    let id = null;
+    this.change(() => !!(id = this.edit.setEnemy(enemy.id, settings, this.patrols(settings))));
+    if (id && wasPicked) this.select({ kind: 'item', id });
   }
 
   /** The enemy settings the panel shows: the picked enemy's, or the ones for new enemies. */
@@ -339,62 +393,122 @@ export class Editor {
   /**
    * Save the enemy settings as a new enemy type in defs.json, a template
    * of the base type (D58); the picked enemy becomes one of it, and so do
-   * new ones.
+   * new ones. One undo step of the room.
    * @param {string} name the template's id
    */
   saveTemplate(name) {
-    if (!ID_PATTERN.test(name)) this.status = 'Template name: lowercase letters, digits and _, starting with a letter.';
-    else if (this.defs.enemies[name]) this.status = `Template name: "${name}" is taken.`;
-    else {
-      const { type, overrides } = this.enemySettings;
-      const { extends: base, ...own } = this.defs.enemies[type];
-      // A template of a template is one more template of the same base.
-      this.defs.enemies[name] = { extends: base ?? type, ...(base ? own : {}), ...structuredClone(overrides) };
-      this.useTemplate(name);
-      this.status = `Template ${name} added to defs.json; Save writes it.`;
-      this.panel.templateInput.value = '';
-    }
+    const { type, overrides } = this.enemySettings;
+    let problem = null;
+    this.templateChange(() => {
+      problem = this.defs.addTemplate(name, type, overrides);
+      return !problem && this.useTemplate(name);
+    });
+    this.status = problem ?? `Template ${name} added to defs.json; Save writes it.`;
+    if (!problem) this.panel.templateInput.value = '';
     this.refresh();
   }
 
   /** Move the settings of an enemy of a template into the template: every enemy of it changes. */
   updateTemplate() {
     const { type, overrides } = this.enemySettings;
-    if (!this.defs.enemies[type]?.extends) return;
-    this.defs.enemies[type] = { ...this.defs.enemies[type], ...structuredClone(overrides) };
-    this.useTemplate(type);
-    this.status = `Template ${type} updated: every ${type} changes. Save writes defs.json.`;
+    let done = false;
+    this.templateChange(() => (done = this.defs.updateTemplate(type, overrides) && this.useTemplate(type)));
+    if (done) this.status = `Template ${type} updated: every ${type} changes. Save writes defs.json.`;
     this.refresh();
   }
 
-  /** Enemy types changed: the picked enemy (and new ones) take template `type` with no overrides of their own. */
+  /** Give the template of the enemy settings another id; the room's enemies of it follow. */
+  renameTemplate(name) {
+    const { type } = this.enemySettings;
+    const elsewhere = this.roomsUsing(type).filter((room) => room !== this.edit.id);
+    if (elsewhere.length > 0) {
+      this.status = `${type} is used in ${elsewhere.join(', ')}: only a template no other room uses can be renamed.`;
+      return this.refresh();
+    }
+    let problem = null;
+    this.templateChange(() => {
+      problem = this.defs.renameTemplate(type, name);
+      if (problem) return false;
+      this.applyEnemyTypes();
+      for (const enemy of (this.edit.data.enemies ?? []).filter((e) => e.type === type)) {
+        const id = this.edit.setEnemy(enemy.id, { type: name, overrides: enemy.overrides ?? {} }, this.patrols({ ...enemy, type: name }));
+        if (id && this.selected?.id === enemy.id) this.selected = { kind: 'item', id };
+      }
+      if (this.enemy.type === type) this.enemy.type = name;
+      return true;
+    });
+    this.status = problem ?? `Template ${type} renamed ${name}. Save writes defs.json.`;
+    if (!problem) this.panel.templateInput.value = '';
+    this.refresh();
+  }
+
+  /** Remove the template of the enemy settings from defs.json, if no enemy is of it. */
+  deleteTemplate() {
+    const { type } = this.enemySettings;
+    const rooms = this.roomsUsing(type);
+    if (rooms.length > 0) {
+      this.status = `${type} is used in ${rooms.join(', ')}: change or remove those enemies first.`;
+      return this.refresh();
+    }
+    const base = this.defs.enemies[type]?.extends;
+    let done = false;
+    this.templateChange(() => {
+      if (!(done = this.defs.deleteTemplate(type))) return false;
+      this.enemy = { type: base, overrides: {} };
+      this.applyEnemyTypes();
+      return true;
+    });
+    if (done) this.status = `Template ${type} deleted. Save writes defs.json.`;
+    this.refresh();
+  }
+
+  /**
+   * A change of the enemy templates, one undo step of the room (with what
+   * it does to the room's enemies).
+   * @param {() => boolean} change
+   */
+  templateChange(change) {
+    this.change(() => this.edit.edit(change));
+  }
+
+  /** Rooms with enemies of `type`. */
+  roomsUsing(type) {
+    return this.roomIds().filter((id) => (this.roomData(id).enemies ?? []).some((enemy) => enemy.type === type));
+  }
+
+  /**
+   * Enemy types changed: the picked enemy (and new ones) take template
+   * `type` with no overrides of their own.
+   * @returns {true}
+   */
   useTemplate(type) {
     this.applyEnemyTypes();
     this.enemy = { type, overrides: {} };
     const enemy = this.selectedEnemy;
-    if (enemy) this.edit.updateItem(enemy.id, { type, overrides: undefined });
-    this.serverErrors = [];
-    this.stale = true;
+    if (enemy) {
+      const id = this.edit.setEnemy(enemy.id, this.enemy, this.patrols(this.enemy));
+      if (id) this.selected = { kind: 'item', id };
+    }
+    return true;
   }
 
   /** Hand the edited enemy types (templates filled in) to the game and the panel. */
   applyEnemyTypes() {
-    const types = this.defs.enemies ?? {};
+    const types = this.defs.enemies;
     this.enemyTypes = resolveEnemyTypes(types);
     this.game.content.enemyTypes = this.enemyTypes;
     this.game.content.enemyModels = enemyModels(types);
     this.panel.setEnemyTypes(this.enemyTypes, this.game.content.enemyModels);
-  }
-
-  /** Are there unsaved enemy templates? */
-  get defsDirty() {
-    return formatJson(this.defs) !== this.defsSaved;
+    this.defsApplied = this.defs.text();
+    // New enemies of a template that is gone (undo, delete) are of the first type.
+    if (!this.enemyTypes[this.enemy.type]) this.enemy = { type: Object.keys(this.enemyTypes)[0], overrides: {} };
   }
 
   /** An exit field changed in the panel: for the picked exit, or new ones. */
   setExit(field, value) {
     const exit = this.selectedExit;
-    if (field === 'width' || field === 'height') value = Math.max(field === 'width' ? 1 : 2, Math.round(value));
+    const least = { width: 1, height: 2, at: 0, y: 0 };
+    if (field in least) value = Math.max(least[field], Math.round(value));
     if (!exit) {
       if (field in this.exitShape) this.exitShape[field] = value;
       this.refresh();
@@ -410,31 +524,38 @@ export class Editor {
         this.change(() => true);
       }
     } else {
-      this.change(() => this.edit.updateExit(exit.id, { [field]: value }));
+      const fields = this.exitFields(this.edit, exit, field, value);
+      if (this.edit.exitClashes(exit.id, fields)) this.status = 'Another exit is in the way.';
+      else {
+        this.change(() => this.edit.updateExit(exit.id, fields));
+        if (field === 'width') this.matchPartnerWidth(exit, value);
+      }
     }
     this.refresh();
   }
 
-  /**
-   * Exits of other rooms the exit can lead to: in the opposite side,
-   * equally wide, not connected elsewhere.
-   * @param {object} exit as written
-   * @returns {string[]} "room.exit"
-   */
-  linkChoices(exit) {
-    const { side, width } = withExitDefaults(exit);
-    const ref = `${this.edit.id}.${exit.id}`;
-    const choices = [];
-    for (const id of this.roomIds()) {
-      if (id === this.edit.id) continue;
-      for (const other of this.roomData(id).exits ?? []) {
-        const to = `${id}.${other.id}`;
-        const partner = this.world.partner(to);
-        const fits = other.side === OPPOSITE_SIDE[side] && withExitDefaults(other).width === width;
-        if (fits && (partner === null || partner === ref)) choices.push(to);
-      }
+  /** Fields that set an exit's `field`; a wider exit moves back to stay within its side. */
+  exitFields(edit, exit, field, value) {
+    if (field !== 'width') return { [field]: value };
+    const length = sideLength(exit.side, edit.size);
+    return { width: value, at: Math.max(0, Math.min(withExitDefaults(exit).at, length - value)) };
+  }
+
+  /** The exit got `width`: the exit it leads to gets it too (an undo step of that room). */
+  matchPartnerWidth(exit, width) {
+    const partner = this.world.partner(`${this.edit.id}.${exit.id}`);
+    if (!partner) return;
+    const [room, id] = partner.split('.');
+    const other = this.session(room);
+    const theirs = other.exits.find((e) => e.id === id);
+    if (!theirs || withExitDefaults(theirs).width === width) return;
+    const fields = this.exitFields(other, theirs, 'width', width);
+    if (other.exitClashes(id, fields) || !other.updateExit(id, fields)) {
+      this.status = `${partner} can't be ${width} wide: another exit is in the way. Change it there.`;
+      return;
     }
-    return choices;
+    this.game.content.rooms.set(room, other.toData());
+    this.status = `${partner} is ${width} wide too.`;
   }
 
   // --- Saving -------------------------------------------------------------
@@ -446,7 +567,7 @@ export class Editor {
     if (this.stale) this.rebuild();
     const rooms = [...this.sessions.values()].filter((edit) => edit.dirty);
     const world = this.world.dirty ? this.world.toData() : undefined;
-    const defs = this.defsDirty ? structuredClone(this.defs) : undefined;
+    const defs = this.defs.dirty ? this.defs.toData() : undefined;
     if (!this.canSave) {
       // Nothing changed: export the room shown.
       const exported = rooms.length > 0 || world || defs ? rooms : [this.edit];
@@ -481,7 +602,7 @@ export class Editor {
         this.files['world.json'] = world;
       }
       if (defs) {
-        this.defsSaved = formatJson(defs);
+        this.defs.savedText = formatJson(defs);
         this.files['defs.json'] = defs;
       }
       this.status = `Saved ${result.files.join(', ')}.`;
@@ -494,7 +615,7 @@ export class Editor {
 
   /** Are there edits not saved yet, in any room, world.json or defs.json? */
   get unsaved() {
-    return this.world.dirty || this.defsDirty || [...this.sessions.values()].some((edit) => edit.dirty);
+    return this.world.dirty || this.defs.dirty || [...this.sessions.values()].some((edit) => edit.dirty);
   }
 
   refresh() {
@@ -509,16 +630,57 @@ export class Editor {
       objectType: this.objectType,
       collapsing: this.objectTypes[this.objectType]?.kind === 'collapsing',
       enemy: this.enemySettings,
+      template: this.defs.isTemplate(this.enemySettings.type),
       pathItem,
       pathItemIsEnemy: !!pathItem && pathItem === enemy,
       exit: exit
-        ? { ...withExitDefaults(exit), link: this.world.partner(`${this.edit.id}.${exit.id}`), links: this.linkChoices(exit) }
+        ? {
+            ...withExitDefaults(exit),
+            link: this.world.partner(`${this.edit.id}.${exit.id}`),
+            links: linkChoices(this.world, this.roomIds(), (id) => this.roomData(id), this.edit.id, exit),
+          }
         : { id: null, ...this.exitShape, link: null, links: [] },
       layer: this.layer,
-      errors: [...this.serverErrors, ...this.errors],
+      cut: this.cut,
+      errors: this.errorGroups(),
       status: this.status,
       unsaved: this.unsaved,
     });
+  }
+
+  /** Remove the picked object, enemy or exit (Delete key). */
+  removeSelected() {
+    const item = this.selectedItem;
+    const exit = this.selectedExit;
+    if (item) this.change(() => this.edit.removeItem(item.id));
+    else if (exit) this.change(() => this.edit.removeExit(exit.id));
+    else return;
+    this.status = `${(item ?? exit).id} removed.`;
+    this.select(null);
+  }
+
+  // --- Errors -------------------------------------------------------------
+
+  /** The errors by file, each marked if a click can go to it. */
+  errorGroups() {
+    const context = { roomData: (id) => this.roomData(id), connections: this.world.connections };
+    return groupErrors([...this.serverErrors, ...this.errors]).map((group) => ({
+      ...group,
+      errors: group.errors.map((entry) => ({ ...entry, target: errorTarget(entry.error, context) !== null })),
+    }));
+  }
+
+  /** Go to what an error is about: its room, the tool that edits it, picked, on its layer. */
+  goTo(error) {
+    const target = errorTarget(error, { roomData: (id) => this.roomData(id), connections: this.world.connections });
+    if (!target) return;
+    if (target.room !== this.edit.id) this.openRoom(target.room);
+    if (target.tool) this.setTool(target.tool);
+    if (target.selected) {
+      this.select(target.selected);
+      const at = this.selectedItem?.at[1] ?? (this.selectedExit && withExitDefaults(this.selectedExit).y);
+      if (at !== undefined && at !== null) this.setLayer(at);
+    }
   }
 
   // --- Mouse and keys ---------------------------------------------------
@@ -558,6 +720,7 @@ export class Editor {
     // The layer or the tool (holes are on the floor) may have changed under a still mouse.
     if (this.pointer && !this.stroke) this.hover = this.pick(this.pointer);
     this.overlay.setCursor(this.hover, { flat: this.tool === 'hole', erase: this.stroke === 'erase' });
+    this.panel.setHover(this.hover && this.edit.describe(this.hover, { tile: this.tool === 'hole' }));
   }
 
   /**
@@ -732,6 +895,7 @@ export class Editor {
       const tool = TOOLS.find(({ key }) => e.code === `Digit${key}`);
       if (tool) this.setTool(tool.id);
       if (e.code === 'Escape') this.select(null);
+      if ((e.code === 'Delete' || e.code === 'Backspace') && !this.stroke) this.removeSelected();
       if (e.code === 'PageUp' || e.code === 'PageDown') {
         e.preventDefault();
         this.setLayer(this.layer + (e.code === 'PageUp' ? 1 : -1));

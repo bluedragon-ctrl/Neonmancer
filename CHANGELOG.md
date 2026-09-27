@@ -98,6 +98,19 @@ and the project uses [Semantic Versioning](https://semver.org/).
   in the Type list, and Update template moves an enemy's own settings into
   its template; `defs.json` is saved with the rooms. The Enemy panel also
   sets integrity, damage, speed and color.
+- Room editor improvements (second review, D59): **hide above** draws the
+  room without what is above the edited layer; a line names what is in
+  the cell under the mouse; Delete removes the picked object, enemy or
+  exit; a picked exit's position and floor level are set in the panel,
+  and a new width goes to the exit it leads to too; an enemy's editor-made
+  id follows its type (`bug_1` → `virus_1`); errors are grouped by file
+  and a click goes to the room, tool, thing and layer; a new room never
+  saved can be discarded; templates can be renamed and deleted, and
+  template changes are undo steps of their room; shrinking a room moves
+  spawn and reset inside and lists what was dropped. Editor logic moved
+  into tested modules (`defs-edit.js`, `errors.js`, `linkChoices()`), and
+  a room's text is kept until it changes, so the unsaved check doesn't
+  re-format every open room on each painted cell.
 - Room design checklist in docs/design.md: reach, timing budgets,
   readability and soft-lock checks collected from playtests; the basis for
   the Phase 3 room design skill and level review subagent.

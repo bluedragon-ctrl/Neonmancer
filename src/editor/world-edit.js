@@ -3,6 +3,7 @@
  * connected and disconnected from the room they are in, and each room's
  * undo steps take that room's connections along. Plain logic, no browser.
  */
+import { OPPOSITE_SIDE, withExitDefaults } from '../data/room-data.js';
 import { formatJson } from './format-json.js';
 
 /** Is "room.exit" an exit of `roomId`? */
@@ -98,4 +99,30 @@ export class WorldEdit {
     const added = links.filter((link) => !kept.some((pair) => samePair(pair, link)));
     this.data.connections = [...kept, ...added.map((pair) => [...pair])];
   }
+}
+
+/**
+ * Exits of other rooms an exit can lead to: in the opposite side, equally
+ * wide, not connected elsewhere.
+ * @param {WorldEdit} world
+ * @param {Iterable<string>} roomIds every room
+ * @param {(id: string) => object} roomData a room's data as edited
+ * @param {string} roomId the exit's room
+ * @param {object} exit as written
+ * @returns {string[]} "room.exit"
+ */
+export function linkChoices(world, roomIds, roomData, roomId, exit) {
+  const { side, width } = withExitDefaults(exit);
+  const ref = `${roomId}.${exit.id}`;
+  const choices = [];
+  for (const id of roomIds) {
+    if (id === roomId) continue;
+    for (const other of roomData(id).exits ?? []) {
+      const to = `${id}.${other.id}`;
+      const partner = world.partner(to);
+      const fits = other.side === OPPOSITE_SIDE[side] && withExitDefaults(other).width === width;
+      if (fits && (partner === null || partner === ref)) choices.push(to);
+    }
+  }
+  return choices;
 }

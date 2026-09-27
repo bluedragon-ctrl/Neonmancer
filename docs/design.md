@@ -519,9 +519,10 @@ list switches to another room; New room makes an empty one (D57).
 |---|---|
 | Left click / drag | Place or pick with the current tool (a drag paints blocks, holes and objects; one undo step) |
 | Right click / drag | Erase with the current tool |
-| Mouse wheel, PgUp / PgDn | Height layer up / down (a grid shows it) |
+| Mouse wheel, PgUp / PgDn | Height layer up / down (a grid shows it; with **hide above**, on by default, blocks, objects and enemies above it aren't drawn) |
 | 1–9, 0 | Tool: Block, Hazard, Void, Hole, Object, Enemy, Path, Exit, Spawn, Reset |
 | Esc | Drop the picked enemy, platform or exit |
+| Delete, Backspace | Remove the picked object, enemy or exit |
 | Ctrl+Z, Ctrl+Y (Ctrl+Shift+Z) | Undo, redo |
 | Ctrl+S | Save (dev server) / export (build), from a panel field too |
 
@@ -541,14 +542,19 @@ list switches to another room; New room makes an empty one (D57).
   on an enemy picks it: the fields then show and change it, and new
   enemies get the same. A patrolling enemy needs a path (the panel says
   so); making one stationary drops its path. Integrity, damage, speed and
-  color are typed in (blank: the type's).
+  color are typed in (blank: the type's). Changing the type of an enemy
+  with an id the editor made renames it (`bug_1` becomes `virus_1`); ids
+  written by hand stay.
 - **Enemy templates** (D58): Template + Save turns the current enemy
   settings into a new enemy type in `defs.json` (`"extends"` its base
   type, only the changed values), picked from the Type list from then on
   (shown as `bug_tank (bug template)`); the picked enemy becomes one of
   it. With an enemy of a template that has settings of its own, **Update
   template** moves them into the template, changing every enemy of it.
-  Saved with Save, like the rooms.
+  **Rename** gives the template the name typed in Template (only a
+  template no other room uses; the room's enemies follow), **Delete**
+  removes one no enemy uses. Template changes are undo steps of the room
+  they were made in (D59). Saved with Save, like the rooms.
 - **Path** works on a picked platform or enemy (click it). Each click on a
   cell adds a point, with corners added so every leg runs along one axis
   (x, then z, then y); an enemy's points stay at its own height, a
@@ -560,9 +566,12 @@ list switches to another room; New room makes an empty one (D57).
 - **Exit** opens an exit in the edge cell clicked (in a corner, in the
   wall nearer the mouse), at the layer's height, with the panel's width
   and height, id after the side (`north`, `east_2`...). A click on an exit
-  picks it: id, width, height and **Leads to** (the exits of other rooms
-  in the opposite side, equally wide and not connected yet). Right click
-  removes an exit and its connection. An exit must be connected before
+  picks it: id, position along its side, floor level (y), width, height
+  and **Leads to** (the exits of other rooms in the opposite side,
+  equally wide and not connected yet); a change that would overlap
+  another exit is refused. A new width goes to the exit it leads to as
+  well (an undo step of that room), moving either back to stay within its
+  side. Right click removes an exit and its connection. An exit must be connected before
   the room plays or saves.
 - **Spawn, Reset** put the start or respawn point in the middle of the
   cell, standing on the layer; erasing with Reset removes the reset point
@@ -572,10 +581,16 @@ list switches to another room; New room makes an empty one (D57).
   then New; it starts empty, 12x4x12, in the current biome), sets the
   room's name, biome and size (applied on Enter or leaving the field; 2–6
   high, width + depth at most 32; a smaller room drops what ends up
-  outside) and the layer, and has Undo, Redo, Save or Export, and Revert
-  (back to the last save; undo and Revert take the room's connections
-  along). Errors of all the edited data are listed live, the way the game
-  would report them at load time.
+  outside, listed in the status line, and moves spawn and reset inside)
+  and the layer, and has Undo, Redo, Save or Export, and Revert (back to
+  the last save; undo and Revert take the room's connections along). A new
+  room never saved has **Discard new room**, which drops it and its
+  connections and goes back to the room edited before. Under the layer, a
+  line says what is in the cell under the mouse (`3, 1, 4: crate_1
+  (crate)`, an exit there too). Errors of all the edited data are listed
+  live by file, the way the game would report them at load time; a click
+  on one goes to its room, picks the thing it is about with its tool and
+  moves to its layer.
 - **Save** (dev server): writes every edited room, `world.json` and
   `defs.json` (templates) together, after the server checks them with the rest of `data/`; nothing
   is written unless everything passes, and the page doesn't reload.
