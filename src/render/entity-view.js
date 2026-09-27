@@ -206,10 +206,10 @@ export class PlayerView {
     this.wizard.visible = look.visible;
     this.wizard.scale.set(...look.scale);
     showHitFlash(this.wizard, hitFlash(player));
-    // Installing a spell: the disk's bits flow into him (and tint him; nothing hurts him meanwhile).
+    // Installing a spell: the disk's bits flow from where it hung into him, wherever he goes, and tint him.
     const { install, shield } = player;
     for (const [spell, view] of this.installs) view.visible = install?.spell === spell;
-    if (install) placeInstall(this.installView(install.spell), this.wizard, pos, install.tick + alpha, install.from);
+    if (install) placeInstall(this.installView(install.spell), this.wizard, pos, install.tick + alpha, install.at.map((v, i) => v - pos[i]));
     if (shield) {
       if (!this.shield) this.group.add((this.shield = createShield(this.game.content.spells.shield.color)));
       placeShield(this.shield, pos, shield.tick + alpha, shield.ticks);

@@ -1,7 +1,7 @@
 /**
  * The wizard: movement along the grid axes, jump, gravity, pushing,
  * integrity (health), invulnerability after a hit, energy (mana) for
- * spells, installing a spell (frozen for a moment), the Shield, death (in a hole, on a void block, or with no integrity left) and
+ * spells, installing a spell, the Shield, death (in a hole, on a void block, or with no integrity left) and
  * respawn. Pure logic, one call to update() per fixed tick. One Player lasts
  * the whole game: entering a room places him (enter()), so integrity and
  * energy carry over.
@@ -53,14 +53,12 @@ export const PLAYER = {
   maxEnergy: 50,
   energyTicks: 12,
   /**
-   * Ticks a data disk takes to install its spell (D73): he stands still
-   * (falling on if he was in the air) and nothing hurts him.
+   * Ticks the install animation of a data disk lasts (D73); he plays on
+   * meanwhile (D74).
    */
   installTicks: 60,
 };
 
-/** Input that presses nothing: what he gets while installing a spell. */
-const NO_INPUT = { down: () => false, pressed: () => false };
 
 /** Take-off speed that reaches exactly jumpHeight: v = √(2gh). */
 export const JUMP_SPEED = Math.sqrt(2 * PLAYER.gravity * PLAYER.jumpHeight);
@@ -116,9 +114,9 @@ export class Player {
     /** The selected spell, cast by the cast action; null while he knows none. */
     this.spell = null;
     /**
-     * A spell being installed (D73), or null: { spell, from, tick }; from is
-     * where the disk was, relative to his feet; tick counts up to
-     * PLAYER.installTicks.
+     * A spell being installed, for its animation (D73), or null: { spell,
+     * at, tick }; at is where the disk hung (its center); tick counts up to
+     * PLAYER.installTicks. It doesn't hold him up (D74).
      */
     this.install = null;
     /** The Shield while it is up, or null: { tick, ticks }, tick counting up to its duration ticks. */
@@ -151,13 +149,13 @@ export class Player {
   }
 
   /**
-   * Start installing `spell` from a data disk at `at` (its center): he
-   * freezes for PLAYER.installTicks, unhurt (D73).
+   * Start installing `spell` from a data disk at `at` (its center): its
+   * animation runs for PLAYER.installTicks while he plays on (D74).
    * @param {string} spell
    * @param {number[]} at
    */
   startInstall(spell, at) {
-    this.install = { spell, from: at.map((v, i) => v - this.pos[i]), tick: 0 };
+    this.install = { spell, at: [...at], tick: 0 };
   }
 
   /**
@@ -177,7 +175,7 @@ export class Player {
    * @returns {number} how much was actually lost
    */
   hurt(amount) {
-    if (this.dead || this.invulnerable > 0 || this.install || amount <= 0) return 0;
+    if (this.dead || this.invulnerable > 0 || amount <= 0) return 0;
     const lost = Math.min(amount, this.integrity);
     this.integrity -= lost;
     this.invulnerable = PLAYER.invulnerableTicks;
@@ -224,7 +222,7 @@ export class Player {
    * @returns {'cast'|'deny'|null}
    */
   cast(cost, cooldownTicks) {
-    if (this.dead || this.install || this.cooldown > 0) return null;
+    if (this.dead || this.cooldown > 0) return null;
     // Recharging adds up small float steps: allow for the rounding.
     if (this.energy < cost) return 'deny';
     this.energy -= cost;
@@ -251,7 +249,7 @@ export class Player {
    */
   selectSpell(step) {
     const { spells } = this;
-    if (spells.length === 0 || this.install) return false;
+    if (spells.length === 0) return false;
     const next = spells[(spells.indexOf(this.spell) + step + spells.length) % spells.length];
     if (next === this.spell) return false;
     this.spell = next;
@@ -336,9 +334,7 @@ export class Player {
     if (this.castTicks !== null) this.castTicks++;
     this.rechargeEnergy();
     if (this.shield && ++this.shield.tick >= this.shield.ticks) this.shield = null;
-    // Installing a spell: frozen (no walking, jumping or pushing) until it is done.
     if (this.install && ++this.install.tick > PLAYER.installTicks) this.install = null;
-    if (this.install) input = NO_INPUT;
 
     // Walk along the grid axes, or screen-relative (D38); diagonals are normalised.
     const directions = movementMode === 'screen' ? SCREEN_DIRECTIONS : GRID_DIRECTIONS;

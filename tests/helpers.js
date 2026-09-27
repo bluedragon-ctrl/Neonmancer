@@ -30,7 +30,7 @@ export const BUG = {
 /** Spell tuning, as in defs.json. */
 export const SPELLS = {
   zap: { slot: 0, color: '#00f0ff', cost: 10, cooldown: 0.25, speed: 12, damage: 1 },
-  shield: { slot: 1, color: '#3b82ff', cost: 20, cooldown: 0.25, duration: 5 },
+  shield: { slot: 1, color: '#3b82ff', cost: 20, cooldown: 0.25, duration: 7 },
 };
 
 /** Pickup types (D71): both data disks and both refills. */

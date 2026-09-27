@@ -1081,3 +1081,17 @@ Phase 3 step 3, settled with the author:
 stronger, damaging version later, and a real second spell tests
 switching and the install animation with a second color. Colors in data
 keep spells data-driven like enemies.
+
+### D74 — 2026-09-27 — Playtest: no freeze while installing, Shield 7 s
+After playtesting step 3 (D73), the author's changes:
+- The install animation no longer freezes the wizard: he walks, jumps,
+  casts and switches during it, and can be hurt. The disk's bits spiral
+  from where it hung into him wherever he goes.
+- Shield lasts 7 s (was 5 s).
+- A lit bit on a data disk glows brighter the darker its color is, so
+  Shield's neon blue reads as well as Zap's cyan on the white disk, and
+  the empty squares of the bit grid are dark gray (were dim white).
+- A found disk's ghost spins like a live disk, without the bob (it stood
+  still).
+**Why:** author's playtest. The freeze interrupted the flow of play;
+5 s felt short; the blue bit was hard to see.

@@ -9,9 +9,9 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ### Added
 - Data disks (Phase 3 step 3, D73): taking a disk plays an install
   animation on the wizard (its bits spiral in, rings sweep up him in the
-  spell's color, a white flash; he is frozen and unhurt for 1 s). A
+  spell's color, a white flash; he plays on meanwhile, D74). A
   second spell, Shield: a crackling neon-blue ring of lightning round him
-  for 5 s (20 energy); it will block projectiles once there are any. Its
+  for 7 s (20 energy); it will block projectiles once there are any. Its
   disk lies in Cache Hall, behind the pit; with two spells Tab / Q switch
   between them. Each spell has a color in `defs.json`. Showcase
   `?asset=install`, `?asset=shield`, `disk-shield`.

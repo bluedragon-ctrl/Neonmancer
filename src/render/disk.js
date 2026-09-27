@@ -5,7 +5,7 @@
  * carry a 4×4 grid of data bits (like a destructible crate's) showing the
  * spell's slot, one of the 16 spell bits of the save: set bits are small
  * raised cubes in the spell's color, the others dim squares. A disk already
- * found is a gray, dashed ghost standing still (D67). Picking one up lifts
+ * found is a gray, dashed ghost, spinning without the bob (D67, D74). Picking one up lifts
  * it, flashes it and bursts its bits into pixels.
  *
  * Looks are reviewed in the asset showcase (`?asset=disks`) before they go
@@ -35,11 +35,15 @@ export const DISK = {
   grid: 0.66,
   bit: 0.62,
   raise: 0.05,
-  /** Zero bits: a share of the body's brightness. */
+  /** Zero bits on a ghost: a share of its brightness. */
   zero: 0.35,
+  /** Zero bits on a live disk: dark gray, so the lit bit stands out (D74); a ghost keeps its own gray. */
+  zeroColor: 0x2c2f3a,
   /** Lit bits: line width and glow, and the share of their color in their faces. */
   bitWidth: 1.8,
   bitBrightness: 2,
+  /** A darker spell color glows brighter, up to this many times, so every lit bit reads like Zap's cyan (D74). */
+  bitBoost: 2.5,
   bitTint: 0.35,
   /** A found disk: gray, dim, dashed and still. */
   ghost: { color: 0x9aa0b8, brightness: 0.9 },
@@ -48,6 +52,23 @@ export const DISK = {
 };
 
 
+
+/** Relative luminance of a color (linear RGB weights). */
+const luminance = (color) => {
+  const { r, g, b } = new Color(color);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+
+/**
+ * How bright a lit bit in `color` glows: DISK.bitBrightness for a color as
+ * light as Zap's cyan or lighter, more for darker ones (up to bitBoost
+ * times), so a dark blue bit stands out on the white disk as well (D74).
+ * @param {number|string} color
+ */
+export function bitGlow(color) {
+  const boost = luminance(PALETTE.cyan) / Math.max(luminance(color), 1e-3);
+  return DISK.bitBrightness * Math.min(DISK.bitBoost, Math.max(1, boost));
+}
 
 /** Line segments of a closed polygon at depth z. */
 const loop = (points, z) => points.map((p, i) => [[...p, z], [...points[(i + 1) % points.length], z]]);
@@ -91,8 +112,10 @@ export function createDisk({ color = PALETTE.cyan, slot = 0, ghost = false } = {
   const half = (pitch * DISK.bit) / 2;
   bitGeometry ??= new BoxGeometry(2 * half, 2 * half, DISK.raise);
   bitEdges ??= new EdgesGeometry(bitGeometry);
-  const zeroMaterial = lineMaterial({ color: bodyColor, width: 1.2, brightness: glow * DISK.zero, dashed: ghost });
-  const litLines = lineMaterial({ color: bitColor, width: DISK.bitWidth, brightness: ghost ? glow : DISK.bitBrightness });
+  const zeroMaterial = ghost
+    ? lineMaterial({ color: bodyColor, width: 1.2, brightness: glow * DISK.zero, dashed: true })
+    : lineMaterial({ color: DISK.zeroColor, width: 1.2, brightness: 1 });
+  const litLines = lineMaterial({ color: bitColor, width: DISK.bitWidth, brightness: ghost ? glow : bitGlow(bitColor) });
   const litFaces = faceMaterial(new Color(PALETTE.face).lerp(new Color(bitColor), ghost ? 0.1 : DISK.bitTint));
   const edgeSegments = edgePairs(bitEdges);
   const cells = [];
@@ -136,13 +159,13 @@ function edgePairs(edges) {
  * Where the disk is and how it looks this frame (pure).
  * @param {object} state
  * @param {number} state.time seconds, for the idle motion
- * @param {boolean} [state.ghost] found already: stands still at its hover height
+ * @param {boolean} [state.ghost] found already: spins at its hover height, without the bob
  * @param {number} [state.collected] ticks since it was picked up (undefined: not picked up)
  * @returns {{ visible: boolean, y: number, angle: number, scale: number, flash: number }}
  *   y: center height above the floor; flash 0..1 towards white
  */
 export function diskMotion({ time, ghost = false, collected }) {
-  if (ghost) return { visible: true, y: DISK.hover, angle: Math.PI / 4, scale: 1, flash: 0 };
+  if (ghost) return { visible: true, y: DISK.hover, angle: time * DISK.turn, scale: 1, flash: 0 };
   const y = DISK.hover + DISK.bob * Math.sin((time / DISK.bobPeriod) * 2 * Math.PI);
   const angle = time * DISK.turn;
   if (collected === undefined) return { visible: true, y, angle, scale: 1, flash: 0 };
