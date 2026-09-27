@@ -1,0 +1,200 @@
+/**
+ * Data disk look (Phase 3 step 2): an abstract data disk, a thin neon slab
+ * with both top corners clipped (it looks the same from either side),
+ * hovering over its cell and spinning. Both faces
+ * carry a 4×4 grid of data bits (like a destructible crate's) showing the
+ * spell's slot, one of the 16 spell bits of the save: set bits are small
+ * raised cubes in the spell's color, the others dim squares. A disk already
+ * found is a gray, dashed ghost standing still (D67). Picking one up lifts
+ * it, flashes it and bursts its bits into pixels.
+ *
+ * Looks are reviewed in the asset showcase (`?asset=disks`) before they go
+ * into the game.
+ */
+import { BoxGeometry, Color, EdgesGeometry, ExtrudeGeometry, Group, Mesh, Shape } from 'three';
+import { hash } from './hash.js';
+import { PALETTE, faceMaterial, lineMaterial, neonLines } from './neon.js';
+
+/** Sizes in units, times in seconds unless named ticks. */
+export const DISK = {
+  /** Edge of the square body and its thickness; the clipped top corners. */
+  size: 0.6,
+  thickness: 0.07,
+  corner: 0.12,
+  /** Height of its center above the floor, the bob around it and its period. */
+  hover: 0.55,
+  bob: 0.05,
+  bobPeriod: 2.2,
+  /** Spin (radians per second): a full turn every ~4 s. */
+  turn: 1.5,
+  /** Body line color, width and glow. */
+  color: 0xffffff,
+  width: 2.2,
+  brightness: 1.5,
+  /** The bit grid: share of the face it covers, a bit's share of its cell, how far a lit bit stands out. */
+  grid: 0.66,
+  bit: 0.62,
+  raise: 0.05,
+  /** Zero bits: a share of the body's brightness. */
+  zero: 0.35,
+  /** Lit bits: line width and glow, and the share of their color in their faces. */
+  bitWidth: 1.8,
+  bitBrightness: 2,
+  bitTint: 0.35,
+  /** A found disk: gray, dim, dashed and still. */
+  ghost: { color: 0x9aa0b8, brightness: 0.9 },
+  /** Pick-up: ticks it rises and flashes, how high; then the pixel burst. */
+  collect: { riseTicks: 10, rise: 0.4, pixels: 24, pixelSize: 0.06, pixelTicks: 36, spread: 0.8, lift: 0.5 },
+};
+
+/** Each spell's color on its disk (the color of its bolt or effect). */
+export const SPELL_COLORS = { zap: PALETTE.cyan };
+
+
+/** Line segments of a closed polygon at depth z. */
+const loop = (points, z) => points.map((p, i) => [[...p, z], [...points[(i + 1) % points.length], z]]);
+
+/** Shared geometry of a lit bit, sized when first needed. */
+let bitGeometry = null;
+let bitEdges = null;
+
+/**
+ * The disk model, centered on its middle, facing +z; pose it with
+ * poseDisk(diskMotion()).
+ * @param {object} [options]
+ * @param {string} [options.spell] its spell, for the bits' color (SPELL_COLORS key)
+ * @param {number} [options.slot] the spell's slot, 0-15: the one bit lit, row
+ *   by row from the top left (the save bit the disk sets)
+ * @param {boolean} [options.ghost] a disk already found
+ */
+export function createDisk({ spell = 'zap', slot = 0, ghost = false } = {}) {
+  const s = DISK.size / 2;
+  const t = DISK.thickness / 2;
+  const c = DISK.corner;
+  // Both top corners clipped: symmetric, so the lit bit sits the same way from both sides.
+  const outline = [[-s, -s], [s, -s], [s, s - c], [s - c, s], [-s + c, s], [-s, s - c]];
+
+  const bodyColor = ghost ? DISK.ghost.color : DISK.color;
+  const bitColor = ghost ? DISK.ghost.color : (SPELL_COLORS[spell] ?? PALETTE.cyan);
+  const glow = ghost ? DISK.ghost.brightness : DISK.brightness;
+
+  const shape = new Shape(outline.map(([x, y]) => ({ x, y })));
+  const geometry = new ExtrudeGeometry(shape, { depth: DISK.thickness, bevelEnabled: false });
+  geometry.translate(0, 0, -t);
+  const body = new Mesh(geometry, faceMaterial());
+
+  // Outline: both faces and the edges between them.
+  const edges = [...loop(outline, t), ...loop(outline, -t), ...outline.map((p) => [[...p, t], [...p, -t]])];
+  const lines = neonLines(edges, lineMaterial({ color: bodyColor, width: DISK.width, brightness: glow, dashed: ghost }));
+  lines.renderOrder = 2;
+
+  // The bit grid on both faces: a lit cube for the slot's bit, a dim square for the others.
+  const pitch = (DISK.size * DISK.grid) / 4;
+  const half = (pitch * DISK.bit) / 2;
+  bitGeometry ??= new BoxGeometry(2 * half, 2 * half, DISK.raise);
+  bitEdges ??= new EdgesGeometry(bitGeometry);
+  const zeroMaterial = lineMaterial({ color: bodyColor, width: 1.2, brightness: glow * DISK.zero, dashed: ghost });
+  const litLines = lineMaterial({ color: bitColor, width: DISK.bitWidth, brightness: ghost ? glow : DISK.bitBrightness });
+  const litFaces = faceMaterial(new Color(PALETTE.face).lerp(new Color(bitColor), ghost ? 0.1 : DISK.bitTint));
+  const edgeSegments = edgePairs(bitEdges);
+  const cells = [];
+  for (const side of [1, -1]) {
+    for (let row = 0; row < 4; row++) {
+      for (let col = 0; col < 4; col++) {
+        // The back mirrors the front, so the code reads the same from both sides.
+        const x = side * (col - 1.5) * pitch;
+        const y = (1.5 - row) * pitch - 0.02 * s;
+        if (row * 4 + col !== slot) {
+          const zero = neonLines(loop([[x - half, y - half], [x + half, y - half], [x + half, y + half], [x - half, y + half]], side * t), zeroMaterial);
+          zero.renderOrder = 2;
+          cells.push(zero);
+          continue;
+        }
+        const cubeLines = neonLines(edgeSegments, litLines);
+        cubeLines.renderOrder = 2;
+        const lit = new Group().add(new Mesh(bitGeometry, litFaces), cubeLines);
+        lit.position.set(x, y, side * (t + DISK.raise / 2));
+        cells.push(lit);
+      }
+    }
+  }
+
+  const spin = new Group().add(body, lines, ...cells);
+  const model = new Group().add(spin);
+  model.userData = { spin, color: bodyColor, bitColor };
+  spin.position.y = DISK.hover;
+  return model;
+}
+
+/** Segment pairs of an EdgesGeometry, for neonLines(). */
+function edgePairs(edges) {
+  const p = edges.attributes.position.array;
+  const pairs = [];
+  for (let i = 0; i < p.length; i += 6) pairs.push([[p[i], p[i + 1], p[i + 2]], [p[i + 3], p[i + 4], p[i + 5]]]);
+  return pairs;
+}
+
+/**
+ * Where the disk is and how it looks this frame (pure).
+ * @param {object} state
+ * @param {number} state.time seconds, for the idle motion
+ * @param {boolean} [state.ghost] found already: stands still at its hover height
+ * @param {number} [state.collected] ticks since it was picked up (undefined: not picked up)
+ * @returns {{ visible: boolean, y: number, angle: number, scale: number, flash: number }}
+ *   y: center height above the floor; flash 0..1 towards white
+ */
+export function diskMotion({ time, ghost = false, collected }) {
+  if (ghost) return { visible: true, y: DISK.hover, angle: Math.PI / 4, scale: 1, flash: 0 };
+  const y = DISK.hover + DISK.bob * Math.sin((time / DISK.bobPeriod) * 2 * Math.PI);
+  const angle = time * DISK.turn;
+  if (collected === undefined) return { visible: true, y, angle, scale: 1, flash: 0 };
+  const { riseTicks, rise } = DISK.collect;
+  // Gone: where it vanished, for the pixel burst.
+  if (collected >= riseTicks) return { visible: false, y: y + rise, angle, scale: 0, flash: 1 };
+  const k = collected / riseTicks;
+  // Rises, spins up and flashes white, shrinking at the very end.
+  return { visible: true, y: y + rise * k * (2 - k), angle: angle + k * k * 6, scale: 1 - 0.5 * k * k, flash: k };
+}
+
+/**
+ * Pose the model from diskMotion().
+ * @param {Group} model from createDisk()
+ * @param {ReturnType<typeof diskMotion>} motion
+ */
+export function poseDisk(model, { visible, y, angle, scale, flash }) {
+  const { spin } = model.userData;
+  spin.visible = visible;
+  spin.position.y = y;
+  spin.rotation.y = angle;
+  spin.scale.setScalar(scale);
+  spin.traverse((node) => {
+    if (!node.isLineSegments2) return;
+    const material = node.material;
+    material.userData.base ??= material.color.clone();
+    material.color.copy(material.userData.base).lerp(new Color(0xffffff).multiplyScalar(2.4), flash);
+  });
+}
+
+/** Seed of the burst's hash() sequence. */
+const SEED = [47.3, 191.9];
+
+/**
+ * The pixels of a picked-up disk, `tick` ticks after it vanished, as
+ * offsets from its center: its bits fly out and up and shrink to nothing.
+ * @param {number} tick
+ * @returns {{ offset: number[], scale: number }[]} empty once they are gone
+ */
+export function diskPixels(tick) {
+  const { pixels, pixelTicks, spread, lift } = DISK.collect;
+  if (tick < 0 || tick >= pixelTicks) return [];
+  const t = tick / pixelTicks;
+  const out = 1 - (1 - t) * (1 - t);
+  return Array.from({ length: pixels }, (_, i) => {
+    const angle = (i / pixels) * 2 * Math.PI + hash(i, 0, SEED);
+    const reach = spread * (0.5 + 0.5 * hash(i, 1, SEED)) * out;
+    return {
+      offset: [Math.cos(angle) * reach, lift * out * (0.4 + hash(i, 2, SEED)) + Math.sin(angle) * reach * 0.4, Math.sin(angle) * reach],
+      scale: 1 - t,
+    };
+  });
+}

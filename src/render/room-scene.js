@@ -10,6 +10,7 @@ import { ExitView } from './exit-view.js';
 import { createFloor } from './floor.js';
 import { createHoleView } from './hole-view.js';
 import { disposeTree } from './neon.js';
+import { PickupView } from './pickup-view.js';
 import { flareHazard } from './block-fx.js';
 import { createRoomView } from './room-view.js';
 import { ZapView } from './zap-view.js';
@@ -46,6 +47,7 @@ export class RoomScene {
     this.cutAbove = null;
     this.objectViews = [];
     this.enemyViews = [];
+    this.pickupViews = [];
     this.exitViews = [];
     /** Bolts and sparks of the room (made in show()). */
     this.zapView = null;
@@ -71,10 +73,11 @@ export class RoomScene {
     const shown = (thing) => cutAbove === null || Math.floor(thing.pos[1]) <= cutAbove;
     this.objectViews = game.objects.filter(shown).map((object) => new OBJECT_VIEWS[object.kind](game, object));
     this.enemyViews = game.enemies.filter(shown).map((enemy) => new EnemyView(game, enemy));
+    this.pickupViews = game.pickups.filter((pickup) => cutAbove === null || pickup.data.at[1] <= cutAbove).map((pickup) => new PickupView(game, pickup));
     this.zapView = new ZapView(game);
     this.objectGroup = new Group().add(this.zapView.group);
     // add() with no arguments logs an error (a room without objects).
-    const views = [...this.objectViews, ...this.enemyViews];
+    const views = [...this.objectViews, ...this.enemyViews, ...this.pickupViews];
     if (views.length > 0) this.objectGroup.add(...views.map((view) => view.group));
     if (rebuild || room.id !== this.roomId || cutAbove !== this.cutAbove) {
       old.push(this.staticGroup);
@@ -111,6 +114,7 @@ export class RoomScene {
   update(alpha, dt) {
     for (const view of this.objectViews) view.sync(alpha);
     for (const view of this.enemyViews) view.sync(alpha, dt);
+    for (const view of this.pickupViews) view.sync(alpha, dt);
     this.zapView.sync(alpha, dt);
     for (const view of this.exitViews) view.update(dt);
     if (this.flare) {

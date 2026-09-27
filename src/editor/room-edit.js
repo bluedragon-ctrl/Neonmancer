@@ -14,7 +14,14 @@ import { Boxes } from './boxes.js';
 import { formatJson } from './format-json.js';
 
 /** Order of a room file's keys when it is written back (as in data/rooms/). */
-const KEY_ORDER = ['$schema', 'schemaVersion', 'id', 'name', 'biome', 'size', 'spawn', 'reset', 'exits', 'blocks', 'holes', 'objects', 'enemies'];
+/** Kinds of things standing in cells, and the room list each is kept in. */
+const ITEM_LISTS = [
+  ['object', 'objects'],
+  ['enemy', 'enemies'],
+  ['pickup', 'pickups'],
+];
+
+const KEY_ORDER = ['$schema', 'schemaVersion', 'id', 'name', 'biome', 'size', 'spawn', 'reset', 'exits', 'blocks', 'holes', 'objects', 'enemies', 'pickups'];
 
 /** Undo steps kept per room. */
 const UNDO_LIMIT = 200;
@@ -176,16 +183,16 @@ export class RoomEdit {
   // --- What is where ----------------------------------------------------
 
   /**
-   * What fills a cell: an object or enemy standing there (its `at`), or a
-   * static block.
+   * What fills a cell: an object, enemy or pickup standing there (its `at`),
+   * or a static block.
    * @param {number[]} cell [x, y, z]
-   * @returns {{ kind: 'object'|'enemy', item: object } | { kind: 'block', type: string } | null}
+   * @returns {{ kind: 'object'|'enemy'|'pickup', item: object } | { kind: 'block', type: string } | null}
    */
   at(cell) {
-    const object = (this.data.objects ?? []).find((item) => sameCell(item.at, cell));
-    if (object) return { kind: 'object', item: object };
-    const enemy = (this.data.enemies ?? []).find((item) => sameCell(item.at, cell));
-    if (enemy) return { kind: 'enemy', item: enemy };
+    for (const [kind, key] of ITEM_LISTS) {
+      const item = (this.data[key] ?? []).find((other) => sameCell(other.at, cell));
+      if (item) return { kind, item };
+    }
     const type = this.blocks.get(cell);
     return type ? { kind: 'block', type } : null;
   }
@@ -261,7 +268,25 @@ export class RoomEdit {
   }
 
   /**
-   * Empty a cell: the object or enemy standing there, else the block.
+   * Put a new pickup of `type` in a cell (D71), replacing whatever was there;
+   * its id is the type name with the first free number (`disk_zap_1`).
+   * @param {number[]} cell
+   * @param {string} type pickup type id (defs.json "pickups")
+   * @returns {boolean} whether anything changed
+   */
+  placePickup(cell, type) {
+    if (!this.inside(cell)) return false;
+    const here = this.at(cell);
+    if (here?.kind === 'pickup' && here.item.type === type) return false;
+    return this.edit(() => {
+      this.remove(cell);
+      this.data.pickups = [...(this.data.pickups ?? []), { id: this.freeId(type), type, at: [...cell] }];
+      return true;
+    });
+  }
+
+  /**
+   * Empty a cell: the object, enemy or pickup standing there, else the block.
    * @returns {boolean} whether anything changed
    */
   erase(cell) {
@@ -329,7 +354,7 @@ export class RoomEdit {
       this.holes.clip([size[0], size[2]]);
       const lost = { block: blocks - count(this.blocks), hole: holes - count(this.holes) };
       for (const [what, n] of Object.entries(lost)) if (n > 0) dropped.push(`${n} ${what}${n > 1 ? 's' : ''}`);
-      for (const key of ['objects', 'enemies']) {
+      for (const [, key] of ITEM_LISTS) {
         if (!this.data[key]) continue;
         dropped.push(...this.data[key].filter((item) => !this.inside(item.at)).map((item) => item.id));
         this.data[key] = this.data[key].filter((item) => this.inside(item.at));
@@ -372,7 +397,12 @@ export class RoomEdit {
    * @param {string} id
    */
   item(id) {
-    return [...(this.data.objects ?? []), ...(this.data.enemies ?? [])].find((item) => item.id === id) ?? null;
+    return this.items().find((item) => item.id === id) ?? null;
+  }
+
+  /** Every object, enemy and pickup of the room (they share one id namespace). */
+  items() {
+    return ITEM_LISTS.flatMap(([, key]) => this.data[key] ?? []);
   }
 
   /**
@@ -446,7 +476,7 @@ export class RoomEdit {
     const next = withFields(item, fields);
     if (JSON.stringify(next) === JSON.stringify(item)) return false;
     return this.edit(() => {
-      for (const key of ['objects', 'enemies']) {
+      for (const [, key] of ITEM_LISTS) {
         if (this.data[key]) this.data[key] = this.data[key].map((other) => (other === item ? next : other));
       }
       return true;
@@ -603,14 +633,14 @@ export class RoomEdit {
     const here = this.at(cell);
     if (!here) return false;
     if (here.kind === 'block') return this.blocks.set(cell, null);
-    const key = here.kind === 'object' ? 'objects' : 'enemies';
+    const key = ITEM_LISTS.find(([kind]) => kind === here.kind)[1];
     this.data[key] = this.data[key].filter((item) => item !== here.item);
     return true;
   }
 
-  /** `type_1`, `type_2`...: the first id no object or enemy of the room has. */
+  /** `type_1`, `type_2`...: the first id no object, enemy or pickup of the room has. */
   freeId(type) {
-    const ids = new Set([...(this.data.objects ?? []), ...(this.data.enemies ?? [])].map((item) => item.id));
+    const ids = new Set(this.items().map((item) => item.id));
     let n = 1;
     while (ids.has(`${type}_${n}`)) n++;
     return `${type}_${n}`;

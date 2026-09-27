@@ -64,7 +64,9 @@ export class Editor {
     /** Block type the Block tool places (defs.json "blocks", D60). */
     this.blockType = 'block';
     this.blockTypes = game.content.blockTypes;
-    this.objectTypes = game.content.objectTypes;
+    /** Pickup types (D71): placed with the Object tool too, into the room's pickups. */
+    this.pickupTypes = game.content.pickupTypes;
+    this.objectTypes = { ...game.content.objectTypes, ...this.pickupTypes };
     this.objectType = Object.keys(this.objectTypes)[0];
     this.enemyTypes = game.content.enemyTypes;
     /** Settings of new enemies (and of the picked one). */
@@ -754,6 +756,7 @@ export class Editor {
     const { edit } = this;
     if (!place) return this.change(() => edit.erase(cell));
     const type = this.objectTypes[this.objectType];
+    if (this.pickupTypes[this.objectType]) return this.change(() => edit.placePickup(cell, this.objectType));
     this.change(() => edit.placeObject(cell, this.objectType));
     // A new platform is picked, ready for its path.
     const here = edit.at(cell);

@@ -43,6 +43,8 @@ import { BUG, animateBug, createBug, popPixels, setEyeMood } from '../src/render
 import { ZAP_FX, damagedGlitch, enemyHitLook } from '../src/render/zap-fx.js';
 import { createBolt, createCastFlare, createSparks, placeBolt, placeCastFlare, placeSparks } from '../src/render/zap-view.js';
 import { EnergyBar } from '../src/ui/energy-bar.js';
+import { DISK, createDisk, diskMotion, diskPixels, poseDisk } from '../src/render/disk.js';
+import { createRefill, refillMotion } from '../src/render/refill.js';
 
 /** Block types with variants filled in (D60). */
 const BLOCK_TYPES = resolveBlockTypes(defs.blocks);
@@ -92,7 +94,145 @@ const ALL_ASSETS = [
   // X-ray (step 7): the wizard walking behind a wall shows through it; the
   // turntable stands still so the wall stays in front.
   { label: 'xray', span: 5.5, spin: false, build: buildXray },
+  // Data disks (Phase 3 step 2): spinning on their own with the spell's slot
+  // as one lit bit (Zap: slot 0), a found one as a ghost, a pick-up in a
+  // loop, and all 16 slots.
+  { label: 'disk', group: 'disks', spin: false, build: () => buildDisk() },
+  { label: 'disk-ghost', group: 'disks', spin: false, build: () => buildDisk({ ghost: true }) },
+  { label: 'disk-collect', group: 'disks', spin: false, build: buildDiskCollect },
+  { label: 'disk-in-room', group: 'disks', span: 5.5, spin: false, build: buildDiskInRoom },
+  { label: 'disk-slots', group: 'disks', span: 6, spin: false, build: buildDiskSlots },
+  // Refills (temporary pickups): integrity and energy, hovering and spinning
+  // like a disk; picked up the same way; beside a disk and the wizard for scale.
+  { label: 'refill-integrity', group: 'refills', spin: false, build: () => buildRefill('integrity') },
+  { label: 'refill-energy', group: 'refills', spin: false, build: () => buildRefill('energy') },
+  { label: 'refill-collect', group: 'refills', spin: false, build: buildRefillCollect },
+  { label: 'pickups-in-room', group: 'refills', span: 5.5, spin: false, build: buildPickupsInRoom },
 ];
+
+/** For scale: a disk on the floor and one on a block, the wizard and a crate beside them, in a 4×4 room corner. */
+function buildDiskInRoom() {
+  const room = new Group().add(createRoomView({ size: [4, 3, 4], blocks: { block: [[3, 0, 1]] }, blockTypes: BLOCK_TYPES, color: PALETTE.amber }));
+  const crate = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...defs.objects.crate, at: [0, 0, 2] });
+  const wizard = createWizard();
+  wizard.position.set(1.5, 0, 2.5);
+  wizard.rotation.y = Math.PI / 4;
+  const floorDisk = createDisk();
+  floorDisk.position.set(2.5, 0, 2.5);
+  const ledgeDisk = createDisk({ ghost: true });
+  ledgeDisk.position.set(3.5, 1, 1.5);
+  room.add(crate, wizard, floorDisk, ledgeDisk);
+  room.position.set(-2, 0, -2);
+  const asset = new Group().add(room);
+  asset.userData.update = (dt, time) => {
+    poseDisk(floorDisk, diskMotion({ time }));
+    poseDisk(ledgeDisk, diskMotion({ time, ghost: true }));
+  };
+  return asset;
+}
+
+/** A data disk idling (or standing still as a ghost). */
+function buildDisk(options = {}) {
+  const disk = createDisk(options);
+  const asset = new Group().add(disk);
+  asset.userData.update = (dt, time) => poseDisk(disk, diskMotion({ time, ghost: options.ghost }));
+  return asset;
+}
+
+/** A refill idling. */
+function buildRefill(stat) {
+  const refill = createRefill(stat);
+  const asset = new Group().add(refill);
+  asset.userData.update = (dt, time) => poseDisk(refill, refillMotion(diskMotion({ time })));
+  return asset;
+}
+
+/** Both refills picked up every 2 s, a moment apart. */
+function buildRefillCollect() {
+  const asset = new Group();
+  const { pixels: count, pixelSize, riseTicks } = DISK.collect;
+  const items = ['integrity', 'energy'].map((stat, i) => {
+    const model = createRefill(stat);
+    model.position.x = i === 0 ? -0.6 : 0.6;
+    const pixels = createPixelBurst(count, pixelSize, [model.userData.color, 0xffffff]);
+    asset.add(model, pixels);
+    return { model, pixels, start: 50 + i * 20 };
+  });
+  const loop = 140;
+  let tick = 0;
+  asset.userData.update = (dt, time) => {
+    tick = (tick + dt * 60) % loop;
+    for (const { model, pixels, start } of items) {
+      const collected = tick >= start ? tick - start : undefined;
+      const motion = refillMotion(diskMotion({ time, collected }));
+      poseDisk(model, motion);
+      const burst = collected === undefined ? [] : diskPixels(collected - riseTicks);
+      placePixels(pixels, burst, [model.position.x, motion.y, 0]);
+    }
+  };
+  return asset;
+}
+
+/** For scale: both refills and a disk on the floor of a 4×4 room corner, the wizard beside them. */
+function buildPickupsInRoom() {
+  const room = new Group().add(createRoomView({ size: [4, 3, 4], blocks: { block: [[3, 0, 1]] }, blockTypes: BLOCK_TYPES, color: PALETTE.amber }));
+  const wizard = createWizard();
+  wizard.position.set(1.2, 0, 2.6);
+  wizard.rotation.y = Math.PI / 4;
+  const items = [
+    [createRefill('integrity'), [2.5, 0, 2.5], true],
+    [createRefill('energy'), [1.5, 0, 1.5], true],
+    [createDisk(), [3.5, 1, 1.5], false],
+  ];
+  for (const [model, at] of items) {
+    model.position.set(...at);
+    room.add(model);
+  }
+  room.add(wizard);
+  room.position.set(-2, 0, -2);
+  const asset = new Group().add(room);
+  asset.userData.update = (dt, time) => {
+    items.forEach(([model, , refill], i) => {
+      const motion = diskMotion({ time: time + i * 0.7 });
+      poseDisk(model, refill ? refillMotion(motion) : motion);
+    });
+  };
+  return asset;
+}
+
+/** All 16 spell slots facing the camera, four rows of four, slot 0 at the top left. */
+function buildDiskSlots() {
+  const asset = new Group();
+  for (let slot = 0; slot < 16; slot++) {
+    const disk = createDisk({ slot });
+    // Along the screen's horizontal (x = -z in the iso view), rows stepping towards the camera.
+    const along = ((slot % 4) - 1.5) * 1.1;
+    const row = Math.floor(slot / 4) - 1.5;
+    disk.position.set(along + row * 1.1, 0, -along + row * 1.1);
+    poseDisk(disk, diskMotion({ time: 0, ghost: true }));
+    asset.add(disk);
+  }
+  return asset;
+}
+
+/** A data disk picked up every 2 s: it rises, flashes and bursts into pixels, then comes back. */
+function buildDiskCollect() {
+  const disk = createDisk();
+  const { pixels: count, pixelSize, riseTicks } = DISK.collect;
+  const pixels = createPixelBurst(count, pixelSize, [disk.userData.color, disk.userData.glyphColor]);
+  const asset = new Group().add(disk, pixels);
+  const loop = 120;
+  let tick = 0;
+  asset.userData.update = (dt, time) => {
+    tick = (tick + dt * 60) % loop;
+    const collected = tick >= 50 ? tick - 50 : undefined;
+    const motion = diskMotion({ time, collected });
+    poseDisk(disk, motion);
+    const burst = collected === undefined ? [] : diskPixels(collected - riseTicks);
+    placePixels(pixels, burst, [0, motion.y, 0]);
+  };
+  return asset;
+}
 
 /**
  * A 4×4 room corner with a 2-high wall and a crate along the front; the
@@ -292,9 +432,11 @@ function buildZapCrate() {
   let wait = 30;
   let recharging = false;
   let carry = 0;
+  let charge = 0;
   asset.userData.update = (dt) => {
     for (carry += dt * 60; carry >= 1; carry--) {
-      energy = Math.min(PLAYER.maxEnergy, energy + PLAYER.energyRecharge / 60);
+      // One unit every energyTicks, as the wizard recharges.
+      if (energy < PLAYER.maxEnergy && ++charge >= PLAYER.energyTicks) [energy, charge] = [energy + 1, 0];
       zapper.tick();
       if (recharging) {
         if (energy >= PLAYER.maxEnergy) [recharging, wait] = [false, 30];
@@ -310,7 +452,7 @@ function buildZapCrate() {
       }
     }
     zapper.sync();
-    bar.set(energy, PLAYER.maxEnergy, cost);
+    bar.set(energy, PLAYER.maxEnergy);
   };
   return asset;
 }

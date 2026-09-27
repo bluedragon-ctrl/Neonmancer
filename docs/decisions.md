@@ -1016,3 +1016,46 @@ The details of the world map tool (Phase 3 step 1, D66):
 **Why:** a room's east exit pointing east on the map makes the layout
 readable at a glance. Splitting ownership avoids the one real conflict of
 two pages editing one file: a stale copy undoing a newer save.
+
+### D71 — 2026-09-27 — Pickups: save bits in blocks, the Zap disk, refills
+Phase 3 step 2's open questions, settled with the author:
+- Save bits come in blocks: spells 16, buffs 16, equipment 16, fragments
+  64, so 112 pickup bits (was 64 in CLAUDE.md §8). A bit identifies an
+  item, not a placement: the same item may lie in several rooms, and a
+  room holds any number of permanent items (or none).
+- The index lives on what the item unlocks: a spell's `slot` on the
+  spell in `defs.json` (its disk's bit); later a buff's or a piece of
+  equipment's slot on its pickup type, and a fragment's number (0–63) on
+  the placement, fragments being one type. Slots are unique per block.
+- Temporary pickups: an integrity refill and an energy refill, an amount
+  each (per type), up to the maximum; left lying while that stat is full.
+- Step 2 ships the Zap data disk (pulled forward from step 3): the wizard
+  no longer knows Zap from the start; its disk lies in Boot Sector near
+  the spawn. Step 3 keeps the install animation and spell switching.
+- Disk look (after three showcase rounds): an abstract white slab with
+  both top corners clipped (the same from either side, so its bits sit
+  the same way from both), spinning and hovering; both faces show a 4×4
+  bit grid with one lit cube in the spell's color: the spell's slot, row
+  by row from the top left. Not a 3.5" floppy, not letter codes (spells
+  can share a first letter), not a binary number, no moving bits, white
+  rather than gold.
+**Why:** author's choices. Blocks keep each kind of item countable and
+leave room per kind; a bit per item (not per place) lets a disk wait in
+two places, e.g. on both sides of a gate. Showing the slot as one bit
+makes each disk the save bit it sets, and the 16 spells fill the 4×4 grid.
+
+### D72 — 2026-09-27 — Energy in whole units, a bar in segments of 10
+Replaces the energy numbers of D52 and the segment-per-cast bar. Energy is
+whole units: the wizard holds 50 and gets one back every 12 ticks (5 per
+second, still full in 10 s); Zap costs 10 (the same share as 2 of 10);
+the energy refill gives 30. The HUD bar keeps its slanted segments, now
+10 energy each whatever the spell, filling unit by unit; spell costs are
+kept to multiples of 10, so full segments count the casts left. The
+maximum and the recharge rate live on the wizard, so energy buffs
+(permanent and temporary, author's note) can raise them; a larger
+maximum adds segments. The bar is hidden until he knows a spell.
+**Why:** author's request. A bar split by the selected spell's cost
+changes shape when switching between spells of different costs; fixed
+segments of 10 don't, and still read as casts. A bar of one thin tick
+per unit with a notch at the cost was tried and dropped: the segments
+read better.

@@ -31,5 +31,6 @@
   "objects": [
     { "id": "crate_a", "type": "crate", "at": [2, 0, 5] },
     { "id": "crate_b", "type": "crate", "at": [7, 0, 3] }
-  ]
+  ],
+  "pickups": [{ "id": "disk_zap", "type": "disk_zap", "at": [5, 0, 6] }]
 }

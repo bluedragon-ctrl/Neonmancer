@@ -125,7 +125,7 @@ export class EditorOverlay {
     this.marks = new Group();
     this.group.add(this.marks);
     const lines = { path: [], selected: [] };
-    for (const item of [...(room.objects ?? []), ...(room.enemies ?? [])]) {
+    for (const item of [...(room.objects ?? []), ...(room.enemies ?? []), ...(room.pickups ?? [])]) {
       const chosen = selected?.kind === 'item' && selected.id === item.id;
       if (chosen) lines.selected.push(...boxSegments(item.at, item.at.map((v) => v + 1)));
       if (!item.path) continue;

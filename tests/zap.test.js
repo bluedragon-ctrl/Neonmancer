@@ -7,6 +7,7 @@ import { validateData } from '../src/data/validate.js';
 import { BREAK_FX, hitJolt } from '../src/render/break-fx.js';
 import { BITS, bitLayout, markSegments } from '../src/render/marks.js';
 import { ZAP_FX, castFlare, damagedGlitch, enemyHitLook, sparkPixels, trailPoints } from '../src/render/zap-fx.js';
+import { Progress, saveBit } from '../src/world/progress.js';
 import { CRATE, LIFT, SPELLS, dataFiles, eventTypes, gameData, idle, roomFile } from './helpers.js';
 
 /** A destructible crate type (like crate_cross), taking `integrity` hits. */
@@ -17,10 +18,10 @@ const cast = { down: (a) => a === 'cast', pressed: (a) => a === 'cast' };
 
 /**
  * A game in one 8×4×8 room with the given enemies, objects and blocks; the
- * wizard stands at [0.5, 0, 3.5] aiming along +x.
+ * wizard stands at [0.5, 0, 3.5] aiming along +x, with the Zap disk found.
  */
 function gameWith({ enemies = [], objects = [], blocks = [], types = { crate: CRATE, brittle: brittle() } } = {}) {
-  const game = new Game(gameData({ rooms: [roomFile('alpha', { enemies, objects, blocks })], objects: types }));
+  const game = new Game(gameData({ rooms: [roomFile('alpha', { enemies, objects, blocks })], objects: types }), { progress: new Progress([saveBit('spells', 0)]) });
   game.player.place([0.5, 0, 3.5]);
   game.player.targetFacing = Math.PI / 2;
   return game;
@@ -46,7 +47,7 @@ test('casting Zap spends energy and sends a bolt from his hands the way he aims'
   assert.ok(Math.abs(bolt.pos[1] - BOLT.height) < 1e-9);
   // Cast, then one tick of flight.
   assert.ok(Math.abs(bolt.pos[0] - (0.5 + BOLT.reach + SPELLS.zap.speed / 60)) < 1e-9);
-  assert.ok(Math.abs(game.player.energy - (PLAYER.maxEnergy - SPELLS.zap.cost)) < 0.1);
+  assert.equal(game.player.energy, PLAYER.maxEnergy - SPELLS.zap.cost);
 });
 
 test('no second cast while cooling down; without enough energy the cast is denied', () => {
@@ -56,19 +57,23 @@ test('no second cast while cooling down; without enough energy the cast is denie
   run(game, idle, 15);
   assert.ok(eventTypes(game.update(cast)).includes('cast'), 'cooled down after 0.25 s');
 
-  game.player.energy = SPELLS.zap.cost - 0.5;
+  game.player.energy = SPELLS.zap.cost - 1;
+  game.player.charge = -99; // no unit comes back meanwhile
   run(game, idle, 15);
   const events = game.update(cast);
   assert.ok(eventTypes(events).includes('deny'));
   assert.ok(!eventTypes(events).includes('cast'));
 });
 
-test('energy recharges at energyRecharge per second up to the maximum; respawning refills it', () => {
+test('energy recharges one whole unit every energyTicks up to the maximum; respawning refills it', () => {
   const game = gameWith();
   game.player.energy = 0;
-  run(game, idle, 60);
-  assert.ok(Math.abs(game.player.energy - PLAYER.energyRecharge) < 1e-6);
-  run(game, idle, 60 * PLAYER.maxEnergy);
+  run(game, idle, PLAYER.energyTicks - 1);
+  assert.equal(game.player.energy, 0);
+  run(game, idle, 1);
+  assert.equal(game.player.energy, 1);
+  assert.equal(60 / PLAYER.energyTicks, 5, '5 units per second');
+  run(game, idle, PLAYER.energyTicks * PLAYER.maxEnergy);
   assert.equal(game.player.energy, PLAYER.maxEnergy);
 
   game.player.energy = 0;

@@ -17,7 +17,7 @@ export class DataError extends Error {
 
 /**
  * @param {Record<string, any>} files parsed JSON keyed by path relative to data/
- * @returns {{ objectTypes: object, blockTypes: object, enemyTypes: object, enemyModels: Record<string, string>, biomes: object, world: object, strings: Record<string, string>,
+ * @returns {{ objectTypes: object, blockTypes: object, enemyTypes: object, enemyModels: Record<string, string>, spells: object, pickupTypes: object, biomes: object, world: object, strings: Record<string, string>,
  *   rooms: Map<string, object>,
  *   links: Map<string, { room: string, exit: string }> }} `links` maps "room.exit" to the exit
  *   it is connected to (both ways round)
@@ -39,6 +39,7 @@ export function loadGameData(files) {
     enemyTypes: resolveEnemyTypes(files['defs.json'].enemies ?? {}),
     enemyModels: enemyModels(files['defs.json'].enemies ?? {}),
     spells: files['defs.json'].spells,
+    pickupTypes: files['defs.json'].pickups ?? {},
     biomes: files['biomes.json'].biomes,
     world: files['world.json'],
     strings: files['strings.json'].strings,

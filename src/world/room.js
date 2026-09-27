@@ -29,9 +29,9 @@ function blocksByType(data, blockTypes) {
 
 /**
  * @param {object} data room file contents (validated)
- * @param {{ objectTypes: object, blockTypes: object, enemyTypes?: object, enemyModels?: Record<string, string>, biomes: object }} content loaded game data
+ * @param {{ objectTypes: object, blockTypes: object, enemyTypes?: object, enemyModels?: Record<string, string>, pickupTypes?: object, biomes: object }} content loaded game data
  */
-export function buildRoom(data, { objectTypes, blockTypes, enemyTypes = {}, enemyModels = {}, biomes }) {
+export function buildRoom(data, { objectTypes, blockTypes, enemyTypes = {}, enemyModels = {}, pickupTypes = {}, biomes }) {
   const fromBlocks = blocksByType(data, blockTypes);
   return {
     id: data.id,
@@ -73,6 +73,13 @@ export function buildRoom(data, { objectTypes, blockTypes, enemyTypes = {}, enem
       model: enemyModels[enemy.type] ?? enemy.type,
       at: [...enemy.at],
       ...(enemy.path && { path: structuredClone(enemy.path) }),
+    })),
+    /** Pickups (D71): type values (kind, spell or stat and amount) with this pickup's id and cell. */
+    pickups: (data.pickups ?? []).map((pickup) => ({
+      ...structuredClone(pickupTypes[pickup.type]),
+      id: pickup.id,
+      type: pickup.type,
+      at: [...pickup.at],
     })),
   };
 }

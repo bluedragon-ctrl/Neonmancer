@@ -133,7 +133,8 @@ mobile/touch support, backend or accounts.
   Each room has up to 4 bonus slots.
 - Every permanent pickup (fragments, data disks, buff items, secrets) is
   one bit in the save, found or not; there are only a limited number of
-  them. A found one shows grayed out when its room is revisited (D67).
+  them. A bit is the item, not a place: the same item may lie in several
+  rooms (D71). A found one shows grayed out when its room is revisited (D67).
   Temporary pickups (e.g. refills) are not saved and come back with the
   room. Death resets the wizard to his base state, so a detour for a
   temporary pickup can be worth it.
@@ -146,6 +147,9 @@ mobile/touch support, backend or accounts.
 Move, jump, gravity, push objects, health ("integrity") and mana ("energy").
 
 ### Spells (programs, unlocked by finding data disks)
+The wizard starts with none; the first data disk (Zap) lies in Boot
+Sector. Each spell has a slot (0–15), its save bit, shown as the one lit
+bit on its disk (D71).
 - **Zap** — fast bolt, short cooldown
 - **Firewall** — brief shield that blocks projectiles
 - **Pause** — freezes an enemy; frozen enemies act as platforms
@@ -282,10 +286,10 @@ not critical.
 
 - Bit layout (one versioned module, spare bits reserved), sized for the
   world targets (D68) and finalized with the access-key step:
-  format version 4, room 8, pickups 64 (one bit per permanent pickup:
-  fragments, data disks, buff items, secrets; known spells and buffs
-  follow from them), health 4, score 20, checksum 16. No per-room data
-  (bonus slots, map).
+  format version 4, room 8, pickups 112 (one bit per permanent item, in
+  blocks, D71: spells 16, buffs 16, equipment 16, fragments 64; known
+  spells and buffs follow from them), health 4, score 20, checksum 16.
+  No per-room data (bonus slots, map).
 - Encoding: Base32 without ambiguous characters (no 0/O, 1/I/L), shown
   in groups (e.g. `KX7M-Q4RP-...`). Input tolerates spaces, dashes and
   lowercase.

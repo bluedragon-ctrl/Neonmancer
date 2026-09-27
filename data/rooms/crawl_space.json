@@ -52,5 +52,6 @@
       "at": [2, 0, 1],
       "overrides": { "movement": "stationary", "hostility": "peaceful" }
     }
-  ]
+  ],
+  "pickups": [{ "id": "energy", "type": "refill_energy", "at": [3, 0, 4] }]
 }

@@ -29,16 +29,23 @@
         "zap": {
           "description": "A fast bolt the way the wizard faces; it stops at blocks and objects and hits the first enemy in its way.",
           "type": "object",
-          "required": ["cost", "cooldown", "speed", "damage"],
+          "required": ["slot", "cost", "cooldown", "speed", "damage"],
           "additionalProperties": false,
           "properties": {
-            "cost": { "type": "number", "exclusiveMinimum": 0, "description": "Energy per cast." },
+            "slot": { "$ref": "#/$defs/slot", "description": "Its bit in the save's spell block (D71), also the lit bit on its data disk; unique among spells." },
+            "cost": { "type": "integer", "minimum": 1, "description": "Energy per cast, in whole units (the wizard holds 50); multiples of 10 read best, as the HUD bar has segments of 10." },
             "cooldown": { "type": "number", "minimum": 0, "maximum": 5, "description": "Seconds before he can cast it again." },
             "speed": { "type": "number", "exclusiveMinimum": 0, "maximum": 50, "description": "Bolt speed in units per second." },
             "damage": { "type": "integer", "minimum": 1, "description": "Integrity an enemy loses per hit." }
           }
         }
       }
+    },
+    "pickups": {
+      "type": "object",
+      "description": "Pickup types (D71), by id. Permanent ones (data disks) set a save bit and stay found; temporary ones (refills) come back with the room.",
+      "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
+      "additionalProperties": { "$ref": "#/$defs/pickupType" }
     },
     "blocks": {
       "type": "object",
@@ -50,6 +57,44 @@
     }
   },
   "$defs": {
+    "slot": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 15,
+      "description": "Index in a block of save bits (D71)."
+    },
+    "pickupType": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": { "enum": ["disk", "refill"], "description": "disk: teaches a spell (permanent); refill: restores integrity or energy (temporary)." }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "disk" } } },
+          "then": {
+            "required": ["spell"],
+            "additionalProperties": false,
+            "properties": {
+              "kind": true,
+              "spell": { "$ref": "common.schema.json#/$defs/id", "description": "The spell it installs (defs.json spells); its save bit is the spell's slot." }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "refill" } } },
+          "then": {
+            "required": ["stat", "amount"],
+            "additionalProperties": false,
+            "properties": {
+              "kind": true,
+              "stat": { "enum": ["integrity", "energy"], "description": "What it restores (its look and color follow)." },
+              "amount": { "type": "integer", "minimum": 1, "maximum": 99, "description": "How much, up to the wizard's maximum. A refill is left lying while that stat is full." }
+            }
+          }
+        }
+      ]
+    },
     "blockType": {
       "type": "object",
       "description": "A base type has a look (a static block in the room grid) or a kind (each cell runs as a room object); a variant (\"extends\") only the values it changes.",

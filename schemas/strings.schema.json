@@ -26,6 +26,8 @@
         "hint.fullscreen",
         "banner.room",
         "banner.biome",
+        "banner.spell",
+        "banner.spellSub",
         "msg.boot",
         "msg.welcome",
         "msg.die",
@@ -33,6 +35,9 @@
         "msg.derez",
         "msg.respawn",
         "msg.plug",
+        "msg.spellInstalled",
+        "msg.refillIntegrity",
+        "msg.refillEnergy",
         "msg.movementGrid",
         "msg.movementScreen"
       ],
@@ -48,6 +53,8 @@
         "hint.fullscreen": { "type": "string", "description": "Hint shown while the game is drawn below 1080 pixels high." },
         "banner.room": { "type": "string", "description": "Banner on entering a room; {room} is the room name." },
         "banner.biome": { "type": "string", "description": "Line under the room banner; {biome} is the biome name." },
+        "banner.spell": { "type": "string", "description": "Banner when a data disk installs a spell; {spell} is its name." },
+        "banner.spellSub": { "type": "string", "description": "Line under the spell banner." },
         "msg.boot": { "type": "string", "description": "Terminal message when the game starts." },
         "msg.welcome": { "type": "string", "description": "Second terminal message when the game starts." },
         "msg.die": { "type": "string", "description": "Terminal message when the wizard falls into a hole." },
@@ -55,6 +62,9 @@
         "msg.derez": { "type": "string", "description": "Terminal message when the wizard loses his last integrity point." },
         "msg.respawn": { "type": "string", "description": "Terminal message when the wizard recompiles at the room entrance." },
         "msg.plug": { "type": "string", "description": "Terminal message when a pushed object fills a hole." },
+        "msg.spellInstalled": { "type": "string", "description": "Terminal message when a data disk installs a spell; {spell} is its name." },
+        "msg.refillIntegrity": { "type": "string", "description": "Terminal message when a refill restores integrity." },
+        "msg.refillEnergy": { "type": "string", "description": "Terminal message when a refill restores energy." },
         "msg.movementGrid": { "type": "string", "description": "Terminal message when movement switches to grid-aligned." },
         "msg.movementScreen": { "type": "string", "description": "Terminal message when movement switches to screen-relative." }
       }
