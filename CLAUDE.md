@@ -169,12 +169,13 @@ Behaviors below are ideas for Phase 4; for now biomes are look only.
   that jitter; later: slow health drain
 - **Frostbyte Wastes** — ice blue, hex crystal floor, falling 0/1 flakes,
   soft frosty bloom; later: low-res, reduced visibility
-- **Abyssal Buffer** — cobalt, wavy caustics on the floor, slow rising
-  bubbles, gentle sway; later: low gravity
+- **Abyssal Buffer** — graphite gray, wavy caustics on the floor, slowly
+  drifting glitter, gentle sway; later: low gravity
 - **Firewall Citadel** — ember orange, brick floor, rising sparks, warm
   flicker; guardians
 - **Phantom Partition** (special: secrets, backtracking) — silver-white,
-  sparse dotted starfield floor, edges slowly shimmering through the hues
+  sparse dotted floor, still twinkling stars, edges slowly shimmering
+  through the hues
 
 ### Goal
 Collect all key fragments (count defined in world data) and deliver them

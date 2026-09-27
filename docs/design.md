@@ -483,14 +483,15 @@ Phase 4.
 | Home Lattice (core) | amber `#ffb020` | clean square grid | warm motes rising slowly | calm, steady glow |
 | Glitchmire | hot pink `#ff5fa8` | torn tiles, slightly offset | pixel bubbles popping up | edges jitter for a frame now and then |
 | Frostbyte Wastes | ice blue `#9fd0ff` | hex crystal pattern | 0/1 flakes falling | soft, frosty bloom |
-| Abyssal Buffer | cobalt `#3a6bff` | wavy caustics | bubbles rising slowly | gentle sway |
+| Abyssal Buffer | graphite `#7a8190` | wavy caustics | glitter drifting slowly | gentle sway |
 | Firewall Citadel | ember orange `#ff6a1f` | brick pattern | sparks rising | warm edge flicker |
-| Phantom Partition (special) | silver-white `#e8eaff` | sparse dots, a starfield | faint glints | edges shimmer slowly through the hues |
+| Phantom Partition (special) | silver-white `#e8eaff` | sparse dots | still stars, twinkling | edges shimmer slowly through the hues |
 
 Room colors keep clear of the gameplay colors (lime crates, cyan
 platforms, magenta collapsing blocks, red hazards, violet void, green bugs),
-so those always stand out from the room. The two blues are far apart in
-lightness.
+so those always stand out from the room. The two grays are far apart:
+graphite Abyssal Buffer is dark and moody, Phantom Partition bright
+silver-white on black.
 
 Surroundings (`look` in `biomes.json`, D62; every field optional, Home
 Lattice's values are the defaults):
@@ -508,7 +509,7 @@ Lattice's values are the defaults):
 | Home Lattice | defaults: near black, neutral gray | 5 | 0.3 | 1.4 |
 | Glitchmire | dark plum, dim mauve | 4 | 0.4 | 1.5 |
 | Frostbyte Wastes | cold blue-black, icy blue: a wide frozen field | 6 | 0.25 | 1.3 |
-| Abyssal Buffer | deep navy, dark blue: the longest, a sea around the room | 9 | 0.4 | 1.7 |
+| Abyssal Buffer | dark gray, dim gray: the longest, a deep plain around the room | 9 | 0.4 | 1.7 |
 | Firewall Citadel | dark ember, dim rust | 5 | 0.45 | 1.7 |
 | Phantom Partition | black, faint gray: the room floats in nothing | 1.5 | 0.15 | 1.2 |
 
@@ -716,7 +717,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 |---|---|
 | `data/rooms/<id>.json` | One room (id = file name) |
 | `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; `collapsing`: collapsing block, magenta); `enemies`: enemy types (`bug`, see Enemies) and templates that `extend` one (D58); `spells`: spell tuning (`zap`, see Zap and energy); `blocks`: look of the `hazard` and `void` block types and the hazard's `damage` |
-| `data/biomes.json` | Biome name and room color: `home_lattice` (core, amber), `glitchmire` (pink), `frostbyte_wastes` (pale ice), `abyssal_buffer` (cobalt), `firewall_citadel` (ember orange), `phantom_partition` (special, silver-white); optional `look` for the surroundings (background, outer grid and its fade, wall grid, bloom); see Biomes (D61, D62) |
+| `data/biomes.json` | Biome name and room color: `home_lattice` (core, amber), `glitchmire` (pink), `frostbyte_wastes` (ice blue), `abyssal_buffer` (graphite), `firewall_citadel` (ember orange), `phantom_partition` (special, silver-white); optional `look` for the surroundings (background, outer grid and its fade, wall grid, bloom); see Biomes (D61, D62) |
 | `data/world.json` | Start room and exit connections |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |
 

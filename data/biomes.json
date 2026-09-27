@@ -15,8 +15,8 @@
     },
     "abyssal_buffer": {
       "name": "Abyssal Buffer",
-      "color": "#3a6bff",
-      "look": { "background": "#030718", "outerGrid": "#1a2850", "outerFade": 9, "wallGrid": 0.4, "bloom": 1.7 }
+      "color": "#7a8190",
+      "look": { "background": "#0b0c0f", "outerGrid": "#26282e", "outerFade": 9, "wallGrid": 0.4, "bloom": 1.7 }
     },
     "firewall_citadel": {
       "name": "Firewall Citadel",

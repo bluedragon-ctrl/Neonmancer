@@ -824,3 +824,13 @@ a value already in the renderer, so six biomes look clearly apart
 without new shaders or draw calls. Floor patterns, particles, backdrop
 shapes and edge effects are the planned next tiers (docs/design.md,
 Biomes).
+
+### D63 — 2026-09-27 — Abyssal Buffer turns graphite gray
+Abyssal Buffer's room color is graphite `#7a8190` instead of cobalt, on
+a dark gray background (`#0b0c0f`) with a dim gray outer grid; its
+planned particles become slowly drifting glitter. Phantom Partition keeps
+stars, but still and twinkling, so the two differ in style. A darker gray
+(`#5a606d`) was tried: blocks and walls faded and the cyan exits took
+over the room.
+**Why:** author's choice: a dark, quiet gray sector that later pairs with
+glitter effects.
