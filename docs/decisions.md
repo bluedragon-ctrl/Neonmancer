@@ -806,3 +806,21 @@ gameplay colors (lime, cyan, magenta, red, violet, green) so crates,
 platforms, collapsing, hazard and void blocks, and bugs never blend into
 the room; that moved the glitch sector off magenta, the color of
 collapsing blocks.
+
+### D62 — 2026-09-27 — Biomes set the room's surroundings too
+A biome in `biomes.json` may have a `look`: `background` (the void
+color), `outerGrid` and `outerFade` (color and fade distance of the floor
+grid outside the room), `wallGrid` (brightness of the wall grid) and
+`bloom` (glow strength). Every field is optional; the defaults are Home
+Lattice's look (`LOOK_DEFAULTS` in `render/neon.js`), so a biome without
+`look` looks as rooms did before. The floor shader, wall grid, scene
+background and bloom read them when a room is shown. Backgrounds stay near
+black and outer grids dim, so the room's own color still carries the
+biome and the outside never reads as room. Frostbyte Wastes moves from
+pale ice to ice blue (`#9fd0ff`): next to Phantom Partition's
+silver-white the two read the same.
+**Why:** author's pick of the cheapest biome effects ("tier 1"): each is
+a value already in the renderer, so six biomes look clearly apart
+without new shaders or draw calls. Floor patterns, particles, backdrop
+shapes and edge effects are the planned next tiers (docs/design.md,
+Biomes).

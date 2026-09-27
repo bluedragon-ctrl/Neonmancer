@@ -84,12 +84,13 @@ export class RoomScene {
       this.hazardFaces = roomView.userData.hazardFaces;
       this.flare = null;
       this.staticGroup = new Group().add(
-        createFloor(room.size, room.color, room.holes),
+        createFloor(room.size, room.color, room.holes, room.look),
         createHoleView(room.holes, room.color),
         roomView,
         ...this.exitViews.map((view) => view.group),
       );
       frameRoom(renderer.camera, room.size);
+      renderer.setLook(room.look);
       this.roomId = room.id;
       this.cutAbove = cutAbove;
     }

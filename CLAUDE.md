@@ -167,7 +167,7 @@ Behaviors below are ideas for Phase 4; for now biomes are look only.
   grid, warm rising motes; safe; holds the central core
 - **Glitchmire** — hot pink, torn offset floor tiles, pixel bubbles, edges
   that jitter; later: slow health drain
-- **Frostbyte Wastes** — pale ice, hex crystal floor, falling 0/1 flakes,
+- **Frostbyte Wastes** — ice blue, hex crystal floor, falling 0/1 flakes,
   soft frosty bloom; later: low-res, reduced visibility
 - **Abyssal Buffer** — cobalt, wavy caustics on the floor, slow rising
   bubbles, gentle sway; later: low gravity

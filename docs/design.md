@@ -472,16 +472,17 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
 ## Biomes
 
 Six Grid sectors (D61): one core, four side sectors and one special sector
-for secrets and rooms reached by backtracking. Today a biome sets only the
-room color (block edges, walls, floor grid) and the name in the room
-banner; the rest of each look below is planned (floor patterns, particles,
-one signature effect), and gameplay effects wait for Phase 4.
+for secrets and rooms reached by backtracking. A biome sets the room color
+(block edges, walls, floor grid), the name in the room banner and the
+room's surroundings (`look`, D62); floor patterns, particles and the
+signature effects in the table are planned, and gameplay effects wait for
+Phase 4.
 
 | Biome | Color | Floor | Particles | Signature |
 |---|---|---|---|---|
 | Home Lattice (core) | amber `#ffb020` | clean square grid | warm motes rising slowly | calm, steady glow |
 | Glitchmire | hot pink `#ff5fa8` | torn tiles, slightly offset | pixel bubbles popping up | edges jitter for a frame now and then |
-| Frostbyte Wastes | pale ice `#cfe9ff` | hex crystal pattern | 0/1 flakes falling | soft, frosty bloom |
+| Frostbyte Wastes | ice blue `#9fd0ff` | hex crystal pattern | 0/1 flakes falling | soft, frosty bloom |
 | Abyssal Buffer | cobalt `#3a6bff` | wavy caustics | bubbles rising slowly | gentle sway |
 | Firewall Citadel | ember orange `#ff6a1f` | brick pattern | sparks rising | warm edge flicker |
 | Phantom Partition (special) | silver-white `#e8eaff` | sparse dots, a starfield | faint glints | edges shimmer slowly through the hues |
@@ -490,6 +491,26 @@ Room colors keep clear of the gameplay colors (lime crates, cyan
 platforms, magenta collapsing blocks, red hazards, violet void, green bugs),
 so those always stand out from the room. The two blues are far apart in
 lightness.
+
+Surroundings (`look` in `biomes.json`, D62; every field optional, Home
+Lattice's values are the defaults):
+
+| Field | What | Default |
+|---|---|---|
+| `background` | the void behind everything, kept near black | `#05060d` |
+| `outerGrid` | floor grid outside the room, kept dim so it never reads as room | `#2a2d35` |
+| `outerFade` | blocks over which that grid fades out | 5 |
+| `wallGrid` | brightness of the faint wall grid (share of the room color) | 0.3 |
+| `bloom` | glow strength | 1.4 |
+
+| Biome | Background, outer grid | Fade | Wall grid | Bloom |
+|---|---|---|---|---|
+| Home Lattice | defaults: near black, neutral gray | 5 | 0.3 | 1.4 |
+| Glitchmire | dark plum, dim mauve | 4 | 0.4 | 1.5 |
+| Frostbyte Wastes | cold blue-black, icy blue: a wide frozen field | 6 | 0.25 | 1.3 |
+| Abyssal Buffer | deep navy, dark blue: the longest, a sea around the room | 9 | 0.4 | 1.7 |
+| Firewall Citadel | dark ember, dim rust | 5 | 0.45 | 1.7 |
+| Phantom Partition | black, faint gray: the room floats in nothing | 1.5 | 0.15 | 1.2 |
 
 ## HUD
 
@@ -684,7 +705,7 @@ Every step also:
 Moved out of Phase 2: biome environmental effects (Glitchmire drain,
 Frostbyte low-res, Abyssal low gravity) and the health pickups and safe
 rooms that balance them are specific content, planned for Phase 4 (content
-production). Biomes stay look-only (name, color) until then.
+production). Biomes stay look-only (name, color, surroundings) until then.
 
 ## Data formats
 
@@ -695,7 +716,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 |---|---|
 | `data/rooms/<id>.json` | One room (id = file name) |
 | `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; `collapsing`: collapsing block, magenta); `enemies`: enemy types (`bug`, see Enemies) and templates that `extend` one (D58); `spells`: spell tuning (`zap`, see Zap and energy); `blocks`: look of the `hazard` and `void` block types and the hazard's `damage` |
-| `data/biomes.json` | Biome name and room color: `home_lattice` (core, amber), `glitchmire` (pink), `frostbyte_wastes` (pale ice), `abyssal_buffer` (cobalt), `firewall_citadel` (ember orange), `phantom_partition` (special, silver-white); see Biomes (D61) |
+| `data/biomes.json` | Biome name and room color: `home_lattice` (core, amber), `glitchmire` (pink), `frostbyte_wastes` (pale ice), `abyssal_buffer` (cobalt), `firewall_citadel` (ember orange), `phantom_partition` (special, silver-white); optional `look` for the surroundings (background, outer grid and its fade, wall grid, bloom); see Biomes (D61, D62) |
 | `data/world.json` | Start room and exit connections |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |
 

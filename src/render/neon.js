@@ -24,6 +24,29 @@ export const PALETTE = {
   amber: 0xffb020,
 };
 
+/**
+ * Surroundings of a room (biomes.json "look", D62): background, floor grid
+ * outside the room, wall grid and bloom. These are Home Lattice's; a biome
+ * overrides any of them.
+ */
+export const LOOK_DEFAULTS = {
+  background: PALETTE.void,
+  outerGrid: PALETTE.outerGrid,
+  /** Distance (blocks) over which the outer grid fades out. */
+  outerFade: 5,
+  /** Brightness of the wall grid, as a share of the room color. */
+  wallGrid: 0.3,
+  bloom: 1.4,
+};
+
+/**
+ * A biome's look with the defaults filled in.
+ * @param {Partial<typeof LOOK_DEFAULTS>} [look]
+ */
+export function roomLook(look) {
+  return { ...LOOK_DEFAULTS, ...look };
+}
+
 /** Dash pattern in world units; one dash + gap = 1/4 block, so dashes line up with block corners. */
 const DASH_SIZE = 0.14;
 const GAP_SIZE = 0.11;

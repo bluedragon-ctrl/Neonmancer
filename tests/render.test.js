@@ -17,6 +17,7 @@ import DEFS from '../data/defs.json' with { type: 'json' };
 import DEFS_SCHEMA from '../schemas/defs.schema.json' with { type: 'json' };
 import { ENEMY_MODELS } from '../src/render/entity-view.js';
 import { createRoomView } from '../src/render/room-view.js';
+import { LOOK_DEFAULTS, roomLook } from '../src/render/neon.js';
 import { createWizard } from '../src/render/wizard.js';
 import { CHARACTER_ORDER, XRAY_ORDER, addXray } from '../src/render/xray.js';
 
@@ -182,4 +183,9 @@ test('x-ray: parts of one color share a ghost material with the wizard flash', (
   const materials = new Set(ghosts.map((ghost) => ghost.material));
   assert.equal(materials.size, 2, 'magenta body and hat, cyan head and hands');
   for (const material of materials) assert.equal(material.uniforms.uFlash, wizard.userData.flash.amount);
+});
+
+test('roomLook fills in the Home Lattice look where a biome sets nothing (D62)', () => {
+  assert.deepEqual(roomLook(undefined), LOOK_DEFAULTS);
+  assert.deepEqual(roomLook({ bloom: 1.7 }), { ...LOOK_DEFAULTS, bloom: 1.7 });
 });

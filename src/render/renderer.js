@@ -8,7 +8,7 @@
  */
 import { Color, Scene, WebGLRenderer } from 'three';
 import { createIsoCamera } from './camera.js';
-import { PALETTE, resizeLines } from './neon.js';
+import { PALETTE, resizeLines, roomLook } from './neon.js';
 import { createComposer } from './post.js';
 import { REFERENCE_HEIGHT, bufferSize, clampRenderScale, fitLetterbox } from './viewport.js';
 
@@ -54,7 +54,9 @@ export class Renderer {
     this.scene = new Scene();
     this.scene.background = new Color(PALETTE.void);
     this.camera = createIsoCamera();
-    this.composer = createComposer(this.webgl, this.scene, this.camera, { multisampling });
+    const { composer, bloom } = createComposer(this.webgl, this.scene, this.camera, { multisampling });
+    this.composer = composer;
+    this.bloom = bloom;
     this.fade = 0;
 
     // The stage follows the window at once (cheap); the buffers, which are
@@ -102,6 +104,16 @@ export class Renderer {
   setRenderScale(scale) {
     this.renderScale = clampRenderScale(scale);
     this.resize();
+  }
+
+  /**
+   * Background and bloom of the room's biome (D62).
+   * @param {object} [look] biome look (neon.js roomLook())
+   */
+  setLook(look) {
+    const { background, bloom } = roomLook(look);
+    this.scene.background.set(background);
+    this.bloom.intensity = bloom;
   }
 
   /** @param {number} level 0 (clear) to 1 (black) */

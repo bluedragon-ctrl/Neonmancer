@@ -117,6 +117,10 @@ and the project uses [Semantic Versioning](https://semver.org/).
 - Six biomes (D61): Home Lattice (core), Glitchmire, Frostbyte Wastes,
   Abyssal Buffer, Firewall Citadel and Phantom Partition (special), with
   names and room colors; looks planned in docs/design.md.
+- Biome surroundings (D62): an optional `look` in `biomes.json` sets the
+  background, the color and fade of the floor grid outside the room, the
+  wall grid brightness and the bloom strength; each of the six biomes has
+  its own.
 
 ### Fixed
 - Volatile Memory: the crate on the one-shot bridge now starts on a plain

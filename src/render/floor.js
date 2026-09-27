@@ -2,9 +2,10 @@
  * Infinite grid floor fading into darkness.
  *
  * One large plane at y = 0 with a shader that draws unit grid lines. Lines
- * use the room color inside the room; outside they are dark gray (clearly
- * not part of the room) and fade out with distance from it; the
- * plane itself has the void color, so it melts into the background.
+ * use the room color inside the room; outside they are dim (the biome's
+ * outer grid color, clearly not part of the room) and fade out with
+ * distance from it; the plane itself has the background color, so it
+ * melts into the background.
  * Hole tiles are cut out of the plane (a small mask texture), so the pit
  * below them shows through.
  */
@@ -18,7 +19,7 @@ import {
   ShaderMaterial,
   Vector2,
 } from 'three';
-import { PALETTE, scaleWithHeight } from './neon.js';
+import { PALETTE, roomLook, scaleWithHeight } from './neon.js';
 
 /** Floor plane size; far larger than anything the camera can see. */
 const EXTENT = 400;
@@ -92,19 +93,21 @@ function holeMask(w, d, holes) {
  * @param {number[]} size room size [x, y, z]
  * @param {number|string} [color] color of the grid lines inside the room
  * @param {number[][]} [holes] hole tiles as [x, z]
+ * @param {object} [look] biome look (neon.js roomLook()): background, outer grid color and fade
  */
-export function createFloor([w, , d], color = PALETTE.amber, holes = []) {
+export function createFloor([w, , d], color = PALETTE.amber, holes = [], look = {}) {
+  const { background, outerGrid, outerFade } = roomLook(look);
   const material = new ShaderMaterial({
     vertexShader,
     fragmentShader,
     uniforms: {
       uColor: { value: new Color(color) },
-      uOuterColor: { value: new Color(PALETTE.outerGrid) },
-      uVoid: { value: new Color(PALETTE.void) },
+      uOuterColor: { value: new Color(outerGrid) },
+      uVoid: { value: new Color(background) },
       uRoomMin: { value: new Vector2(0, 0) },
       uRoomMax: { value: new Vector2(w, d) },
       uLineWidth: { value: LINE_WIDTH },
-      uFade: { value: 5 },
+      uFade: { value: outerFade },
       uHoles: { value: holeMask(w, d, holes) },
     },
     // Keep the floor behind edges and faces lying on y = 0.
