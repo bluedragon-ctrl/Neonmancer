@@ -120,6 +120,11 @@ body {
   color: var(--lime);
 }
 
+/* No spell yet (before the first data disk): energy is only for spells. */
+.hud-energy[hidden] {
+  display: none;
+}
+
 .hud-segments {
   display: flex;
   gap: calc(7 * var(--u));

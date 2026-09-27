@@ -313,8 +313,8 @@ enemies).
   starts with no spell; the Zap disk lies in Boot Sector, two steps from
   the spawn. Taking it shows the banner `ZAP / SPELL INSTALLED`, the
   terminal line `> SPELL INSTALLED: ZAP`, selects the spell and brings up
-  its HUD tag (hidden until then; the energy bar shows one segment per
-  energy unit until a spell sets its cost).
+  the energy bar and the spell tag in the HUD (both hidden until then:
+  energy is only for spells).
 - **Save bits in blocks:** spells 0–15, buffs 16–31, equipment 32–47,
   fragments 48–111; 112 in all. The index comes from what the item
   unlocks: a spell's `slot` in `defs.json` for its disk (Zap: 0); later a
