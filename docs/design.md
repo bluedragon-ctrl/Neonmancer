@@ -718,7 +718,7 @@ Each step is one branch and one PR; the game runs after every step.
 Hazards, combat and the room editor. Each step is one branch and one PR
 against `main` (no stacked PRs); the game runs after every step, CI is
 green before a PR is called ready. Rules that apply across steps are in
-D43. **Next step: 9** (8b, the moving part of the editor, is in review).
+D43. **Done:** every step is merged and Phase 2 is released as v0.2.0.
 
 Every step also:
 - adds its new looks to the asset showcase (`tools/showcase.js`);
