@@ -4,6 +4,7 @@
  */
 import STRINGS from '../data/strings.json' with { type: 'json' };
 import { loadGameData } from '../src/data/load.js';
+import { resolveBlockTypes } from '../src/data/room-data.js';
 import { Grid } from '../src/world/grid.js';
 
 /** A plain pushable crate type. */
@@ -11,9 +12,6 @@ export const CRATE = { kind: 'pushable', color: '#b6ff3c' };
 
 /** A moving platform type (its path is on the room object). */
 export const LIFT = { kind: 'platform', color: '#00f0ff' };
-
-/** A collapsing block type (its optional regrow time is on the room object). */
-export const CRUMBLE = { kind: 'collapsing', color: '#ff2bd6' };
 
 /** A bug enemy type, as in defs.json (3 units per second: 20 ticks per cell). */
 export const BUG = {
@@ -32,8 +30,14 @@ export const BUG = {
 /** Spell tuning, as in defs.json. */
 export const SPELLS = { zap: { cost: 2, cooldown: 0.25, speed: 12, damage: 1 } };
 
-/** Looks and rules of the special block types, as in defs.json. */
-export const BLOCK_TYPES = { hazard: { color: '#ff3b30', damage: 1 }, void: { color: '#8a5cff' } };
+/** Block types, as in defs.json (D60): plain, hazard, void, collapsing and a variant that grows back after 3 s. */
+export const BLOCK_TYPES = {
+  block: { look: 'plain' },
+  hazard: { look: 'hazard', color: '#ff3b30', damage: 1 },
+  void: { look: 'void', color: '#8a5cff', lethal: true },
+  collapsing: { kind: 'collapsing', color: '#ff2bd6' },
+  collapsing_regrow: { extends: 'collapsing', regrow: 3 },
+};
 
 /**
  * A room file with defaults (8×4×8, biome "home", spawn near a corner);
@@ -52,12 +56,13 @@ export function roomFile(id, props = {}) {
  * @param {object[]} options.rooms room files (see roomFile())
  * @param {Record<string, object>} [options.objects] object types; a crate by default
  * @param {Record<string, object>} [options.enemies] enemy types; a bug by default
+ * @param {Record<string, object>} [options.blocks] block types; BLOCK_TYPES by default
  * @param {string[][]} [options.connections] pairs of "room.exit"
  * @param {string} [options.start] start room; the first room by default
  */
-export function dataFiles({ rooms, objects = { crate: CRATE }, enemies = { bug: BUG }, connections = [], start = rooms[0].id }) {
+export function dataFiles({ rooms, objects = { crate: CRATE }, enemies = { bug: BUG }, blocks = BLOCK_TYPES, connections = [], start = rooms[0].id }) {
   return structuredClone({
-    'defs.json': { schemaVersion: 1, objects, enemies, spells: SPELLS, blocks: BLOCK_TYPES },
+    'defs.json': { schemaVersion: 1, objects, enemies, spells: SPELLS, blocks },
     'biomes.json': { schemaVersion: 1, biomes: { home: { name: 'Home', color: '#ffb020' } } },
     'world.json': { schemaVersion: 1, start, connections },
     'strings.json': STRINGS,
@@ -70,9 +75,12 @@ export function gameData(options) {
   return loadGameData(dataFiles(options));
 }
 
-/** A grid for a room of `size` with the given block cells, hole tiles, exits and hazard/void cells. */
-export function grid({ size = [8, 4, 8], cells = [], holes = [], exits = [], typedCells = {} } = {}) {
-  return new Grid({ size, cells, holes, exits, typedCells });
+/**
+ * A grid for a room of `size` with the given plain block cells, hole tiles,
+ * exits, and cells of other static block types (`blocks`, by type).
+ */
+export function grid({ size = [8, 4, 8], cells = [], holes = [], exits = [], blocks = {} } = {}) {
+  return new Grid({ size, blocks: { block: cells, ...blocks }, blockTypes: resolveBlockTypes(BLOCK_TYPES), holes, exits });
 }
 
 /** Just the types of a list of game events, e.g. ['exit'], for short assertions. */

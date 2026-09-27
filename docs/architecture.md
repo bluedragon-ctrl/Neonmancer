@@ -49,11 +49,11 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `core/messages.js` | `say(key, values)` terminal messages and `announce(key, values, options)` banners from any module, queued until the HUD takes them |
 | `core/rules.js` | Shared rule constants (player hitbox, max room footprint) |
 | `data/bundle.js` | The only Vite-specific module: bundles `data/**/*.json`, imports dev schema errors, `DEV_SERVER` flag |
-| `data/room-data.js` | Shared reading of room data: block boxes → cells, exit defaults, sides, exit cells |
+| `data/room-data.js` | Shared reading of room data: block boxes → cells, block types with variants filled in (`resolveBlockTypes()`, D60), exit defaults, sides, exit cells |
 | `data/validate.js` | Semantic checks and readable error messages (Ajv schema pass is dev/CI) |
 | `data/load.js` | Validate the data files and build the content tables; throws `DataError` |
-| `world/grid.js` | 3D occupancy grid: static cells, room sides with exit openings, hole tiles |
-| `world/room.js` | Runtime room built fresh from data on every entry (type defaults + overrides) |
+| `world/grid.js` | 3D occupancy grid: a block type code per cell (`typeAt()` gives its properties), room sides with exit openings, hole tiles |
+| `world/room.js` | Runtime room built fresh from data on every entry (type defaults + overrides; static block cells by type; cells of block types with a kind become room objects) |
 | `world/exits.js` | Which exit the wizard left through; where he arrives in the connected room |
 | `physics/collision.js` | Axis-separated AABB movement against the grid; surface below a body; box helpers (`restsOn()`, `touchesBox()`, `shoveClear()`) shared by all entities |
 | `entities/player.js` | Movement, jump, gravity, turning, pushing, integrity, invulnerability after a hit, death (hole or damage), respawn; one wizard for the whole game |
@@ -72,7 +72,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/neon.js` | Palette, line and face materials; line widths scaled by render height; `neonLines()`, `fadingLines()`, `shadedFaces()` builders; `disposeTree()` |
 | `render/post.js` | pmndrs postprocessing composer (bloom) |
 | `render/floor.js` | Infinite grid floor fading into darkness; hole tiles cut out via a mask texture |
-| `render/edges.js` | Visible block edges from grid occupancy; merging unit segments into runs (pure, tested) |
+| `render/edges.js` | Visible block edges from grid occupancy; several plain types as one mass, each edge to a type (`groupedBlockEdges()`, D64); merging unit segments into runs (pure, tested) |
 | `render/exit-view.js` | Exit effect in the destination color: dashed stream into doorway tunnels, arrows gliding out of front exits |
 | `render/exit-layout.js` | Exit effect layout and timing, `EXIT_FX` tuning (pure, tested) |
 | `render/walls.js` | Back walls with doorways and dark tunnels behind them, front edges with gaps, arrow shape for front exits (pure, tested) |
@@ -153,11 +153,13 @@ collision is needed. No auto step-up: the wizard jumps.
 
 Solid for the player: static blocks, the room sides (x/z outside the room)
 and everything below y = 0 (the grid), plus room objects as moving bodies;
-above the room height is open. Grid cells hold a `CELL` type (`empty`,
-`solid`, `hazard`, `void`; all but `empty` are solid). What a hazard or
-void block does is asked of the grid after the move: `touchesCell()` in
-`physics/collision.js` for hazards (Game, each tick), the cell under the
-feet center for void (Player, on landing). Only blocks that never move or change are grid cells,
+above the room height is open. Grid cells hold a code (D60): 0 empty, 1
+the room's edge, from 2 on the room's static block types; all but empty
+are solid, and `typeAt()` gives the block type with its properties. What
+a block does is asked of its properties after the move, never its name:
+`touchedCell()` in `physics/collision.js` finds a touched cell with
+`damage` (Game, each tick), and a `lethal` cell under the feet center
+kills (Player on landing, Enemy when it stands or falls). Only blocks that never move or change are grid cells,
 everything that moves or disappears is a room object (D40). At an exit the row of cells just
 beyond the side is open (as high as the exit), so the wizard can walk
 through; pushables never move outside the room.

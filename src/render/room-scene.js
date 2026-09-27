@@ -31,9 +31,8 @@ export const OBJECT_VIEWS = {
  * @param {number} layer
  */
 export function cutRoom(room, layer) {
-  const below = (cells) => cells.filter((cell) => cell[1] <= layer);
-  const typedCells = Object.fromEntries(Object.entries(room.typedCells ?? {}).map(([type, cells]) => [type, below(cells)]));
-  return { ...room, cells: below(room.cells), typedCells };
+  const blocks = Object.fromEntries(Object.entries(room.blocks).map(([type, cells]) => [type, cells.filter((cell) => cell[1] <= layer)]));
+  return { ...room, blocks };
 }
 
 export class RoomScene {
@@ -50,9 +49,9 @@ export class RoomScene {
     this.exitViews = [];
     /** Bolts and sparks of the room (made in show()). */
     this.zapView = null;
-    /** Face material of the room's hazard blocks, or null. */
-    this.hazardFaces = null;
-    /** The hazard block that last hurt the wizard, flaring: { cell, time } (seconds since). */
+    /** "x,y,z" of each hazard-look block → its face material (room-view.js). */
+    this.flares = new Map();
+    /** The hazard block that last hurt the wizard, flaring: { faces, cell, time } (seconds since). */
     this.flare = null;
   }
 
@@ -81,7 +80,7 @@ export class RoomScene {
       old.push(this.staticGroup);
       this.exitViews = room.exits.map((exit) => new ExitView(exit, room.size, game.destinationColor(exit)));
       const roomView = createRoomView(cutAbove === null ? room : cutRoom(room, cutAbove));
-      this.hazardFaces = roomView.userData.hazardFaces;
+      this.flares = roomView.userData.flares;
       this.flare = null;
       this.staticGroup = new Group().add(
         createFloor(room.size, room.color, room.holes, room.look),
@@ -114,9 +113,9 @@ export class RoomScene {
     for (const view of this.enemyViews) view.sync(alpha, dt);
     this.zapView.sync(alpha, dt);
     for (const view of this.exitViews) view.update(dt);
-    if (this.flare && this.hazardFaces) {
+    if (this.flare) {
       this.flare.time += dt;
-      flareHazard(this.hazardFaces, this.flare.cell, this.flare.time);
+      flareHazard(this.flare.faces, this.flare.cell, this.flare.time);
     }
   }
 
@@ -133,6 +132,10 @@ export class RoomScene {
    * @param {number[]} cell [x, y, z]
    */
   flareHazard(cell) {
-    this.flare = { cell, time: 0 };
+    const faces = this.flares.get(cell.join());
+    if (!faces) return; // a block that hurts without the hazard look
+    // A flare still fading on another hazard type's blocks goes out.
+    if (this.flare && this.flare.faces !== faces) flareHazard(this.flare.faces, this.flare.cell, Infinity);
+    this.flare = { faces, cell, time: 0 };
   }
 }

@@ -41,10 +41,11 @@ test('grid: room sides and the space below the floor are solid, above is open', 
 
 test('grid: cellAt() tells what fills a cell', () => {
   const g = grid({ cells: [[2, 0, 3]] });
-  assert.equal(g.cellAt(2, 0, 3), CELL.solid);
+  assert.equal(g.typeAt(2, 0, 3).id, 'block');
+  assert.notEqual(g.cellAt(2, 0, 3), CELL.empty);
   assert.equal(g.cellAt(2, 1, 3), CELL.empty);
-  assert.equal(g.cellAt(-1, 0, 0), CELL.solid); // beyond a side
-  assert.equal(g.cellAt(-5, 9, -5), CELL.solid);
+  assert.equal(g.cellAt(-1, 0, 0), CELL.edge); // beyond a side
+  assert.equal(g.cellAt(-5, 9, -5), CELL.edge);
   assert.equal(g.cellAt(3, 9, 3), CELL.empty); // above the room
 });
 

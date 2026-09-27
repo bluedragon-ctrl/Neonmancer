@@ -24,7 +24,6 @@
 import { DT } from '../core/loop.js';
 import { BEHAVIORS } from '../ai/behaviors.js';
 import { REST_EPS, moveAxis, overlapsBox, overlapsSolid, restsOn, shoveClear, surfaceBelow } from '../physics/collision.js';
-import { CELL } from '../world/grid.js';
 
 /** Tuning values (units, ticks). */
 export const ENEMY = {
@@ -160,7 +159,7 @@ export class Enemy {
   /** Standing: fall if unsupported, die on void, else take the next step. */
   rest(game) {
     if (this.startFalling(game)) return this.fall(game);
-    if (this.onVoid(game.grid)) return this.die('void');
+    if (this.onLethal(game.grid)) return this.die('void');
     if (this.wait > 0) {
       this.wait--;
       return null;
@@ -204,7 +203,7 @@ export class Enemy {
       this.state = 'rest';
       this.from = this.target = null;
       // Off a ledge or onto a hole: fall right away.
-      if (!this.startFalling(game) && this.onVoid(game.grid)) return this.die('void');
+      if (!this.startFalling(game) && this.onLethal(game.grid)) return this.die('void');
     }
     return null;
   }
@@ -238,7 +237,7 @@ export class Enemy {
     this.vy = 0;
     if (support < 0) return this.die('hole');
     this.state = 'rest';
-    if (this.onVoid(game.grid)) return this.die('void');
+    if (this.onLethal(game.grid)) return this.die('void');
     return 'land';
   }
 
@@ -309,10 +308,10 @@ export class Enemy {
     return top;
   }
 
-  /** Is it standing right on a void block? */
-  onVoid(grid) {
+  /** Is it standing right on a lethal block (void)? */
+  onLethal(grid) {
     const [x, y, z] = this.pos;
-    return Number.isInteger(y) && grid.cellAt(Math.floor(x + 0.5), y - 1, Math.floor(z + 0.5)) === CELL.void;
+    return Number.isInteger(y) && Boolean(grid.typeAt(Math.floor(x + 0.5), y - 1, Math.floor(z + 0.5))?.lethal);
   }
 }
 

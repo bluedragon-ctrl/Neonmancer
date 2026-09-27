@@ -9,7 +9,6 @@
 import { DT } from '../core/loop.js';
 import { PLAYER_HITBOX } from '../core/rules.js';
 import { bodyBox, moveAxis } from '../physics/collision.js';
-import { CELL } from '../world/grid.js';
 
 /** Tuning values (units, seconds, ticks). */
 export const PLAYER = {
@@ -327,15 +326,15 @@ export class Player {
     }
     if (this.grounded && !wasGrounded) event = 'land';
 
-    // Standing on a hole at floor level: fall in (D18); standing on a void
-    // block: derez. Both drain all integrity; respawning restores it. Only
+    // Standing on a hole at floor level: fall in (D18); standing on a lethal
+    // block (void): derez. Both drain all integrity; respawning restores it. Only
     // the tile under his center counts, so grazing an edge is safe.
     if (this.grounded && !invincible) {
       if (this.pos[1] < FLOOR_EPS && grid.isHole(this.pos[0], this.pos[2])) {
         this.die('hole');
         return 'die';
       }
-      if (this.standingOn(grid) === CELL.void) {
+      if (this.standingOn(grid)?.lethal) {
         this.die('void');
         return 'die';
       }
@@ -344,12 +343,12 @@ export class Player {
   }
 
   /**
-   * The grid cell type right under his feet center: CELL.empty when he
-   * stands on an object, CELL.solid on the floor.
+   * The block type right under his feet center (world/grid.js typeAt()):
+   * null when he stands on an object, the edge type on the floor.
    * @param {import('../world/grid.js').Grid} grid
    */
   standingOn(grid) {
-    return grid.cellAt(Math.floor(this.pos[0]), Math.round(this.pos[1]) - 1, Math.floor(this.pos[2]));
+    return grid.typeAt(Math.floor(this.pos[0]), Math.round(this.pos[1]) - 1, Math.floor(this.pos[2]));
   }
 
   /**

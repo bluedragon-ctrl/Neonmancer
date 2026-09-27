@@ -5,9 +5,26 @@
  */
 import { ENEMY_DEFAULTS, OBJECT_STYLE_DEFAULTS, blockCells, holeTiles, withExitDefaults } from '../data/room-data.js';
 
-/** Cells of the room's blocks of one type ("type" defaults to "block"). */
-function blocksOfType(data, type) {
-  return (data.blocks ?? []).filter((block) => (block.type ?? 'block') === type).flatMap(blockCells);
+/**
+ * The room's block cells by type (D60): static types go into the grid;
+ * each cell of a type with a kind (collapsing) becomes a room object.
+ * @returns {{ blocks: Record<string, number[][]>, objects: object[] }}
+ */
+function blocksByType(data, blockTypes) {
+  const blocks = {};
+  const objects = [];
+  for (const block of data.blocks ?? []) {
+    const type = blockTypes[block.type ?? 'block'];
+    const cells = blockCells(block);
+    if (type.static) {
+      (blocks[type.id] ??= []).push(...cells);
+      continue;
+    }
+    // Its look and tuning come from the type (color, edges, faces, regrow...).
+    const { id: _, static: __, extends: ___, ...values } = type;
+    for (const at of cells) objects.push({ id: `${type.id}@${at.join(',')}`, type: type.id, at, ...OBJECT_STYLE_DEFAULTS, ...values });
+  }
+  return { blocks, objects };
 }
 
 /**
@@ -15,6 +32,7 @@ function blocksOfType(data, type) {
  * @param {{ objectTypes: object, blockTypes: object, enemyTypes?: object, enemyModels?: Record<string, string>, biomes: object }} content loaded game data
  */
 export function buildRoom(data, { objectTypes, blockTypes, enemyTypes = {}, enemyModels = {}, biomes }) {
+  const fromBlocks = blocksByType(data, blockTypes);
   return {
     id: data.id,
     name: data.name,
@@ -27,11 +45,9 @@ export function buildRoom(data, { objectTypes, blockTypes, enemyTypes = {}, enem
     /** Where the wizard reappears after dying here, however he entered (D39). */
     reset: [...(data.reset ?? data.spawn)],
     exits: (data.exits ?? []).map(withExitDefaults),
-    /** Plain static block cells as [x, y, z]. */
-    cells: blocksOfType(data, 'block'),
-    /** Cells of the other static block types (D40), by type. */
-    typedCells: { hazard: blocksOfType(data, 'hazard'), void: blocksOfType(data, 'void') },
-    /** Color and rules of those block types (defs.json "blocks"). */
+    /** Static block cells as [x, y, z], by block type (only types the room uses). */
+    blocks: fromBlocks.blocks,
+    /** Block types (defs.json "blocks", variants filled in): look, color and properties (D60). */
     blockTypes: structuredClone(blockTypes),
     /** Hole floor tiles as [x, z]. */
     holes: (data.holes ?? []).flatMap(holeTiles),
@@ -45,9 +61,7 @@ export function buildRoom(data, { objectTypes, blockTypes, enemyTypes = {}, enem
       ...object.overrides,
       // Moving platforms: the path they follow (world/path.js).
       ...(object.path && { path: structuredClone(object.path) }),
-      // Collapsing blocks: seconds until they grow back (none: they never do).
-      ...(object.regrow !== undefined && { regrow: object.regrow }),
-    })),
+    })).concat(fromBlocks.objects),
     /** Enemies: type values (movement, hostility, speed...) merged with this enemy's overrides, id, cell and path. */
     enemies: (data.enemies ?? []).map((enemy) => ({
       ...ENEMY_DEFAULTS,

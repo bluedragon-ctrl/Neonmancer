@@ -218,7 +218,9 @@ Map screen showing visited rooms, connections and fragment markers.
 
 The engine is generic; all content lives in data.
 
-- `data/defs.json` — object types, enemy types (movement, attack,
+- `data/defs.json` — object types, block types (look or kind, color,
+  properties such as damage and lethal; variants `extend` a base, D60),
+  enemy types (movement, attack,
   hostility, aggro range, integrity, damage, speed, bounce, solid, color;
   templates `extend` a base type, D58), spells
 - `data/biomes.json` — palette, floor pattern, effect settings,

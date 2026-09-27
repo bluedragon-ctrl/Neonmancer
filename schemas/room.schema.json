@@ -84,9 +84,9 @@
       "additionalProperties": false,
       "properties": {
         "type": {
-          "enum": ["block", "hazard", "void"],
+          "$ref": "common.schema.json#/$defs/id",
           "default": "block",
-          "description": "block: plain; hazard: hurts the wizard on touch; void: kills him when he lands on it. Looks are in defs.json \"blocks\"."
+          "description": "A block type in defs.json \"blocks\" (D60): e.g. block (plain), hazard (hurts on touch), void (kills when landed on), collapsing (gives way under the wizard)."
         },
         "at": { "$ref": "common.schema.json#/$defs/cell" },
         "to": {
@@ -122,12 +122,6 @@
         "path": {
           "$ref": "#/$defs/path",
           "description": "Required for platforms (and only allowed on them): the path they follow, starting at \"at\"."
-        },
-        "regrow": {
-          "type": "number",
-          "exclusiveMinimum": 0,
-          "maximum": 60,
-          "description": "Collapsing blocks only: seconds after vanishing until the block grows back (once its cell is clear). Without it the block stays gone until the room resets."
         }
       }
     },

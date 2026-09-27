@@ -743,7 +743,7 @@ front of higher layers hid the cells being edited; leaving them out of
 the drawing (edges worked out anew, so the cut reads as block tops) is
 cleaner than clipping planes, which would leave open, edge-cut blocks.
 
-### D60 — 2026-09-27 — Block types become open, data-driven types (planned)
+### D60 — 2026-09-27 — Block types become open, data-driven types
 Plain, hazard and void stop being a fixed set. `defs.json` `blocks`
 becomes an open map of block types, like enemy types (D48): each type is
 a set of properties the engine understands, plus a look and a color, and
@@ -834,3 +834,26 @@ stars, but still and twinkling, so the two differ in style. A darker gray
 over the room.
 **Why:** author's choice: a dark, quiet gray sector that later pairs with
 glitter effects.
+**Built (2026-09-27):** as planned. Details settled while building it:
+`extends` is one level (a variant of a variant is refused, like enemy
+templates); `block` must be in `defs.json` and static; a kind's objects
+get the id `<type>@x,y,z` and every object style value of the type; the
+grid's code 1 is the room's edge (outside the sides, below the floor);
+Volatile Memory uses `collapsing_regrow` (3 s) for the bridge that grows
+back. The editor's tools are renumbered 1–8 (Block, Hole, Object, Enemy,
+Path, Exit, Spawn, Reset); the regrow field of the Object tool is gone,
+since a regrow time now belongs to a block type.
+
+### D64 — 2026-09-27 — Edges between block types
+Neighbouring blocks of the same type never get an edge between them (the
+corner rule, D12), and neither do neighbouring blocks of different plain
+types: all plain blocks are one mass for the corner rule, and each edge
+takes the color of a type around it, the later one in `defs.json` where
+types meet. The hazard and void looks outline themselves, drawn over the
+plain edges, so a seam always shows where a dangerous block starts.
+Collapsing blocks keep an outline around every cell.
+**Why:** author's choice. Plain types only differ in color, so a seam
+between them would cut shapes apart for nothing; blocks that hurt or kill
+must read at their exact boundary; each collapsing block gives way on its
+own, so its cell outline is information, not noise.
+

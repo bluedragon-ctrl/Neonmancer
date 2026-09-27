@@ -232,14 +232,14 @@ export function voidFaceMaterial(color) {
 }
 
 /**
- * Steady edges of a block type: solid red for hazards, a thin dim frame
+ * Steady edges of a block look: solid red for hazards, a thin dim frame
  * for void.
  * @param {number[][]} cells [x, y, z] cells
- * @param {'hazard'|'void'} type
+ * @param {'hazard'|'void'} look a block type's look (defs.json "blocks", D60)
  * @param {number|string} color
  */
-export function activeBlockEdges(cells, type, color) {
-  const { edgeWidth: width, edgeBrightness: brightness } = BLOCK_FX[type];
+export function activeBlockEdges(cells, look, color) {
+  const { edgeWidth: width, edgeBrightness: brightness } = BLOCK_FX[look];
   return neonLines(blockEdges(cells), lineMaterial({ color, width, brightness }));
 }
 
@@ -258,18 +258,18 @@ export function flareHazard(material, cell, since) {
 const UNIT_BOX = shared(new BoxGeometry(1, 1, 1).translate(0.5, 0.5, 0.5));
 
 /**
- * A block type's cells in the active look: animated instanced faces and
- * edges. `userData.faces` is the face material (e.g. for flareHazard()).
+ * A block type's cells in an animated look: instanced faces and edges.
+ * `userData.faces` is the face material (e.g. for flareHazard()).
  * @param {number[][]} cells [x, y, z] cells
- * @param {'hazard'|'void'} type
+ * @param {'hazard'|'void'} look a block type's look (defs.json "blocks", D60)
  * @param {number|string} color
  */
-export function createActiveBlockView(cells, type, color) {
-  const faces = type === 'hazard' ? hazardFaceMaterial(color) : voidFaceMaterial(color);
+export function createActiveBlockView(cells, look, color) {
+  const faces = look === 'hazard' ? hazardFaceMaterial(color) : voidFaceMaterial(color);
   const boxes = new InstancedMesh(UNIT_BOX, faces, cells.length);
   const matrix = new Matrix4();
   cells.forEach(([x, y, z], i) => boxes.setMatrixAt(i, matrix.makeTranslation(x, y, z)));
-  const edges = activeBlockEdges(cells, type, color);
+  const edges = activeBlockEdges(cells, look, color);
   edges.renderOrder = 3; // over plain block and wall lines lying in the same spot
   const group = new Group().add(boxes, edges);
   group.userData.faces = faces;

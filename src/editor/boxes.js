@@ -42,7 +42,7 @@ export class Boxes {
     this.loose = new Map();
   }
 
-  /** Type at a cell ("block", "hazard", "void", or "hole"), or null. */
+  /** Type at a cell (a block type id such as "block" or "hazard", or "hole"), or null. */
   get(cell) {
     const key = cellKey(cell);
     if (this.loose.has(key)) return this.loose.get(key).type;

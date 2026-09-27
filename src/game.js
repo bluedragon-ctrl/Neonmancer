@@ -11,7 +11,7 @@ import { createObject } from './entities/kinds.js';
 import { PLAYER, Player } from './entities/player.js';
 import { groundBelow, overlaps, surfaceBelow, touchedCell, touchesBox } from './physics/collision.js';
 import { arrival, exitAt } from './world/exits.js';
-import { CELL, Grid } from './world/grid.js';
+import { Grid } from './world/grid.js';
 import { buildRoom } from './world/room.js';
 
 /**
@@ -53,7 +53,7 @@ export const TRANSITION = {
  *   enemy, bounce off it, hit by a spell) or that hurt the wizard (hurt)
  * @property {Bolt} [bolt] the bolt that stopped (zap), where it is now
  * @property {number} [amount] integrity lost (hurt)
- * @property {number[]} [cell] the hazard block that hurt him (hurt), [x, y, z]
+ * @property {number[]} [cell] the block that hurt him (hurt), [x, y, z]
  * @property {'hole'|'void'|'damage'} [cause] how the wizard died (die)
  * @property {object} [exit] the exit walked out through (exit)
  */
@@ -62,7 +62,7 @@ export class Game {
   /** @param {object} content loaded game data (see data/load.js) */
   constructor(content) {
     this.content = content;
-    /** Debug mode: holes and void blocks never kill and hurt() does nothing. */
+    /** Debug mode: holes and lethal blocks never kill and hurt() does nothing. */
     this.invincible = false;
     /** 'grid' (default, D23) or 'screen' (D38); toggled with G, not saved. */
     this.movementMode = 'grid';
@@ -275,9 +275,9 @@ export class Game {
     if (playerEvent === 'die') this.died();
     else if (playerEvent) this.emit(playerEvent);
 
-    // Touching a hazard block hurts (then he is invulnerable for a while).
-    const hazard = player.dead ? null : touchedCell(player.box(), this.grid, CELL.hazard);
-    if (hazard) this.hurt(this.room.blockTypes.hazard.damage, { cell: hazard });
+    // Touching a block that deals damage hurts (then he is invulnerable for a while).
+    const hazard = player.dead ? null : touchedCell(player.box(), this.grid, (type) => type.damage > 0);
+    if (hazard) this.hurt(this.grid.typeAt(...hazard).damage, { cell: hazard });
 
     // Switch spells (Tab), then cast the selected one.
     for (const [action, step] of [['spellNext', 1], ['spellPrev', -1]]) {

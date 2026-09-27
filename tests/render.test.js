@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { GreaterDepth, Vector3 } from 'three';
+import { Color, GreaterDepth, Vector3 } from 'three';
 import {
   bufferSize,
   clampRenderScale,
@@ -8,7 +8,7 @@ import {
   scaleToHeight,
 } from '../src/render/viewport.js';
 import { VIEW_HEIGHT, createIsoCamera, frameRoom, projectedHeight } from '../src/render/camera.js';
-import { blockEdges } from '../src/render/edges.js';
+import { blockEdges, groupedBlockEdges } from '../src/render/edges.js';
 import { MARKS, markSegments } from '../src/render/marks.js';
 import { holeSides } from '../src/render/hole-view.js';
 import { OBJECT_VIEWS } from '../src/render/room-scene.js';
@@ -17,6 +17,7 @@ import DEFS from '../data/defs.json' with { type: 'json' };
 import DEFS_SCHEMA from '../schemas/defs.schema.json' with { type: 'json' };
 import { ENEMY_MODELS } from '../src/render/entity-view.js';
 import { createRoomView } from '../src/render/room-view.js';
+import { resolveBlockTypes } from '../src/data/room-data.js';
 import { LOOK_DEFAULTS, roomLook } from '../src/render/neon.js';
 import { createWizard } from '../src/render/wizard.js';
 import { CHARACTER_ORDER, XRAY_ORDER, addXray } from '../src/render/xray.js';
@@ -113,6 +114,28 @@ test('no blocks, no edges', () => {
   assert.deepEqual(blockEdges([]), []);
 });
 
+test('plain types side by side: one outline, no seam; each edge goes to the higher-ranked type around it (D64)', () => {
+  const low = [[0, 0, 0], [1, 0, 0]];
+  const high = [[2, 0, 0]];
+  const [lowEdges, highEdges] = groupedBlockEdges([low, high]);
+  // Unit pieces of every edge: together exactly the outline of the whole row.
+  const units = (segments) =>
+    segments.flatMap(([from, to]) => {
+      const axis = from.findIndex((v, i) => v !== to[i]);
+      return Array.from({ length: to[axis] - from[axis] }, (_, k) => {
+        const p = [...from];
+        p[axis] += k;
+        return JSON.stringify(p) + axis;
+      });
+    });
+  assert.deepEqual([...units(lowEdges), ...units(highEdges)].sort(), units(blockEdges([...low, ...high])).sort());
+  // The end face at x = 2 is no edge at all (the faces are coplanar there)...
+  assert.ok(![...lowEdges, ...highEdges].some(([from, to]) => from[0] === 2 && to[0] === 2));
+  // ...and the lengthwise edges split where the types meet: x 0..2 low, 2..3 high.
+  assert.ok(norm(lowEdges).includes(JSON.stringify([[0, 0, 0], [2, 0, 0]])));
+  assert.ok(norm(highEdges).includes(JSON.stringify([[2, 0, 0], [3, 0, 0]])));
+});
+
 test('face marks: patterns on all six faces', () => {
   assert.equal(markSegments('none').length, 0);
   assert.equal(markSegments('inset').length, 6 * 4);
@@ -141,8 +164,8 @@ test('hole outline: only sides that border floor', () => {
   assert.ok(!square.some(([[x1], [x2]]) => x1 === 1 && x2 === 1));
 });
 
-test('every object kind in the schema has a logic class and a view', () => {
-  const kinds = DEFS_SCHEMA.$defs.objectType.properties.kind.enum;
+test('every object kind in the schema (objects and block types, D60) has a logic class and a view', () => {
+  const kinds = [...DEFS_SCHEMA.$defs.objectType.properties.kind.enum, ...DEFS_SCHEMA.$defs.blockType.properties.kind.enum];
   assert.deepEqual(Object.keys(OBJECT_KINDS).sort(), [...kinds].sort());
   assert.deepEqual(Object.keys(OBJECT_VIEWS).sort(), [...kinds].sort());
 });
@@ -173,8 +196,30 @@ test('x-ray: ghosts draw after the world and before the wizard', () => {
   for (const ghost of ghosts) assert.equal(ghost.renderOrder, XRAY_ORDER);
   assert.ok(XRAY_ORDER < CHARACTER_ORDER);
   // Every world view that can hide him draws before the ghost.
-  const room = createRoomView({ size: [4, 3, 4], cells: [[0, 0, 0]], color: '#ffb020' });
+  const blocks = { block: [[0, 0, 0]], hazard: [[1, 0, 0]], void: [[2, 0, 0]] };
+  const room = createRoomView({ size: [4, 3, 4], blocks, blockTypes: resolveBlockTypes(DEFS.blocks), color: '#ffb020' });
   room.traverse((node) => assert.ok(node.renderOrder < XRAY_ORDER, 'room view drawn before the ghost'));
+});
+
+test('room view: each static block type in its look and color (D60)', () => {
+  const blockTypes = resolveBlockTypes({
+    block: { look: 'plain' },
+    glass: { look: 'plain', color: '#00ffaa' },
+    hazard: { look: 'hazard', color: '#ff3b30', damage: 1 },
+    hot: { extends: 'hazard', damage: 2 },
+  });
+  const blocks = { block: [[0, 0, 0]], glass: [[1, 0, 0]], hazard: [[2, 0, 0]], hot: [[3, 0, 0]] };
+  const room = createRoomView({ size: [4, 3, 4], blocks, blockTypes, color: '#ffb020' });
+  // Block edges glow at 1.6 times their color (room-view.js createBlockView()).
+  const edgeColor = (hex) => new Color(hex).multiplyScalar(1.6);
+  const lineColors = [];
+  room.traverse((node) => node.material?.isLineMaterial && lineColors.push(node.material.color));
+  assert.ok(lineColors.some((c) => c.equals(edgeColor('#00ffaa'))), 'a plain type with its own color');
+  assert.ok(lineColors.some((c) => c.equals(edgeColor('#ffb020'))), 'a plain type without one takes the room color');
+  // Every hazard-look cell can flare, each with its own type's material.
+  const { flares } = room.userData;
+  assert.deepEqual([...flares.keys()].sort(), ['2,0,0', '3,0,0']);
+  assert.notEqual(flares.get('2,0,0'), flares.get('3,0,0'));
 });
 
 test('x-ray: parts of one color share a ghost material with the wizard flash', () => {

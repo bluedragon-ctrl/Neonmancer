@@ -23,8 +23,11 @@ import {
   exitCells,
   holeTiles,
   sideLength,
+  resolveBlockTypes,
   resolveEnemyTypes,
   withExitDefaults,
+  KIND_BLOCK_VALUES,
+  STATIC_BLOCK_VALUES,
 } from './room-data.js';
 import { legAxis, pathCells } from '../world/path.js';
 
@@ -73,8 +76,11 @@ export function validateData(files) {
 
   const enemies = files['defs.json'].enemies ?? {};
   validateTemplates(enemies, report);
+  const blocks = files['defs.json'].blocks ?? {};
+  validateBlockTypes(blocks, report);
   const context = {
     objectTypes: files['defs.json'].objects ?? {},
+    blockTypes: resolveBlockTypes(blocks),
     enemyTypes: resolveEnemyTypes(enemies),
     biomes: files['biomes.json'].biomes ?? {},
   };
@@ -106,6 +112,42 @@ function validateTemplates(enemies, report) {
   }
 }
 
+/**
+ * Block types (D60): a variant extends a base type; filled in, each has a
+ * look (static, in the grid) or a kind (runs as room objects), never both,
+ * and only the values that go with it. `block`, the default type of room
+ * blocks, is static.
+ */
+function validateBlockTypes(blocks, report) {
+  const resolved = resolveBlockTypes(blocks);
+  for (const [id, own] of Object.entries(blocks)) {
+    const path = `blocks.${id}`;
+    const base = own.extends === undefined ? null : blocks[own.extends];
+    if (own.extends !== undefined) {
+      if (!base) {
+        report('defs.json', `${path}.extends`, `unknown block type "${own.extends}"`);
+        continue;
+      }
+      if (base.extends !== undefined) {
+        report('defs.json', `${path}.extends`, `"${own.extends}" is a variant itself; extend its base "${base.extends}"`);
+        continue;
+      }
+    }
+    const type = resolved[id];
+    if (type.look === undefined && type.kind === undefined) report('defs.json', path, 'needs a "look" (a static block) or a "kind" (runs as room objects)');
+    else if (type.look !== undefined && type.kind !== undefined) report('defs.json', path, 'has both a "look" and a "kind"; a block type is one or the other');
+    else if (type.kind !== undefined) {
+      if (type.color === undefined) report('defs.json', path, `a ${type.kind} block needs a "color"`);
+      const wrong = STATIC_BLOCK_VALUES.filter((key) => key in own);
+      if (wrong.length > 0) report('defs.json', path, `${wrong.join(', ')}: only for static blocks (with a "look"), not a ${type.kind} block`);
+    } else {
+      const wrong = KIND_BLOCK_VALUES.filter((key) => key in own);
+      if (wrong.length > 0) report('defs.json', path, `${wrong.join(', ')}: only for blocks with a "kind", not a static block`);
+    }
+  }
+  if (resolved.block && !resolved.block.static) report('defs.json', 'blocks.block', 'the default block type must be static (a "look", not a "kind")');
+}
+
 /** Run a check; turn a crash on malformed data into an error message. */
 function guarded(file, report, check) {
   try {
@@ -115,7 +157,7 @@ function guarded(file, report, check) {
   }
 }
 
-function validateRoom(file, room, { objectTypes, enemyTypes, biomes }, report) {
+function validateRoom(file, room, { objectTypes, blockTypes, enemyTypes, biomes }, report) {
   const expectedId = roomIdFromFile(file);
   if (room.id !== expectedId) report(file, 'id', `"${room.id}" must match the file name ("${expectedId}")`);
 
@@ -133,7 +175,7 @@ function validateRoom(file, room, { objectTypes, enemyTypes, biomes }, report) {
     filled: new Map(),
     /** "x,z" → path of the hole entry */
     holes: new Map(),
-    /** "x,y,z" → type of the special block filling it (hazard, void); plain blocks aren't listed */
+    /** "x,y,z" → block type (resolved) filling it, only for types that hurt or kill (damage, lethal) */
     blockTypes: new Map(),
     /** "x,y,z" → path of the platform whose path sweeps it */
     pathCells: new Map(),
@@ -144,7 +186,7 @@ function validateRoom(file, room, { objectTypes, enemyTypes, biomes }, report) {
   };
   const exits = (room.exits ?? []).map(withExitDefaults);
   const exitFits = validateExitBounds(checks, exits);
-  validateBlocks(checks);
+  validateBlocks(checks, blockTypes);
   validateObjects(checks, objectTypes);
   validateHoles(checks);
   validateEnemies(checks, enemyTypes);
@@ -206,15 +248,22 @@ function validateRange(report, path, { at, to }) {
   return false;
 }
 
-/** Blocks: inside the room, no two in the same cell. */
-function validateBlocks(checks) {
+/** Blocks: known types, inside the room, no two in the same cell. */
+function validateBlocks(checks, blockTypes) {
   (checks.room.blocks ?? []).forEach((block, i) => {
     const path = `blocks[${i}]`;
+    const type = blockTypes[block.type ?? 'block'];
+    if (!type) {
+      checks.report(`${path}.type`, `unknown block type "${block.type}"`);
+      return;
+    }
     if (!validateRange(checks.report, path, block)) return;
     // Report only the first bad cell of a block, not one per cell.
     for (const cell of blockCells(block)) {
       if (!fillCell(checks, cell, path)) break;
-      if (block.type && block.type !== 'block') checks.blockTypes.set(cellKey(cell), block.type);
+      if (type.damage || type.lethal) checks.blockTypes.set(cellKey(cell), type);
+      // Collapsing blocks (D47) give way: they don't hold up the player or a hole.
+      if (type.kind === 'collapsing') checks.collapsing.add(cellKey(cell));
     }
   });
 }
@@ -236,12 +285,6 @@ function validateObjects(checks, objectTypes) {
     if (type?.kind === 'platform' && !object.path) report(path, 'a platform needs a "path"');
     if (type && type.kind !== 'platform' && object.path) report(`${path}.path`, `only platforms follow a path, not "${object.type}"`);
     if (type?.kind === 'platform' && object.path && inside) validatePath(checks, `${path}.path`, object);
-
-    // Collapsing blocks (D47) may grow back; nothing else does.
-    if (type && type.kind !== 'collapsing' && object.regrow !== undefined) {
-      report(`${path}.regrow`, `only collapsing blocks grow back, not "${object.type}"`);
-    }
-    if (type?.kind === 'collapsing' && inside) checks.collapsing.add(cellKey(object.at));
   });
 }
 
@@ -413,15 +456,18 @@ function validateExitPassage({ room, report, filled, holes, blockTypes, pathCell
     }
     const pit = exit.y === 0 && inside.find(([x, , z]) => holes.has(cellKey([x, z])));
     if (pit) report(`exits[${i}]`, `tile ${cellText([pit[0], pit[2]])} inside the exit is a hole`);
-    const voidFloor = inside.find(([x, y, z]) => y === exit.y && blockTypes.get(cellKey([x, y - 1, z])) === 'void');
-    if (voidFloor) report(`exits[${i}]`, `the floor inside the exit is a void block at ${cellText([voidFloor[0], exit.y - 1, voidFloor[2]])}`);
+    const lethalFloor = inside.find(([x, y, z]) => y === exit.y && blockTypes.get(cellKey([x, y - 1, z]))?.lethal);
+    if (lethalFloor) {
+      const cell = [lethalFloor[0], exit.y - 1, lethalFloor[2]];
+      report(`exits[${i}]`, `the floor inside the exit is a lethal ${blockTypes.get(cellKey(cell)).id} block at ${cellText(cell)}`);
+    }
   });
 }
 
 /**
  * Does the player's hitbox fit at `point`, inside the room, clear of solids,
- * not hovering over an unsupported hole and not above a hazard or void block
- * (he would land on it)? Used for both `spawn` and `reset`.
+ * not hovering over an unsupported hole and not above a block that hurts or
+ * kills (damage, lethal: he would land on it)? Used for both `spawn` and `reset`.
  * @param {string} path 'spawn' or 'reset'
  * @param {number[]} point feet center
  */
@@ -450,9 +496,9 @@ function validatePlayerPoint({ room, report, filled, holes, blockTypes, collapsi
   const hole = holes.get(cellKey([cx, cz]));
   if (hole && below === undefined) report(path, `the player at ${cellText(point)} would fall into ${hole}`);
 
-  // What he lands on: not a hazard or void block.
+  // What he lands on: not a block that hurts or kills.
   const landing = below !== undefined && blockTypes.get(cellKey([cx, below, cz]));
-  if (landing) report(path, `the player at ${cellText(point)} would land on a ${landing} block (${filled.get(cellKey([cx, below, cz]))})`);
+  if (landing) report(path, `the player at ${cellText(point)} would land on a ${landing.id} block (${filled.get(cellKey([cx, below, cz]))})`);
 }
 
 function validateWorld(world, rooms, report) {

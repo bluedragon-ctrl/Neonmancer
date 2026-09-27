@@ -7,7 +7,7 @@ import { validateData } from '../src/data/validate.js';
 import { BREAK_FX, hitJolt } from '../src/render/break-fx.js';
 import { BITS, bitLayout, markSegments } from '../src/render/marks.js';
 import { ZAP_FX, castFlare, damagedGlitch, enemyHitLook, sparkPixels, trailPoints } from '../src/render/zap-fx.js';
-import { CRATE, CRUMBLE, SPELLS, dataFiles, eventTypes, gameData, idle, roomFile } from './helpers.js';
+import { CRATE, LIFT, SPELLS, dataFiles, eventTypes, gameData, idle, roomFile } from './helpers.js';
 
 /** A destructible crate type (like crate_cross), taking `integrity` hits. */
 const brittle = (integrity = 1) => ({ ...CRATE, integrity });
@@ -219,9 +219,9 @@ test('what stood on a broken crate falls', () => {
 });
 
 test('only pushable object types may have integrity', () => {
-  const files = dataFiles({ rooms: [roomFile('alpha')], objects: { crate: CRATE, crumble: { ...CRUMBLE, integrity: 1 } } });
+  const files = dataFiles({ rooms: [roomFile('alpha')], objects: { crate: CRATE, lift: { ...LIFT, integrity: 1 } } });
   const errors = validateData(files);
-  assert.ok(errors.some((e) => e.includes('objects.crumble.integrity') && e.includes('only pushable')), errors.join('\n'));
+  assert.ok(errors.some((e) => e.includes('objects.lift.integrity') && e.includes('only pushable')), errors.join('\n'));
 });
 
 test('break look: a hit jolts and settles', () => {
