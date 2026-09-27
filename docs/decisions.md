@@ -764,14 +764,26 @@ only. Room files keep `{ "type", "at", "to" }` with `block` as the
 default; `type` becomes any block type in `defs.json`, checked by the
 validator. The editor gets one Block tool with a type list filled from
 `defs.json` (like the Object tool), replacing the separate Hazard and
-Void tools. Holes stay separate (they are missing floor, not a block),
-and blocks that move, vanish or break (pushables, platforms, collapsing
-blocks, anything Zap can destroy) stay room objects (D40). This replaces
-D44's "fixed keys in `blocks`"; D44's contact rules and looks stay.
-Only the decision for now: the refactor is a later PR with no new block
-type, keeping today's behavior.
+Void tools. Holes stay separate (they are missing floor, not a block).
+Blocks that vanish and grow back (collapsing, D47) are written and
+painted as block types but run as room objects: a block type with a
+`kind` (`"collapsing": { "kind": "collapsing", "color": "#ff2bd6" }`)
+makes the room loader build one room object of that kind per cell, so
+the engine side (D40, D47) stays as it is. Its tuning moves to the type,
+with `extends` for variants
+(`"collapsing_regrow": { "extends": "collapsing", "regrow": 3 }`), and a
+row of them is one box (`"at"`, `"to"`) instead of one object each; the
+per-object `id` and `regrow` go away. Blocks that move or are pushed
+(platforms with their paths, pushables) stay room objects as they are.
+This replaces D44's "fixed keys in `blocks`"; D44's contact rules and
+looks stay. Only the decision for now: the refactor is a later PR with
+no new block type, keeping today's behavior (Volatile Memory's collapsing
+objects become block boxes).
 **Why:** author's question: blocks, hazards and voids are one thing,
 and more block types will come. With a closed set, every new type means
 touching the schema, grid, game, rendering and editor; with properties,
 the engine grows by behaviors, and content grows in data, as the project's
-data-driven rule (CLAUDE.md §7) asks.
+data-driven rule (CLAUDE.md §7) asks. Collapsing blocks: author's choice to write
+them like blocks (a bridge is one line, not four objects) while keeping
+them objects inside, since a grid cell with its own timer would mean
+rebuilding the merged block mesh (D12) on every collapse.

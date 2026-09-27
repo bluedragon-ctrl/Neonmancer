@@ -132,7 +132,9 @@ edges where they meet. Motion is slow; nothing strobes.
   set of engine properties (`damage`, `lethal`, later e.g. `bounce`,
   `slippery`) with a look and color, and `extends` for variants. The
   engine and validation ask about properties, not type names, and the
-  editor gets one Block tool with a type list. Behavior stays as above.
+  editor gets one Block tool with a type list. Collapsing blocks become
+  a block type with `kind: collapsing` (one room object per cell inside,
+  regrow time on the type). Behavior stays as above.
 
 ## Moving platforms
 
