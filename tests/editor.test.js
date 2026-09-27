@@ -143,9 +143,35 @@ test('RoomEdit.placeObject on the same object applies the new settings', () => {
   assert.equal(edit.placeObject([2, 1, 2], 'collapsing', { regrow: 3 }), false, 'nothing to change');
   assert.equal(edit.placeObject([2, 1, 2], 'collapsing', { regrow: 5 }), true);
   // Placed again without a regrow time: it no longer grows back.
-  assert.equal(edit.placeObject([2, 1, 2], 'collapsing'), true);
+  assert.equal(edit.placeObject([2, 1, 2], 'collapsing', { regrow: undefined }), true);
   assert.deepEqual(edit.at([2, 1, 2]).item, { id: 'collapsing_1', type: 'collapsing', at: [2, 1, 2] });
-  assert.equal(edit.placeObject([2, 1, 2], 'collapsing'), false);
+  assert.equal(edit.placeObject([2, 1, 2], 'collapsing', { regrow: undefined }), false);
+  assert.doesNotMatch(edit.text(), /undefined/);
+  // Another type replaces it.
+  assert.equal(edit.placeObject([2, 1, 2], 'crate'), true);
+  assert.equal(edit.at([2, 1, 2]).item.type, 'crate');
+});
+
+test('RoomEdit.placeObject on a platform of the same type keeps its id and path', () => {
+  const edit = new RoomEdit(sampleRoom());
+  edit.placeObject([6, 0, 6], 'lift');
+  edit.addWaypoint('lift_1', [6, 2, 6]);
+  const before = edit.text();
+  assert.equal(edit.placeObject([6, 0, 6], 'lift'), false);
+  assert.equal(edit.text(), before);
+  assert.deepEqual(edit.item('lift_1').path, { points: [[6, 2, 6]] });
+});
+
+test('RoomEdit.linksChanged tells the room\'s own connections from other rooms\'', () => {
+  const world = new WorldEdit({ start: 'a', connections: [] });
+  const a = new RoomEdit({ ...sampleRoom(), id: 'a' }, { world });
+  const b = new RoomEdit({ ...sampleRoom(), id: 'b' }, { world });
+  world.connect('b.east', 'c.west');
+  assert.equal(a.linksChanged, false);
+  assert.equal(b.linksChanged, true);
+  assert.equal(a.revert(), false, 'nothing of a to revert');
+  assert.equal(b.revert(), true);
+  assert.deepEqual(world.connections, []);
 });
 
 test('RoomEdit moves spawn and reset; no reset falls back to spawn', () => {

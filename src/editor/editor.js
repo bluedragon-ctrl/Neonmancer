@@ -75,6 +75,8 @@ export class Editor {
     this.errors = [];
     this.serverErrors = [];
     this.status = '';
+    /** A save is on its way to the dev server. */
+    this.saving = false;
     /** The room needs rebuilding from the edited data (at most once per frame). */
     this.stale = false;
     /** Mouse stroke in progress: 'place' or 'erase', and the last cell it acted on. */
@@ -83,6 +85,8 @@ export class Editor {
     /** Cell under the mouse, or null; and where the mouse ray met its layer. */
     this.hover = null;
     this.hit = new Vector3();
+    /** Where the mouse last was over the canvas (client pixels), or null. */
+    this.pointer = null;
 
     this.overlay = new EditorOverlay();
     renderer.scene.add(this.overlay.group);
@@ -106,7 +110,7 @@ export class Editor {
         clearPath: () => this.pathItem && this.change(() => this.edit.updateItem(this.pathItem.id, { path: undefined })),
         exit: (field, value) => this.setExit(field, value),
         layer: (step) => this.setLayer(this.layer + step),
-        name: (name) => name && this.change(() => this.edit.setName(name)),
+        name: (name) => (name ? this.change(() => this.edit.setName(name)) : this.refresh()),
         biome: (biome) => this.change(() => this.edit.setBiome(biome)),
         size: (size) => this.resize(size),
         undo: () => this.change(() => this.edit.undo()),
@@ -437,6 +441,9 @@ export class Editor {
 
   /** Save every edited room and world.json (dev server), or download them (build). */
   async save() {
+    if (this.saving) return;
+    // An edit this frame may not be checked yet.
+    if (this.stale) this.rebuild();
     const rooms = [...this.sessions.values()].filter((edit) => edit.dirty);
     const world = this.world.dirty ? this.world.toData() : undefined;
     const defs = this.defsDirty ? structuredClone(this.defs) : undefined;
@@ -460,7 +467,8 @@ export class Editor {
     this.status = 'Saving…';
     this.refresh();
     const sent = rooms.map((edit) => edit.toData());
-    const result = await saveFiles({ rooms: sent, world, defs });
+    this.saving = true;
+    const result = await saveFiles({ rooms: sent, world, defs }).finally(() => (this.saving = false));
     if (result.ok) {
       // Edits made while saving stay unsaved.
       rooms.forEach((edit, i) => {
@@ -547,6 +555,8 @@ export class Editor {
   }
 
   updateCursor() {
+    // The layer or the tool (holes are on the floor) may have changed under a still mouse.
+    if (this.pointer && !this.stroke) this.hover = this.pick(this.pointer);
     this.overlay.setCursor(this.hover, { flat: this.tool === 'hole', erase: this.stroke === 'erase' });
   }
 
@@ -574,7 +584,8 @@ export class Editor {
     const { edit } = this;
     if (!place) return this.change(() => edit.erase(cell));
     const type = this.objectTypes[this.objectType];
-    const extra = type?.kind === 'collapsing' && this.panel.regrow ? { regrow: this.panel.regrow } : {};
+    // Blank regrow removes it: the block no longer grows back.
+    const extra = type?.kind === 'collapsing' ? { regrow: this.panel.regrow } : {};
     this.change(() => edit.placeObject(cell, this.objectType, extra));
     // A new platform is picked, ready for its path.
     const here = edit.at(cell);
@@ -614,8 +625,13 @@ export class Editor {
       this.status = 'Pick a platform or an enemy first: click it.';
       return this.refresh();
     }
+    const enemy = item === this.selectedEnemy;
+    if (enemy && !this.patrols(item)) {
+      this.status = `${item.id} is stationary: set its Movement to patrol (Enemy tool) to give it a path.`;
+      return this.refresh();
+    }
     // Enemies patrol level: their points stay at their own height.
-    const target = item === this.selectedEnemy ? [cell[0], item.at[1], cell[2]] : cell;
+    const target = enemy ? [cell[0], item.at[1], cell[2]] : cell;
     this.change(() => edit.addWaypoint(item.id, target));
   }
 
@@ -656,6 +672,7 @@ export class Editor {
     });
     canvas.addEventListener('pointermove', (e) => {
       if (!this.active) return;
+      this.pointer = { clientX: e.clientX, clientY: e.clientY };
       this.hover = this.pick(e);
       this.updateCursor();
       // Painting: each new cell the stroke crosses.
@@ -674,6 +691,7 @@ export class Editor {
     canvas.addEventListener('pointerup', endStroke);
     canvas.addEventListener('pointercancel', endStroke);
     canvas.addEventListener('pointerleave', () => {
+      this.pointer = null;
       this.hover = null;
       if (this.active) this.updateCursor();
     });
@@ -686,14 +704,21 @@ export class Editor {
         if (!this.active) return;
         e.preventDefault();
         this.setLayer(this.layer + (e.deltaY < 0 ? 1 : -1));
-        this.hover = this.pick(e);
-        this.updateCursor();
       },
       { passive: false },
     );
 
     window.addEventListener('keydown', (e) => {
-      if (!this.active || isTextField(e.target)) return;
+      if (!this.active) return;
+      if (isTextField(e.target)) {
+        // Ctrl+S saves from a field too (committing it first), not the browser's Save Page.
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+          e.preventDefault();
+          e.target.blur();
+          this.save();
+        }
+        return;
+      }
       if (e.ctrlKey || e.metaKey) {
         const key = e.key.toLowerCase();
         const action = { z: e.shiftKey ? 'redo' : 'undo', y: 'redo', s: 'save' }[key];

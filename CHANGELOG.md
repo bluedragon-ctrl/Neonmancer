@@ -121,6 +121,17 @@ and the project uses [Semantic Versioning](https://semver.org/).
   only as a JSON POST from the game's own page, so other sites open in the
   browser can't overwrite rooms; `tools/room-pr.bat` takes a description
   with `( ) & < > |` in it.
+- Room editor, second review: a click with the Object tool on a platform of
+  the same type no longer replaces it and drops its path (an object of
+  the same type only takes the regrow time); the Path tool no longer gives
+  a stationary enemy an invalid path; Save checks an edit made that same
+  frame and ignores a second click while saving; Ctrl+S in a panel field
+  saves instead of opening the browser's Save Page; the cursor follows a
+  layer or tool change without moving the mouse; blanking the room name
+  shows the name again; Revert is enabled only when the room or its own
+  connections changed, and a room whose connections changed shows as
+  unsaved; `tools/room-pr.bat` sends `data/defs.json` (enemy templates)
+  too.
 
 ### Changed
 - Enemy code cleanup: shared collision helpers (`restsOn()`, `cellBox()`,

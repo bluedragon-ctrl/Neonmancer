@@ -311,7 +311,8 @@ export class EditorPanel {
    */
   show({ edit, rooms, tool, objectType, collapsing, enemy, pathItem, pathItemIsEnemy, exit, layer, errors, status, unsaved }) {
     const data = edit.data;
-    this.roomLabel.textContent = `${data.id}${edit.dirty ? ' • unsaved' : unsaved ? ' • other rooms unsaved' : ''}`;
+    const changed = edit.dirty || edit.linksChanged;
+    this.roomLabel.textContent = `${data.id}${changed ? ' • unsaved' : unsaved ? ' • other rooms unsaved' : ''}`;
     if (this.roomSelect.options.length !== rooms.length || rooms.some((id, i) => this.roomSelect.options[i].value !== id)) {
       this.roomSelect.replaceChildren(...rooms.map((id) => option(id, id)));
     }
@@ -368,7 +369,7 @@ export class EditorPanel {
     });
     this.buttons.undo.disabled = edit.undoStack.length === 0;
     this.buttons.redo.disabled = edit.redoStack.length === 0;
-    this.buttons.revert.disabled = !edit.dirty && !edit.world?.dirty;
+    this.buttons.revert.disabled = !changed;
     this.buttons.save.disabled = this.canSave && !unsaved;
     this.status.textContent = status;
     this.errors.replaceChildren(...errors.map((error) => el('li', '', error)));

@@ -204,19 +204,22 @@ export class RoomEdit {
 
   /**
    * Put a new object of `type` in a cell, replacing whatever was there. Its
-   * id is the type name with the first free number (`crate_1`).
+   * id is the type name with the first free number (`crate_1`). An object of
+   * the same type there only takes the `extra` fields, keeping its id and
+   * the rest (a platform its path).
    * @param {number[]} cell
    * @param {string} type object type id (defs.json)
-   * @param {object} [extra] more fields for the room object, e.g. `{ regrow: 3 }`
+   * @param {object} [extra] more fields for the room object, e.g. `{ regrow: 3 }`;
+   *   `undefined` removes a field
    * @returns {boolean} whether anything changed
    */
   placeObject(cell, type, extra = {}) {
     if (!this.inside(cell)) return false;
     const here = this.at(cell);
-    if (here?.kind === 'object' && here.item.type === type && sameFields(settings(here.item), extra)) return false;
+    if (here?.kind === 'object' && here.item.type === type) return this.updateItem(here.item.id, extra);
     return this.edit(() => {
       this.remove(cell);
-      this.data.objects = [...(this.data.objects ?? []), { id: this.freeId(type), type, at: [...cell], ...structuredClone(extra) }];
+      this.data.objects = [...(this.data.objects ?? []), withFields({ id: this.freeId(type), type, at: [...cell] }, extra)];
       return true;
     });
   }
@@ -288,14 +291,18 @@ export class RoomEdit {
     });
   }
 
+  /** Are the room's connections (world.json) not the ones last saved? */
+  get linksChanged() {
+    if (!this.world) return false;
+    return JSON.stringify(this.world.linksOf(this.id)) !== JSON.stringify(this.world.savedLinksOf(this.id));
+  }
+
   /** Go back to the room and its connections as last saved (one undo step); a new room starts over. */
   revert() {
-    const links = this.world?.savedLinksOf(this.id) ?? [];
-    const now = this.world?.linksOf(this.id) ?? [];
-    if (this.text() === this.savedText && JSON.stringify(now) === JSON.stringify(links)) return false;
+    if (this.text() === this.savedText && !this.linksChanged) return false;
     return this.edit(() => {
       this.load(JSON.parse(this.savedText));
-      this.world?.setLinks(this.id, links);
+      this.world?.setLinks(this.id, this.world.savedLinksOf(this.id));
       return true;
     });
   }
@@ -527,17 +534,6 @@ function exitFields({ id, side, at, width, y, height }) {
 /** Do two exits in one side share an opening cell? (defaults applied) */
 function overlaps(a, b) {
   return a.at < b.at + b.width && b.at < a.at + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
-}
-
-/** A room object's own settings: every field but its id, type and cell (e.g. `regrow`). */
-function settings({ id, type, at, ...rest }) {
-  return rest;
-}
-
-/** Do two objects have the same fields with the same values, in any key order? */
-function sameFields(a, b) {
-  const keys = Object.keys(a);
-  return keys.length === Object.keys(b).length && keys.every((key) => key in b && JSON.stringify(a[key]) === JSON.stringify(b[key]));
 }
 
 /**

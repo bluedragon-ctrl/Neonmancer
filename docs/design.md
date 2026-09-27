@@ -523,7 +523,7 @@ list switches to another room; New room makes an empty one (D57).
 | 1–9, 0 | Tool: Block, Hazard, Void, Hole, Object, Enemy, Path, Exit, Spawn, Reset |
 | Esc | Drop the picked enemy, platform or exit |
 | Ctrl+Z, Ctrl+Y (Ctrl+Shift+Z) | Undo, redo |
-| Ctrl+S | Save (dev server) / export (build) |
+| Ctrl+S | Save (dev server) / export (build), from a panel field too |
 
 - **Block, Hazard, Void** put a static block of that type in the cell of
   the current layer, replacing whatever is there; erasing empties the cell.
@@ -531,9 +531,10 @@ list switches to another room; New room makes an empty one (D57).
   erase fills it in.
 - **Object** places the type picked in the panel (its fields show only
   while this tool is picked), with the id `<type>_<n>`; a collapsing block
-  takes the panel's regrow time (blank: never). A new platform is picked,
-  ready for its path. Erasing removes an object or enemy standing in the
-  cell.
+  takes the panel's regrow time (blank: never). Placing on an object of
+  the same type only applies the regrow time: it keeps its id, and a
+  platform its path. A new platform is picked, ready for its path.
+  Erasing removes an object or enemy standing in the cell.
 - **Enemy** places an enemy of the panel's type with its settings
   (movement, hostility, bounce, solid: blank is the type's own; other
   overrides written by hand stay), id `<type>_<n>`, and picks it. A click
@@ -551,8 +552,9 @@ list switches to another room; New room makes an empty one (D57).
 - **Path** works on a picked platform or enemy (click it). Each click on a
   cell adds a point, with corners added so every leg runs along one axis
   (x, then z, then y); an enemy's points stay at its own height, a
-  platform's may change layer (a lift). Right click takes the last point
-  off. The panel sets the mode (there and back, or loop), speed and pause
+  platform's may change layer (a lift); a stationary enemy takes no
+  points (set its Movement to patrol first). Right click takes the last
+  point off. The panel sets the mode (there and back, or loop), speed and pause
   at the ends, or clears the path. Every path shows as a dashed line; the
   picked one is white, with its points marked.
 - **Exit** opens an exit in the edge cell clicked (in a corner, in the
@@ -581,7 +583,8 @@ list switches to another room; New room makes an empty one (D57).
   and hole entries keep their place and shape; edited cells are merged
   into boxes.
 - **Sending the rooms in:** `tools\room-pr.bat ["what changed"]` (Windows)
-  puts only `data/rooms/` and `data/world.json` on a new branch
+  puts only `data/rooms/`, `data/world.json` and `data/defs.json` (enemy
+  templates) on a new branch
   `feat/rooms-<date>` from `origin/main` (after `npm run validate:data`),
   commits, pushes and opens the PR with the GitHub CLI, or prints a
   compare link without it. Other uncommitted changes stay uncommitted; you
