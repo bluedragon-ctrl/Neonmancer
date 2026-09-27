@@ -20,6 +20,8 @@ export function buildRoom(data, { objectTypes, blockTypes, enemyTypes = {}, enem
     name: data.name,
     biome: data.biome,
     color: biomes[data.biome].color,
+    /** Surroundings (background, outer and wall grid, bloom), only what the biome sets (D62). */
+    look: { ...biomes[data.biome].look },
     size: [...data.size],
     spawn: [...data.spawn],
     /** Where the wizard reappears after dying here, however he entered (D39). */

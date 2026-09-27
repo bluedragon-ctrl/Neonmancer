@@ -5,12 +5,15 @@
  */
 import { HalfFloatType } from 'three';
 import { BloomEffect, EffectComposer, EffectPass, RenderPass } from 'postprocessing';
+import { LOOK_DEFAULTS } from './neon.js';
 
 /**
  * @param {import('three').WebGLRenderer} renderer
  * @param {import('three').Scene} scene
  * @param {import('three').Camera} camera
  * @param {{ multisampling?: number }} [options] MSAA samples, 0 for none
+ * @returns {{ composer: EffectComposer, bloom: BloomEffect }} the bloom, so
+ *   its strength can follow the biome
  */
 export function createComposer(renderer, scene, camera, { multisampling = 4 } = {}) {
   // Half float keeps colors brighter than 1 for the bloom; multisampling
@@ -25,11 +28,11 @@ export function createComposer(renderer, scene, camera, { multisampling = 4 } = 
   // with resolution by itself.
   const bloom = new BloomEffect({
     mipmapBlur: true,
-    intensity: 1.4,
+    intensity: LOOK_DEFAULTS.bloom,
     luminanceThreshold: 0.12,
     luminanceSmoothing: 0.25,
     radius: 0.7,
   });
   composer.addPass(new EffectPass(camera, bloom));
-  return composer;
+  return { composer, bloom };
 }

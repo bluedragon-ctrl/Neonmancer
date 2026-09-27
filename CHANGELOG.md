@@ -114,6 +114,13 @@ and the project uses [Semantic Versioning](https://semver.org/).
 - Room design checklist in docs/design.md: reach, timing budgets,
   readability and soft-lock checks collected from playtests; the basis for
   the Phase 3 room design skill and level review subagent.
+- Six biomes (D61): Home Lattice (core), Glitchmire, Frostbyte Wastes,
+  Abyssal Buffer, Firewall Citadel and Phantom Partition (special), with
+  names and room colors; looks planned in docs/design.md.
+- Biome surroundings (D62): an optional `look` in `biomes.json` sets the
+  background, the color and fade of the floor grid outside the room, the
+  wall grid brightness and the bloom strength; each of the six biomes has
+  its own.
 
 ### Fixed
 - Volatile Memory: the crate on the one-shot bridge now starts on a plain
@@ -147,6 +154,8 @@ and the project uses [Semantic Versioning](https://semver.org/).
   too.
 
 ### Changed
+- Glitch Zone is now Glitchmire (`glitchmire`), hot pink instead of
+  magenta so collapsing blocks stand out; Stack Yard uses it.
 - Enemy code cleanup: shared collision helpers (`restsOn()`, `cellBox()`,
   `REST_EPS`) replace copies in every entity; `EnemyView` draws any enemy
   type through `ENEMY_MODELS` (the bug is `BUG_MODEL`); fewer allocations

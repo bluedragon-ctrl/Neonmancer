@@ -3,6 +3,30 @@
   "schemaVersion": 1,
   "biomes": {
     "home_lattice": { "name": "Home Lattice", "color": "#ffb020" },
-    "glitch_zone": { "name": "Glitch Zone", "color": "#ff2bd6" }
+    "glitchmire": {
+      "name": "Glitchmire",
+      "color": "#ff5fa8",
+      "look": { "background": "#0b0510", "outerGrid": "#3a2238", "outerFade": 4, "wallGrid": 0.4, "bloom": 1.5 }
+    },
+    "frostbyte_wastes": {
+      "name": "Frostbyte Wastes",
+      "color": "#9fd0ff",
+      "look": { "background": "#06101c", "outerGrid": "#2a4058", "outerFade": 6, "wallGrid": 0.25, "bloom": 1.3 }
+    },
+    "abyssal_buffer": {
+      "name": "Abyssal Buffer",
+      "color": "#7a8190",
+      "look": { "background": "#0b0c0f", "outerGrid": "#26282e", "outerFade": 9, "wallGrid": 0.4, "bloom": 1.7 }
+    },
+    "firewall_citadel": {
+      "name": "Firewall Citadel",
+      "color": "#ff6a1f",
+      "look": { "background": "#0d0604", "outerGrid": "#3c2317", "outerFade": 5, "wallGrid": 0.45, "bloom": 1.7 }
+    },
+    "phantom_partition": {
+      "name": "Phantom Partition",
+      "color": "#e8eaff",
+      "look": { "background": "#020204", "outerGrid": "#25252c", "outerFade": 1.5, "wallGrid": 0.15, "bloom": 1.2 }
+    }
   }
 }

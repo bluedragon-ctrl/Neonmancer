@@ -265,6 +265,27 @@ test('buildRoom defaults reset to spawn, or uses an explicit reset (D39)', () =>
   assert.deepEqual(withReset.spawn, [1.5, 0, 1.5]); // spawn itself is untouched
 });
 
+test('biome look: optional fields, checked by the schema, carried by buildRoom (D62)', () => {
+  const files = validFiles();
+  files['biomes.json'].biomes.home.look = { background: '#030718', outerFade: 9 };
+  assert.deepEqual(checkFiles(files, schemas), []);
+  const content = loadGameData(files);
+  assert.deepEqual(buildRoom(content.rooms.get('alpha'), content).look, { background: '#030718', outerFade: 9 });
+  // Without a look the room gets an empty one (render/neon.js fills in the defaults).
+  const plain = loadGameData(validFiles());
+  assert.deepEqual(buildRoom(plain.rooms.get('alpha'), plain).look, {});
+
+  assertError(
+    errorsAfter((f) => (f['biomes.json'].biomes.home.look = { fog: 1 })),
+    'biomes.json › biomes.home.look',
+    'unknown property "fog"',
+  );
+  assertError(
+    errorsAfter((f) => (f['biomes.json'].biomes.home.look = { wallGrid: 2 })),
+    'biomes.json › biomes.home.look.wallGrid',
+  );
+});
+
 test('buildRoom gives a fresh copy every time (rooms reset on entry)', () => {
   const content = loadGameData(validFiles());
   const data = content.rooms.get('alpha');

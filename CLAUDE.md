@@ -159,12 +159,23 @@ pop in holes and on void).
 ### Biomes (Grid sectors)
 Each room has a biome defining look and optional environmental effects,
 defined in data and combinable. Health pickups and safe rooms balance
-drain effects.
-- **Home Lattice** — amber (the default room color), safe
-- **Glitch Zone** — magenta, slow health drain
-- **Low-Res Zone** — pixelated, reduced visibility
-- **Zero-G Sector** — low gravity
-- **Firewall Citadel** — red, guardians
+drain effects. Six biomes (D61): one core, four side sectors, one special.
+Room colors stay clear of the gameplay colors (lime crates, cyan
+platforms, magenta collapsing, red hazard, violet void, green bugs).
+Behaviors below are ideas for Phase 4; for now biomes are look only.
+- **Home Lattice** (core) — amber (the default room color), clean square
+  grid, warm rising motes; safe; holds the central core
+- **Glitchmire** — hot pink, torn offset floor tiles, pixel bubbles, edges
+  that jitter; later: slow health drain
+- **Frostbyte Wastes** — ice blue, hex crystal floor, falling 0/1 flakes,
+  soft frosty bloom; later: low-res, reduced visibility
+- **Abyssal Buffer** — graphite gray, wavy caustics on the floor, slowly
+  drifting glitter, gentle sway; later: low gravity
+- **Firewall Citadel** — ember orange, brick floor, rising sparks, warm
+  flicker; guardians
+- **Phantom Partition** (special: secrets, backtracking) — silver-white,
+  sparse dotted floor, still twinkling stars, edges slowly shimmering
+  through the hues
 
 ### Goal
 Collect all key fragments (count defined in world data) and deliver them
@@ -218,7 +229,7 @@ The engine is generic; all content lives in data.
   number of fragments required, core location
 - `data/strings.json` — all UI text
 - `data/audio.json` — named audio events mapped to files
-  (e.g. "jump", "pickup", "music:glitch_zone")
+  (e.g. "jump", "pickup", "music:glitchmire")
 - `schemas/*.json` — JSON Schema for every data format, used both as
   documentation and for validation
 
@@ -347,5 +358,5 @@ screen. Reachability checker. Design skills and subagents.
 Full post-processing, juice pass, music and SFX, audio-reactive visuals,
 settings menu with quality presets, fullscreen, gamepad, key rebinding.
 Then content production toward 1.0.0, including biome environmental
-effects (Glitch Zone drain, Low-Res, Zero-G) with health pickups and safe
-rooms.
+effects (Glitchmire drain, Frostbyte low-res, Abyssal low gravity) with
+health pickups and safe rooms.

@@ -26,6 +26,40 @@
         "color": {
           "$ref": "common.schema.json#/$defs/color",
           "description": "Room color: block edges, walls and the floor grid inside the room."
+        },
+        "look": { "$ref": "#/$defs/look" }
+      }
+    },
+    "look": {
+      "type": "object",
+      "description": "Surroundings of the room (D62); every field is optional, with the Home Lattice look as the default.",
+      "additionalProperties": false,
+      "properties": {
+        "background": {
+          "$ref": "common.schema.json#/$defs/color",
+          "description": "The void behind everything; keep it near black. Default #05060d."
+        },
+        "outerGrid": {
+          "$ref": "common.schema.json#/$defs/color",
+          "description": "Floor grid outside the room; keep it dim, so it never reads as room. Default #2a2d35."
+        },
+        "outerFade": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 20,
+          "description": "Distance from the room (blocks) over which the outer grid fades out. Default 5."
+        },
+        "wallGrid": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Brightness of the faint grid on the back walls (share of the room color). Default 0.3."
+        },
+        "bloom": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 3,
+          "description": "Bloom (glow) strength. Default 1.4."
         }
       }
     }

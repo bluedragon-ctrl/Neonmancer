@@ -742,3 +742,95 @@ would throw away other rooms' templates. On an isometric view, blocks in
 front of higher layers hid the cells being edited; leaving them out of
 the drawing (edges worked out anew, so the cut reads as block tops) is
 cleaner than clipping planes, which would leave open, edge-cut blocks.
+
+### D60 — 2026-09-27 — Block types become open, data-driven types (planned)
+Plain, hazard and void stop being a fixed set. `defs.json` `blocks`
+becomes an open map of block types, like enemy types (D48): each type is
+a set of properties the engine understands, plus a look and a color, and
+may `extend` another type (like enemy templates, D58), e.g.
+`"block": { "look": "plain" }`,
+`"hazard": { "look": "hazard", "color": "#ff3b30", "damage": 1 }`,
+`"void": { "look": "void", "color": "#8a5cff", "lethal": true }`,
+`"hazard_hot": { "extends": "hazard", "damage": 2 }`.
+The engine asks about properties, never about type names: a grid cell
+holds a type index (still one byte, `0` empty) that points to its
+type's properties, and contact checks look for "a cell with `damage`" or
+"a cell that is `lethal`" (`game.js`, `player.js`, `enemy.js`,
+validation). A new property (for example `bounce`, `slippery`,
+`conveyor`, `recharge`) is written once and then works for any type
+that has it; a new look (a shader in `render/block-fx.js`) is also code.
+A new type that only combines existing properties and looks is data
+only. Room files keep `{ "type", "at", "to" }` with `block` as the
+default; `type` becomes any block type in `defs.json`, checked by the
+validator. The editor gets one Block tool with a type list filled from
+`defs.json` (like the Object tool), replacing the separate Hazard and
+Void tools. Holes stay separate (they are missing floor, not a block).
+Blocks that vanish and grow back (collapsing, D47) are written and
+painted as block types but run as room objects: a block type with a
+`kind` (`"collapsing": { "kind": "collapsing", "color": "#ff2bd6" }`)
+makes the room loader build one room object of that kind per cell, so
+the engine side (D40, D47) stays as it is. Its tuning moves to the type,
+with `extends` for variants
+(`"collapsing_regrow": { "extends": "collapsing", "regrow": 3 }`), and a
+row of them is one box (`"at"`, `"to"`) instead of one object each; the
+per-object `id` and `regrow` go away. Blocks that move or are pushed
+(platforms with their paths, pushables) stay room objects as they are.
+This replaces D44's "fixed keys in `blocks`"; D44's contact rules and
+looks stay. Only the decision for now: the refactor is a later PR with
+no new block type, keeping today's behavior (Volatile Memory's collapsing
+objects become block boxes).
+**Why:** author's question: blocks, hazards and voids are one thing,
+and more block types will come. With a closed set, every new type means
+touching the schema, grid, game, rendering and editor; with properties,
+the engine grows by behaviors, and content grows in data, as the project's
+data-driven rule (CLAUDE.md §7) asks. Collapsing blocks: author's choice to write
+them like blocks (a bridge is one line, not four objects) while keeping
+them objects inside, since a grid cell with its own timer would mean
+rebuilding the merged block mesh (D12) on every collapse.
+
+### D61 — 2026-09-27 — Six biomes: a core, four side sectors, one special
+The world has six biomes: Home Lattice (core, amber), Glitchmire (hot
+pink), Frostbyte Wastes (pale ice), Abyssal Buffer (cobalt), Firewall
+Citadel (ember orange) and Phantom Partition (silver-white, the special
+sector for secrets and rooms reached by backtracking). All six are in
+`data/biomes.json` with name and color; each look also plans a floor
+pattern, particles and one signature effect (docs/design.md, Biomes),
+added later. Glitch Zone becomes Glitchmire (id `glitchmire`, pink instead
+of magenta); Low-Res Zone and Zero-G Sector stop being biomes of their own,
+and their effects become Phase 4 candidates for Frostbyte Wastes and
+Abyssal Buffer. This decision covers looks only; gameplay effects are
+decided with Phase 4.
+**Why:** author's request: one core, four side biomes and one special,
+visual only for now, with fantasy cyberspace names. Room colors avoid the
+gameplay colors (lime, cyan, magenta, red, violet, green) so crates,
+platforms, collapsing, hazard and void blocks, and bugs never blend into
+the room; that moved the glitch sector off magenta, the color of
+collapsing blocks.
+
+### D62 — 2026-09-27 — Biomes set the room's surroundings too
+A biome in `biomes.json` may have a `look`: `background` (the void
+color), `outerGrid` and `outerFade` (color and fade distance of the floor
+grid outside the room), `wallGrid` (brightness of the wall grid) and
+`bloom` (glow strength). Every field is optional; the defaults are Home
+Lattice's look (`LOOK_DEFAULTS` in `render/neon.js`), so a biome without
+`look` looks as rooms did before. The floor shader, wall grid, scene
+background and bloom read them when a room is shown. Backgrounds stay near
+black and outer grids dim, so the room's own color still carries the
+biome and the outside never reads as room. Frostbyte Wastes moves from
+pale ice to ice blue (`#9fd0ff`): next to Phantom Partition's
+silver-white the two read the same.
+**Why:** author's pick of the cheapest biome effects ("tier 1"): each is
+a value already in the renderer, so six biomes look clearly apart
+without new shaders or draw calls. Floor patterns, particles, backdrop
+shapes and edge effects are the planned next tiers (docs/design.md,
+Biomes).
+
+### D63 — 2026-09-27 — Abyssal Buffer turns graphite gray
+Abyssal Buffer's room color is graphite `#7a8190` instead of cobalt, on
+a dark gray background (`#0b0c0f`) with a dim gray outer grid; its
+planned particles become slowly drifting glitter. Phantom Partition keeps
+stars, but still and twinkling, so the two differ in style. A darker gray
+(`#5a606d`) was tried: blocks and walls faded and the cyan exits took
+over the room.
+**Why:** author's choice: a dark, quiet gray sector that later pairs with
+glitter effects.

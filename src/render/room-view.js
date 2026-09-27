@@ -19,6 +19,7 @@ import {
   faceMaterial,
   lineMaterial,
   neonLines,
+  roomLook,
   shadedFaces,
   shared,
   tintedFaceMaterials,
@@ -35,12 +36,13 @@ const UNIT_BOX = shared(new BoxGeometry(1, 1, 1).translate(0.5, 0.5, 0.5));
  * @param {number|string} [room.color] room color (biome), amber by default
  * @param {Record<string, number[][]>} [room.typedCells] hazard and void block cells, by type
  * @param {Record<string, { color: string }>} [room.blockTypes] their colors, by type
+ * @param {object} [room.look] biome look (neon.js roomLook()); the walls use its wall grid brightness
  * @returns {Group} with `userData.hazardFaces`, the hazard face material
  *   (for flareHazard()), or null without hazard blocks
  */
-export function createRoomView({ size, cells, exits = [], color = PALETTE.amber, typedCells = {}, blockTypes = {} }) {
+export function createRoomView({ size, cells, exits = [], color = PALETTE.amber, typedCells = {}, blockTypes = {}, look = {} }) {
   const group = new Group();
-  group.add(createWalls(size, exits, color));
+  group.add(createWalls(size, exits, color, roomLook(look).wallGrid));
   if (cells.length > 0) group.add(createBlockView(cells, color));
   group.userData.hazardFaces = null;
   for (const [type, list] of Object.entries(typedCells)) {
@@ -72,7 +74,7 @@ export function createBlockView(cells, color) {
   return group;
 }
 
-function createWalls(size, exits, color) {
+function createWalls(size, exits, color, gridBrightness) {
   const group = new Group();
   const { faces, grid, outline } = wallLayout(size, exits);
 
@@ -87,7 +89,7 @@ function createWalls(size, exits, color) {
 
   // Faint grid on the walls; bright outline: wall tops and ends, doorway
   // frames and the open front edges of the floor.
-  group.add(neonLines(grid, lineMaterial({ color, width: 1.5, brightness: 0.3 })));
+  group.add(neonLines(grid, lineMaterial({ color, width: 1.5, brightness: gridBrightness })));
   const edges = neonLines(outline, lineMaterial({ color, width: 2.5, brightness: 1.2 }));
   edges.renderOrder = 1;
   group.add(edges);
