@@ -70,7 +70,8 @@ mobile/touch support, backend or accounts.
 - Coordinates: y is up; room size is [x, y, z] = [width, height, depth];
   the floor is at y = 0; back walls are the x = 0 and z = 0 planes.
 - 1 block = 1 unit (1x1x1). Player jump height: 1 unit (clears exactly one
-  block, never two). A later jump buff item may raise it (D68).
+  block, never two). A jump buff item raises it later, to skip easier
+  rooms or reach areas closed before (D68).
 - Player hitbox 0.6 x 1.5 x 0.6 (the hat is visual only), so the wizard
   needs 2 blocks of headroom.
 - Blocks snap to the grid; player and enemies move freely (sub-grid).
@@ -79,7 +80,8 @@ mobile/touch support, backend or accounts.
 - Every room fits the fixed camera framing without scrolling.
 - World target: towards 128 rooms, more small rooms rather than a few
   very complex ones (D68). Some areas are locked behind an access level,
-  probably linked to fragments.
+  probably linked to fragments; others open only to a stronger spell or
+  a buff (e.g. a higher jump).
 
 ### Engine
 - Fixed-timestep loop: 60 logic updates per second, rendering
@@ -124,7 +126,9 @@ mobile/touch support, backend or accounts.
 - Rooms fully reset on re-entry (enemies, blocks, moving platforms).
 - Collected things stay collected: fragments, spells, scrolls, secrets,
   and bonus bits.
-- Each room has up to 4 bonus slots, tracked per room in the save.
+- The save holds what the wizard has (fragments, spells, items), not the
+  state of rooms: no per-room data such as bonus slots or the map (D68).
+  Each room has up to 4 bonus slots.
 
 ---
 
@@ -143,7 +147,9 @@ Move, jump, gravity, push objects, health ("integrity") and mana ("energy").
 
 Up to 16 spells in all (D68): new ones, some letting the wizard skip
 easier rooms, and upgrades of the basic ones. Buff items make the wizard
-himself stronger: more integrity, more energy, a higher jump.
+himself stronger: more integrity, more energy, a higher jump. Stronger
+spells and buffs both let him skip easier rooms and reach areas he
+couldn't before.
 
 Mana recharges slowly. Installing a spell plays a short animation.
 Later spells and upgrades are stronger: they let the wizard speedrun
@@ -267,8 +273,7 @@ not critical.
 - Bit layout (one versioned module, spare bits reserved), sized for the
   world targets (D68) and finalized with the access-key step:
   format version 4, room 8, spells 16, items 8, fragments 8, health 4,
-  score 20, secrets 16, bonus slots 4 per room (reserve for 128 rooms =
-  512), checksum 16.
+  score 20, secrets 16, checksum 16. No per-room data (bonus slots, map).
 - Encoding: Base32 without ambiguous characters (no 0/O, 1/I/L), shown
   in groups (e.g. `KX7M-Q4RP-...`). Input tolerates spaces, dashes and
   lowercase.

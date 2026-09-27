@@ -941,14 +941,23 @@ CLAUDE.md:
   spell-roster step).
 - **Buff items:** pickups that make the wizard stronger: more integrity,
   more energy, a higher jump. The one-block jump stays the base; a jump
-  buff raising it is decided with its step.
+  buff raises it (how high is decided with its step).
+- **Ability gates:** stronger spells and buffs let the wizard skip easier
+  rooms and reach areas he couldn't before, so an area can be gated by
+  an ability as well as by an access level. D67 still holds: a room is
+  solvable with what the player can have when he can first reach it.
+- **Saves hold the wizard, not rooms:** the access key stores what he
+  has (fragments, spells, items, secrets, score, health) and where he
+  is, but no per-room data: no bonus slots, no map.
 
 The access-key layout follows (CLAUDE.md §8, finalized in Phase 4): room
-8 bits (7 would allow exactly 128), spells 16, bonus slots for 128 rooms
-(512). The score step no longer discusses world targets (D65); it keeps
+8 bits (7 would allow exactly 128), spells 16, and no bonus-slot bits.
+The score step no longer discusses world targets (D65); it keeps
 bits per room, score values and secrets. A buff-items step joins Phase 3,
 and access levels join the fragments step.
 **Why:** author's direction. Many small rooms suit the flip-screen style
 and make exploring (D67) the core of the game; more spells and buffs give
 the player a growing toolset that opens shortcuts through rooms already
-solved; access levels give a large world its structure.
+solved and new areas; access levels give a large world its structure.
+Leaving room state out keeps the key short (512 bits of bonus slots
+would have been most of it).

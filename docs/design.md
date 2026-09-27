@@ -496,6 +496,9 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
   camera, not behind a ledge.
 - Each mechanic should be seen before it matters: a pit, a hazard or a
   collapsing bridge in view from where the wizard enters.
+- A gate that needs a stronger spell or a buff (a ledge too high for the
+  base jump, D68) should look like a gate: the player should recognise it
+  and come back later, not think the room is unsolvable.
 
 **Spells** (D67)
 - The room must be solvable with the spells the player can have when he
@@ -799,14 +802,13 @@ Open questions, settled at the start of their step:
 - **10 Roster:** which spells and upgrades (up to 16 in all), which buff
   items and how many of each, and the order they appear in the world.
 - **11 Buff items:** how much each raises (e.g. +2 integrity, +2 energy);
-  a jump buff changes the one-block rule (CLAUDE.md §4) and the room
-  design checklist: how high, and does it stack; the access-key health
-  field (4 bits) must hold the highest maximum.
+  the jump buff (it opens areas and skips rooms, D68): how high, and does
+  it stack; the access-key health field (4 bits) must hold the highest
+  maximum.
 - **12 Score and bits:** the world targets are set (D68); what is left is
   how many bits a room typically has, score values, and what counts as a
-  secret. With about 128 rooms, 4 bonus slots each take 512 bits of the
-  access key; storing bits only for the slots rooms really have would
-  shorten it.
+  secret. Bonus bits are not saved (D68): are they back after a load, and
+  if so, how does saved score avoid counting them twice?
 - **13 Fragments and access:** fragment count (in the world and the test
   world); how access levels link to fragments (the level is the number of
   fragments delivered, or collected, or its own reward); what a locked
