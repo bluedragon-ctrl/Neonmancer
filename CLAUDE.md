@@ -129,6 +129,8 @@ mobile/touch support, backend or accounts.
 - The save holds what the wizard has (fragments, spells, items), not the
   state of rooms: no per-room data such as bonus slots or the map (D68).
   Each room has up to 4 bonus slots.
+- Each fragment is one bit in the save, found or not; a found fragment
+  shows grayed out when its room is revisited (D67).
 
 ---
 
@@ -153,8 +155,10 @@ couldn't before.
 
 Mana recharges slowly. Installing a spell plays a short animation.
 Later spells and upgrades are stronger: they let the wizard speedrun
-simple rooms or solve them differently. A room must be solvable with the
-spells he can have on first arrival (D67).
+simple rooms or solve them differently. The world is a maze, not a line:
+a room need not be fully solvable on first arrival, and some of its exits
+and pickups wait for a spell or buff found later (backtracking, D67). He
+can always leave it again the way he came.
 
 ### Enemies (corrupted programs; cute but clearly dangerous)
 - **Bugs** — patrol fixed paths
@@ -272,7 +276,8 @@ not critical.
 
 - Bit layout (one versioned module, spare bits reserved), sized for the
   world targets (D68) and finalized with the access-key step:
-  format version 4, room 8, spells 16, items 8, fragments 8, health 4,
+  format version 4, room 8, spells 16, items 8, fragments 8 (one bit
+  each), health 4,
   score 20, secrets 16, checksum 16. No per-room data (bonus slots, map).
 - Encoding: Base32 without ambiguous characters (no 0/O, 1/I/L), shown
   in groups (e.g. `KX7M-Q4RP-...`). Input tolerates spaces, dashes and

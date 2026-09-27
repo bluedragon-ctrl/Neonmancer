@@ -911,23 +911,31 @@ map screen (Phase 4) share; an automatic layout can't place the test
 world, whose shortcuts (D49) don't fit a flat grid, and would shift
 whenever a connection changes.
 
-### D67 — 2026-09-27 — Exploration is part of the game; later spells open shortcuts
+### D67 — 2026-09-27 — Exploration is part of the game; a maze with backtracking
 Finding what is where is part of the game, as in the 1980s isometric
 games that inspired it: nothing made for development (the world map tool,
-debug room jumps) reaches the player. And the wizard grows stronger:
-later spells and upgrades let him speedrun simple rooms or solve them
-differently. So:
-- A room must be solvable with the spells the player can have when he
-  first reaches it. With later spells, shortcuts and other solutions are
-  intended, not bugs to design out.
+debug room jumps) reaches the player. The world is a maze, not a linear
+progression, and the wizard grows stronger: later spells and upgrades let
+him speedrun simple rooms, solve them differently, and reach what he
+couldn't before. So:
+- A room need not be fully solvable on first arrival: some exits and
+  pickups may wait for a spell or buff found later, and the player comes
+  back (backtracking). He can always leave the way he came.
+- With later spells, shortcuts and other solutions are intended, not bugs
+  to design out.
 - The spell roster step (Phase 3 step 10) looks for spells and upgrades
-  that open such shortcuts, not only for new puzzle types.
-- The reachability checker (Phase 4) checks a room with the spells
-  available on first arrival; that needs an order of spells along the
-  world.
+  that open shortcuts and new areas, not only for new puzzle types.
+- The reachability checker (Phase 4) works out which abilities each exit
+  and pickup of a room needs, and checks that the whole world can be
+  finished in some order.
+- Each fragment is one bit in the save, found or not. A found fragment
+  stays in its room as a grayed-out ghost when the room is revisited, so
+  the player sees he has been there.
 **Why:** author's direction for the game. Exploring the Grid and mastering
-it are the reward: discovering the layout matters, and a room that took
-a puzzle the first time can become a quick run later.
+it are the reward: discovering the layout matters, a gate seen early is a
+reason to come back, and a room that took a puzzle the first time can
+become a quick run later. The grayed fragment keeps a maze readable
+without a saved map.
 
 ### D68 — 2026-09-27 — World targets: towards 128 rooms, 16 spells, buff items, access levels
 The author's targets for the finished game, replacing the 40–60 rooms of
@@ -944,8 +952,8 @@ CLAUDE.md:
   buff raises it (how high is decided with its step).
 - **Ability gates:** stronger spells and buffs let the wizard skip easier
   rooms and reach areas he couldn't before, so an area can be gated by
-  an ability as well as by an access level. D67 still holds: a room is
-  solvable with what the player can have when he can first reach it.
+  an ability as well as by an access level, and the player backtracks
+  to it once he has that ability (D67).
 - **Saves hold the wizard, not rooms:** the access key stores what he
   has (fragments, spells, items, secrets, score, health) and where he
   is, but no per-room data: no bonus slots, no map.
