@@ -507,6 +507,9 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
   way he came with what he has.
 - Later spells may open shortcuts or other solutions; that is intended,
   so don't block them without a reason.
+- Temporary pickups come back with the room and death resets the wizard
+  (D67): a refill a detour away is a choice for the player; place it so
+  the trip is a real trade-off.
 
 **No soft-locks**
 - Every one-shot change (a collapsing block without `regrow`, a crate

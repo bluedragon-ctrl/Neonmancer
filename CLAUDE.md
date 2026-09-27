@@ -133,7 +133,8 @@ mobile/touch support, backend or accounts.
   one bit in the save, found or not; there are only a limited number of
   them. A found one shows grayed out when its room is revisited (D67).
   Temporary pickups (e.g. refills) are not saved and come back with the
-  room.
+  room. Death resets the wizard to his base state, so a detour for a
+  temporary pickup can be worth it.
 
 ---
 

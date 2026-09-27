@@ -932,7 +932,8 @@ couldn't before. So:
   one bit in the save, found or not; there are only a limited number of
   them. A found one stays in its room as a grayed-out ghost when the room
   is revisited, so the player sees he has been there. Temporary pickups
-  (e.g. refills) are not saved and come back with the room.
+  (e.g. refills) are not saved and come back with the room; death resets
+  the wizard, so a trip to one can be worth making.
 **Why:** author's direction for the game. Exploring the Grid and mastering
 it are the reward: discovering the layout matters, a gate seen early is a
 reason to come back, and a room that took a puzzle the first time can
