@@ -36,8 +36,8 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ### Changed
 - Energy in whole units (D72): 50 at most, one back every 0.2 s, Zap
-  costs 10. The HUD energy bar is a row of ticks, one per unit, with a
-  notch at the selected spell's cost; hidden until the first spell.
+  costs 10. The HUD energy bar has segments of 10 energy whatever the
+  spell (spell costs stay multiples of 10); hidden until the first spell.
 - `tools\room-pr.bat` is now `tools\map-pr.bat`: one PR for room and
   world map changes (branch `feat/map-<date>`, title `feat(map): …`); its
   summary says whether rooms, the map or enemy templates changed.

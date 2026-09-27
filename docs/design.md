@@ -359,11 +359,12 @@ enemies).
   carries over between rooms and is full again after a respawn. The
   maximum and the recharge rate are the wizard's own, so buffs
   (permanent and temporary) can raise them later.
-- **Energy bar:** under integrity, one thin lime tick per unit, lighting
-  one by one as energy comes back; the bar's shape never changes with the
-  spell. A notch under it marks the selected spell's cost (the tick that
-  pays for one cast): dim below it, glowing once he can cast. Switching
-  spells only moves the notch. The bar is hidden until he knows a spell.
+- **Energy bar:** under integrity, slanted lime segments of 10 energy
+  each (5 at 50), filling unit by unit as energy comes back; a full one
+  glows. Spell costs are kept to multiples of 10, so the full segments
+  count the casts left whatever spell is selected, and switching spells
+  never changes the bar. A higher maximum adds segments. The bar is
+  hidden until he knows a spell.
 - **Casting:** once he has found a data disk (see Pickups and
   progress), E or Numpad 0 casts the selected spell. Its name
   shows in a lime tag under the energy bar (ZAP); Tab switches to the next

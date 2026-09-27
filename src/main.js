@@ -106,8 +106,8 @@ function boot() {
     debug.sync(game, alpha);
     renderer.setFade(game.fadeLevel(alpha));
     hud.setIntegrity(game.player.integrity, game.player.maxIntegrity);
-    // Energy in segments of one cast of the selected spell; no bar before he knows one.
-    hud.setEnergy(game.player.energy, game.player.maxEnergy, content.spells[game.player.spell]?.cost ?? null);
+    // No energy bar before he knows a spell.
+    hud.setEnergy(game.player.energy, game.player.maxEnergy, game.player.spell !== null);
     hud.setSpell(game.player.spell, game.player.spells.length);
     hud.setMovementMode(game.movementMode);
     hud.setHintWanted(wantsFullscreenHint(renderer.stageHeight, window.devicePixelRatio, !!document.fullscreenElement));

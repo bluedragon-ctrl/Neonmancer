@@ -98,15 +98,15 @@ export class Hud {
   }
 
   /**
-   * Show energy in segments of one cast each. Hidden while he knows no
-   * spell (cost null): energy is only for spells.
+   * Show energy in segments of 10 (D72). Hidden while he knows no spell:
+   * energy is only for spells.
    * @param {number} value
    * @param {number} max
-   * @param {number|null} cost energy per cast of the selected spell
+   * @param {boolean} shown whether he knows a spell
    */
-  setEnergy(value, max, cost) {
-    this.energy.box.hidden = cost === null;
-    if (cost !== null) this.energy.set(value, max, cost);
+  setEnergy(value, max, shown) {
+    this.energy.box.hidden = !shown;
+    if (shown) this.energy.set(value, max);
   }
 
   /**

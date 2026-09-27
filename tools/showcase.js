@@ -452,7 +452,7 @@ function buildZapCrate() {
       }
     }
     zapper.sync();
-    bar.set(energy, PLAYER.maxEnergy, cost);
+    bar.set(energy, PLAYER.maxEnergy);
   };
   return asset;
 }

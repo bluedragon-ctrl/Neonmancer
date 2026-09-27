@@ -112,8 +112,7 @@ body {
   }
 }
 
-/* Energy: a label over a row of thin ticks (one per unit) under integrity,
-   a notch under the tick that pays for one cast of the selected spell. */
+/* Energy: a label over slanted segments (10 energy each) under integrity. */
 .hud-energy {
   position: absolute;
   top: calc(126 * var(--u));
@@ -126,43 +125,38 @@ body {
   display: none;
 }
 
-.hud-ticks {
-  --tick: calc(4 * var(--u));
-  --gap: calc(2 * var(--u));
+.hud-segments {
   display: flex;
-  gap: var(--gap);
+  gap: calc(7 * var(--u));
+}
+
+.hud-segments i {
+  position: relative;
+  width: calc(39 * var(--u));
+  height: calc(14 * var(--u));
   transform: skewX(-18deg);
+  box-sizing: border-box;
+  border: calc(2 * var(--u)) solid color-mix(in srgb, currentColor 35%, transparent);
+  overflow: hidden;
 }
 
-.hud-ticks i {
-  width: var(--tick);
-  height: calc(16 * var(--u));
+/* The filling part: dim while it recharges, glowing once the segment is full. */
+.hud-segments b {
+  position: absolute;
+  inset: 0 auto 0 0;
   background: currentColor;
-  opacity: 0.18;
+  opacity: 0.4;
 }
 
-.hud-ticks i.on {
+.hud-segments i.full {
+  border-color: currentColor;
+  box-shadow:
+    0 0 calc(10 * var(--u)) currentColor,
+    inset 0 0 calc(4 * var(--u)) #fff8;
+}
+
+.hud-segments i.full b {
   opacity: 1;
-  box-shadow: 0 0 calc(6 * var(--u)) currentColor;
-}
-
-/* Under the tick that completes one cast: dim until there is enough energy. */
-.hud-cost {
-  --tick: calc(4 * var(--u));
-  --gap: calc(2 * var(--u));
-  width: 0;
-  height: 0;
-  margin-top: calc(3 * var(--u));
-  margin-left: calc(var(--at) * (var(--tick) + var(--gap)) - var(--gap) - var(--tick) / 2 - calc(6 * var(--u)));
-  border: calc(6 * var(--u)) solid transparent;
-  border-top: none;
-  border-bottom: calc(9 * var(--u)) solid currentColor;
-  opacity: 0.35;
-}
-
-.hud-energy.ready .hud-cost {
-  opacity: 1;
-  filter: drop-shadow(0 0 calc(4 * var(--u)) currentColor);
 }
 
 /* The selected spell under the energy bar: its name in a slanted tag,
