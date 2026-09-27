@@ -818,7 +818,11 @@ order along the world it checks against (D67); how much the player's map
 screen reveals, given that finding what is where is part of the game.
 The author's current plan for the map: it records the rooms visited in
 this run only and is cleared when a save is loaded, so the access key
-carries no map data; the final decision comes with the map step.
+carries no map data (the full map is never saved). Save shrines show a
+map of the area around them, to help after a load. Still open: how far
+that area reaches (e.g. rooms within 2 connections), whether it shows
+rooms not visited yet, and whether they then stay on the run's map. The
+final decision comes with the map step.
 
 ## Data formats
 
