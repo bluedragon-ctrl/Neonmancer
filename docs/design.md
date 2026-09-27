@@ -774,10 +774,11 @@ the author; the answers are recorded as decisions before the code lands.
 | 7 | `feat/pause-spell` | Pause: freezes an enemy for a while; a frozen enemy is a solid platform (reusing the solid-enemy rules, D51). |
 | 8 | `feat/warp-spell` | Warp: a short teleport through gaps or past hazards, with an afterimage. |
 | 9 | `feat/cut-paste-spell` | Cut & Paste: cut one object into a one-slot inventory, paste it at a valid grid cell in front of the wizard. |
-| 10 | `docs/spell-roster` | Discussion step, docs only: further spells, or upgrades of the five, now that they can be played; stronger ones should let the wizard speedrun simple rooms or solve them differently (D67). Accepted ones get their own steps (in this phase or later) and CLAUDE.md §5 is updated; the result is a decision. |
-| 11 | `feat/score-and-bits` | Starts with a discussion of the world targets (below). Then: bonus bits (up to 4 slots per room), secrets, score for bits, enemies, secrets and pickups, floating score popups, HUD score, the "all bits collected" room bonus, local high score. |
-| 12 | `feat/fragments-and-core` | Fragment pickups, the fragment count and locations in `world.json`, the central core that takes them, `> FRAGMENT n/N GET!`, and the end of the game. |
-| 13 | `chore/release-0.3.0` | Docs pass, CHANGELOG, `v0.3.0` tag and GitHub Release (CLAUDE.md §10) |
+| 10 | `docs/spell-roster` | Discussion step, docs only: the roster towards 16 spells (D68) — new spells, some letting the wizard skip easier rooms, and upgrades of the basic ones — and the buff items, now that the first five spells can be played; stronger ones should let the wizard speedrun simple rooms or solve them differently (D67). Accepted spells get their own steps (in this phase or later) and CLAUDE.md §5 is updated; the result is a decision. |
+| 11 | `feat/buff-items` | The first buff items from the roster: pickups that raise the wizard's maximum integrity or energy, or his jump height, kept in `Progress`; HUD bars grow with them. |
+| 12 | `feat/score-and-bits` | Starts with a short discussion (below). Then: bonus bits (up to 4 slots per room), secrets, score for bits, enemies, secrets and pickups, floating score popups, HUD score, the "all bits collected" room bonus, local high score. |
+| 13 | `feat/fragments-and-access` | Fragment pickups, the fragment count and locations in `world.json`, the central core that takes them, `> FRAGMENT n/N GET!`, access levels that lock areas until the wizard's level is high enough, and the end of the game. |
+| 14 | `chore/release-0.3.0` | Docs pass, CHANGELOG, `v0.3.0` tag and GitHub Release (CLAUDE.md §10) |
 
 Open questions, settled at the start of their step:
 - **3 Data disks:** does Zap stay known from the start, or become the first
@@ -795,13 +796,22 @@ Open questions, settled at the start of their step:
 - **9 Cut & Paste:** what can be cut (objects only, enemies, a crate with
   something on it); does the cut object leave the room with the wizard or
   go back on reset?
-- **11 Score and bits — world targets:** target number of rooms (40–60 in
-  CLAUDE.md), spells (and upgrades, from step 9) and items; what an item
-  is (the key layout reserves 8 bits); bits per room; score values; what
-  counts as a secret. These numbers also fix the access-key bit layout
-  (Phase 4).
-- **12 Fragments:** fragment count in the test world; a placeholder win
-  screen or a real ending (final score, credits).
+- **10 Roster:** which spells and upgrades (up to 16 in all), which buff
+  items and how many of each, and the order they appear in the world.
+- **11 Buff items:** how much each raises (e.g. +2 integrity, +2 energy);
+  a jump buff changes the one-block rule (CLAUDE.md §4) and the room
+  design checklist: how high, and does it stack; the access-key health
+  field (4 bits) must hold the highest maximum.
+- **12 Score and bits:** the world targets are set (D68); what is left is
+  how many bits a room typically has, score values, and what counts as a
+  secret. With about 128 rooms, 4 bonus slots each take 512 bits of the
+  access key; storing bits only for the slots rooms really have would
+  shorten it.
+- **13 Fragments and access:** fragment count (in the world and the test
+  world); how access levels link to fragments (the level is the number of
+  fragments delivered, or collected, or its own reward); what a locked
+  exit looks like; a placeholder win screen or a real ending (final score,
+  credits).
 - **Test world:** each step adds a test room (D45), so the world grows to
   about 15 rooms; a second hub may be needed to keep every test room at
   most two rooms from Boot Sector (D49).

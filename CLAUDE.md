@@ -70,14 +70,16 @@ mobile/touch support, backend or accounts.
 - Coordinates: y is up; room size is [x, y, z] = [width, height, depth];
   the floor is at y = 0; back walls are the x = 0 and z = 0 planes.
 - 1 block = 1 unit (1x1x1). Player jump height: 1 unit (clears exactly one
-  block, never two).
+  block, never two). A later jump buff item may raise it (D68).
 - Player hitbox 0.6 x 1.5 x 0.6 (the hat is visual only), so the wizard
   needs 2 blocks of headroom.
 - Blocks snap to the grid; player and enemies move freely (sub-grid).
 - Room size: width + depth <= 32, height <= 6 (max 16x16; also e.g.
   20x12, 24x8). Mix of small (8x8), standard (12x12) and large (16x16).
 - Every room fits the fixed camera framing without scrolling.
-- World target: 40–60 rooms.
+- World target: towards 128 rooms, more small rooms rather than a few
+  very complex ones (D68). Some areas are locked behind an access level,
+  probably linked to fragments.
 
 ### Engine
 - Fixed-timestep loop: 60 logic updates per second, rendering
@@ -138,6 +140,10 @@ Move, jump, gravity, push objects, health ("integrity") and mana ("energy").
 - **Warp** — short teleport through gaps or past hazards
 - **Cut & Paste** — cut one object into inventory, paste it at a valid
   grid spot in front of the wizard
+
+Up to 16 spells in all (D68): new ones, some letting the wizard skip
+easier rooms, and upgrades of the basic ones. Buff items make the wizard
+himself stronger: more integrity, more energy, a higher jump.
 
 Mana recharges slowly. Installing a spell plays a short animation.
 Later spells and upgrades are stronger: they let the wizard speedrun
@@ -258,10 +264,11 @@ Rules:
 Keys are copied, pasted and bookmarked — never memorized — so length is
 not critical.
 
-- Bit layout (one versioned module, spare bits reserved):
-  format version 4, room 7, spells 5, items 8, fragments 8, health 4,
-  score 20, secrets 16, bonus slots 4 per room (reserve for 64 rooms =
-  256), checksum 16.
+- Bit layout (one versioned module, spare bits reserved), sized for the
+  world targets (D68) and finalized with the access-key step:
+  format version 4, room 8, spells 16, items 8, fragments 8, health 4,
+  score 20, secrets 16, bonus slots 4 per room (reserve for 128 rooms =
+  512), checksum 16.
 - Encoding: Base32 without ambiguous characters (no 0/O, 1/I/L), shown
   in groups (e.g. `KX7M-Q4RP-...`). Input tolerates spaces, dashes and
   lowercase.
@@ -365,9 +372,9 @@ In-game room editor with JSON export. Step plan: docs/design.md (D43).
 **Phase 3 (v0.3) — Spells and pickups**
 World map tool for the developer. Pickups and a progress model, data
 disks. Viruses and Pop-ups. Firewall, Pause, Warp and Cut & Paste spells.
-A discussion step on further spells or spell upgrades. Score, bonus bits
-and secrets, starting with the world targets (rooms, spells, items).
-Fragments and the core. Step plan: docs/design.md (D65).
+A discussion step on further spells, spell upgrades and buff items; the
+first buff items. Score, bonus bits and secrets. Fragments, access levels
+and the core. Step plan: docs/design.md (D65).
 
 **Phase 4 (v0.4) — Guardians, saves, tooling**
 Firewall Wardens. Title screen and pause menu. Access keys, URL saves,

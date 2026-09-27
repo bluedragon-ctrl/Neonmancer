@@ -928,3 +928,27 @@ differently. So:
 **Why:** author's direction for the game. Exploring the Grid and mastering
 it are the reward: discovering the layout matters, and a room that took
 a puzzle the first time can become a quick run later.
+
+### D68 — 2026-09-27 — World targets: towards 128 rooms, 16 spells, buff items, access levels
+The author's targets for the finished game, replacing the 40–60 rooms of
+CLAUDE.md:
+- **Rooms:** towards 128, more small rooms rather than a few very
+  complex ones.
+- **Access levels:** some areas are locked behind an access level,
+  probably linked to fragments (settled in the fragments step).
+- **Spells:** up to 16 in all: new spells, some letting the wizard skip
+  easier rooms, and upgrades of the basic ones (the roster is the Phase 3
+  spell-roster step).
+- **Buff items:** pickups that make the wizard stronger: more integrity,
+  more energy, a higher jump. The one-block jump stays the base; a jump
+  buff raising it is decided with its step.
+
+The access-key layout follows (CLAUDE.md §8, finalized in Phase 4): room
+8 bits (7 would allow exactly 128), spells 16, bonus slots for 128 rooms
+(512). The score step no longer discusses world targets (D65); it keeps
+bits per room, score values and secrets. A buff-items step joins Phase 3,
+and access levels join the fragments step.
+**Why:** author's direction. Many small rooms suit the flip-screen style
+and make exploring (D67) the core of the game; more spells and buffs give
+the player a growing toolset that opens shortcuts through rooms already
+solved; access levels give a large world its structure.
