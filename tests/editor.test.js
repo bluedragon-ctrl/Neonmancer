@@ -264,6 +264,7 @@ test('saveEdits writes valid rooms and world.json together, and refuses invalid 
     const world = JSON.parse(readFileSync(join(root, 'data/world.json'), 'utf8'));
     const exitFree = { ...room, name: 'Boot Sector Two', exits: [...room.exits, { id: 'east_2', side: '+x', at: 8 }] };
     world.connections.push(['boot_sector.east_2', 'annex.west']);
+    world.positions.annex = [5, 5];
     const saved = saveEdits(root, { rooms: [exitFree, annex], world });
     assert.deepEqual(saved, { ok: true, errors: [], files: ['data/rooms/boot_sector.json', 'data/rooms/annex.json', 'data/world.json'] });
     assert.equal(readFileSync(file, 'utf8'), formatJson(exitFree));
@@ -277,6 +278,41 @@ test('saveEdits writes valid rooms and world.json together, and refuses invalid 
     assert.equal(saveEdits(root, { rooms: [guarded] }).ok, false, 'unknown type without the new defs');
     assert.deepEqual(saveEdits(root, { rooms: [guarded], defs }).files, ['data/rooms/annex.json', 'data/defs.json']);
     assert.equal(readFileSync(join(root, 'data/defs.json'), 'utf8'), formatJson(defs));
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('saveEdits merges moves from the world map into world.json; the room editor keeps them', () => {
+  const root = mkdtempSync(join(tmpdir(), 'neonmancer-'));
+  try {
+    for (const dir of ['data', 'schemas']) cpSync(fileURLToPath(new URL(`../${dir}`, import.meta.url)), join(root, dir), { recursive: true });
+    const read = () => JSON.parse(readFileSync(join(root, 'data/world.json'), 'utf8'));
+    const before = read();
+
+    // The editor loaded world.json before the move below.
+    const stale = structuredClone(before);
+    assert.deepEqual(saveEdits(root, { positions: { cache_hall: [4, -3] } }).files, ['data/world.json']);
+    assert.deepEqual(read(), { ...before, positions: { ...before.positions, cache_hall: [4, -3] } });
+
+    // A room saved from the editor with a new connection: the move stays, the connection is saved.
+    stale.connections.pop();
+    const boot = JSON.parse(readFileSync(join(root, 'data/rooms/boot_sector.json'), 'utf8'));
+    const transit = JSON.parse(readFileSync(join(root, 'data/rooms/transit_bus.json'), 'utf8'));
+    const rooms = [
+      { ...boot, exits: boot.exits.filter((exit) => exit.id !== 'south') },
+      { ...transit, exits: transit.exits.filter((exit) => exit.id !== 'north') },
+    ];
+    assert.equal(saveEdits(root, { rooms, world: stale }).ok, true);
+    assert.deepEqual(read().positions.cache_hall, [4, -3]);
+    assert.deepEqual(read().connections, stale.connections);
+
+    // Two rooms in one cell, or an unknown room: nothing is written.
+    const text = readFileSync(join(root, 'data/world.json'), 'utf8');
+    assert.match(saveEdits(root, { positions: { stack_yard: [0, 0] } }).errors.join('\n'), /cell \[0,0\] is taken/);
+    assert.match(saveEdits(root, { positions: { nowhere: [9, 9] } }).errors.join('\n'), /unknown room "nowhere"/);
+    assert.equal(saveEdits(root, { positions: [[0, 0]] }).ok, false);
+    assert.equal(readFileSync(join(root, 'data/world.json'), 'utf8'), text);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -338,6 +374,16 @@ test('WorldEdit connects, disconnects and renames exits; setLinks keeps the orde
   assert.equal(world.disconnect('a.n'), true);
   assert.equal(world.disconnect('a.n'), false);
   assert.equal(world.dirty, true);
+});
+
+test('WorldEdit puts a new room next to the room it was made from, and takes it off again', () => {
+  const world = new WorldEdit({ schemaVersion: 1, start: 'a', connections: [], positions: { a: [0, 0], b: [1, 0] } });
+  world.place('c', 'a');
+  assert.deepEqual(world.data.positions.c, [0, 1], 'east is taken: south');
+  world.place('d', 'b');
+  assert.deepEqual(world.data.positions.d, [2, 0]);
+  world.unplace('c');
+  assert.deepEqual(world.data.positions, { a: [0, 0], b: [1, 0], d: [2, 0] });
 });
 
 test('RoomEdit places enemies and edits them; paths get corners and lose points', () => {

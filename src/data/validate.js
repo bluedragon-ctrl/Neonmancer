@@ -1,6 +1,6 @@
 /**
  * Semantic data checks: the rules JSON Schema cannot express (room bounds,
- * overlaps, known types and biomes, exits and connections).
+ * overlaps, known types and biomes, exits and connections, map positions).
  *
  * Runs at load time in the game and, after the schema pass, in the dev
  * server, the build and CI. Assumes the data already matches the schemas;
@@ -29,6 +29,7 @@ import {
   KIND_BLOCK_VALUES,
   STATIC_BLOCK_VALUES,
 } from './room-data.js';
+import { mapKey } from '../world/map.js';
 import { legAxis, pathCells } from '../world/path.js';
 
 /** Files every game needs (paths relative to data/). */
@@ -529,5 +530,19 @@ function validateWorld(world, rooms, report) {
 
   for (const ref of exits.keys()) {
     if (!used.has(ref)) report(file, 'connections', `exit "${ref}" is not connected`);
+  }
+
+  // One cell of the world map per room (D66).
+  const positions = world.positions ?? {};
+  /** "x,z" → room id placed there */
+  const cells = new Map();
+  for (const [id, cell] of Object.entries(positions)) {
+    if (!rooms.has(id)) report(file, `positions.${id}`, `unknown room "${id}"`);
+    const key = mapKey(cell);
+    if (cells.has(key)) report(file, `positions.${id}`, `cell ${cellText(cell)} is taken by "${cells.get(key)}"`);
+    else cells.set(key, id);
+  }
+  for (const id of rooms.keys()) {
+    if (!positions[id]) report(file, 'positions', `room "${id}" has no position on the map`);
   }
 }

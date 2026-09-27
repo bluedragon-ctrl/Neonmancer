@@ -989,3 +989,30 @@ way back open (D67).
 **Why:** author's request. Crates and Zap exist already, so switches turn
 them into puzzle keys with little new machinery, and a locked exit is
 needed for access levels anyway.
+
+### D70 — 2026-09-27 — World map tool: positions format, who saves what
+The details of the world map tool (Phase 3 step 1, D66):
+- `world.json` gets a required `positions` map, room id → `[x, z]` map
+  cell (integers, negative allowed; +x east, +z south, the same axes as a
+  room, so a room's east exit points right on the map). Validation: every
+  room has one, no two share one, no unknown rooms. The data schema
+  version stays 1 (nothing was published that reads the old file).
+- The room editor owns the connections, the map tool the positions. The
+  map sends only the moved rooms' positions, merged into `world.json` on
+  disk; when the editor sends the whole file, the positions on disk win
+  (only a new room's cell comes from the editor). Each tool's saves
+  survive the other's, even from a page loaded earlier.
+- A new room from the editor gets the nearest free cell to the room it
+  was made from: east, south, west, north, then the diagonals, then
+  further out. Discarding the new room frees the cell again.
+- The map opens a room with `/?room=<id>&edit`; the game reads `?room`
+  and `?edit` in the dev server only, so a deployed build can't be used to
+  jump rooms (D67).
+- The "far from the hub" check counts every room as a test room until
+  content production (D45); it flags rooms more than two rooms from the
+  start (D49).
+- After any save the dev server sends a `neonmancer:data-saved` event;
+  the map reloads to show another page's save unless it has unsaved moves.
+**Why:** a room's east exit pointing east on the map makes the layout
+readable at a glance. Splitting ownership avoids the one real conflict of
+two pages editing one file: a stale copy undoing a newer save.

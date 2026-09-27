@@ -7,10 +7,13 @@
 /** URL the dev server takes edits at (tools/vite-plugin-data.js). */
 export const SAVE_URL = '/__editor/save';
 
+/** Vite custom event the dev server sends after a save, with the `files` written. */
+export const DATA_SAVED_EVENT = 'neonmancer:data-saved';
+
 /**
  * Send edited files to the dev server to be checked and written.
- * @param {{ rooms: object[], world?: object, defs?: object }} edits whole room files, and world.json and
- *   defs.json if they changed
+ * @param {{ rooms?: object[], world?: object, defs?: object, positions?: Record<string, number[]> }} edits whole room files, and world.json and
+ *   defs.json if they changed; or map positions of moved rooms (the world map tool)
  * @returns {Promise<{ ok: boolean, errors: string[], files: string[] }>}
  */
 export async function saveFiles(edits) {

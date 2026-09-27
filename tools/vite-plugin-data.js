@@ -6,10 +6,12 @@
  *   through the virtual module `virtual:data-schema-errors`, so its error
  *   screen can list them. Editing data or schemas reloads the page, except
  *   a file the room editor just saved (the editor already shows it).
- * - Dev server: the room editor saves rooms and world.json through SAVE_URL (D56, D57).
+ * - Dev server: the room editor saves rooms and world.json through SAVE_URL (D56, D57),
+ *   the world map tool the rooms' positions (D66); every save is announced to
+ *   open pages as DATA_SAVED_EVENT.
  */
 import { checkData, relativeTo } from './check-data.js';
-import { SAVE_URL, refuseSaveRequest, saveEdits } from './room-save.js';
+import { DATA_SAVED_EVENT, SAVE_URL, refuseSaveRequest, saveEdits } from './room-save.js';
 
 const VIRTUAL_ID = 'virtual:data-schema-errors';
 const RESOLVED_ID = '\0' + VIRTUAL_ID;
@@ -57,6 +59,8 @@ export function dataValidation() {
             saved.set(file, Date.now());
             console.log(`[editor] saved ${file}`);
           }
+          // Pages that don't reload for it (the world map tool) can catch up.
+          if (result.files.length > 0) server.ws.send({ type: 'custom', event: DATA_SAVED_EVENT, data: { files: result.files } });
           res.setHeader('Content-Type', 'application/json');
           res.end(JSON.stringify(result));
         });

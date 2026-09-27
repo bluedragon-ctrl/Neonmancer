@@ -11,10 +11,11 @@ and collect key fragments to reboot the Grid.
 > platforms, runs over collapsing blocks, fights bugs with the Zap spell and
 > shows through walls as an X-ray outline, across seven test rooms. Rooms
 > are made in the in-game room editor (F2), with open, data-driven block
-> types and six biome looks. No goal yet. Next: Phase 3 (spells and
-> pickups: data disks, Viruses and Pop-ups, four more spells, score and
-> bonus bits, fragments and the core), then Phase 4 (Wardens, saves, the
-> map, tooling).
+> types and six biome looks. No goal yet. Now: Phase 3 (spells and
+> pickups: a world map tool for the developer, data disks, switches,
+> Viruses and Pop-ups, four more spells, buff items, score and bonus bits,
+> fragments and the core), then Phase 4 (Wardens, saves, the map,
+> tooling).
 > Latest `main` build: https://bluedragon-ctrl.github.io/Neonmancer/
 
 ## Requirements
@@ -41,6 +42,15 @@ The room editor opens with F2 in the game: in the dev server it saves
 straight to `data/`, in a build it exports the room JSON (docs/design.md,
 Room editor).
 
+The world map tool shows every room and connection on one page, flags
+rooms out of reach, and moves rooms on the map: `/tools/world-map.html` in
+the dev server only (docs/design.md, World map tool).
+
+On Windows, `tools\dev.bat` starts the dev server and opens the game
+(`tools\dev.bat map` opens the world map, `tools\dev.bat showcase` the
+asset showcase), and `tools\map-pr.bat "what changed"` sends saved room
+and map changes as one pull request.
+
 ## Project layout
 
 | Path | Contents |
@@ -49,7 +59,7 @@ Room editor).
 | `data/` | All game content as JSON (rooms, definitions, biomes, world) |
 | `schemas/` | JSON Schema for every data format |
 | `tests/` | Unit tests (`node --test`) |
-| `tools/` | Dev tooling: data validation (Ajv), Vite plugin, asset showcase |
+| `tools/` | Dev tooling: data validation (Ajv), Vite plugin, asset showcase, world map tool |
 | `docs/` | Architecture, design and the decision log |
 
 ## Documentation

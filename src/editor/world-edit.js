@@ -1,9 +1,12 @@
 /**
  * world.json while the room editor changes its connections (D57): exits are
  * connected and disconnected from the room they are in, and each room's
- * undo steps take that room's connections along. Plain logic, no browser.
+ * undo steps take that room's connections along. A new room gets a free
+ * cell on the world map next to the room it was made from (D66). Plain
+ * logic, no browser.
  */
 import { OPPOSITE_SIDE, withExitDefaults } from '../data/room-data.js';
+import { nearestFreeCell } from '../world/map.js';
 import { formatJson } from './format-json.js';
 
 /** Is "room.exit" an exit of `roomId`? */
@@ -67,6 +70,22 @@ export class WorldEdit {
     const before = this.connections.length;
     this.data.connections = this.connections.filter((pair) => !pair.includes(ref));
     return this.connections.length !== before;
+  }
+
+  /**
+   * Put a new room on the world map, in the free cell nearest to another
+   * room (to be moved in the world map tool afterwards).
+   * @param {string} id the new room
+   * @param {string} near the room it was made from
+   */
+  place(id, near) {
+    const positions = (this.data.positions ??= {});
+    positions[id] = nearestFreeCell(positions, positions[near] ?? [0, 0]);
+  }
+
+  /** Take a room off the world map (a new room thrown away). */
+  unplace(id) {
+    delete this.data.positions?.[id];
   }
 
   /** An exit got a new id: its connection follows. */

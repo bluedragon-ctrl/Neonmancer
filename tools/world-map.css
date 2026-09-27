@@ -1,0 +1,226 @@
+/* World map tool (D66): dev server only, never shown to players. */
+@import '@fontsource/orbitron/latin-700.css';
+@import '@fontsource/share-tech-mono/latin.css';
+
+:root {
+  --void: #05060d;
+  --panel: #0b0d18;
+  --line: #1c2036;
+  --text: #c9d2ff;
+  --dim: #6c7399;
+  --amber: #ffb020;
+  --cyan: #00f0ff;
+  --magenta: #ff2bd6;
+  --lime: #b6ff3c;
+  --red: #ff3b30;
+  --arcade: 'Orbitron', 'Segoe UI', sans-serif;
+  --terminal: 'Share Tech Mono', 'Courier New', monospace;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--void);
+  color: var(--text);
+  font-family: var(--terminal);
+  font-size: 15px;
+}
+
+body {
+  display: flex;
+}
+
+#map {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+}
+
+#map svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+}
+
+#panel {
+  width: 320px;
+  flex: none;
+  box-sizing: border-box;
+  height: 100%;
+  overflow-y: auto;
+  padding: 20px;
+  background: var(--panel);
+  border-left: 1px solid var(--line);
+}
+
+h1 {
+  margin: 0 0 4px;
+  font-family: var(--arcade);
+  font-size: 20px;
+  letter-spacing: 0.08em;
+  color: var(--cyan);
+  text-shadow: 0 0 8px var(--cyan);
+}
+
+h2 {
+  margin: 20px 0 8px;
+  font-family: var(--arcade);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: var(--dim);
+}
+
+.counts {
+  color: var(--dim);
+}
+
+button {
+  margin-top: 16px;
+  padding: 8px 16px;
+  font: inherit;
+  color: var(--void);
+  background: var(--lime);
+  border: none;
+  cursor: pointer;
+}
+
+button:disabled {
+  color: var(--dim);
+  background: var(--line);
+  cursor: default;
+}
+
+.status {
+  min-height: 1.3em;
+  margin-top: 8px;
+}
+
+.status.ok {
+  color: var(--lime);
+}
+
+.status.bad {
+  color: var(--red);
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+li {
+  margin: 0 0 6px;
+  line-height: 1.3;
+}
+
+li[data-room] {
+  cursor: pointer;
+}
+
+li[data-room]:hover {
+  color: #fff;
+}
+
+.warn {
+  color: var(--amber);
+}
+
+.error {
+  color: var(--red);
+}
+
+.fine {
+  color: var(--lime);
+}
+
+.help li {
+  color: var(--dim);
+}
+
+/* --- The map ------------------------------------------------------------ */
+
+.cell {
+  fill: var(--line);
+}
+
+.link {
+  fill: none;
+  stroke: var(--cyan);
+  stroke-width: 2;
+  opacity: 0.7;
+}
+
+/* Connected rooms that aren't neighbours that way round on the map. */
+.link.across {
+  stroke-dasharray: 6 5;
+  opacity: 0.45;
+}
+
+.link-end {
+  fill: var(--cyan);
+}
+
+.room {
+  cursor: grab;
+}
+
+.room.dragging {
+  cursor: grabbing;
+  opacity: 0.85;
+}
+
+.room .box {
+  fill: #0a0c16;
+  stroke-width: 2;
+}
+
+.room:hover .box,
+.room.picked .box {
+  fill: #151a2c;
+}
+
+.room .start {
+  fill: none;
+  stroke: var(--lime);
+  stroke-width: 2;
+  stroke-dasharray: 4 4;
+}
+
+.room.unreachable .box {
+  stroke-dasharray: 5 4;
+}
+
+.room .name {
+  font-family: var(--arcade);
+  font-size: 12px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.room .info {
+  font-size: 11px;
+  fill: var(--dim);
+  text-anchor: middle;
+}
+
+.room .flag {
+  font-size: 11px;
+  text-anchor: middle;
+}
+
+.room .moved {
+  fill: var(--lime);
+}
+
+.target {
+  fill: none;
+  stroke-width: 2;
+  stroke: var(--lime);
+}
+
+.target.taken {
+  stroke: var(--red);
+}

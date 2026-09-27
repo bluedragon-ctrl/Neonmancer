@@ -6,6 +6,29 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- World map tool (Phase 3 step 1, D66, D70): `/tools/world-map.html` in
+  the dev server (not built, never shown to players) draws every room as a
+  node in its biome color on a map grid, with lines between connected
+  exits (dashed when a connection runs across the map) and the start room
+  marked. Drag rooms to free cells and save (Ctrl+S; Ctrl+Z undoes a
+  move); click a room to open it in the room editor. The side panel lists
+  data errors, rooms the start can't reach and test rooms more than two
+  rooms from the start (D49).
+- `world.json` `positions`: every room's cell on the world map, validated
+  (one per room, no two in one cell).
+- Room editor: a new room gets the free map cell nearest to the room it
+  was made from.
+- Dev server: `?room=<id>` starts the game in that room and `?edit`
+  opens the room editor on it.
+- `tools\dev.bat` (Windows): starts the dev server and opens the game,
+  or the world map (`map`) or the asset showcase (`showcase`).
+
+### Changed
+- `tools\room-pr.bat` is now `tools\map-pr.bat`: one PR for room and
+  world map changes (branch `feat/map-<date>`, title `feat(map): …`); its
+  summary says whether rooms, the map or enemy templates changed.
+
 ### Changed
 - Phase plan (D65): the old Phase 3 splits into Phase 3 (v0.3, spells and
   pickups) and Phase 4 (v0.4, Wardens, saves, map, tooling); polish moves
