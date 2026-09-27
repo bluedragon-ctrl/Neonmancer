@@ -7,6 +7,14 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Data disks (Phase 3 step 3, D73): taking a disk plays an install
+  animation on the wizard (its bits spiral in, rings sweep up him in the
+  spell's color, a white flash; he is frozen and unhurt for 1 s). A
+  second spell, Shield: a crackling neon-blue ring of lightning round him
+  for 5 s (20 energy); it will block projectiles once there are any. Its
+  disk lies in Cache Hall, behind the pit; with two spells Tab / Q switch
+  between them. Each spell has a color in `defs.json`. Showcase
+  `?asset=install`, `?asset=shield`, `disk-shield`.
 - Pickups and progress (Phase 3 step 2, D71): pickup types in
   `defs.json` and rooms; a `Progress` model of save bits found (112, in
   blocks: spells, buffs, equipment, fragments) that room resets and death

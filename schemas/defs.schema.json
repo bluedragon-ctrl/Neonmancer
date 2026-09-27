@@ -22,21 +22,35 @@
     },
     "spells": {
       "type": "object",
-      "description": "Spell tuning, by spell id. What each spell does is built into the engine (Zap: src/entities/bolt.js and Game.castZap()).",
+      "description": "Spell tuning, by spell id. What each spell does is built into the engine (SPELL_EFFECTS in src/game.js; Zap: src/entities/bolt.js, Shield: Player.raiseShield()).",
       "required": ["zap"],
       "additionalProperties": false,
       "properties": {
         "zap": {
           "description": "A fast bolt the way the wizard faces; it stops at blocks and objects and hits the first enemy in its way.",
           "type": "object",
-          "required": ["slot", "cost", "cooldown", "speed", "damage"],
+          "required": ["slot", "color", "cost", "cooldown", "speed", "damage"],
           "additionalProperties": false,
           "properties": {
-            "slot": { "$ref": "#/$defs/slot", "description": "Its bit in the save's spell block (D71), also the lit bit on its data disk; unique among spells." },
-            "cost": { "type": "integer", "minimum": 1, "description": "Energy per cast, in whole units (the wizard holds 50); multiples of 10 read best, as the HUD bar has segments of 10." },
-            "cooldown": { "type": "number", "minimum": 0, "maximum": 5, "description": "Seconds before he can cast it again." },
+            "slot": { "$ref": "#/$defs/spellSlot" },
+            "color": { "$ref": "#/$defs/spellColor" },
+            "cost": { "$ref": "#/$defs/spellCost" },
+            "cooldown": { "$ref": "#/$defs/spellCooldown" },
             "speed": { "type": "number", "exclusiveMinimum": 0, "maximum": 50, "description": "Bolt speed in units per second." },
             "damage": { "type": "integer", "minimum": 1, "description": "Integrity an enemy loses per hit." }
+          }
+        },
+        "shield": {
+          "description": "A crackling ring of electricity round the wizard for a while (D73); it will block projectiles once there are any.",
+          "type": "object",
+          "required": ["slot", "color", "cost", "cooldown", "duration"],
+          "additionalProperties": false,
+          "properties": {
+            "slot": { "$ref": "#/$defs/spellSlot" },
+            "color": { "$ref": "#/$defs/spellColor" },
+            "cost": { "$ref": "#/$defs/spellCost" },
+            "cooldown": { "$ref": "#/$defs/spellCooldown" },
+            "duration": { "type": "number", "exclusiveMinimum": 0, "maximum": 30, "description": "Seconds the shield stays up; casting it again starts it over." }
           }
         }
       }
@@ -63,6 +77,10 @@
       "maximum": 15,
       "description": "Index in a block of save bits (D71)."
     },
+    "spellSlot": { "$ref": "#/$defs/slot", "description": "Its bit in the save's spell block (D71), also the lit bit on its data disk; unique among spells." },
+    "spellColor": { "$ref": "common.schema.json#/$defs/color", "description": "The spell's color: its disk's lit bit, its effect, its install animation and banner." },
+    "spellCost": { "type": "integer", "minimum": 1, "description": "Energy per cast, in whole units (the wizard holds 50); multiples of 10 read best, as the HUD bar has segments of 10." },
+    "spellCooldown": { "type": "number", "minimum": 0, "maximum": 5, "description": "Seconds before he can cast again." },
     "pickupType": {
       "type": "object",
       "required": ["kind"],

@@ -324,6 +324,17 @@ enemies).
 - **Progress** (`src/world/progress.js`) holds the bits found for the
   whole game; room resets and death leave it alone. Known spells follow
   from it (in slot order). The save key (Phase 4) will hold these bits.
+- **Installing** (D73): taking a disk freezes the wizard for 1 s
+  (`PLAYER.installTicks`, 60 ticks): no walking, jumping, pushing, casting
+  or switching, and nothing hurts him; he still falls if he was in the
+  air. The disk shrinks where it hung and its bits spiral into him, three
+  rings in the spell's color sweep up from his feet to his hat, tinting
+  his hologram, and he flashes white at the end. The banner shows at
+  once. Tuning: `INSTALL_FX` in `src/render/install-fx.js`; showcase
+  `?asset=install`.
+- **Spell colors:** each spell has a `color` in `defs.json` (Zap cyan
+  `#00f0ff`, Shield neon blue `#3b82ff`): its disk's lit bit, its
+  install animation and its banner.
 - **Found before:** a permanent pickup whose bit is set shows as a ghost
   (gray, dashed, standing still) and can't be taken again (D67).
 - **Temporary: refills.** `refill_integrity` (+3) and `refill_energy`
@@ -368,8 +379,9 @@ enemies).
 - **Casting:** once he has found a data disk (see Pickups and
   progress), E or Numpad 0 casts the selected spell. Its name
   shows in a lime tag under the energy bar (ZAP); Tab switches to the next
-  spell he knows (Q back), and the tag flashes. With only Zap known, Tab
-  does nothing and the tag shows no key hint (D54).
+  spell he knows (Q back), and the tag flashes. With only one spell known,
+  Tab does nothing and the tag shows no key hint (D54); with Shield too,
+  the hint TAB shows. A spell just installed is selected.
 - **Zap** (E or Numpad 0): costs 10 energy, then 0.25 s before the next
   cast. The bolt flies at 12 units per second from his hands (0.48 above
   his feet, 0.34 in front) the way he aims: the direction he last walked
@@ -389,6 +401,23 @@ enemies).
   `maxEnergy` and `energyRecharge` in `PLAYER`, `BOLT` in
   `src/entities/bolt.js`; the look is `ZAP_FX` in `src/render/zap-fx.js`;
   review in the asset showcase (`/tools/showcase.html?asset=zap`).
+
+## Shield
+
+The second spell (D73), from a data disk in Cache Hall (slot 1).
+
+- Cast (E) with Shield selected: costs 20 energy, then 0.25 s before the
+  next cast. It stays up for 5 s; casting it again while it is up starts
+  it over. Death ends it; it carries over between rooms.
+- For now it only shows: it blocks projectiles once there are any (Pop-ups,
+  step 6; blocking with step 7). Contact damage is still open.
+- **Look:** a jagged ring of lightning round him at hand height (radius
+  0.55), neon blue outside with a thin white core, turning slowly and
+  flickering between four zigzags every 2 ticks. It pops up in 6 ticks
+  and blinks in its last 40 ticks.
+- Tuning: `defs.json` `spells.shield` (cost, cooldown, duration, color);
+  the look is `SHIELD_FX` in `src/render/shield-fx.js`; showcase
+  `?asset=shield`.
 
 ## X-ray outline
 
@@ -506,7 +535,7 @@ The world map tool flags any room further out.
 | Room | Size | Exits | Shows |
 |---|---|---|---|
 | `boot_sector` (start, hub) | 12×12 | north doorway → Cache Hall; raised east exit on a ledge → Stack Yard; west doorway → Crawl Space; south (front) → Transit Bus | blocks, holes, two crates, a 2-high wall near the front to walk behind (X-ray outline); the Zap data disk two steps from the spawn (Phase 3) |
-| `cache_hall` | 16×8 | south (front) → Boot Sector | a 3-wide pit across the room: push a crate in, then jump the rest |
+| `cache_hall` | 16×8 | south (front) → Boot Sector | a 3-wide pit across the room: push a crate in, then jump the rest; the Shield data disk behind it (Phase 3 step 3) |
 | `stack_yard` | 8×8, Glitchmire color | raised west doorway → Boot Sector; east (front) → Fault Line | stacked crates, a 2-high block to climb via a crate |
 | `fault_line` (Phase 2) | 12×12 | west doorway → Stack Yard; raised east exit on the lookout → Transit Bus | a corridor between hazard walls with an integrity refill at its end (Phase 3), hazard blocks between two plain ones to walk across, a zigzag path of plain blocks through a field of void blocks up to a lookout |
 | `transit_bus` (Phase 2) | 12×12, 5 high | west doorway → Fault Line; north doorway → Boot Sector; raised east exit on the high ledge → Volatile Memory | a ferry across a pit between two ledges, a lift up to a high ledge, a loop carrying a crate, a press coming down (with a crate to jam it) and a pusher squeezing the wizard against the room's edge |
@@ -875,11 +904,11 @@ the author; the answers are recorded as decisions before the code lands.
 |---|---|---|
 | 1 | `feat/world-map-tool` | A developer overview of the whole world on its own page, `tools/world-map.html`, served by the dev server only (D66). Every room is a node in its biome color on a simple map grid, one room per cell, at its position in `world.json`; lines show the connections between exits, and the start room is marked. Rooms are dragged to another free cell and saved through the dev server; connections are shown, and edited in the room editor. A new room from the room editor gets the nearest free cell next to the room it was created from, to be moved afterwards. Validation: every room has a position, no two share one. The tool flags what room validation can't see: rooms not reachable from the start through exits, and test rooms more than two rooms from Boot Sector (D49). Clicking a room opens it in the room editor. |
 | 2 | `feat/pickups-and-progress` | Pickup types in `defs.json` and room data, and a `Progress` model (save bits found, known spells) that survives room resets and death: permanent pickups have a save bit in blocks (D71) and stay as grayed-out ghosts once found; temporary pickups (integrity and energy refills) have none and come back with the room (D67). The first data disk: Zap is no longer known from the start, its disk lies in Boot Sector (`> SPELL INSTALLED: ZAP` banner). Pickup burst; editor and validation support. |
-| 3 | `feat/data-disks` | More disks: an install animation on the wizard, spell switching (Tab / Q) tried with a second spell once there is one (Firewall, step 7, may be the first). |
+| 3 | `feat/data-disks` | More disks (D73): an install animation on the wizard, and a second spell to switch to (Tab / Q): Shield, a crackling ring round him; it blocks projectiles once there are any (step 6). Its disk lies in Cache Hall. |
 | 4 | `feat/switches` | Switches that unlock exits: a pressure plate held down by a crate, and a target that a Zap bolt hits. An exit in room data can be locked until its switches are on; a locked exit looks closed and is solid. Switch state resets with the room. The locked exit is the same mechanism access levels use later (step 14). Editor, validation (switches point at exits that exist), showcase, a test room. |
 | 5 | `feat/viruses` | A `chase` movement behavior: a hostile Virus follows the wizard while it sees him within `aggroRange` and gives up when line of sight breaks. |
 | 6 | `feat/popups` | A projectile attack: Pop-ups are stationary enemies firing slow shots; a projectile entity with its own rules for what stops it. |
-| 7 | `feat/firewall-spell` | Firewall: a brief shield that blocks projectiles. |
+| 7 | `feat/firewall-spell` | Shield blocks projectiles; Firewall: a shield that also damages (D73). |
 | 8 | `feat/pause-spell` | Pause: freezes an enemy for a while; a frozen enemy is a solid platform (reusing the solid-enemy rules, D51). |
 | 9 | `feat/warp-spell` | Warp: a short teleport through gaps or past hazards, with an afterimage. |
 | 10 | `feat/cut-paste-spell` | Cut & Paste: cut one object into a one-slot inventory, paste it at a valid grid cell in front of the wizard. |
@@ -890,7 +919,7 @@ the author; the answers are recorded as decisions before the code lands.
 | 15 | `chore/release-0.3.0` | Docs pass, CHANGELOG, `v0.3.0` tag and GitHub Release (CLAUDE.md §10) |
 
 Open questions, settled at the start of their step:
-- **2 Pickups** and **3 Data disks:** settled (D71).
+- **2 Pickups** and **3 Data disks:** settled (D71, D73).
 - **4 Switches:** does the wizard's own weight (or an enemy's) press a
   plate, or only crates; does a plate hold the exit open only while it is
   pressed, or latch; does a bolt target latch, toggle or stay on for a
@@ -903,7 +932,9 @@ Open questions, settled at the start of their step:
   post or path); chase speed.
 - **6 Pop-ups:** aimed at the wizard or in a fixed direction; fire rate,
   shot speed and range; what stops a shot (blocks, crates, Zap).
-- **7 Firewall:** duration and cost; does it also stop contact damage?
+- **7 Firewall:** Shield's projectile blocking; Firewall's duration, cost
+  and damage (what it hurts: enemies touching it, projectiles); does
+  Shield or Firewall stop contact damage?
 - **8 Pause:** duration and cost; how it picks its target (a bolt, or the
   nearest enemy in front); does it work on Wardens (Phase 4)?
 - **9 Warp:** distance and direction; through a one-block wall, or only
@@ -957,7 +988,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 | File | Contents |
 |---|---|
 | `data/rooms/<id>.json` | One room (id = file name) |
-| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan); `enemies`: enemy types (`bug`, see Enemies) and templates that `extend` one (D58); `spells`: spell tuning (`zap`, see Zap and energy); `blocks`: block types (D60): look or kind, color, properties (`damage`, `lethal`, `regrow`), `extends` for variants; see Block types |
+| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan); `enemies`: enemy types (`bug`, see Enemies) and templates that `extend` one (D58); `spells`: spell tuning and color (`zap`, see Zap and energy; `shield`, see Shield); `pickups`: pickup types (see Pickups and progress); `blocks`: block types (D60): look or kind, color, properties (`damage`, `lethal`, `regrow`), `extends` for variants; see Block types |
 | `data/biomes.json` | Biome name and room color: `home_lattice` (core, amber), `glitchmire` (pink), `frostbyte_wastes` (ice blue), `abyssal_buffer` (graphite), `firewall_citadel` (ember orange), `phantom_partition` (special, silver-white); optional `look` for the surroundings (background, outer grid and its fade, wall grid, bloom); see Biomes (D61, D62) |
 | `data/world.json` | Start room, exit connections and every room's cell on the world map (`positions`, D66) |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |

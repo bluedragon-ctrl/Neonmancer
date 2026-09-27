@@ -8,6 +8,7 @@
     "hud.energy": "ENERGY",
     "hud.spellSwitch": "TAB",
     "spell.zap": "ZAP",
+    "spell.shield": "SHIELD",
     "hud.movementGrid": "GRID MOVE (G)",
     "hud.movementScreen": "SCREEN MOVE (G)",
     "hint.fullscreen": "PRESS F FOR FULLSCREEN",

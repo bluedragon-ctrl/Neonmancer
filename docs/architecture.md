@@ -86,6 +86,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/entity-view.js` | Player (with the cast flare), pushable, platform, collapsing-block and enemy views (enemy models by type: `ENEMY_MODELS`; spell-hit flash and glitch), glowing drop shadows, pixel bursts (derez, collapse), platform guide lines |
 | `render/zap-fx.js` | Zap look: trail zigzags, bolt flicker, cast flare, sparks, enemy hit flash and damaged glitch, `ZAP_FX` tuning (pure, tested) |
 | `render/zap-view.js` | Zap meshes: bolt, cast flare, sparks; `ZapView` keeps a room's bolts and sparks (pooled) |
+| `render/install-fx.js`, `render/install-view.js` | Installing a spell from a data disk (D73): the look (pure, tested) and its meshes, shown by `PlayerView` |
+| `render/shield-fx.js`, `render/shield-view.js` | The Shield's lightning ring (D73): the look (pure, tested) and its meshes, shown by `PlayerView` |
 | `render/collapse-fx.js` | Collapsing-block look: shake, pixels breaking off, regrow, `COLLAPSE_FX` tuning (pure, tested) |
 | `render/bug.js` | Bug model (ball, eyes colored by mood), hop pose, bounce squash, pop pixels, `BUG` tuning (pure parts tested); `BUG_MODEL` for `EnemyView` |
 | `render/hash.js` | Fixed pseudo-random numbers for pixel bursts (pure) |
