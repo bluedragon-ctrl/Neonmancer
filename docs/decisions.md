@@ -888,3 +888,15 @@ access-key bit layout, so they are decided in the step, not up front.
 The world map tool comes first: every step adds a test room, and the
 room editor shows one room at a time, so nothing gives an overview of the
 growing world or catches rooms cut off from the start.
+
+### D66 — 2026-09-27 — World map tool: its own page, room positions in world.json
+The developer world map tool (Phase 3 step 1) is a separate page,
+`tools/world-map.html`, like the asset showcase, not a view inside the
+room editor. Room positions on the map are stored in `data/world.json`,
+not computed from the connections.
+**Why:** author's choice. A page of its own keeps the room editor
+focused on one room and can show the whole world without the game
+running. Stored positions give one layout that the tool and the player's
+map screen (Phase 4) share; an automatic layout can't place the test
+world, whose shortcuts (D49) don't fit a flat grid, and would shift
+whenever a connection changes.
