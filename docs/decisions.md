@@ -1089,6 +1089,7 @@ After playtesting step 3 (D73), the author's changes:
   from where it hung into him wherever he goes.
 - Shield lasts 7 s (was 5 s).
 - A lit bit on a data disk glows brighter the darker its color is, so
-  Shield's neon blue reads as well as Zap's cyan on the white disk.
+  Shield's neon blue reads as well as Zap's cyan on the white disk, and
+  the empty squares of the bit grid are dark gray (were dim white).
 **Why:** author's playtest. The freeze interrupted the flow of play;
 5 s felt short; the blue bit was hard to see.

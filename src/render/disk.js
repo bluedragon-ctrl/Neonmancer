@@ -35,8 +35,10 @@ export const DISK = {
   grid: 0.66,
   bit: 0.62,
   raise: 0.05,
-  /** Zero bits: a share of the body's brightness. */
+  /** Zero bits on a ghost: a share of its brightness. */
   zero: 0.35,
+  /** Zero bits on a live disk: dark gray, so the lit bit stands out (D74); a ghost keeps its own gray. */
+  zeroColor: 0x2c2f3a,
   /** Lit bits: line width and glow, and the share of their color in their faces. */
   bitWidth: 1.8,
   bitBrightness: 2,
@@ -110,7 +112,9 @@ export function createDisk({ color = PALETTE.cyan, slot = 0, ghost = false } = {
   const half = (pitch * DISK.bit) / 2;
   bitGeometry ??= new BoxGeometry(2 * half, 2 * half, DISK.raise);
   bitEdges ??= new EdgesGeometry(bitGeometry);
-  const zeroMaterial = lineMaterial({ color: bodyColor, width: 1.2, brightness: glow * DISK.zero, dashed: ghost });
+  const zeroMaterial = ghost
+    ? lineMaterial({ color: bodyColor, width: 1.2, brightness: glow * DISK.zero, dashed: true })
+    : lineMaterial({ color: DISK.zeroColor, width: 1.2, brightness: 1 });
   const litLines = lineMaterial({ color: bitColor, width: DISK.bitWidth, brightness: ghost ? glow : bitGlow(bitColor) });
   const litFaces = faceMaterial(new Color(PALETTE.face).lerp(new Color(bitColor), ghost ? 0.1 : DISK.bitTint));
   const edgeSegments = edgePairs(bitEdges);

@@ -345,7 +345,8 @@ enemies).
   RECHARGED`.
 - **Look:** a data disk is an abstract white slab with both top corners
   clipped, hovering half a block up, spinning (a turn every ~4 s) and
-  bobbing; both faces carry a 4×4 bit grid whose one lit cube, in the
+  bobbing; both faces carry a 4×4 bit grid of dark gray squares whose
+  one lit cube (brighter for darker colors, D74), in the
   spell's color, is the spell's slot (row by row from the top left). The
   integrity refill is a cyan plus of five voxels, the energy refill a lime
   crystal (the HUD bars' colors), smaller and lower than a disk. Taking
