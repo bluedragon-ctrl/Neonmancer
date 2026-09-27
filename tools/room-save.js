@@ -2,14 +2,15 @@
  * Saving from the in-game editor (dev server only, D56, D57, D58): the
  * edited rooms, world.json and defs.json (enemy templates) are checked together with the rest of data/
  * (schemas, then the game's own checks) and written only if everything
- * passes. New rooms get a new file.
+ * passes. New rooms get a new file. The world map tool (D66) sends moved
+ * rooms' positions only, merged into world.json as it is on disk.
  */
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { formatJson } from '../src/editor/format-json.js';
 import { checkFiles, readDataFiles, readSchemas } from './check-data.js';
 
-export { SAVE_URL } from '../src/editor/save.js';
+export { DATA_SAVED_EVENT, SAVE_URL } from '../src/editor/save.js';
 
 /**
  * Why a save request is refused, as an HTTP status, or 0 to go ahead. Only
@@ -31,13 +32,24 @@ export function refuseSaveRequest({ method, headers }) {
  * Check edited rooms, world.json and defs.json against the data on disk
  * and write them if everything is valid.
  * @param {string} root project root
- * @param {{ rooms?: any[], world?: any, defs?: any }} edits from the editor: whole room files, and world.json
- *   and defs.json if they changed
+ * @param {{ rooms?: any[], world?: any, defs?: any, positions?: Record<string, number[]> }} edits from the editor: whole room files, and world.json
+ *   and defs.json if they changed; from the world map tool: map positions of the rooms it moved
  * @returns {{ ok: boolean, errors: string[], files: string[] }} `files`: the paths written, relative to root
  */
-export function saveEdits(root, { rooms = [], world, defs } = {}) {
-  if (!Array.isArray(rooms) || (rooms.length === 0 && !world && !defs)) return { ok: false, errors: ['nothing to save'], files: [] };
+export function saveEdits(root, { rooms = [], world, defs, positions } = {}) {
+  if (!Array.isArray(rooms) || (rooms.length === 0 && !world && !defs && !positions)) return { ok: false, errors: ['nothing to save'], files: [] };
   const { files, errors: readErrors } = readDataFiles(root);
+  if (positions !== undefined && (typeof positions !== 'object' || positions === null || Array.isArray(positions))) {
+    return { ok: false, errors: ['positions: not a map of room ids to cells'], files: [] };
+  }
+  const disk = files['world.json'];
+  if (disk && (world || positions)) {
+    // The world map tool owns where rooms are, the room editor the connections:
+    // the editor's copy may be older than a move saved from the map, so only
+    // its new rooms' cells count; the map's moves go into world.json as it is.
+    const base = world ?? disk;
+    world = { ...base, positions: { ...base.positions, ...(world ? disk.positions : {}), ...positions } };
+  }
   const names = [];
   for (const room of rooms) {
     const id = room?.id;

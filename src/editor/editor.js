@@ -206,6 +206,7 @@ export class Editor {
       return;
     }
     const data = newRoom(id, this.edit.data.biome);
+    this.world.place(id, this.edit.id);
     this.sessions.set(id, new RoomEdit(data, { world: this.world, defs: this.defs, fresh: true }));
     this.game.content.rooms.set(id, data);
     this.openRoom(id);
@@ -222,6 +223,7 @@ export class Editor {
     this.sessions.delete(id);
     this.game.content.rooms.delete(id);
     this.world.setLinks(id, []);
+    this.world.unplace(id);
     const back = this.lastRoom && this.lastRoom !== id && this.roomData(this.lastRoom) ? this.lastRoom : this.game.content.world.start;
     this.edit = null;
     this.lastRoom = null;

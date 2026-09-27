@@ -2,9 +2,9 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "world.schema.json",
   "title": "World (data/world.json)",
-  "description": "How rooms connect. Fragments and the core join in Phase 3.",
+  "description": "How rooms connect and where they sit on the world map. Fragments and the core join in Phase 3.",
   "type": "object",
-  "required": ["schemaVersion", "start", "connections"],
+  "required": ["schemaVersion", "start", "connections", "positions"],
   "additionalProperties": false,
   "properties": {
     "$schema": { "type": "string" },
@@ -18,6 +18,17 @@
         "items": { "type": "string", "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$" },
         "minItems": 2,
         "maxItems": 2
+      }
+    },
+    "positions": {
+      "description": "Every room's cell on the world map (D66) as [x, z], by room id: +x is east, +z is south, as in a room. One room per cell; neighbours on the map need not be connected.",
+      "type": "object",
+      "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
+      "additionalProperties": {
+        "type": "array",
+        "prefixItems": [{ "type": "integer" }, { "type": "integer" }],
+        "items": false,
+        "minItems": 2
       }
     }
   }

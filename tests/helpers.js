@@ -59,12 +59,21 @@ export function roomFile(id, props = {}) {
  * @param {Record<string, object>} [options.blocks] block types; BLOCK_TYPES by default
  * @param {string[][]} [options.connections] pairs of "room.exit"
  * @param {string} [options.start] start room; the first room by default
+ * @param {Record<string, number[]>} [options.positions] map cells; the rooms in a row by default
  */
-export function dataFiles({ rooms, objects = { crate: CRATE }, enemies = { bug: BUG }, blocks = BLOCK_TYPES, connections = [], start = rooms[0].id }) {
+export function dataFiles({
+  rooms,
+  objects = { crate: CRATE },
+  enemies = { bug: BUG },
+  blocks = BLOCK_TYPES,
+  connections = [],
+  start = rooms[0].id,
+  positions = Object.fromEntries(rooms.map((room, i) => [room.id, [i, 0]])),
+}) {
   return structuredClone({
     'defs.json': { schemaVersion: 1, objects, enemies, spells: SPELLS, blocks },
     'biomes.json': { schemaVersion: 1, biomes: { home: { name: 'Home', color: '#ffb020' } } },
-    'world.json': { schemaVersion: 1, start, connections },
+    'world.json': { schemaVersion: 1, start, connections, positions },
     'strings.json': STRINGS,
     ...Object.fromEntries(rooms.map((room) => [`rooms/${room.id}.json`, room])),
   });

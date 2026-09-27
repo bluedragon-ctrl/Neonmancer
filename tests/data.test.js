@@ -210,6 +210,14 @@ test('world: connected exits must be opposite, equally wide and used once', () =
   assert.ok(errors.some((e) => e.includes('already connected')));
 });
 
+test('world: every room has its own cell on the map (D66)', () => {
+  assertError(errorsAfter((f) => delete f['world.json'].positions.beta), 'world.json › positions', 'room "beta" has no position');
+  assertError(errorsAfter((f) => (f['world.json'].positions.beta = [0, 0])), 'world.json › positions.beta', 'cell [0,0] is taken by "alpha"');
+  assertError(errorsAfter((f) => (f['world.json'].positions.gamma = [5, -2])), 'world.json › positions.gamma', 'unknown room "gamma"');
+  assertError(errorsAfter((f) => (f['world.json'].positions.beta = [1.5, 0])), 'world.json › positions.beta[0]');
+  assertError(errorsAfter((f) => delete f['world.json'].positions), 'world.json', 'positions');
+});
+
 test('a wrong schemaVersion is reported', () => {
   const files = validFiles();
   files['defs.json'].schemaVersion = 2;

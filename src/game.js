@@ -59,8 +59,11 @@ export const TRANSITION = {
  */
 
 export class Game {
-  /** @param {object} content loaded game data (see data/load.js) */
-  constructor(content) {
+  /**
+   * @param {object} content loaded game data (see data/load.js)
+   * @param {string} [start] room to start in; world.json's start by default
+   */
+  constructor(content, start = content.world.start) {
     this.content = content;
     /** Debug mode: holes and lethal blocks never kill and hurt() does nothing. */
     this.invincible = false;
@@ -70,7 +73,7 @@ export class Game {
     this.events = [];
     /** The wizard, for the whole game; each room places him (enterRoom()). */
     this.player = new Player([0, 0, 0]);
-    this.enterRoom(content.world.start);
+    this.enterRoom(start);
     /**
      * Room transition in progress, or null: { phase: 'out' | 'in', tick, exit }.
      * Views read it through fadeLevel().

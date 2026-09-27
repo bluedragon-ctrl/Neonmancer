@@ -443,6 +443,7 @@ in isolation, and later spells and enemy behaviors get tested in them too.
 New mechanics add or extend one (D43). Boot Sector, the start, is the
 hub: every test room is at most two rooms away from it, so no test means
 walking the whole world (new exits are added for that where needed, D49).
+The world map tool flags any room further out.
 
 | Room | Size | Exits | Shows |
 |---|---|---|---|
@@ -708,6 +709,43 @@ list switches to another room; New room makes an empty one (D57).
   compare link without it. Other uncommitted changes stay uncommitted; you
   stay on the new branch.
 
+## World map tool
+
+The whole world on one page for the developer (D66, D70):
+`/tools/world-map.html` in the dev server. It is not part of the build, so
+players never see it (D67).
+
+- **Map:** every room is a node in its biome color on a simple grid, one
+  room per cell, at its `positions` entry in `world.json` (`[x, z]`: +x
+  east, +z south, as in a room). A node shows the room's name, id and
+  size; the start room has a dashed lime frame and `START`.
+- **Connections:** a line joins two connected exits, leaving each node
+  from the side its exit is on, as far along it as the exit is along the
+  room's side. Solid when the rooms are neighbours that way round on the
+  map (east exit, room one cell east), dashed when the connection runs
+  across the map (shortcuts, loops). Connections are edited in the room
+  editor.
+- **Moving rooms:** drag a room to a free cell (dropping it on another room
+  does nothing); moved rooms show a lime dot until saved. **Save** (or
+  Ctrl+S) sends only the moved rooms' positions; the dev server merges them
+  into `world.json` as it is on disk and checks everything first. Ctrl+Z
+  undoes a move. A room file with no position yet gets a free cell next to
+  the start, saved with the next save.
+- **Opening a room:** click it: the game opens in one reused tab at
+  `/?room=<id>&edit`, in the room editor on that room (F2 plays it). The
+  game takes `?room` and `?edit` in the dev server only.
+- **Checks:** the side panel lists the data errors, the rooms the start
+  can't reach through exits, and test rooms more than two rooms from the
+  start (D49; every room counts as a test room until content production).
+  Click a warning to highlight its room.
+- **New rooms** made in the room editor get the free cell nearest to the
+  room they were made from (east, south, west, north first, then further
+  out), to be moved on the map afterwards. The room editor never moves
+  existing rooms: when it saves `world.json`, the positions on disk win
+  over its copy, so a move saved from the map meanwhile stays.
+- **Live data:** when another page saves (the room editor), the map
+  reloads to show it; with moves not saved yet, it says so instead.
+
 ---
 
 ## Phase 1 (v0.1) plan
@@ -863,7 +901,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 | `data/rooms/<id>.json` | One room (id = file name) |
 | `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan); `enemies`: enemy types (`bug`, see Enemies) and templates that `extend` one (D58); `spells`: spell tuning (`zap`, see Zap and energy); `blocks`: block types (D60): look or kind, color, properties (`damage`, `lethal`, `regrow`), `extends` for variants; see Block types |
 | `data/biomes.json` | Biome name and room color: `home_lattice` (core, amber), `glitchmire` (pink), `frostbyte_wastes` (ice blue), `abyssal_buffer` (graphite), `firewall_citadel` (ember orange), `phantom_partition` (special, silver-white); optional `look` for the surroundings (background, outer grid and its fade, wall grid, bloom); see Biomes (D61, D62) |
-| `data/world.json` | Start room and exit connections |
+| `data/world.json` | Start room, exit connections and every room's cell on the world map (`positions`, D66) |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |
 
 Example room (12×12):
@@ -917,3 +955,6 @@ Example room (12×12):
   Objects may override them.
 - `world.json` pairs exits: `"connections": [["boot_sector.north", "cache_hall.south"]]`.
   Paired exits are on opposite sides and equally wide; every exit is connected.
+- `world.json` places every room on the world map, one room per cell:
+  `"positions": { "boot_sector": [0, 0], "cache_hall": [0, -1] }` (`[x, z]`,
+  +x east, +z south). Map neighbours need not be connected (D66).

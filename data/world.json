@@ -11,5 +11,14 @@
     ["volatile_memory.east", "crawl_space.west"],
     ["boot_sector.west", "crawl_space.east"],
     ["boot_sector.south", "transit_bus.north"]
-  ]
+  ],
+  "positions": {
+    "boot_sector": [0, 0],
+    "cache_hall": [0, -1],
+    "stack_yard": [1, 0],
+    "fault_line": [2, 0],
+    "crawl_space": [-1, 0],
+    "transit_bus": [0, 1],
+    "volatile_memory": [1, 1]
+  }
 }

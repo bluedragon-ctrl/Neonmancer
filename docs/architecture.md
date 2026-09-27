@@ -65,6 +65,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `entities/bolt.js` | Zap bolt: flies level in sub-steps, stops at the first enemy, block, object or room side (`BOLT` tuning) |
 | `ai/behaviors.js` | Movement behaviors by name (`BEHAVIORS`: `patrol`, `stationary`), as enemy types refer to them |
 | `ai/patrol.js` | Patrol: next step towards the next waypoint column, pauses at the ends, turns back (pure, tested) |
+| `world/map.js` | The world map (D66): `nearestFreeCell()` for new rooms, `roomDistances()` from the start, `mapWarnings()` (unreachable rooms, test rooms too far out, D49) (pure, tested) |
 | `world/path.js` | Shared path format: legs from `at` through `points`, `advance()` / `positionOf()` on a small path state, swept cells |
 | `render/viewport.js` | Letterbox, buffer size and 1080p-relative sizing math (pure, tested) |
 | `render/renderer.js` | WebGLRenderer, 16:9 stage + HUD overlay, DPR cap, render scale, resize |
@@ -106,9 +107,10 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `tools/run-tests.js` | `npm test`: runs `node --test` on an explicit list of `tests/*.test.js` (works on Node 20 and 22+, Windows and Linux) |
 | `tools/game-version.js` | Dev only: the game version for builds, PATCH counted from git merges since the phase tag (D42) |
 | `tools/showcase.html`, `tools/showcase.js` | Asset showcase page: every look on a turntable with the real renderer (also deployed) |
+| `tools/world-map.html`, `tools/world-map.js`, `tools/world-map.css` | World map tool (D66, D70): every room on the map grid with its connections and checks; drag rooms and save their positions; click to open a room in the editor. Dev server only, not built |
 | `editor/editor.js` | Room editor (F2, D56, D57): opens on the current room, switches rooms and makes new ones, mouse picking on a height layer, tools, picking things, keys, rebuilding the room from the edited data, save or export |
 | `editor/room-edit.js` | One room being edited: place/erase edits, enemies, paths, exits and their connections, spawn/reset, name, biome, size (with a report), undo/redo (with the step's template changes), dirty state, cell descriptions; `roomErrors()`, `newRoom()` (pure, tested) |
-| `editor/world-edit.js` | `world.json` being edited: connecting, disconnecting and renaming exits, a room's connections for its undo steps; `linkChoices()` (pure, tested) |
+| `editor/world-edit.js` | `world.json` being edited: connecting, disconnecting and renaming exits, a room's connections for its undo steps, a new room's map cell (`place()`, `unplace()`); `linkChoices()` (pure, tested) |
 | `editor/defs-edit.js` | `defs.json` being edited: enemy templates added, updated, renamed and deleted; a step's template changes applied again for undo/redo (pure, tested) |
 | `editor/errors.js` | The error list: errors grouped by file, and the room, tool and thing each one points at (pure, tested) |
 | `editor/boxes.js` | `blocks`/`holes` entries edited cell by cell: untouched entries kept, loose cells merged greedily into boxes (pure, tested) |
@@ -381,7 +383,8 @@ Validation has two layers:
    inside the room and not overlapping, exits fit their side, the player
    hitbox fits at the spawn, start room exists, connections join existing
    exits on opposite sides with equal width, every exit connected once, the
-   first row inside an exit free of blocks, objects and (at floor level) holes.
+   first row inside an exit free of blocks, objects and (at floor level) holes,
+   every room on the world map in a cell of its own (`positions`).
 
 Semantic checks run only when the schema pass is clean. Every problem is
 reported (not just the first), naming the file and path, e.g.
@@ -392,10 +395,20 @@ If the game cannot start, `ui/error-screen.js` lists them.
 
 ```
 editor (page) ──POST /__editor/save {rooms, world?, defs?}──► tools/vite-plugin-data.js
-                                                       └─ tools/room-save.js: read data/, swap in the edited files,
-                                                          schema + semantic checks, write them all or none
-editor ◄── { ok, errors, files } ──────────────────────┘  (no page reload for those writes)
+world map ─────POST /__editor/save {positions}─────────────►   └─ tools/room-save.js: read data/, swap in the edited files,
+                                                                  merge positions, schema + semantic checks,
+                                                                  write them all or none
+page ◄── { ok, errors, files } ────────────────────────────────┘  (no page reload for those writes)
+open pages ◄── ws custom event neonmancer:data-saved { files }
 ```
+
+`world.json` has two editors (D70): the room editor owns the connections,
+the world map tool the positions. The map sends only the rooms it moved,
+merged into the file on disk; when the room editor sends the whole file,
+the positions on disk win over its copy (only a new room's cell is its
+own), so neither undoes the other's saves. After every save the dev
+server sends `neonmancer:data-saved`: the game ignores it (it already
+shows its edits), the map reloads unless it has unsaved moves.
 
 While editing, the page checks all its edited data (every edited room and
 `world.json`, D57) with `validateData()` against its own copy of the rest

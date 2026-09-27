@@ -30,11 +30,14 @@ function boot() {
   // well-formed data.
   if (SCHEMA_ERRORS.length > 0) throw new DataError(SCHEMA_ERRORS);
   const content = loadGameData(DATA_FILES);
-  const game = new Game(content);
+  const params = new URLSearchParams(location.search);
+  // Dev server only (never for players, D67): ?room=<id> starts in that
+  // room and ?edit opens the room editor on it (the world map tool's links).
+  const devRoom = DEV_SERVER && content.rooms.has(params.get('room')) ? params.get('room') : undefined;
+  const game = new Game(content, devRoom);
 
   // ?scale=0.5 tries a lower render scale and ?msaa=0 turns multisampling
   // off, until there is a settings menu with quality presets.
-  const params = new URLSearchParams(location.search);
   const renderer = new Renderer(app, {
     renderScale: Number(params.get('scale') ?? 1),
     multisampling: Number(params.get('msaa') ?? 4),
@@ -56,6 +59,7 @@ function boot() {
 
   // F2: the room editor (saves in the dev server, exports in a build).
   const editor = new Editor({ game, renderer, files: DATA_FILES, canSave: DEV_SERVER, onRoom: (options) => showRoom({ rebuild: true, ...options }) });
+  if (DEV_SERVER && params.has('edit')) editor.open();
 
   say('msg.boot');
   say('msg.welcome');
