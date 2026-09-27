@@ -14,15 +14,13 @@ import { ENEMY_OPTIONS, EXIT_DEFAULTS, PATH_DEFAULTS } from '../data/room-data.j
  */
 export const TOOLS = [
   { id: 'block', label: 'Block', key: '1' },
-  { id: 'hazard', label: 'Hazard', key: '2' },
-  { id: 'void', label: 'Void', key: '3' },
-  { id: 'hole', label: 'Hole', key: '4' },
-  { id: 'object', label: 'Object', key: '5' },
-  { id: 'enemy', label: 'Enemy', key: '6' },
-  { id: 'path', label: 'Path', key: '7' },
-  { id: 'exit', label: 'Exit', key: '8' },
-  { id: 'spawn', label: 'Spawn', key: '9' },
-  { id: 'reset', label: 'Reset', key: '0' },
+  { id: 'hole', label: 'Hole', key: '2' },
+  { id: 'object', label: 'Object', key: '3' },
+  { id: 'enemy', label: 'Enemy', key: '4' },
+  { id: 'path', label: 'Path', key: '5' },
+  { id: 'exit', label: 'Exit', key: '6' },
+  { id: 'spawn', label: 'Spawn', key: '7' },
+  { id: 'reset', label: 'Reset', key: '8' },
 ];
 
 /** Enemy settings the panel sets as lists (overrides of the type's values); blank is the type's own. */
@@ -38,7 +36,7 @@ export const ENEMY_NUMBERS = { integrity: [1, 1], damage: [1, 1], speed: [0.5, 0
 
 const HELP = [
   'Left click: place / pick · Right click: erase',
-  'Wheel or PgUp/PgDn: layer · 1–9, 0: tool',
+  'Wheel or PgUp/PgDn: layer · 1–8: tool',
   'Esc: drop the selection · Del: remove it',
   'Ctrl+Z / Ctrl+Y: undo / redo · Ctrl+S: save',
   'F2: play the room · F3: debug',
@@ -50,6 +48,17 @@ const HINTS = {
   path: ['Click a platform or an enemy to pick it.', (id) => `Path of ${id}: click cells to add points, right click takes the last one off.`],
   exit: ['Click an edge cell to open an exit there, or an exit to pick it.', (id) => `Editing exit ${id}.`],
 };
+
+/**
+ * A block type in a few words for the type list: what it does
+ * (`hurts 1`, `lethal`, `collapsing, regrows 3 s`) or its look.
+ * @param {{ look?: string, kind?: string, damage?: number, lethal?: boolean, regrow?: number }} type
+ */
+export function blockTypeText(type) {
+  if (type.kind) return type.regrow ? `${type.kind}, regrows ${type.regrow} s` : type.kind;
+  const does = [type.damage && `hurts ${type.damage}`, type.lethal && 'lethal'].filter(Boolean);
+  return does.join(', ') || type.look;
+}
 
 /** An element with a class and optional text. */
 function el(tag, className, text) {
@@ -87,16 +96,17 @@ export class EditorPanel {
   /**
    * @param {HTMLElement} root the stage (the panel scales with --u)
    * @param {object} options
+   * @param {Record<string, { look?: string, kind?: string }>} options.blockTypes block types the Block tool places (resolved, D60)
    * @param {Record<string, { kind: string, color: string }>} options.objectTypes object types that can be placed
    * @param {Record<string, object>} options.enemyTypes enemy types (defs.json)
    * @param {Record<string, { name: string }>} options.biomes
    * @param {boolean} options.canSave the dev server can save; a build only exports
-   * @param {Record<string, Function>} options.on callbacks: room(id), newRoom(id), tool(id), objectType(id),
+   * @param {Record<string, Function>} options.on callbacks: room(id), newRoom(id), tool(id), blockType(id), objectType(id),
    *   enemy(field, value), saveTemplate(name), updateTemplate(), renameTemplate(name), deleteTemplate(),
    *   path(field, value), clearPath(), exit(field, value), layer(step), cut(on), discard(), error(text), name(text),
    *   biome(id), size([x, y, z]), undo(), redo(), save(), revert()
    */
-  constructor(root, { objectTypes, enemyTypes, biomes, canSave, on }) {
+  constructor(root, { blockTypes, objectTypes, enemyTypes, biomes, canSave, on }) {
     this.canSave = canSave;
     this.on = on;
     this.element = el('div', 'editor-panel');
@@ -167,12 +177,14 @@ export class EditorPanel {
     }
 
     // --- Fields of the current tool, shown only while it is picked
+    this.blockSelect = select(Object.entries(blockTypes).map(([id, type]) => [id, `${id} (${blockTypeText(type)})`]));
+    this.blockSelect.addEventListener('change', () => on.blockType(this.blockSelect.value));
+    this.blockRows = el('div', 'editor-group');
+    this.blockRows.append(this.row('Type', this.blockSelect));
     this.objectSelect = select(Object.entries(objectTypes).map(([id, type]) => [id, `${id} (${type.kind})`]));
     this.objectSelect.addEventListener('change', () => on.objectType(this.objectSelect.value));
-    this.regrowInput = numberInput({ min: 0, step: 0.5, placeholder: 'never' });
-    this.regrowRow = this.row('Regrow (s)', this.regrowInput);
     this.objectRows = el('div', 'editor-group');
-    this.objectRows.append(this.row('Object', this.objectSelect), this.regrowRow);
+    this.objectRows.append(this.row('Object', this.objectSelect));
 
     this.hints = {};
     this.enemyType = el('select');
@@ -263,7 +275,7 @@ export class EditorPanel {
     const help = el('div', 'editor-help');
     for (const line of HELP) help.append(el('div', '', line));
 
-    this.element.append(title, this.roomLabel, room, layer, this.hoverLine, tools, this.objectRows, this.enemyRows, this.pathRows, this.exitRows, actions, this.status, this.errors, help);
+    this.element.append(title, this.roomLabel, room, layer, this.hoverLine, tools, this.blockRows, this.objectRows, this.enemyRows, this.pathRows, this.exitRows, actions, this.status, this.errors, help);
     root.append(this.element);
 
     // Controls let go of the keyboard once used, so the editor's keys (the
@@ -316,20 +328,14 @@ export class EditorPanel {
     this.element.hidden = !shown;
   }
 
-  /** The regrow time typed in, in seconds, or undefined (never grows back). */
-  get regrow() {
-    const value = this.regrowInput.valueAsNumber;
-    return Number.isFinite(value) && value > 0 ? value : undefined;
-  }
-
   /**
    * Show the editor's state.
    * @param {object} state
    * @param {import('./room-edit.js').RoomEdit} state.edit the room
    * @param {string[]} state.rooms ids of every room, to pick from
    * @param {string} state.tool
+   * @param {string} state.blockType the Block tool's type
    * @param {string} state.objectType
-   * @param {boolean} state.collapsing the object type is a collapsing block (it may regrow)
    * @param {{ id?: string, type: string, overrides: object }} state.enemy enemy settings: the picked enemy's (with its id), or for new ones
    * @param {boolean} state.template their type is a template (it can be renamed or deleted)
    * @param {object|null} state.pathItem the platform or enemy whose path is edited
@@ -343,7 +349,7 @@ export class EditorPanel {
    * @param {string} state.status a line about the last action
    * @param {boolean} state.unsaved there are unsaved edits (any room, or world.json)
    */
-  show({ edit, rooms, tool, objectType, collapsing, enemy, template, pathItem, pathItemIsEnemy, exit, layer, cut, errors, status, unsaved }) {
+  show({ edit, rooms, tool, blockType, objectType, enemy, template, pathItem, pathItemIsEnemy, exit, layer, cut, errors, status, unsaved }) {
     const data = edit.data;
     const changed = edit.dirty || edit.linksChanged;
     this.roomLabel.textContent = `${data.id}${changed ? ' • unsaved' : unsaved ? ' • other rooms unsaved' : ''}`;
@@ -353,9 +359,10 @@ export class EditorPanel {
     this.roomSelect.value = data.id;
     for (const [id, button] of this.toolButtons) button.classList.toggle('active', id === tool);
 
+    this.blockRows.hidden = tool !== 'block';
+    this.blockSelect.value = blockType;
     this.objectRows.hidden = tool !== 'object';
     this.objectSelect.value = objectType;
-    this.regrowRow.hidden = !collapsing;
 
     this.enemyRows.hidden = tool !== 'enemy';
     this.pathRows.hidden = tool !== 'path';

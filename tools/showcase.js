@@ -13,7 +13,7 @@
 import { Group, Vector3 } from 'three';
 import defs from '../data/defs.json';
 import strings from '../data/strings.json';
-import { OBJECT_STYLE_DEFAULTS, withExitDefaults } from '../src/data/room-data.js';
+import { OBJECT_STYLE_DEFAULTS, resolveBlockTypes, withExitDefaults } from '../src/data/room-data.js';
 import { VIEW_HEIGHT, frameRoom } from '../src/render/camera.js';
 import { PLAYER } from '../src/entities/player.js';
 import { COLLAPSING } from '../src/entities/collapsing.js';
@@ -43,6 +43,9 @@ import { BUG, animateBug, createBug, popPixels, setEyeMood } from '../src/render
 import { ZAP_FX, damagedGlitch, enemyHitLook } from '../src/render/zap-fx.js';
 import { createBolt, createCastFlare, createSparks, placeBolt, placeCastFlare, placeSparks } from '../src/render/zap-view.js';
 import { EnergyBar } from '../src/ui/energy-bar.js';
+
+/** Block types with variants filled in (D60). */
+const BLOCK_TYPES = resolveBlockTypes(defs.blocks);
 
 /** Units between two assets (the default span of an asset). */
 const SPACING = 3;
@@ -98,7 +101,7 @@ const ALL_ASSETS = [
  */
 function buildXray() {
   const cells = [[1, 0, 3], [2, 0, 3], [1, 1, 3], [2, 1, 3]];
-  const room = new Group().add(createRoomView({ size: [4, 3, 4], cells, color: PALETTE.amber }));
+  const room = new Group().add(createRoomView({ size: [4, 3, 4], blocks: { block: cells }, blockTypes: BLOCK_TYPES, color: PALETTE.amber }));
   const crate = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...defs.objects.crate, at: [0, 0, 3] });
   const wizard = createWizard();
   addXray(wizard);
@@ -377,7 +380,7 @@ function buildWizardHit() {
 
 /** One block of a damaging type in its animated look. */
 function buildActiveBlock(type) {
-  const view = createActiveBlockView([[0, 0, 0]], type, defs.blocks[type].color);
+  const view = createActiveBlockView([[0, 0, 0]], BLOCK_TYPES[type].look, BLOCK_TYPES[type].color);
   view.position.set(-0.5, 0, -0.5);
   const asset = new Group().add(view);
   if (type === 'hazard') {
@@ -392,14 +395,23 @@ function buildActiveBlock(type) {
 
 /**
  * The animated looks in context: a 4×4 room corner with plain blocks, a
- * hazard wall and a void patch crossed by a plain path.
+ * hazard wall and a void patch crossed by a plain path; the pillar's top
+ * is a second plain type in its own color, joined without a seam (D64).
  */
 function buildBlocksInRoom() {
   const size = [4, 3, 4];
   const room = new Group().add(
-    createRoomView({ size, cells: [[0, 0, 0], [1, 0, 0], [0, 1, 0], [2, 0, 2], [2, 0, 3], [3, 0, 3]], color: PALETTE.amber }),
-    createActiveBlockView([[0, 0, 2], [0, 0, 3], [1, 0, 3]], 'hazard', defs.blocks.hazard.color),
-    createActiveBlockView([[2, 0, 1], [3, 0, 1], [3, 0, 2], [2, 0, 0]], 'void', defs.blocks.void.color),
+    createRoomView({
+      size,
+      blocks: {
+        block: [[0, 0, 0], [1, 0, 0], [0, 1, 0], [2, 0, 2], [2, 0, 3], [3, 0, 3]],
+        silver: [[0, 2, 0]],
+        hazard: [[0, 0, 2], [0, 0, 3], [1, 0, 3]],
+        void: [[2, 0, 1], [3, 0, 1], [3, 0, 2], [2, 0, 0]],
+      },
+      blockTypes: { ...BLOCK_TYPES, silver: { id: 'silver', static: true, look: 'plain', color: '#e8eaff' } },
+      color: PALETTE.amber,
+    }),
   );
   room.position.set(-2, 0, -2);
   return new Group().add(room);
@@ -417,7 +429,7 @@ function buildPlatforms() {
     buildTrack([0, 0, 1], { points: [[2, 0, 1], [2, 0, 3]], pause: 0.6 }),
     buildTrack([3, 0, 0], { points: [[3, 1, 0]], speed: 1.2, pause: 0.8 }),
   ];
-  const room = new Group().add(createRoomView({ size, cells: [[2, 0, 0], [2, 1, 0], [1, 0, 0], [1, 1, 0], [0, 0, 0], [0, 1, 0]], color: PALETTE.amber }));
+  const room = new Group().add(createRoomView({ size, blocks: { block: [[2, 0, 0], [2, 1, 0], [1, 0, 0], [1, 1, 0], [0, 0, 0], [0, 1, 0]] }, blockTypes: BLOCK_TYPES, color: PALETTE.amber }));
   const movers = paths.map((track) => {
     const block = createObjectView(style);
     room.add(createRails(track, color), block);
@@ -442,7 +454,7 @@ function buildPlatforms() {
  * still, shaking, breaking into pixels, and after a while growing back.
  */
 function buildCollapsingCycle() {
-  const object = { ...OBJECT_STYLE_DEFAULTS, ...defs.objects.collapsing };
+  const object = { ...OBJECT_STYLE_DEFAULTS, ...BLOCK_TYPES.collapsing };
   const solidTicks = 40;
   const goneTicks = 60;
   const loop = solidTicks + COLLAPSING.shakeTicks + goneTicks;
@@ -477,7 +489,7 @@ function buildExits() {
     withExitDefaults({ id: 'front', side: '+x', at: 1 }),
   ];
   const views = [new ExitView(exits[0], size, PALETTE.magenta), new ExitView(exits[1], size, PALETTE.cyan)];
-  const room = new Group().add(createRoomView({ size, cells: [], exits, color: PALETTE.amber }), ...views.map((v) => v.group));
+  const room = new Group().add(createRoomView({ size, blocks: {}, blockTypes: BLOCK_TYPES, exits, color: PALETTE.amber }), ...views.map((v) => v.group));
   room.position.set(-1.5, 0, -1.5);
   const asset = new Group().add(room);
   asset.userData.update = (dt) => {

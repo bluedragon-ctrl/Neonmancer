@@ -151,6 +151,28 @@ export function resolveEnemyTypes(types) {
 }
 
 /**
+ * Block types (D60) with variants filled in from their base type: each
+ * gets its `id`, the base's values, then its own. `static` tells blocks
+ * that live in the room grid (a look) from those that run as room objects
+ * (a kind, e.g. collapsing).
+ * @param {Record<string, object>} types defs.json `blocks`
+ * @returns {Record<string, { id: string, static: boolean, look?: string, kind?: string, color?: string, damage?: number, lethal?: boolean, regrow?: number }>}
+ */
+export function resolveBlockTypes(types) {
+  const out = {};
+  for (const [id, { extends: base, ...own }] of Object.entries(types)) {
+    const { extends: _, ...baseValues } = (base && types[base]) || {};
+    const type = { ...baseValues, ...own, id };
+    out[id] = { ...type, static: type.kind === undefined };
+  }
+  return out;
+}
+
+/** Values only static block types take, and only object kinds take (D60). */
+export const STATIC_BLOCK_VALUES = ['look', 'damage', 'lethal'];
+export const KIND_BLOCK_VALUES = ['kind', 'regrow', 'edges', 'mark', 'faces', 'tint'];
+
+/**
  * Which base type's look (render/entity-view.js ENEMY_MODELS) each enemy
  * type uses: its own id, or a template's base.
  * @param {Record<string, object>} types defs.json `enemies`

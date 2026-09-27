@@ -21,6 +21,37 @@ const OTHER_AXES = [
  * @returns {number[][][]} segments as [[x1, y1, z1], [x2, y2, z2]]
  */
 export function blockEdges(cells) {
+  return mergeUnitSegments(cornerUnits(cells).map(({ segment }) => segment));
+}
+
+/**
+ * Edges of several block types drawn as one mass (D64): the corner rule
+ * runs over all their cells together, so there is no edge between two
+ * neighbours of different types either; each edge goes to the highest
+ * ranked type among the filled cells around it (later groups rank higher).
+ * @param {number[][][]} groups cells of each type, lowest rank first
+ * @returns {number[][][][]} merged segments of each group, in the same order
+ */
+export function groupedBlockEdges(groups) {
+  const rank = new Map();
+  groups.forEach((cells, i) => {
+    for (const cell of cells) rank.set(cellKey(cell), i);
+  });
+  const units = groups.map(() => []);
+  for (const { segment, around } of cornerUnits(groups.flat())) {
+    const owner = Math.max(...around.map((cell) => rank.get(cellKey(cell)) ?? -1));
+    units[owner].push(segment);
+  }
+  return units.map(mergeUnitSegments);
+}
+
+/**
+ * Unit edges of a set of blocks that form a corner, each with the four
+ * cells around it.
+ * @param {Iterable<number[]>} cells
+ * @returns {{ segment: number[][], around: number[][] }[]}
+ */
+function cornerUnits(cells) {
   const filled = new Set();
   for (const cell of cells) filled.add(cellKey(cell));
   const has = (p) => filled.has(cellKey(p));
@@ -41,15 +72,16 @@ export function blockEdges(cells) {
           const edgeKey = `${axis}:${start}`;
           if (seen.has(edgeKey)) continue;
           seen.add(edgeKey);
-          if (!isCorner(has, start, axis, b, c)) continue;
+          const around = cellsAround(start, b, c);
+          if (!isCorner(around.map(has))) continue;
           const end = [...start];
           end[axis] += 1;
-          units.push([start, end]);
+          units.push({ segment: [start, end], around });
         }
       }
     }
   }
-  return mergeUnitSegments(units);
+  return units;
 }
 
 /**
@@ -89,17 +121,24 @@ export function mergeUnitSegments(units) {
   return segments;
 }
 
-/** Does the edge starting at `start` along `axis` form a visible corner? */
-function isCorner(has, start, axis, b, c) {
-  const around = (db, dc) => {
+/** The four cells around the edge starting at `start` (b, c: the other two axes), diagonal pairs at 0/3 and 1/2. */
+function cellsAround(start, b, c) {
+  return [
+    [0, 0],
+    [1, 0],
+    [0, 1],
+    [1, 1],
+  ].map(([db, dc]) => {
     const p = [...start];
     p[b] -= db;
     p[c] -= dc;
-    return has(p) ? 1 : 0;
-  };
-  const a = around(0, 0);
-  const d = around(1, 1);
-  const n = a + around(1, 0) + around(0, 1) + d;
+    return p;
+  });
+}
+
+/** Do the four cells around an edge (filled or not) form a visible corner? */
+function isCorner([a, e, f, d]) {
+  const n = a + e + f + d;
   if (n === 1 || n === 3) return true;
   return n === 2 && a === d; // diagonal pair
 }

@@ -55,13 +55,13 @@ export class DebugOverlay {
   /**
    * Rebuild the boxes for a freshly (re)built room: one per static block
    * cell, one per room object and enemy (the wizard's box is reused, see the constructor).
-   * @param {{ cells: number[][] }} room
+   * @param {{ blocks: Record<string, number[][]> }} room
    * @param {object[]} objects the game's room objects
    * @param {object[]} [enemies] the game's enemies
    */
   setRoom(room, objects, enemies = []) {
     this.cellGroup.clear();
-    for (const cell of room.cells) {
+    for (const cell of Object.values(room.blocks).flat()) {
       const mesh = box(materials.cell);
       place(mesh, cell, [1, 1, 1]);
       this.cellGroup.add(mesh);

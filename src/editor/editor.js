@@ -26,14 +26,11 @@ import { ID_PATTERN, RoomEdit, newRoom, resizeText, roomIdProblem, sizeProblem }
 import { downloadFile, saveFiles } from './save.js';
 import { WorldEdit, linkChoices } from './world-edit.js';
 
-/** Block tools and the block type they place. */
-const BLOCK_TOOLS = { block: 'block', hazard: 'hazard', void: 'void' };
-
 /** Tools a mouse drag paints with; the others act on the cell clicked only. */
-const PAINT_TOOLS = new Set(['block', 'hazard', 'void', 'hole', 'object']);
+const PAINT_TOOLS = new Set(['block', 'hole', 'object']);
 
 /** Hint after placing something that can't do without a path yet. */
-const NEEDS_PATH = (id) => `${id} needs a path: pick the Path tool (7) and click cells.`;
+const NEEDS_PATH = (id) => `${id} needs a path: pick the Path tool (${TOOLS.find((tool) => tool.id === 'path').key}) and click cells.`;
 
 export class Editor {
   /**
@@ -64,6 +61,9 @@ export class Editor {
     /** @type {RoomEdit|null} the room being edited */
     this.edit = null;
     this.tool = 'block';
+    /** Block type the Block tool places (defs.json "blocks", D60). */
+    this.blockType = 'block';
+    this.blockTypes = game.content.blockTypes;
     this.objectTypes = game.content.objectTypes;
     this.objectType = Object.keys(this.objectTypes)[0];
     this.enemyTypes = game.content.enemyTypes;
@@ -98,6 +98,7 @@ export class Editor {
     this.overlay = new EditorOverlay();
     renderer.scene.add(this.overlay.group);
     this.panel = new EditorPanel(renderer.stage, {
+      blockTypes: this.blockTypes,
       objectTypes: this.objectTypes,
       enemyTypes: this.enemyTypes,
       biomes: game.content.biomes,
@@ -106,6 +107,10 @@ export class Editor {
         room: (id) => this.openRoom(id),
         newRoom: (id) => this.createRoom(id),
         tool: (id) => this.setTool(id),
+        blockType: (id) => {
+          this.blockType = id;
+          this.refresh();
+        },
         objectType: (id) => {
           this.objectType = id;
           this.refresh();
@@ -627,8 +632,8 @@ export class Editor {
       edit: this.edit,
       rooms: this.roomIds(),
       tool: this.tool,
+      blockType: this.blockType,
       objectType: this.objectType,
-      collapsing: this.objectTypes[this.objectType]?.kind === 'collapsing',
       enemy: this.enemySettings,
       template: this.defs.isTemplate(this.enemySettings.type),
       pathItem,
@@ -733,7 +738,7 @@ export class Editor {
     const place = mode === 'place';
     const [x, y, z] = cell;
     const point = [x + 0.5, y, z + 0.5];
-    if (BLOCK_TOOLS[tool]) this.change(() => (place ? edit.placeBlock(cell, BLOCK_TOOLS[tool]) : edit.erase(cell)));
+    if (tool === 'block') this.change(() => (place ? edit.placeBlock(cell, this.blockType) : edit.erase(cell)));
     else if (tool === 'hole') this.change(() => edit.setHole([x, z], place));
     else if (tool === 'object') this.useObject(cell, place);
     else if (tool === 'enemy') this.useEnemy(cell, place);
@@ -747,9 +752,7 @@ export class Editor {
     const { edit } = this;
     if (!place) return this.change(() => edit.erase(cell));
     const type = this.objectTypes[this.objectType];
-    // Blank regrow removes it: the block no longer grows back.
-    const extra = type?.kind === 'collapsing' ? { regrow: this.panel.regrow } : {};
-    this.change(() => edit.placeObject(cell, this.objectType, extra));
+    this.change(() => edit.placeObject(cell, this.objectType));
     // A new platform is picked, ready for its path.
     const here = edit.at(cell);
     if (type?.kind === 'platform' && here?.kind === 'object' && !here.item.path) {

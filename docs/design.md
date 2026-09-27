@@ -94,13 +94,52 @@ steps.
   `HIT_FX` in `src/render/hit-fx.js`, shown looping in the asset showcase
   (`/tools/showcase.html?asset=wizard-hit`).
 
+## Block types
+
+Every block in a room has a block type (`"type"` on a room's block entry,
+default `block`), defined in `defs.json` `blocks` (D60). A type is a set of
+properties the engine understands plus a look, and may `extend` a base
+type (one level, like enemy templates), taking its values and replacing
+the ones it gives:
+
+| Type | Look | Properties |
+|---|---|---|
+| `block` | plain (room color) | none |
+| `hazard` | hazard, red | `damage: 1` |
+| `void` | void, violet | `lethal: true` |
+| `collapsing` | kind `collapsing`, magenta, dashed edges, tinted faces | gives way (see Collapsing blocks) |
+| `collapsing_regrow` | extends `collapsing` | `regrow: 3` |
+
+- **Static types** have a `look` (`plain`, `hazard`, `void`) and live in
+  the room grid: each cell holds its type's code, and the rules ask about
+  properties, never names: a cell with `damage` hurts on touch, a
+  `lethal` one kills whoever lands on it. A plain type may have its own
+  `color`; without one it takes the room color.
+- **Types with a `kind`** (`collapsing`) are written and painted like
+  blocks, but each cell becomes a room object of that kind when the room
+  is built (id `<type>@x,y,z`); `regrow`, `color` and the object look
+  (`edges`, `mark`, `faces`, `tint`) are on the type.
+- A new type that only combines existing properties and looks is data
+  only (e.g. `"hazard_hot": { "extends": "hazard", "damage": 2 }`); a new
+  property (bounce, slippery, conveyor...) or look is code.
+- Validation: a base type has a look or a kind, not both; `damage` and
+  `lethal` only on static types, `kind` values only on kinds; a kind needs
+  a color; `block` must be static; room blocks name a known type.
+- **Edges (D64):** neighbours of any plain types never get an edge between
+  them: the corner rule (D12) runs over all plain blocks as one mass, and
+  each edge takes the color of a type around it (the later one in
+  `defs.json` where types meet). The hazard and void looks outline
+  themselves over the plain edges, so there is always a seam where a
+  dangerous block starts. Collapsing blocks keep an outline around every
+  cell, since each one gives way on its own.
+
 ## Hazard and void blocks
 
-Static blocks of their own type (`"type"` on a room's block entry, D40,
-D44), solid like plain blocks. They are drawn in an animated look of
-their own (color from `defs.json` `blocks`, not the room color), so they
-read as active. Their edges stay steady and are drawn over plain blocks'
-edges where they meet. Motion is slow; nothing strobes.
+The `hazard` and `void` types (D40, D44): solid like plain blocks, drawn
+in an animated look of their own (color from their block type, not the
+room color), so they read as active. Their edges stay steady and are
+drawn over plain blocks' edges where they meet. Motion is slow; nothing
+strobes.
 
 - **Hazard look:** dark red faces with red pixels (8 per unit) that
   switch on and off at random, each on its own timer (about 30% lit,
@@ -112,29 +151,23 @@ edges where they meet. Motion is slow; nothing strobes.
   shrinking and fading, as if falling into the void (9 s per layer). Grains
   show more strongly through the top face, since only landing on top
   kills.
-- **Hazard rules:** touching one hurts, standing on
-  it or walking into any side of it (`damage` in defs.json, 1). The body
+- **Hazard rules** (any type with `damage`): touching one hurts, standing on
+  it or walking into any side of it (its `damage`, 1 for `hazard`). The body
   must overlap the block on two axes and lie against or in it (within 0.02),
   so brushing past a corner diagonally doesn't count. Leaning on or
   standing on one keeps hurting each time the 1 s invulnerability ends.
-- **Void rules:** landing on top is
+- **Void rules** (any type with `lethal`): landing on top is
   instant death (`die`, cause `void`), whatever the integrity; he derezzes
   on the spot like a damage death. Only the block under his feet center
   counts, like a hole, so an edge under one foot is safe; walking into its
   sides is safe; a crate or plain block on top of one covers it.
 - Debug invincibility: hazards don't hurt, void blocks don't kill.
-- Validation: `spawn` and `reset` can't be above a hazard or void block
-  (he would land on it), and a raised exit's floor can't be a void block.
-- Tuning: color and `damage` in `data/defs.json` `blocks`; the animated
-  looks are `BLOCK_FX` in `src/render/block-fx.js`. Review them in the
-  asset showcase (`/tools/showcase.html?asset=block-hazard,block-void,blocks-in-room`).
-- Planned (D60): block types become an open list in `defs.json`, each a
-  set of engine properties (`damage`, `lethal`, later e.g. `bounce`,
-  `slippery`) with a look and color, and `extends` for variants. The
-  engine and validation ask about properties, not type names, and the
-  editor gets one Block tool with a type list. Collapsing blocks become
-  a block type with `kind: collapsing` (one room object per cell inside,
-  regrow time on the type). Behavior stays as above.
+- Validation: `spawn` and `reset` can't be above a block with `damage` or
+  `lethal` (he would land on it), and a raised exit's floor can't be a
+  lethal block.
+- Tuning: color, `damage` and `lethal` in `data/defs.json` `blocks`; the
+  animated looks are `BLOCK_FX` in `src/render/block-fx.js`. Review them
+  in the asset showcase (`/tools/showcase.html?asset=block-hazard,block-void,blocks-in-room`).
 
 ## Moving platforms
 
@@ -174,9 +207,10 @@ follows a path given on the room object.
 
 ## Collapsing blocks
 
-Room objects of kind `collapsing` (D40, D47): a 1×1×1 block in its own
-color (`collapsing` in `defs.json`: magenta, thin dashed edges, tinted faces)
-that gives way under the wizard.
+Block types with `kind: collapsing` (D47, D60): painted in rooms like any
+block (a box of them is one entry), each cell runs as its own room object
+(D40), a 1×1×1 block in the type's color (`collapsing` in `defs.json`:
+magenta, thin dashed edges, tinted faces) that gives way under the wizard.
 
 - **Trigger:** only the wizard standing on it (grounded, feet on its top,
   any part of his footprint over it). Walking into its side, jumping past
@@ -186,15 +220,17 @@ that gives way under the wizard.
   breaks into pixels that tumble down and fade, and is gone: whatever
   stood on it falls (the wizard, crates). Once shaking it goes even if he
   steps off. Running across a row of them is safe; stopping is not.
-- **Regrow** (optional, `regrow` seconds on the room object): that long
+- **Regrow** (optional, `regrow` seconds on the block type, e.g.
+  `collapsing_regrow`: 3): that long
   after vanishing it grows back from its center, but only once nothing is
   in its cell (the wizard or a crate standing there makes it wait).
   Without `regrow` it stays gone until the room resets.
 - **Over a hole:** a collapsing block may stand in a hole tile (a bridge
   that gives way); when it goes, the wizard drops into the pit and a crate
   plugs it.
-- Validation: `regrow` only on collapsing blocks; spawn and reset points
-  don't count a collapsing block as holding the wizard up over a hole.
+- Validation: `regrow` only on block types with a kind; spawn and reset
+  points don't count a collapsing block as holding the wizard up over a
+  hole.
 - Tuning: `COLLAPSING` in `src/entities/collapsing.js`, the look is
   `COLLAPSE_FX` in `src/render/collapse-fx.js`; review in the asset
   showcase (`/tools/showcase.html?asset=collapsing,collapsing-cycle`).
@@ -571,21 +607,21 @@ list switches to another room; New room makes an empty one (D57).
 | Left click / drag | Place or pick with the current tool (a drag paints blocks, holes and objects; one undo step) |
 | Right click / drag | Erase with the current tool |
 | Mouse wheel, PgUp / PgDn | Height layer up / down (a grid shows it; with **hide above**, on by default, blocks, objects and enemies above it aren't drawn) |
-| 1–9, 0 | Tool: Block, Hazard, Void, Hole, Object, Enemy, Path, Exit, Spawn, Reset |
+| 1–8 | Tool: Block, Hole, Object, Enemy, Path, Exit, Spawn, Reset |
 | Esc | Drop the picked enemy, platform or exit |
 | Delete, Backspace | Remove the picked object, enemy or exit |
 | Ctrl+Z, Ctrl+Y (Ctrl+Shift+Z) | Undo, redo |
 | Ctrl+S | Save (dev server) / export (build), from a panel field too |
 
-- **Block, Hazard, Void** put a static block of that type in the cell of
-  the current layer, replacing whatever is there; erasing empties the cell.
+- **Block** puts a block of the type picked in the panel's type list (every
+  block type in `defs.json`, with what it does: `hazard (hurts 1)`,
+  `collapsing_regrow (collapsing, regrows 3 s)`) in the cell of the current
+  layer, replacing whatever is there; erasing empties the cell (D60).
 - **Hole** works on floor tiles, whatever the layer: place makes a hole,
   erase fills it in.
 - **Object** places the type picked in the panel (its fields show only
-  while this tool is picked), with the id `<type>_<n>`; a collapsing block
-  takes the panel's regrow time (blank: never). Placing on an object of
-  the same type only applies the regrow time: it keeps its id, and a
-  platform its path. A new platform is picked, ready for its path.
+  while this tool is picked), with the id `<type>_<n>`. Placing on an
+  object of the same type leaves it as it is (a platform keeps its path). A new platform is picked, ready for its path.
   Erasing removes an object or enemy standing in the cell.
 - **Enemy** places an enemy of the panel's type with its settings
   (movement, hostility, bounce, solid: blank is the type's own; other
@@ -716,7 +752,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 | File | Contents |
 |---|---|
 | `data/rooms/<id>.json` | One room (id = file name) |
-| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; `collapsing`: collapsing block, magenta); `enemies`: enemy types (`bug`, see Enemies) and templates that `extend` one (D58); `spells`: spell tuning (`zap`, see Zap and energy); `blocks`: look of the `hazard` and `void` block types and the hazard's `damage` |
+| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan); `enemies`: enemy types (`bug`, see Enemies) and templates that `extend` one (D58); `spells`: spell tuning (`zap`, see Zap and energy); `blocks`: block types (D60): look or kind, color, properties (`damage`, `lethal`, `regrow`), `extends` for variants; see Block types |
 | `data/biomes.json` | Biome name and room color: `home_lattice` (core, amber), `glitchmire` (pink), `frostbyte_wastes` (ice blue), `abyssal_buffer` (graphite), `firewall_citadel` (ember orange), `phantom_partition` (special, silver-white); optional `look` for the surroundings (background, outer grid and its fade, wall grid, bloom); see Biomes (D61, D62) |
 | `data/world.json` | Start room and exit connections |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |
@@ -756,13 +792,13 @@ Example room (12×12):
   that side; `width` (default 2), `y` floor level (default 0), `height`
   (default 2).
 - `blocks` — anonymous static geometry; `to` fills a box (inclusive);
-  `type` is `block` (default, room color), `hazard` or `void`.
+  `type` is a block type from `defs.json` `blocks` (default `block`, room
+  color), e.g. `hazard`, `void`, `collapsing` (see Block types).
 - `holes` — floor tiles `[x, z]` that are pits; `to` fills a rectangle.
 - `objects` — typed things with stable ids; `overrides` replace type defaults.
   Platforms also take a `path`:
   `{ "points": [[6, 0, 1]], "mode": "pingpong", "speed": 2, "pause": 0.8 }`
-  (see Moving platforms). Collapsing blocks may take `"regrow": 3`
-  (seconds; see Collapsing blocks).
+  (see Moving platforms).
 - `enemies` — `{ "id", "type", "at", "path", "overrides" }`: `at` is the
   spawn cell, `path` a patrol path (level legs), `overrides` any type field
   (see Enemies). Ids are shared with objects.

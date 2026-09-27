@@ -6,8 +6,7 @@
     "crate_plain": { "kind": "pushable", "color": "#b6ff3c" },
     "crate_cross": { "kind": "pushable", "color": "#b6ff3c", "faces": "tinted", "integrity": 1 },
     "crate_dashed": { "kind": "pushable", "color": "#b6ff3c", "edges": "dashed" },
-    "platform": { "kind": "platform", "color": "#00f0ff", "mark": "brackets", "faces": "tinted" },
-    "collapsing": { "kind": "collapsing", "color": "#ff2bd6", "edges": "dashed", "faces": "tinted" }
+    "platform": { "kind": "platform", "color": "#00f0ff", "mark": "brackets", "faces": "tinted" }
   },
   "enemies": {
     "bug": {
@@ -27,7 +26,10 @@
     "zap": { "cost": 2, "cooldown": 0.25, "speed": 12, "damage": 1 }
   },
   "blocks": {
-    "hazard": { "color": "#ff3b30", "damage": 1 },
-    "void": { "color": "#8a5cff" }
+    "block": { "look": "plain" },
+    "hazard": { "look": "hazard", "color": "#ff3b30", "damage": 1 },
+    "void": { "look": "void", "color": "#8a5cff", "lethal": true },
+    "collapsing": { "kind": "collapsing", "color": "#ff2bd6", "edges": "dashed", "faces": "tinted" },
+    "collapsing_regrow": { "extends": "collapsing", "regrow": 3 }
   }
 }

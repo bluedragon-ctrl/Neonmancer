@@ -5,15 +5,15 @@ import { PLAYER } from '../src/entities/player.js';
 import { Game } from '../src/game.js';
 import { bodyBox, touchedCell } from '../src/physics/collision.js';
 import { wizardLook } from '../src/render/hit-fx.js';
-import { CELL } from '../src/world/grid.js';
-import { eventTypes, gameData, grid, hold, idle, roomFile } from './helpers.js';
+import { CELL, EDGE_TYPE } from '../src/world/grid.js';
+import { BLOCK_TYPES, eventTypes, gameData, grid, hold, idle, roomFile } from './helpers.js';
 
 /**
  * A game in one 8×4×8 room with the given blocks, the wizard put at `pos`
  * (the room's spawn can't be above a hazard or void block).
  */
-function gameWith(blocks, pos = [1.5, 0, 1.5]) {
-  const game = new Game(gameData({ rooms: [roomFile('alpha', { blocks })] }));
+function gameWith(blocks, pos = [1.5, 0, 1.5], types = BLOCK_TYPES) {
+  const game = new Game(gameData({ rooms: [roomFile('alpha', { blocks })], blocks: types }));
   game.player.place(pos);
   return game;
 }
@@ -25,19 +25,23 @@ function run(game, inp, ticks) {
   return events;
 }
 
-test('grid: hazard and void blocks are solid cells of their own type', () => {
-  const g = grid({ cells: [[1, 0, 1]], typedCells: { hazard: [[2, 0, 2]], void: [[3, 0, 3]] } });
-  assert.equal(g.cellAt(1, 0, 1), CELL.solid);
-  assert.equal(g.cellAt(2, 0, 2), CELL.hazard);
-  assert.equal(g.cellAt(3, 0, 3), CELL.void);
+test('grid: each cell points to its block type and its properties (D60)', () => {
+  const g = grid({ cells: [[1, 0, 1]], blocks: { hazard: [[2, 0, 2]], void: [[3, 0, 3]] } });
+  assert.equal(g.typeAt(1, 0, 1).id, 'block');
+  assert.equal(g.typeAt(2, 0, 2).damage, 1);
+  assert.equal(g.typeAt(3, 0, 3).lethal, true);
+  assert.equal(g.typeAt(4, 0, 4), null);
+  assert.equal(g.typeAt(-1, 0, 0), EDGE_TYPE); // beyond a side
+  assert.equal(g.cellAt(4, 0, 4), CELL.empty);
   assert.equal(g.isSolid(2, 0, 2), true);
   assert.equal(g.isSolid(3, 0, 3), true);
 });
 
 test('touchedCell: standing on or leaning against a cell counts, a corner or a gap does not', () => {
-  const g = grid({ typedCells: { hazard: [[3, 0, 3]] } });
-  const touches = (pos) => touchedCell(bodyBox(pos, [0.6, 1.5, 0.6]), g, CELL.hazard) !== null;
-  assert.deepEqual(touchedCell(bodyBox([3.5, 1, 3.5], [0.6, 1.5, 0.6]), g, CELL.hazard), [3, 0, 3]);
+  const g = grid({ blocks: { hazard: [[3, 0, 3]] } });
+  const hurts = (type) => type.damage > 0;
+  const touches = (pos) => touchedCell(bodyBox(pos, [0.6, 1.5, 0.6]), g, hurts) !== null;
+  assert.deepEqual(touchedCell(bodyBox([3.5, 1, 3.5], [0.6, 1.5, 0.6]), g, hurts), [3, 0, 3]);
   assert.equal(touches([3.5, 1, 3.5]), true); // on top
   assert.equal(touches([2.7, 0, 3.5]), true); // against the -x face
   assert.equal(touches([2.6, 0, 3.5]), false); // a gap of 0.1
@@ -135,3 +139,18 @@ test('wizardLook: a void death derezzes like a damage death, not a drop into a p
     wizardLook({ ...dead, deathCause: 'hole' }, PLAYER.deathTicks),
   );
 });
+
+test('rules follow block properties, not type names: a variant hurts more, a new type can be lethal (D60)', () => {
+  const types = {
+    ...BLOCK_TYPES,
+    hazard_hot: { extends: 'hazard', damage: 2 },
+    abyss: { look: 'void', color: '#000000', lethal: true },
+  };
+  const hot = gameWith([{ type: 'hazard_hot', at: [3, 0, 1] }], [1.5, 0, 1.5], types);
+  const hurt = run(hot, hold('down'), 30).filter((e) => e.type === 'hurt');
+  assert.deepEqual(hurt, [{ type: 'hurt', amount: 2, cell: [3, 0, 1] }]);
+
+  const abyss = gameWith([{ type: 'abyss', at: [3, 0, 3] }], [3.5, 2, 3.5], types);
+  assert.ok(run(abyss, idle, 30).some((e) => e.type === 'die' && e.cause === 'void'));
+});
+

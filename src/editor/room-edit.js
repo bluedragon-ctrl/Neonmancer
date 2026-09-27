@@ -226,9 +226,9 @@ export class RoomEdit {
   // --- Edits (each one undo step unless inside begin()/end()) -------------
 
   /**
-   * Put a static block of `type` in a cell, replacing whatever was there.
+   * Put a block of `type` in a cell, replacing whatever was there.
    * @param {number[]} cell
-   * @param {'block'|'hazard'|'void'} type
+   * @param {string} type block type id (defs.json "blocks", D60)
    * @returns {boolean} whether anything changed
    */
   placeBlock(cell, type) {
@@ -244,21 +244,18 @@ export class RoomEdit {
   /**
    * Put a new object of `type` in a cell, replacing whatever was there. Its
    * id is the type name with the first free number (`crate_1`). An object of
-   * the same type there only takes the `extra` fields, keeping its id and
-   * the rest (a platform its path).
+   * the same type there stays as it is (a platform keeps its path).
    * @param {number[]} cell
    * @param {string} type object type id (defs.json)
-   * @param {object} [extra] more fields for the room object, e.g. `{ regrow: 3 }`;
-   *   `undefined` removes a field
    * @returns {boolean} whether anything changed
    */
-  placeObject(cell, type, extra = {}) {
+  placeObject(cell, type) {
     if (!this.inside(cell)) return false;
     const here = this.at(cell);
-    if (here?.kind === 'object' && here.item.type === type) return this.updateItem(here.item.id, extra);
+    if (here?.kind === 'object' && here.item.type === type) return false;
     return this.edit(() => {
       this.remove(cell);
-      this.data.objects = [...(this.data.objects ?? []), withFields({ id: this.freeId(type), type, at: [...cell] }, extra)];
+      this.data.objects = [...(this.data.objects ?? []), { id: this.freeId(type), type, at: [...cell] }];
       return true;
     });
   }

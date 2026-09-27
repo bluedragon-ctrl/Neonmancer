@@ -154,6 +154,18 @@ and the project uses [Semantic Versioning](https://semver.org/).
   too.
 
 ### Changed
+- Block types are open and data-driven (D60): `defs.json` `blocks` lists
+  every block type (`block`, `hazard`, `void`, `collapsing`,
+  `collapsing_regrow`) with a look or a kind, a color and properties
+  (`damage`, `lethal`, `regrow`); variants `extend` a base type. The grid
+  holds a type code per cell and the rules ask about properties, not
+  names. Collapsing blocks are painted as block boxes (each cell still runs
+  as its own object; regrow time on the type), so Volatile Memory's
+  bridges are one line each. The editor has one Block tool with a type
+  list; tools are now 1–8.
+- Block edges (D64): neighbouring plain blocks of different types join
+  without a seam, each edge in the color of a type around it; hazard and
+  void blocks always show their outline.
 - Glitch Zone is now Glitchmire (`glitchmire`), hot pink instead of
   magenta so collapsing blocks stand out; Stack Yard uses it.
 - Enemy code cleanup: shared collision helpers (`restsOn()`, `cellBox()`,

@@ -7,55 +7,55 @@
  * cells just beyond the side, so the wizard can walk through). Above the
  * room height is open (a jump at the top of a 6-high room must not bump
  * into nothing).
- * Only blocks that never move or change live in the grid. Pushables (and,
- * from Phase 2, moving and collapsing blocks) are room objects that collide
- * as bodies (see physics/collision.js, D40).
+ * Only blocks that never move or change live in the grid (static block
+ * types, D60). Pushables, moving platforms and collapsing blocks are room
+ * objects that collide as bodies (see physics/collision.js, D40).
  *
  * Collision asks isSolid() many times per tick, so cells are one flat typed
  * array covering the room plus a one-cell ring around its sides (where exit
- * openings are), not string-keyed sets.
+ * openings are), not string-keyed sets. Each cell holds a code: 0 empty,
+ * 1 the room's edge (outside the sides, below the floor), from 2 on a
+ * static block type; typeAt() gives the type with its properties (damage,
+ * lethal), so game rules ask about properties, never type names (D60).
  */
 import { exitCells } from '../data/room-data.js';
 
-/**
- * What fills a grid cell. Every type but `empty` is solid (D40): `hazard`
- * blocks hurt on touch, `void` blocks kill whoever lands on them.
- */
-export const CELL = { empty: 0, solid: 1, hazard: 2, void: 3 };
+/** Cell codes that aren't a block type from the room's data. */
+export const CELL = { empty: 0, edge: 1 };
 
-/** The CELL type of each block type in room data ("type" of a block entry). */
-export const BLOCK_CELL = { block: CELL.solid, hazard: CELL.hazard, void: CELL.void };
+/** What typeAt() returns beyond the room's sides and below its floor: solid, nothing else. */
+export const EDGE_TYPE = Object.freeze({ id: 'edge', static: true, look: 'plain' });
 
 export class Grid {
   /**
    * @param {object} room runtime room (see world/room.js)
    * @param {number[]} room.size [x, y, z]
-   * @param {number[][]} room.cells plain static block cells [x, y, z]
+   * @param {Record<string, number[][]>} room.blocks static block cells [x, y, z], by block type
+   * @param {Record<string, object>} room.blockTypes block types (resolved), by id
    * @param {number[][]} room.holes hole tiles [x, z]
    * @param {object[]} [room.exits] exits with defaults applied
-   * @param {Record<string, number[][]>} [room.typedCells] cells of the other
-   *   block types by type name (hazard, void), see BLOCK_CELL
    */
-  constructor({ size, cells, holes, exits = [], typedCells = {} }) {
+  constructor({ size, blocks, blockTypes, holes, exits = [] }) {
     this.size = size;
     [this.w, this.h, this.d] = size;
     const { w, h, d } = this;
 
-    /** CELL types, for x in −1..w, y in 0..h−1, z in −1..d (see index()). */
+    /** Block type of each cell code: [empty, edge, ...the room's static types]. */
+    this.types = [null, EDGE_TYPE];
+    /** Cell codes, for x in −1..w, y in 0..h−1, z in −1..d (see index()). */
     this.cells = new Uint8Array((w + 2) * h * (d + 2));
     for (let y = 0; y < h; y++) {
       for (let x = -1; x <= w; x++) {
-        for (let z = -1; z <= d; z++) if (!this.isInside(x, z)) this.cells[this.index(x, y, z)] = CELL.solid;
+        for (let z = -1; z <= d; z++) if (!this.isInside(x, z)) this.cells[this.index(x, y, z)] = CELL.edge;
       }
     }
     for (const exit of exits) {
       for (const [x, y, z] of exitCells(exit, size).outside) if (y >= 0 && y < h) this.cells[this.index(x, y, z)] = CELL.empty;
     }
-    const fill = (list, type) => {
-      for (const [x, y, z] of list) if (this.isInside(x, z) && y >= 0 && y < h) this.cells[this.index(x, y, z)] = type;
-    };
-    fill(cells, CELL.solid);
-    for (const [name, list] of Object.entries(typedCells)) fill(list, BLOCK_CELL[name]);
+    for (const [id, list] of Object.entries(blocks)) {
+      const code = this.types.push(blockTypes[id]) - 1;
+      for (const [x, y, z] of list) if (this.isInside(x, z) && y >= 0 && y < h) this.cells[this.index(x, y, z)] = code;
+    }
 
     /** Floor tiles: 1 where there is a hole, index z * w + x. */
     this.holes = new Uint8Array(w * d);
@@ -68,13 +68,22 @@ export class Grid {
   }
 
   /**
-   * What fills the cell with integer coordinates [x, y, z]: a CELL type.
-   * Below the floor and beyond the sides (except exit openings) is solid.
+   * What fills the cell with integer coordinates [x, y, z]: a cell code
+   * (CELL.empty, CELL.edge, or a block type's). Below the floor and beyond
+   * the sides (except exit openings) is the edge.
    */
   cellAt(x, y, z) {
-    if (y < 0 || x < -1 || z < -1 || x > this.w || z > this.d) return CELL.solid;
-    if (y >= this.h) return this.isInside(x, z) ? CELL.empty : CELL.solid;
+    if (y < 0 || x < -1 || z < -1 || x > this.w || z > this.d) return CELL.edge;
+    if (y >= this.h) return this.isInside(x, z) ? CELL.empty : CELL.edge;
     return this.cells[this.index(x, y, z)];
+  }
+
+  /**
+   * The block type filling the cell [x, y, z] (integers), with its
+   * properties (damage, lethal...): EDGE_TYPE outside the room, null if empty.
+   */
+  typeAt(x, y, z) {
+    return this.types[this.cellAt(x, y, z)];
   }
 
   /** Is the cell with integer coordinates [x, y, z] solid? */

@@ -42,33 +42,49 @@
     },
     "blocks": {
       "type": "object",
-      "description": "Static block types other than plain blocks (which take the room color). Their behavior and animated look are built into the engine (src/render/block-fx.js); this sets their color and tuning.",
-      "required": ["hazard", "void"],
-      "additionalProperties": false,
-      "properties": {
-        "hazard": {
-          "description": "Hurts the wizard when he touches it (stands on it or walks into it).",
-          "type": "object",
-          "required": ["color", "damage"],
-          "additionalProperties": false,
-          "properties": {
-            "color": { "$ref": "common.schema.json#/$defs/color", "description": "Edges and lit pixels." },
-            "damage": { "type": "integer", "minimum": 1, "description": "Integrity lost per hit." }
-          }
-        },
-        "void": {
-          "description": "Kills the wizard instantly when he lands on it.",
-          "type": "object",
-          "required": ["color"],
-          "additionalProperties": false,
-          "properties": {
-            "color": { "$ref": "common.schema.json#/$defs/color", "description": "Thin frame; also tints the grains inside." }
-          }
-        }
-      }
+      "description": "Block types (D60), by id; room blocks name one in \"type\" (default \"block\"). The engine only knows properties (damage, lethal) and looks; a new type that combines them is data only. Rules the schema can't say (a base type has a look or a kind, not both; which values go with which) are checked by the validator.",
+      "required": ["block"],
+      "properties": { "block": { "$ref": "#/$defs/blockType", "description": "The default type of room blocks; must be static." } },
+      "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
+      "additionalProperties": { "$ref": "#/$defs/blockType" }
     }
   },
   "$defs": {
+    "blockType": {
+      "type": "object",
+      "description": "A base type has a look (a static block in the room grid) or a kind (each cell runs as a room object); a variant (\"extends\") only the values it changes.",
+      "additionalProperties": false,
+      "properties": {
+        "extends": {
+          "$ref": "common.schema.json#/$defs/id",
+          "description": "Variant: the base block type (one without \"extends\") whose values it takes; its own values replace the base's."
+        },
+        "look": {
+          "enum": ["plain", "hazard", "void"],
+          "description": "Static blocks: plain (dark faces, neon edges), hazard (red pixels switching on and off, flares when it hurts) or void (grains sinking inside a black block). Looks are built into the engine (src/render/block-fx.js)."
+        },
+        "kind": {
+          "enum": ["collapsing"],
+          "description": "Blocks that change: each cell becomes a room object of this kind (src/entities/kinds.js). collapsing: shakes when the wizard stands on it, then vanishes (D47)."
+        },
+        "color": {
+          "$ref": "common.schema.json#/$defs/color",
+          "description": "Edges (and lit pixels or grains). Plain blocks without a color take the room color. Required for a kind."
+        },
+        "damage": { "type": "integer", "minimum": 1, "description": "Static blocks: integrity the wizard loses when he touches it (stands on it or walks into it)." },
+        "lethal": { "type": "boolean", "description": "Static blocks: landing on top kills the wizard and enemies instantly; touching a side is safe." },
+        "regrow": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 60,
+          "description": "Collapsing blocks: seconds after vanishing until the block grows back (once its cell is clear). Without it the block stays gone until the room resets."
+        },
+        "edges": { "$ref": "#/$defs/objectType/properties/edges" },
+        "mark": { "$ref": "#/$defs/objectType/properties/mark" },
+        "faces": { "$ref": "#/$defs/objectType/properties/faces" },
+        "tint": { "$ref": "#/$defs/objectType/properties/tint" }
+      }
+    },
     "enemyType": {
       "type": "object",
       "description": "A base type has every required value; a template (\"extends\") only the ones it changes.",
@@ -124,8 +140,8 @@
       "additionalProperties": false,
       "properties": {
         "kind": {
-          "enum": ["pushable", "platform", "collapsing"],
-          "description": "Which engine behavior the object uses. pushable: the wizard pushes it; platform: follows its path (room data \"path\") carrying the wizard and pushables; collapsing: shakes when the wizard stands on it, then vanishes (optionally growing back, room data \"regrow\")."
+          "enum": ["pushable", "platform"],
+          "description": "Which engine behavior the object uses. pushable: the wizard pushes it; platform: follows its path (room data \"path\") carrying the wizard and pushables. Collapsing blocks are block types (\"blocks\", D60)."
         },
         "color": { "$ref": "common.schema.json#/$defs/color" },
         "edges": {

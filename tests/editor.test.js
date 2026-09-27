@@ -13,11 +13,12 @@ import { errorTarget, groupErrors } from '../src/editor/errors.js';
 import { cutRoom } from '../src/render/room-scene.js';
 import { validateData } from '../src/data/validate.js';
 import { loadGameData } from '../src/data/load.js';
-import { enemyModels, resolveEnemyTypes } from '../src/data/room-data.js';
+import { enemyModels, resolveBlockTypes, resolveEnemyTypes } from '../src/data/room-data.js';
+import { blockTypeText } from '../src/editor/panel.js';
 import { buildRoom } from '../src/world/room.js';
 import { checkSchemas, readSchemas } from '../tools/check-data.js';
 import { refuseSaveRequest, saveEdits } from '../tools/room-save.js';
-import { BUG, CRUMBLE, LIFT, dataFiles, roomFile } from './helpers.js';
+import { BLOCK_TYPES, BUG, LIFT, dataFiles, roomFile } from './helpers.js';
 
 const dataDir = fileURLToPath(new URL('../data/', import.meta.url));
 
@@ -120,7 +121,7 @@ test('RoomEdit places and erases blocks, objects and holes', () => {
   assert.equal(edit.placeBlock([3, 0, 3], 'void'), true);
   assert.equal(edit.placeBlock([3, 0, 3], 'void'), false);
   assert.equal(edit.placeObject([6, 0, 6], 'crate'), true);
-  assert.equal(edit.placeObject([2, 1, 2], 'collapsing', { regrow: 3 }), true);
+  assert.equal(edit.placeBlock([2, 1, 2], 'collapsing_regrow'), true);
   assert.equal(edit.placeObject([9, 0, 0], 'crate'), false, 'outside the room');
   assert.equal(edit.erase([5, 0, 1]), true);
   assert.equal(edit.erase([5, 0, 1]), false);
@@ -128,11 +129,12 @@ test('RoomEdit places and erases blocks, objects and holes', () => {
   assert.equal(edit.setHole([1, 5], true), true);
 
   const data = edit.toData();
-  assert.deepEqual(data.blocks, [{ at: [0, 0, 0], to: [1, 0, 0] }, { type: 'void', at: [3, 0, 3] }]);
-  assert.deepEqual(data.objects, [
-    { id: 'crate_1', type: 'crate', at: [6, 0, 6] },
-    { id: 'collapsing_1', type: 'collapsing', at: [2, 1, 2], regrow: 3 },
+  assert.deepEqual(data.blocks, [
+    { at: [0, 0, 0], to: [1, 0, 0] },
+    { type: 'void', at: [3, 0, 3] },
+    { type: 'collapsing_regrow', at: [2, 1, 2] },
   ]);
+  assert.deepEqual(data.objects, [{ id: 'crate_1', type: 'crate', at: [6, 0, 6] }]);
   assert.equal(data.enemies, undefined, 'an empty list is left out');
   assert.deepEqual(data.holes, [{ at: [1, 5] }]);
   assert.equal(edit.dirty, true);
@@ -140,16 +142,11 @@ test('RoomEdit places and erases blocks, objects and holes', () => {
   assert.equal(edit.dirty, false);
 });
 
-test('RoomEdit.placeObject on the same object applies the new settings', () => {
+test('RoomEdit.placeObject on the same object keeps it; another type replaces it', () => {
   const edit = new RoomEdit(sampleRoom());
-  assert.equal(edit.placeObject([2, 1, 2], 'collapsing', { regrow: 3 }), true);
-  assert.equal(edit.placeObject([2, 1, 2], 'collapsing', { regrow: 3 }), false, 'nothing to change');
-  assert.equal(edit.placeObject([2, 1, 2], 'collapsing', { regrow: 5 }), true);
-  // Placed again without a regrow time: it no longer grows back.
-  assert.equal(edit.placeObject([2, 1, 2], 'collapsing', { regrow: undefined }), true);
-  assert.deepEqual(edit.at([2, 1, 2]).item, { id: 'collapsing_1', type: 'collapsing', at: [2, 1, 2] });
-  assert.equal(edit.placeObject([2, 1, 2], 'collapsing', { regrow: undefined }), false);
-  assert.doesNotMatch(edit.text(), /undefined/);
+  assert.equal(edit.placeObject([2, 1, 2], 'platform'), true);
+  assert.equal(edit.placeObject([2, 1, 2], 'platform'), false, 'nothing to change');
+  assert.deepEqual(edit.at([2, 1, 2]).item, { id: 'platform_1', type: 'platform', at: [2, 1, 2] });
   // Another type replaces it.
   assert.equal(edit.placeObject([2, 1, 2], 'crate'), true);
   assert.equal(edit.at([2, 1, 2]).item.type, 'crate');
@@ -233,7 +230,7 @@ test('RoomEdit undoes and redoes; a stroke is one step', () => {
 });
 
 test('roomErrors checks the edited room with the rest of the data', () => {
-  const files = dataFiles({ rooms: [sampleRoom()], objects: { crate: { kind: 'pushable', color: '#b6ff3c' }, collapsing: CRUMBLE } });
+  const files = dataFiles({ rooms: [sampleRoom()], objects: { crate: { kind: 'pushable', color: '#b6ff3c' } } });
   const edit = new RoomEdit(files['rooms/lab.json']);
   assert.deepEqual(roomErrors(files, edit.toData()), []);
   edit.placeBlock([1, 0, 1], 'block'); // under the spawn point
@@ -587,9 +584,18 @@ test('errors are grouped by file and point at what they are about', () => {
 });
 
 test('cutRoom leaves out the blocks above a layer', () => {
-  const room = { size: [4, 4, 4], cells: [[0, 0, 0], [0, 1, 0], [0, 2, 0]], typedCells: { hazard: [[1, 3, 1]], void: [[2, 0, 2]] } };
+  const room = { size: [4, 4, 4], blocks: { block: [[0, 0, 0], [0, 1, 0], [0, 2, 0]], hazard: [[1, 3, 1]], void: [[2, 0, 2]] } };
   const cut = cutRoom(room, 1);
-  assert.deepEqual(cut.cells, [[0, 0, 0], [0, 1, 0]]);
-  assert.deepEqual(cut.typedCells, { hazard: [], void: [[2, 0, 2]] });
-  assert.equal(room.cells.length, 3, 'the room itself stays whole');
+  assert.deepEqual(cut.blocks, { block: [[0, 0, 0], [0, 1, 0]], hazard: [], void: [[2, 0, 2]] });
+  assert.equal(room.blocks.block.length, 3, 'the room itself stays whole');
 });
+
+test('blockTypeText: what a block type does, for the Block tool\'s type list', () => {
+  const types = resolveBlockTypes({ ...BLOCK_TYPES, hot: { extends: 'hazard', damage: 2 } });
+  assert.equal(blockTypeText(types.block), 'plain');
+  assert.equal(blockTypeText(types.hot), 'hurts 2');
+  assert.equal(blockTypeText(types.void), 'lethal');
+  assert.equal(blockTypeText(types.collapsing), 'collapsing');
+  assert.equal(blockTypeText(types.collapsing_regrow), 'collapsing, regrows 3 s');
+});
+
