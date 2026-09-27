@@ -280,6 +280,9 @@ not critical.
   visual asset (monsters, pickups) to it.
 - **Room editor** (in-game, Phase 2): place blocks, enemies and pickups
   with the mouse, preview in the real neon look, export room JSON.
+- **World map tool** (Phase 3): developer overview of every room, its
+  exits and connections; flags rooms not reachable from the start; opens
+  a room in the room editor.
 - **Reachability checker** (Phase 4): script that searches the grid with
   jump height, pushable objects and available spells to flag unsolvable
   rooms. Used by CI, the editor, and design skills/subagents.
@@ -351,7 +354,7 @@ hazard and void blocks. Bugs enemy. Zap spell and mana. X-ray outline.
 In-game room editor with JSON export. Step plan: docs/design.md (D43).
 
 **Phase 3 (v0.3) — Spells and pickups**
-Pickups and a progress model, data disks. Viruses and Pop-ups. Firewall,
+World map tool for the developer. Pickups and a progress model, data disks. Viruses and Pop-ups. Firewall,
 Pause, Warp and Cut & Paste spells. A discussion step on further spells
 or spell upgrades. Score, bonus bits and secrets, starting with the world
 targets (rooms, spells, items). Fragments and the core. Step plan:

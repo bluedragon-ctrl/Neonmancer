@@ -865,8 +865,8 @@ own, so its cell outline is information, not noise.
 ### D65 — 2026-09-27 — Phase 3 splits in two; spells get a discussion step
 The old Phase 3 (game structure) becomes two phases, and polish moves to
 Phase 5 (v0.5+):
-- **Phase 3 (v0.3), spells and pickups:** pickups and progress, data
-  disks, Viruses, Pop-ups, the Firewall, Pause, Warp and Cut & Paste
+- **Phase 3 (v0.3), spells and pickups:** a world map tool for the
+  developer, pickups and progress, data disks, Viruses, Pop-ups, the Firewall, Pause, Warp and Cut & Paste
   spells, a spell roster discussion, score with bonus bits and secrets,
   fragments and the core.
 - **Phase 4 (v0.4), guardians, saves, tooling:** Firewall Wardens, title
@@ -885,3 +885,6 @@ them could be played; once they can, it is worth asking what else (or
 what upgrade) the game needs. Score and bits depend on how big the world
 is and how many spells and items it has, and those numbers also fix the
 access-key bit layout, so they are decided in the step, not up front.
+The world map tool comes first: every step adds a test room, and the
+room editor shows one room at a time, so nothing gives an overview of the
+growing world or catches rooms cut off from the start.
