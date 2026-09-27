@@ -129,8 +129,10 @@ the ones it gives:
   them: the corner rule (D12) runs over all plain blocks as one mass, and
   each edge takes the color of a type around it (the later one in
   `defs.json` where types meet). The hazard and void looks outline
-  themselves over the plain edges, so there is always a seam where a
-  dangerous block starts. Collapsing blocks keep an outline around every
+  themselves, and a line they share with plain blocks is drawn once, by
+  them alone (a lethal type also over a hurting one), so there is always a
+  seam in the danger's color where it starts, with no plain edge showing
+  around it. Collapsing blocks keep an outline around every
   cell, since each one gives way on its own.
 
 ## Hazard and void blocks

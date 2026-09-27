@@ -165,7 +165,8 @@ and the project uses [Semantic Versioning](https://semver.org/).
   list; tools are now 1–8.
 - Block edges (D64): neighbouring plain blocks of different types join
   without a seam, each edge in the color of a type around it; hazard and
-  void blocks always show their outline.
+  void blocks always show their outline, and a line they share with plain
+  blocks is theirs alone (no amber showing around the thin void frame).
 - Glitch Zone is now Glitchmire (`glitchmire`), hot pink instead of
   magenta so collapsing blocks stand out; Stack Yard uses it.
 - Enemy code cleanup: shared collision helpers (`restsOn()`, `cellBox()`,

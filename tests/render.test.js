@@ -8,7 +8,7 @@ import {
   scaleToHeight,
 } from '../src/render/viewport.js';
 import { VIEW_HEIGHT, createIsoCamera, frameRoom, projectedHeight } from '../src/render/camera.js';
-import { blockEdges, groupedBlockEdges } from '../src/render/edges.js';
+import { blockEdges, edgeUnitKeys, groupedBlockEdges } from '../src/render/edges.js';
 import { MARKS, markSegments } from '../src/render/marks.js';
 import { holeSides } from '../src/render/hole-view.js';
 import { OBJECT_VIEWS } from '../src/render/room-scene.js';
@@ -112,6 +112,18 @@ test('an edge shared by diagonal blocks is drawn once', () => {
 
 test('no blocks, no edges', () => {
   assert.deepEqual(blockEdges([]), []);
+});
+
+test('a line claimed by a more dangerous look is left out of the plain edges (D64)', () => {
+  const plain = [[0, 0, 0]];
+  const danger = [[1, 0, 0]];
+  const claimed = edgeUnitKeys(danger);
+  const kept = norm(blockEdges(plain, claimed));
+  // The shared face x = 1: its 4 edges belong to the dangerous block alone.
+  assert.equal(kept.length, 8);
+  assert.ok(!kept.some((edge) => JSON.parse(edge).every(([x]) => x === 1)));
+  const [grouped] = groupedBlockEdges([plain], claimed);
+  assert.deepEqual(norm(grouped).sort(), kept.sort());
 });
 
 test('plain types side by side: one outline, no seam; each edge goes to the higher-ranked type around it (D64)', () => {
