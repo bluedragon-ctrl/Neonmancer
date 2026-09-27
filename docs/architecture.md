@@ -119,7 +119,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `editor/panel.js` | Editor side panel (DOM): room list, tools and their fields, layer, room settings, actions, errors |
 | `editor/save.js` | Posting edited files to the dev server; downloading them in a build |
 | `tools/room-save.js` | Dev only: checks edited rooms, `world.json` and `defs.json` with the rest of `data/` and writes them |
-| `tools/room-pr.bat` | Windows: opens a PR with only `data/rooms/` and `data/world.json` changes (validates first) |
+| `tools/map-pr.bat` | Windows: opens one PR with only `data/rooms/`, `data/world.json` and `data/defs.json` changes, rooms and map together (validates first) |
+| `tools/dev.bat` | Windows: installs packages if needed and starts the dev server, opening the game (or `dev.bat map`: the world map tool, `dev.bat showcase`: the asset showcase) |
 | `debug/overlay.js` | Debug mode's wireframe collision boxes |
 | `debug/readout.js` | Debug mode's stats readout (rates, buffer, GPU resources, actions, position) |
 

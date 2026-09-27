@@ -46,6 +46,11 @@ The world map tool shows every room and connection on one page, flags
 rooms out of reach, and moves rooms on the map: `/tools/world-map.html` in
 the dev server only (docs/design.md, World map tool).
 
+On Windows, `tools\dev.bat` starts the dev server and opens the game
+(`tools\dev.bat map` opens the world map, `tools\dev.bat showcase` the
+asset showcase), and `tools\map-pr.bat "what changed"` sends saved room
+and map changes as one pull request.
+
 ## Project layout
 
 | Path | Contents |

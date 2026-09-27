@@ -21,6 +21,13 @@ and the project uses [Semantic Versioning](https://semver.org/).
   was made from.
 - Dev server: `?room=<id>` starts the game in that room and `?edit`
   opens the room editor on it.
+- `tools\dev.bat` (Windows): starts the dev server and opens the game,
+  or the world map (`map`) or the asset showcase (`showcase`).
+
+### Changed
+- `tools\room-pr.bat` is now `tools\map-pr.bat`: one PR for room and
+  world map changes (branch `feat/map-<date>`, title `feat(map): …`); its
+  summary says whether rooms, the map or enemy templates changed.
 
 ### Changed
 - Phase plan (D65): the old Phase 3 splits into Phase 3 (v0.3, spells and

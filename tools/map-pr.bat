@@ -1,9 +1,10 @@
 @echo off
 rem Open a pull request with the room and map changes: data\rooms\*.json,
-rem data\world.json and data\defs.json (enemy templates), saved from the
-rem room editor (D56, D58).
+rem data\world.json (connections, and room positions from the world map
+rem tool) and data\defs.json (enemy templates), saved from the room editor
+rem and the world map tool (D56, D58, D66). Rooms and map go in one PR.
 rem
-rem Usage: tools\room-pr.bat ["what changed"]
+rem Usage: tools\map-pr.bat ["what changed"]
 rem
 rem Checks the data, puts only those files on a new branch from origin/main,
 rem commits, pushes and opens the PR with the GitHub CLI. Without the CLI it
@@ -15,7 +16,7 @@ setlocal
 cd /d "%~dp0.."
 
 set "WHAT=%~1"
-if not defined WHAT set "WHAT=update rooms"
+if not defined WHAT set "WHAT=update rooms and map"
 rem From here the description is used as !WHAT!: expanded after the line is
 rem parsed, so ( ) & < > | in it are plain text, not batch syntax.
 setlocal EnableDelayedExpansion
@@ -36,7 +37,7 @@ if errorlevel 1 (
 )
 
 for /f %%t in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd-HHmm"') do set "STAMP=%%t"
-set "BRANCH=feat/rooms-%STAMP%"
+set "BRANCH=feat/map-%STAMP%"
 
 echo Making branch %BRANCH% from origin/main...
 git fetch origin main || exit /b 1
@@ -49,10 +50,22 @@ if errorlevel 1 (
 
 git add -A -- data/rooms data/world.json data/defs.json || exit /b 1
 
-set "BODY=%TEMP%\neonmancer-room-pr.md"
+rem What kind of change it is, for the summary.
+set "ROOMS="
+set "WORLD="
+set "DEFS="
+for /f "delims=" %%f in ('git diff --cached --name-only -- data/rooms') do set "ROOMS=1"
+for /f "delims=" %%f in ('git diff --cached --name-only -- data/world.json') do set "WORLD=1"
+for /f "delims=" %%f in ('git diff --cached --name-only -- data/defs.json') do set "DEFS=1"
+
+set "BODY=%TEMP%\neonmancer-map-pr.md"
 > "%BODY%" echo ## Summary
 >> "%BODY%" echo.
 >> "%BODY%" echo Room and map data: !WHAT!.
+>> "%BODY%" echo.
+if defined ROOMS >> "%BODY%" echo - Rooms edited in the room editor
+if defined WORLD >> "%BODY%" echo - World map: connections and/or room positions ^(world.json^)
+if defined DEFS >> "%BODY%" echo - Enemy templates ^(defs.json^)
 >> "%BODY%" echo.
 >> "%BODY%" echo Changed files:
 >> "%BODY%" echo.
@@ -61,9 +74,10 @@ for /f "tokens=1,*" %%a in ('git diff --cached --name-status') do >> "%BODY%" ec
 >> "%BODY%" echo ## How it was tested
 >> "%BODY%" echo.
 >> "%BODY%" echo - [x] `npm run validate:data` passes
->> "%BODY%" echo - [ ] Rooms played in the game (`npm run dev`)
+>> "%BODY%" echo - [ ] Rooms played in the game (`tools\dev.bat`)
+>> "%BODY%" echo - [ ] World map checked (`tools\dev.bat map`)
 
-git commit -q -m "feat(rooms): !WHAT!" || exit /b 1
+git commit -q -m "feat(map): !WHAT!" || exit /b 1
 git push -u origin "%BRANCH%" || exit /b 1
 
 where gh >nul 2>nul
@@ -71,9 +85,9 @@ if errorlevel 1 (
   echo.
   echo The GitHub CLI is not installed. Create the PR here:
   echo https://github.com/bluedragon-ctrl/Neonmancer/compare/main...%BRANCH%?expand=1
-  echo Title: feat^(rooms^): !WHAT!
+  echo Title: feat^(map^): !WHAT!
   echo Body:  %BODY%
   exit /b 0
 )
-gh pr create --base main --head "%BRANCH%" --title "feat(rooms): !WHAT!" --body-file "%BODY%"
+gh pr create --base main --head "%BRANCH%" --title "feat(map): !WHAT!" --body-file "%BODY%"
 del "%BODY%"

@@ -701,10 +701,11 @@ list switches to another room; New room makes an empty one (D57).
   **Export** (deployed build) downloads each changed file. Untouched block
   and hole entries keep their place and shape; edited cells are merged
   into boxes.
-- **Sending the rooms in:** `tools\room-pr.bat ["what changed"]` (Windows)
-  puts only `data/rooms/`, `data/world.json` and `data/defs.json` (enemy
-  templates) on a new branch
-  `feat/rooms-<date>` from `origin/main` (after `npm run validate:data`),
+- **Sending the rooms in:** `tools\map-pr.bat ["what changed"]` (Windows)
+  puts only `data/rooms/`, `data/world.json` (connections, and room
+  positions from the world map tool) and `data/defs.json` (enemy
+  templates) on a new branch, room and map changes in one PR,
+  `feat/map-<date>` from `origin/main` (after `npm run validate:data`),
   commits, pushes and opens the PR with the GitHub CLI, or prints a
   compare link without it. Other uncommitted changes stay uncommitted; you
   stay on the new branch.
@@ -745,6 +746,8 @@ players never see it (D67).
   over its copy, so a move saved from the map meanwhile stays.
 - **Live data:** when another page saves (the room editor), the map
   reloads to show it; with moves not saved yet, it says so instead.
+- **Sending it in:** `tools\map-pr.bat` opens one PR with the saved map
+  and room changes (see Room editor).
 
 ---
 
