@@ -128,6 +128,11 @@ edges where they meet. Motion is slow; nothing strobes.
 - Tuning: color and `damage` in `data/defs.json` `blocks`; the animated
   looks are `BLOCK_FX` in `src/render/block-fx.js`. Review them in the
   asset showcase (`/tools/showcase.html?asset=block-hazard,block-void,blocks-in-room`).
+- Planned (D60): block types become an open list in `defs.json`, each a
+  set of engine properties (`damage`, `lethal`, later e.g. `bounce`,
+  `slippery`) with a look and color, and `extends` for variants. The
+  engine and validation ask about properties, not type names, and the
+  editor gets one Block tool with a type list. Behavior stays as above.
 
 ## Moving platforms
 

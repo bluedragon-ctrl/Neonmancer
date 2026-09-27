@@ -742,3 +742,36 @@ would throw away other rooms' templates. On an isometric view, blocks in
 front of higher layers hid the cells being edited; leaving them out of
 the drawing (edges worked out anew, so the cut reads as block tops) is
 cleaner than clipping planes, which would leave open, edge-cut blocks.
+
+### D60 — 2026-09-27 — Block types become open, data-driven types (planned)
+Plain, hazard and void stop being a fixed set. `defs.json` `blocks`
+becomes an open map of block types, like enemy types (D48): each type is
+a set of properties the engine understands, plus a look and a color, and
+may `extend` another type (like enemy templates, D58), e.g.
+`"block": { "look": "plain" }`,
+`"hazard": { "look": "hazard", "color": "#ff3b30", "damage": 1 }`,
+`"void": { "look": "void", "color": "#8a5cff", "lethal": true }`,
+`"hazard_hot": { "extends": "hazard", "damage": 2 }`.
+The engine asks about properties, never about type names: a grid cell
+holds a type index (still one byte, `0` empty) that points to its
+type's properties, and contact checks look for "a cell with `damage`" or
+"a cell that is `lethal`" (`game.js`, `player.js`, `enemy.js`,
+validation). A new property (for example `bounce`, `slippery`,
+`conveyor`, `recharge`) is written once and then works for any type
+that has it; a new look (a shader in `render/block-fx.js`) is also code.
+A new type that only combines existing properties and looks is data
+only. Room files keep `{ "type", "at", "to" }` with `block` as the
+default; `type` becomes any block type in `defs.json`, checked by the
+validator. The editor gets one Block tool with a type list filled from
+`defs.json` (like the Object tool), replacing the separate Hazard and
+Void tools. Holes stay separate (they are missing floor, not a block),
+and blocks that move, vanish or break (pushables, platforms, collapsing
+blocks, anything Zap can destroy) stay room objects (D40). This replaces
+D44's "fixed keys in `blocks`"; D44's contact rules and looks stay.
+Only the decision for now: the refactor is a later PR with no new block
+type, keeping today's behavior.
+**Why:** author's question: blocks, hazards and voids are one thing,
+and more block types will come. With a closed set, every new type means
+touching the schema, grid, game, rendering and editor; with properties,
+the engine grows by behaviors, and content grows in data, as the project's
+data-driven rule (CLAUDE.md §7) asks.
