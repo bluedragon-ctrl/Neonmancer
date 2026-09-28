@@ -131,6 +131,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `tools/room-save.js` | Dev only: checks edited rooms, `world.json` and `defs.json` with the rest of `data/` and writes them; deletes rooms the world map removed |
 | `tools/map-pr.bat` | Windows: opens one PR with only `data/rooms/`, `data/world.json` and `data/defs.json` changes, rooms and map together (validates first) |
 | `tools/dev.bat` | Windows: installs packages if needed and starts the dev server, opening the game (or `dev.bat map`: the world map tool, `dev.bat showcase`: the asset showcase) |
+| `tools/world-map.bat` | Windows: double-click to start the dev server on the world map tool (`dev.bat map`) |
 | `debug/overlay.js` | Debug mode's wireframe collision boxes |
 | `debug/readout.js` | Debug mode's stats readout (rates, buffer and quality, GPU resources, actions, position) |
 

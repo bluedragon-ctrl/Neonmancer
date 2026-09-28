@@ -13,7 +13,8 @@ and the project uses [Semantic Versioning](https://semver.org/).
   the wall if that spot is taken or blocked), and delete a room (with the
   exits leading into it) or a connection (with both its exits). Undo
   covers every edit; Save writes the new, changed and removed room files
-  and `world.json` after the usual checks.
+  and `world.json` after the usual checks. `tools\world-map.bat` starts
+  the dev server on the map (double-click on Windows).
 - Automatic quality fallback (D76): when frames run below 50 fps for a
   few seconds, multisampling steps down (4 → 2 → 0), then the render
   scale (0.75, 0.5), so weak laptops stay smooth. `?msaa` / `?scale`
