@@ -284,18 +284,6 @@ export class PushableView {
     }
   }
 
-  /** The ring of a Shield or Firewall `spell`, made on first use. */
-  ringView(spell) {
-    let view = this.rings.get(spell);
-    if (!view) {
-      const { color } = this.game.content.spells[spell];
-      view = spell === 'firewall' ? createFirewall(color) : createShield(color);
-      this.rings.set(spell, view);
-      this.group.add(view);
-    }
-    return view;
-  }
-
   /** @param {number} alpha interpolation factor 0..1 between the last two ticks */
   sync(alpha) {
     const { pushable } = this;
@@ -341,18 +329,6 @@ export class PlatformView {
     this.group.add(this.rails, this.block);
   }
 
-  /** The ring of a Shield or Firewall `spell`, made on first use. */
-  ringView(spell) {
-    let view = this.rings.get(spell);
-    if (!view) {
-      const { color } = this.game.content.spells[spell];
-      view = spell === 'firewall' ? createFirewall(color) : createShield(color);
-      this.rings.set(spell, view);
-      this.group.add(view);
-    }
-    return view;
-  }
-
   /** @param {number} alpha interpolation factor 0..1 between the last two ticks */
   sync(alpha) {
     const { platform } = this;
@@ -378,18 +354,6 @@ export class CollapsingView {
     // Pixels falling into a pit disappear at the floor, like objects.
     this.pixels.material.clippingPlanes = FLOOR_CLIP;
     this.group = new Group().add(this.center, this.pixels);
-  }
-
-  /** The ring of a Shield or Firewall `spell`, made on first use. */
-  ringView(spell) {
-    let view = this.rings.get(spell);
-    if (!view) {
-      const { color } = this.game.content.spells[spell];
-      view = spell === 'firewall' ? createFirewall(color) : createShield(color);
-      this.rings.set(spell, view);
-      this.group.add(view);
-    }
-    return view;
   }
 
   /** @param {number} alpha interpolation factor 0..1 between the last two ticks */
