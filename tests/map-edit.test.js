@@ -8,9 +8,9 @@ import { validateData } from '../src/data/validate.js';
 import { MapEdit, exitSpots, facingSide } from '../src/editor/map-edit.js';
 import { readDataFiles } from '../tools/check-data.js';
 import { saveEdits } from '../tools/room-save.js';
+import { testWorld, writeDataFiles } from './helpers.js';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
-const dataFiles = () => readDataFiles(root).files;
 
 test('facingSide picks the wall towards the other room, along the axis they are further apart on', () => {
   assert.equal(facingSide([0, 0], [1, 0]), '+x');
@@ -27,12 +27,12 @@ test('exitSpots start in the middle of the wall, then go outwards', () => {
 });
 
 test('MapEdit adds a room, connects it with exits in the middle of the facing walls, and the data stays valid', () => {
-  const edit = new MapEdit(dataFiles());
+  const edit = new MapEdit(testWorld());
   assert.equal(edit.dirty, false);
 
-  assert.match(edit.addRoom('annex', [0, 0], 'home_lattice'), /boot_sector's/, 'a taken cell');
-  assert.match(edit.addRoom('boot_sector', [5, 5], 'home_lattice'), /taken/);
-  assert.equal(edit.addRoom('annex', [0, 2], 'home_lattice'), null);
+  assert.match(edit.addRoom('annex', [0, 0], 'home'), /boot_sector's/, 'a taken cell');
+  assert.match(edit.addRoom('boot_sector', [5, 5], 'home'), /taken/);
+  assert.equal(edit.addRoom('annex', [0, 2], 'home'), null);
   assert.deepEqual(edit.positions.annex, [0, 2]);
 
   // Annex is south of Transit Bus ([0, 1]): its north wall faces Transit Bus's south wall.
@@ -59,9 +59,8 @@ test('MapEdit adds a room, connects it with exits in the middle of the facing wa
 });
 
 test('MapEdit moves an exit off the middle when the middle is taken or blocked', () => {
-  const files = dataFiles();
-  const edit = new MapEdit(files);
-  edit.addRoom('annex', [0, 2], 'home_lattice');
+  const edit = new MapEdit(testWorld());
+  edit.addRoom('annex', [0, 2], 'home');
   const annex = edit.rooms.get('annex');
   // A block where the middle exit would open (cells 5 and 6 of the north wall).
   edit.rooms.set('annex', { ...annex, blocks: [{ at: [5, 0, 0] }] });
@@ -76,7 +75,7 @@ test('MapEdit moves an exit off the middle when the middle is taken or blocked',
 });
 
 test('MapEdit removes a connection with both its exits, and a room with the exits into it', () => {
-  const edit = new MapEdit(dataFiles());
+  const edit = new MapEdit(testWorld());
   const index = edit.connections.findIndex((pair) => pair.includes('boot_sector.south'));
   assert.equal(edit.disconnect(index), true);
   assert.equal(edit.rooms.get('boot_sector').exits.some((exit) => exit.id === 'south'), false);
@@ -98,10 +97,11 @@ test('MapEdit removes a connection with both its exits, and a room with the exit
 test('saveEdits writes the map tool\'s new, changed and removed rooms with world.json', () => {
   const tmp = mkdtempSync(join(tmpdir(), 'neonmancer-'));
   try {
-    for (const dir of ['data', 'schemas']) cpSync(join(root, dir), join(tmp, dir), { recursive: true });
+    cpSync(join(root, 'schemas'), join(tmp, 'schemas'), { recursive: true });
+    writeDataFiles(tmp, testWorld());
     const edit = new MapEdit(readDataFiles(tmp).files);
     edit.removeRoom('volatile_memory');
-    edit.addRoom('annex', [0, 2], 'home_lattice');
+    edit.addRoom('annex', [0, 2], 'home');
     edit.connect('transit_bus', 'annex');
     const { rooms, remove, positions, world } = edit.changes();
     const result = saveEdits(tmp, { rooms, remove, positions, world });

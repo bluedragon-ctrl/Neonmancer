@@ -2,7 +2,10 @@
  * Shared test fixtures: small data files and games, fake input, grids.
  * Not a test file itself (node --test only picks up *.test.js here).
  */
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import STRINGS from '../data/strings.json' with { type: 'json' };
+import { formatJson } from '../src/editor/format-json.js';
 import { loadGameData } from '../src/data/load.js';
 import { resolveBlockTypes } from '../src/data/room-data.js';
 import { Grid } from '../src/world/grid.js';
@@ -90,6 +93,61 @@ export function dataFiles({
     'strings.json': STRINGS,
     ...Object.fromEntries(rooms.map((room) => [`rooms/${room.id}.json`, room])),
   });
+}
+
+/**
+ * A fixed world for the map and save tools' tests, so they don't depend on
+ * data/ (which the author rearranges with the world map tool). Map cells:
+ *
+ *                      cache_hall [0,-1]   relay_station [1,-1]
+ *   crawl_space [-1,0] boot_sector [0,0]   stack_yard [1,0]       fault_line [2,0]
+ *                      transit_bus [0,1]   volatile_memory [1,1]
+ *
+ * Every room is 12×4×12 with its exits in the middle of the walls
+ * (north -z, south +z, west -x, east +x).
+ */
+export function testWorld() {
+  const connections = [
+    ['stack_yard.east', 'fault_line.west'],
+    ['fault_line.east', 'transit_bus.west'],
+    ['transit_bus.east', 'volatile_memory.west'],
+    ['volatile_memory.east', 'crawl_space.west'],
+    ['boot_sector.south', 'transit_bus.north'],
+    ['cache_hall.east', 'relay_station.west'],
+    ['relay_station.south', 'stack_yard.north'],
+    ['boot_sector.east', 'stack_yard.west'],
+    ['boot_sector.west', 'crawl_space.east'],
+    ['boot_sector.north', 'cache_hall.south'],
+  ];
+  const positions = {
+    boot_sector: [0, 0],
+    cache_hall: [0, -1],
+    stack_yard: [1, 0],
+    fault_line: [2, 0],
+    crawl_space: [-1, 0],
+    transit_bus: [0, 1],
+    volatile_memory: [1, 1],
+    relay_station: [1, -1],
+  };
+  const sides = { north: '-z', south: '+z', west: '-x', east: '+x' };
+  const rooms = Object.keys(positions).map((id) => {
+    const exits = connections
+      .flat()
+      .filter((ref) => ref.startsWith(`${id}.`))
+      .map((ref) => ref.slice(id.length + 1))
+      .map((exit) => ({ id: exit, side: sides[exit], at: 5 }));
+    return roomFile(id, { size: [12, 4, 12], exits });
+  });
+  return dataFiles({ rooms, connections, start: 'boot_sector', positions });
+}
+
+/** Write data files (keyed like data/) into `root`/data. */
+export function writeDataFiles(root, files) {
+  for (const [name, data] of Object.entries(files)) {
+    const path = join(root, 'data', name);
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, formatJson(data));
+  }
 }
 
 /** Loaded content for a small game (dataFiles() through loadGameData()). */

@@ -18,7 +18,7 @@ import { blockTypeText } from '../src/editor/panel.js';
 import { buildRoom } from '../src/world/room.js';
 import { checkSchemas, readSchemas } from '../tools/check-data.js';
 import { refuseSaveRequest, saveEdits } from '../tools/room-save.js';
-import { BLOCK_TYPES, BUG, LIFT, dataFiles, roomFile } from './helpers.js';
+import { BLOCK_TYPES, BUG, LIFT, dataFiles, roomFile, testWorld, writeDataFiles } from './helpers.js';
 
 const dataDir = fileURLToPath(new URL('../data/', import.meta.url));
 
@@ -286,7 +286,8 @@ test('saveEdits writes valid rooms and world.json together, and refuses invalid 
 test('saveEdits merges moves from the world map into world.json; the room editor keeps them', () => {
   const root = mkdtempSync(join(tmpdir(), 'neonmancer-'));
   try {
-    for (const dir of ['data', 'schemas']) cpSync(fileURLToPath(new URL(`../${dir}`, import.meta.url)), join(root, dir), { recursive: true });
+    cpSync(fileURLToPath(new URL('../schemas', import.meta.url)), join(root, 'schemas'), { recursive: true });
+    writeDataFiles(root, testWorld());
     const read = () => JSON.parse(readFileSync(join(root, 'data/world.json'), 'utf8'));
     const before = read();
 
