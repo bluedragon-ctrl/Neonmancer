@@ -189,7 +189,7 @@ Each has a distinct color, silhouette and animation.
 AI is implemented as named behavior modules referenced from data.
 Enemies are universal and fully data-driven (D48, D77): an enemy is a
 look, a movement, an attack (touch, burst, arc or none) and a color, and
-any of them combine. Type fields in `defs.json` (look, movement, attack,
+any of them combine. Template fields in `defs.json` (look, movement, attack,
 hostility — hostile / peaceful / provoked —, aggro range, integrity,
 damage, speed, chase speed, bounce, solid, color, and a burst's or arc's
 range, charge, cooldown and color), overridable per enemy in the room.
@@ -265,9 +265,9 @@ The engine is generic; all content lives in data.
 
 - `data/defs.json` — object types, block types (look or kind, color,
   properties such as damage and lethal; variants `extend` a base, D60),
-  enemy types (look, movement, attack,
+  enemy templates (look, movement, attack,
   hostility, aggro range, integrity, damage, speeds, bounce, solid, color,
-  discharge values; templates `extend` a base type, D58, D77), spells
+  discharge values; a template may `extend` another, D58, D77, D78), spells
 - `data/biomes.json` — palette, floor pattern, effect settings,
   environmental effects
 - `data/rooms/*.json` — one file per room: biome, size [x, y, z], exits,

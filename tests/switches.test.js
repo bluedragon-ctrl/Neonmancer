@@ -70,7 +70,7 @@ test('a plate is on while a crate, an enemy or the wizard stands on it, not whil
   withCrate.update(idle);
   assert.equal(withCrate.switches[0].on, true);
 
-  const withBug = gameWith({ objects: [plate], enemies: [{ id: 'b', type: 'bug', at: [5, 0, 5], overrides: { movement: 'stationary', hostility: 'peaceful' } }] });
+  const withBug = gameWith({ objects: [plate], enemies: [{ id: 'b', template: 'bug', at: [5, 0, 5], overrides: { movement: 'stationary', hostility: 'peaceful' } }] });
   withBug.update(idle);
   assert.equal(withBug.switches[0].on, true);
 

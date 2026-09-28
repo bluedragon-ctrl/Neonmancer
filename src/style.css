@@ -404,7 +404,7 @@ body {
   top: calc(24 * var(--u));
   left: calc(24 * var(--u));
   bottom: calc(24 * var(--u));
-  width: calc(330 * var(--u));
+  width: calc(350 * var(--u));
   box-sizing: border-box;
   padding: calc(16 * var(--u));
   overflow-y: auto;

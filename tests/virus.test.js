@@ -13,18 +13,18 @@ const CELL_TICKS = 20;
 const VIRUS_CHARGE = 24;
 const SENTINEL_CHARGE = 42;
 
-const TYPES = { bug: BUG, virus: VIRUS, sentinel: SENTINEL, crate: CRATE };
+const TEMPLATES = { bug: BUG, virus: VIRUS, sentinel: SENTINEL };
 
 /**
  * A game in one 8×4×8 room with the given enemies, objects and blocks; the
  * wizard is put at `pos`.
  */
-function gameWith({ enemies, objects = [], blocks = [], holes = [], pos, enemyTypes = {} }) {
+function gameWith({ enemies, objects = [], blocks = [], holes = [], pos, templates = {} }) {
   const game = new Game(
     gameData({
       rooms: [roomFile('alpha', { enemies, objects, blocks, holes, spawn: [0.5, 0, 7.5] })],
       objects: { crate: CRATE },
-      enemies: { bug: BUG, virus: VIRUS, sentinel: SENTINEL, ...enemyTypes },
+      enemies: { bug: BUG, virus: VIRUS, sentinel: SENTINEL, ...templates },
     }),
   );
   game.player.place(pos);
@@ -44,7 +44,7 @@ function until(game, type, limit = 600) {
   assert.fail(`no "${type}" within ${limit} ticks`);
 }
 
-const virus = (at, id = 'v', overrides) => ({ id, type: 'virus', at, ...(overrides && { overrides }) });
+const virus = (at, id = 'v', overrides) => ({ id, template: 'virus', at, ...(overrides && { overrides }) });
 
 // ---- sight
 
@@ -134,8 +134,8 @@ test('a burst hits every enemy around it too, and nothing beyond its range', () 
   const game = gameWith({
     enemies: [
       virus([2, 0, 2], 'v', { movement: 'stationary' }),
-      { id: 'near', type: 'bug', at: [2, 0, 3], overrides: { movement: 'stationary' } },
-      { id: 'far', type: 'bug', at: [2, 0, 5], overrides: { movement: 'stationary' } },
+      { id: 'near', template: 'bug', at: [2, 0, 3], overrides: { movement: 'stationary' } },
+      { id: 'far', template: 'bug', at: [2, 0, 5], overrides: { movement: 'stationary' } },
     ],
     pos: [3.5, 0, 2.5],
   });
@@ -187,7 +187,7 @@ test('a peaceful virus never chases nor attacks', () => {
 // ---- sentinels (arc)
 
 test('a sentinel keeps its distance: it comes into range, stops and fires an arc that hurts', () => {
-  const game = gameWith({ enemies: [{ id: 's', type: 'sentinel', at: [0, 0, 1] }], pos: [7.5, 0, 1.5] });
+  const game = gameWith({ enemies: [{ id: 's', template: 'sentinel', at: [0, 0, 1] }], pos: [7.5, 0, 1.5] });
   const [enemy] = game.enemies;
   const ticks = until(game, 'charge');
   assert.deepEqual(enemy.pos, [2, 0, 1], 'stopped 5 away');
@@ -201,9 +201,9 @@ test('a sentinel keeps its distance: it comes into range, stops and fires an arc
 test('an arc hits everything in the squares along its path, not beside it', () => {
   const game = gameWith({
     enemies: [
-      { id: 's', type: 'sentinel', at: [1, 0, 1], overrides: { movement: 'stationary' } },
-      { id: 'inline', type: 'bug', at: [3, 0, 1], overrides: { movement: 'stationary' } },
-      { id: 'beside', type: 'bug', at: [3, 0, 2], overrides: { movement: 'stationary' } },
+      { id: 's', template: 'sentinel', at: [1, 0, 1], overrides: { movement: 'stationary' } },
+      { id: 'inline', template: 'bug', at: [3, 0, 1], overrides: { movement: 'stationary' } },
+      { id: 'beside', template: 'bug', at: [3, 0, 2], overrides: { movement: 'stationary' } },
     ],
     pos: [5.5, 0, 1.5],
   });
@@ -222,7 +222,7 @@ test('sight: the cells along a ray, each once, in order', () => {
 });
 
 test('an arc flies where he stood when it started charging: stepping aside dodges it', () => {
-  const game = gameWith({ enemies: [{ id: 's', type: 'sentinel', at: [1, 0, 1], overrides: { movement: 'stationary' } }], pos: [5.5, 0, 1.5] });
+  const game = gameWith({ enemies: [{ id: 's', template: 'sentinel', at: [1, 0, 1], overrides: { movement: 'stationary' } }], pos: [5.5, 0, 1.5] });
   until(game, 'charge');
   game.player.place([5.5, 0, 3.5]);
   const events = run(game, SENTINEL_CHARGE);
@@ -232,13 +232,13 @@ test('an arc flies where he stood when it started charging: stepping aside dodge
 
 test('a crate in the way hides the wizard from a sentinel, and a crate stops an arc', () => {
   const hidden = gameWith({
-    enemies: [{ id: 's', type: 'sentinel', at: [1, 0, 1], overrides: { movement: 'stationary' } }],
+    enemies: [{ id: 's', template: 'sentinel', at: [1, 0, 1], overrides: { movement: 'stationary' } }],
     objects: [{ id: 'c', type: 'crate', at: [3, 0, 1] }],
     pos: [5.5, 0, 1.5],
   });
   assert.ok(!eventTypes(run(hidden, 60)).includes('charge'));
 
-  const game = gameWith({ enemies: [{ id: 's', type: 'sentinel', at: [1, 0, 1], overrides: { movement: 'stationary' } }], pos: [5.5, 0, 1.5] });
+  const game = gameWith({ enemies: [{ id: 's', template: 'sentinel', at: [1, 0, 1], overrides: { movement: 'stationary' } }], pos: [5.5, 0, 1.5] });
   until(game, 'charge');
   // The aim is fixed; a crate dropped into its line now takes the bolt.
   game.objects.push(...new Game(gameData({ rooms: [roomFile('b', { objects: [{ id: 'c', type: 'crate', at: [3, 0, 1] }] })] })).objects);
@@ -252,14 +252,14 @@ test('a crate in the way hides the wizard from a sentinel, and a crate stops an 
 
 test('any enemy can have any attack: a bug with a burst hurts from a cell away, not by touch', () => {
   const zapper = { extends: 'bug', movement: 'stationary', attack: 'burst', aggroRange: 3, attackRange: 1.2, attackCharge: 0.2 };
-  const game = gameWith({ enemies: [{ id: 'b', type: 'zapper', at: [2, 0, 2] }], pos: [3.5, 0, 2.5], enemyTypes: { zapper } });
+  const game = gameWith({ enemies: [{ id: 'b', template: 'zapper', at: [2, 0, 2] }], pos: [3.5, 0, 2.5], templates: { zapper } });
   const events = run(game, 13);
   assert.deepEqual(eventTypes(events).filter((t) => ['alert', 'charge', 'discharge', 'hurt'].includes(t)), ['alert', 'charge', 'discharge', 'hurt']);
   assert.equal(game.enemies[0].data.look, 'bug');
 });
 
 test('a "!" pops up over a provoked enemy when a spell turns it hostile, and goes after a while', () => {
-  const game = gameWith({ enemies: [{ id: 'b', type: 'bug', at: [2, 0, 2], overrides: { movement: 'stationary', hostility: 'provoked' } }], pos: [6.5, 0, 6.5] });
+  const game = gameWith({ enemies: [{ id: 'b', template: 'bug', at: [2, 0, 2], overrides: { movement: 'stationary', hostility: 'provoked' } }], pos: [6.5, 0, 6.5] });
   const [enemy] = game.enemies;
   assert.equal(enemy.alerted, false);
   enemy.hit(1, 'zap');
@@ -272,8 +272,8 @@ test('a "!" pops up over a provoked enemy when a spell turns it hostile, and goe
 
 test('data: discharge values are checked; a discharge enemy must notice what it can hit', () => {
   const room = (enemies) => roomFile('alpha', { enemies });
-  const errors = (enemies) => validateData(dataFiles({ rooms: [room(enemies)], enemies: TYPES, objects: { crate: CRATE } })).join('\n');
-  assert.equal(errors([virus([1, 0, 1]), { id: 's', type: 'sentinel', at: [5, 0, 5] }]), '');
+  const errors = (enemies) => validateData(dataFiles({ rooms: [room(enemies)], enemies: TEMPLATES, objects: { crate: CRATE } })).join('\n');
+  assert.equal(errors([virus([1, 0, 1]), { id: 's', template: 'sentinel', at: [5, 0, 5] }]), '');
   assert.match(errors([virus([1, 0, 1], 'v', { aggroRange: 1 })]), /aggroRange 1 is shorter than its attackRange 1\.2/);
   assert.match(errors([virus([1, 0, 1], 'v', { attackColor: 'yellow' })]), /"attackColor" must be #rrggbb/);
   assert.match(errors([virus([1, 0, 1], 'v', { attackRange: 40 })]), /"attackRange" must be between/);

@@ -1,6 +1,6 @@
 /**
  * The discharge attack's look (Phase 3 step 5): one electric attack for
- * every enemy that has it, set per enemy type by data — its color, shape
+ * every enemy that has it, set per enemy template by data — its color, shape
  * and range, and how long it charges. It charges (the enemy's own model
  * shakes and glows; here: crackle round its middle, and for an `arc` a
  * dashed aim line), then discharges lightning for a few ticks:
@@ -31,7 +31,7 @@ export const DISCHARGE = {
   crackle: 0.42,
 };
 
-/** Discharge shapes, as enemy types name them. */
+/** Discharge shapes, as enemy templates name them. */
 export const DISCHARGE_SHAPES = ['burst', 'arc'];
 
 const SEED = [57.1, 143.9];

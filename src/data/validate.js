@@ -25,7 +25,8 @@ import {
   holeTiles,
   sideLength,
   resolveBlockTypes,
-  resolveEnemyTypes,
+  resolveEnemyTemplates,
+  templateChain,
   withEnemyDefaults,
   withExitDefaults,
   KIND_BLOCK_VALUES,
@@ -88,7 +89,7 @@ export function validateData(files) {
     objectTypes: files['defs.json'].objects ?? {},
     pickupTypes,
     blockTypes: resolveBlockTypes(blocks),
-    enemyTypes: resolveEnemyTypes(enemies),
+    enemyTemplates: resolveEnemyTemplates(enemies),
     biomes: files['biomes.json'].biomes ?? {},
   };
   /** room id (from the file name) → room data */
@@ -103,19 +104,18 @@ export function validateData(files) {
 }
 
 /**
- * Enemy templates (D58): `extends` names a base type (one without
- * `extends`), and the type is complete once filled in from it.
+ * Enemy templates (D58, D78): `extends` names a known template, the chain
+ * of them has no loop, and each template is complete once filled in.
  */
 function validateTemplates(enemies, report) {
-  const resolved = resolveEnemyTypes(enemies);
-  for (const [id, type] of Object.entries(enemies)) {
+  const resolved = resolveEnemyTemplates(enemies);
+  for (const id of Object.keys(enemies)) {
     const path = `enemies.${id}`;
-    if (type.extends === undefined) continue;
-    const base = enemies[type.extends];
-    if (!base) report('defs.json', `${path}.extends`, `unknown enemy type "${type.extends}"`);
-    else if (base.extends !== undefined) report('defs.json', `${path}.extends`, `"${type.extends}" is a template itself; extend its base "${base.extends}"`);
+    const { chain, loop, unknown } = templateChain(enemies, id);
+    if (unknown) report('defs.json', `${path}.extends`, `unknown enemy template "${unknown}"`);
+    else if (loop) report('defs.json', `${path}.extends`, `a loop: ${[...chain, enemies[chain.at(-1)].extends].join(' → ')}`);
     const missing = ENEMY_REQUIRED.filter((key) => resolved[id][key] === undefined);
-    if (base && missing.length > 0) report('defs.json', path, `missing ${missing.join(', ')}`);
+    if (!unknown && !loop && missing.length > 0) report('defs.json', path, `missing ${missing.join(', ')}`);
   }
 }
 
@@ -182,7 +182,7 @@ function guarded(file, report, check) {
   }
 }
 
-function validateRoom(file, room, { objectTypes, pickupTypes, blockTypes, enemyTypes, biomes }, report) {
+function validateRoom(file, room, { objectTypes, pickupTypes, blockTypes, enemyTemplates, biomes }, report) {
   const expectedId = roomIdFromFile(file);
   if (room.id !== expectedId) report(file, 'id', `"${room.id}" must match the file name ("${expectedId}")`);
 
@@ -216,7 +216,7 @@ function validateRoom(file, room, { objectTypes, pickupTypes, blockTypes, enemyT
   validateBlocks(checks, blockTypes);
   validateObjects(checks, objectTypes);
   validateHoles(checks);
-  validateEnemies(checks, enemyTypes);
+  validateEnemies(checks, enemyTemplates);
   validatePickups(checks, pickupTypes);
   validateExitPassage(checks, exits, exitFits);
   validateLocks(checks, exits, objectTypes);
@@ -381,7 +381,7 @@ function validatePathShape(room, report, path, at, points, mode, level = false) 
  * enemies have none. A burst or arc only fires at a wizard it sees,
  * so its aggro range must reach its attack range.
  */
-function validateEnemies(checks, enemyTypes) {
+function validateEnemies(checks, enemyTemplates) {
   const { room, report, ids, filled, holes } = checks;
   const [w, h, d] = room.size;
   const taken = new Map();
@@ -389,8 +389,8 @@ function validateEnemies(checks, enemyTypes) {
     const path = `enemies[${i}]`;
     if (ids.has(enemy.id)) report(path, `duplicate id "${enemy.id}"`);
     ids.add(enemy.id);
-    const type = enemyTypes[enemy.type] && withEnemyDefaults(enemyTypes[enemy.type]);
-    if (!type) report(path, `unknown enemy type "${enemy.type}"`);
+    const type = enemyTemplates[enemy.template] && withEnemyDefaults(enemyTemplates[enemy.template]);
+    if (!type) report(path, `unknown enemy template "${enemy.template}"`);
     else {
       validateOverrides(report, `${path}.overrides`, enemy, type, ENEMY_OPTIONS);
       const values = { ...type, ...enemy.overrides };

@@ -13,7 +13,7 @@ import { errorTarget, groupErrors } from '../src/editor/errors.js';
 import { cutRoom } from '../src/render/room-scene.js';
 import { validateData } from '../src/data/validate.js';
 import { loadGameData } from '../src/data/load.js';
-import { enemyBases, resolveBlockTypes, resolveEnemyTypes } from '../src/data/room-data.js';
+import { resolveBlockTypes, resolveEnemyTemplates, templateChain } from '../src/data/room-data.js';
 import { ENEMY_FIELDS, ENEMY_NUMBERS, ENEMY_ROWS, blockTypeText } from '../src/editor/panel.js';
 import { buildRoom } from '../src/world/room.js';
 import { checkSchemas, readSchemas } from '../tools/check-data.js';
@@ -99,7 +99,7 @@ function sampleRoom() {
     blocks: [{ at: [0, 0, 0], to: [1, 0, 0] }, { type: 'hazard', at: [6, 0, 6] }],
     holes: [{ at: [4, 4] }],
     objects: [{ id: 'crate_1', type: 'crate', at: [3, 0, 3] }],
-    enemies: [{ id: 'sentry', type: 'bug', at: [5, 0, 1], overrides: { movement: 'stationary' } }],
+    enemies: [{ id: 'sentry', template: 'bug', at: [5, 0, 1], overrides: { movement: 'stationary' } }],
   });
 }
 
@@ -274,7 +274,7 @@ test('saveEdits writes valid rooms and world.json together, and refuses invalid 
     // A template in defs.json and an enemy of it, saved together.
     const defs = JSON.parse(readFileSync(join(root, 'data/defs.json'), 'utf8'));
     defs.enemies.tank = { extends: 'bug', integrity: 4 };
-    const guarded = { ...annex, enemies: [{ id: 'tank_1', type: 'tank', at: [3, 0, 3], overrides: { movement: 'stationary' } }] };
+    const guarded = { ...annex, enemies: [{ id: 'tank_1', template: 'tank', at: [3, 0, 3], overrides: { movement: 'stationary' } }] };
     assert.equal(saveEdits(root, { rooms: [guarded] }).ok, false, 'unknown type without the new defs');
     assert.deepEqual(saveEdits(root, { rooms: [guarded], defs }).files, ['data/rooms/annex.json', 'data/defs.json']);
     assert.equal(readFileSync(join(root, 'data/defs.json'), 'utf8'), formatJson(defs));
@@ -346,7 +346,7 @@ function twoRooms() {
       roomFile('lab', {
         exits: [{ id: 'west', side: '-x', at: 3 }],
         objects: [{ id: 'lift', type: 'platform', at: [5, 0, 5], path: { points: [[5, 2, 5]] } }],
-        enemies: [{ id: 'bug_1', type: 'bug', at: [2, 0, 6], path: { points: [[6, 0, 6]] } }],
+        enemies: [{ id: 'bug_1', template: 'bug', at: [2, 0, 6], path: { points: [[6, 0, 6]] } }],
       }),
     ],
     objects: { crate: { kind: 'pushable', color: '#b6ff3c' }, platform: LIFT },
@@ -391,7 +391,7 @@ test('RoomEdit places enemies and edits them; paths get corners and lose points'
   const edit = new RoomEdit(files['rooms/lab.json']);
   assert.equal(edit.placeEnemy([2, 0, 6], 'bug'), null, 'an enemy is there');
   assert.equal(edit.placeEnemy([1, 0, 4], 'bug', { movement: 'stationary' }), 'bug_2');
-  assert.deepEqual(edit.item('bug_2'), { id: 'bug_2', type: 'bug', at: [1, 0, 4], overrides: { movement: 'stationary' } });
+  assert.deepEqual(edit.item('bug_2'), { id: 'bug_2', template: 'bug', at: [1, 0, 4], overrides: { movement: 'stationary' } });
   assert.equal(edit.updateItem('bug_2', { overrides: undefined }), true);
   assert.equal(edit.updateItem('bug_2', { overrides: undefined }), false);
 
@@ -465,13 +465,15 @@ test('newRoom is a valid empty room; roomIdProblem refuses bad and taken ids', (
   assert.match(roomIdProblem('../world', []), /lowercase/);
 });
 
-test('enemy templates take their base type values and look; validation checks them', () => {
-  const types = { bug: BUG, tank: { extends: 'bug', integrity: 4, color: '#ffb020' } };
-  const resolved = resolveEnemyTypes(types);
+test('enemy templates take the values of the ones they build on, down the chain; validation checks them', () => {
+  const types = { bug: BUG, tank: { extends: 'bug', integrity: 4, color: '#ffb020' }, big_tank: { extends: 'tank', damage: 2 } };
+  const resolved = resolveEnemyTemplates(types);
+  assert.deepEqual(resolved.bug, BUG);
   assert.deepEqual(resolved.tank, { ...BUG, integrity: 4, color: '#ffb020' });
-  assert.deepEqual(enemyBases(types), { bug: 'bug', tank: 'bug' });
+  assert.deepEqual(resolved.big_tank, { ...BUG, integrity: 4, color: '#ffb020', damage: 2 });
+  assert.deepEqual(templateChain(types, 'big_tank'), { chain: ['big_tank', 'tank', 'bug'], loop: false, unknown: null });
 
-  const room = roomFile('lab', { enemies: [{ id: 'tank_1', type: 'tank', at: [4, 0, 4], overrides: { movement: 'stationary' } }] });
+  const room = roomFile('lab', { enemies: [{ id: 'tank_1', template: 'tank', at: [4, 0, 4], overrides: { movement: 'stationary' } }] });
   const files = dataFiles({ rooms: [room], enemies: types });
   assert.deepEqual(validateData(files), []);
   assert.deepEqual(checkSchemas(files, readSchemas(fileURLToPath(new URL('..', import.meta.url)))), [], 'a template needs only what it changes');
@@ -480,31 +482,33 @@ test('enemy templates take their base type values and look; validation checks th
   assert.equal(built.enemies[0].integrity, 4);
 
   const bad = (enemies) => validateData(dataFiles({ rooms: [roomFile('lab')], enemies })).join('\n');
-  assert.match(bad({ bug: BUG, tank: { extends: 'beetle' } }), /enemies\.tank\.extends: unknown enemy type "beetle"/);
-  assert.match(bad({ bug: BUG, tank: { extends: 'bug' }, boss: { extends: 'tank' } }), /"tank" is a template itself/);
+  assert.equal(bad({ bug: BUG, tank: { extends: 'bug' }, boss: { extends: 'tank' } }), '', 'a template may build on a template');
+  assert.match(bad({ bug: BUG, tank: { extends: 'beetle' } }), /enemies\.tank\.extends: unknown enemy template "beetle"/);
+  assert.match(bad({ bug: BUG, a: { extends: 'b' }, b: { extends: 'a' } }), /enemies\.a\.extends: a loop: a → b → a/);
   const { color, ...colorless } = BUG;
+  assert.match(bad({ bug: colorless, tank: { extends: 'bug' } }), /enemies\.bug: missing color/);
   assert.match(bad({ bug: colorless, tank: { extends: 'bug' } }), /enemies\.tank: missing color/);
 });
 
 test('RoomEdit removes items, and ids the editor made follow a new type', () => {
   const files = twoRooms();
   const edit = new RoomEdit(files['rooms/lab.json']);
-  assert.equal(edit.idForType(edit.item('bug_1'), 'bug'), 'bug_1');
-  assert.equal(edit.idForType(edit.item('bug_1'), 'bug_tank'), 'bug_tank_1');
-  assert.equal(edit.idForType(edit.item('lift'), 'crate'), 'lift', 'written by hand: stays');
+  assert.equal(edit.idFor(edit.item('bug_1'), 'bug', 'bug'), 'bug_1');
+  assert.equal(edit.idFor(edit.item('bug_1'), 'bug', 'bug_tank'), 'bug_tank_1');
+  assert.equal(edit.idFor(edit.item('lift'), 'platform', 'crate'), 'lift', 'written by hand: stays');
 
   // A new type renames it; a stationary one loses its path; the same settings change nothing.
-  assert.equal(edit.setEnemy('bug_1', { type: 'virus', overrides: { movement: 'stationary' } }, false), 'virus_1');
-  assert.deepEqual(edit.item('virus_1'), { id: 'virus_1', type: 'virus', at: [2, 0, 6], overrides: { movement: 'stationary' } });
-  assert.equal(edit.setEnemy('virus_1', { type: 'virus', overrides: { movement: 'stationary' } }, false), null);
-  assert.equal(edit.setEnemy('virus_1', { type: 'virus', overrides: {} }, true), 'virus_1');
+  assert.equal(edit.setEnemy('bug_1', { template: 'virus', overrides: { movement: 'stationary' } }, false), 'virus_1');
+  assert.deepEqual(edit.item('virus_1'), { id: 'virus_1', template: 'virus', at: [2, 0, 6], overrides: { movement: 'stationary' } });
+  assert.equal(edit.setEnemy('virus_1', { template: 'virus', overrides: { movement: 'stationary' } }, false), null);
+  assert.equal(edit.setEnemy('virus_1', { template: 'virus', overrides: {} }, true), 'virus_1');
   assert.equal('overrides' in edit.item('virus_1'), false);
 
   assert.equal(edit.removeItem('virus_1'), true);
   assert.equal(edit.removeItem('virus_1'), false);
   assert.equal(edit.item('virus_1'), null);
   edit.undo();
-  assert.equal(edit.item('virus_1').type, 'virus');
+  assert.equal(edit.item('virus_1').template, 'virus');
 });
 
 test('RoomEdit moves exits along their side and up, not onto another exit', () => {
@@ -554,27 +558,32 @@ test('RoomEdit keeps its text until the next change', () => {
   edit.end();
 });
 
-test('DefsEdit adds, updates, renames and deletes enemy templates', () => {
+test('DefsEdit adds, updates, renames and deletes enemy templates, any of them (D78)', () => {
   const defs = new DefsEdit({ enemies: { bug: BUG, virus: BUG } });
   assert.match(defs.addTemplate('Tank', 'bug', {}), /lowercase/);
   assert.match(defs.addTemplate('virus', 'bug', {}), /taken/);
   assert.equal(defs.addTemplate('tank', 'bug', { integrity: 4 }), null);
-  // A template of a template extends the same base, with the values of both.
+  // A template of a template builds on it, with only its own values.
   assert.equal(defs.addTemplate('big_tank', 'tank', { damage: 2 }), null);
-  assert.deepEqual(defs.enemies.big_tank, { extends: 'bug', integrity: 4, damage: 2 });
-  assert.equal(defs.isTemplate('tank'), true);
-  assert.equal(defs.isTemplate('bug'), false);
+  assert.deepEqual(defs.enemies.big_tank, { extends: 'tank', damage: 2 });
+  assert.deepEqual(defs.builtOn('tank'), ['big_tank']);
 
   assert.equal(defs.updateTemplate('tank', { color: '#ffb020' }), true);
-  assert.equal(defs.updateTemplate('bug', { color: '#ffb020' }), false, 'not a template');
+  assert.equal(defs.updateTemplate('bug', { speed: 4 }), true, 'one without extends too');
+  assert.equal(defs.enemies.bug.speed, 4);
   assert.equal(defs.updateTemplate('tank', {}), false);
+  assert.equal(defs.updateTemplate('beetle', { speed: 4 }), false);
 
-  assert.match(defs.renameTemplate('bug', 'bugs'), /not a template/);
+  assert.match(defs.renameTemplate('beetle', 'bugs'), /not a template/);
   assert.match(defs.renameTemplate('tank', 'virus'), /taken/);
   assert.equal(defs.renameTemplate('tank', 'heavy'), null);
   assert.deepEqual(Object.keys(defs.enemies), ['bug', 'virus', 'heavy', 'big_tank'], 'in its place');
-  assert.equal(defs.deleteTemplate('bug'), false);
-  assert.equal(defs.deleteTemplate('heavy'), true);
+  assert.equal(defs.enemies.big_tank.extends, 'heavy', 'the templates built on it follow');
+  assert.match(defs.deleteTemplate('heavy'), /big_tank is built on heavy/);
+  assert.equal(defs.deleteTemplate('big_tank'), null);
+  assert.equal(defs.deleteTemplate('heavy'), null);
+  assert.equal(defs.deleteTemplate('virus'), null, 'one without extends too');
+  assert.deepEqual(Object.keys(defs.enemies), ['bug']);
   assert.equal(defs.dirty, true);
 });
 
@@ -583,7 +592,7 @@ test('undo takes back the template changes of its step only', () => {
   const defs = new DefsEdit(files['defs.json']);
   const lab = new RoomEdit(files['rooms/lab.json'], { defs });
   const hall = new RoomEdit(files['rooms/hall.json'], { defs });
-  lab.edit(() => defs.addTemplate('tank', 'bug', { integrity: 4 }) === null && !!lab.setEnemy('bug_1', { type: 'tank', overrides: {} }, true));
+  lab.edit(() => defs.addTemplate('tank', 'bug', { integrity: 4 }) === null && !!lab.setEnemy('bug_1', { template: 'tank', overrides: {} }, true));
   lab.placeBlock([1, 0, 1], 'block');
   hall.edit(() => defs.addTemplate('scout', 'bug', { speed: 5 }) === null);
 
@@ -592,10 +601,10 @@ test('undo takes back the template changes of its step only', () => {
   assert.deepEqual(Object.keys(defs.enemies), ['bug', 'tank', 'scout']);
   lab.undo();
   assert.deepEqual(Object.keys(defs.enemies), ['bug', 'scout']);
-  assert.equal(lab.item('bug_1').type, 'bug');
+  assert.equal(lab.item('bug_1').template, 'bug');
   lab.redo();
   assert.deepEqual(Object.keys(defs.enemies), ['bug', 'tank', 'scout']);
-  assert.equal(lab.item('tank_1').type, 'tank');
+  assert.equal(lab.item('tank_1').template, 'tank');
 });
 
 test('linkChoices lists free exits of other rooms in the opposite side, equally wide', () => {
@@ -613,7 +622,7 @@ test('linkChoices lists free exits of other rooms in the opposite side, equally 
 
 test('errors are grouped by file and point at what they are about', () => {
   const rooms = {
-    lab: { exits: [{ id: 'west', side: '-x', at: 3 }], objects: [{ id: 'lift', type: 'platform', at: [1, 0, 1] }], enemies: [{ id: 'bug_1', type: 'bug', at: [2, 0, 2] }] },
+    lab: { exits: [{ id: 'west', side: '-x', at: 3 }], objects: [{ id: 'lift', type: 'platform', at: [1, 0, 1] }], enemies: [{ id: 'bug_1', template: 'bug', at: [2, 0, 2] }] },
   };
   const context = { roomData: (id) => rooms[id], connections: [['lab.west', 'hall.east']] };
   const target = (error) => errorTarget(error, context);
@@ -628,7 +637,7 @@ test('errors are grouped by file and point at what they are about', () => {
   assert.deepEqual(target('rooms/lab.json › size: width + depth is 40, at most 32 fits the camera'), { room: 'lab' });
   assert.deepEqual(target('world.json › connections: exit "lab.west" is not connected'), { room: 'lab', tool: 'exit', selected: { kind: 'exit', id: 'west' } });
   assert.deepEqual(target('world.json › connections[0]: exits must be equally wide (2 and 3)'), { room: 'lab', tool: 'exit', selected: { kind: 'exit', id: 'west' } });
-  assert.equal(target('defs.json › enemies.tank.extends: unknown enemy type "tonk"'), null);
+  assert.equal(target('defs.json › enemies.tank.extends: unknown enemy template "tonk"'), null);
   assert.equal(target('rooms/gone.json › size: bad'), null);
   assert.equal(target('preview failed: boom'), null);
 

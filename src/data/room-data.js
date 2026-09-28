@@ -114,7 +114,7 @@ export const OBJECT_STYLE_DEFAULTS = {
 };
 
 /**
- * Values an enemy type's fields can take (the first is listed first in the
+ * Values an enemy template's fields can take (the first is listed first in the
  * schema too). Enemies are universal (D77): any look, movement and attack
  * combine. look: its body (render/entity-view.js ENEMY_MODELS); movement:
  * a behavior module (ai/behaviors.js); attack: how it hurts (touch: touching
@@ -137,7 +137,7 @@ export const ENEMY_OPTIONS = {
 export const DISCHARGES = ['burst', 'arc'];
 
 /**
- * Enemy type fields that may be left out: aggro range (units), bounce (a
+ * Enemy template fields that may be left out: aggro range (units), bounce (a
  * trampoline top), solid (blocks, carries and shoves the wizard), memory
  * (seconds a chaser searches after losing sight of him) and a discharge's
  * range (units), charge and cooldown (seconds). chaseSpeed
@@ -153,12 +153,12 @@ export const ENEMY_DEFAULTS = {
   attackCooldown: 1.5,
 };
 
-/** Enemy type fields a type needs (a template gets them from its base), as in the schema. */
+/** Enemy template fields every template needs, its own or from the ones it extends (as in the schema). */
 export const ENEMY_REQUIRED = ['look', 'movement', 'attack', 'hostility', 'integrity', 'damage', 'speed', 'color'];
 
 /**
  * An enemy's values with every default filled in: ENEMY_DEFAULTS, then
- * `values` (a type, or a type with a room's overrides), then chaseSpeed
+ * `values` (a template, or a template with a room's overrides), then chaseSpeed
  * and attackColor from its speed and color unless set.
  * @param {object} values
  */
@@ -170,19 +170,41 @@ export function withEnemyDefaults(values) {
 }
 
 /**
- * Enemy types with templates filled in (D58): a type with `extends` (a
- * template, e.g. a tougher bug saved from the room editor) takes its base
- * type's values, then its own. One level: a base type has no `extends`.
- * @param {Record<string, object>} types defs.json `enemies`
- * @returns {Record<string, object>} every type with all its values (no `extends`)
+ * Enemy templates filled in (D58, D78): one with `extends` takes the values
+ * of the template it builds on (filled in the same way, down the chain),
+ * then its own. A loop or an unknown template ends the chain (validation
+ * reports both).
+ * @param {Record<string, object>} templates defs.json `enemies`
+ * @returns {Record<string, object>} every template with all its values (no `extends`)
  */
-export function resolveEnemyTypes(types) {
+export function resolveEnemyTemplates(templates) {
   const out = {};
-  for (const [id, { extends: base, ...own }] of Object.entries(types)) {
-    const { extends: _, ...baseValues } = (base && types[base]) || {};
-    out[id] = { ...baseValues, ...own };
-  }
+  const resolve = (id, seen) => {
+    if (out[id]) return out[id];
+    const { extends: parent, ...own } = templates[id];
+    seen.add(id);
+    const inherited = parent && templates[parent] && !seen.has(parent) ? resolve(parent, seen) : {};
+    return (out[id] = { ...inherited, ...own });
+  };
+  for (const id of Object.keys(templates)) resolve(id, new Set());
   return out;
+}
+
+/**
+ * The chain of templates `id` builds on: itself, what it extends, and so
+ * on, as far as it goes (it stops before an unknown template or a loop).
+ * @param {Record<string, object>} templates defs.json `enemies`
+ * @param {string} id
+ * @returns {{ chain: string[], loop: boolean, unknown: string|null }}
+ */
+export function templateChain(templates, id) {
+  const chain = [];
+  for (let at = id; at !== undefined; at = templates[at].extends) {
+    if (chain.includes(at)) return { chain, loop: true, unknown: null };
+    if (!templates[at]) return { chain, loop: false, unknown: at };
+    chain.push(at);
+  }
+  return { chain, loop: false, unknown: null };
 }
 
 /**
@@ -206,16 +228,6 @@ export function resolveBlockTypes(types) {
 /** Values only static block types take, and only object kinds take (D60). */
 export const STATIC_BLOCK_VALUES = ['look', 'damage', 'lethal'];
 export const KIND_BLOCK_VALUES = ['kind', 'regrow', 'edges', 'mark', 'faces', 'tint'];
-
-/**
- * The base type of each enemy type: its own id, or a template's base (the
- * room editor names it next to a template).
- * @param {Record<string, object>} types defs.json `enemies`
- * @returns {Record<string, string>}
- */
-export function enemyBases(types) {
-  return Object.fromEntries(Object.entries(types).map(([id, type]) => [id, type.extends ?? id]));
-}
 
 /**
  * Every floor tile a hole entry covers: just `at`, or the rectangle from

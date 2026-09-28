@@ -76,6 +76,11 @@ and the project uses [Semantic Versioning](https://semver.org/).
   or the world map (`map`) or the asset showcase (`showcase`).
 
 ### Changed
+- Every enemy type is an enemy template now (D78): a room enemy names its
+  `"template"` (was `"type"`), a template may build on another
+  (`extends` chains), and the room editor updates, renames and deletes
+  any template, the base ones too; Update says which rooms and templates
+  a change reaches.
 - Enemies never walk into a hole or onto a void block any more, nor off a
   ledge onto one (D77); they still fall in if the ground goes from under
   them.

@@ -1,8 +1,8 @@
 /**
- * defs.json while the room editor changes its enemy templates (D58): enemy
- * types that `extends` a base type with only the values they change. Room
- * undo steps that change a template take it along (room-edit.js). Plain
- * logic, no browser.
+ * defs.json while the room editor changes its enemy templates (D58, D78):
+ * every entry of `enemies` is one, with all its values or `extends` another
+ * with only the values it changes. Room undo steps that change a template
+ * take it along (room-edit.js). Plain logic, no browser.
  */
 import { formatJson } from './format-json.js';
 import { ID_PATTERN } from './room-edit.js';
@@ -15,7 +15,7 @@ export class DefsEdit {
     this.savedText = this.text();
   }
 
-  /** @returns {Record<string, object>} enemy types by id, as written */
+  /** @returns {Record<string, object>} enemy templates by id, as written */
   get enemies() {
     return this.data.enemies ?? {};
   }
@@ -55,13 +55,13 @@ export class DefsEdit {
     this.data.enemies = out;
   }
 
-  /** Is enemy type `type` a template (it extends a base type)? */
-  isTemplate(type) {
-    return !!this.enemies[type]?.extends;
+  /** Templates that extend `id` directly. */
+  builtOn(id) {
+    return Object.keys(this.enemies).filter((other) => this.enemies[other].extends === id);
   }
 
   /**
-   * Why `name` can't be a new enemy type id, or null.
+   * Why `name` can't be a new template id, or null.
    * @param {string} name
    */
   nameProblem(name) {
@@ -71,47 +71,57 @@ export class DefsEdit {
   }
 
   /**
-   * Add a template of `type` with these values (a template of a template is
-   * one more template of the same base).
+   * Add a template built on `template`, with these values of its own.
    * @param {string} name
-   * @param {string} type enemy type the settings are of
-   * @param {object} overrides values that differ from `type`'s
+   * @param {string} template the template the settings are of
+   * @param {object} overrides values that differ from it
    * @returns {string|null} why not, or null when added
    */
-  addTemplate(name, type, overrides) {
+  addTemplate(name, template, overrides) {
     const problem = this.nameProblem(name);
     if (problem) return problem;
-    const { extends: base, ...own } = this.enemies[type];
-    this.data.enemies[name] = { extends: base ?? type, ...(base ? own : {}), ...structuredClone(overrides) };
+    this.data.enemies[name] = { extends: template, ...structuredClone(overrides) };
     return null;
   }
 
   /**
-   * Move values into a template: every enemy of it changes.
+   * Move values into a template: every enemy of it changes, and every
+   * template built on it that doesn't set them itself.
    * @returns {boolean} whether anything changed
    */
-  updateTemplate(type, overrides) {
-    if (!this.isTemplate(type) || Object.keys(overrides).length === 0) return false;
-    this.data.enemies[type] = { ...this.enemies[type], ...structuredClone(overrides) };
+  updateTemplate(template, overrides) {
+    if (!this.enemies[template] || Object.keys(overrides).length === 0) return false;
+    this.data.enemies[template] = { ...this.enemies[template], ...structuredClone(overrides) };
     return true;
   }
 
   /**
-   * Give a template another id, keeping its place in defs.json.
+   * Give a template another id, keeping its place in defs.json; templates
+   * built on it follow.
    * @returns {string|null} why not, or null when renamed
    */
   renameTemplate(from, to) {
-    if (!this.isTemplate(from)) return `${from} is not a template.`;
+    if (!this.enemies[from]) return `${from} is not a template.`;
     const problem = this.nameProblem(to);
     if (problem) return problem;
-    this.data.enemies = Object.fromEntries(Object.entries(this.enemies).map(([id, type]) => [id === from ? to : id, type]));
+    this.data.enemies = Object.fromEntries(
+      Object.entries(this.enemies).map(([id, template]) => [
+        id === from ? to : id,
+        template.extends === from ? { ...template, extends: to } : template,
+      ]),
+    );
     return null;
   }
 
-  /** @returns {boolean} whether the template was there */
-  deleteTemplate(type) {
-    if (!this.isTemplate(type)) return false;
-    delete this.data.enemies[type];
-    return true;
+  /**
+   * Remove a template no other template builds on.
+   * @returns {string|null} why not, or null when deleted
+   */
+  deleteTemplate(template) {
+    if (!this.enemies[template]) return `${template} is not a template.`;
+    const children = this.builtOn(template);
+    if (children.length > 0) return `${children.join(', ')} ${children.length === 1 ? 'is' : 'are'} built on ${template}: change or delete ${children.length === 1 ? 'it' : 'them'} first.`;
+    delete this.data.enemies[template];
+    return null;
   }
 }

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "defs.schema.json",
   "title": "Type definitions (data/defs.json)",
-  "description": "Object types with their defaults, enemy types, spells, and the look and rules of the special static block types.",
+  "description": "Object types with their defaults, enemy templates, spells, and the look and rules of the special static block types.",
   "type": "object",
   "required": ["schemaVersion", "objects", "spells", "blocks"],
   "additionalProperties": false,
@@ -16,9 +16,9 @@
     },
     "enemies": {
       "type": "object",
-      "description": "Enemy types (corrupted programs), by id.",
+      "description": "Enemy templates (corrupted programs), by id (D78); rooms place enemies of them.",
       "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
-      "additionalProperties": { "$ref": "#/$defs/enemyType" }
+      "additionalProperties": { "$ref": "#/$defs/enemyTemplate" }
     },
     "spells": {
       "type": "object",
@@ -148,9 +148,9 @@
         "tint": { "$ref": "#/$defs/objectType/properties/tint" }
       }
     },
-    "enemyType": {
+    "enemyTemplate": {
       "type": "object",
-      "description": "A base type has every required value; a template (\"extends\") only the ones it changes.",
+      "description": "An enemy template (D78): rooms place enemies of it. One without \"extends\" has every required value; one with it only the values it changes.",
       "if": { "properties": { "extends": true }, "required": ["extends"] },
       "else": {
         "properties": { "look": true, "movement": true, "attack": true, "hostility": true, "integrity": true, "damage": true, "speed": true, "color": true },
@@ -160,7 +160,7 @@
       "properties": {
         "extends": {
           "$ref": "common.schema.json#/$defs/id",
-          "description": "Template (D58): the base enemy type (one without \"extends\") whose values and look it takes; its own values replace the base's. Saved from the room editor."
+          "description": "The template it builds on (D58, D78): it takes that one's values (and so on down the chain), its own replace them. No loops."
         },
         "look": {
           "enum": ["bug", "virus", "sentinel"],

@@ -14,11 +14,11 @@
   "holes": [{ "at": [7, 2], "to": [7, 6] }],
   "objects": [{ "id": "cover", "type": "crate", "at": [3, 0, 7] }],
   "enemies": [
-    { "id": "virus", "type": "virus", "at": [2, 0, 2] },
-    { "id": "sentinel", "type": "sentinel", "at": [9, 0, 1] },
+    { "id": "virus", "template": "virus", "at": [2, 0, 2] },
+    { "id": "sentinel", "template": "sentinel", "at": [9, 0, 1] },
     {
       "id": "zapbug",
-      "type": "bug",
+      "template": "bug",
       "at": [8, 0, 6],
       "overrides": { "movement": "stationary", "attack": "burst", "aggroRange": 2 }
     }

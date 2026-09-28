@@ -13,7 +13,7 @@ export const CRATE = { kind: 'pushable', color: '#b6ff3c' };
 /** A moving platform type (its path is on the room object). */
 export const LIFT = { kind: 'platform', color: '#00f0ff' };
 
-/** A bug enemy type, as in defs.json (3 units per second: 20 ticks per cell). */
+/** A bug enemy template, as in defs.json (3 units per second: 20 ticks per cell). */
 export const BUG = {
   look: 'bug',
   movement: 'patrol',
@@ -29,7 +29,7 @@ export const BUG = {
 };
 
 /**
- * A virus enemy type, as in defs.json but chasing at 3 units per second (20
+ * A virus enemy template, as in defs.json but chasing at 3 units per second (20
  * ticks per cell): a burst (range 1.2, 24 ticks of charge, 90 of
  * cooldown).
  */
@@ -49,7 +49,7 @@ export const VIRUS = {
   attackCooldown: 1.5,
 };
 
-/** A sentinel enemy type, as in defs.json: an arc (range 5, 42 ticks of charge). */
+/** A sentinel enemy template, as in defs.json: an arc (range 5, 42 ticks of charge). */
 export const SENTINEL = {
   look: 'sentinel',
   movement: 'chase',
@@ -105,7 +105,7 @@ export function roomFile(id, props = {}) {
  * @param {object} options
  * @param {object[]} options.rooms room files (see roomFile())
  * @param {Record<string, object>} [options.objects] object types; a crate by default
- * @param {Record<string, object>} [options.enemies] enemy types; a bug by default
+ * @param {Record<string, object>} [options.enemies] enemy templates; a bug by default
  * @param {Record<string, object>} [options.blocks] block types; BLOCK_TYPES by default
  * @param {Record<string, object>} [options.pickups] pickup types; PICKUPS by default
  * @param {string[][]} [options.connections] pairs of "room.exit"

@@ -25,7 +25,7 @@
   "enemies": [
     {
       "id": "bug_a",
-      "type": "bug",
+      "template": "bug",
       "at": [10, 0, 4],
       "overrides": { "hostility": "peaceful" },
       "path": { "points": [[10, 0, 9]], "pause": 2 }

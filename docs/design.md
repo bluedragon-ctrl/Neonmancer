@@ -240,8 +240,11 @@ magenta, thin dashed edges, tinted faces) that gives way under the wizard.
 ## Enemies
 
 Corrupted programs (D48), listed in a room's `enemies`. Everything about one
-comes from data: its type in `defs.json` `enemies`, and the room's
-`overrides` for that one enemy. Enemies are universal (D77): a look, a
+comes from data: its template in `defs.json` `enemies` (D78), and the
+room's `overrides` for that one enemy. A template without `extends` sets
+every required value below; one with `extends` builds on another template
+(and so on down the chain) and sets only what it changes.
+Enemies are universal (D77): a look, a
 movement, an attack and a color, and any of them combine (a bug can chase
 and burst; a virus can patrol).
 
@@ -259,7 +262,7 @@ and burst; a virus can patrol).
 | `memory` | seconds (default 1.5) | how long a chaser searches where it lost him. |
 | `bounce` | true / false (default false; bug: true) | trampoline top (below). |
 | `solid` | true / false (default false) | blocks the wizard, carries him and shoves him (below). |
-| `color` | #rrggbb | body color; the eyes always show hostility, so a room can recolor one enemy with `overrides` without a new type or look. |
+| `color` | #rrggbb | body color; the eyes always show hostility, so a room can recolor one enemy with `overrides` without a new template. |
 | `attackRange` | units (default 1.2) | burst or arc reach, from its eyes to the nearest point of the wizard; `aggroRange` must be at least this. |
 | `attackCharge` | seconds (default 0.4) | the warning before it fires. |
 | `attackCooldown` | seconds (default 1.5) | the wait after firing. |
@@ -842,28 +845,30 @@ list switches to another room; New room makes an empty one (D57).
   while this tool is picked), with the id `<type>_<n>`. Placing on an
   object of the same type leaves it as it is (a platform keeps its path). A new platform is picked, ready for its path.
   Erasing removes an object or enemy standing in the cell.
-- **Enemy** places an enemy of the panel's type with its settings
+- **Enemy** places an enemy of the panel's template with its settings
   (grouped: look and color; movement, speed and chase speed; hostility
   and aggro range; attack, attack range and damage; integrity, bounce,
-  solid; each with a tooltip. Blank is the type's own; other overrides
-  written by hand stay), id
-  `<type>_<n>`, and picks it. A click on an enemy picks it: the fields
-  then show and change it, and new enemies get the same. A patrolling
-  enemy needs a path (the panel says so), a chaser may have one; making
-  one stationary drops its path. Integrity, damage, speed, chase speed,
-  aggro range, attack range and color are typed in (blank: the type's). Changing the type of an enemy
-  with an id the editor made renames it (`bug_1` becomes `virus_1`); ids
-  written by hand stay.
-- **Enemy templates** (D58): Template + Save turns the current enemy
-  settings into a new enemy type in `defs.json` (`"extends"` its base
-  type, only the changed values), picked from the Type list from then on
-  (shown as `bug_tank (bug template)`); the picked enemy becomes one of
-  it. With an enemy of a template that has settings of its own, **Update
-  template** moves them into the template, changing every enemy of it.
-  **Rename** gives the template the name typed in Template (only a
-  template no other room uses; the room's enemies follow), **Delete**
-  removes one no enemy uses. Template changes are undo steps of the room
-  they were made in (D59). Saved with Save, like the rooms.
+  solid; each with a tooltip. Blank is the template's own; other
+  overrides written by hand stay), id `<template>_<n>`, and picks it. A
+  click on an enemy picks it: the fields then show and change it, and new
+  enemies get the same. A patrolling enemy needs a path (the panel says
+  so), a chaser may have one; making one stationary drops its path.
+  Integrity, damage, speed, chase speed, aggro range, attack range and
+  color are typed in (blank: the template's). Changing the template of
+  an enemy with an id the editor made renames it (`bug_1` becomes
+  `virus_1`); ids written by hand stay.
+- **Enemy templates** (D58, D78), any of them, the base ones too: a
+  name + **New** turns the current enemy settings into a new template in
+  `defs.json` (`"extends"` the current template, only the enemy's own
+  values), listed as `bug_tank (on bug)` from then on; the picked enemy
+  becomes one of it. With settings of its own, **Update template** moves
+  them into the template: every enemy of it changes, in every room, and
+  so do the templates built on it (the status line says which rooms and
+  templates). **Rename** gives the template the typed name (only one no
+  other room uses; the room's enemies and the templates built on it
+  follow), **Delete** removes one no enemy uses and no template builds
+  on. Template changes are undo steps of the room they were made in
+  (D59). Saved with Save, like the rooms.
 - **Path** works on a picked platform or enemy (click it). Each click on a
   cell adds a point, with corners added so every leg runs along one axis
   (x, then z, then y); an enemy's points stay at its own height, a
@@ -1024,7 +1029,7 @@ the author; the answers are recorded as decisions before the code lands.
 | 2 | `feat/pickups-and-progress` | Pickup types in `defs.json` and room data, and a `Progress` model (save bits found, known spells) that survives room resets and death: permanent pickups have a save bit in blocks (D71) and stay as grayed-out ghosts once found; temporary pickups (integrity and energy refills) have none and come back with the room (D67). The first data disk: Zap is no longer known from the start, its disk lies in Boot Sector (`> SPELL INSTALLED: ZAP` banner). Pickup burst; editor and validation support. |
 | 3 | `feat/data-disks` | More disks (D73): an install animation on the wizard, and a second spell to switch to (Tab / Q): Shield, a crackling ring round him; it blocks projectiles once there are any (step 6). Its disk lies in Cache Hall. |
 | 4 | `feat/switches` | Switches that unlock exits: a pressure plate held down by a crate, and a target that a Zap bolt hits. An exit in room data can be locked until its switches are on; a locked exit looks closed and is solid. Switch state resets with the room. The locked exit is the same mechanism access levels use later (step 14). Editor, validation (switches point at exits that exist), showcase, a test room. |
-| 5 | `feat/viruses` | Universal enemies (a `look` field, D77); a `chase` movement behavior: a hostile enemy follows the wizard while it sees him within `aggroRange`, searches, then goes home; charged discharge attacks (`burst`, `arc`; `contact` renamed `touch`); the Virus and the Sentinel; the "!" mark; enemies keep out of holes. Test room Quarantine. |
+| 5 | `feat/viruses` | Universal enemies (a `look` field, D77); every enemy type an enemy template (D78); a `chase` movement behavior: a hostile enemy follows the wizard while it sees him within `aggroRange`, searches, then goes home; charged discharge attacks (`burst`, `arc`; `contact` renamed `touch`); the Virus and the Sentinel; the "!" mark; enemies keep out of holes. Test room Quarantine. |
 | 6 | `feat/popups` | A projectile attack: Pop-ups are stationary enemies firing slow shots; a projectile entity with its own rules for what stops it. |
 | 7 | `feat/firewall-spell` | Shield blocks projectiles; Firewall: a shield that also damages (D73). |
 | 8 | `feat/pause-spell` | Pause: freezes an enemy for a while; a frozen enemy is a solid platform (reusing the solid-enemy rules, D51). |
@@ -1098,7 +1103,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 | File | Contents |
 |---|---|
 | `data/rooms/<id>.json` | One room (id = file name) |
-| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; switches `target` and `plate`, white, see Switches and locked exits); `enemies`: enemy types (`bug`, see Enemies) and templates that `extend` one (D58); `spells`: spell tuning and color (`zap`, see Zap and energy; `shield`, see Shield); `pickups`: pickup types (see Pickups and progress); `blocks`: block types (D60): look or kind, color, properties (`damage`, `lethal`, `regrow`), `extends` for variants; see Block types |
+| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; switches `target` and `plate`, white, see Switches and locked exits); `enemies`: enemy templates (`bug`, `virus`, `sentinel`, see Enemies), each complete or `extend`ing another (D58, D78); `spells`: spell tuning and color (`zap`, see Zap and energy; `shield`, see Shield); `pickups`: pickup types (see Pickups and progress); `blocks`: block types (D60): look or kind, color, properties (`damage`, `lethal`, `regrow`), `extends` for variants; see Block types |
 | `data/biomes.json` | Biome name and room color: `home_lattice` (core, amber), `glitchmire` (pink), `frostbyte_wastes` (ice blue), `abyssal_buffer` (graphite), `firewall_citadel` (ember orange), `phantom_partition` (special, silver-white); optional `look` for the surroundings (background, outer grid and its fade, wall grid, bloom); see Biomes (D61, D62) |
 | `data/world.json` | Start room, exit connections and every room's cell on the world map (`positions`, D66) |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |
@@ -1145,8 +1150,8 @@ Example room (12×12):
   Platforms also take a `path`:
   `{ "points": [[6, 0, 1]], "mode": "pingpong", "speed": 2, "pause": 0.8 }`
   (see Moving platforms).
-- `enemies` — `{ "id", "type", "at", "path", "overrides" }`: `at` is the
-  spawn cell, `path` a patrol path (level legs), `overrides` any type field
+- `enemies` — `{ "id", "template", "at", "path", "overrides" }`: `at` is the
+  spawn cell, `path` a patrol path (level legs), `overrides` any template field
   (see Enemies). Ids are shared with objects.
 - Object type style (D17): `edges` `solid`/`dashed`, `mark`
   `none`/`inset`/`cross`/`brackets`, `faces` `dark`/`tinted` (defaults first),

@@ -35,7 +35,7 @@ function run(game, inp, ticks) {
 }
 
 /** A bug staying in its cell, with more `overrides` of its type. */
-const sitter = (at, id = 'b', overrides = {}) => ({ id, type: 'bug', at, overrides: { movement: 'stationary', ...overrides } });
+const sitter = (at, id = 'b', overrides = {}) => ({ id, template: 'bug', at, overrides: { movement: 'stationary', ...overrides } });
 
 test('casting Zap spends energy and sends a bolt from his hands the way he aims', () => {
   const game = gameWith();

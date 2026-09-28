@@ -60,12 +60,12 @@ const SNAP = 1e-9;
 
 export class Enemy {
   /**
-   * @param {object} enemy runtime room enemy (id, type, at, path, behavior, speed, damage...)
+   * @param {object} enemy runtime room enemy (id, template, at, path, behavior, speed, damage...)
    */
   constructor(enemy) {
     this.data = enemy;
     this.id = enemy.id;
-    this.type = enemy.type;
+    this.template = enemy.template;
     this.size = ENEMY.size;
     /** Lower corner of its cell [x, y, z]; whole cells except while walking, falling or riding. */
     this.pos = [...enemy.at];

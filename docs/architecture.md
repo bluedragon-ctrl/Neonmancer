@@ -64,7 +64,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `entities/enemy.js` | Enemy body: steps cell by cell where its movement behavior leads (never into a hole or onto void), turns back when blocked, falls, rides platforms, pops in holes and on void; hostility, provoke, bounce state (D48); seeing the wizard, the "!", the discharge attack's charge and cooldown (D77) |
 | `entities/switch.js` | Switches (D75): `Target` (a fixed body a bolt switches over) and `Plate` (a floor tile, no body, on while something stands on it); `SWITCH_KINDS` (pure, tested) |
 | `entities/bolt.js` | Zap bolt: flies level in sub-steps, stops at the first enemy, block, object or room side (`BOLT` tuning) |
-| `ai/behaviors.js` | Movement behaviors by name (`BEHAVIORS`: `patrol`, `stationary`, `chase`), as enemy types refer to them |
+| `ai/behaviors.js` | Movement behaviors by name (`BEHAVIORS`: `patrol`, `stationary`, `chase`), as enemy templates refer to them |
 | `ai/patrol.js` | Patrol: next step towards the next waypoint column, pauses at the ends, turns back (pure, tested) |
 | `ai/chase.js` | Chase (D77): calm → chase → search → return, greedy steps towards the wizard or home, patrols while calm if it has a path (pure, tested) |
 | `ai/sight.js` | Rays through the grid and bodies (`castRay()`), `lineOfSight()`, `reach()` from a point to a box (pure, tested) |
@@ -126,7 +126,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `editor/editor.js` | Room editor (F2, D56, D57): opens on the current room, switches rooms and makes new ones, mouse picking on a height layer, tools, picking things, keys, rebuilding the room from the edited data, save or export |
 | `editor/room-edit.js` | One room being edited: place/erase edits, enemies, paths, exits and their connections, spawn/reset, name, biome, size (with a report), undo/redo (with the step's template changes), dirty state, cell descriptions; `roomErrors()`, `newRoom()` (pure, tested) |
 | `editor/world-edit.js` | `world.json` being edited: connecting, disconnecting and renaming exits, a room's connections for its undo steps, a new room's map cell (`place()`, `unplace()`); `linkChoices()` (pure, tested) |
-| `editor/defs-edit.js` | `defs.json` being edited: enemy templates added, updated, renamed and deleted; a step's template changes applied again for undo/redo (pure, tested) |
+| `editor/defs-edit.js` | `defs.json` being edited: enemy templates (any of them, D78) added, updated, renamed and deleted; a step's template changes applied again for undo/redo (pure, tested) |
 | `editor/errors.js` | The error list: errors grouped by file, and the room, tool and thing each one points at (pure, tested) |
 | `editor/boxes.js` | `blocks`/`holes` entries edited cell by cell: untouched entries kept, loose cells merged greedily into boxes (pure, tested) |
 | `editor/format-json.js` | JSON in the data files' hand-written style (pure, tested against every data file) |

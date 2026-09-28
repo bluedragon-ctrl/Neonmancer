@@ -29,9 +29,9 @@ function blocksByType(data, blockTypes) {
 
 /**
  * @param {object} data room file contents (validated)
- * @param {{ objectTypes: object, blockTypes: object, enemyTypes?: object, pickupTypes?: object, biomes: object }} content loaded game data
+ * @param {{ objectTypes: object, blockTypes: object, enemyTemplates?: object, pickupTypes?: object, biomes: object }} content loaded game data
  */
-export function buildRoom(data, { objectTypes, blockTypes, enemyTypes = {}, pickupTypes = {}, biomes }) {
+export function buildRoom(data, { objectTypes, blockTypes, enemyTemplates = {}, pickupTypes = {}, biomes }) {
   const fromBlocks = blocksByType(data, blockTypes);
   return {
     id: data.id,
@@ -62,11 +62,11 @@ export function buildRoom(data, { objectTypes, blockTypes, enemyTypes = {}, pick
       // Moving platforms: the path they follow (world/path.js).
       ...(object.path && { path: structuredClone(object.path) }),
     })).concat(fromBlocks.objects),
-    /** Enemies: type values (model, movement, attack, speed...) merged with this enemy's overrides, id, cell and path. */
+    /** Enemies: template values (look, movement, attack, speed...) merged with this enemy's overrides, id, cell and path. */
     enemies: (data.enemies ?? []).map((enemy) => ({
-      ...withEnemyDefaults({ ...structuredClone(enemyTypes[enemy.type]), ...enemy.overrides }),
+      ...withEnemyDefaults({ ...structuredClone(enemyTemplates[enemy.template]), ...enemy.overrides }),
       id: enemy.id,
-      type: enemy.type,
+      template: enemy.template,
       at: [...enemy.at],
       ...(enemy.path && { path: structuredClone(enemy.path) }),
     })),

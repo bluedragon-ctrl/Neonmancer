@@ -1202,8 +1202,8 @@ Phase 3 step 5's open questions, settled with the author:
   `aggroRange` ≥ `attackRange`.
 - **Editor:** the Enemy panel lists the settings grouped (look and color,
   movement and speeds, hostility and aggro range, attack, range and
-  damage, integrity, bounce, solid), each with a tooltip; Type is the
-  enemy type all of them come from unless set for the one enemy.
+  damage, integrity, bounce, solid), each with a tooltip; all of them
+  come from the enemy's template unless set for the one enemy (D78).
 - **Virus:** a sharp-edged cube tipped onto an edge, slanted eyes on its
   front face, four small cubes of itself orbiting (the glitch shape,
   picked over a spiky ball and a phage; hard, flat edges at the author's
@@ -1229,3 +1229,27 @@ would. Aiming an arc when the charge starts keeps long shots dodgeable.
 Greedy chasing is readable and lets rooms use cover and crates as
 puzzles. Enemies throwing themselves into pits looked silly; the author
 wants them to keep out.
+
+### D78 — 2026-09-28 — Every enemy type is a template
+Amends D58. With the look a field of its own (D77), a base enemy type
+was only a template that sets every value, so the two are one thing now:
+- Every entry of `defs.json` `enemies` is an **enemy template**. One
+  without `extends` has every required value; one with it takes the
+  values of the template it builds on and changes only its own. Chains
+  are allowed (`big_tank` → `tank` → `bug`), loops and unknown templates
+  are errors; each template must be complete once filled in
+  (`resolveEnemyTemplates()`, `templateChain()`).
+- A room enemy names its template: `"template": "bug"` (was `"type"`),
+  so the data and the editor say the same word.
+- In the room editor every template can be updated, renamed and deleted,
+  the base ones too: Update moves an enemy's own settings into its
+  template and says what that reaches (every enemy of it, by room, and
+  the templates built on it); Rename is refused while another room uses
+  it, and the templates built on it follow; Delete is refused while an
+  enemy uses it or a template builds on it. New saves a template built
+  on the current one, with only the enemy's own settings.
+**Why:** the author's call: a type was a template in all but name.
+Changing `bug` now reaches every bug and every template built on it,
+which the author wants: templates tune the enemies of a whole area at
+once, and different sets of templates give different areas their own
+enemies.

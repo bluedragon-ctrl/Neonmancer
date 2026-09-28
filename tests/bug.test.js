@@ -34,10 +34,10 @@ function run(game, inp, ticks) {
 }
 
 /** A bug patrolling from `at` to `to` (ping-pong, no pause). */
-const bug = (at, to, id = 'b') => ({ id, type: 'bug', at, path: { points: [to] } });
+const bug = (at, to, id = 'b') => ({ id, template: 'bug', at, path: { points: [to] } });
 
 /** A bug staying in its cell, with more `overrides` of its type. */
-const sitter = (at, id = 'b', overrides = {}) => ({ id, type: 'bug', at, overrides: { movement: 'stationary', ...overrides } });
+const sitter = (at, id = 'b', overrides = {}) => ({ id, template: 'bug', at, overrides: { movement: 'stationary', ...overrides } });
 
 /** Cells a patrol walks from [x, z] in `steps` calls (none while pausing). */
 function walk(patrol, [x, z], steps) {

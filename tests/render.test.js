@@ -183,8 +183,8 @@ test('every object kind in the schema (objects and block types, D60) has a logic
   assert.deepEqual(Object.keys(OBJECT_VIEWS).sort(), [...kinds].sort());
 });
 
-test('every enemy look in the schema has a model, and so every enemy type in defs.json', () => {
-  assert.deepEqual(Object.keys(ENEMY_MODELS).sort(), [...DEFS_SCHEMA.$defs.enemyType.properties.look.enum].sort());
+test('every enemy look in the schema has a model, and so every enemy template in defs.json', () => {
+  assert.deepEqual(Object.keys(ENEMY_MODELS).sort(), [...DEFS_SCHEMA.$defs.enemyTemplate.properties.look.enum].sort());
   for (const [type, { look }] of Object.entries(DEFS.enemies)) assert.ok(!look || ENEMY_MODELS[look], `no model for look "${look}" of "${type}"`);
 });
 
