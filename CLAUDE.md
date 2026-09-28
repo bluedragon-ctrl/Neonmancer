@@ -171,11 +171,29 @@ bit on its disk (D71).
   into a one-slot clipboard, paste it into the free cell in front of him,
   in any room (it goes with him; copies allowed, D87)
 
-Up to 16 spells in all (D68): new ones, some letting the wizard skip
-easier rooms, and upgrades of the basic ones. Buff items make the wizard
-himself stronger: more integrity, more energy, a higher jump. Stronger
-spells and buffs both let him skip easier rooms and reach areas he
-couldn't before.
+Planned for Phase 4 (the roster, D88); details settle in their steps:
+- **Compile** — builds a temporary block in the cell in front of the
+  wizard: a step up or a bridge tile over a gap
+- **Fork** — a hologram decoy of the wizard that stands for a while,
+  holds floor plates down and draws enemies
+- **Scan** — reveals hidden blocks, fake walls and secret pickups for a
+  while
+
+Spell upgrades have their own disks and save bits (the upgrades block,
+not spells, D88); an upgrade replaces its base spell in the Tab cycle
+(ZAP becomes ZAP+):
+- **Zap+** — the bolt bounces off walls, reaching targets round corners
+- **Mirror** (Shield upgrade) — reflects bolts back at the shooter
+
+Up to 16 spells and 16 upgrades; 10 spells and 2 upgrades are set, the
+rest stay spare for what content production needs (D88). Intended order
+in the world: early Zap, Shield, Blink, Pause; middle Cut & Paste,
+Firewall, Fork, Scan and the jump buff; late Compile, Warp, Zap+ and
+Mirror. Buff items make the wizard himself stronger: more integrity,
+more energy, a higher jump, faster recharge (draft: 4× +1 integrity,
+5× +10 energy, one jump buff to 2 blocks, one recharge buff; settled
+in the buff step). Stronger spells and buffs both let him skip easier
+rooms and reach areas he couldn't before.
 
 Mana recharges slowly. Installing a spell plays a short animation.
 Later spells and upgrades are stronger: they let the wizard speedrun
@@ -313,8 +331,8 @@ not critical.
 - Bit layout (one versioned module, spare bits reserved), sized for the
   world targets (D68) and finalized with the access-key step:
   format version 4, room 8, pickups 112 (one bit per permanent item, in
-  blocks, D71: spells 16, buffs 16, equipment 16, fragments 64; known
-  spells and buffs follow from them), health 4, score 20, checksum 16.
+  blocks, D71: spells 16, buffs 16, upgrades 16 (D88), fragments 64;
+  known spells, upgrades and buffs follow from them), health 4, score 20, checksum 16.
   No per-room data (bonus slots, map).
 - Encoding: Base32 without ambiguous characters (no 0/O, 1/I/L), shown
   in groups (e.g. `KX7M-Q4RP-...`). Input tolerates spaces, dashes and
@@ -427,9 +445,10 @@ first buff items. Score, bonus bits and secrets. Fragments, access levels
 and the core. Step plan: docs/design.md (D65).
 
 **Phase 4 (v0.4) — Guardians, saves, tooling**
-Firewall Wardens. Title screen and pause menu. Access keys, URL saves,
-localStorage autosave, tests. Map screen. Reachability checker. Design
-skills and subagents.
+Firewall Wardens. The roster's new spells and upgrades (D88): Compile,
+Fork, Scan, Zap+ and Mirror. Title screen and pause menu. Access keys,
+URL saves, localStorage autosave, tests. Map screen. Reachability
+checker. Design skills and subagents.
 
 **Phase 5 (v0.5+) — Polish**
 Full post-processing, juice pass, music and SFX, audio-reactive visuals,

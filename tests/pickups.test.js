@@ -22,12 +22,12 @@ function stepOnto(game, [x, y, z]) {
   return eventTypes(game.update(idle));
 }
 
-test('save bits come in blocks: spells, buffs, equipment, fragments; 112 in all (D71)', () => {
-  assert.deepEqual(Object.keys(SAVE_BLOCKS), ['spells', 'buffs', 'equipment', 'fragments']);
+test('save bits come in blocks: spells, buffs, upgrades, fragments; 112 in all (D71, D88)', () => {
+  assert.deepEqual(Object.keys(SAVE_BLOCKS), ['spells', 'buffs', 'upgrades', 'fragments']);
   assert.equal(PICKUP_BITS, 112);
   assert.equal(saveBit('spells', 0), 0);
   assert.equal(saveBit('buffs', 0), 16);
-  assert.equal(saveBit('equipment', 15), 47);
+  assert.equal(saveBit('upgrades', 15), 47);
   assert.equal(saveBit('fragments', 63), 111);
   assert.throws(() => saveBit('spells', 16), RangeError);
   assert.equal(pickupBit(PICKUPS.disk_zap, SPELLS), 0);

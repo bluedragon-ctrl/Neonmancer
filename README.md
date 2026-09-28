@@ -14,8 +14,8 @@ and collect key fragments to reboot the Grid.
 > types and six biome looks. No goal yet. Now: Phase 3 (spells and
 > pickups: a world map tool for the developer, data disks, switches,
 > Viruses and Pop-ups, four more spells, buff items, score and bonus bits,
-> fragments and the core), then Phase 4 (Wardens, saves, the map,
-> tooling).
+> fragments and the core), then Phase 4 (Wardens, more spells, saves,
+> the map, tooling).
 > Latest `main` build: https://bluedragon-ctrl.github.io/Neonmancer/
 
 ## Requirements
