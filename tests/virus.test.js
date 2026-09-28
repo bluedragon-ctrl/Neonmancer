@@ -279,7 +279,7 @@ test('data: discharge values are checked; a discharge enemy must notice what it 
   assert.match(errors([virus([1, 0, 1], 'v', { attackColor: 'yellow' })]), /"attackColor" must be #rrggbb/);
   assert.match(errors([virus([1, 0, 1], 'v', { attackRange: 40 })]), /"attackRange" must be between/);
   assert.match(errors([virus([1, 0, 1], 'v', { attack: 'ring' })]), /"attack" must be one of touch, burst, arc, bolt, none/);
-  assert.match(errors([virus([1, 0, 1], 'v', { look: 'dragon' })]), /"look" must be one of bug, virus, sentinel/);
+  assert.match(errors([virus([1, 0, 1], 'v', { look: 'dragon' })]), /"look" must be one of bug, virus, sentinel, cron, worm, crawler/);
   assert.equal(errors([virus([1, 0, 1], 'v', { attack: 'touch', aggroRange: 0, movement: 'stationary' })]), '', 'only a charged attack or a chaser needs the aggro range');
   assert.equal(errors([virus([1, 0, 1], 'v', { chaseSpeed: 4, memory: 3, attackColor: '#ffffff' })]), '');
   assert.equal(errors([virus([1, 0, 1], 'v')]), '', 'a chaser needs no path');

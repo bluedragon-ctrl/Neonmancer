@@ -1,8 +1,7 @@
 /**
- * Proposed look for the stationary tower (defs.json "tower": `attack:
- * "bolt"`, `boltPattern: "cross"`, D81), working name "cron" (a scheduled
- * job), in the hologram look (D22). Shown in the asset showcase for
- * review; not in the game yet.
+ * The cron model (D83), a scheduled job, in the hologram look (D22): the
+ * look of the stationary tower (defs.json "tower": `attack: "bolt"`,
+ * `boltPattern: "cross"`, D81).
  *
  * A squat hex pedestal with two eyes and a small bell on top, and a clock
  * dial floating round it at eye height: a ring with four emitters on the

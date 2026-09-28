@@ -163,8 +163,8 @@
           "description": "The template it builds on (D58, D79): it takes that one's values (and so on down the chain), its own replace them. No loops."
         },
         "look": {
-          "enum": ["bug", "virus", "sentinel"],
-          "description": "Its body (src/render/entity-view.js ENEMY_MODELS). Any look combines with any movement and attack (D78). bug: a hopping ball; virus: a gliding sharp cube with orbiting bits; sentinel: a tall sharp octahedron with one eye."
+          "enum": ["bug", "virus", "sentinel", "cron", "worm", "crawler"],
+          "description": "Its body (src/render/entity-view.js ENEMY_MODELS). Any look combines with any movement and attack (D78). bug: a hopping ball; virus: a gliding sharp cube with orbiting bits; sentinel: a tall sharp octahedron with one eye; cron: a hex pedestal with a clock dial whose four emitters hold the grid axes (a tower's cross, D83); worm: a head dragging a tail of balls, inching along; crawler: a six-legged spider."
         },
         "movement": {
           "enum": ["patrol", "stationary", "chase"],

@@ -1,13 +1,17 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { validateData } from '../src/data/validate.js';
-import { boltDirections } from '../src/entities/bolt.js';
+import { BOLT, boltDirections } from '../src/entities/bolt.js';
 import { ENEMY } from '../src/entities/enemy.js';
 import { Game } from '../src/game.js';
+import { Vector3 } from 'three';
 import { BUG as BUG_LOOK, popPixels } from '../src/render/bug.js';
+import { CRAWLER, animateCrawler, crawlerFoot, crawlerPopPixels, createCrawler } from '../src/render/crawler.js';
+import { CRON, animateCron, createCron, cronHand, cronPopPixels } from '../src/render/cron.js';
 import { MOODS, eyeMood, popBurst } from '../src/render/enemy-look.js';
 import { SENTINEL, sentinelPopPixels } from '../src/render/sentinel.js';
 import { VIRUS as VIRUS_LOOK, virusPopPixels } from '../src/render/virus.js';
+import { WORM, wormPopPixels, wormSpine } from '../src/render/worm.js';
 import { Progress, saveBit } from '../src/world/progress.js';
 import { BUG, CRATE, SENTINEL as SENTINEL_TYPE, VIRUS, dataFiles, eventTypes, gameData, idle, roomFile } from './helpers.js';
 
@@ -362,6 +366,9 @@ test('look: every enemy shares the mood colors, and every pop is over after its 
     [popPixels, BUG_LOOK],
     [virusPopPixels, VIRUS_LOOK],
     [sentinelPopPixels, SENTINEL],
+    [cronPopPixels, CRON],
+    [wormPopPixels, WORM],
+    [crawlerPopPixels, CRAWLER],
   ]) {
     assert.equal(pop(0).length, look.pop.pixels);
     assert.deepEqual(pop(look.pop.ticks), []);
@@ -369,4 +376,67 @@ test('look: every enemy shares the mood colors, and every pop is over after its 
   }
   const burst = popBurst({ pixels: 3, ticks: 10, spread: 0, rise: 0 }, { seed: 1, middle: 0.5, start: 0 });
   assert.deepEqual(burst(5).map(({ offset }) => offset[1]), [0.5, 0.5, 0.5], 'no rise nor scatter: level');
+});
+
+test('look (cron, D83): its four emitters hold the grid axes at bolt height whichever way it faces', () => {
+  const cron = createCron('#ff4f7a');
+  for (const facing of [0, 1.1, -2.5]) {
+    cron.rotation.y = facing;
+    animateCron(cron, { time: 3.7, alert: 1 });
+    cron.updateMatrixWorld(true);
+    const tips = cron.userData.emitters.map((tip) => tip.getWorldPosition(new Vector3()));
+    const axes = tips.map(({ x, z }) => [Math.round(x / Math.hypot(x, z)), Math.round(z / Math.hypot(x, z))].join()).sort();
+    assert.deepEqual(axes, ['-1,0', '0,-1', '0,1', '1,0'], `facing ${facing}`);
+    for (const tip of tips) {
+      assert.ok(Math.abs(tip.y - ENEMY.eyeHeight) < 0.03, 'at the height the bolts leave');
+      assert.ok(Math.hypot(tip.x, tip.z) <= BOLT.reach + 0.05, 'where a bolt starts, not beyond');
+    }
+  }
+});
+
+test('look (cron): the hand whirls whole turns over a charge, so it lands where it would have been', () => {
+  const turn = Math.PI * 2;
+  const extra = (cronHand(2, 0.5, 1) - cronHand(2, 0.5, 0)) / turn;
+  assert.equal(extra, -CRON.whirl);
+  assert.ok(Number.isInteger(CRON.whirl));
+  assert.ok(Math.abs(cronHand(1, 1, 0)) > Math.abs(cronHand(1, 0, 0)), 'faster while after the wizard');
+});
+
+test('look (worm): the head leads, the tail trails behind it on the floor, humps rise and never sink', () => {
+  const flat = wormSpine(0, 0);
+  assert.equal(flat.length, WORM.tail.length + 1);
+  assert.deepEqual(flat[0], [0, WORM.head.r, WORM.head.z]);
+  flat.slice(1).forEach(([x, y, z], i) => {
+    assert.ok(z < flat[i][2], 'each ball behind the one before');
+    assert.equal(y, WORM.tail[i][0], 'resting on the floor');
+    assert.ok(Math.abs(x) <= WORM.wiggle.width, 'wiggling no wider than its wiggle');
+  });
+  for (let phase = 0; phase < 7; phase += 0.5) {
+    wormSpine(phase).slice(1).forEach(([, y], i) => assert.ok(y >= WORM.tail[i][0] && y <= WORM.tail[i][0] + WORM.hump.height + 1e-9));
+  }
+});
+
+test('look (crawler): a foot swings forward lifted, then slides back planted; a tripod is always down', () => {
+  const { stride, lift } = CRAWLER.step;
+  assert.deepEqual(crawlerFoot(0), [-stride / 2, 0]);
+  const [, top] = crawlerFoot(0.25);
+  assert.ok(Math.abs(top - lift) < 1e-9, 'highest halfway through its swing');
+  assert.deepEqual(crawlerFoot(0.75), [0, 0], 'planted, halfway back');
+  const crawler = createCrawler('#3dffd0');
+  for (let walked = 0; walked < 2; walked += 0.07) {
+    animateCrawler(crawler, { state: 'walk', walked });
+    crawler.updateMatrixWorld(true);
+    const down = crawler.userData.legs.filter(({ lower }) => {
+      // The foot: the lower part's far end (placeLimb() stretches it from the knee along +y).
+      const foot = new Vector3(0, 0.5, 0).applyMatrix4(lower.matrixWorld);
+      return foot.y < 1e-6;
+    });
+    assert.ok(down.length >= 3, `three feet down at ${walked.toFixed(2)} cells`);
+  }
+});
+
+test('a chaser with a touch attack (the crawler, D83) runs up to the wizard and hurts him', () => {
+  const game = gameWith({ enemies: [virus([1, 0, 3], 'c', { look: 'crawler', attack: 'touch' })], pos: [5.5, 0, 3.5] });
+  until(game, 'hurt', 300);
+  assert.equal(game.player.integrity, game.player.maxIntegrity - VIRUS.damage);
 });

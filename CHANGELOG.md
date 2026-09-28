@@ -7,6 +7,13 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Cron, worm and crawler enemy looks (D83). The `tower` template now
+  looks like a cron: a pedestal and a clock dial whose four emitters hold
+  the grid axes, where its four-way bolts leave. New templates `worm` (a
+  patroller inching along on a tail of balls) and `crawler` (a six-legged
+  spider that chases), both with touch attacks. A new test room,
+  Scheduler, west of Quarantine, has all three. Showcase
+  `?asset=crons,worms,crawlers`; `bolt-cross` shows the cron.
 - Spiked platforms (D82): a platform type with `damage` hurts the wizard
   on any touch, like a moving hazard block. `spiked_platform` in hazard
   red, shaped as a core with four pyramids on each side, its outline

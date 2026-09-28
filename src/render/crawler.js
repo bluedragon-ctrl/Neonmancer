@@ -1,7 +1,6 @@
 /**
- * Proposed moving enemy, working name "crawler" (a web crawler), in the
- * hologram look (D22). Shown in the asset showcase for review; not in the
- * game yet.
+ * The crawler model (D83), a web crawler, in the hologram look (D22);
+ * defs.json "crawler" chases with a touch attack.
  *
  * A six-legged spider: a faceted gem abdomen, a round head with four eyes
  * (two big, two small) and thin jointed legs that walk in a tripod gait,

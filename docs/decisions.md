@@ -1386,3 +1386,31 @@ damaging object with coloring from the hazard block.
 nothing to it). Reusing platforms and the hazard look makes it data plus
 a touch check, and red with flickering pixels already means "hurts" in
 every room.
+
+### D83 — 2026-09-28 — Cron, worm and crawler looks
+Asked for four new enemy models, two static and two moving, the author
+kept three of the proposals in the showcase and dropped a pop-up window
+(a flat window reads badly on the isometric screen and a slab looked
+clumsy):
+- **Cron** (a scheduled job) becomes the look of the `tower` template
+  (D81), replacing the sentinel it borrowed: a hex pedestal and a clock
+  dial at eye height with four emitters on the grid axes, exactly where a
+  cross's bolts leave (eye height, `BOLT.reach` out). The dial holds the
+  grid whichever way the enemy faces; only the pedestal turns to watch
+  the wizard. Rose `#ff4f7a`.
+- **Worm**: a head dragging a tail of shrinking balls, inching along;
+  template `worm`, a patroller with a touch attack. Blue `#4f7dff`. The
+  tail trails outside the hitbox, for show, and turns stiffly with the
+  head.
+- **Crawler**: a six-legged spider in a tripod gait; template `crawler`, a
+  chaser with a touch attack (a chaser only holds its ground in range of
+  a charged attack, so it runs into the wizard). Mint `#3dffd0`.
+- New test room Scheduler west of Quarantine (two rooms from Boot
+  Sector, D49) with all three; showcase `?asset=crons,worms,crawlers`,
+  and `bolt-cross` now shows the cron.
+**Why:** looks are data (D78): each is only a model, and any of them
+still takes any movement and attack. A tower whose emitters sit on the
+grid axes shows at a glance which lines are dangerous and that the
+corners are safe. Colors are provisional: nearly every hue is taken, so
+the rose sits near hazard red and the mint between the bug's green and
+the platforms' cyan; the silhouettes carry the difference.

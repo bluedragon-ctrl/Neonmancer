@@ -125,7 +125,7 @@ export const OBJECT_STYLE_DEFAULTS = {
  * shots, one aimed at the wizard or four along the grid axes (D81).
  */
 export const ENEMY_OPTIONS = {
-  look: ['bug', 'virus', 'sentinel'],
+  look: ['bug', 'virus', 'sentinel', 'cron', 'worm', 'crawler'],
   movement: ['patrol', 'stationary', 'chase'],
   attack: ['touch', 'burst', 'arc', 'bolt', 'none'],
   hostility: ['hostile', 'peaceful', 'provoked'],

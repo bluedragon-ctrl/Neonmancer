@@ -20,6 +20,7 @@ import { PLAYER_HITBOX } from '../src/core/rules.js';
 import { COLLAPSING } from '../src/entities/collapsing.js';
 import {
   CollapsingView,
+  ENEMY_MODELS,
   createDerezPixels,
   createPixelBurst,
   createDropShadow,
@@ -57,9 +58,6 @@ import { createInstall, placeInstall } from '../src/render/install-view.js';
 import { createShield, placeShield } from '../src/render/shield-view.js';
 import { createLock, createPlate, createTarget } from '../src/render/switch-view.js';
 import { SWITCH_KINDS } from '../src/entities/switch.js';
-import { CRON_MODEL } from '../src/render/cron.js';
-import { WORM_MODEL } from '../src/render/worm.js';
-import { CRAWLER_MODEL } from '../src/render/crawler.js';
 
 /** Block types with variants filled in (D60). */
 const BLOCK_TYPES = resolveBlockTypes(defs.blocks);
@@ -68,13 +66,6 @@ const BLOCK_TYPES = resolveBlockTypes(defs.blocks);
 const SPACING = 3;
 /** Turning speed in radians per second. */
 const SPIN = 0.6;
-
-/** Proposed enemies (not in defs.json yet): their models and colors, for review. */
-const PROPOSED = {
-  cron: { model: CRON_MODEL, color: '#ff4f7a' },
-  worm: { model: WORM_MODEL, color: '#4f7dff', speed: 2, chaseSpeed: 3 },
-  crawler: { model: CRAWLER_MODEL, color: '#3dffd0', speed: 2, chaseSpeed: 3.5 },
-};
 
 /**
  * Showcased assets: a label and a function building the model centered on
@@ -117,8 +108,9 @@ const ALL_ASSETS = [
   // The bolt attack (D80): a shooter (a stationary bug) charging and
   // firing a slow shot in its color at the wizard.
   { label: 'bug-bolt', group: 'bugs', span: 6, spin: false, build: buildBoltShot },
-  // Bolt patterns and bounces (D81): a tower firing four ways, a
-  // ricochet glancing a bolt off a crate into the wizard.
+  // Bolt patterns and bounces (D81): a tower (the cron look, D83) firing
+  // four ways, hitting the wizard on an axis, then missing him in a corner;
+  // a ricochet glancing a bolt off a crate into the wizard.
   { label: 'bolt-cross', group: 'bolts', span: 6, spin: false, build: buildBoltCross },
   { label: 'bolt-ricochet', group: 'bolts', span: 6, spin: false, build: buildBoltRicochet },
   // Viruses (Phase 3 step 5, D78): gliding calm, then after the wizard
@@ -132,16 +124,16 @@ const ALL_ASSETS = [
   { label: 'sentinel', group: 'sentinels', build: buildSentinel },
   { label: 'sentinel-attack', group: 'sentinels', span: 7, spin: false, build: buildSentinelAttack },
   { label: 'sentinel-pop', group: 'sentinels', build: buildSentinelPop },
-  // Proposed enemy looks (not in the game yet): a cron clock as the tower
-  // (four-way bolts, D81), its dial holding the grid, calm then after the
-  // wizard and charging, and firing four ways (hitting him on an axis,
-  // missing him in a corner); a worm inching along; a six-legged crawler;
-  // their pops.
-  { label: 'cron', group: 'proposals', build: buildCron },
-  { label: 'cron-cross', group: 'proposals', span: 6, spin: false, build: buildCronCross },
-  { label: 'worm', group: 'proposals', build: () => buildWalker('worm') },
-  { label: 'crawler', group: 'proposals', build: () => buildWalker('crawler') },
-  ...Object.keys(PROPOSED).map((type) => ({ label: `${type}-pop`, group: 'proposals', build: () => buildProposedPop(type) })),
+  // Cron, worm and crawler looks (D83): a tower (the cron) calm, then after
+  // the wizard and charging, its dial holding the grid; a worm (patrol)
+  // inching along; a crawler (chase) on six legs; calm, then after the
+  // wizard (faster); their pops.
+  { label: 'cron', group: 'crons', build: buildCron },
+  { label: 'cron-pop', group: 'crons', build: () => buildEnemyPop('tower') },
+  { label: 'worm', group: 'worms', build: () => buildWalker('worm') },
+  { label: 'worm-pop', group: 'worms', build: () => buildEnemyPop('worm') },
+  { label: 'crawler', group: 'crawlers', build: () => buildWalker('crawler') },
+  { label: 'crawler-pop', group: 'crawlers', build: () => buildEnemyPop('crawler') },
   // Zap (step 6): the bolt close up, two hits on a bug (the second pops
   // it), and rapid fire at a crate until the energy bar runs dry.
   { label: 'zap-bolt', group: 'zap', build: buildZapBolt },
@@ -894,28 +886,6 @@ function buildBoltShot() {
 }
 
 /**
- * The four-way bolt (D81) in a loop: a tower (defs.json, a stationary
- * sentinel) charges, then fires four level bolts along the grid axes; the
- * one along +z hits the wizard, the others spark out 2.4 away (walls).
- */
-function buildBoltCross() {
-  const { color, attackColor, attackCharge, boltSpeed } = enemyValues('tower');
-  const tower = createSentinel(color);
-  const wizard = createWizard();
-  wizard.position.set(0, 0, 2.2);
-  wizard.rotation.y = Math.PI;
-  const asset = new Group().add(tower, wizard);
-  const eyes = [0, ENEMY.eyeHeight, 0];
-  const routes = [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]].map((dir) => {
-    const reach = dir[2] === 1 ? 2.2 - PLAYER_HITBOX[2] / 2 - BOLT.size / 2 : 2.4;
-    return [BOLT.reach, reach].map((d) => eyes.map((e, k) => e + dir[k] * d));
-  });
-  const runs = boltRuns(asset, attackColor, routes, boltSpeed);
-  loopBoltAttack(asset, { model: tower, animate: animateSentinel, markHeight: SENTINEL.markHeight, charge: Math.round(attackCharge * 60), runs, wizard, hit: runs.ticks[2] });
-  return asset;
-}
-
-/**
  * The bouncing bolt (D81) in a loop: a ricochet (defs.json, a virus)
  * fires a level shot at a crate, which it glances off (sparks) into the
  * wizard beside it.
@@ -946,15 +916,15 @@ function buildBoltRicochet() {
 }
 
 /**
- * The proposed cron as the tower (defs.json "tower": four-way bolts, D81)
- * in a loop, two shots: it charges, then fires four level bolts along the
+ * The four-way bolt (D81) in a loop, two shots: a tower (defs.json, a
+ * stationary cron, D83) it charges, then fires four level bolts along the
  * grid axes out of its dial's emitters; the first time the wizard stands
  * on its +z axis and is hit, the second time he stands off the axes (a
  * safe corner) and the bolts spark out 2.4 away (walls) past him.
  */
-function buildCronCross() {
-  const { attackColor, attackCharge, boltSpeed } = enemyValues('tower');
-  const { model, color } = PROPOSED.cron;
+function buildBoltCross() {
+  const { look, color, attackColor, attackCharge, boltSpeed } = enemyValues('tower');
+  const model = ENEMY_MODELS[look];
   const cron = model.create(color);
   const wizard = createWizard();
   const asset = new Group().add(cron, wizard);
@@ -990,12 +960,12 @@ function buildCronCross() {
 }
 
 /**
- * A cron alone, calm, then after the wizard (a faster hand), charging and
- * firing now and then without bolts, in a loop.
+ * A tower (defs.json, the cron look) alone, calm, then after the wizard
+ * (a faster hand), charging and firing without bolts, in a loop.
  */
 function buildCron() {
-  const { attackCharge } = enemyValues('tower');
-  const { model, color } = PROPOSED.cron;
+  const { look, color, attackCharge } = enemyValues('tower');
+  const model = ENEMY_MODELS[look];
   const cron = model.create(color);
   const asset = new Group().add(cron);
   const mark = addMark(asset, model.markHeight);
@@ -1013,12 +983,13 @@ function buildCron() {
 }
 
 /**
- * A worm or crawler walking in place, calm, then after the wizard (walking
- * faster), in a loop.
- * @param {'worm'|'crawler'} type
+ * An enemy of type `type` (defs.json) walking in place at its speed, calm,
+ * then after the wizard (at its chase speed), in a loop.
+ * @param {string} type
  */
 function buildWalker(type) {
-  const { model, color, speed, chaseSpeed } = PROPOSED[type];
+  const { look, color, speed, chaseSpeed = speed } = enemyValues(type);
+  const model = ENEMY_MODELS[look];
   const walker = model.create(color);
   const asset = new Group().add(walker);
   const mark = addMark(asset, model.markHeight);
@@ -1033,11 +1004,12 @@ function buildWalker(type) {
 }
 
 /**
- * A proposed enemy popping into pixels, in a loop.
- * @param {keyof typeof PROPOSED} type
+ * An enemy of type `type` (defs.json) popping into pixels, in a loop.
+ * @param {string} type
  */
-function buildProposedPop(type) {
-  const { model, color } = PROPOSED[type];
+function buildEnemyPop(type) {
+  const { look, color } = enemyValues(type);
+  const model = ENEMY_MODELS[look];
   const enemy = model.create(color);
   const pixels = createPixelBurst(model.pop.pixels, model.pop.pixelSize, [color, 0xffffff]);
   const asset = new Group().add(enemy, pixels);

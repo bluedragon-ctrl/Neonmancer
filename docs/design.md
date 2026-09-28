@@ -262,7 +262,7 @@ and burst; a virus can patrol).
 
 | Field | Values | Meaning |
 |---|---|---|
-| `look` | `bug`, `virus`, `sentinel` | its body (below). A template takes its base's. |
+| `look` | `bug`, `virus`, `sentinel`, `cron`, `worm`, `crawler` | its body (below). A template takes its base's. |
 | `movement` | `patrol`, `stationary`, `chase` | patrol walks the enemy's `path` (required); stationary stays in its cell (no path); chase goes after the wizard (below), walking its `path` while calm if it has one. |
 | `attack` | `touch`, `burst`, `arc`, `bolt`, `none` | touch: touching it hurts while it is hostile; burst, arc and bolt: charged attacks (below): lightning all round it, a lightning bolt aimed at the wizard, or a slow shot at him (D80); touching it doesn't hurt. |
 | `hostility` | `hostile`, `peaceful`, `provoked` | hostile attacks; peaceful never does; provoked is peaceful until a spell (Zap), a discharge or a bolt hits it, then hostile. |
@@ -288,8 +288,10 @@ and burst; a virus can patrol).
 | `bug` | mint-green ball `#2bff88`, hops, bouncy | patrol, 3 cells/s | touch, 1 |
 | `virus` | yellow sharp cube `#ffe23a`, glides | chase: aggro 5, 2 cells/s calm, 3.5 chasing | burst, range 1.2, charge 0.4 s, cooldown 1.5 s; integrity 2 |
 | `sentinel` | orange sharp octahedron `#ff8a1a`, glides | chase: aggro 7, 1.5 calm, 2.5 chasing; stops 5 away | arc, range 5, charge 0.7 s, cooldown 2 s; integrity 3 |
+| `worm` | blue worm `#4f7dff`, inches along | patrol, 2 cells/s | touch, 1; integrity 2 (D83) |
+| `crawler` | mint six-legged spider `#3dffd0`, walks | chase: aggro 5, 2 cells/s calm, 3.5 chasing | touch, 1; integrity 2 (D83) |
 | `shooter` | a bug (extends `bug`) | stationary | bolt at 4 units/s, range 6 (aggro 6), charge 0.6 s, cooldown 2 s (D80) |
-| `tower` | a sentinel (extends `sentinel`) | stationary | bolts four ways (`cross`) at 3.5 units/s, range 5 (aggro 5), charge 0.6 s, cooldown 1.8 s (D81) |
+| `tower` | rose cron `#ff4f7a` (extends `sentinel`, D83) | stationary | bolts four ways (`cross`) at 3.5 units/s, range 5 (aggro 5), charge 0.6 s, cooldown 1.8 s (D81) |
 | `ricochet` | a virus (extends `virus`) | chase: aggro 6, stops 5 away | a bolt bouncing twice, 5 units/s, charge 0.6 s, cooldown 2.2 s (D81) |
 
 - **Moving:** an enemy stands in a grid cell (hitbox 0.6 × 0.6 × 0.6,
@@ -404,6 +406,23 @@ and burst; a virus can patrol).
   across its front ridge and three shards circling its waist; it floats,
   steady. Charging, the shards swing in front of its eye and spin round
   the line of fire like a barrel; firing, it recoils.
+- **Look (cron, D83):** a squat hex pedestal with two eyes and a small
+  bell on top, and a clock dial floating round it at eye height: a ring
+  with four emitters on the grid axes and one hand sweeping round. The
+  dial never turns with the enemy (the pedestal does, to watch the
+  wizard), so a tower's cross leaves from the emitters. After the wizard
+  the hand sweeps faster; charging, it whirls two whole turns, the
+  emitters glow up and push out and the pedestal trembles; firing, the
+  dial slams down and springs back.
+- **Look (worm, D83):** a round head with two antennae and big frowning
+  eyes, dragging a tail of four shrinking balls; it inches along, a hump
+  running from head to tail once per cell while the tail wiggles. After
+  the wizard it rears its head up and its antennae stand straight. The
+  tail trails outside its hitbox, for show.
+- **Look (crawler, D83):** a six-legged spider: a faceted gem abdomen, a
+  round head with four eyes, thin jointed legs walking in a tripod gait
+  (three feet down while the other three swing). After the wizard it
+  crouches, walks faster and paws with its front legs.
 - **Spell hits:** a Zap takes `damage` (1) of its integrity and provokes
   it; the last point pops it into pixels. Any enemy can be hit, peaceful
   ones too (they stay peaceful). A hit flashes it white, then cyan, with a
@@ -418,11 +437,12 @@ and burst; a virus can patrol).
 - Tuning: `ENEMY` in `src/entities/enemy.js`, `BOLT` in
   `src/entities/bolt.js`, `PLAYER.bounceHeight`; the looks are `BUG` in
   `src/render/bug.js`, `VIRUS` in `src/render/virus.js`, `SENTINEL` in
-  `src/render/sentinel.js` (what they share, mood colors, eyes and the
+  `src/render/sentinel.js`, `CRON`, `WORM` and `CRAWLER` in
+  `src/render/cron.js`, `worm.js` and `crawler.js` (what they share, mood colors, eyes and the
   pop, in `src/render/enemy-look.js`), the lightning `DISCHARGE` in
   `src/render/discharge.js`; review in the asset showcase
-  (`/tools/showcase.html?asset=bugs,viruses,sentinels`; the bolt:
-  `bug-bolt`, `?asset=bolts` for the tower and the ricochet).
+  (`/tools/showcase.html?asset=bugs,viruses,sentinels,crons,worms,crawlers`;
+  the bolt: `bug-bolt`, `?asset=bolts` for the tower and the ricochet).
 
 ## Pickups and progress
 
@@ -715,7 +735,8 @@ The world map tool flags any room further out.
 | `transit_bus` (Phase 2) | 12×12, 5 high | west doorway → Fault Line; north doorway → Boot Sector; raised east exit on the high ledge → Volatile Memory | a ferry across a pit between two ledges, a lift up to a high ledge, a loop carrying a crate, a press coming down (with a crate to jam it) and a pusher squeezing the wizard against the room's edge |
 | `volatile_memory` (Phase 2) | 12×12, 5 high | west doorway → Transit Bus; raised east exit on the high ledge → Crawl Space | a pit across the room with two collapsing bridges: one regrowing after 3 s (the way back), one that stays gone, with a crate on a plain ledge in front of it to push onto the bridge from solid ground (it doesn't trigger the blocks, so it is a safe spot to hop onto); two one-shot collapsing steps up to a high ledge |
 | `crawl_space` (Phase 2) | 12×12 | west doorway → Volatile Memory; east (front) → Boot Sector | bugs: a sentry crossing the entrance lane, one walking off a ledge and patrolling the floor below, a solid one shoving along a lane with a crate to push in its way, a provoked one circling a pillar, a peaceful stationary one to bounce up to a 2-high ledge, a solid peaceful one along the front edge to ride; Zap targets: the provoked one turns hostile when hit, and an amber stationary one with 4 integrity; an energy refill near the entrance (Phase 3) |
-| `quarantine` (Phase 3) | 10×10, Glitchmire | east doorway → Boot Sector | chasers (step 5, D78): a virus at the back that chases and bursts, a sentinel in the far corner that keeps its distance and fires arcs, a stationary bug with a burst guarding an integrity refill; a 2-high pillar to hide behind, a trench of holes the chasers won't cross, a crate for cover and a 1-high ledge |
+| `quarantine` (Phase 3) | 10×10, Glitchmire | east doorway → Boot Sector; west doorway → Scheduler | chasers (step 5, D78): a virus at the back that chases and bursts, a sentinel in the far corner that keeps its distance and fires arcs, a stationary bug with a burst guarding an integrity refill; a 2-high pillar to hide behind, a trench of holes the chasers won't cross, a crate for cover and a 1-high ledge |
+| `scheduler` (Phase 3) | 10×10, Abyssal Buffer | east doorway → Quarantine | the cron, worm and crawler looks (D83): a tower in the middle firing four ways, placed off the entrance's axes; a worm patrolling the back row across the tower's line of fire (its bolts can pop it); a crawler chasing from the far corner; pillars, a low wall and a crate to hide behind, and an integrity refill in the far corner |
 
 ### Room design checklist
 

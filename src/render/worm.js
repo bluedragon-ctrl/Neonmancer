@@ -1,7 +1,6 @@
 /**
- * Proposed moving enemy, working name "worm" (it copies itself along),
- * in the hologram look (D22). Shown in the asset showcase for review; not
- * in the game yet.
+ * The worm model (D83), malware that copies itself along, in the hologram
+ * look (D22); defs.json "worm" patrols with a touch attack.
  *
  * A round head with two antennae and big frowning eyes, dragging a tail of
  * four shrinking balls. It inches along: a hump runs from head to tail once
