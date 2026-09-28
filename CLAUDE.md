@@ -324,9 +324,11 @@ not critical.
   with the mouse, preview in the real neon look, export room JSON.
 - **World map tool** (`tools/world-map.html`, Phase 3, D66): every room
   as a node on a simple map grid (positions in `world.json`), with its
-  connections; drag rooms and save; flags rooms not reachable from the
-  start; opens a room in the room editor. Dev server only, never shown to
-  players: exploring is part of the game (D67).
+  connections; drag rooms and save; adds and removes rooms and
+  connections (exits in the middle of the facing walls, D77); flags rooms
+  not reachable from the start; opens a room in the room editor. Dev
+  server only, never shown to players: exploring is part of the game
+  (D67).
 - **Reachability checker** (Phase 4): script that searches the grid with
   jump height, pushable objects and available spells to flag unsolvable
   rooms. Used by CI, the editor, and design skills/subagents.

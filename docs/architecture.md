@@ -116,9 +116,10 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/switch-view.js` | Switch and locked-exit looks (`SWITCH_FX`): target and plate with their square bull's-eye, the lock's panel or bars with one light per switch; `TargetView`, `PlateView`, `LockView` (marks pure, tested) |
 | `render/pickup-view.js` | A room pickup's view: its look, idle motion, ghost, pick-up effect |
 | `tools/showcase.html`, `tools/showcase.js` | Asset showcase page: every look on a turntable with the real renderer (also deployed) |
-| `tools/world-map.html`, `tools/world-map.js`, `tools/world-map.css` | World map tool (D66, D70): every room on the map grid with its connections and checks; drag rooms and save their positions; click to open a room in the editor. Dev server only, not built |
+| `tools/world-map.html`, `tools/world-map.js`, `tools/world-map.css` | World map tool (D66, D70, D77): every room on the map grid with its connections and checks; move, add and delete rooms, connect rooms and delete connections, then save; click to open a room in the editor. Dev server only, not built |
 | `editor/editor.js` | Room editor (F2, D56, D57): opens on the current room, switches rooms and makes new ones, mouse picking on a height layer, tools, picking things, keys, rebuilding the room from the edited data, save or export |
 | `editor/room-edit.js` | One room being edited: place/erase edits, enemies, paths, exits and their connections, spawn/reset, name, biome, size (with a report), undo/redo (with the step's template changes), dirty state, cell descriptions; `roomErrors()`, `newRoom()` (pure, tested) |
+| `editor/map-edit.js` | The world as the world map tool edits it (D77): `MapEdit` moves, adds and removes rooms, connects rooms with an exit in the middle of each facing wall (`addExit()`), removes connections with both exits (`disconnectExit()`), undo, and what a save sends (`changes()`) (pure, tested) |
 | `editor/world-edit.js` | `world.json` being edited: connecting, disconnecting and renaming exits, a room's connections for its undo steps, a new room's map cell (`place()`, `unplace()`); `linkChoices()` (pure, tested) |
 | `editor/defs-edit.js` | `defs.json` being edited: enemy templates added, updated, renamed and deleted; a step's template changes applied again for undo/redo (pure, tested) |
 | `editor/errors.js` | The error list: errors grouped by file, and the room, tool and thing each one points at (pure, tested) |
@@ -127,9 +128,10 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `editor/overlay.js` | Editor gizmos: layer grid, cursor, spawn and reset markers, paths, the picked thing's box, `EDITOR_LOOK` |
 | `editor/panel.js` | Editor side panel (DOM): room list, tools and their fields, layer, room settings, actions, errors |
 | `editor/save.js` | Posting edited files to the dev server; downloading them in a build |
-| `tools/room-save.js` | Dev only: checks edited rooms, `world.json` and `defs.json` with the rest of `data/` and writes them |
+| `tools/room-save.js` | Dev only: checks edited rooms, `world.json` and `defs.json` with the rest of `data/` and writes them; deletes rooms the world map removed |
 | `tools/map-pr.bat` | Windows: opens one PR with only `data/rooms/`, `data/world.json` and `data/defs.json` changes, rooms and map together (validates first) |
 | `tools/dev.bat` | Windows: installs packages if needed and starts the dev server, opening the game (or `dev.bat map`: the world map tool, `dev.bat showcase`: the asset showcase) |
+| `tools/world-map.bat` | Windows: double-click to start the dev server on the world map tool (`dev.bat map`) |
 | `debug/overlay.js` | Debug mode's wireframe collision boxes |
 | `debug/readout.js` | Debug mode's stats readout (rates, buffer and quality, GPU resources, actions, position) |
 
@@ -412,20 +414,26 @@ If the game cannot start, `ui/error-screen.js` lists them.
 
 ```
 editor (page) ──POST /__editor/save {rooms, world?, defs?}──► tools/vite-plugin-data.js
-world map ─────POST /__editor/save {positions}─────────────►   └─ tools/room-save.js: read data/, swap in the edited files,
-                                                                  merge positions, schema + semantic checks,
-                                                                  write them all or none
+world map ─POST /__editor/save {positions, rooms?, remove?,──►   └─ tools/room-save.js: read data/, swap in the edited files,
+                                world?}                           drop removed rooms, merge positions,
+                                                                  schema + semantic checks,
+                                                                  write (and delete) them all or none
 page ◄── { ok, errors, files } ────────────────────────────────┘  (no page reload for those writes)
 open pages ◄── ws custom event neonmancer:data-saved { files }
 ```
 
 `world.json` has two editors (D70): the room editor owns the connections,
-the world map tool the positions. The map sends only the rooms it moved,
-merged into the file on disk; when the room editor sends the whole file,
-the positions on disk win over its copy (only a new room's cell is its
-own), so neither undoes the other's saves. After every save the dev
-server sends `neonmancer:data-saved`: the game ignores it (it already
-shows its edits), the map reloads unless it has unsaved moves.
+the world map tool the positions. The map sends the positions of the rooms
+it moved, merged into the file on disk; when the room editor sends the
+whole file, the positions on disk win over its copy (only a new room's
+cell is its own), so neither undoes the other's saves. The map also adds
+and removes rooms and connections (D77): then it sends the new and
+changed room files, the removed rooms' ids and the whole `world.json`
+(its connections win; positions still merge, removed rooms' dropped).
+After every save the dev server sends `neonmancer:data-saved`: the game
+ignores it (it already shows its edits), the map reloads unless it has
+unsaved changes. A room file added or deleted reloads open pages anyway
+(the data bundle changed).
 
 While editing, the page checks all its edited data (every edited room and
 `world.json`, D57) with `validateData()` against its own copy of the rest

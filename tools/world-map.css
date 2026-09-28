@@ -224,3 +224,107 @@ li[data-room]:hover {
 .target.taken {
   stroke: var(--red);
 }
+
+.target-label {
+  font-size: 12px;
+  fill: var(--lime);
+  text-anchor: middle;
+}
+
+/* --- Tools (D77) -------------------------------------------------------- */
+
+.tools {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.tools button.tool {
+  margin: 0;
+  padding: 6px 10px;
+  text-align: left;
+  color: var(--text);
+  background: var(--line);
+}
+
+.tools button.tool.active {
+  color: var(--void);
+  background: var(--cyan);
+}
+
+.tool-help {
+  margin-top: 8px;
+  color: var(--dim);
+  line-height: 1.3;
+}
+
+.fields {
+  margin-top: 8px;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.field span {
+  width: 48px;
+  color: var(--dim);
+}
+
+.field input,
+.field select {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 6px;
+  font: inherit;
+  color: var(--text);
+  background: var(--void);
+  border: 1px solid var(--line);
+}
+
+.link-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 18;
+  pointer-events: none;
+}
+
+.link-draft {
+  stroke: var(--cyan);
+  stroke-width: 2;
+  stroke-dasharray: 4 4;
+}
+
+.tool-add svg {
+  cursor: copy;
+}
+
+.tool-connect .room {
+  cursor: crosshair;
+}
+
+.room.linking .box {
+  stroke: var(--cyan);
+  fill: #0d1f2a;
+}
+
+.tool-delete .room {
+  cursor: pointer;
+}
+
+.tool-delete .room:hover .box {
+  stroke: var(--red);
+}
+
+.tool-delete .link-hit {
+  pointer-events: stroke;
+  cursor: pointer;
+}
+
+.tool-delete .link-group:hover .link {
+  stroke: var(--red);
+  opacity: 1;
+}

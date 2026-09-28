@@ -6,9 +6,12 @@
  * rooms the start can't reach, and test rooms more than two rooms from the
  * start (D49).
  *
- * Drag a room to another free cell and save (the dev server merges the
- * moves into world.json). Click a room to open it in the room editor.
- * Connections are edited in the room editor.
+ * Tools (D77): Move drags a room to another free cell (click opens it in
+ * the room editor); Add puts a new, empty room in a free cell; Connect
+ * joins two rooms with an exit in the middle of each one's facing wall;
+ * Delete removes a room (with the exits leading into it) or a connection
+ * (with both its exits). Save sends it all to the dev server, which checks
+ * it and writes the room files and world.json (MapEdit, editor/map-edit.js).
  *
  * Open /tools/world-map.html in the dev server; it is not part of the
  * build, so players never see it (D67).
@@ -17,8 +20,9 @@ import './world-map.css';
 import { DATA_FILES, DEV_SERVER, SCHEMA_ERRORS } from '../src/data/bundle.js';
 import { sideLength, withExitDefaults } from '../src/data/room-data.js';
 import { validateData } from '../src/data/validate.js';
+import { MapEdit } from '../src/editor/map-edit.js';
 import { DATA_SAVED_EVENT, saveFiles } from '../src/editor/save.js';
-import { TEST_ROOM_REACH, mapKey, mapWarnings, nearestFreeCell, roomDistances } from '../src/world/map.js';
+import { TEST_ROOM_REACH, mapKey, mapWarnings, roomDistances } from '../src/world/map.js';
 
 /** Map units per grid cell, and a room node's size in them. */
 const CELL = 180;
@@ -27,12 +31,22 @@ const NODE = 128;
 const MARGIN = 1;
 /** Pointer travel (px) that turns a click into a drag. */
 const DRAG_START = 5;
+/** Session storage key of the status line kept over a reload after saving. */
+const STATUS_KEY = 'neonmancer-world-map-status';
 /** Window the game opens in from here: one tab, reused. */
 const GAME_WINDOW = 'neonmancer-game';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 /** Unit vector [x, z] of each side on the map. */
 const SIDE_DIR = { '-x': [-1, 0], '+x': [1, 0], '-z': [0, -1], '+z': [0, 1] };
+
+/** The map's tools, in panel order; `key` is the digit that picks it. */
+const TOOLS = [
+  { id: 'move', label: 'Move', key: '1', help: 'Drag a room to a free cell; click it to open it in the room editor.' },
+  { id: 'add', label: 'Add', key: '2', help: 'Click a free cell to put a new, empty room there (12×4×12, no exits).' },
+  { id: 'connect', label: 'Connect', key: '3', help: 'Drag from one room to another (or click both): each gets an exit in the middle of the wall facing the other.' },
+  { id: 'delete', label: 'Delete', key: '4', help: 'Click a room to remove it (and the exits into it), or a connection to remove it and both its exits.' },
+];
 
 const mapEl = document.getElementById('map');
 const panelEl = document.getElementById('panel');
@@ -64,56 +78,54 @@ function wrap(text, max = 16) {
   return lines.slice(0, 2);
 }
 
-const world = structuredClone(DATA_FILES['world.json']);
 const biomes = DATA_FILES['biomes.json']?.biomes ?? {};
-/** room id → room data */
-const rooms = new Map(
-  Object.entries(DATA_FILES)
-    .filter(([file]) => file.startsWith('rooms/'))
-    .map(([, room]) => [room.id, room]),
-);
+/** The world as edited: rooms, positions and connections (null without valid data). */
+const edit = SCHEMA_ERRORS.length === 0 && DATA_FILES['world.json']?.connections ? new MapEdit(DATA_FILES) : null;
 
 const state = {
-  /** room id → [x, z], as shown (saved positions plus unsaved moves) */
-  positions: structuredClone(world?.positions ?? {}),
-  /** room id → [x, z] as saved */
-  saved: structuredClone(world?.positions ?? {}),
-  /** Moves, newest last, for undo: { id, from } */
-  history: [],
-  /** Room being dragged: { id, pointer, start, moved, offset } */
+  tool: 'move',
+  /** Room pressed: { id, tool, screen, offset, point, cell, moved } (dragged when moved) */
   drag: null,
+  /** Connect tool: the room clicked first, waiting for the second. */
+  linkFrom: null,
+  /** Add tool: the cell under the pointer. */
+  hover: null,
   /** Room highlighted from the panel. */
   picked: null,
+  /** Add tool: the new room's id (a free `room_N` when empty) and biome. */
+  newId: '',
+  newBiome: Object.keys(biomes)[0] ?? '',
   status: '',
   statusKind: '',
   saving: false,
   /** Ignore the dev server's saved event until then (it announces our own save). */
   quietUntil: 0,
-  /** Data on disk changed (another page saved) while there are unsaved moves. */
+  /** Data on disk changed (another page saved) while there are unsaved changes. */
   stale: false,
 };
 
-/** Rooms without a position (a room file added by hand) get a free cell next to the start, unsaved. */
-for (const id of rooms.keys()) {
-  if (state.positions[id]) continue;
-  state.positions[id] = nearestFreeCell(state.positions, state.positions[world.start] ?? [0, 0]);
-}
-
-/** Room ids whose position differs from the saved one. */
-function movedRooms() {
-  return [...rooms.keys()].filter((id) => mapKey(state.positions[id]) !== mapKey(state.saved[id] ?? [NaN, NaN]));
-}
-
-/** The room in a map cell, if any. */
-function roomAt(cell) {
-  const key = mapKey(cell);
-  return [...rooms.keys()].find((id) => mapKey(state.positions[id]) === key) ?? null;
-}
-
-/** Validation errors of the data with the map as shown. */
+/** Validation errors of the data as edited. */
 function dataErrors() {
   if (SCHEMA_ERRORS.length > 0) return SCHEMA_ERRORS;
-  return validateData({ ...DATA_FILES, 'world.json': { ...world, positions: state.positions } });
+  return validateData(edit.dataFiles());
+}
+
+/** Rooms with unsaved changes: moved, new, or with exits added or removed. */
+function unsavedRooms() {
+  const { rooms, positions } = edit.changes();
+  return new Set([...rooms.map((room) => room.id), ...Object.keys(positions)]);
+}
+
+/** Save button text: what the save would send. */
+function changesText() {
+  const { moved, added, removed, changed, links } = edit.changes().counts;
+  const parts = [];
+  if (moved > 0) parts.push(`${moved} moved`);
+  if (added > 0) parts.push(`${added} new`);
+  if (removed > 0) parts.push(`${removed} removed`);
+  if (changed > 0) parts.push(`${changed} changed`);
+  else if (links) parts.push('connections');
+  return parts.length > 0 ? `Save: ${parts.join(', ')}` : 'Saved';
 }
 
 // --- Geometry ----------------------------------------------------------------
@@ -127,7 +139,7 @@ const cellCenter = ([x, z]) => [x * CELL, z * CELL];
  * @returns {{ point: number[], dir: number[] }} map units, and the side's outward direction
  */
 function exitAnchor(roomId, exitId, center) {
-  const room = rooms.get(roomId);
+  const room = edit.rooms.get(roomId);
   const exit = room?.exits?.find((e) => e.id === exitId);
   if (!exit) return { point: center, dir: [0, 0] };
   const { side, at, width } = withExitDefaults(exit);
@@ -150,7 +162,7 @@ function linkPath(a, b) {
 
 /** Map cells to draw: around every room, with a margin. */
 function bounds() {
-  const cells = Object.values(state.positions);
+  const cells = Object.values(edit.positions);
   if (state.drag) cells.push(state.drag.cell);
   const xs = cells.map(([x]) => x);
   const zs = cells.map(([, z]) => z);
@@ -185,49 +197,69 @@ function draw() {
 
   // Connections under the rooms.
   const links = svg('g');
-  for (const [refA, refB] of world.connections ?? []) {
+  edit.connections.forEach(([refA, refB], index) => {
     const [roomA, exitA] = refA.split('.');
     const [roomB, exitB] = refB.split('.');
-    if (!state.positions[roomA] || !state.positions[roomB]) continue;
+    if (!edit.positions[roomA] || !edit.positions[roomB]) return;
     const a = exitAnchor(roomA, exitA, centerOf(roomA));
     const b = exitAnchor(roomB, exitB, centerOf(roomB));
     // Neighbours that way round on the map: a plain line; otherwise dashed.
-    const step = [state.positions[roomB][0] - state.positions[roomA][0], state.positions[roomB][1] - state.positions[roomA][1]];
+    const step = [edit.positions[roomB][0] - edit.positions[roomA][0], edit.positions[roomB][1] - edit.positions[roomA][1]];
     const across = step[0] !== a.dir[0] || step[1] !== a.dir[1];
-    const path = svg('path', { class: `link${across ? ' across' : ''}`, d: linkPath(a, b) });
-    path.append(svg('title', {}, `${refA} ↔ ${refB}`));
-    links.append(path, svg('circle', { class: 'link-end', cx: a.point[0], cy: a.point[1], r: 4 }), svg('circle', { class: 'link-end', cx: b.point[0], cy: b.point[1], r: 4 }));
-  }
+    const d = linkPath(a, b);
+    const group = svg('g', { class: 'link-group', 'data-link': index });
+    // A wide invisible stroke to click (Delete tool).
+    const hit = svg('path', { class: 'link-hit', d });
+    hit.append(svg('title', {}, `${refA} ↔ ${refB}`));
+    group.append(svg('path', { class: `link${across ? ' across' : ''}`, d }), svg('circle', { class: 'link-end', cx: a.point[0], cy: a.point[1], r: 4 }), svg('circle', { class: 'link-end', cx: b.point[0], cy: b.point[1], r: 4 }), hit);
+    links.append(group);
+  });
   svgEl.append(links);
 
-  const { unreachable, far } = mapWarnings(world, rooms.keys());
-  const farBy = new Map(far.map(({ id, distance }) => [id, distance]));
-  const moved = new Set(movedRooms());
-  for (const id of rooms.keys()) svgEl.append(roomNode(id, { unreachable: unreachable.includes(id), far: farBy.get(id), moved: moved.has(id) }));
+  // Connect tool: the line being drawn.
+  if (state.drag?.tool === 'connect' && state.drag.moved) {
+    const [x1, z1] = cellCenter(edit.positions[state.drag.id]);
+    svgEl.append(svg('line', { class: 'link-draft', x1, y1: z1, x2: state.drag.point[0], y2: state.drag.point[1] }));
+  }
 
-  // Where a dragged room would land.
-  if (state.drag?.moved) {
-    const [cx, cz] = cellCenter(state.drag.cell);
-    const other = roomAt(state.drag.cell);
-    const taken = other !== null && other !== state.drag.id;
+  const { unreachable, far } = mapWarnings(edit.world, edit.rooms.keys());
+  const farBy = new Map(far.map(({ id, distance }) => [id, distance]));
+  const unsaved = unsavedRooms();
+  for (const id of edit.rooms.keys()) svgEl.append(roomNode(id, { unreachable: unreachable.includes(id), far: farBy.get(id), moved: unsaved.has(id) }));
+
+  // Where a dragged room would land, or a new one go.
+  const target = state.drag?.tool === 'move' && state.drag.moved ? state.drag.cell : state.tool === 'add' ? state.hover : null;
+  if (target) {
+    const [cx, cz] = cellCenter(target);
+    const other = edit.roomAt(target);
+    const taken = other !== null && other !== state.drag?.id;
     const half = NODE / 2 + 6;
     svgEl.append(svg('rect', { class: `target${taken ? ' taken' : ''}`, x: cx - half, y: cz - half, width: 2 * half, height: 2 * half }));
+    if (state.tool === 'add' && !taken) svgEl.append(svg('text', { class: 'target-label', x: cx, y: cz + 6 }, newRoomId()));
   }
 
   mapEl.append(svgEl);
 }
 
+/** The id the Add tool gives the next room. */
+function newRoomId() {
+  return state.newId.trim() || edit.freeRoomId();
+}
+
 /** Center of a room's node: its cell, or under the pointer while dragged. */
 function centerOf(id) {
-  if (state.drag?.id === id && state.drag.moved) return state.drag.point;
-  return cellCenter(state.positions[id]);
+  if (state.drag?.tool === 'move' && state.drag.id === id && state.drag.moved) return state.drag.point;
+  return cellCenter(edit.positions[id]);
 }
 
 function roomNode(id, { unreachable, far, moved }) {
-  const room = rooms.get(id);
+  const room = edit.rooms.get(id);
+  const world = edit.world;
   const color = biomes[room.biome]?.color ?? '#ffb020';
   const [cx, cz] = centerOf(id);
-  const classes = ['room', unreachable && 'unreachable', state.drag?.id === id && state.drag.moved && 'dragging', state.picked === id && 'picked'];
+  const dragged = state.drag?.tool === 'move' && state.drag.id === id && state.drag.moved;
+  const linking = state.linkFrom === id || (state.drag?.tool === 'connect' && state.drag.id === id);
+  const classes = ['room', unreachable && 'unreachable', dragged && 'dragging', state.picked === id && 'picked', linking && 'linking'];
   const g = svg('g', { class: classes.filter(Boolean).join(' '), transform: `translate(${cx} ${cz})`, 'data-room': id });
   const half = NODE / 2;
   if (id === world.start) g.append(svg('rect', { class: 'start', x: -half - 7, y: -half - 7, width: NODE + 14, height: NODE + 14 }));
@@ -241,27 +273,45 @@ function roomNode(id, { unreachable, far, moved }) {
   else if (unreachable) g.append(svg('text', { class: 'flag', x: 0, y: 50, fill: 'var(--magenta)' }, 'UNREACHABLE'));
   else if (far !== undefined) g.append(svg('text', { class: 'flag', x: 0, y: 50, fill: 'var(--amber)' }, `${far} ROOMS OUT`));
   if (moved) g.append(svg('circle', { class: 'moved', cx: half - 10, cy: -half + 10, r: 5 }, undefined));
-  g.append(svg('title', {}, `${room.name} (${id}) — click to edit, drag to move`));
+  g.append(svg('title', {}, `${room.name} (${id})`));
   return g;
 }
 
 function drawPanel() {
   panelEl.replaceChildren();
   panelEl.append(html('h1', '', 'WORLD MAP'));
-  const connections = world.connections?.length ?? 0;
-  panelEl.append(html('div', 'counts', `${rooms.size} rooms · ${connections} connections`));
+  if (!edit) {
+    const list = html('ul');
+    for (const error of SCHEMA_ERRORS) list.append(html('li', 'error', error));
+    if (list.children.length === 0) list.append(html('li', 'error', 'world.json has no connections list.'));
+    panelEl.append(list);
+    return;
+  }
+  const world = edit.world;
+  panelEl.append(html('div', 'counts', `${edit.rooms.size} rooms · ${edit.connections.length} connections`));
 
-  const moved = movedRooms();
-  const save = html('button', '', moved.length > 0 ? `Save ${moved.length} move${moved.length === 1 ? '' : 's'}` : 'Saved');
-  save.disabled = moved.length === 0 || state.saving;
-  save.addEventListener('click', saveMoves);
+  const save = html('button', '', changesText());
+  save.disabled = !edit.dirty || state.saving;
+  save.addEventListener('click', saveChanges);
   panelEl.append(save);
   panelEl.append(html('div', `status ${state.statusKind}`, state.status));
-  if (state.stale) panelEl.append(html('div', 'status warn', 'Data changed on disk (saved from another page). Save or undo your moves, then reload.'));
+  if (state.stale) panelEl.append(html('div', 'status warn', 'Data changed on disk (saved from another page). Save or undo your changes, then reload.'));
+
+  panelEl.append(html('h2', '', 'TOOLS'));
+  const tools = html('div', 'tools');
+  for (const tool of TOOLS) {
+    const button = html('button', `tool${state.tool === tool.id ? ' active' : ''}`, `${tool.key} ${tool.label}`);
+    button.addEventListener('click', () => setTool(tool.id));
+    tools.append(button);
+  }
+  panelEl.append(tools);
+  panelEl.append(html('div', 'tool-help', TOOLS.find((tool) => tool.id === state.tool).help));
+  if (state.tool === 'add') panelEl.append(newRoomFields());
+  if (state.tool === 'connect' && state.linkFrom) panelEl.append(html('div', 'tool-help', `From ${state.linkFrom}: click the room to connect it to (Esc cancels).`));
 
   const errors = dataErrors();
-  const distances = roomDistances(world.start, world.connections ?? []);
-  const { unreachable, far } = mapWarnings(world, rooms.keys());
+  const distances = roomDistances(world.start, world.connections);
+  const { unreachable, far } = mapWarnings(world, edit.rooms.keys());
 
   panelEl.append(html('h2', '', 'CHECKS'));
   const list = html('ul');
@@ -276,15 +326,36 @@ function drawPanel() {
   panelEl.append(html('h2', '', 'HOW TO'));
   const help = html('ul', 'help');
   for (const line of [
-    'Drag a room to a free cell.',
-    'Click a room to open it in the room editor (F2 there to play).',
-    'Ctrl+Z undoes a move, Ctrl+S saves.',
+    'Keys 1–4 pick a tool. Ctrl+Z undoes, Ctrl+S saves.',
+    'Move: click a room to open it in the room editor (F2 there to play).',
+    'Exits made here sit in the middle of the wall; fine-tune them in the room editor.',
     'Solid line: neighbours on the map that way round. Dashed: connected across the map.',
-    'Connections are edited in the room editor.',
   ]) {
     help.append(html('li', '', line));
   }
   panelEl.append(help);
+}
+
+/** Add tool: the new room's id and biome. */
+function newRoomFields() {
+  const box = html('div', 'fields');
+  const id = Object.assign(html('input'), { type: 'text', value: state.newId, placeholder: edit.freeRoomId() });
+  id.addEventListener('input', () => {
+    state.newId = id.value;
+  });
+  const biome = html('select');
+  for (const [key, { name }] of Object.entries(biomes)) biome.append(Object.assign(html('option', '', name ?? key), { value: key }));
+  biome.value = state.newBiome;
+  biome.addEventListener('change', () => {
+    state.newBiome = biome.value;
+  });
+  const row = (label, input) => {
+    const el = html('label', 'field');
+    el.append(html('span', '', label), input);
+    return el;
+  };
+  box.append(row('Id', id), row('Biome', biome));
+  return box;
 }
 
 function roomItem(id, className, text) {
@@ -302,7 +373,16 @@ function render() {
   drawPanel();
 }
 
-// --- Dragging and clicking ---------------------------------------------------
+// --- Tools -------------------------------------------------------------------
+
+function setTool(id) {
+  state.tool = id;
+  state.linkFrom = null;
+  state.hover = null;
+  mapEl.className = `tool-${id}`;
+  setStatus('');
+  render();
+}
 
 /** Pointer position in map units. */
 function mapPoint(event) {
@@ -311,24 +391,66 @@ function mapPoint(event) {
   return [point.x, point.y];
 }
 
+/** The map cell under a point in map units. */
+const cellAt = ([x, z]) => [Math.round(x / CELL), Math.round(z / CELL)];
+
+/** Show the outcome of an edit: a problem, or the new state. */
+function done(problem, text = '') {
+  setStatus(problem ?? text, problem ? 'bad' : '');
+  render();
+}
+
 mapEl.addEventListener('pointerdown', (event) => {
-  const node = event.target.closest?.('.room');
-  if (!node || event.button !== 0) return;
-  const id = node.dataset.room;
+  if (!edit || event.button !== 0) return;
+  const id = event.target.closest?.('.room')?.dataset.room;
   const point = mapPoint(event);
-  const [cx, cz] = cellCenter(state.positions[id]);
-  state.drag = { id, screen: [event.clientX, event.clientY], offset: [point[0] - cx, point[1] - cz], point: [cx, cz], cell: state.positions[id], moved: false };
+  if (state.tool === 'add') {
+    const cell = cellAt(point);
+    const roomId = newRoomId();
+    const problem = edit.addRoom(roomId, cell, state.newBiome);
+    if (!problem) state.newId = '';
+    done(problem, `New room ${roomId}: connect it (3), then save.`);
+    return;
+  }
+  if (state.tool === 'delete') {
+    const link = event.target.closest?.('.link-group')?.dataset.link;
+    if (id) done(edit.removeRoom(id), `Removed ${id} and the exits into it.`);
+    else if (link !== undefined) {
+      const pair = edit.connections[Number(link)];
+      edit.disconnect(Number(link));
+      done(null, `Removed ${pair.join(' ↔ ')} and both exits.`);
+    }
+    return;
+  }
+  if (!id) return;
+  const [cx, cz] = cellCenter(edit.positions[id]);
+  const offset = state.tool === 'move' ? [point[0] - cx, point[1] - cz] : [0, 0];
+  state.drag = { id, tool: state.tool, screen: [event.clientX, event.clientY], offset, point: [cx, cz], cell: edit.positions[id], moved: false };
   mapEl.setPointerCapture(event.pointerId);
 });
 
 mapEl.addEventListener('pointermove', (event) => {
+  if (!edit) return;
   const drag = state.drag;
-  if (!drag) return;
+  if (!drag) {
+    if (state.tool !== 'add') return;
+    const cell = cellAt(mapPoint(event));
+    if (state.hover && mapKey(state.hover) === mapKey(cell)) return;
+    state.hover = cell;
+    draw();
+    return;
+  }
   if (!drag.moved && Math.hypot(event.clientX - drag.screen[0], event.clientY - drag.screen[1]) < DRAG_START) return;
   drag.moved = true;
   const [px, pz] = mapPoint(event);
   drag.point = [px - drag.offset[0], pz - drag.offset[1]];
-  drag.cell = [Math.round(drag.point[0] / CELL), Math.round(drag.point[1] / CELL)];
+  drag.cell = cellAt(drag.point);
+  draw();
+});
+
+mapEl.addEventListener('pointerleave', () => {
+  if (!state.hover) return;
+  state.hover = null;
   draw();
 });
 
@@ -336,14 +458,27 @@ mapEl.addEventListener('pointerup', () => {
   const drag = state.drag;
   if (!drag) return;
   state.drag = null;
+  if (drag.tool === 'connect') {
+    // Dragged onto another room, or the second of two clicks.
+    const to = drag.moved ? edit.roomAt(drag.cell) : state.linkFrom && state.linkFrom !== drag.id ? drag.id : null;
+    const from = drag.moved ? drag.id : state.linkFrom;
+    if (to && from && to !== from) {
+      state.linkFrom = null;
+      const { ref, problem } = edit.connect(from, to);
+      done(problem, ref && `Connected ${ref.join(' ↔ ')}.`);
+    } else {
+      state.linkFrom = drag.moved || state.linkFrom === drag.id ? null : drag.id;
+      done(null);
+    }
+    return;
+  }
   if (!drag.moved) {
     openInEditor(drag.id);
     return;
   }
-  const other = roomAt(drag.cell);
+  const other = edit.roomAt(drag.cell);
   if (other === null) {
-    state.history.push({ id: drag.id, from: state.positions[drag.id] });
-    state.positions[drag.id] = drag.cell;
+    edit.move(drag.id, drag.cell);
     setStatus('');
   } else if (other !== drag.id) {
     setStatus(`That cell is ${other}'s.`, 'bad');
@@ -357,28 +492,44 @@ mapEl.addEventListener('pointercancel', () => {
 });
 
 function openInEditor(id) {
+  if (!edit.saved.rooms.has(id)) {
+    setStatus(`Save first: ${id} is not on disk yet.`, 'bad');
+    drawPanel();
+    return;
+  }
   window.open(`/?room=${encodeURIComponent(id)}&edit`, GAME_WINDOW)?.focus();
 }
 
 window.addEventListener('keydown', (event) => {
+  if (!edit) return;
+  const typing = event.target.closest?.('input, select, textarea');
+  if (event.key === 'Escape' && state.linkFrom) {
+    state.linkFrom = null;
+    render();
+    return;
+  }
+  const tool = TOOLS.find((t) => t.key === event.key);
+  if (tool && !typing && !event.ctrlKey && !event.metaKey && !event.altKey) {
+    setTool(tool.id);
+    return;
+  }
   if (!(event.ctrlKey || event.metaKey)) return;
   const key = event.key.toLowerCase();
-  if (key === 'z') {
+  if (key === 'z' && !typing) {
     event.preventDefault();
-    const last = state.history.pop();
-    if (last) {
-      state.positions[last.id] = last.from;
-      setStatus(`Undid the move of ${last.id}.`);
+    if (edit.undo()) {
+      state.linkFrom = null;
+      setStatus('Undid the last change.');
       render();
     }
   } else if (key === 's') {
     event.preventDefault();
-    saveMoves();
+    saveChanges();
   }
 });
 
 window.addEventListener('beforeunload', (event) => {
-  if (movedRooms().length > 0) event.preventDefault();
+  if (edit?.dirty) event.preventDefault();
 });
 
 // --- Saving ------------------------------------------------------------------
@@ -388,25 +539,33 @@ function setStatus(text, kind = '') {
   state.statusKind = kind;
 }
 
-async function saveMoves() {
-  const moved = movedRooms();
-  if (moved.length === 0 || state.saving) return;
+async function saveChanges() {
+  if (!edit?.dirty || state.saving) return;
   state.saving = true;
   setStatus('Saving…');
   render();
-  const positions = Object.fromEntries(moved.map((id) => [id, state.positions[id]]));
-  const result = await saveFiles({ positions });
+  const { rooms, remove, positions, world, counts } = edit.changes();
+  const result = await saveFiles({ rooms, remove, positions, world });
   state.saving = false;
   state.quietUntil = performance.now() + 1500;
   if (result.ok) {
-    Object.assign(state.saved, positions);
-    state.history = [];
+    edit.markSaved();
+    edit.clearHistory();
+    setStatus(`Saved ${result.files.join(', ')}.`, 'ok');
+    // A room file added or removed reloads the page (the data bundle
+    // changed): keep the line for the reloaded page.
+    if (counts.added > 0 || counts.removed > 0 || state.stale) {
+      try {
+        sessionStorage.setItem(STATUS_KEY, state.status);
+      } catch {
+        // No session storage: the line is lost on reload, nothing else.
+      }
+    }
     // Another page's save came in meanwhile: it is on disk, so show it.
     if (state.stale) {
       location.reload();
       return;
     }
-    setStatus(`Saved ${result.files.join(', ')}.`, 'ok');
   } else {
     setStatus(`Not saved: ${result.errors.join(' · ')}`, 'bad');
   }
@@ -414,10 +573,10 @@ async function saveMoves() {
 }
 
 // Another page (the room editor) saved: show the data as it is now, unless
-// that would lose moves not saved yet.
+// that would lose changes not saved yet.
 import.meta.hot?.on(DATA_SAVED_EVENT, () => {
-  if (state.saving || performance.now() < state.quietUntil) return;
-  if (movedRooms().length === 0) location.reload();
+  if (!edit || state.saving || performance.now() < state.quietUntil) return;
+  if (!edit.dirty) location.reload();
   else {
     state.stale = true;
     drawPanel();
@@ -428,8 +587,16 @@ import.meta.hot?.on(DATA_SAVED_EVENT, () => {
 
 if (!DEV_SERVER) {
   panelEl.append(html('h1', '', 'WORLD MAP'), html('p', '', 'The world map tool runs in the dev server only (npm run dev).'));
-} else if (SCHEMA_ERRORS.length > 0 || !world?.connections) {
+} else if (!edit) {
   drawPanel();
 } else {
+  try {
+    const saved = sessionStorage.getItem(STATUS_KEY);
+    sessionStorage.removeItem(STATUS_KEY);
+    if (saved) setStatus(saved, 'ok');
+  } catch {
+    // No session storage: start without a status line.
+  }
+  mapEl.className = `tool-${state.tool}`;
   render();
 }

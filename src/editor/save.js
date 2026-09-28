@@ -12,8 +12,8 @@ export const DATA_SAVED_EVENT = 'neonmancer:data-saved';
 
 /**
  * Send edited files to the dev server to be checked and written.
- * @param {{ rooms?: object[], world?: object, defs?: object, positions?: Record<string, number[]> }} edits whole room files, and world.json and
- *   defs.json if they changed; or map positions of moved rooms (the world map tool)
+ * @param {{ rooms?: object[], world?: object, defs?: object, positions?: Record<string, number[]>, remove?: string[] }} edits whole room files,
+ *   and world.json and defs.json if they changed; from the world map tool also map positions of moved rooms and ids of removed rooms
  * @returns {Promise<{ ok: boolean, errors: string[], files: string[] }>}
  */
 export async function saveFiles(edits) {
