@@ -1162,7 +1162,7 @@ function buildSpikedPlatforms() {
   });
   room.position.set(-2, 0, -2);
   const asset = new Group().add(room);
-  const hopper = movers[0].block.userData;
+  const flareHopper = movers[0].block.userData.flare;
   let carry = 0;
   let time = 0;
   asset.userData.update = (dt) => {
@@ -1171,7 +1171,7 @@ function buildSpikedPlatforms() {
     }
     for (const { track, block, state } of movers) block.position.set(...positionOf(track, state));
     time = (time + dt) % 2;
-    flareHazard(hopper.faces, hopper.flareCell, time);
+    flareHopper(time);
   };
   return asset;
 }

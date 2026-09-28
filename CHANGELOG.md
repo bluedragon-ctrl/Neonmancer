@@ -9,9 +9,9 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ### Added
 - Spiked platforms (D82): a platform type with `damage` hurts the wizard
   on any touch, like a moving hazard block. `spiked_platform` in hazard
-  red with the hazard look (flickering pixels, flaring when it hurts),
-  shaped as a core with four pyramids on each side; object styles
-  `faces: "hazard"` and `shape: "spiked"`. Showcase `spiked-platforms`. Fault Line's
+  red, shaped as a core with four pyramids on each side, its outline
+  flaring when it hurts; object styles `shape: "spiked"` and
+  `faces: "hazard"` (the hazard block's flickering pixels). Showcase `spiked-platforms`. Fault Line's
   hazard corridor is now guarded by two gates of spiked hoppers, out of
   step, with a pocket between them to wait in.
 - The `bolt` attack (D80): an enemy charges, then fires a slow shot

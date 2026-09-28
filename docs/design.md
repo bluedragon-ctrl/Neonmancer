@@ -206,11 +206,12 @@ follows a path given on the room object.
 - **Spiked platforms** (D82): a platform type with `damage` hurts the
   wizard whenever he touches it, its sides, its top or riding it, like a
   hazard block that moves (then he is invulnerable for a while and
-  blinks). `spiked_platform` in `defs.json`: hazard red, `faces: "hazard"`
-  (the hazard block's flickering pixels, flaring when it hurts him) and
+  blinks). `spiked_platform` in `defs.json`: hazard red, dark faces and
   `shape: "spiked"` (a smaller core cube with four pyramids on each side,
   their tips reaching the faces of its cell, so what shows is what hurts;
-  `SPIKES` in `src/render/spikes.js`). It moves, waits
+  `SPIKES` in `src/render/spikes.js`); its outline flares when it hurts
+  him (hazard faces would flare too, but their pixels are too small to
+  read on the spikes). It moves, waits
   and carries crates like any platform; a short up-and-down path makes a
   hopper to time a run past, a long one a sliding trap. Only platforms
   take `damage` (validation).

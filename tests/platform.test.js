@@ -8,7 +8,7 @@ import { createObjectView } from '../src/render/room-view.js';
 import { CRATE, LIFT, eventTypes, gameData, hold, idle, roomFile } from './helpers.js';
 
 /** A spiked platform type (D82), like spiked_platform in defs.json. */
-const SPIKES = { ...LIFT, color: '#ff3b30', faces: 'hazard', shape: 'spiked', damage: 1 };
+const SPIKES = { ...LIFT, color: '#ff3b30', shape: 'spiked', damage: 1 };
 
 const near = (a, b, eps = 1e-6) => Math.abs(a - b) < eps;
 
@@ -228,10 +228,20 @@ test('riding a spiked platform hurts; a plain one never does, and nor does a spi
   assert.ok(!eventTypes(run(game, idle, 120)).includes('hurt'));
 });
 
-test('a spiked platform looks like a hazard block: its own flickering faces, to flare', () => {
-  const view = createObjectView({ ...SPIKES, edges: 'solid', tint: 0.1, at: [2, 0, 3] });
-  assert.ok(view.userData.faces.uniforms.uFlare);
-  assert.deepEqual(view.userData.flareCell, [2, 0, 3]);
+test('a spiked platform flares when it hurts: its outline brightens, then fades back', () => {
+  const view = createObjectView({ ...SPIKES, edges: 'solid', mark: 'none', faces: 'dark', tint: 0.1, at: [2, 0, 3] });
+  const outline = view.children.find((child) => child.material?.isLineMaterial);
+  const steady = outline.material.color.r;
+  view.userData.flare(0);
+  assert.ok(outline.material.color.r > steady);
+  view.userData.flare(Infinity);
+  assert.ok(Math.abs(outline.material.color.r - steady) < 1e-9);
+  // Hazard faces flare too, on the object's own cell.
+  const hazard = createObjectView({ ...SPIKES, edges: 'solid', mark: 'none', faces: 'hazard', tint: 0.1, at: [2, 0, 3] });
+  hazard.userData.flare(0);
+  const faces = hazard.children.find((child) => child.material?.uniforms?.uFlare).material;
+  assert.equal(faces.uniforms.uFlare.value, 1);
+  assert.deepEqual(faces.uniforms.uFlareCell.value, [2, 0, 3]);
   // A plain platform has no flare.
-  assert.equal(createObjectView({ ...LIFT, edges: 'solid', mark: 'none', faces: 'tinted', tint: 0.1, at: [0, 0, 0] }).userData.faces, undefined);
+  assert.equal(createObjectView({ ...LIFT, edges: 'solid', mark: 'none', faces: 'tinted', tint: 0.1, at: [0, 0, 0] }).userData.flare, undefined);
 });

@@ -333,7 +333,7 @@ test('object styles: overrides must use known values', () => {
 });
 
 test('spiked platforms (D82): only platforms can hurt', () => {
-  assert.deepEqual(errorsAfter((f) => (f['defs.json'].objects.spikes = { ...LIFT, color: '#ff3b30', faces: 'hazard', shape: 'spiked', damage: 1 })), []);
+  assert.deepEqual(errorsAfter((f) => (f['defs.json'].objects.spikes = { ...LIFT, color: '#ff3b30', shape: 'spiked', damage: 1 })), []);
   assertError(
     errorsAfter((f) => (f['defs.json'].objects.crate.damage = 1)),
     'defs.json › objects.crate.damage',

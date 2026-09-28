@@ -60,8 +60,9 @@ export class RoomScene {
     this.flares = new Map();
     /**
      * The hazard block or spiked platform (D82) that last hurt the wizard,
-     * flaring: { faces, cell, time } (seconds since; cell is in the faces'
-     * own coordinates).
+     * flaring: { owner, apply, object?, time }: `apply(since)` sets its
+     * look `time` seconds after; `owner` tells flares apart (the face
+     * material of a hazard block type, the object).
      */
     this.flare = null;
   }
@@ -137,7 +138,7 @@ export class RoomScene {
     }
     if (this.flare) {
       this.flare.time += dt;
-      flareHazard(this.flare.faces, this.flare.cell, this.flare.time);
+      this.flare.apply(this.flare.time);
     }
   }
 
@@ -158,7 +159,7 @@ export class RoomScene {
   flareHazard(cell) {
     const faces = this.flares.get(cell.join());
     if (!faces) return; // a block that hurts without the hazard look
-    this.startFlare({ faces, cell });
+    this.startFlare({ owner: faces, apply: (since) => flareHazard(faces, cell, since) });
   }
 
   /**
@@ -166,14 +167,13 @@ export class RoomScene {
    * @param {object} object the room object (entities/platform.js)
    */
   flareObject(object) {
-    const block = this.objectViews.find((view) => view.platform === object)?.block;
-    const { faces, flareCell } = block?.userData ?? {};
-    if (faces) this.startFlare({ faces, cell: flareCell, object });
+    const apply = this.objectViews.find((view) => view.platform === object)?.block.userData.flare;
+    if (apply) this.startFlare({ owner: object, apply, object });
   }
 
-  /** Start a flare; one still fading on other faces goes out. */
+  /** Start a flare; one still fading on something else goes out. */
   startFlare(flare) {
-    if (this.flare && this.flare.faces !== flare.faces) flareHazard(this.flare.faces, this.flare.cell, Infinity);
+    if (this.flare && this.flare.owner !== flare.owner) this.flare.apply(Infinity);
     this.flare = { ...flare, time: 0 };
   }
 }

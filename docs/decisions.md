@@ -1377,8 +1377,10 @@ damaging object with coloring from the hazard block.
   smaller core cube with four pyramids on each side (the author asked for
   real spikes rather than a face pattern), their tips on the faces of
   its cell: it still collides as the whole cell, so what shows is what
-  hurts. `spiked_platform` combines both in hazard red; showcase
-  `spiked-platforms`.
+  hurts. An object that hurts flares when it hurts the wizard (its
+  outline, or its hazard faces). `spiked_platform` is spiked with dark
+  faces in hazard red (the author: the hazard pixels are too small to
+  see on the spikes); showcase `spiked-platforms`.
 **Why:** a mechanism with a fixed rhythm is an object, not a monster
 (enemies are for things that sense and react; a Zap, Pause or alarm means
 nothing to it). Reusing platforms and the hazard look makes it data plus
