@@ -1,11 +1,11 @@
 /**
- * The world as the world map tool edits it (D66, D77, D78): room positions,
- * rooms added and removed, connections made and broken, exits removed. A
- * connection made on the map opens an exit in the middle of each room's
- * facing wall (or takes a loose exit already there); breaking one closes
- * both exits (every exit must be connected). Fine
- * tuning (where along the wall, height, width) stays with the room editor.
- * Plain logic, no browser, so tests can drive it.
+ * The world as the world map tool edits it (D66, D77, D78, D79): room
+ * positions, rooms added and removed, connections made and broken, exits
+ * removed, and rolling back the last save. A connection made on the map
+ * opens an exit in the middle of each room's facing wall (or takes a loose
+ * exit already there); breaking one closes both exits (every exit must be
+ * connected). Fine tuning (where along the wall, height, width) stays with
+ * the room editor. Plain logic, no browser, so tests can drive it.
  */
 import { OPPOSITE_SIDE, sideLength, withExitDefaults } from '../data/room-data.js';
 import { validateData } from '../data/validate.js';
@@ -172,6 +172,44 @@ export class MapEdit {
 
   clearHistory() {
     this.undoStack = [];
+  }
+
+  /**
+   * Before saving: what the save is about to overwrite, so it can be rolled
+   * back (D79): world.json and each room the save writes or deletes, as on
+   * disk (null for a room the save adds). Plain JSON, to keep over a reload.
+   * @returns {{ world: object, rooms: Record<string, object|null> }}
+   */
+  rollbackPoint() {
+    const { rooms, remove } = this.changes();
+    const ids = [...rooms.map((room) => room.id), ...remove];
+    return {
+      world: structuredClone(this.saved.world),
+      rooms: Object.fromEntries(ids.map((id) => [id, this.saved.rooms.has(id) ? JSON.parse(this.saved.rooms.get(id)) : null])),
+    };
+  }
+
+  /**
+   * Go back to a rollback point (one undo step, not saved yet): its rooms
+   * come back as they were (a room it didn't have goes), and so does
+   * world.json.
+   * @param {{ world: object, rooms: Record<string, object|null> }} point from rollbackPoint()
+   * @returns {boolean} whether anything changed
+   */
+  rollBack({ world, rooms }) {
+    return this.edit(() => {
+      const before = JSON.stringify([this.world, [...this.rooms]]);
+      for (const [id, room] of Object.entries(rooms)) {
+        if (room) this.rooms.set(id, structuredClone(room));
+        else this.rooms.delete(id);
+      }
+      this.world = structuredClone(world);
+      // A room the point's world.json doesn't know (made since) keeps a cell.
+      for (const id of this.rooms.keys()) {
+        if (!this.positions[id]) this.positions[id] = nearestFreeCell(this.positions, this.positions[this.world.start] ?? [0, 0]);
+      }
+      return JSON.stringify([this.world, [...this.rooms]]) !== before;
+    });
   }
 
   snapshot() {

@@ -1462,8 +1462,12 @@ players never see it (D67).
   positions, the new and changed room files, the removed rooms' ids and,
   if the connections changed, `world.json`; the dev server merges the
   positions into `world.json` as it is on disk, checks everything and
-  writes it all or nothing (removed room files are deleted). Ctrl+Z
-  undoes the last edit. A room file with no position yet gets a free cell
+  writes it all or nothing (removed room files are deleted). **Undo**
+  (or Ctrl+Z) undoes the last edit; with nothing left to undo it becomes
+  **Undo last save** (D79): what the last save changed or deleted comes
+  back as unsaved changes (Save writes it). It survives the reload a
+  saved new or deleted room causes, and is dropped when another page
+  (the room editor) saves. A room file with no position yet gets a free cell
   next to the start, saved with the next save.
 - **Opening a room:** click it: the game opens in one reused tab at
   `/?room=<id>&edit`, in the room editor on that room (F2 plays it). The

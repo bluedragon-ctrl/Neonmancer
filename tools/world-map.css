@@ -86,6 +86,25 @@ button {
   cursor: pointer;
 }
 
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.actions button {
+  margin-top: 0;
+}
+
+.actions button.undo {
+  color: var(--text);
+  background: var(--line);
+}
+
+.actions button.undo:disabled {
+  color: var(--dim);
+}
+
 button:disabled {
   color: var(--dim);
   background: var(--line);
