@@ -205,10 +205,17 @@ test('a bug walks off a ledge, falls, and keeps to its path below; it cannot cli
   }
 });
 
-test('a bug falling into a hole pops and is gone until the room resets', () => {
+test('a bug never walks into a hole; one whose ground goes falls in and pops until the room resets', () => {
   const game = gameWith({ enemies: [bug([1, 0, 1], [4, 0, 1])], holes: [{ at: [2, 1] }] });
   const [enemy] = game.enemies;
-  const events = run(game, idle, CELL_TICKS + 30);
+  for (let i = 0; i < 4 * CELL_TICKS; i++) {
+    game.update(idle);
+    assert.ok(enemy.pos[0] <= 1 + 1e-9, `stays out of the hole: ${enemy.pos}`);
+  }
+  assert.equal(enemy.alive, true);
+  // The ground gone from under it (as a collapsing block would): in it falls.
+  enemy.pos = [2, 0, 1];
+  const events = run(game, idle, 30);
   assert.equal(enemy.state, 'dead');
   assert.equal(enemy.deathCause, 'hole');
   assert.deepEqual(events.filter((e) => e.type === 'pop').map((e) => e.enemy), [enemy]);
@@ -218,7 +225,7 @@ test('a bug falling into a hole pops and is gone until the room resets', () => {
   assert.equal(game.enemies[0].state, 'rest');
 });
 
-test('a bug stepping onto a void block pops; hazard blocks do not hurt it', () => {
+test('a bug never steps onto a void block (standing on one pops it); hazard blocks do not hurt it', () => {
   const game = gameWith({
     enemies: [bug([1, 1, 1], [3, 1, 1], 'a'), bug([1, 1, 4], [3, 1, 4], 'b')],
     blocks: [
@@ -229,10 +236,22 @@ test('a bug stepping onto a void block pops; hazard blocks do not hurt it', () =
     ],
   });
   const [voidBug, hazardBug] = game.enemies;
-  run(game, idle, CELL_TICKS);
-  assert.equal(voidBug.deathCause, 'void');
-  run(game, idle, 3 * CELL_TICKS);
+  run(game, idle, 2 * CELL_TICKS);
+  assert.deepEqual(hazardBug.pos, [3, 1, 4], 'walks over hazard blocks');
+  run(game, idle, 2 * CELL_TICKS);
   assert.equal(hazardBug.alive, true);
+  assert.equal(voidBug.alive, true);
+  assert.deepEqual(voidBug.pos, [1, 1, 1], 'turned back at the void block');
+  voidBug.pos = [2, 1, 1];
+  run(game, idle, 1);
+  assert.equal(voidBug.deathCause, 'void');
+});
+
+test('a bug does not walk off a ledge into a hole below', () => {
+  const game = gameWith({ enemies: [bug([1, 1, 1], [4, 1, 1])], blocks: [{ at: [1, 0, 1] }], holes: [{ at: [2, 1] }] });
+  const [enemy] = game.enemies;
+  run(game, idle, 4 * CELL_TICKS);
+  assert.deepEqual(enemy.pos, [1, 1, 1]);
 });
 
 test('a platform carries a bug standing on it', () => {

@@ -17,8 +17,13 @@ import {
   ShaderMaterial,
   Vector3,
 } from 'three';
+import { ENEMY } from '../entities/enemy.js';
 import { PLAYER } from '../entities/player.js';
+import { createAlertMark, placeAlertMark } from './alert-mark.js';
 import { BUG_MODEL, eyeMood } from './bug.js';
+import { chargeGlow, createDischarge, dischargeLook, placeDischarge } from './discharge.js';
+import { SENTINEL_MODEL } from './sentinel.js';
+import { VIRUS_MODEL } from './virus.js';
 import { hitJolt } from './break-fx.js';
 import { COLLAPSE_FX, COLLAPSE_PIXELS, collapseLook, collapsePixels } from './collapse-fx.js';
 import { PALETTE, lineMaterial, neonLines, shared } from './neon.js';
@@ -355,11 +360,15 @@ export function createRails(track, color) {
 }
 
 /**
- * The model of each enemy type (defs.json "enemies"), by type id: how to
- * build, color, animate and pop it (see BUG_MODEL in bug.js). A model has
- * its own flash uniforms (`userData.flash`, holo.js) for spell hits.
+ * The enemy looks (defs.json enemy "model", D77), by name: how to build,
+ * color, animate and pop one (see BUG_MODEL in bug.js), how high its "!"
+ * floats and where an arc leaves it. A model has its own flash uniforms
+ * (`userData.flash`, holo.js) for spell hits and its charge glow.
  */
-export const ENEMY_MODELS = { bug: BUG_MODEL };
+export const ENEMY_MODELS = { bug: BUG_MODEL, virus: VIRUS_MODEL, sentinel: SENTINEL_MODEL };
+
+/** How fast its after-the-wizard look (faster bits, flaring eyes) comes and goes, per second. */
+const ALERT_RATE = 6;
 
 export class EnemyView {
   /**
@@ -369,21 +378,27 @@ export class EnemyView {
   constructor(game, enemy) {
     this.game = game;
     this.enemy = enemy;
-    // Templates look like their base type (D58).
-    const model = enemy.data.model ?? enemy.type;
+    const { model, color, attack, attackColor, attackShape, attackRange } = enemy.data;
     this.kind = ENEMY_MODELS[model];
-    if (!this.kind) throw new Error(`No model for enemy type "${model}" (ENEMY_MODELS)`);
-    const { color } = enemy.data;
+    if (!this.kind) throw new Error(`No enemy model "${model}" (ENEMY_MODELS)`);
     this.model = this.kind.create(color);
     this.pixels = createPixelBurst(this.kind.pop.pixels, this.kind.pop.pixelSize, [color, 0xffffff]);
     this.mood = null;
-    this.group = new Group().add(this.model, this.pixels);
+    /** The "!" over it while it has noticed the wizard (any enemy). */
+    this.mark = createAlertMark();
+    this.markHolder = new Group().add(this.mark);
+    this.group = new Group().add(this.model, this.pixels, this.markHolder);
+    /** Its discharge lightning (world space), if it has that attack. */
+    this.discharge = attack === 'discharge' ? createDischarge({ color: attackColor, shape: attackShape, range: attackRange }) : null;
+    if (this.discharge) this.group.add(this.discharge);
     /** Its own offset into the glitch rhythm of damaged enemies, so they don't glitch in step. */
     this.seed = game.enemies.indexOf(enemy);
     /** Angle the model faces now; it turns towards the enemy's facing. */
     this.angle = enemy.facing;
     /** Seconds, for the hop while standing. */
     this.time = 0;
+    /** 0..1: how much it looks after the wizard (it sees him or searches for him). */
+    this.alert = 0;
   }
 
   /**
@@ -396,6 +411,8 @@ export class EnemyView {
     const feet = [pos[0] + 0.5, pos[1], pos[2] + 0.5];
     if (enemy.state === 'dead') {
       this.model.visible = false;
+      this.mark.visible = false;
+      if (this.discharge) this.discharge.visible = false;
       // Popped in a pit: the burst comes out at the floor. Once it is over
       // (hidden by an empty burst), there is nothing left to update.
       if (enemy.timer <= kind.pop.ticks) placePixels(this.pixels, kind.popPixels(enemy.timer + alpha), [feet[0], Math.max(feet[1], 0), feet[2]]);
@@ -406,6 +423,8 @@ export class EnemyView {
     this.angle = lerpAngle(this.angle, enemy.facing, Math.min(1, dt * kind.turnRate));
     this.model.position.set(...feet);
     this.model.rotation.y = this.angle;
+    const after = enemy.sees || enemy.behavior.chasing ? 1 : 0;
+    this.alert += Math.sign(after - this.alert) * Math.min(Math.abs(after - this.alert), dt * ALERT_RATE);
 
     // Walked: the distance from the cell it left, for one hop per cell.
     const { from } = enemy;
@@ -413,6 +432,7 @@ export class EnemyView {
     // A spell hit flashes and squashes it; while damaged it glitches now and then.
     const hit = enemyHitLook(enemy.hitTicks === null ? null : enemy.hitTicks + alpha);
     const glitch = enemy.damaged && hit.flash === 0 ? damagedGlitch(this.time * 60, this.seed) : { shift: 0, flash: 0 };
+    const attack = enemy.attackTick === null ? null : enemy.attackTick + alpha;
     kind.animate(this.model, {
       state: walking || enemy.state === 'fall' ? enemy.state : 'rest',
       walked: walking ? Math.abs(pos[0] - from[0]) + Math.abs(pos[2] - from[2]) : 0,
@@ -420,12 +440,41 @@ export class EnemyView {
       bounced: enemy.bounced === null ? null : enemy.bounced + alpha,
       squash: hit.squash,
       shift: glitch.shift,
+      alert: this.alert,
+      attack,
+      charge: enemy.chargeTicks,
     });
+    // Its flash: a hit (white, then cyan), a damaged glitch (cyan), or the
+    // white glow of charging and discharging.
+    const glow = chargeGlow(dischargeLook(attack, enemy.chargeTicks));
     const flash = this.model.userData.flash;
-    flash.amount.value = Math.max(hit.flash, glitch.flash);
-    flash.color.value.set(hit.flash > 0 && hit.color === 'white' ? 0xffffff : PALETTE.cyan);
+    flash.amount.value = Math.max(hit.flash, glitch.flash, glow);
+    const white = (hit.flash > 0 && hit.color === 'white') || glow > Math.max(hit.flash, glitch.flash);
+    flash.color.value.set(white ? 0xffffff : PALETTE.cyan);
+
+    this.markHolder.position.set(...feet);
+    placeAlertMark(this.mark, enemy.alerted ? 1 : 0, this.time, kind.markHeight);
+    if (this.discharge) this.placeDischarge(feet, attack);
 
     const mood = eyeMood(enemy);
     if (mood !== this.mood) kind.setMood(this.model, (this.mood = mood));
+  }
+
+  /**
+   * Its discharge: a burst from its middle; an arc from its muzzle along
+   * its aim while charging, and to where it stopped once fired.
+   * @param {number[]} feet
+   * @param {number|null} attack ticks since the attack started
+   */
+  placeDischarge(feet, attack) {
+    const { enemy, kind } = this;
+    if (enemy.data.attackShape !== 'arc') {
+      placeDischarge(this.discharge, attack, enemy.chargeTicks, [feet[0], feet[1] + ENEMY.eyeHeight, feet[2]]);
+      return;
+    }
+    const [, my, mz] = kind.muzzle;
+    const from = [feet[0] + Math.sin(this.angle) * mz, feet[1] + my, feet[2] + Math.cos(this.angle) * mz];
+    const target = attack !== null && attack >= enemy.chargeTicks ? enemy.boltEnd : enemy.aim?.end;
+    placeDischarge(this.discharge, target ? attack : null, enemy.chargeTicks, from, target);
   }
 }

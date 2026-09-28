@@ -15,7 +15,7 @@
 import { Plane, Raycaster, Vector2, Vector3 } from 'three';
 import { isTextField } from '../core/input.js';
 import { linkMap } from '../data/load.js';
-import { enemyModels, resolveEnemyTypes, sideLength, withExitDefaults } from '../data/room-data.js';
+import { enemyBases, resolveEnemyTypes, sideLength, withExitDefaults } from '../data/room-data.js';
 import { validateData } from '../data/validate.js';
 import { DefsEdit } from './defs-edit.js';
 import { errorTarget, groupErrors } from './errors.js';
@@ -368,9 +368,14 @@ export class Editor {
     return this.selected?.kind === 'exit' ? (this.edit.exits.find((e) => e.id === this.selected.id) ?? null) : null;
   }
 
-  /** Does this enemy (or new ones, with these settings) walk a path? */
+  /** Does this enemy (or new ones, with these settings) patrol, so it needs a path? */
   patrols({ type, overrides = {} }) {
     return (overrides.movement ?? this.enemyTypes[type]?.movement) === 'patrol';
+  }
+
+  /** May this enemy have a path: a patrol, or a chaser (walked while calm, D77)? Not a stationary one. */
+  walksPath({ type, overrides = {} }) {
+    return (overrides.movement ?? this.enemyTypes[type]?.movement) !== 'stationary';
   }
 
   /** An enemy setting changed in the panel: for new enemies, and the picked one. */
@@ -389,7 +394,7 @@ export class Editor {
   retype(enemy, settings) {
     const wasPicked = this.selected?.id === enemy.id;
     let id = null;
-    this.change(() => !!(id = this.edit.setEnemy(enemy.id, settings, this.patrols(settings))));
+    this.change(() => !!(id = this.edit.setEnemy(enemy.id, settings, this.walksPath(settings))));
     if (id && wasPicked) this.select({ kind: 'item', id });
   }
 
@@ -440,7 +445,7 @@ export class Editor {
       if (problem) return false;
       this.applyEnemyTypes();
       for (const enemy of (this.edit.data.enemies ?? []).filter((e) => e.type === type)) {
-        const id = this.edit.setEnemy(enemy.id, { type: name, overrides: enemy.overrides ?? {} }, this.patrols({ ...enemy, type: name }));
+        const id = this.edit.setEnemy(enemy.id, { type: name, overrides: enemy.overrides ?? {} }, this.walksPath({ ...enemy, type: name }));
         if (id && this.selected?.id === enemy.id) this.selected = { kind: 'item', id };
       }
       if (this.enemy.type === type) this.enemy.type = name;
@@ -495,7 +500,7 @@ export class Editor {
     this.enemy = { type, overrides: {} };
     const enemy = this.selectedEnemy;
     if (enemy) {
-      const id = this.edit.setEnemy(enemy.id, this.enemy, this.patrols(this.enemy));
+      const id = this.edit.setEnemy(enemy.id, this.enemy, this.walksPath(this.enemy));
       if (id) this.selected = { kind: 'item', id };
     }
     return true;
@@ -506,8 +511,8 @@ export class Editor {
     const types = this.defs.enemies;
     this.enemyTypes = resolveEnemyTypes(types);
     this.game.content.enemyTypes = this.enemyTypes;
-    this.game.content.enemyModels = enemyModels(types);
-    this.panel.setEnemyTypes(this.enemyTypes, this.game.content.enemyModels);
+    this.game.content.enemyBases = enemyBases(types);
+    this.panel.setEnemyTypes(this.enemyTypes, this.game.content.enemyBases);
     this.defsApplied = this.defs.text();
     // New enemies of a template that is gone (undo, delete) are of the first type.
     if (!this.enemyTypes[this.enemy.type]) this.enemy = { type: Object.keys(this.enemyTypes)[0], overrides: {} };
@@ -799,8 +804,8 @@ export class Editor {
       return this.refresh();
     }
     const enemy = item === this.selectedEnemy;
-    if (enemy && !this.patrols(item)) {
-      this.status = `${item.id} is stationary: set its Movement to patrol (Enemy tool) to give it a path.`;
+    if (enemy && !this.walksPath(item)) {
+      this.status = `${item.id} is stationary: set its Movement to patrol or chase (Enemy tool) to give it a path.`;
       return this.refresh();
     }
     // Enemies patrol level: their points stay at their own height.

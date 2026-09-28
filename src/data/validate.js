@@ -13,7 +13,6 @@
 import { DATA_SCHEMA_VERSION } from '../core/version.js';
 import { MAX_ROOM_FOOTPRINT, PLAYER_HITBOX } from '../core/rules.js';
 import {
-  ENEMY_DEFAULTS,
   ENEMY_OPTIONS,
   ENEMY_REQUIRED,
   OBJECT_STYLES,
@@ -26,6 +25,7 @@ import {
   sideLength,
   resolveBlockTypes,
   resolveEnemyTypes,
+  withEnemyDefaults,
   withExitDefaults,
   KIND_BLOCK_VALUES,
   STATIC_BLOCK_VALUES,
@@ -373,10 +373,12 @@ function validatePathShape(room, report, path, at, points, mode, level = false) 
 }
 
 /**
- * Enemies (D48): unique ids (shared with objects), known types and valid
- * overrides, each in a free cell of its own, not starting over a hole;
- * patrols have a path, level (legs along x or z) and through no static
- * block; stationary enemies have none.
+ * Enemies (D48, D77): unique ids (shared with objects), known types and
+ * valid overrides, each in a free cell of its own, not starting over a
+ * hole; patrols have a path, level (legs along x or z) and through no
+ * static block; chasers may have one (walked while calm); stationary
+ * enemies have none. A discharge attack only fires at a wizard it sees,
+ * so its aggro range must reach its attack range.
  */
 function validateEnemies(checks, enemyTypes) {
   const { room, report, ids, filled, holes } = checks;
@@ -386,9 +388,15 @@ function validateEnemies(checks, enemyTypes) {
     const path = `enemies[${i}]`;
     if (ids.has(enemy.id)) report(path, `duplicate id "${enemy.id}"`);
     ids.add(enemy.id);
-    const type = enemyTypes[enemy.type] && { ...ENEMY_DEFAULTS, ...enemyTypes[enemy.type] };
+    const type = enemyTypes[enemy.type] && withEnemyDefaults(enemyTypes[enemy.type]);
     if (!type) report(path, `unknown enemy type "${enemy.type}"`);
-    else validateOverrides(report, `${path}.overrides`, enemy, type, ENEMY_OPTIONS);
+    else {
+      validateOverrides(report, `${path}.overrides`, enemy, type, ENEMY_OPTIONS);
+      const values = { ...type, ...enemy.overrides };
+      if (values.attack === 'discharge' && values.aggroRange < values.attackRange) {
+        report(path, `its aggroRange ${values.aggroRange} is shorter than its attackRange ${values.attackRange}: it only fires at a wizard it has noticed`);
+      }
+    }
     // A patrol walks its path; a stationary enemy has none.
     const movement = enemy.overrides?.movement ?? type?.movement;
     if (movement === 'patrol' && !enemy.path) report(path, 'a patrolling enemy needs a "path"');
@@ -438,9 +446,17 @@ const OVERRIDE_RANGES = {
   tint: [0, 1, false],
   aggroRange: [0, 32, false],
   speed: [0.01, 8, false],
+  chaseSpeed: [0.01, 8, false],
+  memory: [0, 10, false],
+  attackRange: [0.5, 16, false],
+  attackCharge: [0, 3, false],
+  attackCooldown: [0, 10, false],
   integrity: [1, 15, true],
   damage: [1, 99, true],
 };
+
+/** Override values that are colors (#rrggbb). */
+const COLOR_KEYS = ['color', 'attackColor'];
 
 /**
  * Overrides can only change existing properties of the type, with valid
@@ -453,7 +469,7 @@ function validateOverrides(report, path, object, type, enums = OBJECT_STYLES) {
     else if (typeof value !== typeof type[key]) report(path, `"${key}" must be a ${typeof type[key]}`);
     else if (enums[key] && !enums[key].includes(value)) {
       report(path, `"${key}" must be one of ${enums[key].join(', ')}`);
-    } else if (key === 'color' && !/^#[0-9a-fA-F]{6}$/.test(value)) report(path, `"color" must be #rrggbb`);
+    } else if (COLOR_KEYS.includes(key) && !/^#[0-9a-fA-F]{6}$/.test(value)) report(path, `"${key}" must be #rrggbb`);
     else if (range && !(value >= range[0] && value <= range[1] && (!range[2] || Number.isInteger(value)))) {
       report(path, `"${key}" must be ${range[2] ? 'a whole number ' : ''}between ${range[0]} and ${range[1]}`);
     }

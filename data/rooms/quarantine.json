@@ -1,0 +1,27 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "quarantine",
+  "name": "Quarantine",
+  "biome": "glitchmire",
+  "size": [10, 4, 10],
+  "spawn": [5.5, 0, 8.5],
+  "exits": [{ "id": "south", "side": "+z", "at": 5 }],
+  "blocks": [
+    { "at": [4, 0, 4], "to": [5, 1, 5] },
+    { "at": [0, 0, 7], "to": [1, 0, 9] }
+  ],
+  "holes": [{ "at": [7, 2], "to": [7, 6] }],
+  "objects": [{ "id": "cover", "type": "crate", "at": [3, 0, 7] }],
+  "enemies": [
+    { "id": "virus", "type": "virus", "at": [2, 0, 2] },
+    { "id": "sentinel", "type": "sentinel", "at": [9, 0, 1] },
+    {
+      "id": "zapbug",
+      "type": "bug",
+      "at": [8, 0, 6],
+      "overrides": { "movement": "stationary", "attack": "discharge", "aggroRange": 2 }
+    }
+  ],
+  "pickups": [{ "id": "integrity", "type": "refill_integrity", "at": [9, 0, 7] }]
+}

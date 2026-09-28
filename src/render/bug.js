@@ -9,6 +9,7 @@
  * is as big as the hitbox (0.6); the hop lifts it only for show.
  */
 import { Group, Mesh, MeshBasicMaterial, SphereGeometry } from 'three';
+import { dischargeLook } from './discharge.js';
 import { hash } from './hash.js';
 import { createFlash, holoPart } from './holo.js';
 import { shared } from './neon.js';
@@ -138,9 +139,14 @@ export function bugPose(phase, size = 1) {
  * @param {number|null} [state.bounced] ticks since the wizard bounced off it
  * @param {number} [state.squash] extra squash (a hit, zap-fx.js enemyHitLook())
  * @param {number} [state.shift] sideways shift (a glitch, zap-fx.js damagedGlitch())
+ * @param {number|null} [state.attack] ticks since its discharge attack started, or null
+ * @param {number} [state.charge] ticks that attack charges
  */
-export function animateBug(bug, { state = 'rest', walked = 0, time = 0, bounced = null, squash: hit = 0, shift = 0 }) {
+export function animateBug(bug, { state = 'rest', walked = 0, time = 0, bounced = null, squash: hit = 0, shift = 0, attack = null, charge = 1 }) {
   const pose = state === 'fall' ? FALL_POSE : state === 'walk' ? bugPose(walked) : bugPose(time * BUG.idleRate, BUG.idleLift);
+  // A bug with a discharge attack trembles while it charges.
+  const { shake } = dischargeLook(attack, charge);
+  if (shake > 0) shift += shake * (hash(Math.floor(time * 30), 5) - 0.5) * 2;
   const squash = bounceSquash(bounced) + hit;
   const { body } = bug.userData;
   body.position.x = shift;
@@ -180,4 +186,8 @@ export const BUG_MODEL = {
   popPixels,
   pop: BUG.pop,
   turnRate: BUG.turnRate,
+  /** Height of the "!" above its feet. */
+  markHeight: 0.85,
+  /** Where an arc leaves it, from its feet center looking along +z. */
+  muzzle: [0, BUG.r, BUG.r],
 };

@@ -2,7 +2,7 @@
  * Turn the raw data files into the game's content tables, after validating
  * them. Plain logic (no Vite features), so tests can call it with fixtures.
  */
-import { enemyModels, resolveBlockTypes, resolveEnemyTypes } from './room-data.js';
+import { enemyBases, resolveBlockTypes, resolveEnemyTypes } from './room-data.js';
 import { validateData } from './validate.js';
 
 /** Thrown when the game data is invalid; `errors` lists every problem. */
@@ -17,7 +17,7 @@ export class DataError extends Error {
 
 /**
  * @param {Record<string, any>} files parsed JSON keyed by path relative to data/
- * @returns {{ objectTypes: object, blockTypes: object, enemyTypes: object, enemyModels: Record<string, string>, spells: object, pickupTypes: object, biomes: object, world: object, strings: Record<string, string>,
+ * @returns {{ objectTypes: object, blockTypes: object, enemyTypes: object, enemyBases: Record<string, string>, spells: object, pickupTypes: object, biomes: object, world: object, strings: Record<string, string>,
  *   rooms: Map<string, object>,
  *   links: Map<string, { room: string, exit: string }> }} `links` maps "room.exit" to the exit
  *   it is connected to (both ways round)
@@ -37,7 +37,7 @@ export function loadGameData(files) {
     blockTypes: resolveBlockTypes(files['defs.json'].blocks),
     // Templates filled in from their base types (D58).
     enemyTypes: resolveEnemyTypes(files['defs.json'].enemies ?? {}),
-    enemyModels: enemyModels(files['defs.json'].enemies ?? {}),
+    enemyBases: enemyBases(files['defs.json'].enemies ?? {}),
     spells: files['defs.json'].spells,
     pickupTypes: files['defs.json'].pickups ?? {},
     biomes: files['biomes.json'].biomes,

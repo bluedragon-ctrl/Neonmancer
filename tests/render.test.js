@@ -16,6 +16,7 @@ import { OBJECT_KINDS } from '../src/entities/kinds.js';
 import DEFS from '../data/defs.json' with { type: 'json' };
 import DEFS_SCHEMA from '../schemas/defs.schema.json' with { type: 'json' };
 import { ENEMY_MODELS } from '../src/render/entity-view.js';
+import { DISCHARGE, arcSegments, burstSegments, chargeGlow, dischargeLook } from '../src/render/discharge.js';
 import { createRoomView } from '../src/render/room-view.js';
 import { resolveBlockTypes } from '../src/data/room-data.js';
 import { LOOK_DEFAULTS, roomLook } from '../src/render/neon.js';
@@ -182,8 +183,25 @@ test('every object kind in the schema (objects and block types, D60) has a logic
   assert.deepEqual(Object.keys(OBJECT_VIEWS).sort(), [...kinds].sort());
 });
 
-test('every enemy type in defs.json has a model', () => {
-  for (const type of Object.keys(DEFS.enemies)) assert.ok(ENEMY_MODELS[type], `no model for "${type}"`);
+test('every enemy model in the schema has a look, and so every enemy type in defs.json', () => {
+  assert.deepEqual(Object.keys(ENEMY_MODELS).sort(), [...DEFS_SCHEMA.$defs.enemyType.properties.model.enum].sort());
+  for (const [type, { model }] of Object.entries(DEFS.enemies)) assert.ok(!model || ENEMY_MODELS[model], `no model "${model}" for "${type}"`);
+});
+
+test('discharge: it charges, then discharges for its ticks, glowing white', () => {
+  assert.deepEqual(dischargeLook(null, 24), { charge: 0, discharging: false, shake: 0 });
+  const half = dischargeLook(12, 24);
+  assert.equal(half.charge, 0.5);
+  assert.equal(half.discharging, false);
+  assert.ok(half.shake > 0);
+  assert.equal(dischargeLook(24, 24).discharging, true);
+  assert.equal(dischargeLook(24 + DISCHARGE.ticks, 24).discharging, false, 'over');
+  assert.ok(chargeGlow(dischargeLook(24, 24)) > chargeGlow(half));
+  // A burst reaches out to its range; an arc runs along +z to its length.
+  const burst = burstSegments(0, 1.2).flat();
+  assert.ok(Math.max(...burst.map(([x, , z]) => Math.hypot(x, z))) <= 1.2 + 0.2);
+  const arc = arcSegments(0, 5).flat();
+  assert.equal(Math.max(...arc.map(([, , z]) => z)), 5);
 });
 
 test('x-ray: every hologram part of the wizard gets a ghost', () => {

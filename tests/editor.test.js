@@ -13,7 +13,7 @@ import { errorTarget, groupErrors } from '../src/editor/errors.js';
 import { cutRoom } from '../src/render/room-scene.js';
 import { validateData } from '../src/data/validate.js';
 import { loadGameData } from '../src/data/load.js';
-import { enemyModels, resolveBlockTypes, resolveEnemyTypes } from '../src/data/room-data.js';
+import { enemyBases, resolveBlockTypes, resolveEnemyTypes } from '../src/data/room-data.js';
 import { blockTypeText } from '../src/editor/panel.js';
 import { buildRoom } from '../src/world/room.js';
 import { checkSchemas, readSchemas } from '../tools/check-data.js';
@@ -469,7 +469,7 @@ test('enemy templates take their base type values and look; validation checks th
   const types = { bug: BUG, tank: { extends: 'bug', integrity: 4, color: '#ffb020' } };
   const resolved = resolveEnemyTypes(types);
   assert.deepEqual(resolved.tank, { ...BUG, integrity: 4, color: '#ffb020' });
-  assert.deepEqual(enemyModels(types), { bug: 'bug', tank: 'bug' });
+  assert.deepEqual(enemyBases(types), { bug: 'bug', tank: 'bug' });
 
   const room = roomFile('lab', { enemies: [{ id: 'tank_1', type: 'tank', at: [4, 0, 4], overrides: { movement: 'stationary' } }] });
   const files = dataFiles({ rooms: [room], enemies: types });

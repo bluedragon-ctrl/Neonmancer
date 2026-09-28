@@ -428,17 +428,17 @@ export class RoomEdit {
 
   /**
    * Give an enemy a type and overrides (none: `{}`); its id follows the type
-   * (idForType()), and one that doesn't patrol loses its path.
+   * (idForType()), and a stationary one loses its path.
    * @param {string} id
    * @param {{ type: string, overrides: object }} settings
-   * @param {boolean} patrols it walks a path with these settings
+   * @param {boolean} walksPath it may have a path with these settings (not stationary)
    * @returns {string|null} its id afterwards, or null if nothing changed
    */
-  setEnemy(id, { type, overrides }, patrols) {
+  setEnemy(id, { type, overrides }, walksPath) {
     const enemy = this.item(id);
     if (!enemy) return null;
     const next = this.idForType(enemy, type);
-    const fields = { id: next, type, overrides: Object.keys(overrides).length > 0 ? overrides : undefined, path: patrols ? enemy.path : undefined };
+    const fields = { id: next, type, overrides: Object.keys(overrides).length > 0 ? overrides : undefined, path: walksPath ? enemy.path : undefined };
     return this.updateItem(id, fields) ? next : null;
   }
 

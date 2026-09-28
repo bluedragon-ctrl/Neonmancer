@@ -23,16 +23,29 @@ export const TOOLS = [
   { id: 'reset', label: 'Reset', key: '8' },
 ];
 
-/** Enemy settings the panel sets as lists (overrides of the type's values); blank is the type's own. */
+/**
+ * Enemy settings the panel sets as lists (overrides of the type's values);
+ * blank is the type's own. Any look, movement and attack combine (D77).
+ */
 export const ENEMY_FIELDS = {
+  model: ENEMY_OPTIONS.model,
   movement: ENEMY_OPTIONS.movement,
+  attack: ENEMY_OPTIONS.attack,
   hostility: ENEMY_OPTIONS.hostility,
+  attackShape: ENEMY_OPTIONS.attackShape,
   bounce: [true, false],
   solid: [true, false],
 };
 
 /** Enemy settings typed in as numbers: [min, step] (the schema's limits are checked on validation). */
-export const ENEMY_NUMBERS = { integrity: [1, 1], damage: [1, 1], speed: [0.5, 0.5] };
+export const ENEMY_NUMBERS = {
+  integrity: [1, 1],
+  damage: [1, 1],
+  speed: [0.5, 0.5],
+  chaseSpeed: [0.5, 0.5],
+  aggroRange: [0, 0.5],
+  attackRange: [0.5, 0.5],
+};
 
 const HELP = [
   'Left click: place / pick · Right click: erase',
@@ -192,7 +205,8 @@ export class EditorPanel {
     this.enemySelects = {};
     this.enemyRows = this.group('enemy');
     this.enemyRows.append(this.row('Type', this.enemyType));
-    const label = (field) => field[0].toUpperCase() + field.slice(1);
+    // chaseSpeed → Chase speed
+    const label = (field) => field[0].toUpperCase() + field.slice(1).replace(/[A-Z]/g, (c) => ` ${c.toLowerCase()}`);
     for (const [field, values] of Object.entries(ENEMY_FIELDS)) {
       const node = select([['', ''], ...values.map((value) => [String(value), yesNo(value)])]);
       node.addEventListener('change', () => on.enemy(field, node.value === '' ? undefined : values.find((v) => String(v) === node.value)));
@@ -312,13 +326,13 @@ export class EditorPanel {
   /**
    * The enemy types to pick from; templates show their base.
    * @param {Record<string, object>} types enemy types, templates filled in
-   * @param {Record<string, string>} models each type's base type (itself for a base)
+   * @param {Record<string, string>} bases each type's base type (itself for a base)
    */
-  setEnemyTypes(types, models) {
+  setEnemyTypes(types, bases) {
     this.enemyTypes = types;
-    this.enemyModels = models;
+    this.enemyBases = bases;
     this.enemyType.replaceChildren(
-      ...Object.keys(types).map((id) => option(id, models[id] && models[id] !== id ? `${id} (${models[id]} template)` : id)),
+      ...Object.keys(types).map((id) => option(id, bases[id] && bases[id] !== id ? `${id} (${bases[id]} template)` : id)),
     );
   }
 

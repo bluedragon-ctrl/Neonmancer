@@ -12,7 +12,8 @@
     ["boot_sector.west", "crawl_space.east"],
     ["boot_sector.south", "transit_bus.north"],
     ["cache_hall.east", "relay_station.west"],
-    ["relay_station.south", "stack_yard.north"]
+    ["relay_station.south", "stack_yard.north"],
+    ["crawl_space.north", "quarantine.south"]
   ],
   "positions": {
     "boot_sector": [0, 0],
@@ -22,6 +23,7 @@
     "crawl_space": [-1, 0],
     "transit_bus": [0, 1],
     "volatile_memory": [1, 1],
-    "relay_station": [1, -1]
+    "relay_station": [1, -1],
+    "quarantine": [-1, -1]
   }
 }

@@ -115,24 +115,54 @@ export const OBJECT_STYLE_DEFAULTS = {
 
 /**
  * Values an enemy type's fields can take (the first is listed first in the
- * schema too). movement: a behavior module (ai/behaviors.js); attack: how it
- * hurts; hostility: hostile hurts, peaceful never does, provoked turns
- * hostile once a spell hits it.
+ * schema too). Enemies are universal (D77): any look, movement and attack
+ * combine. model: its look (render/entity-view.js ENEMY_MODELS); movement:
+ * a behavior module (ai/behaviors.js); attack: how it hurts; hostility:
+ * hostile hurts, peaceful never does, provoked turns hostile once a spell
+ * hits it; attackShape: a discharge all round it (burst) or one bolt at the
+ * wizard (arc).
  */
 export const ENEMY_OPTIONS = {
-  movement: ['patrol', 'stationary'],
-  attack: ['contact', 'none'],
+  model: ['bug', 'virus', 'sentinel'],
+  movement: ['patrol', 'stationary', 'chase'],
+  attack: ['contact', 'none', 'discharge'],
   hostility: ['hostile', 'peaceful', 'provoked'],
+  attackShape: ['burst', 'arc'],
 };
 
 /**
  * Enemy type fields that may be left out: aggro range (units), bounce (a
- * trampoline top) and solid (blocks, carries and shoves the wizard).
+ * trampoline top), solid (blocks, carries and shoves the wizard), memory
+ * (seconds a chaser searches after losing sight of him) and the discharge
+ * attack's shape, range (units), charge and cooldown (seconds). chaseSpeed
+ * and attackColor default to the enemy's speed and color (withEnemyDefaults()).
  */
-export const ENEMY_DEFAULTS = { aggroRange: 0, bounce: false, solid: false };
+export const ENEMY_DEFAULTS = {
+  aggroRange: 0,
+  bounce: false,
+  solid: false,
+  memory: 1.5,
+  attackShape: 'burst',
+  attackRange: 1.2,
+  attackCharge: 0.4,
+  attackCooldown: 1.5,
+};
 
 /** Enemy type fields a type needs (a template gets them from its base), as in the schema. */
-export const ENEMY_REQUIRED = ['movement', 'attack', 'hostility', 'integrity', 'damage', 'speed', 'color'];
+export const ENEMY_REQUIRED = ['model', 'movement', 'attack', 'hostility', 'integrity', 'damage', 'speed', 'color'];
+
+/**
+ * An enemy's values with every default filled in: ENEMY_DEFAULTS, then
+ * `values` (a type, or a type with a room's overrides), then chaseSpeed
+ * and attackColor from its speed and color unless set.
+ * @param {object} values
+ */
+export function withEnemyDefaults(values) {
+  const out = { ...ENEMY_DEFAULTS, ...values };
+  out.chaseSpeed ??= out.speed;
+  out.attackColor ??= out.color;
+  return out;
+}
 
 /**
  * Enemy types with templates filled in (D58): a type with `extends` (a
@@ -173,12 +203,12 @@ export const STATIC_BLOCK_VALUES = ['look', 'damage', 'lethal'];
 export const KIND_BLOCK_VALUES = ['kind', 'regrow', 'edges', 'mark', 'faces', 'tint'];
 
 /**
- * Which base type's look (render/entity-view.js ENEMY_MODELS) each enemy
- * type uses: its own id, or a template's base.
+ * The base type of each enemy type: its own id, or a template's base (the
+ * room editor names it next to a template).
  * @param {Record<string, object>} types defs.json `enemies`
  * @returns {Record<string, string>}
  */
-export function enemyModels(types) {
+export function enemyBases(types) {
   return Object.fromEntries(Object.entries(types).map(([id, type]) => [id, type.extends ?? id]));
 }
 

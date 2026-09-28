@@ -15,6 +15,7 @@ export const LIFT = { kind: 'platform', color: '#00f0ff' };
 
 /** A bug enemy type, as in defs.json (3 units per second: 20 ticks per cell). */
 export const BUG = {
+  model: 'bug',
   movement: 'patrol',
   attack: 'contact',
   hostility: 'hostile',
@@ -25,6 +26,46 @@ export const BUG = {
   bounce: true,
   solid: false,
   color: '#2bff88',
+};
+
+/**
+ * A virus enemy type, as in defs.json but chasing at 3 units per second (20
+ * ticks per cell): a burst discharge (range 1.2, 24 ticks of charge, 90 of
+ * cooldown).
+ */
+export const VIRUS = {
+  model: 'virus',
+  movement: 'chase',
+  attack: 'discharge',
+  hostility: 'hostile',
+  aggroRange: 5,
+  integrity: 2,
+  damage: 1,
+  speed: 2,
+  chaseSpeed: 3,
+  color: '#ffe23a',
+  attackShape: 'burst',
+  attackRange: 1.2,
+  attackCharge: 0.4,
+  attackCooldown: 1.5,
+};
+
+/** A sentinel enemy type, as in defs.json: an arc discharge (range 5, 42 ticks of charge). */
+export const SENTINEL = {
+  model: 'sentinel',
+  movement: 'chase',
+  attack: 'discharge',
+  hostility: 'hostile',
+  aggroRange: 7,
+  integrity: 3,
+  damage: 1,
+  speed: 1.5,
+  chaseSpeed: 3,
+  color: '#ff8a1a',
+  attackShape: 'arc',
+  attackRange: 5,
+  attackCharge: 0.7,
+  attackCooldown: 2,
 };
 
 /** Spell tuning, as in defs.json. */

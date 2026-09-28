@@ -3,6 +3,7 @@
  * the state, they never change it.
  */
 import { DT } from './core/loop.js';
+import { boxCenter, castRay, cellsAlong, direction, lineOfSight, reach } from './ai/sight.js';
 import { announce, say } from './core/messages.js';
 import { exitCells, isBackSide, sideAxes, withExitDefaults } from './data/room-data.js';
 import { Bolt } from './entities/bolt.js';
@@ -49,13 +50,15 @@ export const TRANSITION = {
  * Something that happened, for views, the HUD and (later) sound. Returned
  * by Game.update() for the tick it happened in.
  * @typedef {object} GameEvent
- * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'} type
+ * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'} type
  * @property {string} [spell] the spell cast, failed or selected (cast, deny, spell)
  * @property {object} [object] the room object it happened to (push, plug,
  *   land of an object; shake, collapse and regrow of a collapsing block;
  *   hit by a spell, break of a destructible one; a switch going on or off)
  * @property {object} [enemy] the enemy it happened to (pop, land of an
- *   enemy, bounce off it, hit by a spell) or that hurt the wizard (hurt)
+ *   enemy, bounce off it, hit by a spell or a discharge; it noticed the
+ *   wizard: alert; its discharge attack: charge, discharge) or that hurt
+ *   the wizard (hurt)
  * @property {Bolt} [bolt] the bolt that stopped (zap), where it is now
  * @property {number} [amount] integrity lost (hurt)
  * @property {number[]} [cell] the block that hurt him (hurt), [x, y, z]
@@ -147,6 +150,8 @@ export class Game {
     this.solids = [...objects, ...this.liveEnemies.filter((enemy) => enemy.solid)];
     /** What enemies collide with: the objects and the other live enemies (not the wizard). */
     this.obstacles = [...objects, ...this.liveEnemies];
+    /** What blocks an enemy's line of sight and stops an arc (besides blocks): the objects. */
+    this.sightBlockers = objects;
     /** Everything objects collide with: the solid objects, live enemies and the wizard. */
     this.bodies = [...this.obstacles, this.player];
   }
@@ -229,6 +234,78 @@ export class Game {
   }
 
   /**
+   * Enemies' discharge attacks (D77): one starting to charge ('charge')
+   * takes aim (an arc), one charged fires (discharge()).
+   */
+  updateAttacks() {
+    for (const enemy of this.enemies) {
+      const event = enemy.updateAttack(this);
+      if (!event) continue;
+      if (event === 'charge') this.aimDischarge(enemy);
+      this.emit(event, { enemy });
+      if (event === 'discharge') this.discharge(enemy);
+    }
+  }
+
+  /**
+   * An arc takes aim as it starts charging: at the wizard's middle, as far
+   * as its range or the first block or object in the way (the aim line).
+   * @param {Enemy} enemy
+   */
+  aimDischarge(enemy) {
+    if (enemy.data.attackShape !== 'arc') return;
+    const from = enemy.middle();
+    const dir = direction(from, boxCenter(this.player.box()));
+    const { point } = castRay(from, dir, enemy.data.attackRange, this.grid, this.sightBlockers);
+    enemy.aim = { dir, end: point };
+  }
+
+  /**
+   * A charged discharge fires (D77). A burst hits every body within its
+   * range that it could see: the wizard and other enemies. An arc flies
+   * along its aim until a block or an object stops it (unharmed) or its
+   * range runs out, and hits every body in the squares it passes through:
+   * the wizard and other enemies.
+   * @param {Enemy} enemy
+   */
+  discharge(enemy) {
+    const { attackShape, attackRange } = enemy.data;
+    const from = enemy.middle();
+    const { player } = this;
+    const others = this.liveEnemies.filter((other) => other !== enemy);
+    if (attackShape === 'arc') {
+      const { dir } = enemy.aim;
+      const { point, distance } = castRay(from, dir, attackRange, this.grid, this.sightBlockers);
+      enemy.boltEnd = point;
+      const path = cellsAlong(from, dir, distance).map(cellBox);
+      const inPath = (body) => path.some((cell) => overlapsBox(body.box(), cell));
+      if (!player.dead && inPath(player)) this.strike(player, enemy);
+      for (const other of others) if (inPath(other)) this.strike(other, enemy);
+      return;
+    }
+    const inBurst = (body) => {
+      const box = body.box();
+      return reach(from, box) <= attackRange && lineOfSight(from, boxCenter(box), this.grid, this.sightBlockers);
+    };
+    if (!player.dead && inBurst(player)) this.strike(player, enemy);
+    for (const other of others) if (inBurst(other)) this.strike(other, enemy);
+  }
+
+  /**
+   * A discharge from `enemy` hits the wizard (hurt) or another enemy
+   * (hit, or pop with its last integrity).
+   * @param {Player|Enemy} body
+   * @param {Enemy} enemy
+   */
+  strike(body, enemy) {
+    const { damage } = enemy.data;
+    if (body === this.player) return this.hurt(damage, { enemy });
+    const event = body.hit(damage, 'discharge');
+    if (event) this.emit(event, { enemy: body });
+    if (event === 'pop') this.refreshBodies();
+  }
+
+  /**
    * Record an event for this tick's (or, outside update(), the next tick's)
    * list.
    * @param {GameEvent['type']} type
@@ -268,7 +345,8 @@ export class Game {
 
   /**
    * One fixed tick: player → exits → his cast → his push → objects →
-   * enemies → bolts → bouncing off enemies → enemy contact → events.
+   * enemies (seeing, moving) → bolts → enemy attacks → bouncing off
+   * enemies → enemy contact → events.
    * Walking out through an exit starts a transition: fade out (frozen
    * world), load the next room, fade in (running).
    * @param {import('./core/input.js').Input} input
@@ -330,12 +408,14 @@ export class Game {
     // Enemies after objects, so they step off platforms and crates where those are now.
     // Dead ones too: their pop runs on.
     for (const enemy of this.enemies) {
+      if (enemy.sense(this)) this.emit('alert', { enemy });
       const event = enemy.update(this);
       if (event) this.emit(event, { enemy });
       if (event === 'pop') this.refreshBodies();
     }
     // Bolts after enemies, so they hit enemies where those are now.
     this.updateBolts();
+    this.updateAttacks();
     const bounced = this.bounceOffEnemies();
     this.touchEnemies(bounced);
     this.takePickups();
