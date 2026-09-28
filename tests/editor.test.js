@@ -309,21 +309,25 @@ test('saveEdits merges moves from the world map into world.json; the room editor
     assert.deepEqual(saveEdits(root, { positions: { cache_hall: [4, -3] } }).files, ['data/world.json']);
     assert.deepEqual(read(), { ...before, positions: { ...before.positions, cache_hall: [4, -3] } });
 
-    // A room saved from the editor with a new connection: the move stays, the connection is saved.
-    stale.connections = stale.connections.filter((pair) => !pair.includes('boot_sector.south'));
-    const boot = JSON.parse(readFileSync(join(root, 'data/rooms/boot_sector.json'), 'utf8'));
-    const transit = JSON.parse(readFileSync(join(root, 'data/rooms/transit_bus.json'), 'utf8'));
-    const rooms = [
-      { ...boot, exits: boot.exits.filter((exit) => exit.id !== 'south') },
-      { ...transit, exits: transit.exits.filter((exit) => exit.id !== 'north') },
-    ];
+    // A room saved from the editor with a connection gone (the first one, with
+    // both its exits): the move stays, the connection change is saved.
+    const [dropped] = stale.connections;
+    stale.connections = stale.connections.slice(1);
+    const rooms = dropped.map((ref) => {
+      const [roomId, exitId] = ref.split('.');
+      const room = JSON.parse(readFileSync(join(root, `data/rooms/${roomId}.json`), 'utf8'));
+      return { ...room, exits: room.exits.filter((exit) => exit.id !== exitId) };
+    });
     assert.equal(saveEdits(root, { rooms, world: stale }).ok, true);
     assert.deepEqual(read().positions.cache_hall, [4, -3]);
     assert.deepEqual(read().connections, stale.connections);
 
     // Two rooms in one cell, or an unknown room: nothing is written.
     const text = readFileSync(join(root, 'data/world.json'), 'utf8');
-    assert.match(saveEdits(root, { positions: { stack_yard: [0, 0] } }).errors.join('\n'), /cell \[0,0\] is taken/);
+    // Another room moved onto the start room's cell.
+    const other = Object.keys(before.positions).find((id) => id !== before.start);
+    const [sx, sz] = before.positions[before.start];
+    assert.match(saveEdits(root, { positions: { [other]: [sx, sz] } }).errors.join('\n'), new RegExp(`cell \\[${sx},${sz}\\] is taken`));
     assert.match(saveEdits(root, { positions: { nowhere: [9, 9] } }).errors.join('\n'), /unknown room "nowhere"/);
     assert.equal(saveEdits(root, { positions: [[0, 0]] }).ok, false);
     assert.equal(readFileSync(join(root, 'data/world.json'), 'utf8'), text);
