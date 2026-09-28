@@ -71,7 +71,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `world/map.js` | The world map (D66): `nearestFreeCell()` for new rooms, `roomDistances()` from the start, `mapWarnings()` (unreachable rooms, test rooms too far out, D49) (pure, tested) |
 | `world/path.js` | Shared path format: legs from `at` through `points`, `advance()` / `positionOf()` on a small path state, swept cells |
 | `render/viewport.js` | Letterbox, buffer size and 1080p-relative sizing math (pure, tested) |
-| `render/renderer.js` | WebGLRenderer, 16:9 stage + HUD overlay, DPR cap, render scale, resize |
+| `render/renderer.js` | WebGLRenderer, 16:9 stage + HUD overlay, DPR cap, render scale, MSAA, resize, shader precompile |
+| `render/quality.js` | Automatic quality fallback: steps MSAA, then render scale, down when frames run slow (D76; pure, tested) |
 | `render/camera.js` | Fixed isometric orthographic camera |
 | `render/neon.js` | Palette, line and face materials; line widths scaled by render height; `neonLines()`, `fadingLines()`, `shadedFaces()` builders; `disposeTree()` |
 | `render/post.js` | pmndrs postprocessing composer (bloom) |
@@ -130,7 +131,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `tools/map-pr.bat` | Windows: opens one PR with only `data/rooms/`, `data/world.json` and `data/defs.json` changes, rooms and map together (validates first) |
 | `tools/dev.bat` | Windows: installs packages if needed and starts the dev server, opening the game (or `dev.bat map`: the world map tool, `dev.bat showcase`: the asset showcase) |
 | `debug/overlay.js` | Debug mode's wireframe collision boxes |
-| `debug/readout.js` | Debug mode's stats readout (rates, buffer, GPU resources, actions, position) |
+| `debug/readout.js` | Debug mode's stats readout (rates, buffer and quality, GPU resources, actions, position) |
 
 ## Input
 
@@ -309,9 +310,16 @@ shadow plane) are never freed.
   dark planes with a faint grid and a bright outline.
 - The floor is one large plane with a grid shader that fades with distance
   from the room and has the void color, so it melts into the background.
-- Composer: half-float buffers, 4× MSAA (`?msaa=0` turns it off until
-  there are quality presets), render pass + one effect pass (bloom with
-  mipmap blur, which scales with resolution by itself) (D13).
+- Composer: half-float buffers, 4× MSAA, render pass + one effect pass
+  (bloom with mipmap blur, which scales with resolution by itself) (D13).
+- Auto quality (D76): `AutoQuality` in `main.js` judges frame times in
+  2 s windows and, after two slow ones (below 50 fps), lowers MSAA
+  (4 → 2 → 0), then the render scale (0.75, 0.5), via
+  `Renderer.setQuality()`. `?msaa=` / `?scale=` set quality by hand and
+  turn it off. The debug readout shows the current level.
+- `Renderer.compile()` runs on every room show, before the old room is
+  freed: it compiles hidden objects too and compiles for the composer's
+  buffer, so no shader compiles during play (D76).
 - Window resizing moves the stage at once; the drawing buffers are
   reallocated only once resizing pauses (150 ms).
 

@@ -1129,3 +1129,30 @@ readable (the lights show how many are left). Opening behind him keeps
 every room leavable the way he came without the designer checking both
 sides. A shape, not only a color, marks switches for color-blind players
 and survives bloom (D17).
+
+### D76 — 2026-09-28 — Automatic quality fallback; shaders compiled ahead
+A rendering review (measured on a fast GPU, scaled to weak ones by memory
+bandwidth) found that what a room shows costs little: rooms use 60–130
+draw calls, a bug 4, the wizard 20, and game logic is a few µs per enemy.
+The frame cost on weak GPUs is resolution × 4× MSAA in half-float
+buffers: estimated 13–19 ms at 1080p on an Intel UHD 620, most of the
+60 fps budget. So:
+- **Auto quality** (`render/quality.js`): the game starts at 4× MSAA and
+  full render scale; when two 2 s windows in a row average slower than
+  50 fps, it steps down one level: MSAA 4 → 2 → 0, then render scale
+  0.75 → 0.5. Never back up (no flicker). Two steps that don't make
+  frames faster (a 30 or 50 Hz display, battery-saver frame caps, a slow
+  CPU) go back and stop. `?msaa` or `?scale` set quality by hand and turn
+  it off. Nothing is saved: each load judges again.
+- **Shaders compiled ahead**: `Renderer.compile()` (on every room show)
+  now includes hidden objects (pixel bursts, the cast flare), which
+  otherwise compiled mid-play the first time they appeared, and compiles
+  for the composer's buffer: compiled for the canvas they were the wrong
+  variants (output color space), so room shaders really compiled on the
+  first frame after the fade.
+- **Data disk in 7 draw calls** instead of 36: its 30 zero-bit squares
+  are one line (dashes restart per square, so a ghost looks the same).
+**Why:** protect weak laptops before the Phase 5 quality presets exist;
+the fallback is what those presets will start from. Effects added to the
+existing effect pass are nearly free, while every extra full-screen pass
+costs (~1.6 ms at 1080p on a UHD 620); keep that in mind for Phase 5.

@@ -7,6 +7,10 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Automatic quality fallback (D76): when frames run below 50 fps for a
+  few seconds, multisampling steps down (4 → 2 → 0), then the render
+  scale (0.75, 0.5), so weak laptops stay smooth. `?msaa` / `?scale`
+  still set quality by hand. The debug readout (F3) shows the level.
 - Switches and locked exits (Phase 3 step 4, D75): a Zap target (a fixed
   block a bolt switches on and off) and a floor plate (on while a crate,
   an enemy or the wizard stands on it), both white with a square
@@ -54,6 +58,11 @@ and the project uses [Semantic Versioning](https://semver.org/).
   or the world map (`map`) or the asset showcase (`showcase`).
 
 ### Changed
+- Shaders of hidden effects (pixel bursts, the cast flare) and of each
+  new room are compiled while the room loads, for the buffer they are
+  really drawn into, instead of on first use during play (D76).
+- A data disk takes 7 draw calls instead of 36 (its zero bits are one
+  line); it looks the same (D76).
 - Energy in whole units (D72): 50 at most, one back every 0.2 s, Zap
   costs 10. The HUD energy bar has segments of 10 energy whatever the
   spell (spell costs stay multiples of 10); hidden until the first spell.
