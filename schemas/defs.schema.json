@@ -192,6 +192,18 @@
         "attackCooldown": { "type": "number", "minimum": 0, "maximum": 10, "default": 1.5, "description": "Seconds after a charged attack before it can charge again." },
         "attackColor": { "$ref": "common.schema.json#/$defs/color", "description": "Color of a burst's or arc's lightning or of a bolt; its color by default." },
         "boltSpeed": { "type": "number", "minimum": 0.5, "maximum": 16, "default": 4, "description": "Speed of a bolt in units per second (attack bolt); slow enough to dodge." },
+        "boltPattern": {
+          "enum": ["aimed", "cross"],
+          "default": "aimed",
+          "description": "Shots of a bolt attack (D81). aimed: one at the wizard's middle (level if it bounces); cross: four level shots along the grid axes (a tower), fired when it sees him within attackRange like any charged attack."
+        },
+        "boltBounces": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8,
+          "default": 0,
+          "description": "How often a bolt glances off blocks, room sides and objects before they stop it (D81); after its first bounce it can hit its own shooter too. 0: it doesn't bounce."
+        },
         "integrity": { "type": "integer", "minimum": 1, "maximum": 15, "description": "Hits it takes to destroy (spells, from step 6)." },
         "damage": { "type": "integer", "minimum": 1, "description": "Integrity the wizard loses per attack." },
         "speed": { "type": "number", "exclusiveMinimum": 0, "maximum": 8, "description": "Walking speed in units per second (a path's own speed overrides it)." },

@@ -1334,3 +1334,31 @@ duplication gone, a bolt attack and enemies alerted by the wizard's hits:
 a livelock between chasers; routes stop chasers stranding themselves
 behind a wall they walked round; a bolt reuses the Zap's entity and
 rules instead of a second projectile.
+
+### D81 — 2026-09-28 — Bolt patterns and bounces; any hit alarms
+Amends D80, after the enemy review; the author's answers to four
+questions (each the proposed option):
+- **Bolt options, not new attacks:** the `bolt` attack gets
+  `boltPattern` (`aimed`, the default, or `cross`) and `boltBounces` (0–8,
+  default 0), which combine freely (a tower firing bouncing bolts four
+  ways), instead of two fixed attacks.
+- **Cross** (towers): fired like every charged attack, when it sees the
+  wizard within `attackRange`; four level shots at eye height along the
+  grid axes (`boltDirections()`); the corners between them are safe.
+- **Bounces:** a bouncing bolt is aimed level at the wizard (it bounces
+  in the level plane only) and glances off blocks, the room's sides
+  (closed exits included) and room objects, turning back along the axis
+  it ran into, `boltBounces` times; then the next of them stops it. After
+  its first bounce it can hit its own shooter. Each bounce is a
+  `ricochet` event (sparks). Objects are still never harmed by it.
+- **Any hit alarms:** not only the wizard's Zap but every hit that leaves
+  an enemy hostile, friendly fire from another enemy's burst, arc or bolt
+  included (`Game.hitEnemy()`). The wizard always gets the blame: it
+  turns to him and a chaser searches where he stands.
+- Templates `tower` (a stationary sentinel with a cross) and `ricochet`
+  (a chasing virus whose bolt bounces twice); showcase `?asset=bolts`.
+**Why:** the author's choices. Options keep enemies universal (D78):
+new combinations are data, not code. Level bounces stay readable on the
+isometric screen; a bolt that can come back at its shooter gives the
+wizard a trick. Blaming the wizard for friendly fire lets him stir up a
+room on purpose.

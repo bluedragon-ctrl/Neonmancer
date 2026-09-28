@@ -8,8 +8,8 @@
  *   Enemy.sense()), `route(column)` the first step of a shortest walk to a
  *   column round walls, or null (Enemy.route());
  * - `turnBack()`: the step it was taking is blocked;
- * - optionally `update(senses)`, called every tick, `alarm()`, when the
- *   wizard's Zap hits it (Enemy.alarm()), and `chasing` (true while it
+ * - optionally `update(senses)`, called every tick, `alarm()`, when
+ *   something hits it (Enemy.alarm()), and `chasing` (true while it
  *   moves at its chase speed).
  * A new behavior is a class here, listed in ENEMY_OPTIONS (data/room-data.js)
  * and schemas/defs.schema.json.

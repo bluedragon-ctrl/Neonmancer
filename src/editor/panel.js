@@ -32,6 +32,7 @@ export const ENEMY_FIELDS = {
   movement: ENEMY_OPTIONS.movement,
   hostility: ENEMY_OPTIONS.hostility,
   attack: ENEMY_OPTIONS.attack,
+  boltPattern: ENEMY_OPTIONS.boltPattern,
   bounce: [true, false],
   solid: [true, false],
 };
@@ -45,6 +46,7 @@ export const ENEMY_NUMBERS = {
   aggroRange: [0, 0.5],
   attackRange: [0.5, 0.5],
   boltSpeed: [0.5, 0.5],
+  boltBounces: [0, 1],
 };
 
 /**
@@ -63,6 +65,8 @@ export const ENEMY_ROWS = [
   ['attack', 'touch: touching it hurts; burst: charged lightning all round it; arc: a charged lightning bolt aimed at the wizard; bolt: a charged slow shot at him; none: harmless.'],
   ['attackRange', 'Reach of a burst or arc; how near he must be for a bolt.'],
   ['boltSpeed', 'Speed of a bolt, units per second.'],
+  ['boltPattern', 'aimed: one bolt at the wizard; cross: four bolts along the grid axes (a tower).'],
+  ['boltBounces', 'How often a bolt bounces off walls and objects; after a bounce it can hit its shooter. 0: none.'],
   ['damage', 'Integrity the wizard loses per attack.'],
   ['integrity', 'Hits it takes before it pops.'],
   ['bounce', 'Landing on it bounces the wizard up.'],

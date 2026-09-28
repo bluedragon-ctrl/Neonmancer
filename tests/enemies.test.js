@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { validateData } from '../src/data/validate.js';
+import { boltDirections } from '../src/entities/bolt.js';
 import { ENEMY } from '../src/entities/enemy.js';
 import { Game } from '../src/game.js';
 import { BUG as BUG_LOOK, popPixels } from '../src/render/bug.js';
@@ -13,7 +14,16 @@ import { BUG, CRATE, SENTINEL as SENTINEL_TYPE, VIRUS, dataFiles, eventTypes, ga
 /** A stationary bug firing slow bolts (D80): 12 ticks of charge, 6 units per second. */
 const SHOOTER = { extends: 'bug', movement: 'stationary', attack: 'bolt', aggroRange: 6, attackRange: 6, attackCharge: 0.2, attackCooldown: 2, boltSpeed: 6 };
 
-const TEMPLATES = { bug: BUG, virus: VIRUS, sentinel: SENTINEL_TYPE, shooter: SHOOTER };
+/** A tower (D81): four level bolts along the grid axes, 12 ticks of charge, 6 units per second. */
+const TOWER = { extends: 'sentinel', movement: 'stationary', attack: 'bolt', boltPattern: 'cross', aggroRange: 5, attackRange: 5, attackCharge: 0.2, boltSpeed: 6 };
+
+/** A stationary bug whose bolt bounces once (D81), 8 units per second, a long cooldown. */
+const BOUNCER = { ...SHOOTER, boltBounces: 1, boltSpeed: 8, attackCooldown: 5 };
+
+/** A stationary bug with a burst (friendly fire). */
+const ZAPPER = { extends: 'bug', movement: 'stationary', attack: 'burst', aggroRange: 3, attackRange: 1.2, attackCharge: 0.2 };
+
+const TEMPLATES = { bug: BUG, virus: VIRUS, sentinel: SENTINEL_TYPE, shooter: SHOOTER, tower: TOWER, bouncer: BOUNCER, zapper: ZAPPER };
 
 /** A destructible crate type. */
 const BRITTLE = { ...CRATE, integrity: 1 };
@@ -174,6 +184,22 @@ test('a Zap alarms a hostile bug too ("!"), but not a peaceful one', () => {
   assert.equal(calm.enemies[0].alerted, false);
 });
 
+test("any hit alarms: another enemy's burst sends a chaser looking for the wizard (he gets the blame)", () => {
+  const game = gameWith({
+    enemies: [
+      { id: 'z', template: 'zapper', at: [2, 0, 2] },
+      virus([2, 0, 3], 'v', { aggroRange: 1.5 }), // next to the zapper, but too far to see him
+    ],
+    pos: [3.5, 0, 1.5],
+  });
+  const [, chaser] = game.enemies;
+  until(game, 'discharge');
+  assert.equal(chaser.integrity, VIRUS.integrity - 1, 'caught in the burst');
+  assert.equal(chaser.alerted, true);
+  assert.deepEqual(chaser.lastSeen, [3, 1], 'where the wizard stands');
+  assert.ok(chaser.behavior.chasing, `after him: ${chaser.behavior.mode}`);
+});
+
 test('a popped enemy sees and thinks nothing more', () => {
   const game = gameWith({ enemies: [virus([1, 0, 1])], pos: [3.5, 0, 1.5] });
   const [enemy] = game.enemies;
@@ -246,6 +272,68 @@ test('a shooter aims up at a wizard standing higher', () => {
   assert.equal(game.player.integrity, game.player.maxIntegrity - BUG.damage);
 });
 
+// ---- bolt patterns and bounces (D81)
+
+test('bolt directions: four level axes for a cross; aimed in 3D, or level when it bounces', () => {
+  const from = [1.5, 0.4, 1.5];
+  assert.deepEqual(boltDirections({ boltPattern: 'cross', boltBounces: 0 }, from, [9, 9, 9], 0), [
+    [1, 0, 0],
+    [-1, 0, 0],
+    [0, 0, 1],
+    [0, 0, -1],
+  ]);
+  const [aimed] = boltDirections({ boltPattern: 'aimed', boltBounces: 0 }, from, [4.5, 4.4, 1.5], 0);
+  assert.deepEqual(aimed.map((c) => Math.round(c * 1e9) / 1e9), [0.6, 0.8, 0]);
+  assert.deepEqual(boltDirections({ boltPattern: 'aimed', boltBounces: 2 }, from, [4.5, 4.4, 1.5], 0), [[1, 0, 0]], 'level');
+  const [above] = boltDirections({ boltPattern: 'aimed', boltBounces: 2 }, from, [1.5, 3, 1.5], Math.PI / 2);
+  assert.ok(Math.abs(above[0] - 1) < 1e-9 && above[1] === 0, `the way it faces: ${above}`);
+});
+
+test('a tower fires four ways: bolts along the axes hit the wizard and a bug; its corners are safe', () => {
+  const game = gameWith({ enemies: [{ id: 't', template: 'tower', at: [3, 0, 3] }, sitter([6, 0, 3], 'b', { hostility: 'provoked' })], pos: [3.5, 0, 6.5] });
+  const [tower, bug] = game.enemies;
+  until(game, 'discharge');
+  assert.equal(game.bolts.length, 4);
+  assert.ok(game.bolts.every((bolt) => bolt.owner === tower && bolt.dir[1] === 0));
+  run(game, 60);
+  assert.equal(game.player.integrity, game.player.maxIntegrity - SENTINEL_TYPE.damage, 'the +z bolt');
+  assert.equal(bug.integrity, BUG.integrity - 1, 'the +x bolt');
+  assert.equal(bug.alerted, true, 'alarmed by the hit');
+
+  const corner = gameWith({ enemies: [{ id: 't', template: 'tower', at: [3, 0, 3] }], pos: [5.5, 0, 5.5] });
+  until(corner, 'discharge');
+  run(corner, 60);
+  assert.equal(corner.player.integrity, corner.player.maxIntegrity);
+});
+
+test('a bouncing bolt glances off the room side and comes back at its own shooter', () => {
+  const game = gameWith({ enemies: [{ id: 'b', template: 'bouncer', at: [1, 0, 3] }], pos: [5.5, 0, 3.5] });
+  const [enemy] = game.enemies;
+  until(game, 'discharge');
+  game.player.place([5.5, 0, 6.5]); // out of the way
+  const events = run(game, 100);
+  const ricochets = events.filter((e) => e.type === 'ricochet');
+  assert.equal(ricochets.length, 1);
+  assert.ok(ricochets[0].pos[0] > 7.5 && ricochets[0].dir[0] > 0, `off the +x side, coming in along +x: ${ricochets[0].pos}`);
+  assert.equal(enemy.integrity, BUG.integrity - 1, 'hit by its own bolt');
+  assert.equal(game.player.integrity, game.player.maxIntegrity);
+});
+
+test('a bouncing bolt glances off a crate (unharmed), then stops at the next wall', () => {
+  const game = gameWith({ enemies: [{ id: 'b', template: 'bouncer', at: [1, 0, 3] }], pos: [5.5, 0, 3.5] });
+  const [enemy] = game.enemies;
+  until(game, 'discharge');
+  const crate = new Game(gameData({ rooms: [roomFile('b', { objects: [{ id: 'c', type: 'brittle', at: [3, 0, 3] }] })], objects: { brittle: BRITTLE } })).objects[0];
+  game.objects.push(crate);
+  game.refreshBodies();
+  const [bolt] = game.bolts;
+  const events = run(game, 30);
+  assert.equal(events.filter((e) => e.type === 'ricochet').length, 1);
+  assert.equal(crate.state, 'rest');
+  assert.equal(crate.integrity, 1);
+  assert.equal(bolt.target, enemy, 'back into its shooter');
+});
+
 // ---- data (D80)
 
 test('data: chasers need an aggro range, peaceful enemies no charged attack, nobody starts on a void block', () => {
@@ -258,6 +346,9 @@ test('data: chasers need an aggro range, peaceful enemies no charged attack, nob
   assert.match(errors([shooter([1, 1, 1])], [{ at: [1, 0, 1], type: 'void' }]), /starts on a lethal block at \[1,0,1\]/);
   assert.match(errors([{ ...shooter([1, 0, 1]), overrides: { boltSpeed: 40 } }]), /"boltSpeed" must be between 0\.5 and 16/);
   assert.match(errors([{ ...shooter([1, 0, 1]), overrides: { wings: 2 } }]), /"wings" is not a property of template "shooter"/);
+  assert.match(errors([{ ...shooter([1, 0, 1]), overrides: { boltPattern: 'star' } }]), /"boltPattern" must be one of aimed, cross/);
+  assert.match(errors([{ ...shooter([1, 0, 1]), overrides: { boltBounces: 1.5 } }]), /"boltBounces" must be a whole number/);
+  assert.equal(errors([{ ...shooter([1, 0, 1]), overrides: { boltPattern: 'cross', boltBounces: 3 } }]), '');
 });
 
 // ---- looks

@@ -268,6 +268,8 @@ and burst; a virus can patrol).
 | `attackCooldown` | seconds (default 1.5) | the wait after firing. |
 | `attackColor` | #rrggbb (default: `color`) | lightning or bolt color. |
 | `boltSpeed` | units/s (default 4) | how fast a bolt flies (slow enough to dodge). |
+| `boltPattern` | `aimed`, `cross` (default `aimed`) | a bolt attack's shots: one at the wizard, or four level ones along the grid axes (a tower, D81). |
+| `boltBounces` | 0–8 (default 0) | how often a bolt glances off walls and objects before they stop it (D81). |
 
 | Type | Look | Moves | Attack |
 |---|---|---|---|
@@ -275,6 +277,8 @@ and burst; a virus can patrol).
 | `virus` | yellow sharp cube `#ffe23a`, glides | chase: aggro 5, 2 cells/s calm, 3.5 chasing | burst, range 1.2, charge 0.4 s, cooldown 1.5 s; integrity 2 |
 | `sentinel` | orange sharp octahedron `#ff8a1a`, glides | chase: aggro 7, 1.5 calm, 2.5 chasing; stops 5 away | arc, range 5, charge 0.7 s, cooldown 2 s; integrity 3 |
 | `shooter` | a bug (extends `bug`) | stationary | bolt at 4 units/s, range 6 (aggro 6), charge 0.6 s, cooldown 2 s (D80) |
+| `tower` | a sentinel (extends `sentinel`) | stationary | bolts four ways (`cross`) at 3.5 units/s, range 5 (aggro 5), charge 0.6 s, cooldown 1.8 s (D81) |
+| `ricochet` | a virus (extends `virus`) | chase: aggro 6, stops 5 away | a bolt bouncing twice, 5 units/s, charge 0.6 s, cooldown 2.2 s (D81) |
 
 - **Moving:** an enemy stands in a grid cell (hitbox 0.6 × 0.6 × 0.6,
   centered) and steps one cell at a time (bug: one hop per cell, 3 cells
@@ -301,9 +305,12 @@ and burst; a virus can patrol).
   (a shortest walk over the room's cells, `Enemy.route()`, D80), down
   ledges but never up a step; going back, it stays where it is only when
   there is no way home. It notices him again at any time.
-- **Alarm** (D80): the wizard's Zap hitting a hostile enemy (a provoked
-  one included, once it turns) pops up a "!", turns it to him, and a
-  chaser searches where he stood, as if it had seen him there.
+- **Alarm** (D80, D81): any hit that leaves an enemy hostile (a provoked
+  one included, once it turns) pops up a "!", turns it to the wizard,
+  and a chaser searches where he stands, as if it had seen him there:
+  his Zap, and friendly fire too (another enemy's burst, arc or bolt).
+  The wizard always gets the blame, so he can stir enemies up with
+  friendly fire. Peaceful ones only take the damage.
 - **Patrol:** the shared path format (D46) with level legs (along x or z,
   all at the height of `at`); only x and z count once it walks, so after
   falling off a ledge it keeps to its path below. Ping-pong or loop, pause
@@ -360,6 +367,16 @@ and burst; a virus can patrol).
     sparks there. Room objects shrug it off (it breaks no crate and
     switches no target). Stepping aside while it flies dodges it. The
     Shield doesn't stop it yet (Phase 3 step 7).
+    - `boltPattern: "cross"` (D81, towers): four level shots at eye
+      height along the grid axes (the screen diagonals), fired like any
+      charged attack when it sees him within range; the corners between
+      the axes are safe.
+    - `boltBounces` (D81): a bouncing bolt is aimed level at him and
+      glances off blocks, the room's sides (closed exits too) and room
+      objects that many times, turning back along the axis it ran into
+      (sparks at each bounce, a 'ricochet' event); then the next of them
+      stops it. After its first bounce it can hit its own shooter, so
+      the wizard can dodge and let it come back at the shooter.
 - **Look (bug):** a mint-green hologram ball with two slanted eyes whose
   color shows its mood: red hostile, amber calm until provoked, cyan
   peaceful. It squashes when bounced on, hops as it walks, bobs while
@@ -393,7 +410,7 @@ and burst; a virus can patrol).
   pop, in `src/render/enemy-look.js`), the lightning `DISCHARGE` in
   `src/render/discharge.js`; review in the asset showcase
   (`/tools/showcase.html?asset=bugs,viruses,sentinels`; the bolt:
-  `bug-bolt`).
+  `bug-bolt`, `?asset=bolts` for the tower and the ricochet).
 
 ## Pickups and progress
 

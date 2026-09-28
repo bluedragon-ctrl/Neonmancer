@@ -192,9 +192,9 @@ a look, a movement, an attack (touch, burst, arc, bolt or none) and a
 color, and any of them combine. Template fields in `defs.json` (look,
 movement, attack, hostility — hostile / peaceful / provoked —, aggro
 range, integrity, damage, speed, chase speed, bounce, solid, color, a
-charged attack's range, charge, cooldown and color, and a bolt's speed),
-overridable per enemy in the room. The wizard's Zap alerts the enemy it
-hits.
+charged attack's range, charge, cooldown and color, and a bolt's speed,
+pattern — aimed or four ways — and bounces), overridable per enemy in
+the room. Any hit alerts an enemy, and the wizard gets the blame (D81).
 Eye color shows hostility (red hostile, amber provoked, cyan peaceful);
 a red "!" pops up over one that notices the wizard. Enemies move cell by
 cell with physics (fall, ride platforms), never step into holes or onto

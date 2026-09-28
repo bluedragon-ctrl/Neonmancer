@@ -12,8 +12,14 @@ and the project uses [Semantic Versioning](https://semver.org/).
   up or down too; it stops at him, another enemy, a block, an object or
   the room's side, and stepping aside dodges it. A `shooter` template (a
   stationary bug with a bolt), editor field, showcase `bug-bolt`.
-- An enemy the wizard's Zap hits turns to him with a "!" (D80); a chaser
-  searches where he stood.
+- An enemy that is hit turns to the wizard with a "!" and a chaser
+  searches where he stands (D80, D81): by his Zap, and by another enemy's
+  burst, arc or bolt too (he gets the blame).
+- Bolt patterns and bounces (D81): `boltPattern: "cross"` fires four
+  level bolts along the grid axes (towers); `boltBounces` makes a bolt
+  glance off walls and objects (sparks at each bounce), and after a
+  bounce it can hit its own shooter. Templates `tower` and `ricochet`,
+  editor fields, showcase `?asset=bolts`.
 - Viruses and Sentinels, and universal enemies (Phase 3 step 5, D78). An
   enemy type now names its look (`look`: bug, virus, sentinel), and any
   look combines with any movement and attack in data. A new `chase`

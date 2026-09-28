@@ -3,7 +3,7 @@
  * where he was last seen for a while, then go home. Pure logic; the enemy
  * does the seeing (Enemy.sense()) and hands it over every tick (update()).
  *
- *   calm ──sees him, or his Zap hits it──► chase / search ──memory runs out──► return ──home──► calm
+ *   calm ──sees him, or something hits it──► chase / search ──memory runs out──► return ──home──► calm
  *     ▲                                      ▲    │                               │
  *     │                                      └────┴──────────sees him─────────────┘
  *     └── with a path, it patrols while calm, and goes straight back to it after a search
@@ -55,7 +55,7 @@ export class Chase {
     if (this.mode === 'search' && --this.search <= 0) this.mode = this.patrol ? 'calm' : 'return';
   }
 
-  /** The wizard's Zap hit it (Enemy.alarm()): it searches where he stood, unless it is after him already. */
+  /** Something hit it (Enemy.alarm()): it searches where the wizard stood, unless it is after him already. */
   alarm() {
     if (this.mode === 'chase') return;
     this.mode = 'search';

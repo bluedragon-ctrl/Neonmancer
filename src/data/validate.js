@@ -462,6 +462,7 @@ const OVERRIDE_RANGES = {
   attackCharge: [0, 3, false],
   attackCooldown: [0, 10, false],
   boltSpeed: [0.5, 16, false],
+  boltBounces: [0, 8, true],
   integrity: [1, 15, true],
   damage: [1, 99, true],
 };

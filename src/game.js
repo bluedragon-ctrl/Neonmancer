@@ -6,7 +6,7 @@ import { DT } from './core/loop.js';
 import { boxCenter, castRay, cellsAlong, direction, lineOfSight, reach } from './ai/sight.js';
 import { announce, say } from './core/messages.js';
 import { exitCells, isBackSide, sideAxes, withExitDefaults } from './data/room-data.js';
-import { Bolt } from './entities/bolt.js';
+import { Bolt, boltDirections } from './entities/bolt.js';
 import { Enemy } from './entities/enemy.js';
 import { createObject } from './entities/kinds.js';
 import { Pickup } from './entities/pickup.js';
@@ -50,16 +50,19 @@ export const TRANSITION = {
  * Something that happened, for views, the HUD and (later) sound. Returned
  * by Game.update() for the tick it happened in.
  * @typedef {object} GameEvent
- * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'} type
+ * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'} type
  * @property {string} [spell] the spell cast, failed or selected (cast, deny, spell)
  * @property {object} [object] the room object it happened to (push, plug,
  *   land of an object; shake, collapse and regrow of a collapsing block;
  *   hit by a spell, break of a destructible one; a switch going on or off)
  * @property {object} [enemy] the enemy it happened to (pop, land of an
  *   enemy, bounce off it, hit by a spell, a discharge or a bolt; it noticed
- *   the wizard or his Zap hit it: alert; its charged attack: charge,
- *   discharge (a burst, an arc or a bolt fired)) or that hurt the wizard (hurt)
- * @property {Bolt} [bolt] the bolt that stopped (zap: the wizard's or an enemy's), where it is now
+ *   the wizard or something hit it: alert; its charged attack: charge,
+ *   discharge (a burst, an arc or bolts fired)) or that hurt the wizard (hurt)
+ * @property {Bolt} [bolt] the bolt that stopped (zap: the wizard's or an
+ *   enemy's), where it is now, or that bounced (ricochet)
+ * @property {number[]} [pos] where a bolt bounced (ricochet)
+ * @property {number[]} [dir] the way it came in (ricochet)
  * @property {number} [amount] integrity lost (hurt)
  * @property {number[]} [cell] the block that hurt him (hurt), [x, y, z]
  * @property {'hole'|'void'|'damage'} [cause] how the wizard died (die)
@@ -214,31 +217,53 @@ export class Game {
   }
 
   /**
-   * Bolts fly on. One that stops is reported ('zap', for its sparks) and
-   * gone. If it stopped at the wizard (an enemy's shot), he is hurt; at an
-   * enemy, that takes its damage: 'hit' or, with its last integrity, 'pop';
-   * one the wizard's Zap hit and didn't pop turns to him ('alert', D80). A
-   * room object only minds the wizard's Zap: a destructible one 'hit' or
-   * 'break', a target 'switch' (others shrug it off).
+   * Bolts fly on. A bounce is reported ('ricochet', with where and the way
+   * it came in, for sparks). One that stops is reported ('zap', for its
+   * sparks) and gone. If it stopped at the wizard (an enemy's shot), he is
+   * hurt; at an enemy, that takes its damage (hitEnemy()). A room object
+   * only minds the wizard's Zap: a destructible one 'hit' or 'break', a
+   * target 'switch' (others shrug it off).
    */
   updateBolts() {
     for (const bolt of this.bolts) {
-      if (!bolt.update(this)) continue;
+      const stopped = bolt.update(this);
+      for (const { pos, dir } of bolt.rebounds) this.emit('ricochet', { bolt, pos, dir });
+      if (!stopped) continue;
       this.emit('zap', { bolt });
       const { target, owner } = bolt;
       if (target === this.player) {
         this.hurt(bolt.damage, { enemy: owner });
         continue;
       }
-      if (owner && !(target instanceof Enemy)) continue;
-      const event = target?.hit?.(bolt.damage, owner ? 'bolt' : 'zap');
+      if (target instanceof Enemy) {
+        this.hitEnemy(target, bolt.damage, owner ? 'bolt' : 'zap');
+        continue;
+      }
+      if (owner) continue;
+      const event = target?.hit?.(bolt.damage, 'zap');
       if (!event) continue;
-      this.emit(event, target instanceof Enemy ? { enemy: target } : { object: target });
-      if (!owner && event === 'hit' && target instanceof Enemy && target.alarm(this.player)) this.emit('alert', { enemy: target });
+      this.emit(event, { object: target });
       // Whatever stood on a broken crate falls from the next tick.
-      if (event === 'pop' || event === 'break') this.refreshBodies();
+      if (event === 'break') this.refreshBodies();
     }
     if (this.bolts.some((bolt) => bolt.stopped)) this.bolts = this.bolts.filter((bolt) => !bolt.stopped);
+  }
+
+  /**
+   * An enemy takes a hit, from the wizard's spell or another enemy's
+   * discharge or bolt: 'hit' or, with its last integrity, 'pop' (then
+   * refreshBodies()). Any hit that leaves it hostile alarms it (D80, D81):
+   * the wizard gets the blame, so it turns to him ('alert').
+   * @param {Enemy} enemy
+   * @param {number} damage
+   * @param {'zap'|'discharge'|'bolt'} cause
+   */
+  hitEnemy(enemy, damage, cause) {
+    const event = enemy.hit(damage, cause);
+    if (!event) return;
+    this.emit(event, { enemy });
+    if (event === 'pop') this.refreshBodies();
+    else if (enemy.alarm(this.player)) this.emit('alert', { enemy });
   }
 
   /**
@@ -269,19 +294,20 @@ export class Game {
   }
 
   /**
-   * A charged attack fires (D78, D80). A bolt flies off at the wizard's
-   * middle as he is now (entities/bolt.js; updateBolts() resolves it). A
-   * burst hits every body within its range that it could see: the wizard
-   * and other enemies. An arc flies along its aim until a block or an
-   * object stops it (unharmed) or its range runs out, and hits every body
-   * in the squares it passes through: the wizard and other enemies.
+   * A charged attack fires (D78, D80, D81). Bolts fly off at the wizard's
+   * middle as he is now, or four ways (boltDirections(); updateBolts()
+   * resolves them). A burst hits every body within its range that it
+   * could see: the wizard and other enemies. An arc flies along its aim
+   * until a block or an object stops it (unharmed) or its range runs out,
+   * and hits every body in the squares it passes through: the wizard and
+   * other enemies.
    * @param {Enemy} enemy
    */
   discharge(enemy) {
     const { attack, attackRange } = enemy.data;
     const from = enemy.middle();
     if (attack === 'bolt') {
-      this.bolts.push(Bolt.shoot(enemy, direction(from, boxCenter(this.player.box()))));
+      for (const dir of boltDirections(enemy.data, from, boxCenter(this.player.box()), enemy.facing)) this.bolts.push(Bolt.shoot(enemy, dir));
       return;
     }
     let hits;
@@ -300,16 +326,14 @@ export class Game {
 
   /**
    * A discharge from `enemy` hits the wizard (hurt) or another enemy
-   * (hit, or pop with its last integrity).
+   * (hitEnemy()).
    * @param {Player|Enemy} body
    * @param {Enemy} enemy
    */
   strike(body, enemy) {
     const { damage } = enemy.data;
     if (body === this.player) return this.hurt(damage, { enemy });
-    const event = body.hit(damage, 'discharge');
-    if (event) this.emit(event, { enemy: body });
-    if (event === 'pop') this.refreshBodies();
+    this.hitEnemy(body, damage, 'discharge');
   }
 
   /**

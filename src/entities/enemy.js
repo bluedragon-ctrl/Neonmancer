@@ -21,8 +21,8 @@
  * turns it back to the cell it left, where it waits turnTicks (D80).
  * Seeing: a hostile enemy with an aggro range notices the wizard within it
  * when nothing blocks the line between them (ai/sight.js); a "!" pops up
- * over it then, when a provoked one turns hostile, and when the wizard's
- * Zap hits it (it turns to him and looks for him there, alarm(), D80).
+ * over it then, when a provoked one turns hostile, and when anything hits
+ * it (it turns to the wizard and looks for him there, alarm(), D80, D81).
  * Charged attack (burst, arc or bolt): seeing him within its attack range
  * at rest, it stops, charges, fires (Game.discharge()), then cools down.
  *
@@ -169,9 +169,10 @@ export class Enemy {
   }
 
   /**
-   * The wizard's Zap hit it (D80): if that leaves it hostile, it turns to
-   * him and looks for him where he stands (a chaser searches there) and a
-   * "!" pops up.
+   * Something hit it (D80, D81: his Zap, or another enemy's discharge or
+   * bolt; the wizard gets the blame): if that leaves it hostile, it turns
+   * to him and looks for him where he stands (a chaser searches there) and
+   * a "!" pops up.
    * @param {{ pos: number[], dead: boolean }} player
    * @returns {boolean} whether it has just noticed him (a new "!"; not if it saw him already)
    */

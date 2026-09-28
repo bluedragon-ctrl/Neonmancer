@@ -120,13 +120,15 @@ export const OBJECT_STYLE_DEFAULTS = {
  * a behavior module (ai/behaviors.js); attack: how it hurts (touch: touching
  * it; burst, arc and bolt: charged attacks, CHARGED_ATTACKS; none: never);
  * hostility: hostile hurts, peaceful never does, provoked turns hostile once
- * a spell, a discharge or a bolt hits it.
+ * a spell, a discharge or a bolt hits it; boltPattern: a bolt attack's
+ * shots, one aimed at the wizard or four along the grid axes (D81).
  */
 export const ENEMY_OPTIONS = {
   look: ['bug', 'virus', 'sentinel'],
   movement: ['patrol', 'stationary', 'chase'],
   attack: ['touch', 'burst', 'arc', 'bolt', 'none'],
   hostility: ['hostile', 'peaceful', 'provoked'],
+  boltPattern: ['aimed', 'cross'],
 };
 
 /**
@@ -147,9 +149,9 @@ export const CHARGED_ATTACKS = [...DISCHARGES, 'bolt'];
  * Enemy template fields that may be left out: aggro range (units), bounce (a
  * trampoline top), solid (blocks, carries and shoves the wizard), memory
  * (seconds a chaser searches after losing sight of him), a charged attack's
- * range (units), charge and cooldown (seconds), and a bolt's speed (units
- * per second). chaseSpeed and attackColor default to the enemy's speed and
- * color (withEnemyDefaults()).
+ * range (units), charge and cooldown (seconds), and a bolt attack's speed
+ * (units per second), pattern and bounces (D81). chaseSpeed and attackColor
+ * default to the enemy's speed and color (withEnemyDefaults()).
  */
 export const ENEMY_DEFAULTS = {
   aggroRange: 0,
@@ -160,6 +162,8 @@ export const ENEMY_DEFAULTS = {
   attackCharge: 0.4,
   attackCooldown: 1.5,
   boltSpeed: 4,
+  boltPattern: 'aimed',
+  boltBounces: 0,
 };
 
 /** Enemy template fields every template needs, its own or from the ones it extends (as in the schema). */

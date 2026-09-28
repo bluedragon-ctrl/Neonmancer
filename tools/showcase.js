@@ -13,7 +13,7 @@
 import { Group, Vector3 } from 'three';
 import defs from '../data/defs.json';
 import strings from '../data/strings.json';
-import { OBJECT_STYLE_DEFAULTS, resolveBlockTypes, withExitDefaults } from '../src/data/room-data.js';
+import { OBJECT_STYLE_DEFAULTS, resolveBlockTypes, resolveEnemyTemplates, withEnemyDefaults, withExitDefaults } from '../src/data/room-data.js';
 import { VIEW_HEIGHT, frameRoom } from '../src/render/camera.js';
 import { PLAYER } from '../src/entities/player.js';
 import { PLAYER_HITBOX } from '../src/core/rules.js';
@@ -104,6 +104,10 @@ const ALL_ASSETS = [
   // The bolt attack (D80): a shooter (a stationary bug) charging and
   // firing a slow shot in its color at the wizard.
   { label: 'bug-bolt', group: 'bugs', span: 6, spin: false, build: buildBoltShot },
+  // Bolt patterns and bounces (D81): a tower firing four ways, a
+  // ricochet glancing a bolt off a crate into the wizard.
+  { label: 'bolt-cross', group: 'bolts', span: 6, spin: false, build: buildBoltCross },
+  { label: 'bolt-ricochet', group: 'bolts', span: 6, spin: false, build: buildBoltRicochet },
   // Viruses (Phase 3 step 5, D78): gliding calm, then after the wizard
   // ("!"); the burst discharge on the wizard; a pop.
   { label: 'virus', group: 'viruses', build: buildVirus },
@@ -765,16 +769,89 @@ function buildBurst(type) {
   return asset;
 }
 
+/** An enemy template from defs.json, filled in (D79) with every default. */
+function enemyValues(id) {
+  return withEnemyDefaults(resolveEnemyTemplates(defs.enemies)[id]);
+}
+
+/**
+ * Bolts (D80, D81) flying along `routes` at `speed`, in `color`: each route
+ * a polyline, its first point where the bolt leaves, one per bolt; sparks
+ * at every bounce and where it stops. Returns `update(flown)` (ticks since
+ * they were fired, negative before) and each route's flight in ticks.
+ * @param {Group} asset the bolts and sparks are added to
+ */
+function boltRuns(asset, color, routes, speed) {
+  const runs = routes.map((points) => {
+    const legs = points.slice(1).map((to, i) => {
+      const from = points[i];
+      const d = to.map((v, k) => v - from[k]);
+      const length = Math.hypot(...d);
+      return { from, to, dir: d.map((c) => c / length), length };
+    });
+    const bolt = createBolt(color);
+    const sparks = legs.map(() => createSparks(color));
+    asset.add(bolt, ...sparks);
+    return { legs, bolt, sparks, length: legs.reduce((sum, leg) => sum + leg.length, 0) };
+  });
+  const update = (flown) => {
+    const traveled = (Math.max(0, flown) / 60) * speed;
+    for (const { legs, bolt, sparks, length } of runs) {
+      bolt.visible = flown >= 0 && traveled < length;
+      let start = 0;
+      legs.forEach((leg, i) => {
+        const end = start + leg.length;
+        if (bolt.visible && traveled >= start && traveled < end) {
+          placeBolt(bolt, leg.from.map((f, k) => f + leg.dir[k] * (traveled - start)), leg.dir, flown, traveled);
+        }
+        placeSparks(sparks[i], leg.to, leg.dir, flown >= 0 && traveled >= end ? ((traveled - end) / speed) * 60 : -1);
+        start = end;
+      });
+    }
+  };
+  return { update, ticks: runs.map(({ length }) => (length / speed) * 60) };
+}
+
+/** The point `distance` from `from` towards `to`. */
+const towards3 = (from, to, distance) => {
+  const d = to.map((v, k) => v - from[k]);
+  const length = Math.hypot(...d);
+  return from.map((f, k) => f + (d[k] / length) * distance);
+};
+
+/**
+ * A charged bolt attack in a loop: `model` charges, then `runs` fly;
+ * `hit` is the tick (after firing) the wizard is hit, if he is.
+ */
+function loopBoltAttack(asset, { model, animate, markHeight, charge, runs, wizard, hit }) {
+  const mark = addMark(asset, markHeight, model.position);
+  const loop = Math.ceil(charge + Math.max(...runs.ticks) + 80);
+  let tick = 0;
+  asset.userData.update = (dt, time) => {
+    tick = (tick + dt * 60) % loop;
+    const attack = tick < charge + ENEMY.dischargeTicks ? tick : null;
+    animate(model, { time, alert: 1, attack, charge });
+    showGlow(model, attack, charge);
+    mark(1, time);
+    const flown = tick - charge;
+    runs.update(flown);
+    showWizardHit(wizard, flown >= hit ? flown - hit : null);
+  };
+}
+
+/** Where a bolt from eyes at `eyes` stops at the wizard standing at `feet` (his box, half 0.3, and its own). */
+function boltStopAtWizard(eyes, feet) {
+  const middle = [feet[0], PLAYER_HITBOX[1] / 2, feet[2]];
+  return towards3(eyes, middle, Math.hypot(...middle.map((v, k) => v - eyes[k])) - PLAYER_HITBOX[0] / 2 - BOLT.size / 2);
+}
+
 /**
  * The bolt attack (D80) in a loop: a shooter (defs.json, a stationary bug)
  * charges, then fires a slow shot in its attack color at the wizard 4
  * away; it bursts into sparks on him and he flashes.
  */
 function buildBoltShot() {
-  const values = { ...defs.enemies.bug, ...defs.enemies.shooter };
-  const { color, attackCharge, boltSpeed } = values;
-  const attackColor = values.attackColor ?? color;
-  const charge = Math.round(attackCharge * 60);
+  const { color, attackColor, attackCharge, boltSpeed } = enemyValues('shooter');
   // Along the row on screen.
   const u = [Math.SQRT1_2, 0, -Math.SQRT1_2];
   const bug = createBug(color);
@@ -783,34 +860,65 @@ function buildBoltShot() {
   const wizard = createWizard();
   wizard.position.set(u[0] * 2, 0, u[2] * 2);
   wizard.rotation.y = Math.atan2(-u[0], -u[2]);
-  const bolt = createBolt(attackColor);
-  const sparks = createSparks(attackColor);
-  const asset = new Group().add(bug, wizard, bolt, sparks);
-  const mark = addMark(asset, BUG_MODEL.markHeight, bug.position);
-  // From its eyes at his middle (Bolt.shoot()); it stops at his box (half 0.3) with its own (half size).
+  const asset = new Group().add(bug, wizard);
+  // From its eyes at his middle (Bolt.shoot()).
   const eyes = [bug.position.x, ENEMY.eyeHeight, bug.position.z];
-  const d = [wizard.position.x - eyes[0], PLAYER_HITBOX[1] / 2 - eyes[1], wizard.position.z - eyes[2]];
-  const length = Math.hypot(...d);
-  const dir = d.map((c) => c / length);
-  const from = eyes.map((e, k) => e + dir[k] * BOLT.reach);
-  const flight = length - BOLT.reach - PLAYER_HITBOX[0] / 2 - BOLT.size / 2;
-  const flyTicks = (flight / boltSpeed) * 60;
-  const loop = Math.ceil(charge + flyTicks + 80);
-  let tick = 0;
-  asset.userData.update = (dt, time) => {
-    tick = (tick + dt * 60) % loop;
-    const attack = tick < charge + ENEMY.dischargeTicks ? tick : null;
-    animateBug(bug, { time, attack, charge });
-    showGlow(bug, attack, charge);
-    mark(1, time);
-    const flown = tick - charge;
-    bolt.visible = flown >= 0 && flown < flyTicks;
-    const traveled = (Math.max(0, flown) / 60) * boltSpeed;
-    if (bolt.visible) placeBolt(bolt, from.map((f, k) => f + dir[k] * traveled), dir, flown, traveled);
-    const since = flown >= flyTicks ? flown - flyTicks : null;
-    placeSparks(sparks, from.map((f, k) => f + dir[k] * flight), dir, since ?? -1);
-    showWizardHit(wizard, since);
-  };
+  const stop = boltStopAtWizard(eyes, wizard.position.toArray());
+  const from = towards3(eyes, stop, BOLT.reach);
+  const runs = boltRuns(asset, attackColor, [[from, stop]], boltSpeed);
+  loopBoltAttack(asset, { model: bug, animate: animateBug, markHeight: BUG_MODEL.markHeight, charge: Math.round(attackCharge * 60), runs, wizard, hit: runs.ticks[0] });
+  return asset;
+}
+
+/**
+ * The four-way bolt (D81) in a loop: a tower (defs.json, a stationary
+ * sentinel) charges, then fires four level bolts along the grid axes; the
+ * one along +z hits the wizard, the others spark out 2.4 away (walls).
+ */
+function buildBoltCross() {
+  const { color, attackColor, attackCharge, boltSpeed } = enemyValues('tower');
+  const tower = createSentinel(color);
+  const wizard = createWizard();
+  wizard.position.set(0, 0, 2.2);
+  wizard.rotation.y = Math.PI;
+  const asset = new Group().add(tower, wizard);
+  const eyes = [0, ENEMY.eyeHeight, 0];
+  const routes = [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]].map((dir) => {
+    const reach = dir[2] === 1 ? 2.2 - PLAYER_HITBOX[2] / 2 - BOLT.size / 2 : 2.4;
+    return [BOLT.reach, reach].map((d) => eyes.map((e, k) => e + dir[k] * d));
+  });
+  const runs = boltRuns(asset, attackColor, routes, boltSpeed);
+  loopBoltAttack(asset, { model: tower, animate: animateSentinel, markHeight: SENTINEL.markHeight, charge: Math.round(attackCharge * 60), runs, wizard, hit: runs.ticks[2] });
+  return asset;
+}
+
+/**
+ * The bouncing bolt (D81) in a loop: a ricochet (defs.json, a virus)
+ * fires a level shot at a crate, which it glances off (sparks) into the
+ * wizard beside it.
+ */
+function buildBoltRicochet() {
+  const { color, attackColor, attackCharge, boltSpeed } = enemyValues('ricochet');
+  const virus = createVirus(color);
+  virus.position.set(-1.5, 0, 0.8);
+  const wizard = createWizard();
+  wizard.position.set(-1.5, 0, -2);
+  wizard.rotation.y = Math.PI / 2;
+  // A crate with its −x face at x = 1, z from −1 to 0.
+  const crate = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...defs.objects.crate, at: [1, 0, -1] });
+  const asset = new Group().add(virus, wizard, crate);
+  const eyes = [virus.position.x, ENEMY.eyeHeight, virus.position.z];
+  const bounce = [1 - BOLT.size / 2, ENEMY.eyeHeight, -0.5];
+  virus.rotation.y = Math.atan2(bounce[0] - eyes[0], bounce[2] - eyes[2]);
+  const from = towards3(eyes, bounce, BOLT.reach);
+  // Glancing off the crate's side: back along x, on along z, to his side.
+  const d = bounce.map((v, k) => v - eyes[k]);
+  const stopX = wizard.position.x + PLAYER_HITBOX[0] / 2 + BOLT.size / 2;
+  const t = (bounce[0] - stopX) / d[0];
+  const stop = [stopX, ENEMY.eyeHeight, bounce[2] + d[2] * t];
+  wizard.position.z = stop[2];
+  const runs = boltRuns(asset, attackColor, [[from, bounce, stop]], boltSpeed);
+  loopBoltAttack(asset, { model: virus, animate: animateVirus, markHeight: VIRUS.markHeight, charge: Math.round(attackCharge * 60), runs, wizard, hit: runs.ticks[0] });
   return asset;
 }
 

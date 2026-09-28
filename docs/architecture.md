@@ -61,9 +61,9 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `entities/pushable.js` | Rest → slide → fall → land / plug-a-hole state machine; destructible ones break (`hit()` → `broken`) |
 | `entities/platform.js` | Moving platform: follows its path, carries riders, waits when blocked, shoves or squeezes the wizard (D46) |
 | `entities/collapsing.js` | Collapsing block: solid → shake (the wizard stood on it) → gone → optional regrow once its cell is clear (D47) |
-| `entities/enemy.js` | Enemy body: steps cell by cell where its movement behavior leads (never into a hole or onto void, never into a cell another enemy is walking into), turns back when blocked, falls (mid-step too), rides platforms, pops in holes and on void; hostility, provoke, bounce state (D48); seeing the wizard, the "!", the charged attack's charge and cooldown (D78); `alarm()` when his Zap hits it and `route()`, a shortest walk to a column (D80) |
+| `entities/enemy.js` | Enemy body: steps cell by cell where its movement behavior leads (never into a hole or onto void, never into a cell another enemy is walking into), turns back when blocked, falls (mid-step too), rides platforms, pops in holes and on void; hostility, provoke, bounce state (D48); seeing the wizard, the "!", the charged attack's charge and cooldown (D78); `alarm()` when anything hits it (D81) and `route()`, a shortest walk to a column (D80) |
 | `entities/switch.js` | Switches (D75): `Target` (a fixed body a bolt switches over) and `Plate` (a floor tile, no body, on while something stands on it); `SWITCH_KINDS` (pure, tested) |
-| `entities/bolt.js` | A bolt: the wizard's Zap (`Bolt.cast()`, level) or an enemy's shot (`Bolt.shoot()`, D80, aimed in 3D); flies in sub-steps, stops at the first body it may hit, block, object or room side (`BOLT` tuning) |
+| `entities/bolt.js` | A bolt: the wizard's Zap (`Bolt.cast()`, level) or an enemy's shot (`Bolt.shoot()`, D80; `boltDirections()`: aimed, or four ways, D81); flies in sub-steps one axis at a time, bounces off walls and objects if it has bounces left (D81), stops at the first body it may hit, block, object or room side (`BOLT` tuning) |
 | `ai/behaviors.js` | Movement behaviors by name (`BEHAVIORS`: `patrol`, `stationary`, `chase`), as enemy templates refer to them |
 | `ai/patrol.js` | Patrol: next step towards the next waypoint column, pauses at the ends, turns back; off its path it takes the enemy's route back (pure, tested) |
 | `ai/chase.js` | Chase (D78, D80): calm → chase → search → return, greedy steps towards the wizard, routes (round walls) to where it last saw him and home, searches when his Zap hits it, patrols while calm if it has a path (pure, tested) |
@@ -277,12 +277,17 @@ an `alert` event unless it saw him already). A room object it stopped at
 takes `hit(damage)` if it has one: a pushable with `integrity` reports
 `hit` or, at 0, `break` (state `broken`, `solid` false, so
 `refreshBodies()` drops it and what stood on it falls next tick);
-indestructible ones return null. An enemy's `bolt` attack (D80) puts a
-`Bolt.shoot()` in the same list when `Game.discharge()` fires it, with
-the enemy as its `owner`: it stops at the wizard (`hurt()` with the
-enemy), another enemy (`hit(damage, 'bolt')`), a block, an object
-(unharmed) or the room side. Bolts belong to the room: `enterRoom()`
-clears them.
+indestructible ones return null. An enemy's `bolt` attack (D80) puts
+`Bolt.shoot()`s in the same list when `Game.discharge()` fires it (one,
+or four for a `cross`, D81), with the enemy as their `owner`: a bolt
+stops at the wizard (`hurt()` with the enemy), another enemy (or, after
+a bounce, its own; `hit(damage, 'bolt')`), a block, an object (unharmed)
+or the room side; a bouncing one glances off blocks and objects first
+(`ricochet` events, passed to `RoomScene.sparks()` too). Every hit on an
+enemy, a spell's, a discharge's or a bolt's, goes through
+`Game.hitEnemy()`: it emits `hit` or `pop`, and alarms one left hostile
+(`Enemy.alarm()`, D81). Bolts belong to the room: `enterRoom()` clears
+them.
 Energy recharges in `Player.update()` and lives on the `Player`, so it
 carries over between rooms.
 

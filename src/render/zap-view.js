@@ -176,10 +176,13 @@ export class ZapView {
   }
 
   /**
-   * A bolt stopped: sparks at where it is now, flying back against its flight.
+   * A bolt stopped (or bounced): sparks at where it is now, flying back
+   * against its flight.
    * @param {import('../entities/bolt.js').Bolt} bolt
+   * @param {number[]} [pos] where; where the bolt is by default
+   * @param {number[]} [dir] the flight it came in on; the bolt's by default
    */
-  spark(bolt) {
+  spark(bolt, pos = bolt.pos, dir = bolt.dir) {
     const color = bolt.color ?? PALETTE.cyan;
     let spark = this.sparks.find((s) => s.done && s.color === color);
     if (!spark) {
@@ -187,7 +190,7 @@ export class ZapView {
       this.sparks.push(spark);
       this.group.add(spark.view);
     }
-    Object.assign(spark, { pos: [...bolt.pos], dir: bolt.dir, tick: 0, done: false });
+    Object.assign(spark, { pos: [...pos], dir: [...dir], tick: 0, done: false });
   }
 
   /**

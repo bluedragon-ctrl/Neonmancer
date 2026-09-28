@@ -63,6 +63,27 @@
       "attackCharge": 0.6,
       "attackCooldown": 2,
       "boltSpeed": 4
+    },
+    "tower": {
+      "extends": "sentinel",
+      "movement": "stationary",
+      "attack": "bolt",
+      "boltPattern": "cross",
+      "aggroRange": 5,
+      "attackRange": 5,
+      "attackCharge": 0.6,
+      "attackCooldown": 1.8,
+      "boltSpeed": 3.5
+    },
+    "ricochet": {
+      "extends": "virus",
+      "attack": "bolt",
+      "boltBounces": 2,
+      "aggroRange": 6,
+      "attackRange": 5,
+      "attackCharge": 0.6,
+      "attackCooldown": 2.2,
+      "boltSpeed": 5
     }
   },
   "spells": {
