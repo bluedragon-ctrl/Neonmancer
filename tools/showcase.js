@@ -55,6 +55,10 @@ import { createInstall, placeInstall } from '../src/render/install-view.js';
 import { createShield, placeShield } from '../src/render/shield-view.js';
 import { createLock, createPlate, createTarget } from '../src/render/switch-view.js';
 import { SWITCH_KINDS } from '../src/entities/switch.js';
+import { POPUP_MODEL, POPUP_MUZZLE, createPopupShot, placePopupShot } from '../src/render/popup.js';
+import { CRON, CRON_MODEL, createCronPulse, placeCronPulse } from '../src/render/cron.js';
+import { WORM_MODEL } from '../src/render/worm.js';
+import { CRAWLER_MODEL } from '../src/render/crawler.js';
 
 /** Block types with variants filled in (D60). */
 const BLOCK_TYPES = resolveBlockTypes(defs.blocks);
@@ -63,6 +67,14 @@ const BLOCK_TYPES = resolveBlockTypes(defs.blocks);
 const SPACING = 3;
 /** Turning speed in radians per second. */
 const SPIN = 0.6;
+
+/** Proposed enemies (not in defs.json yet): their models and colors, for review. */
+const PROPOSED = {
+  popup: { model: POPUP_MODEL, color: '#c86bff' },
+  cron: { model: CRON_MODEL, color: '#ff4f7a', period: 3, range: 1.6 },
+  worm: { model: WORM_MODEL, color: '#4f7dff', speed: 2, chaseSpeed: 3 },
+  crawler: { model: CRAWLER_MODEL, color: '#3dffd0', speed: 2, chaseSpeed: 3.5 },
+};
 
 /**
  * Showcased assets: a label and a function building the model centered on
@@ -110,6 +122,18 @@ const ALL_ASSETS = [
   { label: 'sentinel', group: 'sentinels', build: buildSentinel },
   { label: 'sentinel-attack', group: 'sentinels', span: 7, spin: false, build: buildSentinelAttack },
   { label: 'sentinel-pop', group: 'sentinels', build: buildSentinelPop },
+  // Proposed enemies (not in the game yet), two static and two moving:
+  // a pop-up window that springs up and lobs a slow shot; a cron clock that
+  // pulses a ring along the floor every time its hand comes round; a worm
+  // inching along; a six-legged crawler. Calm, then after the wizard; their
+  // attacks on the wizard; pops.
+  { label: 'popup', group: 'proposals', build: buildPopup },
+  { label: 'popup-attack', group: 'proposals', span: 5, spin: false, build: buildPopupAttack },
+  { label: 'cron', group: 'proposals', build: () => buildCron() },
+  { label: 'cron-pulse', group: 'proposals', span: 4.5, spin: false, build: () => buildCron({ wizard: true }) },
+  { label: 'worm', group: 'proposals', build: () => buildWalker('worm') },
+  { label: 'crawler', group: 'proposals', build: () => buildWalker('crawler') },
+  ...Object.keys(PROPOSED).map((type) => ({ label: `${type}-pop`, group: 'proposals', build: () => buildProposedPop(type) })),
   // Zap (step 6): the bolt close up, two hits on a bug (the second pops
   // it), and rapid fire at a crate until the energy bar runs dry.
   { label: 'zap-bolt', group: 'zap', build: buildZapBolt },
@@ -756,6 +780,134 @@ function buildBurst(type) {
     mark(1, time);
     placeDischarge(discharge, attack === null ? null : Math.floor(attack), charge, [model.position.x, ENEMY.eyeHeight, model.position.z]);
     showWizardHit(wizard, tick - charge);
+  };
+  return asset;
+}
+
+/** A point `a` along the row on screen (world +x −z) and `b` across it, towards the camera. */
+const alongRow = (a, b = 0) => [(a + b) * Math.SQRT1_2, 0, (b - a) * Math.SQRT1_2];
+
+/** A pop-up folded flat while calm, springing up when after the wizard, in a loop. */
+function buildPopup() {
+  const { model, color } = PROPOSED.popup;
+  const popup = model.create(color);
+  const asset = new Group().add(popup);
+  const mark = addMark(asset, model.markHeight);
+  asset.userData.update = (dt, time) => {
+    model.animate(popup, { time, alert: alertAt(time) });
+    mark(alertAt(time), time);
+  };
+  return asset;
+}
+
+/**
+ * A pop-up and the wizard, in a loop: it springs up, charges a ball of junk
+ * data, fires it as a slow shot (2.5 units per second) that hits him, and
+ * folds down again.
+ */
+function buildPopupAttack() {
+  const { model, color } = PROPOSED.popup;
+  const charge = 40;
+  const speed = 2.5;
+  const popup = model.create(color);
+  // It stands behind the wizard's row, so it faces him turned towards the camera.
+  popup.position.set(...alongRow(-1.3, -1));
+  const wizard = createWizard();
+  wizard.position.set(...alongRow(1, 0.8));
+  popup.rotation.y = Math.atan2(wizard.position.x - popup.position.x, wizard.position.z - popup.position.z);
+  wizard.rotation.y = popup.rotation.y + Math.PI;
+  const shot = createPopupShot(color);
+  const asset = new Group().add(popup, wizard, shot);
+  const mark = addMark(asset, model.markHeight, popup.position);
+  const from = new Vector3(...POPUP_MUZZLE).applyAxisAngle(new Vector3(0, 1, 0), popup.rotation.y).add(popup.position);
+  const to = wizard.position.clone().setY(0.75);
+  const flight = (from.distanceTo(to) / speed) * 60;
+  const open = [0, 15];
+  const fold = [190, 205];
+  const loop = 240;
+  let tick = 0;
+  asset.userData.update = (dt, time) => {
+    tick = (tick + dt * 60) % loop;
+    const alert = Math.min(1, Math.max(0, Math.min((tick - open[0]) / (open[1] - open[0]), (fold[1] - tick) / (fold[1] - fold[0]))));
+    const attack = tick >= open[1] && tick < open[1] + charge + 30 ? tick - open[1] : null;
+    model.animate(popup, { time, alert, attack, charge });
+    showGlow(popup, attack, charge);
+    mark(alert, time);
+    const flown = tick - open[1] - charge;
+    shot.visible = flown >= 0 && flown < flight;
+    if (shot.visible) shot.position.lerpVectors(from, to, flown / flight);
+    placePopupShot(shot, time);
+    showWizardHit(wizard, flown - flight);
+  };
+  return asset;
+}
+
+/**
+ * A cron ticking round and pulsing every period, in a loop; `wizard`: the
+ * wizard stands 1.4 units away, inside its range, and each pulse hits him.
+ */
+function buildCron({ wizard = false } = {}) {
+  const { model, color, period, range } = PROPOSED.cron;
+  const cron = model.create(color);
+  const pulse = createCronPulse(color);
+  const asset = new Group().add(cron, pulse);
+  let target = null;
+  if (wizard) {
+    target = createWizard();
+    target.position.set(...alongRow(0.7));
+    target.rotation.y = -Math.PI / 4;
+    cron.position.set(...alongRow(-0.7));
+    cron.rotation.y = (Math.PI * 3) / 4;
+    pulse.position.copy(cron.position);
+    asset.add(target);
+  }
+  // When the ring reaches his side (the ring's growth, placeCronPulse()).
+  const hitAt = target ? target.position.distanceTo(cron.position) - 0.3 : 0;
+  const reach = CRON.pulse.seconds * (1 - Math.sqrt(Math.max(0, 1 - hitAt / range)));
+  asset.userData.update = (dt, time) => {
+    const seconds = time % period;
+    model.animate(cron, { time, cycle: seconds / period, since: seconds * 60, alert: wizard ? 1 : 0 });
+    placeCronPulse(pulse, seconds, range);
+    if (target) showWizardHit(target, (seconds - reach) * 60);
+  };
+  return asset;
+}
+
+/**
+ * A worm or crawler walking in place, calm, then after the wizard (walking
+ * faster), in a loop.
+ * @param {'worm'|'crawler'} type
+ */
+function buildWalker(type) {
+  const { model, color, speed, chaseSpeed } = PROPOSED[type];
+  const walker = model.create(color);
+  const asset = new Group().add(walker);
+  const mark = addMark(asset, model.markHeight);
+  let walked = 0;
+  asset.userData.update = (dt, time) => {
+    const alert = alertAt(time);
+    walked += dt * (speed + (chaseSpeed - speed) * alert);
+    model.animate(walker, { state: 'walk', walked, time, alert });
+    mark(alert, time);
+  };
+  return asset;
+}
+
+/**
+ * A proposed enemy popping into pixels, in a loop.
+ * @param {keyof typeof PROPOSED} type
+ */
+function buildProposedPop(type) {
+  const { model, color, period = 3 } = PROPOSED[type];
+  const enemy = model.create(color);
+  const pixels = createPixelBurst(model.pop.pixels, model.pop.pixelSize, [color, 0xffffff]);
+  const asset = new Group().add(enemy, pixels);
+  let tick = 0;
+  asset.userData.update = (dt, time) => {
+    tick = (tick + dt * 60) % 90;
+    enemy.visible = tick < 40;
+    model.animate(enemy, { time, alert: type === 'popup' ? 1 : 0, cycle: (time % period) / period });
+    placePixels(pixels, tick >= 40 ? model.popPixels(tick - 40) : [], [0, 0, 0]);
   };
   return asset;
 }
