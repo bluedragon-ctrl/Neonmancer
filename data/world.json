@@ -3,16 +3,16 @@
   "schemaVersion": 1,
   "start": "boot_sector",
   "connections": [
-    ["boot_sector.north", "cache_hall.south"],
-    ["boot_sector.east", "stack_yard.west"],
     ["stack_yard.east", "fault_line.west"],
     ["fault_line.east", "transit_bus.west"],
     ["transit_bus.east", "volatile_memory.west"],
     ["volatile_memory.east", "crawl_space.west"],
-    ["boot_sector.west", "crawl_space.east"],
     ["boot_sector.south", "transit_bus.north"],
     ["cache_hall.east", "relay_station.west"],
-    ["relay_station.south", "stack_yard.north"]
+    ["relay_station.south", "stack_yard.north"],
+    ["boot_sector.east", "stack_yard.west"],
+    ["boot_sector.west", "crawl_space.east"],
+    ["boot_sector.north", "cache_hall.south"]
   ],
   "positions": {
     "boot_sector": [0, 0],
