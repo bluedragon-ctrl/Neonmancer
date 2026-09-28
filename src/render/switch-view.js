@@ -426,3 +426,79 @@ export function createLock(exit, size, { color, switches }) {
   group.userData.update(0);
   return group;
 }
+
+/** A target in the room (entities/switch.js): a bolt switching it makes it flash. */
+export class TargetView {
+  /**
+   * @param {import('../game.js').Game} game
+   * @param {import('../entities/switch.js').Target} target
+   */
+  constructor(game, target) {
+    this.target = target;
+    this.group = createTarget(target.object.color);
+    this.group.position.set(...target.pos);
+    this.on = target.on;
+    this.group.userData.set(this.on);
+  }
+
+  /**
+   * @param {number} alpha unused: it never moves
+   * @param {number} [dt] seconds since the last frame
+   */
+  sync(alpha, dt = 0) {
+    // Only a bolt switches a target, so every change is a hit.
+    if (this.target.on !== this.on) {
+      this.on = this.target.on;
+      this.group.userData.set(this.on, { hit: true });
+    }
+    this.group.userData.update(dt);
+  }
+}
+
+/** A plate in the room: lit while pressed. */
+export class PlateView {
+  /**
+   * @param {import('../game.js').Game} game
+   * @param {import('../entities/switch.js').Plate} plate
+   */
+  constructor(game, plate) {
+    this.plate = plate;
+    this.group = createPlate(plate.object.color);
+    this.group.position.set(...plate.pos);
+  }
+
+  /**
+   * @param {number} alpha unused: it never moves
+   * @param {number} [dt] seconds since the last frame
+   */
+  sync(alpha, dt = 0) {
+    this.group.userData.set(this.plate.on);
+    this.group.userData.update(dt);
+  }
+}
+
+/** A locked exit of the room (Game.locks): its barrier and one light per switch. */
+export class LockView {
+  /**
+   * @param {import('../game.js').Game} game
+   * @param {{ exit: object, open: boolean }} lock
+   */
+  constructor(game, lock) {
+    this.game = game;
+    this.lock = lock;
+    const color = game.switches[0]?.object.color ?? 0xffffff;
+    this.group = createLock(lock.exit, game.room.size, { color, switches: game.switches.length });
+    this.sync(0);
+  }
+
+  /** How far it has opened, 0..1. */
+  get openness() {
+    return this.group.userData.openness;
+  }
+
+  /** @param {number} dt seconds since the last frame */
+  sync(dt) {
+    this.group.userData.set({ lit: this.game.switchesOn(), open: this.lock.open });
+    this.group.userData.update(dt);
+  }
+}

@@ -1095,3 +1095,37 @@ After playtesting step 3 (D73), the author's changes:
   still).
 **Why:** author's playtest. The freeze interrupted the flow of play;
 5 s felt short; the blue bit was hard to see.
+
+### D75 — 2026-09-28 — Switches: targets, floor plates, locked exits
+Phase 3 step 4's open questions (D69), settled with the author:
+- Two switches, both fixed in place: a **target**, a block a Zap switches
+  on and off (toggle), and a **plate**, a floor tile flush with the floor
+  like a hole (y 0 only), on while a crate, an enemy or the wizard stands
+  on it (no latch). New object types `target` and `plate` (kinds of the
+  same names), placed in `objects`; `crate_plain` and `crate_dashed`,
+  whose looks they start from, stay crates (stable ids).
+- An exit gets `"locked": true`: it opens while **every** switch in its
+  room is on, and closes again when one goes off, but never on the
+  wizard (it waits while he stands in the opening). No per-exit switch
+  lists: all switches of the room count. A room with a locked exit needs
+  a switch.
+- The way back (D67): the exit he came in through stays open for him
+  while he is in the room, even after a respawn; the exit on the other
+  side is not locked by this one.
+- Look, after two showcase rounds: white (`#eef3ff`), picked over yellow
+  (too close to Home Lattice's amber) and red → green. First round: the
+  target `led` (a square on each face that fills), picked over `glow`
+  and `bullseye`; the plate `brackets` (corner brackets and a floor glow
+  when pressed), over `halo` and `slab`; the lock `panel` (a sinking dark
+  panel with one light per switch; bars on front exits), over bars
+  alone and a grid. The author then asked for a stronger hint than
+  brightness: both switches carry a **square bull's-eye** (a small square
+  inside a bigger one), whose inner square fills when on; the lock's
+  lights are small bull's-eyes too.
+- Terminal line `> ACCESS GRANTED: EXIT UNLOCKED` when locked exits open.
+**Why:** author's choices. Plates on the floor keep "push a crate onto
+it" the natural puzzle; every switch counting keeps room data simple and
+readable (the lights show how many are left). Opening behind him keeps
+every room leavable the way he came without the designer checking both
+sides. A shape, not only a color, marks switches for color-blind players
+and survives bloom (D17).

@@ -52,7 +52,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `data/room-data.js` | Shared reading of room data: block boxes → cells, block types with variants filled in (`resolveBlockTypes()`, D60), exit defaults, sides, exit cells |
 | `data/validate.js` | Semantic checks and readable error messages (Ajv schema pass is dev/CI) |
 | `data/load.js` | Validate the data files and build the content tables; throws `DataError` |
-| `world/grid.js` | 3D occupancy grid: a block type code per cell (`typeAt()` gives its properties), room sides with exit openings, hole tiles |
+| `world/grid.js` | 3D occupancy grid: a block type code per cell (`typeAt()` gives its properties), room sides with exit openings (a locked exit's opening closes with `setOpening()`), hole tiles |
 | `world/room.js` | Runtime room built fresh from data on every entry (type defaults + overrides; static block cells by type; cells of block types with a kind become room objects) |
 | `world/exits.js` | Which exit the wizard left through; where he arrives in the connected room |
 | `physics/collision.js` | Axis-separated AABB movement against the grid; surface below a body; box helpers (`restsOn()`, `touchesBox()`, `shoveClear()`) shared by all entities |
@@ -62,6 +62,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `entities/platform.js` | Moving platform: follows its path, carries riders, waits when blocked, shoves or squeezes the wizard (D46) |
 | `entities/collapsing.js` | Collapsing block: solid → shake (the wizard stood on it) → gone → optional regrow once its cell is clear (D47) |
 | `entities/enemy.js` | Enemy body: steps cell by cell where its movement behavior leads, turns back when blocked, falls, rides platforms, pops in holes and on void; hostility, provoke, bounce state (D48) |
+| `entities/switch.js` | Switches (D75): `Target` (a fixed body a bolt switches over) and `Plate` (a floor tile, no body, on while something stands on it); `SWITCH_KINDS` (pure, tested) |
 | `entities/bolt.js` | Zap bolt: flies level in sub-steps, stops at the first enemy, block, object or room side (`BOLT` tuning) |
 | `ai/behaviors.js` | Movement behaviors by name (`BEHAVIORS`: `patrol`, `stationary`), as enemy types refer to them |
 | `ai/patrol.js` | Patrol: next step towards the next waypoint column, pauses at the ends, turns back (pure, tested) |
@@ -111,6 +112,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `tools/run-tests.js` | `npm test`: runs `node --test` on an explicit list of `tests/*.test.js` (works on Node 20 and 22+, Windows and Linux) |
 | `tools/game-version.js` | Dev only: the game version for builds, PATCH counted from git merges since the phase tag (D42) |
 | `render/disk.js`, `render/refill.js` | Pickup looks: the data disk (bit grid showing the spell's slot, ghost, pick-up and pixel burst; motion pure, tested) and the refills |
+| `render/switch-view.js` | Switch and locked-exit looks (`SWITCH_FX`): target and plate with their square bull's-eye, the lock's panel or bars with one light per switch; `TargetView`, `PlateView`, `LockView` (marks pure, tested) |
 | `render/pickup-view.js` | A room pickup's view: its look, idle motion, ghost, pick-up effect |
 | `tools/showcase.html`, `tools/showcase.js` | Asset showcase page: every look on a turntable with the real renderer (also deployed) |
 | `tools/world-map.html`, `tools/world-map.js`, `tools/world-map.css` | World map tool (D66, D70): every room on the map grid with its connections and checks; drag rooms and save their positions; click to open a room in the editor. Dev server only, not built |

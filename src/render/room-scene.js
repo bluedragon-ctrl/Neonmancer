@@ -13,6 +13,7 @@ import { disposeTree } from './neon.js';
 import { PickupView } from './pickup-view.js';
 import { flareHazard } from './block-fx.js';
 import { createRoomView } from './room-view.js';
+import { LockView, PlateView, TargetView } from './switch-view.js';
 import { ZapView } from './zap-view.js';
 
 /**
@@ -23,6 +24,8 @@ export const OBJECT_VIEWS = {
   pushable: PushableView,
   platform: PlatformView,
   collapsing: CollapsingView,
+  target: TargetView,
+  plate: PlateView,
 };
 
 /**
@@ -49,6 +52,8 @@ export class RoomScene {
     this.enemyViews = [];
     this.pickupViews = [];
     this.exitViews = [];
+    /** Locked exits' barriers (switch-view.js), by exit id. */
+    this.lockViews = new Map();
     /** Bolts and sparks of the room (made in show()). */
     this.zapView = null;
     /** "x,y,z" of each hazard-look block → its face material (room-view.js). */
@@ -75,7 +80,8 @@ export class RoomScene {
     this.enemyViews = game.enemies.filter(shown).map((enemy) => new EnemyView(game, enemy));
     this.pickupViews = game.pickups.filter((pickup) => cutAbove === null || pickup.data.at[1] <= cutAbove).map((pickup) => new PickupView(game, pickup));
     this.zapView = new ZapView(game);
-    this.objectGroup = new Group().add(this.zapView.group);
+    this.lockViews = new Map(game.locks.map((lock) => [lock.exit.id, new LockView(game, lock)]));
+    this.objectGroup = new Group().add(this.zapView.group, ...[...this.lockViews.values()].map((view) => view.group));
     // add() with no arguments logs an error (a room without objects).
     const views = [...this.objectViews, ...this.enemyViews, ...this.pickupViews];
     if (views.length > 0) this.objectGroup.add(...views.map((view) => view.group));
@@ -112,11 +118,17 @@ export class RoomScene {
    * @param {number} dt seconds since the last frame
    */
   update(alpha, dt) {
-    for (const view of this.objectViews) view.sync(alpha);
+    for (const view of this.objectViews) view.sync(alpha, dt);
     for (const view of this.enemyViews) view.sync(alpha, dt);
     for (const view of this.pickupViews) view.sync(alpha, dt);
     this.zapView.sync(alpha, dt);
-    for (const view of this.exitViews) view.update(dt);
+    for (const view of this.lockViews.values()) view.sync(dt);
+    for (const view of this.exitViews) {
+      // A locked exit's stream shows once its barrier is mostly gone.
+      const lock = this.lockViews.get(view.exit.id);
+      view.group.visible = !lock || lock.openness > 0.5;
+      view.update(dt);
+    }
     if (this.flare) {
       this.flare.time += dt;
       flareHazard(this.flare.faces, this.flare.cell, this.flare.time);

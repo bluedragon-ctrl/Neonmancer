@@ -259,8 +259,12 @@ export class EditorPanel {
     this.exitLink.addEventListener('change', () => on.exit('link', this.exitLink.value || null));
     this.exitIdRow = this.row('Id', this.exitId);
     this.exitLinkRow = this.row('Leads to', this.exitLink);
+    // Locked (D75): open only while every switch in the room is on.
+    this.exitLocked = Object.assign(el('input'), { type: 'checkbox', title: 'Open only while every switch (target, plate) in the room is on' });
+    this.exitLocked.addEventListener('change', () => on.exit('locked', this.exitLocked.checked));
+    this.exitLockedRow = this.row('Locked', this.exitLocked);
     this.exitRows = this.group('exit');
-    this.exitRows.append(this.exitIdRow, this.exitAtRow, this.exitYRow, this.row('Width', this.exitWidth), this.row('Height', this.exitHeight), this.exitLinkRow);
+    this.exitRows.append(this.exitIdRow, this.exitAtRow, this.exitYRow, this.row('Width', this.exitWidth), this.row('Height', this.exitHeight), this.exitLinkRow, this.exitLockedRow);
 
     const actions = el('div', 'editor-actions');
     this.buttons = {};
@@ -395,7 +399,8 @@ export class EditorPanel {
     this.setNumber(this.pathSpeed, path?.speed);
     this.setNumber(this.pathPause, path?.pause);
 
-    this.exitIdRow.hidden = this.exitLinkRow.hidden = this.exitAtRow.hidden = this.exitYRow.hidden = !exit.id;
+    this.exitIdRow.hidden = this.exitLinkRow.hidden = this.exitAtRow.hidden = this.exitYRow.hidden = this.exitLockedRow.hidden = !exit.id;
+    this.exitLocked.checked = !!exit.locked;
     this.setNumber(this.exitAt, exit.at);
     this.setNumber(this.exitY, exit.y);
     if (document.activeElement !== this.exitId) this.exitId.value = exit.id ?? '';

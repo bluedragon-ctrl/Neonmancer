@@ -296,7 +296,7 @@ test('saveEdits merges moves from the world map into world.json; the room editor
     assert.deepEqual(read(), { ...before, positions: { ...before.positions, cache_hall: [4, -3] } });
 
     // A room saved from the editor with a new connection: the move stays, the connection is saved.
-    stale.connections.pop();
+    stale.connections = stale.connections.filter((pair) => !pair.includes('boot_sector.south'));
     const boot = JSON.parse(readFileSync(join(root, 'data/rooms/boot_sector.json'), 'utf8'));
     const transit = JSON.parse(readFileSync(join(root, 'data/rooms/transit_bus.json'), 'utf8'));
     const rooms = [
@@ -517,6 +517,16 @@ test('RoomEdit moves exits along their side and up, not onto another exit', () =
   assert.equal(hall.exitClashes('east_2', { y: 2 }), false, 'above east');
   assert.equal(hall.updateExit('east_2', { at: 5, y: 1 }), true);
   assert.deepEqual(hall.exits[1], { id: 'east_2', side: '+x', at: 5, y: 1 });
+});
+
+test('RoomEdit locks and unlocks an exit (D75); a moved locked exit stays locked', () => {
+  const hall = new RoomEdit(twoRooms()['rooms/hall.json']);
+  assert.equal(hall.updateExit('east', { locked: true }), true);
+  assert.equal(hall.exits[0].locked, true);
+  assert.equal(hall.updateExit('east', { at: 2 }), true);
+  assert.equal(hall.exits[0].locked, true);
+  assert.equal(hall.updateExit('east', { locked: false }), true);
+  assert.equal('locked' in hall.exits[0], false, 'unlocked is the default, left out');
 });
 
 test('RoomEdit.describe says what is in a cell', () => {

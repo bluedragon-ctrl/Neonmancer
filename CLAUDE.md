@@ -103,8 +103,10 @@ mobile/touch support, backend or accounts.
 - Types: static, pushable, moving (paths or up/down cycles; player rides
   them), collapsing (vanish after being stepped on, optional respawn),
   hazard (deals damage), void (instant death when the player falls onto it).
-- Switches unlock exits: a pressure plate held down by a crate, or a
-  target hit by a bolt (D69).
+- Switches unlock exits: a floor plate held down by a crate, an enemy or
+  the wizard, or a target a bolt switches on and off. A locked exit opens
+  while every switch in its room is on, never closes on the wizard, and
+  stays open for him if he came in through it (D69, D75).
 - Holes: floor tiles (at y = 0) drawn as black pits. The player dies falling
   in (a trap, no way back out); a block pushed into a hole drops in and fills
   it, turning it into walkable floor. Holes never lead to another room.

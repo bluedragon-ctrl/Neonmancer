@@ -8,7 +8,8 @@
   "spawn": [1.5, 1, 3.5],
   "exits": [
     { "id": "west", "side": "-x", "at": 3, "y": 1 },
-    { "id": "east", "side": "+x", "at": 5 }
+    { "id": "east", "side": "+x", "at": 5 },
+    { "id": "north", "side": "-z", "at": 2, "locked": true }
   ],
   "blocks": [
     { "at": [0, 0, 2], "to": [1, 0, 5] },
@@ -17,6 +18,8 @@
   "objects": [
     { "id": "crate_a", "type": "crate", "at": [4, 0, 4] },
     { "id": "crate_b", "type": "crate", "at": [4, 1, 4] },
-    { "id": "crate_c", "type": "crate_cross", "at": [3, 0, 6] }
+    { "id": "crate_c", "type": "crate_cross", "at": [3, 0, 6] },
+    { "id": "crate_d", "type": "crate", "at": [5, 0, 2] },
+    { "id": "plate_a", "type": "plate", "at": [3, 0, 2] }
   ]
 }
