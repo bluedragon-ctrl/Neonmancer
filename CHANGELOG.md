@@ -7,6 +7,13 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- World map tool edits the world's structure (D77): tools to add a room
+  (a new, empty 12×4×12 room in a free cell), connect two rooms (each
+  gets an exit in the middle of the wall facing the other, moved along
+  the wall if that spot is taken or blocked), and delete a room (with the
+  exits leading into it) or a connection (with both its exits). Undo
+  covers every edit; Save writes the new, changed and removed room files
+  and `world.json` after the usual checks.
 - Automatic quality fallback (D76): when frames run below 50 fps for a
   few seconds, multisampling steps down (4 → 2 → 0), then the render
   scale (0.75, 0.5), so weak laptops stay smooth. `?msaa` / `?scale`

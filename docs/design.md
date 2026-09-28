@@ -863,14 +863,27 @@ players never see it (D67).
   from the side its exit is on, as far along it as the exit is along the
   room's side. Solid when the rooms are neighbours that way round on the
   map (east exit, room one cell east), dashed when the connection runs
-  across the map (shortcuts, loops). Connections are edited in the room
-  editor.
-- **Moving rooms:** drag a room to a free cell (dropping it on another room
-  does nothing); moved rooms show a lime dot until saved. **Save** (or
-  Ctrl+S) sends only the moved rooms' positions; the dev server merges them
-  into `world.json` as it is on disk and checks everything first. Ctrl+Z
-  undoes a move. A room file with no position yet gets a free cell next to
-  the start, saved with the next save.
+  across the map (shortcuts, loops).
+- **Tools** (D77), picked in the panel or with keys 1–4:
+  - **Move:** drag a room to a free cell (dropping it on another room
+    does nothing); a click opens it (below).
+  - **Add:** click a free cell for a new, empty room (12×4×12, no exits);
+    its id (a free `room_N` if left empty) and biome are set in the panel.
+  - **Connect:** drag from one room to another, or click one then the
+    other (Esc cancels). Each gets a 2-wide floor-level exit in the wall
+    facing the other on the map (x wall for diagonal neighbours), in the
+    middle of the wall, or the nearest spot that is free of other exits
+    and passes the room's checks. Fine-tune it in the room editor.
+  - **Delete:** click a room to remove it with the exits into it (not the
+    start room), or a connection to remove it and both its exits.
+- **Saving:** rooms with unsaved changes show a lime dot; the Save button
+  says what it would send. **Save** (or Ctrl+S) sends the moved rooms'
+  positions, the new and changed room files, the removed rooms' ids and,
+  if the connections changed, `world.json`; the dev server merges the
+  positions into `world.json` as it is on disk, checks everything and
+  writes it all or nothing (removed room files are deleted). Ctrl+Z
+  undoes the last edit. A room file with no position yet gets a free cell
+  next to the start, saved with the next save.
 - **Opening a room:** click it: the game opens in one reused tab at
   `/?room=<id>&edit`, in the room editor on that room (F2 plays it). The
   game takes `?room` and `?edit` in the dev server only.
@@ -884,7 +897,7 @@ players never see it (D67).
   existing rooms: when it saves `world.json`, the positions on disk win
   over its copy, so a move saved from the map meanwhile stays.
 - **Live data:** when another page saves (the room editor), the map
-  reloads to show it; with moves not saved yet, it says so instead.
+  reloads to show it; with changes not saved yet, it says so instead.
 - **Sending it in:** `tools\map-pr.bat` opens one PR with the saved map
   and room changes (see Room editor).
 

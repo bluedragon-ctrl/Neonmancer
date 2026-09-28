@@ -78,14 +78,7 @@ export class RoomEdit {
 
   /** The room data as it would be saved: blocks and holes written back, keys in file order, empty lists left out. */
   toData() {
-    const data = { ...this.data, blocks: this.blocks.list(), holes: this.holes.list() };
-    const out = {};
-    for (const key of [...KEY_ORDER, ...Object.keys(data)]) {
-      if (key in out || data[key] === undefined) continue;
-      if (Array.isArray(data[key]) && data[key].length === 0 && key !== 'size') continue;
-      out[key] = structuredClone(data[key]);
-    }
-    return out;
+    return roomFileData({ ...this.data, blocks: this.blocks.list(), holes: this.holes.list() });
   }
 
   /** The room file's text (see format-json.js). */
@@ -558,7 +551,7 @@ export class RoomEdit {
     const length = sideLength(side, this.size);
     const at = Math.max(0, Math.min(side[1] === 'x' ? cell[2] : cell[0], length - width));
     const exit = exitFields({ id: this.freeExitId(side), side, at, width, y: cell[1], height });
-    const clash = this.exits.some((other) => other.side === side && overlaps(withExitDefaults(other), withExitDefaults(exit)));
+    const clash = this.exits.some((other) => other.side === side && exitsOverlap(withExitDefaults(other), withExitDefaults(exit)));
     if (clash) return null;
     this.edit(() => {
       this.data.exits = [...this.exits, exit];
@@ -576,7 +569,7 @@ export class RoomEdit {
     const exit = this.exits.find((e) => e.id === id);
     if (!exit) return false;
     const next = withExitDefaults({ ...exit, ...fields });
-    return this.exits.some((other) => other !== exit && other.side === next.side && overlaps(withExitDefaults(other), next));
+    return this.exits.some((other) => other !== exit && other.side === next.side && exitsOverlap(withExitDefaults(other), next));
   }
 
   /**
@@ -661,7 +654,7 @@ function withFields(item, fields) {
 }
 
 /** An exit as written in a room file: the schema's key order, defaults left out. */
-function exitFields({ id, side, at, width, y, height, locked }) {
+export function exitFields({ id, side, at, width, y, height, locked }) {
   const exit = { id, side, at };
   if (width !== EXIT_DEFAULTS.width) exit.width = width;
   if (y !== EXIT_DEFAULTS.y) exit.y = y;
@@ -671,7 +664,7 @@ function exitFields({ id, side, at, width, y, height, locked }) {
 }
 
 /** Do two exits in one side share an opening cell? (defaults applied) */
-function overlaps(a, b) {
+export function exitsOverlap(a, b) {
   return a.at < b.at + b.width && b.at < a.at + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
 }
 
@@ -684,6 +677,21 @@ function overlaps(a, b) {
  */
 export function roomErrors(files, room) {
   return validateData({ ...files, [`rooms/${room.id}.json`]: room });
+}
+
+/**
+ * A room as written back to its file (a copy): keys in the order the room
+ * files use, empty lists left out.
+ * @param {object} data room data
+ */
+export function roomFileData(data) {
+  const out = {};
+  for (const key of [...KEY_ORDER, ...Object.keys(data)]) {
+    if (key in out || data[key] === undefined) continue;
+    if (Array.isArray(data[key]) && data[key].length === 0 && key !== 'size') continue;
+    out[key] = structuredClone(data[key]);
+  }
+  return out;
 }
 
 /**

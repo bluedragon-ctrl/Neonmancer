@@ -1156,3 +1156,40 @@ buffers: estimated 13–19 ms at 1080p on an Intel UHD 620, most of the
 the fallback is what those presets will start from. Effects added to the
 existing effect pass are nearly free, while every extra full-screen pass
 costs (~1.6 ms at 1080p on a UHD 620); keep that in mind for Phase 5.
+
+### D77 — 2026-09-28 — World map tool adds and removes rooms and connections
+The world map tool (D66, D70) now edits the world's structure, not only
+where rooms sit. Four tools, picked in the panel or with keys 1–4:
+- **Move** (as before): drag a room to a free cell; a click opens it in
+  the room editor.
+- **Add**: click a free cell for a new, empty room (the room editor's
+  new room: 12×4×12, spawn in the middle, no exits), id and biome from
+  the panel (a free `room_N` by default).
+- **Connect**: drag from one room to another, or click both. Each room
+  gets a 2-wide exit at floor level in the wall facing the other on the
+  map (along the axis they are further apart on; x for diagonals), in
+  the middle of the wall; if that spot overlaps another exit or the room's
+  checks reject it (a block, a hole, a platform path in the opening), the
+  nearest spot that passes, outwards from the middle. Ids as in the room
+  editor (`south`, `south_2`...).
+- **Delete**: click a room to remove it, with its map cell, its
+  connections and the exits of other rooms that led into it; click a
+  connection to remove it and both its exits. The start room stays.
+Every exit must be connected (validation), so the map never leaves one
+half-made: exits come and go in pairs with their connection. Everything
+else about an exit (where along the wall, height, width, lock) stays in
+the room editor. Edits are undoable (Ctrl+Z) and saved together: the
+dev server gets the new and changed room files, the ids of removed ones
+(deleted from `data/rooms/`), the moved rooms' cells and, when the
+connections changed, `world.json`; it checks the result as a whole and
+writes all of it or none. The logic is `editor/map-edit.js` (`MapEdit`),
+with `addExit()` and `disconnectExit()` as hooks for later room edits
+from the map.
+With structure edits the map now sends `world.json` itself, so its
+connections win over the file on disk; the positions still merge as in
+D70. An unsaved-changes warning covers a room editor save made meanwhile.
+**Why:** author's request: sketching the world's layout (which rooms,
+which way they connect) is quicker on the map than one room at a time in
+the room editor. Exits in the middle of the wall are a sensible start;
+the rooms are then built in the room editor, where the exits can move.
+

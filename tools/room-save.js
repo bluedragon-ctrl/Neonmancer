@@ -3,9 +3,11 @@
  * edited rooms, world.json and defs.json (enemy templates) are checked together with the rest of data/
  * (schemas, then the game's own checks) and written only if everything
  * passes. New rooms get a new file. The world map tool (D66) sends moved
- * rooms' positions only, merged into world.json as it is on disk.
+ * rooms' positions, merged into world.json as it is on disk, and (D77) the
+ * rooms it added, changed (exits) or removed, with world.json when its
+ * connections changed.
  */
-import { writeFileSync } from 'node:fs';
+import { rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { formatJson } from '../src/editor/format-json.js';
 import { checkFiles, readDataFiles, readSchemas } from './check-data.js';
@@ -32,23 +34,35 @@ export function refuseSaveRequest({ method, headers }) {
  * Check edited rooms, world.json and defs.json against the data on disk
  * and write them if everything is valid.
  * @param {string} root project root
- * @param {{ rooms?: any[], world?: any, defs?: any, positions?: Record<string, number[]> }} edits from the editor: whole room files, and world.json
- *   and defs.json if they changed; from the world map tool: map positions of the rooms it moved
- * @returns {{ ok: boolean, errors: string[], files: string[] }} `files`: the paths written, relative to root
+ * @param {{ rooms?: any[], world?: any, defs?: any, positions?: Record<string, number[]>, remove?: string[] }} edits from the editor: whole
+ *   room files, and world.json and defs.json if they changed; from the world map tool: map positions of the rooms it moved or added,
+ *   whole files of rooms it added or changed, ids of rooms to delete, and world.json if its connections changed
+ * @returns {{ ok: boolean, errors: string[], files: string[] }} `files`: the paths written or deleted, relative to root
  */
-export function saveEdits(root, { rooms = [], world, defs, positions } = {}) {
-  if (!Array.isArray(rooms) || (rooms.length === 0 && !world && !defs && !positions)) return { ok: false, errors: ['nothing to save'], files: [] };
+export function saveEdits(root, { rooms = [], world, defs, positions, remove = [] } = {}) {
+  if (!Array.isArray(rooms) || !Array.isArray(remove) || (rooms.length === 0 && remove.length === 0 && !world && !defs && !positions)) {
+    return { ok: false, errors: ['nothing to save'], files: [] };
+  }
   const { files, errors: readErrors } = readDataFiles(root);
   if (positions !== undefined && (typeof positions !== 'object' || positions === null || Array.isArray(positions))) {
     return { ok: false, errors: ['positions: not a map of room ids to cells'], files: [] };
   }
+  const removed = [];
+  for (const id of remove) {
+    if (typeof id !== 'string' || !/^[a-z][a-z0-9_]*$/.test(id)) return { ok: false, errors: ['a removed room has no valid id'], files: [] };
+    if (!files[`rooms/${id}.json`]) return { ok: false, errors: [`no room ${id} to remove`], files: [] };
+    if (rooms.some((room) => room?.id === id)) return { ok: false, errors: [`room ${id} is both saved and removed`], files: [] };
+    delete files[`rooms/${id}.json`];
+    removed.push(`rooms/${id}.json`);
+  }
   const disk = files['world.json'];
-  if (disk && (world || positions)) {
+  if (disk && (world || positions || removed.length > 0)) {
     // The world map tool owns where rooms are, the room editor the connections:
     // the editor's copy may be older than a move saved from the map, so only
     // its new rooms' cells count; the map's moves go into world.json as it is.
     const base = world ?? disk;
     world = { ...base, positions: { ...base.positions, ...(world ? disk.positions : {}), ...positions } };
+    for (const id of remove) delete world.positions[id];
   }
   const names = [];
   for (const room of rooms) {
@@ -65,5 +79,6 @@ export function saveEdits(root, { rooms = [], world, defs, positions } = {}) {
   const errors = [...readErrors, ...checkFiles(files, readSchemas(root))];
   if (errors.length > 0) return { ok: false, errors, files: [] };
   for (const name of names) writeFileSync(join(root, 'data', name), formatJson(files[name]));
-  return { ok: true, errors: [], files: names.map((name) => `data/${name}`) };
+  for (const name of removed) rmSync(join(root, 'data', name));
+  return { ok: true, errors: [], files: [...names, ...removed].map((name) => `data/${name}`) };
 }
