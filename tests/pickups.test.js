@@ -4,7 +4,7 @@ import { loadGameData } from '../src/data/load.js';
 import { validateData } from '../src/data/validate.js';
 import { RoomEdit } from '../src/editor/room-edit.js';
 import { Game } from '../src/game.js';
-import { DISK, diskMotion, diskPixels } from '../src/render/disk.js';
+import { DISK, createDisk, diskMotion, diskPixels } from '../src/render/disk.js';
 import { PICKUP_BITS, Progress, SAVE_BLOCKS, pickupBit, saveBit } from '../src/world/progress.js';
 import { PICKUPS, SPELLS, dataFiles, eventTypes, gameData, idle, roomFile } from './helpers.js';
 
@@ -171,4 +171,24 @@ test('room editor: pickups are placed, picked by id and erased like objects', ()
   edit.placePickup([7, 0, 7], 'refill_energy');
   edit.resize([6, 4, 6]);
   assert.deepEqual(edit.data.pickups, [], 'dropped outside the new size');
+});
+
+test('disk model: few draw calls; a ghost dashes each merged zero bit like its own line', () => {
+  const draws = (model) => {
+    let count = 0;
+    model.traverse((node) => (count += node.isMesh ? 1 : 0)); // LineSegments2 is a Mesh too
+    return count;
+  };
+  // Body, outline, all zero bits in one line, and a lit cube (faces + lines) on each side.
+  assert.equal(draws(createDisk({ slot: 5 })), 7);
+  const ghost = createDisk({ slot: 5, ghost: true });
+  assert.equal(draws(ghost), 7);
+  const zeros = ghost.userData.spin.children.find((node) => node.isLineSegments2 && node.geometry.attributes.instanceStart.count === 30 * 4);
+  assert.ok(zeros, 'one line with the 4 sides of 15 zero bits on both faces');
+  const start = zeros.geometry.attributes.instanceDistanceStart;
+  const end = zeros.geometry.attributes.instanceDistanceEnd;
+  for (let i = 0; i < start.count; i++) {
+    if (i % 4 === 0) assert.equal(start.getX(i), 0, 'each square starts the dash pattern anew');
+    else assert.ok(Math.abs(start.getX(i) - end.getX(i - 1)) < 1e-6, 'and runs on round it');
+  }
 });
