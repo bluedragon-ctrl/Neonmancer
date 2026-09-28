@@ -4,7 +4,7 @@
  * when nothing holds it up (D48). Everything about it comes from its type
  * in defs.json and the room's overrides: model, movement, attack,
  * hostility, aggro range, integrity, damage, speeds, bounce, color and the
- * discharge attack's values; any look, movement and attack combine (D77).
+ * discharge attack's values; any look, movement and attack combine (D78).
  * Pure logic, one call each to sense(), update() and updateAttack() per
  * fixed tick (Game.update()).
  *
@@ -15,7 +15,7 @@
  *   hit by a spell or a discharge ──► integrity − damage; at 0 ──► dead (pops)
  *
  * It never steps into a hole or where it would land on a lethal block
- * (D77); it only ends up in one when the ground goes from under it.
+ * (D78); it only ends up in one when the ground goes from under it.
  * Seeing: a hostile enemy with an aggro range notices the wizard within it
  * when nothing blocks the line between them (ai/sight.js); a "!" pops up
  * over it then, and when a provoked one turns hostile.

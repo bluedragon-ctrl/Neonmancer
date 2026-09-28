@@ -95,16 +95,16 @@ const ALL_ASSETS = [
   { label: 'bug-peaceful', group: 'bugs', build: () => buildBug('peaceful') },
   { label: 'bug-bounce', group: 'bugs', build: () => buildBug('hostile', { bounced: true }) },
   { label: 'bug-pop', group: 'bugs', build: buildBugPop },
-  // Any enemy (D77): a bug noticing the wizard ("!"), and a bug with a
+  // Any enemy (D78): a bug noticing the wizard ("!"), and a bug with a
   // burst discharge instead of its touch attack.
   { label: 'bug-alert', group: 'bugs', build: buildBugAlert },
   { label: 'bug-burst', group: 'bugs', span: 4, spin: false, build: () => buildBurst('bug') },
-  // Viruses (Phase 3 step 5, D77): gliding calm, then after the wizard
+  // Viruses (Phase 3 step 5, D78): gliding calm, then after the wizard
   // ("!"); the burst discharge on the wizard; a pop.
   { label: 'virus', group: 'viruses', build: buildVirus },
   { label: 'virus-attack', group: 'viruses', span: 4, spin: false, build: () => buildBurst('virus') },
   { label: 'virus-pop', group: 'viruses', build: buildVirusPop },
-  // Sentinels (step 5, D77): calm, then after the wizard; the arc discharge
+  // Sentinels (step 5, D78): calm, then after the wizard; the arc discharge
   // (range 5), aimed, then fired: once hitting him, once missing as he
   // steps aside; a pop.
   { label: 'sentinel', group: 'sentinels', build: buildSentinel },

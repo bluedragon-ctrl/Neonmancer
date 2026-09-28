@@ -151,7 +151,7 @@
       "additionalProperties": false,
       "properties": {
         "id": { "$ref": "common.schema.json#/$defs/id" },
-        "template": { "$ref": "common.schema.json#/$defs/id", "description": "Enemy template from defs.json \"enemies\" (D78): every value it has unless overridden here." },
+        "template": { "$ref": "common.schema.json#/$defs/id", "description": "Enemy template from defs.json \"enemies\" (D79): every value it has unless overridden here." },
         "at": { "$ref": "common.schema.json#/$defs/cell", "description": "Spawn cell (its lower corner); it starts here whenever the room resets." },
         "overrides": {
           "type": "object",

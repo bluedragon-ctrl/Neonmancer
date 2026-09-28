@@ -181,13 +181,13 @@ can always leave it again the way he came.
 - **Bugs** — patrol fixed paths
 - **Viruses** — chase on line of sight, give up when it breaks; a
   close-range electric burst
-- **Sentinels** — keep their distance and fire a long aimed bolt (D77)
+- **Sentinels** — keep their distance and fire a long aimed bolt (D78)
 - **Pop-ups** — stationary, fire slow projectiles
 - **Firewall Wardens** — tougher guardians blocking key rooms
 
 Each has a distinct color, silhouette and animation.
 AI is implemented as named behavior modules referenced from data.
-Enemies are universal and fully data-driven (D48, D77): an enemy is a
+Enemies are universal and fully data-driven (D48, D78): an enemy is a
 look, a movement, an attack (touch, burst, arc or none) and a color, and
 any of them combine. Template fields in `defs.json` (look, movement, attack,
 hostility — hostile / peaceful / provoked —, aggro range, integrity,
@@ -267,7 +267,7 @@ The engine is generic; all content lives in data.
   properties such as damage and lethal; variants `extend` a base, D60),
   enemy templates (look, movement, attack,
   hostility, aggro range, integrity, damage, speeds, bounce, solid, color,
-  discharge values; a template may `extend` another, D58, D77, D78), spells
+  discharge values; a template may `extend` another, D58, D78, D79), spells
 - `data/biomes.json` — palette, floor pattern, effect settings,
   environmental effects
 - `data/rooms/*.json` — one file per room: biome, size [x, y, z], exits,
@@ -330,9 +330,11 @@ not critical.
   with the mouse, preview in the real neon look, export room JSON.
 - **World map tool** (`tools/world-map.html`, Phase 3, D66): every room
   as a node on a simple map grid (positions in `world.json`), with its
-  connections; drag rooms and save; flags rooms not reachable from the
-  start; opens a room in the room editor. Dev server only, never shown to
-  players: exploring is part of the game (D67).
+  connections; drag rooms and save; adds and removes rooms and
+  connections (exits in the middle of the facing walls, D77); flags rooms
+  not reachable from the start; opens a room in the room editor. Dev
+  server only, never shown to players: exploring is part of the game
+  (D67).
 - **Reachability checker** (Phase 4): script that searches the grid with
   jump height, pushable objects and available spells to flag unsolvable
   rooms. Used by CI, the editor, and design skills/subagents.

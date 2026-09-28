@@ -35,7 +35,7 @@ export function loadGameData(files) {
     objectTypes: files['defs.json'].objects,
     // Variants filled in from their base types (D60).
     blockTypes: resolveBlockTypes(files['defs.json'].blocks),
-    // Enemy templates filled in from the ones they extend (D58, D78).
+    // Enemy templates filled in from the ones they extend (D58, D79).
     enemyTemplates: resolveEnemyTemplates(files['defs.json'].enemies ?? {}),
     spells: files['defs.json'].spells,
     pickupTypes: files['defs.json'].pickups ?? {},

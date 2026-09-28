@@ -234,7 +234,7 @@ export class Game {
   }
 
   /**
-   * Enemies' discharge attacks (D77): one starting to charge ('charge')
+   * Enemies' discharge attacks (D78): one starting to charge ('charge')
    * takes aim (an arc), one charged fires (discharge()).
    */
   updateAttacks() {
@@ -261,7 +261,7 @@ export class Game {
   }
 
   /**
-   * A charged discharge fires (D77). A burst hits every body within its
+   * A charged discharge fires (D78). A burst hits every body within its
    * range that it could see: the wizard and other enemies. An arc flies
    * along its aim until a block or an object stops it (unharmed) or its
    * range runs out, and hits every body in the squares it passes through:

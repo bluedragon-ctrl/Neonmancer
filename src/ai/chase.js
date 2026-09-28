@@ -1,5 +1,5 @@
 /**
- * Chase behavior (D77): go after the wizard while seeing him, search where
+ * Chase behavior (D78): go after the wizard while seeing him, search where
  * he was last seen for a while, then go home. Pure logic; the enemy does
  * the seeing (Enemy.sense()) and hands it over every tick (update()).
  *

@@ -558,7 +558,7 @@ test('RoomEdit keeps its text until the next change', () => {
   edit.end();
 });
 
-test('DefsEdit adds, updates, renames and deletes enemy templates, any of them (D78)', () => {
+test('DefsEdit adds, updates, renames and deletes enemy templates, any of them (D79)', () => {
   const defs = new DefsEdit({ enemies: { bug: BUG, virus: BUG } });
   assert.match(defs.addTemplate('Tank', 'bug', {}), /lowercase/);
   assert.match(defs.addTemplate('virus', 'bug', {}), /taken/);

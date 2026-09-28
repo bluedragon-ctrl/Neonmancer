@@ -1157,7 +1157,43 @@ the fallback is what those presets will start from. Effects added to the
 existing effect pass are nearly free, while every extra full-screen pass
 costs (~1.6 ms at 1080p on a UHD 620); keep that in mind for Phase 5.
 
-### D77 — 2026-09-28 — Universal enemies; chase and discharge; Viruses and Sentinels
+### D77 — 2026-09-28 — World map tool adds and removes rooms and connections
+The world map tool (D66, D70) now edits the world's structure, not only
+where rooms sit. Four tools, picked in the panel or with keys 1–4:
+- **Move** (as before): drag a room to a free cell; a click opens it in
+  the room editor.
+- **Add**: click a free cell for a new, empty room (the room editor's
+  new room: 12×4×12, spawn in the middle, no exits), id and biome from
+  the panel (a free `room_N` by default).
+- **Connect**: drag from one room to another, or click both. Each room
+  gets a 2-wide exit at floor level in the wall facing the other on the
+  map (along the axis they are further apart on; x for diagonals), in
+  the middle of the wall; if that spot overlaps another exit or the room's
+  checks reject it (a block, a hole, a platform path in the opening), the
+  nearest spot that passes, outwards from the middle. Ids as in the room
+  editor (`south`, `south_2`...).
+- **Delete**: click a room to remove it, with its map cell, its
+  connections and the exits of other rooms that led into it; click a
+  connection to remove it and both its exits. The start room stays.
+Every exit must be connected (validation), so the map never leaves one
+half-made: exits come and go in pairs with their connection. Everything
+else about an exit (where along the wall, height, width, lock) stays in
+the room editor. Edits are undoable (Ctrl+Z) and saved together: the
+dev server gets the new and changed room files, the ids of removed ones
+(deleted from `data/rooms/`), the moved rooms' cells and, when the
+connections changed, `world.json`; it checks the result as a whole and
+writes all of it or none. The logic is `editor/map-edit.js` (`MapEdit`),
+with `addExit()` and `disconnectExit()` as hooks for later room edits
+from the map.
+With structure edits the map now sends `world.json` itself, so its
+connections win over the file on disk; the positions still merge as in
+D70. An unsaved-changes warning covers a room editor save made meanwhile.
+**Why:** author's request: sketching the world's layout (which rooms,
+which way they connect) is quicker on the map than one room at a time in
+the room editor. Exits in the middle of the wall are a sensible start;
+the rooms are then built in the room editor, where the exits can move.
+
+### D78 — 2026-09-28 — Universal enemies; chase and discharge; Viruses and Sentinels
 Phase 3 step 5's open questions, settled with the author:
 - **Universal enemies:** an enemy type's body is a field, `look` (`bug`,
   `virus`, `sentinel`; the word block types use too, D60), beside
@@ -1203,7 +1239,7 @@ Phase 3 step 5's open questions, settled with the author:
 - **Editor:** the Enemy panel lists the settings grouped (look and color,
   movement and speeds, hostility and aggro range, attack, range and
   damage, integrity, bounce, solid), each with a tooltip; all of them
-  come from the enemy's template unless set for the one enemy (D78).
+  come from the enemy's template unless set for the one enemy (D79).
 - **Virus:** a sharp-edged cube tipped onto an edge, slanted eyes on its
   front face, four small cubes of itself orbiting (the glitch shape,
   picked over a spiky ball and a phage; hard, flat edges at the author's
@@ -1216,10 +1252,10 @@ Phase 3 step 5's open questions, settled with the author:
   range 5, charge 0.7 s, cooldown 2 s, aggro range 7, speed 1.5, chase
   speed 2.5, integrity 3. It keeps its distance: it stops once he is in
   range.
-- Test room **Quarantine** (10×10, Glitchmire), behind a new north
-  doorway of Crawl Space: a virus, a sentinel, a stationary bug with a
-  burst guarding an integrity refill, a pillar to hide behind, a trench
-  of holes, a crate and a ledge.
+- Test room **Quarantine** (10×10, Glitchmire), off a new west doorway
+  of Boot Sector: a virus, a sentinel, a stationary bug with a burst
+  guarding an integrity refill, a pillar to hide behind, a trench of
+  holes, a crate and a ledge.
 **Why:** author's choices. The author wants one universal enemy whose
 look, attack, color and movement all come from data, so new enemies are
 data, not code. A charged discharge warns before it hurts, and stops a
@@ -1230,8 +1266,8 @@ Greedy chasing is readable and lets rooms use cover and crates as
 puzzles. Enemies throwing themselves into pits looked silly; the author
 wants them to keep out.
 
-### D78 — 2026-09-28 — Every enemy type is a template
-Amends D58. With the look a field of its own (D77), a base enemy type
+### D79 — 2026-09-28 — Every enemy type is a template
+Amends D58. With the look a field of its own (D78), a base enemy type
 was only a template that sets every value, so the two are one thing now:
 - Every entry of `defs.json` `enemies` is an **enemy template**. One
   without `extends` has every required value; one with it takes the

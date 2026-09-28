@@ -25,7 +25,7 @@ export const TOOLS = [
 
 /**
  * Enemy settings the panel sets as lists (overrides of the template's values);
- * blank is the template's own. Any look, movement and attack combine (D77).
+ * blank is the template's own. Any look, movement and attack combine (D78).
  */
 export const ENEMY_FIELDS = {
   look: ENEMY_OPTIONS.look,
@@ -225,7 +225,7 @@ export class EditorPanel {
     this.enemySelects = {};
     this.enemyRows = this.group('enemy');
     const templateOf = this.row('Template', this.enemyTemplate);
-    templateOf.title = 'The enemy template (defs.json, D78). Every setting below is the template\'s unless set here for this one enemy.';
+    templateOf.title = 'The enemy template (defs.json, D79). Every setting below is the template\'s unless set here for this one enemy.';
     this.enemyRows.append(templateOf);
     // chaseSpeed → Chase speed
     const label = (field) => field[0].toUpperCase() + field.slice(1).replace(/[A-Z]/g, (c) => ` ${c.toLowerCase()}`);
@@ -249,7 +249,7 @@ export class EditorPanel {
       row.title = tip;
       this.enemyRows.append(row);
     }
-    // Templates (D58, D78): these settings as a new template built on this
+    // Templates (D58, D79): these settings as a new template built on this
     // one, or moved into it; renaming or deleting the template.
     this.templateInput = Object.assign(el('input'), { type: 'text', placeholder: 'template_name' });
     const templateName = () => this.templateInput.value.trim();

@@ -1,5 +1,5 @@
 /**
- * What enemies see and reach (D77): rays through the room grid and its
+ * What enemies see and reach (D78): rays through the room grid and its
  * solid bodies, the line of sight between two points, and how far a point
  * is from a box. Pure logic.
  *

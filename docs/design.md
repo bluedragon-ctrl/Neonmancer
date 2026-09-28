@@ -240,11 +240,11 @@ magenta, thin dashed edges, tinted faces) that gives way under the wizard.
 ## Enemies
 
 Corrupted programs (D48), listed in a room's `enemies`. Everything about one
-comes from data: its template in `defs.json` `enemies` (D78), and the
+comes from data: its template in `defs.json` `enemies` (D79), and the
 room's `overrides` for that one enemy. A template without `extends` sets
 every required value below; one with `extends` builds on another template
 (and so on down the chain) and sets only what it changes.
-Enemies are universal (D77): a look, a
+Enemies are universal (D78): a look, a
 movement, an attack and a color, and any of them combine (a bug can chase
 and burst; a virus can patrol).
 
@@ -285,7 +285,7 @@ and burst; a virus can patrol).
   holes don't block it. Noticing him pops up a red **"!"** over it
   (any enemy), which stays at least 1 s and as long as it sees him; so
   does a provoked one turning hostile.
-- **Chase** (D77): while it sees him it steps towards his column at
+- **Chase** (D78): while it sees him it steps towards his column at
   `chaseSpeed`, greedily: along the axis where he is farther, else along
   the other; if both are blocked it waits and tries again, so a wall
   between them stops it (he can hide behind blocks and trap it with
@@ -304,7 +304,7 @@ and burst; a virus can patrol).
 - **Physics:** it walks off ledges and falls, rides platforms (which wait
   while it steps on or off, and wait for one in their way), and a crate
   can rest on it but can't be pushed into it. It never steps into a hole
-  or onto a void block, nor off a ledge onto one (D77): that cell counts
+  or onto a void block, nor off a ledge onto one (D78): that cell counts
   as blocked. Falling into a hole or onto a void block anyway (the ground
   gone from under it) pops it into pixels; it stays gone until the room
   resets. Hazard blocks don't hurt it; it never triggers collapsing
@@ -321,7 +321,7 @@ and burst; a virus can patrol).
   reads as bouncy) bounces him up 2.2 above its top (clears 2 blocks)
   without hurting him; its sides still hurt if it is hostile. Enemies with
   `bounce` false can be stood on only if they are solid.
-- **Discharges** (D77): a hostile enemy with a burst or arc that sees him
+- **Discharges** (D78): a hostile enemy with a burst or arc that sees him
   within `attackRange` stops (at a whole cell), charges for
   `attackCharge` seconds (it trembles and glows white, lightning crackles
   round it), then fires lightning in `attackColor` for 10 ticks and cools
@@ -650,15 +650,15 @@ The world map tool flags any room further out.
 
 | Room | Size | Exits | Shows |
 |---|---|---|---|
-| `boot_sector` (start, hub) | 12×12 | north doorway → Cache Hall; raised east exit on a ledge → Stack Yard; west doorway → Crawl Space; south (front) → Transit Bus | blocks, holes, two crates, a 2-high wall near the front to walk behind (X-ray outline); the Zap data disk two steps from the spawn (Phase 3) |
+| `boot_sector` (start, hub) | 12×12 | north doorway → Cache Hall; raised east exit on a ledge → Stack Yard; west doorway → Quarantine; south (front) → Transit Bus | blocks, holes, two crates, a 2-high wall near the front to walk behind (X-ray outline); the Zap data disk two steps from the spawn (Phase 3) |
 | `cache_hall` | 16×8 | south (front) → Boot Sector; east (front) → Relay Station | a 3-wide pit across the room: push a crate in, then jump the rest; the Shield data disk behind it (Phase 3 step 3) |
 | `relay_station` (Phase 3) | 12×12 | west doorway → Cache Hall; south (front, locked) → Stack Yard | switches (step 4): a Zap target by the back wall, a crate to push onto a plate, and a peaceful bug resting 2 s on a plate near the locked exit, so the exit opens while the bug is on it (the wizard can press that plate himself, but the exit closes as he steps off) |
 | `stack_yard` | 8×8, Glitchmire color | raised west doorway → Boot Sector; east (front) → Fault Line; north doorway (locked) → Relay Station | stacked crates, a 2-high block to climb via a crate; a plate in front of the locked doorway and a crate to push onto it (Phase 3 step 4) |
 | `fault_line` (Phase 2) | 12×12 | west doorway → Stack Yard; raised east exit on the lookout → Transit Bus | a corridor between hazard walls with an integrity refill at its end (Phase 3), hazard blocks between two plain ones to walk across, a zigzag path of plain blocks through a field of void blocks up to a lookout |
 | `transit_bus` (Phase 2) | 12×12, 5 high | west doorway → Fault Line; north doorway → Boot Sector; raised east exit on the high ledge → Volatile Memory | a ferry across a pit between two ledges, a lift up to a high ledge, a loop carrying a crate, a press coming down (with a crate to jam it) and a pusher squeezing the wizard against the room's edge |
 | `volatile_memory` (Phase 2) | 12×12, 5 high | west doorway → Transit Bus; raised east exit on the high ledge → Crawl Space | a pit across the room with two collapsing bridges: one regrowing after 3 s (the way back), one that stays gone, with a crate on a plain ledge in front of it to push onto the bridge from solid ground (it doesn't trigger the blocks, so it is a safe spot to hop onto); two one-shot collapsing steps up to a high ledge |
-| `crawl_space` (Phase 2) | 12×12 | west doorway → Volatile Memory; east (front) → Boot Sector; north doorway → Quarantine | bugs: a sentry crossing the entrance lane, one walking off a ledge and patrolling the floor below, a solid one shoving along a lane with a crate to push in its way, a provoked one circling a pillar, a peaceful stationary one to bounce up to a 2-high ledge, a solid peaceful one along the front edge to ride; Zap targets: the provoked one turns hostile when hit, and an amber stationary one with 4 integrity; an energy refill near the entrance (Phase 3) |
-| `quarantine` (Phase 3) | 10×10, Glitchmire | south (front) → Crawl Space | chasers (step 5, D77): a virus at the back that chases and bursts, a sentinel in the far corner that keeps its distance and fires arcs, a stationary bug with a burst guarding an integrity refill; a 2-high pillar to hide behind, a trench of holes the chasers won't cross, a crate for cover and a 1-high ledge |
+| `crawl_space` (Phase 2) | 12×12 | west doorway → Volatile Memory; east (front) → Boot Sector | bugs: a sentry crossing the entrance lane, one walking off a ledge and patrolling the floor below, a solid one shoving along a lane with a crate to push in its way, a provoked one circling a pillar, a peaceful stationary one to bounce up to a 2-high ledge, a solid peaceful one along the front edge to ride; Zap targets: the provoked one turns hostile when hit, and an amber stationary one with 4 integrity; an energy refill near the entrance (Phase 3) |
+| `quarantine` (Phase 3) | 10×10, Glitchmire | east doorway → Boot Sector | chasers (step 5, D78): a virus at the back that chases and bursts, a sentinel in the far corner that keeps its distance and fires arcs, a stationary bug with a burst guarding an integrity refill; a 2-high pillar to hide behind, a trench of holes the chasers won't cross, a crate for cover and a 1-high ledge |
 
 ### Room design checklist
 
@@ -857,7 +857,7 @@ list switches to another room; New room makes an empty one (D57).
   color are typed in (blank: the template's). Changing the template of
   an enemy with an id the editor made renames it (`bug_1` becomes
   `virus_1`); ids written by hand stay.
-- **Enemy templates** (D58, D78), any of them, the base ones too: a
+- **Enemy templates** (D58, D79), any of them, the base ones too: a
   name + **New** turns the current enemy settings into a new template in
   `defs.json` (`"extends"` the current template, only the enemy's own
   values), listed as `bug_tank (on bug)` from then on; the picked enemy
@@ -934,14 +934,27 @@ players never see it (D67).
   from the side its exit is on, as far along it as the exit is along the
   room's side. Solid when the rooms are neighbours that way round on the
   map (east exit, room one cell east), dashed when the connection runs
-  across the map (shortcuts, loops). Connections are edited in the room
-  editor.
-- **Moving rooms:** drag a room to a free cell (dropping it on another room
-  does nothing); moved rooms show a lime dot until saved. **Save** (or
-  Ctrl+S) sends only the moved rooms' positions; the dev server merges them
-  into `world.json` as it is on disk and checks everything first. Ctrl+Z
-  undoes a move. A room file with no position yet gets a free cell next to
-  the start, saved with the next save.
+  across the map (shortcuts, loops).
+- **Tools** (D77), picked in the panel or with keys 1–4:
+  - **Move:** drag a room to a free cell (dropping it on another room
+    does nothing); a click opens it (below).
+  - **Add:** click a free cell for a new, empty room (12×4×12, no exits);
+    its id (a free `room_N` if left empty) and biome are set in the panel.
+  - **Connect:** drag from one room to another, or click one then the
+    other (Esc cancels). Each gets a 2-wide floor-level exit in the wall
+    facing the other on the map (x wall for diagonal neighbours), in the
+    middle of the wall, or the nearest spot that is free of other exits
+    and passes the room's checks. Fine-tune it in the room editor.
+  - **Delete:** click a room to remove it with the exits into it (not the
+    start room), or a connection to remove it and both its exits.
+- **Saving:** rooms with unsaved changes show a lime dot; the Save button
+  says what it would send. **Save** (or Ctrl+S) sends the moved rooms'
+  positions, the new and changed room files, the removed rooms' ids and,
+  if the connections changed, `world.json`; the dev server merges the
+  positions into `world.json` as it is on disk, checks everything and
+  writes it all or nothing (removed room files are deleted). Ctrl+Z
+  undoes the last edit. A room file with no position yet gets a free cell
+  next to the start, saved with the next save.
 - **Opening a room:** click it: the game opens in one reused tab at
   `/?room=<id>&edit`, in the room editor on that room (F2 plays it). The
   game takes `?room` and `?edit` in the dev server only.
@@ -955,7 +968,7 @@ players never see it (D67).
   existing rooms: when it saves `world.json`, the positions on disk win
   over its copy, so a move saved from the map meanwhile stays.
 - **Live data:** when another page saves (the room editor), the map
-  reloads to show it; with moves not saved yet, it says so instead.
+  reloads to show it; with changes not saved yet, it says so instead.
 - **Sending it in:** `tools\map-pr.bat` opens one PR with the saved map
   and room changes (see Room editor).
 
@@ -1029,7 +1042,7 @@ the author; the answers are recorded as decisions before the code lands.
 | 2 | `feat/pickups-and-progress` | Pickup types in `defs.json` and room data, and a `Progress` model (save bits found, known spells) that survives room resets and death: permanent pickups have a save bit in blocks (D71) and stay as grayed-out ghosts once found; temporary pickups (integrity and energy refills) have none and come back with the room (D67). The first data disk: Zap is no longer known from the start, its disk lies in Boot Sector (`> SPELL INSTALLED: ZAP` banner). Pickup burst; editor and validation support. |
 | 3 | `feat/data-disks` | More disks (D73): an install animation on the wizard, and a second spell to switch to (Tab / Q): Shield, a crackling ring round him; it blocks projectiles once there are any (step 6). Its disk lies in Cache Hall. |
 | 4 | `feat/switches` | Switches that unlock exits: a pressure plate held down by a crate, and a target that a Zap bolt hits. An exit in room data can be locked until its switches are on; a locked exit looks closed and is solid. Switch state resets with the room. The locked exit is the same mechanism access levels use later (step 14). Editor, validation (switches point at exits that exist), showcase, a test room. |
-| 5 | `feat/viruses` | Universal enemies (a `look` field, D77); every enemy type an enemy template (D78); a `chase` movement behavior: a hostile enemy follows the wizard while it sees him within `aggroRange`, searches, then goes home; charged discharge attacks (`burst`, `arc`; `contact` renamed `touch`); the Virus and the Sentinel; the "!" mark; enemies keep out of holes. Test room Quarantine. |
+| 5 | `feat/viruses` | Universal enemies (a `look` field, D78); every enemy type an enemy template (D79); a `chase` movement behavior: a hostile enemy follows the wizard while it sees him within `aggroRange`, searches, then goes home; charged discharge attacks (`burst`, `arc`; `contact` renamed `touch`); the Virus and the Sentinel; the "!" mark; enemies keep out of holes. Test room Quarantine. |
 | 6 | `feat/popups` | A projectile attack: Pop-ups are stationary enemies firing slow shots; a projectile entity with its own rules for what stops it. |
 | 7 | `feat/firewall-spell` | Shield blocks projectiles; Firewall: a shield that also damages (D73). |
 | 8 | `feat/pause-spell` | Pause: freezes an enemy for a while; a frozen enemy is a solid platform (reusing the solid-enemy rules, D51). |
@@ -1044,7 +1057,7 @@ the author; the answers are recorded as decisions before the code lands.
 Open questions, settled at the start of their step:
 - **2 Pickups** and **3 Data disks:** settled (D71, D73).
 - **4 Switches:** settled (D75).
-- **5 Viruses:** settled (D77).
+- **5 Viruses:** settled (D78).
 - **6 Pop-ups:** aimed at the wizard or in a fixed direction; fire rate,
   shot speed and range; what stops a shot (blocks, crates, Zap).
 - **7 Firewall:** Shield's projectile blocking; Firewall's duration, cost
@@ -1103,7 +1116,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 | File | Contents |
 |---|---|
 | `data/rooms/<id>.json` | One room (id = file name) |
-| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; switches `target` and `plate`, white, see Switches and locked exits); `enemies`: enemy templates (`bug`, `virus`, `sentinel`, see Enemies), each complete or `extend`ing another (D58, D78); `spells`: spell tuning and color (`zap`, see Zap and energy; `shield`, see Shield); `pickups`: pickup types (see Pickups and progress); `blocks`: block types (D60): look or kind, color, properties (`damage`, `lethal`, `regrow`), `extends` for variants; see Block types |
+| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; switches `target` and `plate`, white, see Switches and locked exits); `enemies`: enemy templates (`bug`, `virus`, `sentinel`, see Enemies), each complete or `extend`ing another (D58, D79); `spells`: spell tuning and color (`zap`, see Zap and energy; `shield`, see Shield); `pickups`: pickup types (see Pickups and progress); `blocks`: block types (D60): look or kind, color, properties (`damage`, `lethal`, `regrow`), `extends` for variants; see Block types |
 | `data/biomes.json` | Biome name and room color: `home_lattice` (core, amber), `glitchmire` (pink), `frostbyte_wastes` (ice blue), `abyssal_buffer` (graphite), `firewall_citadel` (ember orange), `phantom_partition` (special, silver-white); optional `look` for the surroundings (background, outer grid and its fade, wall grid, bloom); see Biomes (D61, D62) |
 | `data/world.json` | Start room, exit connections and every room's cell on the world map (`positions`, D66) |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |

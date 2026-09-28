@@ -115,7 +115,7 @@ export const OBJECT_STYLE_DEFAULTS = {
 
 /**
  * Values an enemy template's fields can take (the first is listed first in the
- * schema too). Enemies are universal (D77): any look, movement and attack
+ * schema too). Enemies are universal (D78): any look, movement and attack
  * combine. look: its body (render/entity-view.js ENEMY_MODELS); movement:
  * a behavior module (ai/behaviors.js); attack: how it hurts (touch: touching
  * it; burst and arc: discharges, DISCHARGES; none: never); hostility:
@@ -130,7 +130,7 @@ export const ENEMY_OPTIONS = {
 };
 
 /**
- * The discharge attacks (D77): charged lightning all round it (burst) or
+ * The discharge attacks (D78): charged lightning all round it (burst) or
  * one bolt aimed at the wizard (arc). They share attackRange, attackCharge,
  * attackCooldown and attackColor.
  */
@@ -170,7 +170,7 @@ export function withEnemyDefaults(values) {
 }
 
 /**
- * Enemy templates filled in (D58, D78): one with `extends` takes the values
+ * Enemy templates filled in (D58, D79): one with `extends` takes the values
  * of the template it builds on (filled in the same way, down the chain),
  * then its own. A loop or an unknown template ends the chain (validation
  * reports both).

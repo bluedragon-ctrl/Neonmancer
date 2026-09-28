@@ -360,7 +360,7 @@ export function createRails(track, color) {
 }
 
 /**
- * The enemy bodies (defs.json enemy "look", D77), by name: how to build,
+ * The enemy bodies (defs.json enemy "look", D78), by name: how to build,
  * color, animate and pop one (see BUG_MODEL in bug.js), how high its "!"
  * floats and where an arc leaves it. A model has its own flash uniforms
  * (`userData.flash`, holo.js) for spell hits and its charge glow.

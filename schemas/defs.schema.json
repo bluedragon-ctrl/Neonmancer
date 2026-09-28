@@ -16,7 +16,7 @@
     },
     "enemies": {
       "type": "object",
-      "description": "Enemy templates (corrupted programs), by id (D78); rooms place enemies of them.",
+      "description": "Enemy templates (corrupted programs), by id (D79); rooms place enemies of them.",
       "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
       "additionalProperties": { "$ref": "#/$defs/enemyTemplate" }
     },
@@ -150,7 +150,7 @@
     },
     "enemyTemplate": {
       "type": "object",
-      "description": "An enemy template (D78): rooms place enemies of it. One without \"extends\" has every required value; one with it only the values it changes.",
+      "description": "An enemy template (D79): rooms place enemies of it. One without \"extends\" has every required value; one with it only the values it changes.",
       "if": { "properties": { "extends": true }, "required": ["extends"] },
       "else": {
         "properties": { "look": true, "movement": true, "attack": true, "hostility": true, "integrity": true, "damage": true, "speed": true, "color": true },
@@ -160,11 +160,11 @@
       "properties": {
         "extends": {
           "$ref": "common.schema.json#/$defs/id",
-          "description": "The template it builds on (D58, D78): it takes that one's values (and so on down the chain), its own replace them. No loops."
+          "description": "The template it builds on (D58, D79): it takes that one's values (and so on down the chain), its own replace them. No loops."
         },
         "look": {
           "enum": ["bug", "virus", "sentinel"],
-          "description": "Its body (src/render/entity-view.js ENEMY_MODELS). Any look combines with any movement and attack (D77). bug: a hopping ball; virus: a gliding sharp cube with orbiting bits; sentinel: a tall sharp octahedron with one eye."
+          "description": "Its body (src/render/entity-view.js ENEMY_MODELS). Any look combines with any movement and attack (D78). bug: a hopping ball; virus: a gliding sharp cube with orbiting bits; sentinel: a tall sharp octahedron with one eye."
         },
         "movement": {
           "enum": ["patrol", "stationary", "chase"],

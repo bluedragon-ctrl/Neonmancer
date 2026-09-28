@@ -61,12 +61,12 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `entities/pushable.js` | Rest → slide → fall → land / plug-a-hole state machine; destructible ones break (`hit()` → `broken`) |
 | `entities/platform.js` | Moving platform: follows its path, carries riders, waits when blocked, shoves or squeezes the wizard (D46) |
 | `entities/collapsing.js` | Collapsing block: solid → shake (the wizard stood on it) → gone → optional regrow once its cell is clear (D47) |
-| `entities/enemy.js` | Enemy body: steps cell by cell where its movement behavior leads (never into a hole or onto void), turns back when blocked, falls, rides platforms, pops in holes and on void; hostility, provoke, bounce state (D48); seeing the wizard, the "!", the discharge attack's charge and cooldown (D77) |
+| `entities/enemy.js` | Enemy body: steps cell by cell where its movement behavior leads (never into a hole or onto void), turns back when blocked, falls, rides platforms, pops in holes and on void; hostility, provoke, bounce state (D48); seeing the wizard, the "!", the discharge attack's charge and cooldown (D78) |
 | `entities/switch.js` | Switches (D75): `Target` (a fixed body a bolt switches over) and `Plate` (a floor tile, no body, on while something stands on it); `SWITCH_KINDS` (pure, tested) |
 | `entities/bolt.js` | Zap bolt: flies level in sub-steps, stops at the first enemy, block, object or room side (`BOLT` tuning) |
 | `ai/behaviors.js` | Movement behaviors by name (`BEHAVIORS`: `patrol`, `stationary`, `chase`), as enemy templates refer to them |
 | `ai/patrol.js` | Patrol: next step towards the next waypoint column, pauses at the ends, turns back (pure, tested) |
-| `ai/chase.js` | Chase (D77): calm → chase → search → return, greedy steps towards the wizard or home, patrols while calm if it has a path (pure, tested) |
+| `ai/chase.js` | Chase (D78): calm → chase → search → return, greedy steps towards the wizard or home, patrols while calm if it has a path (pure, tested) |
 | `ai/sight.js` | Rays through the grid and bodies (`castRay()`), `lineOfSight()`, `reach()` from a point to a box (pure, tested) |
 | `world/progress.js` | What the wizard has for the whole game (D71): save bits in blocks (`SAVE_BLOCKS`, `saveBit()`, `pickupBit()`), `Progress` (bits found, known spells) (pure, tested) |
 | `entities/pickup.js` | A pickup in a room: its box, save bit, state (idle, ghost, taken) and pick-up ticks (pure, tested) |
@@ -94,9 +94,9 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/shield-fx.js`, `render/shield-view.js` | The Shield's lightning ring (D73): the look (pure, tested) and its meshes, shown by `PlayerView` |
 | `render/collapse-fx.js` | Collapsing-block look: shake, pixels breaking off, regrow, `COLLAPSE_FX` tuning (pure, tested) |
 | `render/bug.js` | Bug model (ball, eyes colored by mood), hop pose, bounce squash, pop pixels, `BUG` tuning (pure parts tested); `BUG_MODEL` for `EnemyView` |
-| `render/virus.js` | Virus model (D77): sharp tipped cube, orbiting bits, glide, charge pose, pop pixels, `VIRUS` tuning; `VIRUS_MODEL` |
-| `render/sentinel.js` | Sentinel model (D77): sharp octahedron, visor eye, shards gathering like a barrel, recoil, pop pixels, `SENTINEL` tuning; `SENTINEL_MODEL` |
-| `render/discharge.js` | Discharge lightning (D77): charge timing and glow (`dischargeLook()`, `chargeGlow()`), burst and arc zigzags (pure, tested), the aim line, `DISCHARGE` tuning |
+| `render/virus.js` | Virus model (D78): sharp tipped cube, orbiting bits, glide, charge pose, pop pixels, `VIRUS` tuning; `VIRUS_MODEL` |
+| `render/sentinel.js` | Sentinel model (D78): sharp octahedron, visor eye, shards gathering like a barrel, recoil, pop pixels, `SENTINEL` tuning; `SENTINEL_MODEL` |
+| `render/discharge.js` | Discharge lightning (D78): charge timing and glow (`dischargeLook()`, `chargeGlow()`), burst and arc zigzags (pure, tested), the aim line, `DISCHARGE` tuning |
 | `render/alert-mark.js` | The red "!" over an enemy that noticed the wizard |
 | `render/hash.js` | Fixed pseudo-random numbers for pixel bursts (pure) |
 | `render/rails.js` | Guide line along a platform's path, `RAILS` tuning (pure, tested) |
@@ -122,20 +122,22 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/switch-view.js` | Switch and locked-exit looks (`SWITCH_FX`): target and plate with their square bull's-eye, the lock's panel or bars with one light per switch; `TargetView`, `PlateView`, `LockView` (marks pure, tested) |
 | `render/pickup-view.js` | A room pickup's view: its look, idle motion, ghost, pick-up effect |
 | `tools/showcase.html`, `tools/showcase.js` | Asset showcase page: every look on a turntable with the real renderer (also deployed) |
-| `tools/world-map.html`, `tools/world-map.js`, `tools/world-map.css` | World map tool (D66, D70): every room on the map grid with its connections and checks; drag rooms and save their positions; click to open a room in the editor. Dev server only, not built |
+| `tools/world-map.html`, `tools/world-map.js`, `tools/world-map.css` | World map tool (D66, D70, D77): every room on the map grid with its connections and checks; move, add and delete rooms, connect rooms and delete connections, then save; click to open a room in the editor. Dev server only, not built |
 | `editor/editor.js` | Room editor (F2, D56, D57): opens on the current room, switches rooms and makes new ones, mouse picking on a height layer, tools, picking things, keys, rebuilding the room from the edited data, save or export |
 | `editor/room-edit.js` | One room being edited: place/erase edits, enemies, paths, exits and their connections, spawn/reset, name, biome, size (with a report), undo/redo (with the step's template changes), dirty state, cell descriptions; `roomErrors()`, `newRoom()` (pure, tested) |
+| `editor/map-edit.js` | The world as the world map tool edits it (D77): `MapEdit` moves, adds and removes rooms, connects rooms with an exit in the middle of each facing wall (`addExit()`), removes connections with both exits (`disconnectExit()`), undo, and what a save sends (`changes()`) (pure, tested) |
 | `editor/world-edit.js` | `world.json` being edited: connecting, disconnecting and renaming exits, a room's connections for its undo steps, a new room's map cell (`place()`, `unplace()`); `linkChoices()` (pure, tested) |
-| `editor/defs-edit.js` | `defs.json` being edited: enemy templates (any of them, D78) added, updated, renamed and deleted; a step's template changes applied again for undo/redo (pure, tested) |
+| `editor/defs-edit.js` | `defs.json` being edited: enemy templates (any of them, D79) added, updated, renamed and deleted; a step's template changes applied again for undo/redo (pure, tested) |
 | `editor/errors.js` | The error list: errors grouped by file, and the room, tool and thing each one points at (pure, tested) |
 | `editor/boxes.js` | `blocks`/`holes` entries edited cell by cell: untouched entries kept, loose cells merged greedily into boxes (pure, tested) |
 | `editor/format-json.js` | JSON in the data files' hand-written style (pure, tested against every data file) |
 | `editor/overlay.js` | Editor gizmos: layer grid, cursor, spawn and reset markers, paths, the picked thing's box, `EDITOR_LOOK` |
 | `editor/panel.js` | Editor side panel (DOM): room list, tools and their fields, layer, room settings, actions, errors |
 | `editor/save.js` | Posting edited files to the dev server; downloading them in a build |
-| `tools/room-save.js` | Dev only: checks edited rooms, `world.json` and `defs.json` with the rest of `data/` and writes them |
+| `tools/room-save.js` | Dev only: checks edited rooms, `world.json` and `defs.json` with the rest of `data/` and writes them; deletes rooms the world map removed |
 | `tools/map-pr.bat` | Windows: opens one PR with only `data/rooms/`, `data/world.json` and `data/defs.json` changes, rooms and map together (validates first) |
 | `tools/dev.bat` | Windows: installs packages if needed and starts the dev server, opening the game (or `dev.bat map`: the world map tool, `dev.bat showcase`: the asset showcase) |
+| `tools/world-map.bat` | Windows: double-click to start the dev server on the world map tool (`dev.bat map`) |
 | `debug/overlay.js` | Debug mode's wireframe collision boxes |
 | `debug/readout.js` | Debug mode's stats readout (rates, buffer and quality, GPU resources, actions, position) |
 
@@ -418,20 +420,26 @@ If the game cannot start, `ui/error-screen.js` lists them.
 
 ```
 editor (page) ──POST /__editor/save {rooms, world?, defs?}──► tools/vite-plugin-data.js
-world map ─────POST /__editor/save {positions}─────────────►   └─ tools/room-save.js: read data/, swap in the edited files,
-                                                                  merge positions, schema + semantic checks,
-                                                                  write them all or none
+world map ─POST /__editor/save {positions, rooms?, remove?,──►   └─ tools/room-save.js: read data/, swap in the edited files,
+                                world?}                           drop removed rooms, merge positions,
+                                                                  schema + semantic checks,
+                                                                  write (and delete) them all or none
 page ◄── { ok, errors, files } ────────────────────────────────┘  (no page reload for those writes)
 open pages ◄── ws custom event neonmancer:data-saved { files }
 ```
 
 `world.json` has two editors (D70): the room editor owns the connections,
-the world map tool the positions. The map sends only the rooms it moved,
-merged into the file on disk; when the room editor sends the whole file,
-the positions on disk win over its copy (only a new room's cell is its
-own), so neither undoes the other's saves. After every save the dev
-server sends `neonmancer:data-saved`: the game ignores it (it already
-shows its edits), the map reloads unless it has unsaved moves.
+the world map tool the positions. The map sends the positions of the rooms
+it moved, merged into the file on disk; when the room editor sends the
+whole file, the positions on disk win over its copy (only a new room's
+cell is its own), so neither undoes the other's saves. The map also adds
+and removes rooms and connections (D77): then it sends the new and
+changed room files, the removed rooms' ids and the whole `world.json`
+(its connections win; positions still merge, removed rooms' dropped).
+After every save the dev server sends `neonmancer:data-saved`: the game
+ignores it (it already shows its edits), the map reloads unless it has
+unsaved changes. A room file added or deleted reloads open pages anyway
+(the data bundle changed).
 
 While editing, the page checks all its edited data (every edited room and
 `world.json`, D57) with `validateData()` against its own copy of the rest

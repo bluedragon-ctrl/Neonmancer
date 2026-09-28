@@ -5,23 +5,23 @@
   "name": "Quarantine",
   "biome": "glitchmire",
   "size": [10, 4, 10],
-  "spawn": [5.5, 0, 8.5],
-  "exits": [{ "id": "south", "side": "+z", "at": 5 }],
+  "spawn": [8.5, 0, 5.5],
+  "exits": [{ "id": "east", "side": "+x", "at": 5 }],
   "blocks": [
     { "at": [4, 0, 4], "to": [5, 1, 5] },
-    { "at": [0, 0, 7], "to": [1, 0, 9] }
+    { "at": [7, 0, 0], "to": [9, 0, 1] }
   ],
-  "holes": [{ "at": [7, 2], "to": [7, 6] }],
-  "objects": [{ "id": "cover", "type": "crate", "at": [3, 0, 7] }],
+  "holes": [{ "at": [2, 7], "to": [6, 7] }],
+  "objects": [{ "id": "cover", "type": "crate", "at": [7, 0, 3] }],
   "enemies": [
     { "id": "virus", "template": "virus", "at": [2, 0, 2] },
-    { "id": "sentinel", "template": "sentinel", "at": [9, 0, 1] },
+    { "id": "sentinel", "template": "sentinel", "at": [1, 0, 9] },
     {
       "id": "zapbug",
       "template": "bug",
-      "at": [8, 0, 6],
+      "at": [6, 0, 8],
       "overrides": { "movement": "stationary", "attack": "burst", "aggroRange": 2 }
     }
   ],
-  "pickups": [{ "id": "integrity", "type": "refill_integrity", "at": [9, 0, 7] }]
+  "pickups": [{ "id": "integrity", "type": "refill_integrity", "at": [7, 0, 9] }]
 }

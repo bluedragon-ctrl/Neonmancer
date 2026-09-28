@@ -104,7 +104,7 @@ export function validateData(files) {
 }
 
 /**
- * Enemy templates (D58, D78): `extends` names a known template, the chain
+ * Enemy templates (D58, D79): `extends` names a known template, the chain
  * of them has no loop, and each template is complete once filled in.
  */
 function validateTemplates(enemies, report) {
@@ -374,7 +374,7 @@ function validatePathShape(room, report, path, at, points, mode, level = false) 
 }
 
 /**
- * Enemies (D48, D77): unique ids (shared with objects), known types and
+ * Enemies (D48, D78): unique ids (shared with objects), known types and
  * valid overrides, each in a free cell of its own, not starting over a
  * hole; patrols have a path, level (legs along x or z) and through no
  * static block; chasers may have one (walked while calm); stationary

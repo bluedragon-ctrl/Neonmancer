@@ -1,5 +1,5 @@
 /**
- * defs.json while the room editor changes its enemy templates (D58, D78):
+ * defs.json while the room editor changes its enemy templates (D58, D79):
  * every entry of `enemies` is one, with all its values or `extends` another
  * with only the values it changes. Room undo steps that change a template
  * take it along (room-edit.js). Plain logic, no browser.

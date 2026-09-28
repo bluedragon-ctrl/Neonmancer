@@ -248,7 +248,7 @@ test('a crate in the way hides the wizard from a sentinel, and a crate stops an 
   assert.ok(game.enemies[0].boltEnd[0] < 3.3, `stopped at the crate: ${game.enemies[0].boltEnd}`);
 });
 
-// ---- any enemy (D77)
+// ---- any enemy (D78)
 
 test('any enemy can have any attack: a bug with a burst hurts from a cell away, not by touch', () => {
   const zapper = { extends: 'bug', movement: 'stationary', attack: 'burst', aggroRange: 3, attackRange: 1.2, attackCharge: 0.2 };

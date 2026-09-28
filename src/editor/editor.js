@@ -6,7 +6,7 @@
  * and testing take turns without a reload. Edits are kept per room until
  * the page is closed; the panel switches between rooms and makes new ones.
  * Exit connections are edited in world.json, and enemy templates in
- * defs.json (D58, D78); both are saved with the rooms.
+ * defs.json (D58, D79); both are saved with the rooms.
  *
  * The editor reads the mouse and its own keys directly, not through action
  * mapping (a tool, not the game; D56). Saving writes data/ through the dev
@@ -373,7 +373,7 @@ export class Editor {
     return (overrides.movement ?? this.enemyTemplates[template]?.movement) === 'patrol';
   }
 
-  /** May this enemy have a path: a patrol, or a chaser (walked while calm, D77)? Not a stationary one. */
+  /** May this enemy have a path: a patrol, or a chaser (walked while calm, D78)? Not a stationary one. */
   walksPath({ template, overrides = {} }) {
     return (overrides.movement ?? this.enemyTemplates[template]?.movement) !== 'stationary';
   }
@@ -406,7 +406,7 @@ export class Editor {
 
   /**
    * Save the enemy settings as a new template in defs.json, built on the
-   * template they are of (D58, D78); the picked enemy becomes one of it,
+   * template they are of (D58, D79); the picked enemy becomes one of it,
    * and so do new ones. One undo step of the room.
    * @param {string} name the template's id
    */
