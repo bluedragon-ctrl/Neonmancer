@@ -682,9 +682,9 @@ The seventh spell (D87), from a data disk by the entrance of Clipboard
   (rounded to the nearest level mid-jump). `frontCell()`, `cutTarget()`
   and `pasteCell()` in `src/entities/clip.js`.
 - **Cut** (E, clipboard empty; 20 energy): takes the crate (any pushable
-  at rest) or the frozen enemy in that cell, or else one level up, out of
-  the room into his clipboard. One with something resting on it stays
-  (D4), but the top of a stack is cut. Nothing to cut: it fizzles
+  at rest) or the frozen enemy in that cell, on his own level only, out
+  of the room into his clipboard. One with something resting on it
+  stays (D4): cutting never makes anything fall. Nothing to cut: it fizzles
   (energy back, no cooldown).
 - **Paste** (E, holding something; free, `pasteCost`): puts it into that
   cell, if it is inside the room and clear of blocks, bodies (objects,
@@ -889,7 +889,7 @@ The world map tool flags any room further out.
 | `crawl_space` (Phase 2) | 12×12 | west doorway → Volatile Memory; east (front) → Boot Sector | bugs: a sentry crossing the entrance lane, one walking off a ledge and patrolling the floor below, a solid one shoving along a lane with a crate to push in its way, a provoked one circling a pillar, a peaceful stationary one to bounce up to a 2-high ledge, a solid peaceful one along the front edge to ride; Zap targets: the provoked one turns hostile when hit, and an amber stationary one with 4 integrity; an energy refill near the entrance (Phase 3) |
 | `quarantine` (Phase 3) | 10×10, Glitchmire | east doorway → Boot Sector; west doorway → Scheduler | chasers (step 5, D78): a virus at the back that chases and bursts, a sentinel in the far corner that keeps its distance and fires arcs, a stationary bug with a burst guarding an integrity refill; a 2-high pillar to hide behind, a trench of holes the chasers won't cross, a crate for cover and a 1-high ledge; the Pause data disk on the pillar (step 8, D85), reached by pushing the crate against it |
 | `fast_path` (Phase 3) | 12×12, Frostbyte Wastes | south (front) → Room 1 | Blink and Warp (step 9, D86): the Blink disk by the entrance, a 2-wide pit across the room to blink over, a bug patrolling the lane beyond (blink through it) past a 2-high pillar to blink into, the Warp disk at the lane's end, and a 6-wide pit only Warp crosses to an energy refill against the side wall |
-| `clipboard` (Phase 3) | 12×12, Abyssal Buffer | east doorway → Room 1 | Cut & Paste (step 10, D87): the disk by the entrance; a crate on a 1-high ledge to cut from the floor and paste as a step up a 2-high pillar with an energy refill on top; a crate walled into a nook, only cut out; a 2-wide pit to fill with both crates, an integrity refill beyond; a patrolling bug to freeze and move |
+| `clipboard` (Phase 3) | 12×12, Abyssal Buffer | east doorway → Room 1 | Cut & Paste (step 10, D87): the disk by the entrance; a crate on a 2-long 1-high ledge, cut standing on the ledge and pasted on the floor as a step up a 2-high pillar with an energy refill on top; a crate walled into a nook, only cut out; a 2-wide pit to fill with both crates, an integrity refill beyond; a patrolling bug to freeze and move |
 | `scheduler` (Phase 3) | 10×10, Abyssal Buffer | east doorway → Quarantine | the cron, worm and crawler looks (D83): a tower in the middle firing four ways, placed off the entrance's axes; a worm patrolling the back row across the tower's line of fire (its bolts can pop it); a crawler chasing from the far corner; pillars, a low wall and a crate to hide behind, an integrity refill in the far corner, and the Firewall data disk on the low wall (step 7, D84) |
 
 ### Room design checklist

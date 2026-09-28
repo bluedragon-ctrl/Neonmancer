@@ -99,20 +99,26 @@ test('with nothing to cut or no room to paste it fizzles: energy kept, clipboard
   assert.ok(game.player.clipboard);
 });
 
-test('a crate with something on it stays; the top of the stack is cut; one level up is in reach', () => {
+test('only on his own level: a crate with something on it stays, one a level up is out of reach', () => {
   const game = gameWith({
+    blocks: [{ at: [1, 0, 3] }],
     objects: [
       { id: 'low', type: 'crate', at: [2, 0, 3] },
       { id: 'top', type: 'crate', at: [2, 1, 3] },
     ],
   });
   const [low, top] = game.objects;
-  assert.equal(cast(game)[0].object, top, 'the top one, one level up');
-  assert.equal(game.player.clipboard.data.id, 'top');
-  aim(game, [1.5, 0, 3.5], 0);
-  cast(game); // paste it somewhere else
-  aim(game, [1.5, 0, 3.5], Math.PI / 2);
-  assert.equal(cast(game)[0].object, low);
+  aim(game, [2.5, 0, 2.5], 0); // on the floor facing +z: the low crate, loaded
+  assert.deepEqual(eventTypes(cast(game)), ['fizzle']);
+  aim(game, [2.5, 0, 4.5], Math.PI); // facing −z from the other side: same, and the top one is a level up
+  assert.deepEqual(eventTypes(cast(game)), ['fizzle']);
+
+  aim(game, [1.5, 1, 3.5], Math.PI / 2); // on the block: the top crate is on his level
+  assert.equal(cast(game)[0].object, top);
+  aim(game, [1.5, 1, 3.5], Math.PI);
+  cast(game); // paste it off the stack; it drops to the floor
+  aim(game, [2.5, 0, 2.5], 0);
+  assert.equal(cast(game)[0].object, low, 'nothing on it any more');
 
   const loaded = gameWith({ objects: [{ id: 'box', type: 'crate', at: [2, 0, 3] }], enemies: [{ id: 'bug', template: 'still', at: [2, 1, 3] }] });
   assert.deepEqual(eventTypes(cast(loaded)), ['fizzle'], 'a bug sits on it');

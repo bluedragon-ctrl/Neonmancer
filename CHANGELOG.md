@@ -9,7 +9,7 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ### Added
 - The Cut & Paste spell (Phase 3 step 10, D87, slot 6, white). With an
   empty clipboard it cuts the crate or frozen enemy right in front of
-  the wizard (at his feet or one level up; 20 energy); holding one, it
+  the wizard, on his own level (20 energy); holding one, it
   pastes it into the free cell in front of him for free, in this room or
   another: the clipboard goes with him, and dying loses it. A pasted
   enemy keeps its freeze (paused while held), integrity and patrol path.

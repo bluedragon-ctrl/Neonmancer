@@ -1522,9 +1522,10 @@ never strands him inside something.
 Settled with the author at the start of Phase 3 step 10:
 - **What it cuts:** crates (every pushable type, destructible ones too)
   and frozen enemies, the thing right in front of him: the first whole
-  cell ahead of his box on his grid axis, at his feet or one level up.
-  One with something resting on it stays (like pushing, D4); the top of
-  a stack can be cut. Targets, plates, platforms, collapsing blocks and
+  cell ahead of his box on his grid axis, **on his own level only** (the
+  author turned down reaching one level up). One with something resting
+  on it stays (like pushing, D4), so cutting never makes anything fall
+  out of a stack. Targets, plates, platforms, collapsing blocks and
   awake enemies can't.
 - **One slot, taken along:** what he holds goes with him from room to
   room and pastes into any room; dying loses it. The room it came from
@@ -1555,7 +1556,7 @@ Settled with the author at the start of Phase 3 step 10:
   `#f4f6ff` (over gold and coral), slot 6.
 - New test room **Clipboard** (Abyssal Buffer) west of Room 1, two rooms
   from Boot Sector (D49): the disk by the entrance, a crate on a 1-high
-  ledge to cut from the floor and paste as a step up a 2-high pillar (an
+  ledge to cut standing on the ledge and paste as a step up a 2-high pillar (an
   energy refill on top), a crate walled into a nook that can only be cut
   out, a 2-wide pit to fill with both crates (an integrity refill
   beyond), and a patrolling bug to freeze and move.

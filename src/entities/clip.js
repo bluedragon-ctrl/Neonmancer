@@ -4,9 +4,9 @@
  * a tie), and the cell in front is the first whole cell ahead of his box,
  * in his column across that axis, at the height of his feet.
  *
- * - Cut takes a crate (a resting pushable) or a frozen enemy there, at
- *   his feet or else one level up; one with something resting on it can't
- *   be cut (like pushing, D4), but the top of a stack can.
+ * - Cut takes a crate (a resting pushable) or a frozen enemy there, on
+ *   his own level only; one with something resting on it can't be cut
+ *   (like pushing, D4), so nothing ever drops out of a stack.
  * - Paste puts what he holds into that cell at his feet: inside the room,
  *   clear of blocks, bodies (objects, enemies, him) and pickups lying there.
  *   It falls from there if nothing holds it up (into a hole, it plugs it).
@@ -51,22 +51,20 @@ function loaded(box, bodies, self) {
 
 /**
  * What Cut would take: the crate or frozen enemy in the cell in front of
- * him, at his feet or one level up.
+ * him, on his own level, with nothing resting on it.
  * @param {import('../game.js').Game} game player, objects, liveEnemies and bodies
  * @returns {{ object?: object, enemy?: object, cell: number[] }|null}
  */
 export function cutTarget({ player, objects, liveEnemies, bodies }) {
-  const [x, y, z] = frontCell(player.pos, player.size, aimAxis(player.aim()));
-  for (const cy of [y, y + 1]) {
-    const cell = [x, cy, z];
-    const object = objects.find((o) => o.kind === 'pushable' && o.state === 'rest' && o.pos.every((v, i) => v === cell[i]));
-    if (object && !loaded(object.box(), bodies, object)) return { object, cell };
-    const enemy = liveEnemies.find((e) => {
-      const [bx, by, bz] = e.box();
-      return Math.floor((bx[0] + bx[1]) / 2) === x && Math.floor(by[0] + REST_EPS) === cy && Math.floor((bz[0] + bz[1]) / 2) === z;
-    });
-    if (enemy?.frozen && !loaded(enemy.box(), bodies, enemy)) return { enemy, cell };
-  }
+  const cell = frontCell(player.pos, player.size, aimAxis(player.aim()));
+  const [x, y, z] = cell;
+  const object = objects.find((o) => o.kind === 'pushable' && o.state === 'rest' && o.pos.every((v, i) => v === cell[i]));
+  if (object) return loaded(object.box(), bodies, object) ? null : { object, cell };
+  const enemy = liveEnemies.find((e) => {
+    const [bx, by, bz] = e.box();
+    return Math.floor((bx[0] + bx[1]) / 2) === x && Math.floor(by[0] + REST_EPS) === y && Math.floor((bz[0] + bz[1]) / 2) === z;
+  });
+  if (enemy?.frozen && !loaded(enemy.box(), bodies, enemy)) return { enemy, cell };
   return null;
 }
 
