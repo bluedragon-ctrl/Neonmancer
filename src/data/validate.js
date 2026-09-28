@@ -72,10 +72,14 @@ export function validateData(files) {
     }
   }
 
-  // Only pushables break (entities/pushable.js); integrity on another kind would do nothing.
+  // Only pushables break (entities/pushable.js) and only platforms hurt
+  // (D82); on another kind these would do nothing.
   for (const [id, type] of Object.entries(files['defs.json'].objects ?? {})) {
     if (type.integrity !== undefined && type.kind !== 'pushable') {
       report('defs.json', `objects.${id}.integrity`, `only pushable objects can be destroyed, not a ${type.kind}`);
+    }
+    if (type.damage !== undefined && type.kind !== 'platform') {
+      report('defs.json', `objects.${id}.damage`, `only platforms can hurt, not a ${type.kind}`);
     }
   }
 

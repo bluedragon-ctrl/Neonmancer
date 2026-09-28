@@ -8,7 +8,8 @@
     "crate_dashed": { "kind": "pushable", "color": "#b6ff3c", "edges": "dashed" },
     "target": { "kind": "target", "color": "#eef3ff" },
     "plate": { "kind": "plate", "color": "#eef3ff", "edges": "dashed" },
-    "platform": { "kind": "platform", "color": "#00f0ff", "mark": "brackets", "faces": "tinted" }
+    "platform": { "kind": "platform", "color": "#00f0ff", "mark": "brackets", "faces": "tinted" },
+    "spiked_platform": { "kind": "platform", "color": "#ff3b30", "shape": "spiked", "damage": 1 }
   },
   "enemies": {
     "bug": {

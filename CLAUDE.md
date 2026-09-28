@@ -104,7 +104,7 @@ mobile/touch support, backend or accounts.
 
 ### Objects and blocks
 - Types: static, pushable, moving (paths or up/down cycles; player rides
-  them), collapsing (vanish after being stepped on, optional respawn),
+  them; spiked ones hurt on touch, D82), collapsing (vanish after being stepped on, optional respawn),
   hazard (deals damage), void (instant death when the player falls onto it).
 - Switches unlock exits: a floor plate held down by a crate, an enemy or
   the wizard, or a target a bolt switches on and off. A locked exit opens
@@ -265,7 +265,8 @@ show a map of the surrounding area (decided with the Phase 4 map step).
 
 The engine is generic; all content lives in data.
 
-- `data/defs.json` — object types, block types (look or kind, color,
+- `data/defs.json` — object types (kind, style, damage for spiked
+  platforms), block types (look or kind, color,
   properties such as damage and lethal; variants `extend` a base, D60),
   enemy templates (look, movement, attack,
   hostility, aggro range, integrity, damage, speeds, bounce, solid, color,

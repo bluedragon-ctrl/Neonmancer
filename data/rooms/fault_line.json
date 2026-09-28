@@ -24,5 +24,31 @@
     { "type": "void", "at": [7, 0, 7], "to": [8, 0, 9] },
     { "type": "void", "at": [7, 0, 10], "to": [10, 0, 10] }
   ],
+  "objects": [
+    {
+      "id": "hopper_a1",
+      "type": "spiked_platform",
+      "at": [3, 0, 5],
+      "path": { "points": [[3, 2, 5]], "speed": 2.5, "pause": 0.6 }
+    },
+    {
+      "id": "hopper_a2",
+      "type": "spiked_platform",
+      "at": [3, 0, 6],
+      "path": { "points": [[3, 2, 6]], "speed": 2.5, "pause": 0.6 }
+    },
+    {
+      "id": "hopper_b1",
+      "type": "spiked_platform",
+      "at": [5, 2, 5],
+      "path": { "points": [[5, 0, 5]], "speed": 2.5, "pause": 0.6 }
+    },
+    {
+      "id": "hopper_b2",
+      "type": "spiked_platform",
+      "at": [5, 2, 6],
+      "path": { "points": [[5, 0, 6]], "speed": 2.5, "pause": 0.6 }
+    }
+  ],
   "pickups": [{ "id": "integrity", "type": "refill_integrity", "at": [6, 0, 5] }]
 }

@@ -14,9 +14,10 @@
  * front edges (render/walls.js).
  */
 import { BoxGeometry, BufferGeometry, Color, DoubleSide, Float32BufferAttribute, Group, InstancedMesh, Matrix4, Mesh } from 'three';
-import { createActiveBlockView } from './block-fx.js';
+import { BLOCK_FX, createActiveBlockView, flareHazard, hazardFaceMaterial } from './block-fx.js';
 import { blockEdges, edgeUnitKeys, groupedBlockEdges } from './edges.js';
 import { BITS, markSegments } from './marks.js';
+import { spikeSegments, spikeTriangles } from './spikes.js';
 import { doorwayTunnels, wallLayout } from './walls.js';
 import {
   PALETTE,
@@ -140,6 +141,15 @@ function createTunnels({ quads, lines: corners }, color) {
   return new Group().add(shadedFaces(positions, colors), fadingLines(corners, { color, width: 1.5, brightness: 0.6 }));
 }
 
+/** The spiked shape (D82) at the origin, shared by every spiked object view. */
+const SPIKED_BODY = shared(new BufferGeometry().setAttribute('position', new Float32BufferAttribute(spikeTriangles(), 3)));
+SPIKED_BODY.computeVertexNormals();
+
+/** Outline width of a spiked shape: its ridges are short, so thinner than a cube's edges. */
+const SPIKED_EDGE_WIDTH = 2;
+/** How much brighter a spiked shape's outline gets at the peak of its flare. */
+const SPIKED_FLARE = 1.5;
+
 /** Outline width by object kind, where it differs: collapsing blocks look fragile. */
 const EDGE_WIDTH = { collapsing: 1.5 };
 
@@ -148,21 +158,50 @@ const EDGE_WIDTH = { collapsing: 1.5 };
  * (edges, face mark, faces), so types differ by more than color. Kept
  * separate from the static blocks because objects move (D40). A
  * destructible object (with `integrity`) shows its data bits with some
- * missing instead of its mark.
- * @param {{ at: number[], kind?: string, color: string, edges: string, mark: string, faces: string, tint: number, integrity?: number }} object
+ * missing instead of its mark. Hazard faces (D82) are the hazard block's
+ * flickering pixels (block-fx.js). A spiked shape (D82, spikes.js) has
+ * dark or hazard faces, its own outline and no mark. An object that hurts
+ * (hazard faces or spiked) can flare like a hazard block: its faces light
+ * up, or its outline brightens; `userData.flare(since)` sets the flare
+ * for `since` seconds after it hurt the wizard.
+ * @param {{ at: number[], kind?: string, color: string, edges: string, mark: string, faces: string, shape?: string, tint: number, integrity?: number }} object
  */
-export function createObjectView({ at, kind, color, edges, mark, faces, tint, integrity }) {
+export function createObjectView({ at, kind, color, edges, mark, faces, shape = 'cube', tint, integrity }) {
   const group = new Group();
+  const spiked = shape === 'spiked';
+  /** What lights up when it hurts the wizard, each set for seconds since. */
+  const flares = [];
+  const geometry = spiked ? SPIKED_BODY : UNIT_BOX;
 
-  const materials = faces === 'tinted' ? tintedFaceMaterials(color, tint) : faceMaterial();
-  const box = new Mesh(UNIT_BOX, materials);
-  box.position.set(...at);
-  group.add(box);
+  if (faces === 'hazard') {
+    // The hazard shader places its pixels by instance, so this is a one-instance mesh.
+    const material = hazardFaceMaterial(color);
+    const body = new InstancedMesh(geometry, material, 1);
+    body.setMatrixAt(0, new Matrix4().makeTranslation(...at));
+    group.add(body);
+    flares.push((since) => flareHazard(material, at, since));
+  } else {
+    const materials = faces === 'tinted' && !spiked ? tintedFaceMaterials(color, tint) : faceMaterial();
+    const body = new Mesh(geometry, materials);
+    body.position.set(...at);
+    group.add(body);
+  }
 
   const dashed = edges === 'dashed';
-  const outline = neonLines(blockEdges([at]), lineMaterial({ color, width: EDGE_WIDTH[kind] ?? 2.5, brightness: 1.6, dashed }));
+  const segments = spiked ? spikeSegments(at) : blockEdges([at]);
+  const width = spiked ? SPIKED_EDGE_WIDTH : EDGE_WIDTH[kind] ?? 2.5;
+  const outline = neonLines(segments, lineMaterial({ color, width, brightness: 1.6, dashed }));
   outline.renderOrder = 2;
   group.add(outline);
+  if (spiked) {
+    const base = outline.material.color.clone();
+    flares.push((since) => {
+      const flare = Math.max(0, 1 - since / BLOCK_FX.hazard.flareTime);
+      outline.material.color.copy(base).multiplyScalar(1 + SPIKED_FLARE * flare);
+    });
+  }
+  if (flares.length > 0) group.userData.flare = (since) => flares.forEach((flare) => flare(since));
+  if (spiked) return group;
 
   // A destructible object shows its data bits with some missing, whatever its mark.
   const drawn = integrity !== undefined ? 'bitsBroken' : mark;

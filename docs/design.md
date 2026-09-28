@@ -203,9 +203,21 @@ follows a path given on the room object.
 - Validation: points inside the room, legs along one axis, nothing static
   on the path, and no path through the first row inside an exit. Crates on
   the path and holes under it are fine.
+- **Spiked platforms** (D82): a platform type with `damage` hurts the
+  wizard whenever he touches it, its sides, its top or riding it, like a
+  hazard block that moves (then he is invulnerable for a while and
+  blinks). `spiked_platform` in `defs.json`: hazard red, dark faces and
+  `shape: "spiked"` (a smaller core cube with four pyramids on each side,
+  their tips reaching the faces of its cell, so what shows is what hurts;
+  `SPIKES` in `src/render/spikes.js`); its outline flares when it hurts
+  him (hazard faces would flare too, but their pixels are too small to
+  read on the spikes). It moves, waits
+  and carries crates like any platform; a short up-and-down path makes a
+  hopper to time a run past, a long one a sliding trap. Only platforms
+  take `damage` (validation).
 - Tuning: `PLATFORM` in `src/entities/platform.js`, `RAILS` in
   `src/render/rails.js`; review in the asset showcase
-  (`/tools/showcase.html?asset=platform,platforms`).
+  (`/tools/showcase.html?asset=platform,platforms,spiked_platform,spiked-platforms`).
 
 ## Collapsing blocks
 
@@ -699,7 +711,7 @@ The world map tool flags any room further out.
 | `cache_hall` | 16×8 | south (front) → Boot Sector; east (front) → Relay Station | a 3-wide pit across the room: push a crate in, then jump the rest; the Shield data disk behind it (Phase 3 step 3) |
 | `relay_station` (Phase 3) | 12×12 | west doorway → Cache Hall; south (front, locked) → Stack Yard | switches (step 4): a Zap target by the back wall, a crate to push onto a plate, and a peaceful bug resting 2 s on a plate near the locked exit, so the exit opens while the bug is on it (the wizard can press that plate himself, but the exit closes as he steps off) |
 | `stack_yard` | 8×8, Glitchmire color | raised west doorway → Boot Sector; east (front) → Fault Line; north doorway (locked) → Relay Station | stacked crates, a 2-high block to climb via a crate; a plate in front of the locked doorway and a crate to push onto it (Phase 3 step 4) |
-| `fault_line` (Phase 2) | 12×12 | west doorway → Stack Yard; raised east exit on the lookout → Transit Bus | a corridor between hazard walls with an integrity refill at its end (Phase 3), hazard blocks between two plain ones to walk across, a zigzag path of plain blocks through a field of void blocks up to a lookout |
+| `fault_line` (Phase 2) | 12×12 | west doorway → Stack Yard; raised east exit on the lookout → Transit Bus | a corridor between hazard walls with an integrity refill at its end (Phase 3), guarded by two gates of spiked hoppers going up and down out of step, with a one-cell pocket between them to wait in (D82), hazard blocks between two plain ones to walk across, a zigzag path of plain blocks through a field of void blocks up to a lookout |
 | `transit_bus` (Phase 2) | 12×12, 5 high | west doorway → Fault Line; north doorway → Boot Sector; raised east exit on the high ledge → Volatile Memory | a ferry across a pit between two ledges, a lift up to a high ledge, a loop carrying a crate, a press coming down (with a crate to jam it) and a pusher squeezing the wizard against the room's edge |
 | `volatile_memory` (Phase 2) | 12×12, 5 high | west doorway → Transit Bus; raised east exit on the high ledge → Crawl Space | a pit across the room with two collapsing bridges: one regrowing after 3 s (the way back), one that stays gone, with a crate on a plain ledge in front of it to push onto the bridge from solid ground (it doesn't trigger the blocks, so it is a safe spot to hop onto); two one-shot collapsing steps up to a high ledge |
 | `crawl_space` (Phase 2) | 12×12 | west doorway → Volatile Memory; east (front) → Boot Sector | bugs: a sentry crossing the entrance lane, one walking off a ledge and patrolling the floor below, a solid one shoving along a lane with a crate to push in its way, a provoked one circling a pillar, a peaceful stationary one to bounce up to a 2-high ledge, a solid peaceful one along the front edge to ride; Zap targets: the provoked one turns hostile when hit, and an amber stationary one with 4 integrity; an energy refill near the entrance (Phase 3) |
@@ -1161,7 +1173,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 | File | Contents |
 |---|---|
 | `data/rooms/<id>.json` | One room (id = file name) |
-| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; switches `target` and `plate`, white, see Switches and locked exits); `enemies`: enemy templates (`bug`, `virus`, `sentinel`, see Enemies), each complete or `extend`ing another (D58, D79); `spells`: spell tuning and color (`zap`, see Zap and energy; `shield`, see Shield); `pickups`: pickup types (see Pickups and progress); `blocks`: block types (D60): look or kind, color, properties (`damage`, `lethal`, `regrow`), `extends` for variants; see Block types |
+| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; `spiked_platform`: a platform that hurts on touch, hazard red (D82); switches `target` and `plate`, white, see Switches and locked exits); `enemies`: enemy templates (`bug`, `virus`, `sentinel`, see Enemies), each complete or `extend`ing another (D58, D79); `spells`: spell tuning and color (`zap`, see Zap and energy; `shield`, see Shield); `pickups`: pickup types (see Pickups and progress); `blocks`: block types (D60): look or kind, color, properties (`damage`, `lethal`, `regrow`), `extends` for variants; see Block types |
 | `data/biomes.json` | Biome name and room color: `home_lattice` (core, amber), `glitchmire` (pink), `frostbyte_wastes` (ice blue), `abyssal_buffer` (graphite), `firewall_citadel` (ember orange), `phantom_partition` (special, silver-white); optional `look` for the surroundings (background, outer grid and its fade, wall grid, bloom); see Biomes (D61, D62) |
 | `data/world.json` | Start room, exit connections and every room's cell on the world map (`positions`, D66) |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |
@@ -1212,8 +1224,11 @@ Example room (12×12):
   spawn cell, `path` a patrol path (level legs), `overrides` any template field
   (see Enemies). Ids are shared with objects.
 - Object type style (D17): `edges` `solid`/`dashed`, `mark`
-  `none`/`inset`/`cross`/`brackets`, `faces` `dark`/`tinted` (defaults first),
-  `tint` 0–1 (color share of a tinted top face, default 0.1).
+  `none`/`inset`/`cross`/`brackets`/`bits`, `faces`
+  `dark`/`tinted`/`hazard` (`hazard`: the hazard block's flickering
+  pixels, D82), `shape` `cube`/`spiked` (spiked: pyramids on every side,
+  dark or hazard faces, no mark, D82) (defaults first), `tint` 0–1 (color
+  share of a tinted top face, default 0.1).
   Objects may override them.
 - `world.json` pairs exits: `"connections": [["boot_sector.north", "cache_hall.south"]]`.
   Paired exits are on opposite sides and equally wide; every exit is connected.

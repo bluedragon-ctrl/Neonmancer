@@ -90,6 +90,9 @@ const ALL_ASSETS = [
   { label: 'blocks-in-room', span: 5.5, build: buildBlocksInRoom },
   { label: 'exits', span: 5.5, build: buildExits },
   { label: 'platforms', span: 5.5, build: buildPlatforms },
+  // Spiked platforms (D82): a hopper bobbing up and down, a slider gliding
+  // along the floor; the hopper flares every 2 s as if it just hurt the wizard.
+  { label: 'spiked-platforms', span: 5.5, build: buildSpikedPlatforms },
   { label: 'collapsing-cycle', span: 4.5, build: buildCollapsingCycle },
   // Bugs (D48): walking hops in each mood, one being bounced on, a pop.
   { label: 'bug', group: 'bugs', build: () => buildBug('hostile') },
@@ -1134,6 +1137,41 @@ function buildPlatforms() {
       for (const mover of movers) mover.state = advance(mover.track, mover.state, mover.track.speed / 60);
     }
     for (const { track, block, state } of movers) block.position.set(...positionOf(track, state));
+  };
+  return asset;
+}
+
+/**
+ * Spiked platforms (D82) in a 4×4 room corner: a hopper going up a block
+ * and back with a short pause at each end, and a slider gliding to and fro
+ * along the floor. They move like any platform (world/path.js).
+ */
+function buildSpikedPlatforms() {
+  const size = [4, 3, 4];
+  const props = defs.objects.spiked_platform;
+  const style = { ...OBJECT_STYLE_DEFAULTS, ...props, at: [0, 0, 0] };
+  const paths = [
+    buildTrack([1, 0, 1], { points: [[1, 1, 1]], speed: 2.5, pause: 0.4 }),
+    buildTrack([3, 0, 0], { points: [[3, 0, 3]], speed: 1.5, pause: 0.5 }),
+  ];
+  const room = new Group().add(createRoomView({ size, blocks: {}, blockTypes: BLOCK_TYPES, color: PALETTE.amber }));
+  const movers = paths.map((track) => {
+    const block = createObjectView(style);
+    room.add(createRails(track, props.color), block);
+    return { track, block, state: startState() };
+  });
+  room.position.set(-2, 0, -2);
+  const asset = new Group().add(room);
+  const flareHopper = movers[0].block.userData.flare;
+  let carry = 0;
+  let time = 0;
+  asset.userData.update = (dt) => {
+    for (carry += dt * 60; carry >= 1; carry--) {
+      for (const mover of movers) mover.state = advance(mover.track, mover.state, mover.track.speed / 60);
+    }
+    for (const { track, block, state } of movers) block.position.set(...positionOf(track, state));
+    time = (time + dt) % 2;
+    flareHopper(time);
   };
   return asset;
 }

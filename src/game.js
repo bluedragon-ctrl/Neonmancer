@@ -54,7 +54,8 @@ export const TRANSITION = {
  * @property {string} [spell] the spell cast, failed or selected (cast, deny, spell)
  * @property {object} [object] the room object it happened to (push, plug,
  *   land of an object; shake, collapse and regrow of a collapsing block;
- *   hit by a spell, break of a destructible one; a switch going on or off)
+ *   hit by a spell, break of a destructible one; a switch going on or off;
+ *   a spiked platform that hurt the wizard: hurt)
  * @property {object} [enemy] the enemy it happened to (pop, land of an
  *   enemy, bounce off it, hit by a spell, a discharge or a bolt; it noticed
  *   the wizard or something hit it: alert; its charged attack: charge,
@@ -123,6 +124,8 @@ export class Game {
     this.updateOrder = [...this.objects];
     /** The room's switches (entities/switch.js): targets and plates, all off. */
     this.switches = this.objects.filter((object) => SWITCH_KINDS.includes(object.kind));
+    /** Objects that hurt the wizard on touch: spiked platforms (D82). */
+    this.spiked = this.objects.filter((object) => object.damage > 0);
     /** The exit he came in through: it stays open for him while he is in the room (D75). */
     this.entryExit = entry;
     /** Locked exits (D75), open while every switch is on; closed ones are solid (Grid.setOpening()). */
@@ -180,18 +183,19 @@ export class Game {
    * The wizard loses integrity, unless invincible (debug mode) or still
    * invulnerable from the last hit; losing the last point kills him. Every
    * damage source goes through here (D43): hazard blocks, enemies,
-   * squeezing platforms and the debug test-damage key. Reported
+   * spiked and squeezing platforms and the debug test-damage key. Reported
    * as a 'hurt' (and 'die') event with this tick's events, or the next
    * tick's when called outside update().
    * @param {number} [amount]
    * @param {object} [source]
    * @param {number[]} [source.cell] the hazard block that hurt him, passed on with the event
    * @param {Enemy} [source.enemy] the enemy that hurt him, passed on with the event
+   * @param {object} [source.object] the room object that hurt him (a spiked platform), passed on with the event
    */
-  hurt(amount = 1, { cell, enemy } = {}) {
+  hurt(amount = 1, { cell, enemy, object } = {}) {
     if (this.invincible) return;
     const lost = this.player.hurt(amount);
-    if (lost > 0) this.emit('hurt', { amount: lost, ...(cell && { cell }), ...(enemy && { enemy }) });
+    if (lost > 0) this.emit('hurt', { amount: lost, ...(cell && { cell }), ...(enemy && { enemy }), ...(object && { object }) });
     if (this.player.dead) this.died();
   }
 
@@ -413,9 +417,13 @@ export class Game {
     if (playerEvent === 'die') this.died();
     else if (playerEvent) this.emit(playerEvent);
 
-    // Touching a block that deals damage hurts (then he is invulnerable for a while).
+    // Touching a block or an object that deals damage hurts (then he is
+    // invulnerable for a while). A spiked platform's sides and top hurt
+    // like a hazard block's, riding it too (D82).
     const hazard = player.dead ? null : touchedCell(player.box(), this.grid, (type) => type.damage > 0);
     if (hazard) this.hurt(this.grid.typeAt(...hazard).damage, { cell: hazard });
+    const spiked = player.dead ? null : this.spiked.find((object) => touchesBox(player.box(), object.box()));
+    if (spiked) this.hurt(spiked.damage, { object: spiked });
 
     // Switch spells (Tab), then cast the selected one.
     for (const [action, step] of [['spellNext', 1], ['spellPrev', -1]]) {

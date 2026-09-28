@@ -1362,3 +1362,27 @@ new combinations are data, not code. Level bounces stay readable on the
 isometric screen; a bolt that can come back at its shooter gives the
 wizard a trick. Blaming the wizard for friendly fire lets him stir up a
 room on purpose.
+
+### D82 — 2026-09-28 — Spiked platforms
+Knight Lore's bouncing spiked balls, as an object rather than an enemy:
+the author asked for the hopper only, reusing the platform code, as a
+damaging object with coloring from the hazard block.
+- A platform type may have `damage` (validated: platforms only): the
+  wizard touching it, its sides, its top or riding it, loses that much
+  integrity, like touching a hazard block (then invulnerability). It
+  moves, waits and carries crates like any platform (same class, same
+  paths), so a hopper is a platform on a short up-and-down path.
+- Look: `faces: "hazard"` gives an object the hazard block's flickering
+  pixels, flaring when it hurts the wizard; `shape: "spiked"` makes it a
+  smaller core cube with four pyramids on each side (the author asked for
+  real spikes rather than a face pattern), their tips on the faces of
+  its cell: it still collides as the whole cell, so what shows is what
+  hurts. An object that hurts flares when it hurts the wizard (its
+  outline, or its hazard faces). `spiked_platform` is spiked with dark
+  faces in hazard red (the author: the hazard pixels are too small to
+  see on the spikes); showcase `spiked-platforms`.
+**Why:** a mechanism with a fixed rhythm is an object, not a monster
+(enemies are for things that sense and react; a Zap, Pause or alarm means
+nothing to it). Reusing platforms and the hazard look makes it data plus
+a touch check, and red with flickering pixels already means "hurts" in
+every room.
