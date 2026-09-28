@@ -479,7 +479,8 @@ enemies).
   `?asset=install`.
 - **Spell colors:** each spell has a `color` in `defs.json` (Zap cyan
   `#00f0ff`, Shield neon blue `#3b82ff`, Firewall ember `#ff5a14`, Pause
-  lavender `#c9a2ff`): its disk's lit bit, its
+  lavender `#c9a2ff`, Blink pale cyan `#9ef0ff`, Warp pink `#ff6ee8`):
+  its disk's lit bit, its
   install animation and its banner.
 - **Found before:** a permanent pickup whose bit is set shows as a ghost
   (gray, dashed, spinning without the bob, D74) and can't be taken again
@@ -634,6 +635,40 @@ of the 2-high pillar (push the crate against it and climb).
   color); the look is `PAUSE_FX` in `src/render/pause-fx.js` and
   `PAUSE_VIEW` in `src/render/pause-view.js`; showcase
   `?asset=pause,disk-pause`.
+
+## Blink and Warp
+
+Two teleport spells (D86): Blink from a data disk by the entrance of Fast
+Path (slot 4), Warp from one further in (slot 5).
+
+- Both go the way he aims (the way he last walked), level at his height,
+  through open space only: over holes, hazard and void floors, and
+  through enemies. A block, a room object or the room's side stops them,
+  however thin; they never leave the room. His box sweeps the line
+  (`warpTarget()` in `src/entities/warp.js`) and he lands at the farthest
+  free spot short of the stop, backing off an enemy standing there. He
+  keeps his fall or jump, so a jump and a Blink at its top clears a
+  1-high block. Landing over a hole, he falls in.
+- Right against a wall (no spot at least `WARP.minDistance`, 0.1, away)
+  the cast fizzles (a `fizzle` event): he stays, the energy comes back
+  and there is no cooldown.
+- **Blink:** 15 energy, at most 3 units (`range`): over a 2-tile gap,
+  never a 3-tile one. Every enemy it passes through takes 2
+  (`hitDamage`), a spell hit (provokes, alarms, D81). Cut short by a
+  wall, an object or the room's side, he takes 1 (`damage`) after
+  landing, as a hit (invulnerability after it; no ring blocks it).
+- **Warp:** 30 energy, no limit: as far as the first stop, and harmless.
+- **Look:** Blink is a super-speed dash: he is drawn shooting from where
+  he was to where he is over 6 ticks (fast at first), stretched along the
+  way, with light streaks at his feet, hands and head trailing behind
+  and a kick of pixels where he pushed off. Warp: he bursts into pixels
+  that stream along the way into him, and his hologram flashes in its
+  color as he lands (12 ticks). Picked in the showcase; the afterimage
+  lasts `PLAYER.warpTicks` (24).
+- Tuning: `defs.json` `spells.blink` (cost, cooldown, range, damage,
+  hitDamage, color) and `spells.warp` (cost, cooldown, color); the look
+  is `WARP_FX` in `src/render/warp-fx.js`; showcase
+  `?asset=blink,warp,disk-blink,disk-warp`.
 
 ## X-ray outline
 
@@ -807,6 +842,7 @@ The world map tool flags any room further out.
 | `volatile_memory` (Phase 2) | 12×12, 5 high | west doorway → Transit Bus; raised east exit on the high ledge → Crawl Space | a pit across the room with two collapsing bridges: one regrowing after 3 s (the way back), one that stays gone, with a crate on a plain ledge in front of it to push onto the bridge from solid ground (it doesn't trigger the blocks, so it is a safe spot to hop onto); two one-shot collapsing steps up to a high ledge |
 | `crawl_space` (Phase 2) | 12×12 | west doorway → Volatile Memory; east (front) → Boot Sector | bugs: a sentry crossing the entrance lane, one walking off a ledge and patrolling the floor below, a solid one shoving along a lane with a crate to push in its way, a provoked one circling a pillar, a peaceful stationary one to bounce up to a 2-high ledge, a solid peaceful one along the front edge to ride; Zap targets: the provoked one turns hostile when hit, and an amber stationary one with 4 integrity; an energy refill near the entrance (Phase 3) |
 | `quarantine` (Phase 3) | 10×10, Glitchmire | east doorway → Boot Sector; west doorway → Scheduler | chasers (step 5, D78): a virus at the back that chases and bursts, a sentinel in the far corner that keeps its distance and fires arcs, a stationary bug with a burst guarding an integrity refill; a 2-high pillar to hide behind, a trench of holes the chasers won't cross, a crate for cover and a 1-high ledge; the Pause data disk on the pillar (step 8, D85), reached by pushing the crate against it |
+| `fast_path` (Phase 3) | 12×12, Frostbyte Wastes | south (front) → Room 1 | Blink and Warp (step 9, D86): the Blink disk by the entrance, a 2-wide pit across the room to blink over, a bug patrolling the lane beyond (blink through it) past a 2-high pillar to blink into, the Warp disk at the lane's end, and a 6-wide pit only Warp crosses to an energy refill against the side wall |
 | `scheduler` (Phase 3) | 10×10, Abyssal Buffer | east doorway → Quarantine | the cron, worm and crawler looks (D83): a tower in the middle firing four ways, placed off the entrance's axes; a worm patrolling the back row across the tower's line of fire (its bolts can pop it); a crawler chasing from the far corner; pillars, a low wall and a crate to hide behind, an integrity refill in the far corner, and the Firewall data disk on the low wall (step 7, D84) |
 
 ### Room design checklist
@@ -1195,7 +1231,7 @@ the author; the answers are recorded as decisions before the code lands.
 | 6 | ~~`feat/popups`~~ | Closed without a branch (D84): the projectile came with the enemy review (the `bolt` attack and the `shooter` template, D80, D81), and the looks with D83. More enemies go on as side work, discussed and playtested outside the step plan. |
 | 7 | `feat/firewall-spell` | The Shield blocks bolts, arcs and bursts (absorbing bolts at its ring, which flares); Firewall: a ring of flames that also blocks touch and burns enemies touching it (D84). Its disk lies in Scheduler. |
 | 8 | `feat/pause-spell` | Pause: a bolt that freezes the enemy it hits for 5 s; a frozen enemy is harmless and a solid platform (the solid-enemy rules, D51), still hittable; a `pausable` template field (D85). Its disk lies in Quarantine. |
-| 9 | `feat/warp-spell` | Warp: a short teleport through gaps or past hazards, with an afterimage. |
+| 9 | `feat/warp-spell` | Two spells (D86): Blink, a 3-unit dash through open space that hits enemies on the way and hurts on a wall; Warp, a teleport as far as the first wall. Both disks lie in the new test room Fast Path. |
 | 10 | `feat/cut-paste-spell` | Cut & Paste: cut one object into a one-slot inventory, paste it at a valid grid cell in front of the wizard. |
 | 11 | `docs/spell-roster` | Discussion step, docs only: the roster towards 16 spells (D68) — new spells, some letting the wizard skip easier rooms, and upgrades of the basic ones — and the buff items, now that the first five spells can be played; stronger ones should let the wizard speedrun simple rooms or solve them differently (D67). Accepted spells get their own steps (in this phase or later) and CLAUDE.md §5 is updated; the result is a decision. |
 | 12 | `feat/buff-items` | The first buff items from the roster: pickups that raise the wizard's maximum integrity or energy, or his jump height, kept in `Progress`; HUD bars grow with them. |
@@ -1210,8 +1246,7 @@ Open questions, settled at the start of their step:
 - **6 Pop-ups:** closed; answered by the bolt attack (D80, D81) (D84).
 - **7 Firewall:** settled (D84).
 - **8 Pause:** settled (D85).
-- **9 Warp:** distance and direction; through a one-block wall, or only
-  across gaps and hazards; where it lands when the target cell is taken.
+- **9 Warp:** settled (D86).
 - **10 Cut & Paste:** what can be cut (objects only, enemies, a crate with
   something on it); does the cut object leave the room with the wizard or
   go back on reset?
@@ -1261,7 +1296,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 | File | Contents |
 |---|---|
 | `data/rooms/<id>.json` | One room (id = file name) |
-| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; `spiked_platform`: a platform that hurts on touch, hazard red (D82); switches `target` and `plate`, white, see Switches and locked exits); `enemies`: enemy templates (`bug`, `virus`, `sentinel`, see Enemies), each complete or `extend`ing another (D58, D79); `spells`: spell tuning and color (`zap`, see Zap and energy; `shield`, see Shield; `firewall`, see Firewall; `pause`, see Pause); `pickups`: pickup types (see Pickups and progress); `blocks`: block types (D60): look or kind, color, properties (`damage`, `lethal`, `regrow`), `extends` for variants; see Block types |
+| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; `spiked_platform`: a platform that hurts on touch, hazard red (D82); switches `target` and `plate`, white, see Switches and locked exits); `enemies`: enemy templates (`bug`, `virus`, `sentinel`, see Enemies), each complete or `extend`ing another (D58, D79); `spells`: spell tuning and color (`zap`, see Zap and energy; `shield`, see Shield; `firewall`, see Firewall; `pause`, see Pause; `blink` and `warp`, see Blink and Warp); `pickups`: pickup types (see Pickups and progress); `blocks`: block types (D60): look or kind, color, properties (`damage`, `lethal`, `regrow`), `extends` for variants; see Block types |
 | `data/biomes.json` | Biome name and room color: `home_lattice` (core, amber), `glitchmire` (pink), `frostbyte_wastes` (ice blue), `abyssal_buffer` (graphite), `firewall_citadel` (ember orange), `phantom_partition` (special, silver-white); optional `look` for the surroundings (background, outer grid and its fade, wall grid, bloom); see Biomes (D61, D62) |
 | `data/world.json` | Start room, exit connections and every room's cell on the world map (`positions`, D66) |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |

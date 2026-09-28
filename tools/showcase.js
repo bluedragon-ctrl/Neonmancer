@@ -59,6 +59,9 @@ import { createShield, placeShield } from '../src/render/shield-view.js';
 import { createFirewall, placeFirewall } from '../src/render/firewall-view.js';
 import { PAUSE_FX, pauseLook } from '../src/render/pause-fx.js';
 import { createPauseCage, placePauseCage } from '../src/render/pause-view.js';
+import { warpFlash } from '../src/render/warp-fx.js';
+import { createWarpTrail, dashPose, placeWarpTrail } from '../src/render/warp-view.js';
+import { createHoleView } from '../src/render/hole-view.js';
 import { createLock, createPlate, createTarget } from '../src/render/switch-view.js';
 import { SWITCH_KINDS } from '../src/entities/switch.js';
 
@@ -157,6 +160,8 @@ const ALL_ASSETS = [
   { label: 'disk-shield', group: 'disks', spin: false, build: () => buildDisk(defs.spells.shield) },
   { label: 'disk-firewall', group: 'disks', spin: false, build: () => buildDisk(defs.spells.firewall) },
   { label: 'disk-pause', group: 'disks', spin: false, build: () => buildDisk(defs.spells.pause) },
+  { label: 'disk-blink', group: 'disks', spin: false, build: () => buildDisk(defs.spells.blink) },
+  { label: 'disk-warp', group: 'disks', spin: false, build: () => buildDisk(defs.spells.warp) },
   // Installing a spell (Phase 3 step 3, D73): Zap, then Shield, in a loop.
   { label: 'install', spin: false, shadow: PALETTE.cyan, build: buildInstall },
   // Shield (D73): up for its duration, blinking before it ends.
@@ -171,6 +176,11 @@ const ALL_ASSETS = [
   // hopping bug, which freezes in its pose for the spell's duration,
   // tinted, in a cage of corner brackets, blinking before it thaws.
   { label: 'pause', span: 6, spin: false, build: buildPauseFreeze },
+  // Blink and Warp (Phase 3 step 9, D86): the wizard dashes over a
+  // two-tile pit and back (Blink); he bursts into pixels that stream
+  // across and back (Warp).
+  { label: 'blink', group: 'warp', span: 6, spin: false, build: () => buildWarp('blink') },
+  { label: 'warp', group: 'warp', span: 6, spin: false, build: () => buildWarp('warp') },
   // Refills (temporary pickups): integrity and energy, hovering and spinning
   // like a disk; picked up the same way; beside a disk and the wizard for scale.
   { label: 'refill-integrity', group: 'refills', spin: false, build: () => buildRefill('integrity') },
@@ -428,6 +438,44 @@ function buildPauseFreeze() {
     bug.userData.flash.amount.value = look.frozen && look.on ? PAUSE_FX.tint * look.grow : 0;
     bug.userData.flash.color.value.set(pauseColor);
     placePauseCage(cage, [1.5, 0, 0], look);
+  };
+  return asset;
+}
+
+/**
+ * Blink or Warp (D86) in a loop: the wizard crosses a two-tile pit, 3
+ * units, waits, and comes back the same way: a Blink dash (drawn short of
+ * where he is, stretched, streaks and a kick) or a Warp (pixels, and he
+ * flashes in its color as he lands).
+ */
+function buildWarp(spell) {
+  const { color } = defs.spells[spell];
+  const wizard = createWizard();
+  const pit = createHoleView([[0, 0], [1, 0]], PALETTE.amber);
+  pit.position.set(-1, 0, -0.5);
+  const trail = createWarpTrail(color, spell);
+  const asset = new Group().add(pit, wizard, trail);
+  const left = [-1.5, 0, 0];
+  const right = [1.5, 0, 0];
+  // Across at tick 40, back at tick 130; loop 220.
+  const casts = [
+    { at: 40, from: left, to: right, facing: Math.PI / 2 },
+    { at: 130, from: right, to: left, facing: -Math.PI / 2 },
+  ];
+  const loop = 220;
+  let tick = 0;
+  asset.userData.update = (dt) => {
+    tick = (tick + dt * 60) % loop;
+    const last = [...casts].reverse().find((cast) => tick >= cast.at) ?? { ...casts[1], at: casts[1].at - loop };
+    const since = tick - last.at;
+    const warp = since < PLAYER.warpTicks ? { spell, ...last } : null;
+    const { pos, stretch } = dashPose(warp, last.to, since);
+    wizard.position.set(...pos);
+    wizard.rotation.y = last.facing;
+    wizard.scale.set(1 / Math.sqrt(stretch), 1 / Math.sqrt(stretch), stretch);
+    placeWarpTrail(trail, warp, since);
+    wizard.userData.flash.amount.value = spell === 'warp' ? warpFlash(since) : 0;
+    wizard.userData.flash.color.value.set(color);
   };
   return asset;
 }

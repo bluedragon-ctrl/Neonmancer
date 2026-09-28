@@ -1,7 +1,8 @@
 /**
  * The wizard: movement along the grid axes, jump, gravity, pushing,
  * integrity (health), invulnerability after a hit, energy (mana) for
- * spells, installing a spell, the Shield and Firewall rings, death (in a hole, on a void block, or with no integrity left) and
+ * spells, installing a spell, the Shield and Firewall rings, Blink and
+ * Warp (a teleport, D86), death (in a hole, on a void block, or with no integrity left) and
  * respawn. Pure logic, one call to update() per fixed tick. One Player lasts
  * the whole game: entering a room places him (enter()), so integrity and
  * energy carry over.
@@ -62,6 +63,8 @@ export const PLAYER = {
    * D84): what it blocks and what Firewall burns is measured from there.
    */
   shieldRadius: 0.55,
+  /** Ticks the afterimage of a Blink or Warp lasts (D86); it doesn't hold him up. */
+  warpTicks: 24,
 };
 
 
@@ -131,6 +134,11 @@ export class Player {
      * null. Firewall also keeps `burns`: ticks until it may burn each enemy again.
      */
     this.shield = null;
+    /**
+     * The last Blink or Warp (D86) while its afterimage lasts, or null:
+     * { spell, from, to, tick }, tick counting up to PLAYER.warpTicks.
+     */
+    this.warp = null;
     this.enter(pos, resetPoint);
   }
 
@@ -237,6 +245,31 @@ export class Player {
   }
 
   /**
+   * Teleport to `to` with a Blink or Warp (D86): he keeps his fall or jump
+   * and facing; drawing doesn't slide him there (his previous position
+   * moves along), the afterimage shows where he came from.
+   * @param {'blink'|'warp'} spell
+   * @param {number[]} to feet center
+   */
+  teleport(spell, to) {
+    this.warp = { spell, from: [...this.pos], to: [...to], tick: 0 };
+    for (let i = 0; i < 3; i++) this.pos[i] = this.prev[i] = to[i];
+    this.pushTarget = null;
+    this.pushTicks = 0;
+  }
+
+  /**
+   * Give back a cast that fizzled (a Blink with nowhere to go): its energy
+   * and the cooldown.
+   * @param {number} cost
+   */
+  refund(cost) {
+    this.energy += cost;
+    this.cooldown = 0;
+    this.castTicks = null;
+  }
+
+  /**
    * Try to cast a spell costing `cost` energy: nothing while dead or cooling
    * down; without enough energy it fails ('deny'); else the energy is spent
    * and he waits `cooldownTicks` before the next cast.
@@ -307,6 +340,7 @@ export class Player {
     this.pushTicks = 0;
     /** Set when a push is due this tick: { body, dir: [dx, dz] }; the game carries it out. */
     this.pushIntent = null;
+    this.warp = null;
   }
 
   /** Keep this tick's start for render interpolation (copied in place: no new array every tick). */
@@ -358,6 +392,7 @@ export class Player {
     this.rechargeEnergy();
     if (this.shield && ++this.shield.tick >= this.shield.ticks) this.shield = null;
     if (this.install && ++this.install.tick > PLAYER.installTicks) this.install = null;
+    if (this.warp && ++this.warp.tick > PLAYER.warpTicks) this.warp = null;
 
     // Walk along the grid axes, or screen-relative (D38); diagonals are normalised.
     const directions = movementMode === 'screen' ? SCREEN_DIRECTIONS : GRID_DIRECTIONS;

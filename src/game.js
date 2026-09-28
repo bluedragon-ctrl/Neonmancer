@@ -15,12 +15,14 @@ import { SWITCH_KINDS } from './entities/switch.js';
 import { cellBox, groundBelow, overlaps, overlapsBox, surfaceBelow, touchedCell, touchesBox } from './physics/collision.js';
 import { arrival, exitAt } from './world/exits.js';
 import { Grid } from './world/grid.js';
+import { warpTarget } from './entities/warp.js';
 import { Progress, pickupBit } from './world/progress.js';
 import { buildRoom } from './world/room.js';
 
 /**
  * What each spell does once cast (Player.cast() spent the energy), by
- * spell id; `spell` is its tuning from defs.json.
+ * spell id; `spell` is its tuning from defs.json. An effect returning false
+ * fizzled: the energy goes back (castSpell()).
  */
 const SPELL_EFFECTS = {
   /** A bolt from his hands the way he aims (entities/bolt.js). */
@@ -31,6 +33,10 @@ const SPELL_EFFECTS = {
   firewall: (game, spell) => game.player.raiseShield('firewall', Math.round(spell.duration / DT)),
   /** A bolt the way he aims that freezes the first enemy it hits (D85). */
   pause: (game, spell) => game.bolts.push(Bolt.cast(game.player.pos, game.player.aim(), { ...spell, freeze: Math.round(spell.duration / DT) })),
+  /** A short teleport the way he aims, hitting the enemies it passes; cut short by a wall, it hurts him (D86). */
+  blink: (game, spell) => game.teleport('blink', spell),
+  /** A teleport the way he aims, as far as the first wall or object, harmless (D86). */
+  warp: (game, spell) => game.teleport('warp', spell),
 };
 
 /** Terminal message for each way to die (Player.deathCause). */
@@ -54,8 +60,11 @@ export const TRANSITION = {
  * Something that happened, for views, the HUD and (later) sound. Returned
  * by Game.update() for the tick it happened in.
  * @typedef {object} GameEvent
- * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'} type
- * @property {string} [spell] the spell cast, failed or selected (cast, deny, spell)
+ * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'|'warp'|'fizzle'} type
+ * @property {string} [spell] the spell cast, failed, fizzled (nowhere to
+ *   go, energy kept) or selected (cast, deny, fizzle, spell); the teleport (warp)
+ * @property {number[]} [from] where a Blink or Warp started (warp)
+ * @property {number[]} [to] where it ended (warp)
  * @property {object} [object] the room object it happened to (push, plug,
  *   land of an object; shake, collapse and regrow of a collapsing block;
  *   hit by a spell, break of a destructible one; a switch going on or off;
@@ -220,8 +229,35 @@ export class Game {
     if (!id) return;
     const spell = this.content.spells[id];
     const result = this.player.cast(spell.cost, Math.round(spell.cooldown / DT));
-    if (result === 'cast') SPELL_EFFECTS[id](this, spell);
+    if (result === 'cast' && SPELL_EFFECTS[id](this, spell) === false) {
+      this.player.refund(spell.cost);
+      this.emit('fizzle', { spell: id });
+      return;
+    }
     if (result) this.emit(result, { spell: id });
+  }
+
+  /**
+   * Blink or Warp (D86): the wizard teleports the way he aims, level,
+   * through open space (entities/warp.js), at most the spell's `range`
+   * units (Warp: no limit). Nowhere to go (right against a wall), the
+   * spell fizzles. Blink hits every enemy it passes through for its
+   * `hitDamage`, and when a wall, an object or the room's side cuts it
+   * short he takes its `damage` after landing.
+   * @param {'blink'|'warp'} id
+   * @param {object} spell its tuning from defs.json
+   * @returns {boolean} false if it fizzled
+   */
+  teleport(id, { range = Infinity, damage = 0, hitDamage = 0 }) {
+    const { player } = this;
+    const objects = this.solids.filter((body) => !(body instanceof Enemy));
+    const target = warpTarget(player.pos, player.size, player.aim(), range, this.grid, objects, this.liveEnemies);
+    if (!target) return false;
+    player.teleport(id, target.to);
+    this.emit('warp', { spell: id, from: player.warp.from, to: target.to });
+    if (hitDamage > 0) for (const enemy of target.passed) this.hitEnemy(enemy, hitDamage, 'blink');
+    if (target.cut && damage > 0) this.hurt(damage);
+    return true;
   }
 
   /**
@@ -267,7 +303,7 @@ export class Game {
    * the wizard gets the blame, so it turns to him ('alert').
    * @param {Enemy} enemy
    * @param {number} damage
-   * @param {'zap'|'discharge'|'bolt'|'firewall'} cause
+   * @param {'zap'|'discharge'|'bolt'|'firewall'|'blink'} cause
    */
   hitEnemy(enemy, damage, cause) {
     const event = enemy.hit(damage, cause);

@@ -137,7 +137,7 @@ export class Enemy {
      * has stepped out of it, so freezing never traps him (Game.updateFrozen()).
      */
     this.passable = false;
-    /** How it died: 'hole' | 'void' | 'zap' | 'discharge' | 'bolt' | 'firewall'; null while alive. */
+    /** How it died: 'hole' | 'void' | 'zap' | 'discharge' | 'bolt' | 'firewall' | 'blink'; null while alive. */
     this.deathCause = null;
     /** Ticks since it died, for the pop. */
     this.timer = 0;
@@ -317,7 +317,7 @@ export class Enemy {
    * A spell, a discharge or a bolt hits it: it is provoked and loses
    * `damage` integrity; losing the last pops it.
    * @param {number} damage
-   * @param {'zap'|'discharge'|'bolt'|'firewall'} cause
+   * @param {'zap'|'discharge'|'bolt'|'firewall'|'blink'} cause
    * @returns {'hit'|'pop'|null} event (null if it was dead already)
    */
   hit(damage, cause) {
@@ -482,7 +482,7 @@ export class Enemy {
     return true;
   }
 
-  /** @param {'hole'|'void'|'zap'|'discharge'|'bolt'|'firewall'} cause */
+  /** @param {'hole'|'void'|'zap'|'discharge'|'bolt'|'firewall'|'blink'} cause */
   die(cause) {
     this.state = 'dead';
     this.frozen = null;

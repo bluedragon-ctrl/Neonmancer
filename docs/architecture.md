@@ -69,6 +69,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `ai/chase.js` | Chase (D78, D80): calm → chase → search → return, greedy steps towards the wizard, routes (round walls) to where it last saw him and home, searches when his Zap hits it, patrols while calm if it has a path (pure, tested) |
 | `ai/sight.js` | Rays through the grid and bodies (`castRay()`), `lineOfSight()`, `reach()` from a point to a box (pure, tested) |
 | `world/progress.js` | What the wizard has for the whole game (D71): save bits in blocks (`SAVE_BLOCKS`, `saveBit()`, `pickupBit()`), `Progress` (bits found, known spells) (pure, tested) |
+| `entities/warp.js` | Where Blink and Warp take the wizard (D86): `warpTarget()` sweeps his box along his aim through open space, stops at blocks, objects and the room's side, lands short of enemies, reports the enemies passed (pure, tested) |
 | `entities/pickup.js` | A pickup in a room: its box, save bit, state (idle, ghost, taken) and pick-up ticks (pure, tested) |
 | `world/map.js` | The world map (D66): `nearestFreeCell()` for new rooms, `roomDistances()` from the start, `mapWarnings()` (unreachable rooms, test rooms too far out, D49) (pure, tested) |
 | `world/path.js` | Shared path format: legs from `at` through `points`, `advance()` / `positionOf()` on a small path state, swept cells |
@@ -94,6 +95,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/install-fx.js`, `render/install-view.js` | Installing a spell from a data disk (D73): the look (pure, tested) and its meshes, shown by `PlayerView` |
 | `render/shield-fx.js`, `render/shield-view.js` | The Shield's lightning ring (D73): the look (pure, tested; its flare when it blocks, D84) and its meshes, shown by `PlayerView` |
 | `render/firewall-fx.js`, `render/firewall-view.js` | Firewall's ring of flames (D84): the segments (pure, tested; timing is the Shield's) and its meshes, shown by `PlayerView` |
+| `render/warp-fx.js`, `render/warp-view.js` | Blink's dash (drawn position and stretch, streaks, kicked-up pixels) and Warp's pixel stream and arrival flash (D86): the look (pure, tested) and its meshes, shown by `PlayerView` |
 | `render/pause-fx.js`, `render/pause-view.js` | A frozen enemy (Pause, D85): tint and blinking (pure, tested) and its cage of corner brackets, shown by `EnemyView` |
 | `render/collapse-fx.js` | Collapsing-block look: shake, pixels breaking off, regrow, `COLLAPSE_FX` tuning (pure, tested) |
 | `render/enemy-look.js` | What every enemy model shares (D80): mood colors (`MOODS`, `eyeMood()`, `setMood()`), the eye geometry and glow, the pop burst (`popBurst()`) (pure parts tested) |
