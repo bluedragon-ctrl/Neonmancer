@@ -8,25 +8,26 @@
   "spawn": [5.5, 0, 8.5],
   "exits": [
     { "id": "east", "side": "+x", "at": 7 },
-    { "id": "south", "side": "+z", "at": 5 }
+    { "id": "south", "side": "+z", "at": 5 },
+    { "id": "north", "side": "-z", "at": 5, "locked": true }
   ],
   "blocks": [
-    { "at": [0, 0, 0], "to": [1, 0, 6] },
-    { "at": [10, 0, 5], "to": [11, 0, 6] },
     { "at": [0, 1, 0], "to": [1, 2, 0] },
-    { "at": [11, 1, 5], "to": [11, 1, 6] }
+    { "at": [0, 0, 0], "to": [1, 0, 6] }
   ],
   "holes": [
-    { "at": [0, 7], "to": [2, 8] },
-    { "at": [1, 9], "to": [2, 11] },
-    { "at": [0, 11] }
+    { "at": [7, 0], "to": [8, 6] },
+    { "at": [9, 5], "to": [11, 6] }
   ],
   "objects": [
-    { "id": "crate_1", "type": "crate", "at": [0, 1, 4] },
-    { "id": "crate_2", "type": "crate", "at": [4, 0, 9] },
-    { "id": "crate_3", "type": "crate", "at": [4, 0, 10] },
-    { "id": "plate_1", "type": "plate", "at": [6, 0, 0] },
-    { "id": "crate_4", "type": "crate", "at": [6, 0, 2] }
+    { "id": "crate_2", "type": "crate", "at": [3, 0, 9] },
+    { "id": "crate_3", "type": "crate", "at": [9, 0, 9] },
+    { "id": "crate_5", "type": "crate", "at": [7, 0, 7] },
+    { "id": "plate_1", "type": "plate", "at": [0, 0, 9] },
+    { "id": "plate_2", "type": "plate", "at": [10, 0, 0] },
+    { "id": "crate_1", "type": "crate", "at": [1, 1, 5] },
+    { "id": "crate_4", "type": "crate", "at": [1, 1, 3] },
+    { "id": "crate_6", "type": "crate", "at": [4, 0, 4] }
   ],
   "pickups": [{ "id": "disk_zap_1", "type": "disk_zap", "at": [0, 3, 0] }]
 }

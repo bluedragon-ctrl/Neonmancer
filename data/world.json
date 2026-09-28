@@ -10,7 +10,8 @@
     ["relay_station.west", "volatile_memory.east"],
     ["volatile_memory.west", "transit_bus.east"],
     ["volatile_memory.north", "boot_sector.south"],
-    ["volatile_memory.south", "stack_yard.north"]
+    ["volatile_memory.south", "stack_yard.north"],
+    ["room_1.south", "boot_sector.north"]
   ],
   "positions": {
     "boot_sector": [-1, -1],
@@ -20,6 +21,7 @@
     "crawl_space": [0, -2],
     "transit_bus": [-2, 0],
     "volatile_memory": [-1, 0],
-    "relay_station": [0, 0]
+    "relay_station": [0, 0],
+    "room_1": [-1, -2]
   }
 }
