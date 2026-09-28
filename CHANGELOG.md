@@ -7,6 +7,11 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Spiked platforms (D82): a platform type with `damage` hurts the wizard
+  on any touch, like a moving hazard block. `spiked_platform` in hazard
+  red with the hazard look (flickering pixels, flaring when it hurts)
+  and a new `spikes` mark; object styles `faces: "hazard"` and
+  `mark: "spikes"`. Showcase `spiked-platforms`.
 - The `bolt` attack (D80): an enemy charges, then fires a slow shot
   (`boltSpeed`, default 4 units/s) in its attack color at the wizard,
   up or down too; it stops at him, another enemy, a block, an object or

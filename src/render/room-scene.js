@@ -58,7 +58,11 @@ export class RoomScene {
     this.zapView = null;
     /** "x,y,z" of each hazard-look block → its face material (room-view.js). */
     this.flares = new Map();
-    /** The hazard block that last hurt the wizard, flaring: { faces, cell, time } (seconds since). */
+    /**
+     * The hazard block or spiked platform (D82) that last hurt the wizard,
+     * flaring: { faces, cell, time } (seconds since; cell is in the faces'
+     * own coordinates).
+     */
     this.flare = null;
   }
 
@@ -75,6 +79,8 @@ export class RoomScene {
     const { room } = game;
     const { renderer } = this;
     const old = [this.objectGroup];
+    // A spiked platform's flare goes with its old view.
+    if (this.flare?.object) this.flare = null;
     const shown = (thing) => cutAbove === null || Math.floor(thing.pos[1]) <= cutAbove;
     this.objectViews = game.objects.filter(shown).map((object) => new OBJECT_VIEWS[object.kind](game, object));
     this.enemyViews = game.enemies.filter(shown).map((enemy) => new EnemyView(game, enemy));
@@ -152,8 +158,22 @@ export class RoomScene {
   flareHazard(cell) {
     const faces = this.flares.get(cell.join());
     if (!faces) return; // a block that hurts without the hazard look
-    // A flare still fading on another hazard type's blocks goes out.
-    if (this.flare && this.flare.faces !== faces) flareHazard(this.flare.faces, this.flare.cell, Infinity);
-    this.flare = { faces, cell, time: 0 };
+    this.startFlare({ faces, cell });
+  }
+
+  /**
+   * A spiked platform (D82) just hurt the wizard: make it flare.
+   * @param {object} object the room object (entities/platform.js)
+   */
+  flareObject(object) {
+    const block = this.objectViews.find((view) => view.platform === object)?.block;
+    const { faces, flareCell } = block?.userData ?? {};
+    if (faces) this.startFlare({ faces, cell: flareCell, object });
+  }
+
+  /** Start a flare; one still fading on other faces goes out. */
+  startFlare(flare) {
+    if (this.flare && this.flare.faces !== flare.faces) flareHazard(this.flare.faces, this.flare.cell, Infinity);
+    this.flare = { ...flare, time: 0 };
   }
 }

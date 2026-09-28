@@ -154,12 +154,13 @@ test('face marks: patterns on all six faces', () => {
   assert.equal(markSegments('inset').length, 6 * 4);
   assert.equal(markSegments('cross').length, 6 * 2);
   assert.equal(markSegments('brackets').length, 6 * 8);
-  assert.deepEqual(MARKS, ['none', 'inset', 'cross', 'brackets', 'bits']);
+  assert.equal(markSegments('spikes').length, 6 * 4 * 3 * 2);
+  assert.deepEqual(MARKS, ['none', 'inset', 'cross', 'brackets', 'bits', 'spikes']);
 });
 
 test('face marks lie on the faces of the cube at the given cell', () => {
   const cell = [3, 1, 5];
-  for (const segment of markSegments('inset', cell)) {
+  for (const segment of ['inset', 'spikes'].flatMap((mark) => markSegments(mark, cell))) {
     for (const point of segment) {
       // Every point is inside the cube and on at least one of its faces.
       const local = point.map((v, i) => v - cell[i]);

@@ -102,8 +102,8 @@ export function exitCells({ side, at, width, y, height }, size) {
  */
 export const OBJECT_STYLES = {
   edges: ['solid', 'dashed'],
-  mark: ['none', 'inset', 'cross', 'brackets', 'bits'],
-  faces: ['dark', 'tinted'],
+  mark: ['none', 'inset', 'cross', 'brackets', 'bits', 'spikes'],
+  faces: ['dark', 'tinted', 'hazard'],
 };
 
 /** Style defaults: the first value of each OBJECT_STYLES list, plus the tint. */

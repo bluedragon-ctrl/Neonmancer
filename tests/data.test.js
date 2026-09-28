@@ -331,6 +331,16 @@ test('object styles: overrides must use known values', () => {
   );
 });
 
+test('spiked platforms (D82): only platforms can hurt', () => {
+  assert.deepEqual(errorsAfter((f) => (f['defs.json'].objects.spikes = { ...LIFT, color: '#ff3b30', faces: 'hazard', mark: 'spikes', damage: 1 })), []);
+  assertError(
+    errorsAfter((f) => (f['defs.json'].objects.crate.damage = 1)),
+    'defs.json › objects.crate.damage',
+    'only platforms can hurt, not a pushable',
+  );
+  assertError(errorsAfter((f) => (f['defs.json'].objects.spikes = { ...LIFT, damage: 0 })), 'objects.spikes.damage');
+});
+
 test('object styles: the schema rejects unknown values in defs.json', () => {
   assertError(
     errorsAfter((f) => (f['defs.json'].objects.crate.faces = 'glass')),

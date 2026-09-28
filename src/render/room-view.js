@@ -14,7 +14,7 @@
  * front edges (render/walls.js).
  */
 import { BoxGeometry, BufferGeometry, Color, DoubleSide, Float32BufferAttribute, Group, InstancedMesh, Matrix4, Mesh } from 'three';
-import { createActiveBlockView } from './block-fx.js';
+import { createActiveBlockView, hazardFaceMaterial } from './block-fx.js';
 import { blockEdges, edgeUnitKeys, groupedBlockEdges } from './edges.js';
 import { BITS, markSegments } from './marks.js';
 import { doorwayTunnels, wallLayout } from './walls.js';
@@ -148,16 +148,29 @@ const EDGE_WIDTH = { collapsing: 1.5 };
  * (edges, face mark, faces), so types differ by more than color. Kept
  * separate from the static blocks because objects move (D40). A
  * destructible object (with `integrity`) shows its data bits with some
- * missing instead of its mark.
+ * missing instead of its mark. Hazard faces (a spiked platform, D82) are
+ * the hazard block's flickering pixels (block-fx.js), one material per
+ * object so it can flare on its own: `userData.faces` and
+ * `userData.flareCell` (for flareHazard()).
  * @param {{ at: number[], kind?: string, color: string, edges: string, mark: string, faces: string, tint: number, integrity?: number }} object
  */
 export function createObjectView({ at, kind, color, edges, mark, faces, tint, integrity }) {
   const group = new Group();
 
-  const materials = faces === 'tinted' ? tintedFaceMaterials(color, tint) : faceMaterial();
-  const box = new Mesh(UNIT_BOX, materials);
-  box.position.set(...at);
-  group.add(box);
+  if (faces === 'hazard') {
+    // The hazard shader places its pixels by instance, so this is a one-instance mesh.
+    const material = hazardFaceMaterial(color);
+    const box = new InstancedMesh(UNIT_BOX, material, 1);
+    box.setMatrixAt(0, new Matrix4().makeTranslation(...at));
+    group.add(box);
+    group.userData.faces = material;
+    group.userData.flareCell = [...at];
+  } else {
+    const materials = faces === 'tinted' ? tintedFaceMaterials(color, tint) : faceMaterial();
+    const box = new Mesh(UNIT_BOX, materials);
+    box.position.set(...at);
+    group.add(box);
+  }
 
   const dashed = edges === 'dashed';
   const outline = neonLines(blockEdges([at]), lineMaterial({ color, width: EDGE_WIDTH[kind] ?? 2.5, brightness: 1.6, dashed }));
@@ -167,8 +180,10 @@ export function createObjectView({ at, kind, color, edges, mark, faces, tint, in
   // A destructible object shows its data bits with some missing, whatever its mark.
   const drawn = integrity !== undefined ? 'bitsBroken' : mark;
   if (drawn !== 'none') {
-    const bits = drawn === 'bits' || drawn === 'bitsBroken';
-    const style = bits
+    // Data bits and spikes are drawn pale, so they read over the faces
+    // (spikes over the hazard pixels, D82).
+    const pale = drawn === 'bits' || drawn === 'bitsBroken' || drawn === 'spikes';
+    const style = pale
       ? { color: new Color(color).lerp(new Color(0xffffff), BITS.whiten), width: BITS.width, brightness: BITS.brightness }
       : { color, width: 1.5, brightness: 1 };
     const marks = neonLines(markSegments(drawn, at), lineMaterial(style));

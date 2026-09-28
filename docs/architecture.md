@@ -59,7 +59,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `entities/player.js` | Movement, jump, gravity, turning, pushing, integrity, invulnerability after a hit, death (hole or damage), respawn; one wizard for the whole game |
 | `entities/kinds.js` | Object kind → logic class (`OBJECT_KINDS`); the room's objects are built from it |
 | `entities/pushable.js` | Rest → slide → fall → land / plug-a-hole state machine; destructible ones break (`hit()` → `broken`) |
-| `entities/platform.js` | Moving platform: follows its path, carries riders, waits when blocked, shoves or squeezes the wizard (D46) |
+| `entities/platform.js` | Moving platform: follows its path, carries riders, waits when blocked, shoves or squeezes the wizard (D46); a spiked one hurts on touch (D82) |
 | `entities/collapsing.js` | Collapsing block: solid → shake (the wizard stood on it) → gone → optional regrow once its cell is clear (D47) |
 | `entities/enemy.js` | Enemy body: steps cell by cell where its movement behavior leads (never into a hole or onto void, never into a cell another enemy is walking into), turns back when blocked, falls (mid-step too), rides platforms, pops in holes and on void; hostility, provoke, bounce state (D48); seeing the wizard, the "!", the charged attack's charge and cooldown (D78); `alarm()` when anything hits it (D81) and `route()`, a shortest walk to a column (D80) |
 | `entities/switch.js` | Switches (D75): `Target` (a fixed body a bolt switches over) and `Plate` (a floor tile, no body, on while something stands on it); `SWITCH_KINDS` (pure, tested) |
@@ -221,6 +221,10 @@ scrape him off), then shoved clear of the new box by the smallest move of
 at most `maxShove` along any axis. If none fits, it calls `Game.hurt()`
 and waits. Carried crates keep whole-cell positions at stops (a tiny
 rounding snap), and `push()` only moves a crate standing on whole cells.
+A spiked platform (D82) is the same class with a `damage` from its type:
+`Game.spiked` lists those objects, and each tick, right after the hazard
+blocks, touching one (`touchesBox()`) calls `Game.hurt()` with the object,
+whose view flares (`RoomScene.flareObject()`).
 
 Collapsing blocks (D47) are room objects that never move but can vanish.
 Each tick one checks whether the wizard stands on it (alive, grounded, feet

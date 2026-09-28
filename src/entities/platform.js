@@ -12,6 +12,10 @@
  * - the wizard in the way (or carried into a ceiling): he is shoved out of
  *   the way, along the motion or aside, by at most PLATFORM.maxShove; with
  *   no room for that it hurts him and waits. It never kills outright.
+ *
+ * A spiked platform (a type with `damage`, D82) moves the same way; the
+ * game hurts the wizard whenever he touches it (Game.update()), like a
+ * hazard block that moves.
  */
 import { DT } from '../core/loop.js';
 import { cellBox, moveAxis, overlapsBox, overlapsSolid, restsOn, shoveClear } from '../physics/collision.js';
@@ -34,6 +38,8 @@ export class Platform {
     this.object = object;
     this.id = object.id;
     this.kind = object.kind;
+    /** Integrity the wizard loses touching it: 0 for a plain platform, more for a spiked one (D82). */
+    this.damage = object.damage ?? 0;
     this.size = [1, 1, 1];
     this.track = buildTrack(object.at, object.path);
     /** Where it is on its path (world/path.js). */

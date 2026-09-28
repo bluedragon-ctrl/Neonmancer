@@ -227,7 +227,7 @@
       "properties": {
         "kind": {
           "enum": ["pushable", "platform", "target", "plate"],
-          "description": "Which engine behavior the object uses. pushable: the wizard pushes it; platform: follows its path (room data \"path\") carrying the wizard and pushables; target: a fixed block a Zap switches on and off; plate: a floor tile (y 0) that is on while a crate, an enemy or the wizard stands on it. Targets and plates are switches: the room's locked exits open while all of them are on (D75); their look is fixed (render/switch-view.js), only the color comes from here. Collapsing blocks are block types (\"blocks\", D60)."
+          "description": "Which engine behavior the object uses. pushable: the wizard pushes it; platform: follows its path (room data \"path\") carrying the wizard and pushables (with \"damage\" it hurts him instead, a spiked platform, D82); target: a fixed block a Zap switches on and off; plate: a floor tile (y 0) that is on while a crate, an enemy or the wizard stands on it. Targets and plates are switches: the room's locked exits open while all of them are on (D75); their look is fixed (render/switch-view.js), only the color comes from here. Collapsing blocks are block types (\"blocks\", D60)."
         },
         "color": { "$ref": "common.schema.json#/$defs/color" },
         "edges": {
@@ -236,14 +236,14 @@
           "description": "Outline style."
         },
         "mark": {
-          "enum": ["none", "inset", "cross", "brackets", "bits"],
+          "enum": ["none", "inset", "cross", "brackets", "bits", "spikes"],
           "default": "none",
-          "description": "Pattern drawn on every face."
+          "description": "Pattern drawn on every face; spikes: a ring of teeth pointing in from the edges (for objects that hurt, D82)."
         },
         "faces": {
-          "enum": ["dark", "tinted"],
+          "enum": ["dark", "tinted", "hazard"],
           "default": "dark",
-          "description": "dark: like static blocks; tinted: faces shaded in the object color (top lighter)."
+          "description": "dark: like static blocks; tinted: faces shaded in the object color (top lighter); hazard: the hazard block look, pixels flickering in the object color (D82)."
         },
         "tint": {
           "type": "number",
@@ -257,6 +257,12 @@
           "minimum": 1,
           "maximum": 15,
           "description": "Pushable objects only: makes it destructible, taking this much spell damage (Zap: 1 per hit) before it breaks into pixels. It is drawn with its data bits with some missing (a grid of small squares, holes in it) instead of its mark, so it reads as breakable next to a crate with the whole grid. Without it the object is indestructible."
+        },
+        "damage": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 99,
+          "description": "Platforms only: touching it (its sides, its top, riding it) hurts the wizard by this much, like a hazard block (D82). Without it the object is harmless."
         }
       }
     }

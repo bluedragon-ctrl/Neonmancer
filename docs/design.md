@@ -203,9 +203,18 @@ follows a path given on the room object.
 - Validation: points inside the room, legs along one axis, nothing static
   on the path, and no path through the first row inside an exit. Crates on
   the path and holes under it are fine.
+- **Spiked platforms** (D82): a platform type with `damage` hurts the
+  wizard whenever he touches it, its sides, its top or riding it, like a
+  hazard block that moves (then he is invulnerable for a while and
+  blinks). `spiked_platform` in `defs.json`: hazard red, `faces: "hazard"`
+  (the hazard block's flickering pixels, flaring when it hurts him) and
+  `mark: "spikes"` (a ring of pale teeth on every face). It moves, waits
+  and carries crates like any platform; a short up-and-down path makes a
+  hopper to time a run past, a long one a sliding trap. Only platforms
+  take `damage` (validation).
 - Tuning: `PLATFORM` in `src/entities/platform.js`, `RAILS` in
   `src/render/rails.js`; review in the asset showcase
-  (`/tools/showcase.html?asset=platform,platforms`).
+  (`/tools/showcase.html?asset=platform,platforms,spiked_platform,spiked-platforms`).
 
 ## Collapsing blocks
 
@@ -1161,7 +1170,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 | File | Contents |
 |---|---|
 | `data/rooms/<id>.json` | One room (id = file name) |
-| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; switches `target` and `plate`, white, see Switches and locked exits); `enemies`: enemy templates (`bug`, `virus`, `sentinel`, see Enemies), each complete or `extend`ing another (D58, D79); `spells`: spell tuning and color (`zap`, see Zap and energy; `shield`, see Shield); `pickups`: pickup types (see Pickups and progress); `blocks`: block types (D60): look or kind, color, properties (`damage`, `lethal`, `regrow`), `extends` for variants; see Block types |
+| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; `spiked_platform`: a platform that hurts on touch, hazard red (D82); switches `target` and `plate`, white, see Switches and locked exits); `enemies`: enemy templates (`bug`, `virus`, `sentinel`, see Enemies), each complete or `extend`ing another (D58, D79); `spells`: spell tuning and color (`zap`, see Zap and energy; `shield`, see Shield); `pickups`: pickup types (see Pickups and progress); `blocks`: block types (D60): look or kind, color, properties (`damage`, `lethal`, `regrow`), `extends` for variants; see Block types |
 | `data/biomes.json` | Biome name and room color: `home_lattice` (core, amber), `glitchmire` (pink), `frostbyte_wastes` (ice blue), `abyssal_buffer` (graphite), `firewall_citadel` (ember orange), `phantom_partition` (special, silver-white); optional `look` for the surroundings (background, outer grid and its fade, wall grid, bloom); see Biomes (D61, D62) |
 | `data/world.json` | Start room, exit connections and every room's cell on the world map (`positions`, D66) |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |
@@ -1212,8 +1221,10 @@ Example room (12×12):
   spawn cell, `path` a patrol path (level legs), `overrides` any template field
   (see Enemies). Ids are shared with objects.
 - Object type style (D17): `edges` `solid`/`dashed`, `mark`
-  `none`/`inset`/`cross`/`brackets`, `faces` `dark`/`tinted` (defaults first),
-  `tint` 0–1 (color share of a tinted top face, default 0.1).
+  `none`/`inset`/`cross`/`brackets`/`bits`/`spikes`, `faces`
+  `dark`/`tinted`/`hazard` (defaults first; `hazard`: the hazard block's
+  flickering pixels, D82), `tint` 0–1 (color share of a tinted top face,
+  default 0.1).
   Objects may override them.
 - `world.json` pairs exits: `"connections": [["boot_sector.north", "cache_hall.south"]]`.
   Paired exits are on opposite sides and equally wide; every exit is connected.

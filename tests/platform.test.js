@@ -4,7 +4,11 @@ import { PLAYER_HITBOX } from '../src/core/rules.js';
 import { Game } from '../src/game.js';
 import { railSegments } from '../src/render/rails.js';
 import { advance, buildTrack, pathCells, positionOf, startState } from '../src/world/path.js';
+import { createObjectView } from '../src/render/room-view.js';
 import { CRATE, LIFT, eventTypes, gameData, hold, idle, roomFile } from './helpers.js';
+
+/** A spiked platform type (D82), like spiked_platform in defs.json. */
+const SPIKES = { ...LIFT, color: '#ff3b30', faces: 'hazard', mark: 'spikes', damage: 1 };
 
 const near = (a, b, eps = 1e-6) => Math.abs(a - b) < eps;
 
@@ -76,7 +80,7 @@ test('guide line: one line through the middle of the path, each leg drawn once',
  */
 function gameWith({ objects, blocks = [], pos = [0.5, 0, 7.5] }) {
   const game = new Game(
-    gameData({ rooms: [roomFile('alpha', { objects, blocks, spawn: [0.5, 0, 7.5] })], objects: { crate: CRATE, lift: LIFT } }),
+    gameData({ rooms: [roomFile('alpha', { objects, blocks, spawn: [0.5, 0, 7.5] })], objects: { crate: CRATE, lift: LIFT, spikes: SPIKES } }),
   );
   game.player.place(pos);
   return game;
@@ -200,4 +204,34 @@ test('platforms reset with the room', () => {
   run(game, idle, 40);
   game.enterRoom('alpha');
   assert.deepEqual(game.objects[0].pos, [1, 0, 1]);
+});
+
+test('a spiked platform running into the wizard hurts him, naming itself for its flare (D82)', () => {
+  const game = gameWith({ objects: [{ id: 's', type: 'spikes', at: [1, 0, 1], path: { points: [[6, 0, 1]] } }], pos: [4.5, 0, 1.5] });
+  const hurts = run(game, idle, 90).filter((event) => event.type === 'hurt');
+  const [spikes] = game.objects;
+  assert.equal(spikes.damage, 1);
+  assert.equal(hurts.length, 1); // then he is invulnerable for a while
+  assert.equal(hurts[0].object, spikes);
+  assert.equal(game.player.integrity, game.player.maxIntegrity - 1);
+});
+
+test('riding a spiked platform hurts; a plain one never does, and nor does a spiked one out of reach', () => {
+  const ride = (type) => {
+    const game = gameWith({ objects: [{ id: 'p', type, at: [1, 0, 1], path: { points: [[1, 0, 4]] } }], pos: [1.5, 1, 1.5] });
+    return eventTypes(run(game, idle, 30)).filter((t) => t === 'hurt').length;
+  };
+  assert.equal(ride('spikes'), 1);
+  assert.equal(ride('lift'), 0);
+  // Moving away from him along z, a block to his side: never touching.
+  const game = gameWith({ objects: [{ id: 'p', type: 'spikes', at: [3, 0, 1], path: { points: [[3, 0, 6]] } }], pos: [1.5, 0, 1.5] });
+  assert.ok(!eventTypes(run(game, idle, 120)).includes('hurt'));
+});
+
+test('a spiked platform looks like a hazard block: its own flickering faces, to flare', () => {
+  const view = createObjectView({ ...SPIKES, edges: 'solid', tint: 0.1, at: [2, 0, 3] });
+  assert.ok(view.userData.faces.uniforms.uFlare);
+  assert.deepEqual(view.userData.flareCell, [2, 0, 3]);
+  // A plain platform has no flare.
+  assert.equal(createObjectView({ ...LIFT, edges: 'solid', mark: 'none', faces: 'tinted', tint: 0.1, at: [0, 0, 0] }).userData.faces, undefined);
 });
