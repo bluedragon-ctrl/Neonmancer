@@ -8,6 +8,7 @@
  * scale with the render height by themselves.
  */
 import { BackSide, Color, Group, Mesh, MeshBasicMaterial, ShaderMaterial } from 'three';
+import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { shared } from './neon.js';
 
 /** Shared clock in seconds for the scanlines; advance it once per frame. */
@@ -125,6 +126,36 @@ export function holoPart(geometry, color, flash = NO_FLASH) {
   /** The glowing solid, for effects built on the part's shape (xray.js). */
   group.userData.holoSolid = core;
   return group;
+}
+
+/**
+ * Geometry for a sharp hologram part (sharpPart()): the shape with flat
+ * faces for the glow (hard edges), and a hull with shared corners for the
+ * outline, so the pushed-out outline stays closed at the edges. Both are
+ * shared (never disposed with a room).
+ * @param {import('three').BufferGeometry} geometry e.g. BoxGeometry, OctahedronGeometry
+ */
+export function sharpGeometry(geometry) {
+  const flat = geometry.clone();
+  flat.deleteAttribute('normal');
+  flat.deleteAttribute('uv');
+  const hull = mergeVertices(flat);
+  hull.computeVertexNormals();
+  flat.dispose();
+  return { core: shared(geometry), hull: shared(hull) };
+}
+
+/**
+ * A hologram part with hard edges and flat faces (enemies with a sharp,
+ * aggressive look), from sharpGeometry().
+ * @param {ReturnType<typeof sharpGeometry>} geometry
+ * @param {number|string} color
+ * @param {ReturnType<typeof createFlash>} [flash]
+ */
+export function sharpPart({ core, hull }, color, flash = NO_FLASH) {
+  const part = holoPart(core, color, flash);
+  part.children[1].geometry = hull;
+  return part;
 }
 
 /** Bright material for glowing eyes (above 1, so bloom picks it up). */

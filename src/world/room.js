@@ -3,7 +3,7 @@
  * room fully resets on re-entry (CLAUDE.md §4). Nothing here points back
  * into the data, so the game can change it freely.
  */
-import { ENEMY_DEFAULTS, OBJECT_STYLE_DEFAULTS, blockCells, holeTiles, withExitDefaults } from '../data/room-data.js';
+import { OBJECT_STYLE_DEFAULTS, blockCells, holeTiles, withEnemyDefaults, withExitDefaults } from '../data/room-data.js';
 
 /**
  * The room's block cells by type (D60): static types go into the grid;
@@ -29,9 +29,9 @@ function blocksByType(data, blockTypes) {
 
 /**
  * @param {object} data room file contents (validated)
- * @param {{ objectTypes: object, blockTypes: object, enemyTypes?: object, enemyModels?: Record<string, string>, pickupTypes?: object, biomes: object }} content loaded game data
+ * @param {{ objectTypes: object, blockTypes: object, enemyTemplates?: object, pickupTypes?: object, biomes: object }} content loaded game data
  */
-export function buildRoom(data, { objectTypes, blockTypes, enemyTypes = {}, enemyModels = {}, pickupTypes = {}, biomes }) {
+export function buildRoom(data, { objectTypes, blockTypes, enemyTemplates = {}, pickupTypes = {}, biomes }) {
   const fromBlocks = blocksByType(data, blockTypes);
   return {
     id: data.id,
@@ -62,15 +62,11 @@ export function buildRoom(data, { objectTypes, blockTypes, enemyTypes = {}, enem
       // Moving platforms: the path they follow (world/path.js).
       ...(object.path && { path: structuredClone(object.path) }),
     })).concat(fromBlocks.objects),
-    /** Enemies: type values (movement, hostility, speed...) merged with this enemy's overrides, id, cell and path. */
+    /** Enemies: template values (look, movement, attack, speed...) merged with this enemy's overrides, id, cell and path. */
     enemies: (data.enemies ?? []).map((enemy) => ({
-      ...ENEMY_DEFAULTS,
-      ...structuredClone(enemyTypes[enemy.type]),
-      ...enemy.overrides,
+      ...withEnemyDefaults({ ...structuredClone(enemyTemplates[enemy.template]), ...enemy.overrides }),
       id: enemy.id,
-      type: enemy.type,
-      /** The base type whose look it has (a template's base, D58). */
-      model: enemyModels[enemy.type] ?? enemy.type,
+      template: enemy.template,
       at: [...enemy.at],
       ...(enemy.path && { path: structuredClone(enemy.path) }),
     })),

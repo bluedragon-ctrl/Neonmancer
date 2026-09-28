@@ -240,26 +240,60 @@ magenta, thin dashed edges, tinted faces) that gives way under the wizard.
 ## Enemies
 
 Corrupted programs (D48), listed in a room's `enemies`. Everything about one
-comes from data: its type in `defs.json` `enemies`, and the room's
-`overrides` for that one enemy.
+comes from data: its template in `defs.json` `enemies` (D79), and the
+room's `overrides` for that one enemy. A template without `extends` sets
+every required value below; one with `extends` builds on another template
+(and so on down the chain) and sets only what it changes.
+Enemies are universal (D78): a look, a
+movement, an attack and a color, and any of them combine (a bug can chase
+and burst; a virus can patrol).
 
 | Field | Values | Meaning |
 |---|---|---|
-| `movement` | `patrol`, `stationary` | patrol walks the enemy's `path` (required); stationary stays in its cell (no path). Chasing comes with Viruses (Phase 3); a turret is a stationary enemy with a projectile attack (Pop-ups). |
-| `attack` | `contact`, `none` | contact: touching it hurts while it is hostile. Projectiles come with Pop-ups. |
-| `hostility` | `hostile`, `peaceful`, `provoked` | hostile attacks; peaceful never does; provoked is peaceful until a spell (Zap) hits it, then hostile. |
-| `aggroRange` | units (default 0) | how far a hostile enemy notices the wizard; used by chasing and shooting later, no effect on patrol and contact. |
+| `look` | `bug`, `virus`, `sentinel` | its body (below). A template takes its base's. |
+| `movement` | `patrol`, `stationary`, `chase` | patrol walks the enemy's `path` (required); stationary stays in its cell (no path); chase goes after the wizard (below), walking its `path` while calm if it has one. |
+| `attack` | `touch`, `burst`, `arc`, `none` | touch: touching it hurts while it is hostile; burst and arc: charged lightning (discharges, below), all round it or one bolt aimed at the wizard; touching it doesn't hurt. Projectiles come with Pop-ups. |
+| `hostility` | `hostile`, `peaceful`, `provoked` | hostile attacks; peaceful never does; provoked is peaceful until a spell (Zap) or a discharge hits it, then hostile. |
+| `aggroRange` | units (default 0) | how far a hostile enemy notices the wizard, with nothing solid in between (a "!" pops up); a chaser goes after him, a burst or arc fires at him. 0: it never notices him. |
 | `integrity` | 1–15 | how much spell damage it takes before it pops (bug: 2, so two Zaps). |
 | `damage` | ≥ 1 | integrity the wizard loses per attack. |
 | `speed` | units/s | walking speed; a path's own `speed` overrides it. |
+| `chaseSpeed` | units/s (default: `speed`) | speed while chasing or searching. |
+| `memory` | seconds (default 1.5) | how long a chaser searches where it lost him. |
 | `bounce` | true / false (default false; bug: true) | trampoline top (below). |
 | `solid` | true / false (default false) | blocks the wizard, carries him and shoves him (below). |
-| `color` | #rrggbb | body color; the eyes always show hostility, so a room can recolor one enemy with `overrides` without a new type or model. |
+| `color` | #rrggbb | body color; the eyes always show hostility, so a room can recolor one enemy with `overrides` without a new template. |
+| `attackRange` | units (default 1.2) | burst or arc reach, from its eyes to the nearest point of the wizard; `aggroRange` must be at least this. |
+| `attackCharge` | seconds (default 0.4) | the warning before it fires. |
+| `attackCooldown` | seconds (default 1.5) | the wait after firing. |
+| `attackColor` | #rrggbb (default: `color`) | lightning color. |
+
+| Type | Look | Moves | Attack |
+|---|---|---|---|
+| `bug` | mint-green ball `#2bff88`, hops, bouncy | patrol, 3 cells/s | touch, 1 |
+| `virus` | yellow sharp cube `#ffe23a`, glides | chase: aggro 5, 2 cells/s calm, 3.5 chasing | burst, range 1.2, charge 0.4 s, cooldown 1.5 s; integrity 2 |
+| `sentinel` | orange sharp octahedron `#ff8a1a`, glides | chase: aggro 7, 1.5 calm, 2.5 chasing; stops 5 away | arc, range 5, charge 0.7 s, cooldown 2 s; integrity 3 |
 
 - **Moving:** an enemy stands in a grid cell (hitbox 0.6 × 0.6 × 0.6,
-  centered) and steps one cell at a time with one hop per cell (bug: 3
-  cells per second). It only starts a step from a whole cell, so on a
-  platform only at a stop.
+  centered) and steps one cell at a time (bug: one hop per cell, 3 cells
+  per second). It only starts a step from a whole cell, so on a platform
+  only at a stop.
+- **Seeing:** a hostile enemy with an `aggroRange` sees the wizard when
+  he is within it (from its eyes, 0.4 above its cell floor, to the
+  nearest point of him) and nothing solid lies on the line to his middle:
+  blocks, crates, platforms, targets, closed exits. Other enemies and
+  holes don't block it. Noticing him pops up a red **"!"** over it
+  (any enemy), which stays at least 1 s and as long as it sees him; so
+  does a provoked one turning hostile.
+- **Chase** (D78): while it sees him it steps towards his column at
+  `chaseSpeed`, greedily: along the axis where he is farther, else along
+  the other; if both are blocked it waits and tries again, so a wall
+  between them stops it (he can hide behind blocks and trap it with
+  crates). While he is within its attack range it holds its ground and
+  faces him (a sentinel keeps its distance). Losing sight of him, it goes
+  to the column where it last saw him and searches for `memory` seconds,
+  then goes back to its post (its start cell), or walks its path again
+  if it has one. It notices him again at any time.
 - **Patrol:** the shared path format (D46) with level legs (along x or z,
   all at the height of `at`); only x and z count once it walks, so after
   falling off a ledge it keeps to its path below. Ping-pong or loop, pause
@@ -269,27 +303,54 @@ comes from data: its type in `defs.json` `enemies`, and the room's
   0.2 s beat (`turnTicks`). It never leaves the room.
 - **Physics:** it walks off ledges and falls, rides platforms (which wait
   while it steps on or off, and wait for one in their way), and a crate
-  can rest on it but can't be pushed into it. Falling into a hole or
-  landing on a void block pops it into pixels; it stays gone until the
-  room resets. Hazard blocks don't hurt it; it never triggers collapsing
+  can rest on it but can't be pushed into it. It never steps into a hole
+  or onto a void block, nor off a ledge onto one (D78): that cell counts
+  as blocked. Falling into a hole or onto a void block anyway (the ground
+  gone from under it) pops it into pixels; it stays gone until the room
+  resets. Hazard blocks don't hurt it; it never triggers collapsing
   blocks.
 - **The wizard** walks through enemies unless they are **solid**. A solid
   enemy blocks him like a crate; he can stand on it (if it doesn't bounce)
   and it carries him as it walks, walls scraping him off; walking into him
   it shoves him along (at most 0.35 per tick), and if he is pinned it
   turns back instead. A crate resting on a solid enemy holds it in place.
-- Touching a hostile enemy with a contact attack hurts him (`Game.hurt()`,
+- Touching a hostile enemy with a touch attack hurts him (`Game.hurt()`,
   then the usual invulnerability): overlapping it, or for a solid one
   leaning on it or standing on it (the hazard rule, D44).
   Landing on top of a **bouncy** one (every bug by default: a round ball
   reads as bouncy) bounces him up 2.2 above its top (clears 2 blocks)
   without hurting him; its sides still hurt if it is hostile. Enemies with
   `bounce` false can be stood on only if they are solid.
+- **Discharges** (D78): a hostile enemy with a burst or arc that sees him
+  within `attackRange` stops (at a whole cell), charges for
+  `attackCharge` seconds (it trembles and glows white, lightning crackles
+  round it), then fires lightning in `attackColor` for 10 ticks and cools
+  down for `attackCooldown` seconds. Falling cuts the attack off.
+  - **Burst:** lightning all round it, out to its range. It hits every
+    body within range it can see (the line to its middle not blocked):
+    the wizard and other enemies (they lose `damage` integrity and are
+    provoked). Objects are not hurt.
+  - **Arc:** when the charge starts it aims at the wizard's middle, and a
+    dashed line shows the aim (brightening, blinking just before it
+    fires). The bolt flies along that line for its range, or until a
+    block or an object stops it, and hits every body in the squares it
+    passes through: the wizard (if he is still there) and other enemies.
+    Stepping out of the line during the charge dodges it.
 - **Look (bug):** a mint-green hologram ball with two slanted eyes whose
   color shows its mood: red hostile, amber calm until provoked, cyan
   peaceful. It squashes when bounced on, hops as it walks, bobs while
   standing, turns towards where it walks and pops into pixels. No drop
   shadow (D50).
+- **Look (virus):** a sharp-edged hologram cube (flat faces, hard
+  corners) tipped onto an edge, slanted eyes on its front face, four
+  small cubes of itself orbiting and now and then jumping out of line.
+  It floats and glides, leaning into its steps; after the wizard its bits
+  orbit faster and wider and its eyes flare; charging, it squares up and
+  pulls its bits in tight.
+- **Look (sentinel):** a tall sharp octahedron on its point, a visor eye
+  across its front ridge and three shards circling its waist; it floats,
+  steady. Charging, the shards swing in front of its eye and spin round
+  the line of fire like a barrel; firing, it recoils.
 - **Spell hits:** a Zap takes `damage` (1) of its integrity and provokes
   it; the last point pops it into pixels. Any enemy can be hit, peaceful
   ones too (they stay peaceful). A hit flashes it white, then cyan, with a
@@ -297,10 +358,14 @@ comes from data: its type in `defs.json` `enemies`, and the room's
   jump and a faint flash).
 - Validation: known type, valid overrides, a free cell of its own not over
   a hole, ids unique among objects and enemies, a patrol has a level path
-  clear of static blocks, a stationary enemy has none.
-- Tuning: `ENEMY` in `src/entities/enemy.js`, `PLAYER.bounceHeight`, the
-  look is `BUG` in `src/render/bug.js`; review in the asset showcase
-  (`/tools/showcase.html?asset=bugs`).
+  clear of static blocks (so does a chaser's, if it has one), a
+  stationary enemy has none; a burst or arc enemy's `aggroRange` reaches its
+  `attackRange`.
+- Tuning: `ENEMY` in `src/entities/enemy.js`, `PLAYER.bounceHeight`; the
+  looks are `BUG` in `src/render/bug.js`, `VIRUS` in
+  `src/render/virus.js`, `SENTINEL` in `src/render/sentinel.js`, the
+  lightning `DISCHARGE` in `src/render/discharge.js`; review in the asset
+  showcase (`/tools/showcase.html?asset=bugs,viruses,sentinels`).
 
 ## Pickups and progress
 
@@ -585,7 +650,7 @@ The world map tool flags any room further out.
 
 | Room | Size | Exits | Shows |
 |---|---|---|---|
-| `boot_sector` (start, hub) | 12×12 | north doorway → Cache Hall; raised east exit on a ledge → Stack Yard; west doorway → Crawl Space; south (front) → Transit Bus | blocks, holes, two crates, a 2-high wall near the front to walk behind (X-ray outline); the Zap data disk two steps from the spawn (Phase 3) |
+| `boot_sector` (start, hub) | 12×12 | north doorway → Cache Hall; raised east exit on a ledge → Stack Yard; west doorway → Quarantine; south (front) → Transit Bus | blocks, holes, two crates, a 2-high wall near the front to walk behind (X-ray outline); the Zap data disk two steps from the spawn (Phase 3) |
 | `cache_hall` | 16×8 | south (front) → Boot Sector; east (front) → Relay Station | a 3-wide pit across the room: push a crate in, then jump the rest; the Shield data disk behind it (Phase 3 step 3) |
 | `relay_station` (Phase 3) | 12×12 | west doorway → Cache Hall; south (front, locked) → Stack Yard | switches (step 4): a Zap target by the back wall, a crate to push onto a plate, and a peaceful bug resting 2 s on a plate near the locked exit, so the exit opens while the bug is on it (the wizard can press that plate himself, but the exit closes as he steps off) |
 | `stack_yard` | 8×8, Glitchmire color | raised west doorway → Boot Sector; east (front) → Fault Line; north doorway (locked) → Relay Station | stacked crates, a 2-high block to climb via a crate; a plate in front of the locked doorway and a crate to push onto it (Phase 3 step 4) |
@@ -593,6 +658,7 @@ The world map tool flags any room further out.
 | `transit_bus` (Phase 2) | 12×12, 5 high | west doorway → Fault Line; north doorway → Boot Sector; raised east exit on the high ledge → Volatile Memory | a ferry across a pit between two ledges, a lift up to a high ledge, a loop carrying a crate, a press coming down (with a crate to jam it) and a pusher squeezing the wizard against the room's edge |
 | `volatile_memory` (Phase 2) | 12×12, 5 high | west doorway → Transit Bus; raised east exit on the high ledge → Crawl Space | a pit across the room with two collapsing bridges: one regrowing after 3 s (the way back), one that stays gone, with a crate on a plain ledge in front of it to push onto the bridge from solid ground (it doesn't trigger the blocks, so it is a safe spot to hop onto); two one-shot collapsing steps up to a high ledge |
 | `crawl_space` (Phase 2) | 12×12 | west doorway → Volatile Memory; east (front) → Boot Sector | bugs: a sentry crossing the entrance lane, one walking off a ledge and patrolling the floor below, a solid one shoving along a lane with a crate to push in its way, a provoked one circling a pillar, a peaceful stationary one to bounce up to a 2-high ledge, a solid peaceful one along the front edge to ride; Zap targets: the provoked one turns hostile when hit, and an amber stationary one with 4 integrity; an energy refill near the entrance (Phase 3) |
+| `quarantine` (Phase 3) | 10×10, Glitchmire | east doorway → Boot Sector | chasers (step 5, D78): a virus at the back that chases and bursts, a sentinel in the far corner that keeps its distance and fires arcs, a stationary bug with a burst guarding an integrity refill; a 2-high pillar to hide behind, a trench of holes the chasers won't cross, a crate for cover and a 1-high ledge |
 
 ### Room design checklist
 
@@ -779,25 +845,30 @@ list switches to another room; New room makes an empty one (D57).
   while this tool is picked), with the id `<type>_<n>`. Placing on an
   object of the same type leaves it as it is (a platform keeps its path). A new platform is picked, ready for its path.
   Erasing removes an object or enemy standing in the cell.
-- **Enemy** places an enemy of the panel's type with its settings
-  (movement, hostility, bounce, solid: blank is the type's own; other
-  overrides written by hand stay), id `<type>_<n>`, and picks it. A click
-  on an enemy picks it: the fields then show and change it, and new
+- **Enemy** places an enemy of the panel's template with its settings
+  (grouped: look and color; movement, speed and chase speed; hostility
+  and aggro range; attack, attack range and damage; integrity, bounce,
+  solid; each with a tooltip. Blank is the template's own; other
+  overrides written by hand stay), id `<template>_<n>`, and picks it. A
+  click on an enemy picks it: the fields then show and change it, and new
   enemies get the same. A patrolling enemy needs a path (the panel says
-  so); making one stationary drops its path. Integrity, damage, speed and
-  color are typed in (blank: the type's). Changing the type of an enemy
-  with an id the editor made renames it (`bug_1` becomes `virus_1`); ids
-  written by hand stay.
-- **Enemy templates** (D58): Template + Save turns the current enemy
-  settings into a new enemy type in `defs.json` (`"extends"` its base
-  type, only the changed values), picked from the Type list from then on
-  (shown as `bug_tank (bug template)`); the picked enemy becomes one of
-  it. With an enemy of a template that has settings of its own, **Update
-  template** moves them into the template, changing every enemy of it.
-  **Rename** gives the template the name typed in Template (only a
-  template no other room uses; the room's enemies follow), **Delete**
-  removes one no enemy uses. Template changes are undo steps of the room
-  they were made in (D59). Saved with Save, like the rooms.
+  so), a chaser may have one; making one stationary drops its path.
+  Integrity, damage, speed, chase speed, aggro range, attack range and
+  color are typed in (blank: the template's). Changing the template of
+  an enemy with an id the editor made renames it (`bug_1` becomes
+  `virus_1`); ids written by hand stay.
+- **Enemy templates** (D58, D79), any of them, the base ones too: a
+  name + **New** turns the current enemy settings into a new template in
+  `defs.json` (`"extends"` the current template, only the enemy's own
+  values), listed as `bug_tank (on bug)` from then on; the picked enemy
+  becomes one of it. With settings of its own, **Update template** moves
+  them into the template: every enemy of it changes, in every room, and
+  so do the templates built on it (the status line says which rooms and
+  templates). **Rename** gives the template the typed name (only one no
+  other room uses; the room's enemies and the templates built on it
+  follow), **Delete** removes one no enemy uses and no template builds
+  on. Template changes are undo steps of the room they were made in
+  (D59). Saved with Save, like the rooms.
 - **Path** works on a picked platform or enemy (click it). Each click on a
   cell adds a point, with corners added so every leg runs along one axis
   (x, then z, then y); an enemy's points stay at its own height, a
@@ -971,7 +1042,7 @@ the author; the answers are recorded as decisions before the code lands.
 | 2 | `feat/pickups-and-progress` | Pickup types in `defs.json` and room data, and a `Progress` model (save bits found, known spells) that survives room resets and death: permanent pickups have a save bit in blocks (D71) and stay as grayed-out ghosts once found; temporary pickups (integrity and energy refills) have none and come back with the room (D67). The first data disk: Zap is no longer known from the start, its disk lies in Boot Sector (`> SPELL INSTALLED: ZAP` banner). Pickup burst; editor and validation support. |
 | 3 | `feat/data-disks` | More disks (D73): an install animation on the wizard, and a second spell to switch to (Tab / Q): Shield, a crackling ring round him; it blocks projectiles once there are any (step 6). Its disk lies in Cache Hall. |
 | 4 | `feat/switches` | Switches that unlock exits: a pressure plate held down by a crate, and a target that a Zap bolt hits. An exit in room data can be locked until its switches are on; a locked exit looks closed and is solid. Switch state resets with the room. The locked exit is the same mechanism access levels use later (step 14). Editor, validation (switches point at exits that exist), showcase, a test room. |
-| 5 | `feat/viruses` | A `chase` movement behavior: a hostile Virus follows the wizard while it sees him within `aggroRange` and gives up when line of sight breaks. |
+| 5 | `feat/viruses` | Universal enemies (a `look` field, D78); every enemy type an enemy template (D79); a `chase` movement behavior: a hostile enemy follows the wizard while it sees him within `aggroRange`, searches, then goes home; charged discharge attacks (`burst`, `arc`; `contact` renamed `touch`); the Virus and the Sentinel; the "!" mark; enemies keep out of holes. Test room Quarantine. |
 | 6 | `feat/popups` | A projectile attack: Pop-ups are stationary enemies firing slow shots; a projectile entity with its own rules for what stops it. |
 | 7 | `feat/firewall-spell` | Shield blocks projectiles; Firewall: a shield that also damages (D73). |
 | 8 | `feat/pause-spell` | Pause: freezes an enemy for a while; a frozen enemy is a solid platform (reusing the solid-enemy rules, D51). |
@@ -986,9 +1057,7 @@ the author; the answers are recorded as decisions before the code lands.
 Open questions, settled at the start of their step:
 - **2 Pickups** and **3 Data disks:** settled (D71, D73).
 - **4 Switches:** settled (D75).
-- **5 Viruses:** what blocks line of sight (blocks, crates, height
-  differences); what a Virus does after giving up (stops, returns to its
-  post or path); chase speed.
+- **5 Viruses:** settled (D78).
 - **6 Pop-ups:** aimed at the wizard or in a fixed direction; fire rate,
   shot speed and range; what stops a shot (blocks, crates, Zap).
 - **7 Firewall:** Shield's projectile blocking; Firewall's duration, cost
@@ -1047,7 +1116,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 | File | Contents |
 |---|---|
 | `data/rooms/<id>.json` | One room (id = file name) |
-| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; switches `target` and `plate`, white, see Switches and locked exits); `enemies`: enemy types (`bug`, see Enemies) and templates that `extend` one (D58); `spells`: spell tuning and color (`zap`, see Zap and energy; `shield`, see Shield); `pickups`: pickup types (see Pickups and progress); `blocks`: block types (D60): look or kind, color, properties (`damage`, `lethal`, `regrow`), `extends` for variants; see Block types |
+| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; switches `target` and `plate`, white, see Switches and locked exits); `enemies`: enemy templates (`bug`, `virus`, `sentinel`, see Enemies), each complete or `extend`ing another (D58, D79); `spells`: spell tuning and color (`zap`, see Zap and energy; `shield`, see Shield); `pickups`: pickup types (see Pickups and progress); `blocks`: block types (D60): look or kind, color, properties (`damage`, `lethal`, `regrow`), `extends` for variants; see Block types |
 | `data/biomes.json` | Biome name and room color: `home_lattice` (core, amber), `glitchmire` (pink), `frostbyte_wastes` (ice blue), `abyssal_buffer` (graphite), `firewall_citadel` (ember orange), `phantom_partition` (special, silver-white); optional `look` for the surroundings (background, outer grid and its fade, wall grid, bloom); see Biomes (D61, D62) |
 | `data/world.json` | Start room, exit connections and every room's cell on the world map (`positions`, D66) |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |
@@ -1094,8 +1163,8 @@ Example room (12×12):
   Platforms also take a `path`:
   `{ "points": [[6, 0, 1]], "mode": "pingpong", "speed": 2, "pause": 0.8 }`
   (see Moving platforms).
-- `enemies` — `{ "id", "type", "at", "path", "overrides" }`: `at` is the
-  spawn cell, `path` a patrol path (level legs), `overrides` any type field
+- `enemies` — `{ "id", "template", "at", "path", "overrides" }`: `at` is the
+  spawn cell, `path` a patrol path (level legs), `overrides` any template field
   (see Enemies). Ids are shared with objects.
 - Object type style (D17): `edges` `solid`/`dashed`, `mark`
   `none`/`inset`/`cross`/`brackets`, `faces` `dark`/`tinted` (defaults first),

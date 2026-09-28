@@ -54,7 +54,7 @@
       "items": { "$ref": "#/$defs/object" }
     },
     "enemies": {
-      "description": "Enemies with stable ids (types from defs.json \"enemies\"); ids are shared with objects.",
+      "description": "Enemies with stable ids (templates from defs.json \"enemies\"); ids are shared with objects.",
       "type": "array",
       "items": { "$ref": "#/$defs/enemy" }
     },
@@ -147,19 +147,19 @@
     },
     "enemy": {
       "type": "object",
-      "required": ["id", "type", "at"],
+      "required": ["id", "template", "at"],
       "additionalProperties": false,
       "properties": {
         "id": { "$ref": "common.schema.json#/$defs/id" },
-        "type": { "$ref": "common.schema.json#/$defs/id", "description": "Enemy type from defs.json." },
+        "template": { "$ref": "common.schema.json#/$defs/id", "description": "Enemy template from defs.json \"enemies\" (D79): every value it has unless overridden here." },
         "at": { "$ref": "common.schema.json#/$defs/cell", "description": "Spawn cell (its lower corner); it starts here whenever the room resets." },
         "overrides": {
           "type": "object",
-          "description": "Values that replace the type's for this enemy only (e.g. hostility, bounce, speed, color)."
+          "description": "Values that replace the template's for this enemy only (e.g. hostility, bounce, speed, color)."
         },
         "path": {
           "$ref": "#/$defs/path",
-          "description": "Patrol path: level (legs along x or z at the height of \"at\"); only x and z count once it walks, so it keeps to it after falling off a ledge. \"speed\" overrides the type's. Without a path it stays put."
+          "description": "Patrol path: level (legs along x or z at the height of \"at\"); only x and z count once it walks, so it keeps to it after falling off a ledge. \"speed\" overrides the template's. Without a path it stays put."
         }
       }
     },

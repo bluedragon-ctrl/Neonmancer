@@ -2,27 +2,39 @@
  * An enemy (a corrupted program): a small body that moves one grid cell at
  * a time where its movement behavior (ai/behaviors.js) leads it, and falls
  * when nothing holds it up (D48). Everything about it comes from its type
- * in defs.json and the room's overrides: movement, attack, hostility, aggro
- * range, integrity, damage, speed, bounce, color. Pure logic, one call to
- * update() per fixed tick.
+ * in defs.json and the room's overrides: model, movement, attack,
+ * hostility, aggro range, integrity, damage, speeds, bounce, color and the
+ * discharge attack's values; any look, movement and attack combine (D78).
+ * Pure logic, one call each to sense(), update() and updateAttack() per
+ * fixed tick (Game.update()).
  *
- *   rest ──behavior steps, cell free──► walk ──arrive──► rest
- *     │ └─cell blocked: turn back, wait turnTicks                 │
- *     └──no support──► fall ──land──► rest                         │
- *   onto a hole or a void block ──► dead (pops; gone until the room resets)
- *   hit by a spell ──► integrity − damage; at 0 ──► dead (pops)
+ *   rest ──behavior steps, cell free and safe──► walk ──arrive──► rest
+ *     │ └─cell blocked, or a hole or void block there: turn back, wait turnTicks
+ *     └──no support──► fall ──land──► rest
+ *   falls into a hole or onto a void block ──► dead (pops; gone until the room resets)
+ *   hit by a spell or a discharge ──► integrity − damage; at 0 ──► dead (pops)
+ *
+ * It never steps into a hole or where it would land on a lethal block
+ * (D78); it only ends up in one when the ground goes from under it.
+ * Seeing: a hostile enemy with an aggro range notices the wizard within it
+ * when nothing blocks the line between them (ai/sight.js); a "!" pops up
+ * over it then, and when a provoked one turns hostile.
+ * Discharge attack: seeing him within its attack range at rest, it stops,
+ * charges, fires (Game.discharge()), then cools down.
  *
  * It only starts a step from a whole cell (so on a platform, only at a
  * stop). The wizard walks through it, unless it is solid: then it blocks
  * him, carries him when he stands on it and shoves him when it walks into
  * him (turning back if he is pinned), like a moving platform. Touching a
- * hostile one with a contact attack hurts him, and landing on a bouncy one
+ * hostile one with a touch attack hurts him, and landing on a bouncy one
  * bounces him up (Game.update()). Crates, platforms, walls, other
  * enemies and a step up block it. Pushables rest on it and can't be pushed
  * into it; platforms carry it and wait for it (entities/platform.js).
  */
 import { DT } from '../core/loop.js';
 import { BEHAVIORS } from '../ai/behaviors.js';
+import { DISCHARGES } from '../data/room-data.js';
+import { boxCenter, lineOfSight, reach } from '../ai/sight.js';
 import { REST_EPS, moveAxis, overlapsBox, overlapsSolid, restsOn, shoveClear, surfaceBelow } from '../physics/collision.js';
 
 /** Tuning values (units, ticks). */
@@ -35,6 +47,12 @@ export const ENEMY = {
   turnTicks: 12,
   /** Farthest a solid enemy shoves the wizard in one tick (as platforms do). */
   maxShove: 0.35,
+  /** Height of its eyes above its cell floor: where it looks from and discharges from. */
+  eyeHeight: 0.4,
+  /** Ticks the lightning of a discharge lasts. */
+  dischargeTicks: 10,
+  /** Ticks the "!" stays up at least, once it notices him or is provoked. */
+  alertTicks: 60,
 };
 
 /** A step this close to done counts as done. */
@@ -42,12 +60,12 @@ const SNAP = 1e-9;
 
 export class Enemy {
   /**
-   * @param {object} enemy runtime room enemy (id, type, at, path, behavior, speed, damage...)
+   * @param {object} enemy runtime room enemy (id, template, at, path, behavior, speed, damage...)
    */
   constructor(enemy) {
     this.data = enemy;
     this.id = enemy.id;
-    this.type = enemy.type;
+    this.template = enemy.template;
     this.size = ENEMY.size;
     /** Lower corner of its cell [x, y, z]; whole cells except while walking, falling or riding. */
     this.pos = [...enemy.at];
@@ -66,7 +84,26 @@ export class Enemy {
     this.facing = 0;
     /** Walking speed in units per second: the path's own, else its type's. */
     this.speed = enemy.path?.speed ?? enemy.speed;
-    this.behavior = new BEHAVIORS[enemy.movement](enemy.at, enemy.path);
+    /** Speed of the step it is taking: its chase speed while after the wizard. */
+    this.stepSpeed = this.speed;
+    this.behavior = new BEHAVIORS[enemy.movement](enemy.at, enemy.path, enemy);
+    /** Does it see the wizard (hostile, within aggro range, nothing in the way)? See sense(). */
+    this.sees = false;
+    /** The column [x, z] it last saw him in, or null. */
+    this.lastSeen = null;
+    /** Is he within its discharge range (while it sees him)? */
+    this.inRange = false;
+    /** Ticks since the "!" popped up (it noticed him or was provoked), or null. */
+    this.alert = null;
+    /** Discharge attack: ticks since it started charging (null: not attacking), ticks until it may again. */
+    this.attackTick = null;
+    this.cooldown = 0;
+    this.chargeTicks = Math.max(1, Math.round(enemy.attackCharge / DT));
+    this.cooldownTicks = Math.round(enemy.attackCooldown / DT);
+    /** An arc's aim, fixed when it starts charging: { dir, end } (Game.aimDischarge()). */
+    this.aim = null;
+    /** Where the last arc stopped (Game.discharge()). */
+    this.boltEnd = null;
     /** Integrity left; a spell hit takes some (hit()), at 0 it pops. */
     this.integrity = enemy.integrity;
     /** Ticks since a spell last hit it (for the view), or null. */
@@ -98,14 +135,104 @@ export class Enemy {
     return this.alive && (hostility === 'hostile' || (hostility === 'provoked' && this.provoked));
   }
 
-  /** Does touching it hurt: hostile, with a contact attack? */
+  /** Does touching it hurt: hostile, with a touch attack? */
   get hurtsOnContact() {
-    return this.hostile && this.data.attack === 'contact';
+    return this.hostile && this.data.attack === 'touch';
   }
 
-  /** It was attacked (a spell hit it): a 'provoked' enemy turns hostile. */
+  /** Is its attack a discharge (burst or arc)? */
+  get discharges() {
+    return DISCHARGES.includes(this.data.attack);
+  }
+
+  /** It was attacked (a spell hit it): a 'provoked' enemy turns hostile, and a "!" pops up. */
   provoke() {
+    if (this.data.hostility === 'provoked' && !this.provoked) this.alert = 0;
     this.provoked = true;
+  }
+
+  /** Is the "!" over it: for a while after it popped up, and as long as it sees him. */
+  get alerted() {
+    return this.alive && this.alert !== null && (this.alert < ENEMY.alertTicks || this.sees);
+  }
+
+  /** Its eyes: where it looks and discharges from. */
+  middle() {
+    const [x, y, z] = this.pos;
+    return [x + 0.5, y + ENEMY.eyeHeight, z + 0.5];
+  }
+
+  /**
+   * Look for the wizard: does it see him (hostile, within its aggro range,
+   * nothing solid in between), and is he within its discharge range? Then
+   * its behavior follows what it sees. Once a tick, before update().
+   * @param {import('../game.js').Game} game grid, player and sightBlockers
+   * @returns {boolean} whether it has just noticed him (a new "!")
+   */
+  sense({ grid, player, sightBlockers }) {
+    if (this.alert !== null) this.alert++;
+    const saw = this.sees;
+    this.sees = false;
+    this.inRange = false;
+    if (this.alive && this.hostile && !player.dead && this.data.aggroRange > 0) {
+      const eyes = this.middle();
+      const box = player.box();
+      const distance = reach(eyes, box);
+      this.sees = distance <= this.data.aggroRange && lineOfSight(eyes, boxCenter(box), grid, sightBlockers);
+      if (this.sees) {
+        this.lastSeen = [Math.floor(player.pos[0]), Math.floor(player.pos[2])];
+        this.inRange = this.discharges && distance <= this.data.attackRange;
+      }
+    }
+    this.behavior.update?.(this);
+    if (!this.sees || saw) return false;
+    this.alert = 0;
+    return true;
+  }
+
+  /** Turn to face the point `[x, , z]`. */
+  faceTowards([x, , z]) {
+    const [mx, , mz] = this.middle();
+    if (x !== mx || z !== mz) this.facing = Math.atan2(x - mx, z - mz);
+  }
+
+  /** Will it attack as soon as it stands still: he is in range and it is ready? */
+  get readyToAttack() {
+    return this.inRange && this.cooldown === 0 && this.attackTick === null;
+  }
+
+  /**
+   * The discharge attack, once a tick after update(): start charging when
+   * it sees him within range, stands still and is ready ('charge'), fire
+   * when charged ('discharge', resolved by Game.discharge()), then cool
+   * down. Falling or dying cuts it off.
+   * @param {import('../game.js').Game} game
+   * @returns {'charge'|'discharge'|null}
+   */
+  updateAttack(game) {
+    if (!this.discharges) return null;
+    if (this.cooldown > 0) this.cooldown--;
+    if (this.attackTick !== null) {
+      if (!this.alive || this.state === 'fall') {
+        this.endAttack();
+        return null;
+      }
+      this.attackTick++;
+      if (this.attackTick === this.chargeTicks) return 'discharge';
+      if (this.attackTick >= this.chargeTicks + ENEMY.dischargeTicks) this.endAttack();
+      return null;
+    }
+    if (!this.alive || !this.readyToAttack || this.state !== 'rest') return null;
+    this.attackTick = 0;
+    this.faceTowards(game.player.pos);
+    return 'charge';
+  }
+
+  /** The attack is over (or cut off): cool down. */
+  endAttack() {
+    this.attackTick = null;
+    this.aim = null;
+    this.cooldown = this.cooldownTicks;
   }
 
   /** Has a spell taken some of its integrity? */
@@ -114,10 +241,10 @@ export class Enemy {
   }
 
   /**
-   * A spell hits it: it is provoked and loses `damage` integrity; losing the
-   * last pops it.
+   * A spell or a discharge hits it: it is provoked and loses `damage`
+   * integrity; losing the last pops it.
    * @param {number} damage
-   * @param {'zap'} cause the spell
+   * @param {'zap'|'discharge'} cause
    * @returns {'hit'|'pop'|null} event (null if it was dead already)
    */
   hit(damage, cause) {
@@ -156,10 +283,15 @@ export class Enemy {
     return this.rest(game);
   }
 
-  /** Standing: fall if unsupported, die on void, else take the next step. */
+  /**
+   * Standing: fall if unsupported, die on void, else take the next step
+   * (the first free and safe one its behavior offers). It stands still
+   * while it attacks, and when it is about to.
+   */
   rest(game) {
     if (this.startFalling(game)) return this.fall(game);
     if (this.onLethal(game.grid)) return this.die('void');
+    if (this.attackTick !== null || this.readyToAttack) return null;
     if (this.wait > 0) {
       this.wait--;
       return null;
@@ -167,16 +299,23 @@ export class Enemy {
     if (!this.pos.every(Number.isInteger)) return null; // riding a platform between stops
     if (this.solid && this.loaded(game)) return null; // a crate on top holds it down
     const [x, y, z] = this.pos;
-    const step = this.behavior.next(x, z);
-    if (!step) return null;
-    const [dx, dz] = step;
+    const found = this.behavior.next(x, z, this);
+    if (!found) {
+      // Holding its ground or searching: it keeps its eyes on him.
+      if (this.sees) this.faceTowards(game.player.pos);
+      return null;
+    }
+    const steps = Array.isArray(found[0]) ? found : [found];
+    const step = steps.find(([dx, dz]) => this.canStep([x + dx, y, z + dz], game)) ?? null;
+    const [dx, dz] = step ?? steps[0];
     this.facing = Math.atan2(dx, dz);
-    const target = [x + dx, y, z + dz];
-    if (!this.canEnter(target, game)) {
+    if (!step) {
       this.behavior.turnBack();
       this.wait = ENEMY.turnTicks;
       return null;
     }
+    const target = [x + dx, y, z + dz];
+    this.stepSpeed = this.behavior.chasing ? this.data.chaseSpeed : this.speed;
     this.state = 'walk';
     this.from = [...this.pos];
     this.target = target;
@@ -188,7 +327,7 @@ export class Enemy {
   walk(game) {
     // Distance from the cell it left, counted on its own so that whole
     // cells are exact (adding up small float steps drifts).
-    const walked = Math.min(this.walked + this.speed * DT, 1);
+    const walked = Math.min(this.walked + this.stepSpeed * DT, 1);
     const arrived = walked >= 1 - SNAP;
     const { from, target, next } = this;
     for (let i = 0; i < 3; i++) next[i] = arrived ? target[i] : from[i] + (target[i] - from[i]) * walked;
@@ -284,6 +423,19 @@ export class Enemy {
     return game.grid.isInside(target[0], target[2]) && !this.blockedAt(target, game);
   }
 
+  /**
+   * Can it step into the cell `target`, and is it safe there: whatever it
+   * would stand on (or land on, off a ledge) is no hole and no lethal block?
+   */
+  canStep(target, game) {
+    if (!this.canEnter(target, game)) return false;
+    const ground = this.supportAt(target, game);
+    if (ground < 0) return false;
+    const [x, , z] = target;
+    // On a block top (whole heights); objects and platforms are never lethal.
+    return !(Number.isInteger(ground) && game.grid.typeAt(x, ground - 1, z)?.lethal);
+  }
+
   /** Would its box at `pos` run into a block, a solid object or another enemy? */
   blockedAt(pos, { grid, obstacles }) {
     const box = enemyBox(pos, this.size);
@@ -299,11 +451,16 @@ export class Enemy {
    * objects, other enemies; the wizard only under a solid enemy), or −1
    * above a hole.
    */
-  support({ grid, obstacles, player }) {
-    const box = this.box();
+  support(game) {
+    return this.supportAt(this.pos, game);
+  }
+
+  /** Height it would stand at in the cell with its lower corner at `pos` (see support()). */
+  supportAt(pos, { grid, obstacles, player }) {
+    const box = enemyBox(pos, this.size);
     let top = surfaceBelow(box, grid, obstacles, this);
     if (this.solid && !player.dead) top = Math.max(top, surfaceBelow(box, grid, [player], this));
-    const [x, , z] = this.pos;
+    const [x, , z] = pos;
     if (top === 0 && grid.isHole(x + 0.5, z + 0.5)) return -1;
     return top;
   }

@@ -13,10 +13,11 @@ export const CRATE = { kind: 'pushable', color: '#b6ff3c' };
 /** A moving platform type (its path is on the room object). */
 export const LIFT = { kind: 'platform', color: '#00f0ff' };
 
-/** A bug enemy type, as in defs.json (3 units per second: 20 ticks per cell). */
+/** A bug enemy template, as in defs.json (3 units per second: 20 ticks per cell). */
 export const BUG = {
+  look: 'bug',
   movement: 'patrol',
-  attack: 'contact',
+  attack: 'touch',
   hostility: 'hostile',
   aggroRange: 0,
   integrity: 2,
@@ -25,6 +26,44 @@ export const BUG = {
   bounce: true,
   solid: false,
   color: '#2bff88',
+};
+
+/**
+ * A virus enemy template, as in defs.json but chasing at 3 units per second (20
+ * ticks per cell): a burst (range 1.2, 24 ticks of charge, 90 of
+ * cooldown).
+ */
+export const VIRUS = {
+  look: 'virus',
+  movement: 'chase',
+  attack: 'burst',
+  hostility: 'hostile',
+  aggroRange: 5,
+  integrity: 2,
+  damage: 1,
+  speed: 2,
+  chaseSpeed: 3,
+  color: '#ffe23a',
+  attackRange: 1.2,
+  attackCharge: 0.4,
+  attackCooldown: 1.5,
+};
+
+/** A sentinel enemy template, as in defs.json: an arc (range 5, 42 ticks of charge). */
+export const SENTINEL = {
+  look: 'sentinel',
+  movement: 'chase',
+  attack: 'arc',
+  hostility: 'hostile',
+  aggroRange: 7,
+  integrity: 3,
+  damage: 1,
+  speed: 1.5,
+  chaseSpeed: 3,
+  color: '#ff8a1a',
+  attackRange: 5,
+  attackCharge: 0.7,
+  attackCooldown: 2,
 };
 
 /** Spell tuning, as in defs.json. */
@@ -66,7 +105,7 @@ export function roomFile(id, props = {}) {
  * @param {object} options
  * @param {object[]} options.rooms room files (see roomFile())
  * @param {Record<string, object>} [options.objects] object types; a crate by default
- * @param {Record<string, object>} [options.enemies] enemy types; a bug by default
+ * @param {Record<string, object>} [options.enemies] enemy templates; a bug by default
  * @param {Record<string, object>} [options.blocks] block types; BLOCK_TYPES by default
  * @param {Record<string, object>} [options.pickups] pickup types; PICKUPS by default
  * @param {string[][]} [options.connections] pairs of "room.exit"

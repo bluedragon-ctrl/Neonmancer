@@ -39,7 +39,12 @@ import { ExitView } from '../src/render/exit-view.js';
 import { HOLO_TIME } from '../src/render/holo.js';
 import { createWizard } from '../src/render/wizard.js';
 import { addXray } from '../src/render/xray.js';
-import { BUG, animateBug, createBug, popPixels, setEyeMood } from '../src/render/bug.js';
+import { BUG, BUG_MODEL, animateBug, createBug, popPixels, setEyeMood } from '../src/render/bug.js';
+import { VIRUS, VIRUS_MIDDLE, animateVirus, createVirus, virusPopPixels } from '../src/render/virus.js';
+import { SENTINEL, SENTINEL_EYE, animateSentinel, createSentinel, sentinelPopPixels } from '../src/render/sentinel.js';
+import { DISCHARGE, chargeGlow, createDischarge, dischargeLook, placeDischarge } from '../src/render/discharge.js';
+import { createAlertMark, placeAlertMark } from '../src/render/alert-mark.js';
+import { ENEMY } from '../src/entities/enemy.js';
 import { ZAP_FX, damagedGlitch, enemyHitLook } from '../src/render/zap-fx.js';
 import { createBolt, createCastFlare, createSparks, placeBolt, placeCastFlare, placeSparks } from '../src/render/zap-view.js';
 import { EnergyBar } from '../src/ui/energy-bar.js';
@@ -90,6 +95,21 @@ const ALL_ASSETS = [
   { label: 'bug-peaceful', group: 'bugs', build: () => buildBug('peaceful') },
   { label: 'bug-bounce', group: 'bugs', build: () => buildBug('hostile', { bounced: true }) },
   { label: 'bug-pop', group: 'bugs', build: buildBugPop },
+  // Any enemy (D78): a bug noticing the wizard ("!"), and a bug with a
+  // burst discharge instead of its touch attack.
+  { label: 'bug-alert', group: 'bugs', build: buildBugAlert },
+  { label: 'bug-burst', group: 'bugs', span: 4, spin: false, build: () => buildBurst('bug') },
+  // Viruses (Phase 3 step 5, D78): gliding calm, then after the wizard
+  // ("!"); the burst discharge on the wizard; a pop.
+  { label: 'virus', group: 'viruses', build: buildVirus },
+  { label: 'virus-attack', group: 'viruses', span: 4, spin: false, build: () => buildBurst('virus') },
+  { label: 'virus-pop', group: 'viruses', build: buildVirusPop },
+  // Sentinels (step 5, D78): calm, then after the wizard; the arc discharge
+  // (range 5), aimed, then fired: once hitting him, once missing as he
+  // steps aside; a pop.
+  { label: 'sentinel', group: 'sentinels', build: buildSentinel },
+  { label: 'sentinel-attack', group: 'sentinels', span: 7, spin: false, build: buildSentinelAttack },
+  { label: 'sentinel-pop', group: 'sentinels', build: buildSentinelPop },
   // Zap (step 6): the bolt close up, two hits on a bug (the second pops
   // it), and rapid fire at a crate until the energy bar runs dry.
   { label: 'zap-bolt', group: 'zap', build: buildZapBolt },
@@ -632,6 +652,208 @@ function buildBug(mood, { bounced = false } = {}) {
   const asset = new Group().add(bug);
   asset.userData.update = (dt, time) => {
     animateBug(bug, bounced ? { time, bounced: ((time % 1.2) / 1.2) * 72 } : { state: 'walk', walked: time * speed });
+  };
+  return asset;
+}
+
+/**
+ * How much a showcased enemy is after the wizard at `time`: calm for 3 s,
+ * then after him for 3 s (ramping up and down over a quarter second).
+ */
+function alertAt(time) {
+  const t = time % 6;
+  return Math.min(1, Math.max(0, Math.min((t - 3) * 4, (6 - t) * 4)));
+}
+
+/**
+ * A "!" for a showcased enemy, added to `asset` over `at` (the middle by
+ * default); returns a function that shows it (alert over half) at `height`.
+ * @param {Group} asset
+ * @param {number} height
+ * @param {import('three').Vector3} [at]
+ */
+function addMark(asset, height, at) {
+  const mark = createAlertMark();
+  if (at) mark.position.set(at.x, 0, at.z);
+  asset.add(mark);
+  return (alert, time) => placeAlertMark(mark, alert, time, height);
+}
+
+/**
+ * An enemy model's white glow `attack` ticks into its attack (null: none),
+ * as EnemyView shows it.
+ */
+function showGlow(model, attack, charge) {
+  model.userData.flash.amount.value = chargeGlow(dischargeLook(attack, charge));
+  model.userData.flash.color.value.set(0xffffff);
+}
+
+/** A virus gliding calm, then after the wizard, in a loop. */
+function buildVirus() {
+  const virus = createVirus(defs.enemies.virus.color);
+  const asset = new Group().add(virus);
+  const mark = addMark(asset, VIRUS.markHeight);
+  asset.userData.update = (dt, time) => {
+    animateVirus(virus, { state: 'walk', time, alert: alertAt(time) });
+    mark(alertAt(time), time);
+  };
+  return asset;
+}
+
+/** A bug walking, noticing the wizard now and then ("!"). */
+function buildBugAlert() {
+  const { color, speed } = defs.enemies.bug;
+  const bug = createBug(color);
+  const asset = new Group().add(bug);
+  const mark = addMark(asset, BUG_MODEL.markHeight);
+  asset.userData.update = (dt, time) => {
+    animateBug(bug, { state: 'walk', walked: time * speed });
+    mark(alertAt(time), time);
+  };
+  return asset;
+}
+
+/**
+ * The wizard hit `since` ticks ago (null or negative: not hit): flashing,
+ * then blinking while invulnerable.
+ * @param {Group} wizard
+ * @param {number|null} since
+ */
+function showWizardHit(wizard, since) {
+  const invulnerable = since !== null && since >= 0 ? Math.max(0, PLAYER.invulnerableTicks - Math.floor(since)) : 0;
+  showHitFlash(wizard, hitFlash({ invulnerable, dead: false }));
+  wizard.visible = wizardLook({ invulnerable, dead: false, deathCause: null, deathTimer: 0 }, PLAYER.deathTicks).visible;
+}
+
+/**
+ * A burst discharge in a loop, by an enemy of type `type` (defs.json, its
+ * color, charge and range) next to the wizard: it charges, then bursts;
+ * he flashes when it hits him.
+ * @param {'virus'|'bug'} type
+ */
+function buildBurst(type) {
+  const values = defs.enemies[type];
+  const color = values.color;
+  const charge = Math.round((values.attackCharge ?? 0.4) * 60);
+  const model = type === 'virus' ? createVirus(color) : createBug(color);
+  // Side by side on screen (the row runs along +x −z), 1.1 apart.
+  model.position.set(-0.39, 0, 0.39);
+  model.rotation.y = (Math.PI * 3) / 4;
+  const discharge = createDischarge({ color, shape: 'burst', range: values.attackRange ?? 1.2 });
+  const wizard = createWizard();
+  wizard.position.set(0.39, 0, -0.39);
+  wizard.rotation.y = -Math.PI / 4;
+  const asset = new Group().add(model, discharge, wizard);
+  const mark = addMark(asset, type === 'virus' ? VIRUS.markHeight : BUG_MODEL.markHeight, model.position);
+  const loop = 120;
+  let tick = 0;
+  asset.userData.update = (dt, time) => {
+    tick = (tick + dt * 60) % loop;
+    const attack = tick < charge + DISCHARGE.ticks ? tick : null;
+    if (type === 'virus') animateVirus(model, { time, alert: 1, attack, charge });
+    else animateBug(model, { time, attack, charge });
+    showGlow(model, attack, charge);
+    mark(1, time);
+    placeDischarge(discharge, attack === null ? null : Math.floor(attack), charge, [model.position.x, ENEMY.eyeHeight, model.position.z]);
+    showWizardHit(wizard, tick - charge);
+  };
+  return asset;
+}
+
+/** A sentinel gliding calm, then after the wizard, in a loop. */
+function buildSentinel() {
+  const sentinel = createSentinel(defs.enemies.sentinel.color);
+  const asset = new Group().add(sentinel);
+  const mark = addMark(asset, SENTINEL.markHeight);
+  asset.userData.update = (dt, time) => {
+    animateSentinel(sentinel, { state: 'walk', time, alert: alertAt(time) });
+    mark(alertAt(time), time);
+  };
+  return asset;
+}
+
+/**
+ * The sentinel's arc, two shots in a loop, 4.5 apart: it aims where the
+ * wizard stands when it starts charging (a dashed line), then fires a bolt
+ * its full range along that line. The first shot hits; for the second he
+ * steps aside while it charges, and it misses.
+ */
+function buildSentinelAttack() {
+  const { color, attackRange: range, attackCharge } = defs.enemies.sentinel;
+  const charge = Math.round(attackCharge * 60);
+  // Along the row on screen (u), and across it (v).
+  const u = [Math.SQRT1_2, -Math.SQRT1_2];
+  const v = [Math.SQRT1_2, Math.SQRT1_2];
+  const at = (a, b = 0) => [u[0] * a + v[0] * b, 0, u[1] * a + v[1] * b];
+  const sentinel = createSentinel(color);
+  sentinel.position.set(...at(-2.4));
+  const discharge = createDischarge({ color, shape: 'arc', range });
+  const wizard = createWizard();
+  wizard.rotation.y = -Math.PI / 4;
+  const asset = new Group().add(sentinel, discharge, wizard);
+  const mark = addMark(asset, SENTINEL.markHeight, sentinel.position);
+  const shots = [20, 170];
+  const loop = 300;
+  let tick = 0;
+  let aim = null;
+  asset.userData.update = (dt, time) => {
+    tick = (tick + dt * 60) % loop;
+    // He steps aside during the second charge, and back later.
+    const side = tick < 175 ? 0 : tick < 200 ? (tick - 175) / 25 : tick < 250 ? 1 : tick < 280 ? 1 - (tick - 250) / 30 : 0;
+    wizard.position.set(...at(2.1, side * 0.9));
+    const shot = shots.find((start) => tick >= start && tick < start + charge + DISCHARGE.ticks);
+    const attack = shot === undefined ? null : tick - shot;
+    // The aim locks on his chest when a charge starts; it faces the aim.
+    if (attack !== null && (aim === null || attack < 1)) aim = wizard.position.clone();
+    if (attack === null) aim = null;
+    const target = aim ?? wizard.position;
+    const { x: sx, z: sz } = sentinel.position;
+    sentinel.rotation.y = Math.atan2(target.x - sx, target.z - sz);
+    animateSentinel(sentinel, { time, alert: 1, attack, charge });
+    showGlow(sentinel, attack, charge);
+    mark(1, time);
+    const turn = sentinel.rotation.y;
+    const eye = [sx + Math.sin(turn) * SENTINEL_EYE[2], SENTINEL_EYE[1], sz + Math.cos(turn) * SENTINEL_EYE[2]];
+    const d = [target.x - eye[0], 0.75 - eye[1], target.z - eye[2]];
+    const length = Math.hypot(...d);
+    const end = eye.map((e, k) => e + (d[k] / length) * range);
+    placeDischarge(discharge, attack === null ? null : Math.floor(attack), charge, eye, end);
+    const hit = shots[0] + charge;
+    showWizardHit(wizard, tick >= hit && tick < shots[1] ? tick - hit : null);
+  };
+  return asset;
+}
+
+/** The sentinel popping into pixels, in a loop. */
+function buildSentinelPop() {
+  const { color } = defs.enemies.sentinel;
+  const sentinel = createSentinel(color);
+  const pixels = createPixelBurst(SENTINEL.pop.pixels, SENTINEL.pop.pixelSize, [color, 0xffffff]);
+  const asset = new Group().add(sentinel, pixels);
+  let tick = 0;
+  asset.userData.update = (dt, time) => {
+    tick = (tick + dt * 60) % 90;
+    sentinel.visible = tick < 40;
+    animateSentinel(sentinel, { time });
+    placePixels(pixels, tick >= 40 ? sentinelPopPixels(tick - 40) : [], [0, 0, 0]);
+  };
+  return asset;
+}
+
+/** A virus popping into pixels, in a loop. */
+function buildVirusPop() {
+  const { color } = defs.enemies.virus;
+  const virus = createVirus(color);
+  const pixels = createPixelBurst(VIRUS.pop.pixels, VIRUS.pop.pixelSize, [color, 0xffffff]);
+  const asset = new Group().add(virus, pixels);
+  const loop = 90;
+  let tick = 0;
+  asset.userData.update = (dt, time) => {
+    tick = (tick + dt * 60) % loop;
+    const popped = tick >= 40;
+    virus.visible = !popped;
+    animateVirus(virus, { time });
+    placePixels(pixels, popped ? virusPopPixels(tick - 40) : [], [0, 0, 0]);
   };
   return asset;
 }

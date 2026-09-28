@@ -12,8 +12,9 @@
   },
   "enemies": {
     "bug": {
+      "look": "bug",
       "movement": "patrol",
-      "attack": "contact",
+      "attack": "touch",
       "hostility": "hostile",
       "aggroRange": 0,
       "integrity": 2,
@@ -22,6 +23,36 @@
       "bounce": true,
       "solid": false,
       "color": "#2bff88"
+    },
+    "virus": {
+      "look": "virus",
+      "movement": "chase",
+      "attack": "burst",
+      "hostility": "hostile",
+      "aggroRange": 5,
+      "integrity": 2,
+      "damage": 1,
+      "speed": 2,
+      "chaseSpeed": 3.5,
+      "color": "#ffe23a",
+      "attackRange": 1.2,
+      "attackCharge": 0.4,
+      "attackCooldown": 1.5
+    },
+    "sentinel": {
+      "look": "sentinel",
+      "movement": "chase",
+      "attack": "arc",
+      "hostility": "hostile",
+      "aggroRange": 7,
+      "integrity": 3,
+      "damage": 1,
+      "speed": 1.5,
+      "chaseSpeed": 2.5,
+      "color": "#ff8a1a",
+      "attackRange": 5,
+      "attackCharge": 0.7,
+      "attackCooldown": 2
     }
   },
   "spells": {

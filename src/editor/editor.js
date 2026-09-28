@@ -6,7 +6,7 @@
  * and testing take turns without a reload. Edits are kept per room until
  * the page is closed; the panel switches between rooms and makes new ones.
  * Exit connections are edited in world.json, and enemy templates in
- * defs.json (D58); both are saved with the rooms.
+ * defs.json (D58, D79); both are saved with the rooms.
  *
  * The editor reads the mouse and its own keys directly, not through action
  * mapping (a tool, not the game; D56). Saving writes data/ through the dev
@@ -15,7 +15,7 @@
 import { Plane, Raycaster, Vector2, Vector3 } from 'three';
 import { isTextField } from '../core/input.js';
 import { linkMap } from '../data/load.js';
-import { enemyModels, resolveEnemyTypes, sideLength, withExitDefaults } from '../data/room-data.js';
+import { resolveEnemyTemplates, sideLength, withExitDefaults } from '../data/room-data.js';
 import { validateData } from '../data/validate.js';
 import { DefsEdit } from './defs-edit.js';
 import { errorTarget, groupErrors } from './errors.js';
@@ -68,9 +68,9 @@ export class Editor {
     this.pickupTypes = game.content.pickupTypes;
     this.objectTypes = { ...game.content.objectTypes, ...this.pickupTypes };
     this.objectType = Object.keys(this.objectTypes)[0];
-    this.enemyTypes = game.content.enemyTypes;
-    /** Settings of new enemies (and of the picked one). */
-    this.enemy = { type: Object.keys(this.enemyTypes)[0], overrides: {} };
+    this.enemyTemplates = game.content.enemyTemplates;
+    /** Settings of new enemies (and of the picked one): a template and overrides of its values. */
+    this.enemy = { template: Object.keys(this.enemyTemplates)[0], overrides: {} };
     /** Shape of new exits. */
     this.exitShape = { width: 2, height: 2 };
     /** @type {{ kind: 'item'|'exit', id: string } | null} the picked object, enemy or exit */
@@ -102,7 +102,7 @@ export class Editor {
     this.panel = new EditorPanel(renderer.stage, {
       blockTypes: this.blockTypes,
       objectTypes: this.objectTypes,
-      enemyTypes: this.enemyTypes,
+      enemyTemplates: this.enemyTemplates,
       biomes: game.content.biomes,
       canSave,
       on: {
@@ -139,7 +139,7 @@ export class Editor {
       },
     });
 
-    this.applyEnemyTypes();
+    this.applyEnemyTemplates();
 
     this.raycaster = new Raycaster();
     this.listen(renderer.webgl.domElement);
@@ -279,7 +279,7 @@ export class Editor {
     const data = this.edit.toData();
     this.errors = validateData(this.editedFiles());
     // Undo and redo may have changed the templates.
-    if (this.defs.text() !== this.defsApplied) this.applyEnemyTypes();
+    if (this.defs.text() !== this.defsApplied) this.applyEnemyTemplates();
     this.game.content.rooms.set(data.id, data);
     this.game.content.links = linkMap(this.world.connections);
     try {
@@ -368,16 +368,21 @@ export class Editor {
     return this.selected?.kind === 'exit' ? (this.edit.exits.find((e) => e.id === this.selected.id) ?? null) : null;
   }
 
-  /** Does this enemy (or new ones, with these settings) walk a path? */
-  patrols({ type, overrides = {} }) {
-    return (overrides.movement ?? this.enemyTypes[type]?.movement) === 'patrol';
+  /** Does this enemy (or new ones, with these settings) patrol, so it needs a path? */
+  patrols({ template, overrides = {} }) {
+    return (overrides.movement ?? this.enemyTemplates[template]?.movement) === 'patrol';
+  }
+
+  /** May this enemy have a path: a patrol, or a chaser (walked while calm, D78)? Not a stationary one. */
+  walksPath({ template, overrides = {} }) {
+    return (overrides.movement ?? this.enemyTemplates[template]?.movement) !== 'stationary';
   }
 
   /** An enemy setting changed in the panel: for new enemies, and the picked one. */
   setEnemy(field, value) {
     const enemy = this.selectedEnemy;
-    const settings = enemy ? { type: enemy.type, overrides: { ...enemy.overrides } } : this.enemy;
-    if (field === 'type') settings.type = value;
+    const settings = enemy ? { template: enemy.template, overrides: { ...enemy.overrides } } : this.enemy;
+    if (field === 'template') settings.template = value;
     else if (value === undefined) delete settings.overrides[field];
     else settings.overrides[field] = value;
     this.enemy = structuredClone(settings);
@@ -385,89 +390,103 @@ export class Editor {
     this.refresh();
   }
 
-  /** Give an enemy these settings (its id follows the type; a stationary one loses its path) and keep it picked. */
+  /** Give an enemy these settings (its id follows the template; a stationary one loses its path) and keep it picked. */
   retype(enemy, settings) {
     const wasPicked = this.selected?.id === enemy.id;
     let id = null;
-    this.change(() => !!(id = this.edit.setEnemy(enemy.id, settings, this.patrols(settings))));
+    this.change(() => !!(id = this.edit.setEnemy(enemy.id, settings, this.walksPath(settings))));
     if (id && wasPicked) this.select({ kind: 'item', id });
   }
 
   /** The enemy settings the panel shows: the picked enemy's, or the ones for new enemies. */
   get enemySettings() {
     const enemy = this.selectedEnemy;
-    return enemy ? { id: enemy.id, type: enemy.type, overrides: enemy.overrides ?? {} } : this.enemy;
+    return enemy ? { id: enemy.id, template: enemy.template, overrides: enemy.overrides ?? {} } : this.enemy;
   }
 
   /**
-   * Save the enemy settings as a new enemy type in defs.json, a template
-   * of the base type (D58); the picked enemy becomes one of it, and so do
-   * new ones. One undo step of the room.
+   * Save the enemy settings as a new template in defs.json, built on the
+   * template they are of (D58, D79); the picked enemy becomes one of it,
+   * and so do new ones. One undo step of the room.
    * @param {string} name the template's id
    */
   saveTemplate(name) {
-    const { type, overrides } = this.enemySettings;
+    const { template, overrides } = this.enemySettings;
     let problem = null;
     this.templateChange(() => {
-      problem = this.defs.addTemplate(name, type, overrides);
+      problem = this.defs.addTemplate(name, template, overrides);
       return !problem && this.useTemplate(name);
     });
-    this.status = problem ?? `Template ${name} added to defs.json; Save writes it.`;
+    this.status = problem ?? `Template ${name} (built on ${template}) added to defs.json; Save writes it.`;
     if (!problem) this.panel.templateInput.value = '';
     this.refresh();
   }
 
-  /** Move the settings of an enemy of a template into the template: every enemy of it changes. */
+  /**
+   * Move the enemy's own settings into its template: every enemy of it
+   * changes, in every room, and so do the templates built on it.
+   */
   updateTemplate() {
-    const { type, overrides } = this.enemySettings;
+    const { template, overrides } = this.enemySettings;
     let done = false;
-    this.templateChange(() => (done = this.defs.updateTemplate(type, overrides) && this.useTemplate(type)));
-    if (done) this.status = `Template ${type} updated: every ${type} changes. Save writes defs.json.`;
+    this.templateChange(() => (done = this.defs.updateTemplate(template, overrides) && this.useTemplate(template)));
+    if (done) this.status = `Template ${template} updated; this changes ${this.reach(template)}. Save writes defs.json.`;
     this.refresh();
   }
 
-  /** Give the template of the enemy settings another id; the room's enemies of it follow. */
+  /** What a change of `template` reaches: the rooms with enemies of it, and the templates built on it. */
+  reach(template) {
+    const rooms = this.roomsUsing(template);
+    const children = this.defs.builtOn(template);
+    return [
+      `every ${template}${rooms.length > 0 ? ` (${rooms.join(', ')})` : ''}`,
+      children.length > 0 && `the templates built on it (${children.join(', ')})`,
+    ].filter(Boolean).join(' and ');
+  }
+
+  /** Give the template of the enemy settings another id; the room's enemies of it follow, and templates built on it. */
   renameTemplate(name) {
-    const { type } = this.enemySettings;
-    const elsewhere = this.roomsUsing(type).filter((room) => room !== this.edit.id);
+    const { template } = this.enemySettings;
+    const elsewhere = this.roomsUsing(template).filter((room) => room !== this.edit.id);
     if (elsewhere.length > 0) {
-      this.status = `${type} is used in ${elsewhere.join(', ')}: only a template no other room uses can be renamed.`;
+      this.status = `${template} is used in ${elsewhere.join(', ')}: only a template no other room uses can be renamed.`;
       return this.refresh();
     }
     let problem = null;
     this.templateChange(() => {
-      problem = this.defs.renameTemplate(type, name);
+      problem = this.defs.renameTemplate(template, name);
       if (problem) return false;
-      this.applyEnemyTypes();
-      for (const enemy of (this.edit.data.enemies ?? []).filter((e) => e.type === type)) {
-        const id = this.edit.setEnemy(enemy.id, { type: name, overrides: enemy.overrides ?? {} }, this.patrols({ ...enemy, type: name }));
+      this.applyEnemyTemplates();
+      for (const enemy of (this.edit.data.enemies ?? []).filter((e) => e.template === template)) {
+        const settings = { template: name, overrides: enemy.overrides ?? {} };
+        const id = this.edit.setEnemy(enemy.id, settings, this.walksPath(settings));
         if (id && this.selected?.id === enemy.id) this.selected = { kind: 'item', id };
       }
-      if (this.enemy.type === type) this.enemy.type = name;
+      if (this.enemy.template === template) this.enemy.template = name;
       return true;
     });
-    this.status = problem ?? `Template ${type} renamed ${name}. Save writes defs.json.`;
+    this.status = problem ?? `Template ${template} renamed ${name}. Save writes defs.json.`;
     if (!problem) this.panel.templateInput.value = '';
     this.refresh();
   }
 
-  /** Remove the template of the enemy settings from defs.json, if no enemy is of it. */
+  /** Remove the template of the enemy settings from defs.json, if no enemy is of it and no template built on it. */
   deleteTemplate() {
-    const { type } = this.enemySettings;
-    const rooms = this.roomsUsing(type);
+    const { template } = this.enemySettings;
+    const rooms = this.roomsUsing(template);
     if (rooms.length > 0) {
-      this.status = `${type} is used in ${rooms.join(', ')}: change or remove those enemies first.`;
+      this.status = `${template} is used in ${rooms.join(', ')}: change or remove those enemies first.`;
       return this.refresh();
     }
-    const base = this.defs.enemies[type]?.extends;
-    let done = false;
+    const parent = this.defs.enemies[template]?.extends;
+    let problem = null;
     this.templateChange(() => {
-      if (!(done = this.defs.deleteTemplate(type))) return false;
-      this.enemy = { type: base, overrides: {} };
-      this.applyEnemyTypes();
+      if ((problem = this.defs.deleteTemplate(template))) return false;
+      this.enemy = { template: parent ?? Object.keys(this.defs.enemies)[0], overrides: {} };
+      this.applyEnemyTemplates();
       return true;
     });
-    if (done) this.status = `Template ${type} deleted. Save writes defs.json.`;
+    this.status = problem ?? `Template ${template} deleted. Save writes defs.json.`;
     this.refresh();
   }
 
@@ -480,37 +499,36 @@ export class Editor {
     this.change(() => this.edit.edit(change));
   }
 
-  /** Rooms with enemies of `type`. */
-  roomsUsing(type) {
-    return this.roomIds().filter((id) => (this.roomData(id).enemies ?? []).some((enemy) => enemy.type === type));
+  /** Rooms with enemies of `template`. */
+  roomsUsing(template) {
+    return this.roomIds().filter((id) => (this.roomData(id).enemies ?? []).some((enemy) => enemy.template === template));
   }
 
   /**
-   * Enemy types changed: the picked enemy (and new ones) take template
-   * `type` with no overrides of their own.
+   * The templates changed: the picked enemy (and new ones) take template
+   * `template` with no overrides of their own.
    * @returns {true}
    */
-  useTemplate(type) {
-    this.applyEnemyTypes();
-    this.enemy = { type, overrides: {} };
+  useTemplate(template) {
+    this.applyEnemyTemplates();
+    this.enemy = { template, overrides: {} };
     const enemy = this.selectedEnemy;
     if (enemy) {
-      const id = this.edit.setEnemy(enemy.id, this.enemy, this.patrols(this.enemy));
+      const id = this.edit.setEnemy(enemy.id, this.enemy, this.walksPath(this.enemy));
       if (id) this.selected = { kind: 'item', id };
     }
     return true;
   }
 
-  /** Hand the edited enemy types (templates filled in) to the game and the panel. */
-  applyEnemyTypes() {
-    const types = this.defs.enemies;
-    this.enemyTypes = resolveEnemyTypes(types);
-    this.game.content.enemyTypes = this.enemyTypes;
-    this.game.content.enemyModels = enemyModels(types);
-    this.panel.setEnemyTypes(this.enemyTypes, this.game.content.enemyModels);
+  /** Hand the edited templates (filled in) to the game and the panel. */
+  applyEnemyTemplates() {
+    const templates = this.defs.enemies;
+    this.enemyTemplates = resolveEnemyTemplates(templates);
+    this.game.content.enemyTemplates = this.enemyTemplates;
+    this.panel.setEnemyTemplates(this.enemyTemplates, templates);
     this.defsApplied = this.defs.text();
-    // New enemies of a template that is gone (undo, delete) are of the first type.
-    if (!this.enemyTypes[this.enemy.type]) this.enemy = { type: Object.keys(this.enemyTypes)[0], overrides: {} };
+    // New enemies of a template that is gone (undo, delete) are of the first one.
+    if (!this.enemyTemplates[this.enemy.template]) this.enemy = { template: Object.keys(this.enemyTemplates)[0], overrides: {} };
   }
 
   /** An exit field changed in the panel: for the picked exit, or new ones. */
@@ -641,7 +659,6 @@ export class Editor {
       blockType: this.blockType,
       objectType: this.objectType,
       enemy: this.enemySettings,
-      template: this.defs.isTemplate(this.enemySettings.type),
       pathItem,
       pathItemIsEnemy: !!pathItem && pathItem === enemy,
       exit: exit
@@ -774,11 +791,11 @@ export class Editor {
     if (!place) return this.change(() => edit.erase(cell));
     if (here?.kind === 'enemy') {
       // Pick it: new enemies take its settings.
-      this.enemy = { type: here.item.type, overrides: structuredClone(here.item.overrides ?? {}) };
+      this.enemy = { template: here.item.template, overrides: structuredClone(here.item.overrides ?? {}) };
       return this.select({ kind: 'item', id: here.item.id });
     }
     let id = null;
-    this.change(() => !!(id = edit.placeEnemy(cell, this.enemy.type, this.enemy.overrides)));
+    this.change(() => !!(id = edit.placeEnemy(cell, this.enemy.template, this.enemy.overrides)));
     if (!id) return;
     this.status = this.patrols(this.enemy) ? NEEDS_PATH(id) : '';
     this.select({ kind: 'item', id });
@@ -799,8 +816,8 @@ export class Editor {
       return this.refresh();
     }
     const enemy = item === this.selectedEnemy;
-    if (enemy && !this.patrols(item)) {
-      this.status = `${item.id} is stationary: set its Movement to patrol (Enemy tool) to give it a path.`;
+    if (enemy && !this.walksPath(item)) {
+      this.status = `${item.id} is stationary: set its Movement to patrol or chase (Enemy tool) to give it a path.`;
       return this.refresh();
     }
     // Enemies patrol level: their points stay at their own height.

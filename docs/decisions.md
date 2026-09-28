@@ -1193,3 +1193,99 @@ which way they connect) is quicker on the map than one room at a time in
 the room editor. Exits in the middle of the wall are a sensible start;
 the rooms are then built in the room editor, where the exits can move.
 
+### D78 — 2026-09-28 — Universal enemies; chase and discharge; Viruses and Sentinels
+Phase 3 step 5's open questions, settled with the author:
+- **Universal enemies:** an enemy type's body is a field, `look` (`bug`,
+  `virus`, `sentinel`; the word block types use too, D60), beside
+  `movement`, `attack` and `color`. Any look combines with any movement
+  and attack, all set in data and overridable per enemy in a room (a bug
+  can chase and burst). Templates (D58) still take their base's look, now
+  through the inherited `look`.
+- **One attack field:** `attack` is `touch` (touching it hurts; was
+  `contact`, D48), `burst`, `arc` or `none`. Burst and arc, the
+  discharges, share `attackRange`, `attackCharge`, `attackCooldown` and
+  `attackColor`. A separate shape field beside the attack read as two
+  names for the same thing in the editor.
+- **Chase** (`movement: "chase"`): a hostile enemy notices the wizard
+  within `aggroRange` when nothing solid (blocks, objects, closed exits)
+  lies between its eyes and his middle, and steps cell by cell towards
+  him at `chaseSpeed`, greedily: along the axis where he is farther, else
+  the other; a wall stops it, so he can hide and trap it with crates.
+  Losing sight, it goes to where it last saw him and searches for
+  `memory` seconds (1.5), then goes back to its post, or to its path: a
+  chaser may have one, walked while calm. While he is within its attack
+  range it holds its ground.
+- **No enemy walks into a hole or onto a lethal block**, nor off a ledge
+  onto one (bugs too; amends D48). They still fall in when the ground goes
+  from under them.
+- **"!" mark** over any enemy that notices the wizard, and over a
+  provoked one turned hostile; it stays up at least 1 s and as long as it
+  sees him.
+- **Discharges** (`attack: "burst"` or `"arc"`), instead of touch
+  (touching such an enemy doesn't hurt): seeing him within `attackRange`
+  and standing still, it stops, charges for `attackCharge` seconds
+  (shaking, glowing white, crackling), fires lightning for 10 ticks, then
+  waits `attackCooldown` seconds. Two kinds:
+  - `burst`: lightning all round it, hitting everything within range it
+    can see: the wizard and other enemies (not objects);
+  - `arc`: one bolt aimed where the wizard stood when it started charging
+    (a dashed aim line, blinking before it fires), as long as its range
+    unless a block or an object stops it first; it hits every body in the
+    squares it passes through (the wizard and other enemies, all of them,
+    at the author's request). Stepping aside dodges it.
+  `attackColor` is its color by default; `damage` applies as before. A
+  burst or arc only fires at a wizard it has noticed, so validation wants
+  `aggroRange` ≥ `attackRange`.
+- **Editor:** the Enemy panel lists the settings grouped (look and color,
+  movement and speeds, hostility and aggro range, attack, range and
+  damage, integrity, bounce, solid), each with a tooltip; all of them
+  come from the enemy's template unless set for the one enemy (D79).
+- **Virus:** a sharp-edged cube tipped onto an edge, slanted eyes on its
+  front face, four small cubes of itself orbiting (the glitch shape,
+  picked over a spiky ball and a phage; hard, flat edges at the author's
+  request); yellow `#ffe23a`; it glides instead of hopping. A chaser with
+  a burst: range 1.2, charge 0.4 s, cooldown 1.5 s, aggro range 5, speed
+  2, chase speed 3.5, integrity 2.
+- **Sentinel** (new, the author's addition): a tall sharp octahedron on
+  its point with one visor eye and three shards that swing in front of it
+  like a barrel as it charges; orange `#ff8a1a`. A chaser with an arc:
+  range 5, charge 0.7 s, cooldown 2 s, aggro range 7, speed 1.5, chase
+  speed 2.5, integrity 3. It keeps its distance: it stops once he is in
+  range.
+- Test room **Quarantine** (10×10, Glitchmire), off a new west doorway
+  of Boot Sector: a virus, a sentinel, a stationary bug with a burst
+  guarding an integrity refill, a pillar to hide behind, a trench of
+  holes, a crate and a ledge.
+**Why:** author's choices. The author wants one universal enemy whose
+look, attack, color and movement all come from data, so new enemies are
+data, not code. A charged discharge warns before it hurts, and stops a
+chaser that sits inside the wizard (he walks through enemies) from
+hitting him each time his invulnerability runs out, as contact damage
+would. Aiming an arc when the charge starts keeps long shots dodgeable.
+Greedy chasing is readable and lets rooms use cover and crates as
+puzzles. Enemies throwing themselves into pits looked silly; the author
+wants them to keep out.
+
+### D79 — 2026-09-28 — Every enemy type is a template
+Amends D58. With the look a field of its own (D78), a base enemy type
+was only a template that sets every value, so the two are one thing now:
+- Every entry of `defs.json` `enemies` is an **enemy template**. One
+  without `extends` has every required value; one with it takes the
+  values of the template it builds on and changes only its own. Chains
+  are allowed (`big_tank` → `tank` → `bug`), loops and unknown templates
+  are errors; each template must be complete once filled in
+  (`resolveEnemyTemplates()`, `templateChain()`).
+- A room enemy names its template: `"template": "bug"` (was `"type"`),
+  so the data and the editor say the same word.
+- In the room editor every template can be updated, renamed and deleted,
+  the base ones too: Update moves an enemy's own settings into its
+  template and says what that reaches (every enemy of it, by room, and
+  the templates built on it); Rename is refused while another room uses
+  it, and the templates built on it follow; Delete is refused while an
+  enemy uses it or a template builds on it. New saves a template built
+  on the current one, with only the enemy's own settings.
+**Why:** the author's call: a type was a template in all but name.
+Changing `bug` now reaches every bug and every template built on it,
+which the author wants: templates tune the enemies of a whole area at
+once, and different sets of templates give different areas their own
+enemies.

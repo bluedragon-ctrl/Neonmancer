@@ -23,16 +23,49 @@ export const TOOLS = [
   { id: 'reset', label: 'Reset', key: '8' },
 ];
 
-/** Enemy settings the panel sets as lists (overrides of the type's values); blank is the type's own. */
+/**
+ * Enemy settings the panel sets as lists (overrides of the template's values);
+ * blank is the template's own. Any look, movement and attack combine (D78).
+ */
 export const ENEMY_FIELDS = {
+  look: ENEMY_OPTIONS.look,
   movement: ENEMY_OPTIONS.movement,
   hostility: ENEMY_OPTIONS.hostility,
+  attack: ENEMY_OPTIONS.attack,
   bounce: [true, false],
   solid: [true, false],
 };
 
 /** Enemy settings typed in as numbers: [min, step] (the schema's limits are checked on validation). */
-export const ENEMY_NUMBERS = { integrity: [1, 1], damage: [1, 1], speed: [0.5, 0.5] };
+export const ENEMY_NUMBERS = {
+  integrity: [1, 1],
+  damage: [1, 1],
+  speed: [0.5, 0.5],
+  chaseSpeed: [0.5, 0.5],
+  aggroRange: [0, 0.5],
+  attackRange: [0.5, 0.5],
+};
+
+/**
+ * The enemy rows in panel order, grouped: how it looks, how it moves, how
+ * it notices and hurts the wizard, then how it takes hits and what the
+ * wizard can do with it. Each with its tooltip.
+ */
+export const ENEMY_ROWS = [
+  ['look', 'Its body: bug, virus or sentinel. Any look goes with any movement and attack.'],
+  ['color', 'Body color, #rrggbb (the eyes show hostility).'],
+  ['movement', 'patrol: walks its path; stationary: stays put; chase: goes after the wizard it sees.'],
+  ['speed', 'Walking speed, units per second.'],
+  ['chaseSpeed', 'Speed while chasing.'],
+  ['hostility', 'hostile: attacks; peaceful: never; provoked: once a spell hits it.'],
+  ['aggroRange', 'How far it notices the wizard (a "!" pops up); 0: never.'],
+  ['attack', 'touch: touching it hurts; burst: charged lightning all round it; arc: a charged bolt aimed at the wizard; none: harmless.'],
+  ['attackRange', 'Reach of a burst or arc.'],
+  ['damage', 'Integrity the wizard loses per attack.'],
+  ['integrity', 'Hits it takes before it pops.'],
+  ['bounce', 'Landing on it bounces the wizard up.'],
+  ['solid', 'The wizard can not walk through it; he can stand on it.'],
+];
 
 const HELP = [
   'Left click: place / pick · Right click: erase',
@@ -98,7 +131,7 @@ export class EditorPanel {
    * @param {object} options
    * @param {Record<string, { look?: string, kind?: string }>} options.blockTypes block types the Block tool places (resolved, D60)
    * @param {Record<string, { kind: string, color: string }>} options.objectTypes object types that can be placed
-   * @param {Record<string, object>} options.enemyTypes enemy types (defs.json)
+   * @param {Record<string, object>} options.enemyTemplates enemy templates (defs.json, filled in)
    * @param {Record<string, { name: string }>} options.biomes
    * @param {boolean} options.canSave the dev server can save; a build only exports
    * @param {Record<string, Function>} options.on callbacks: room(id), newRoom(id), tool(id), blockType(id), objectType(id),
@@ -106,7 +139,7 @@ export class EditorPanel {
    *   path(field, value), clearPath(), exit(field, value), layer(step), cut(on), discard(), error(text), name(text),
    *   biome(id), size([x, y, z]), undo(), redo(), save(), revert()
    */
-  constructor(root, { blockTypes, objectTypes, enemyTypes, biomes, canSave, on }) {
+  constructor(root, { blockTypes, objectTypes, enemyTemplates, biomes, canSave, on }) {
     this.canSave = canSave;
     this.on = on;
     this.element = el('div', 'editor-panel');
@@ -187,49 +220,53 @@ export class EditorPanel {
     this.objectRows.append(this.row('Object', this.objectSelect));
 
     this.hints = {};
-    this.enemyType = el('select');
-    this.enemyType.addEventListener('change', () => on.enemy('type', this.enemyType.value));
+    this.enemyTemplate = el('select');
+    this.enemyTemplate.addEventListener('change', () => on.enemy('template', this.enemyTemplate.value));
     this.enemySelects = {};
     this.enemyRows = this.group('enemy');
-    this.enemyRows.append(this.row('Type', this.enemyType));
-    const label = (field) => field[0].toUpperCase() + field.slice(1);
-    for (const [field, values] of Object.entries(ENEMY_FIELDS)) {
-      const node = select([['', ''], ...values.map((value) => [String(value), yesNo(value)])]);
-      node.addEventListener('change', () => on.enemy(field, node.value === '' ? undefined : values.find((v) => String(v) === node.value)));
-      this.enemySelects[field] = node;
-      this.enemyRows.append(this.row(label(field), node));
-    }
+    const templateOf = this.row('Template', this.enemyTemplate);
+    templateOf.title = 'The enemy template (defs.json, D79). Every setting below is the template\'s unless set here for this one enemy.';
+    this.enemyRows.append(templateOf);
+    // chaseSpeed → Chase speed
+    const label = (field) => field[0].toUpperCase() + field.slice(1).replace(/[A-Z]/g, (c) => ` ${c.toLowerCase()}`);
     this.enemyNumbers = {};
-    for (const [field, [min, step]] of Object.entries(ENEMY_NUMBERS)) {
-      const node = numberInput({ min, step });
-      node.addEventListener('change', () => on.enemy(field, numberValue(node)));
-      this.enemyNumbers[field] = node;
-      this.enemyRows.append(this.row(label(field), node));
-    }
     this.enemyColor = Object.assign(el('input'), { type: 'text' });
     this.enemyColor.addEventListener('change', () => on.enemy('color', this.enemyColor.value.trim() || undefined));
-    this.enemyRows.append(this.row('Color', this.enemyColor));
-    // Templates (D58): these settings as a new enemy type, or into the type they are of.
+    for (const [field, tip] of ENEMY_ROWS) {
+      let node = this.enemyColor;
+      const values = ENEMY_FIELDS[field];
+      if (values) {
+        node = select([['', ''], ...values.map((value) => [String(value), yesNo(value)])]);
+        node.addEventListener('change', () => on.enemy(field, node.value === '' ? undefined : values.find((v) => String(v) === node.value)));
+        this.enemySelects[field] = node;
+      } else if (ENEMY_NUMBERS[field]) {
+        const [min, step] = ENEMY_NUMBERS[field];
+        node = numberInput({ min, step });
+        node.addEventListener('change', () => on.enemy(field, numberValue(node)));
+        this.enemyNumbers[field] = node;
+      }
+      const row = this.row(label(field), node);
+      row.title = tip;
+      this.enemyRows.append(row);
+    }
+    // Templates (D58, D79): these settings as a new template built on this
+    // one, or moved into it; renaming or deleting the template.
     this.templateInput = Object.assign(el('input'), { type: 'text', placeholder: 'template_name' });
     const templateName = () => this.templateInput.value.trim();
     const saveTemplate = () => templateName() && on.saveTemplate(templateName());
-    const templateButton = el('button', 'editor-small', 'Save');
-    templateButton.addEventListener('click', saveTemplate);
+    this.saveTemplate = el('button', 'editor-small', 'New');
+    this.saveTemplate.addEventListener('click', saveTemplate);
     this.templateInput.addEventListener('keydown', (e) => e.key === 'Enter' && saveTemplate());
-    const templateRow = el('div', 'editor-row');
-    templateRow.append(el('span', 'editor-label', 'Template'), this.templateInput, templateButton);
-    // The template the settings are of: another name (typed above), or gone.
-    this.renameTemplate = Object.assign(el('button', 'editor-small', 'Rename'), { title: 'Rename it to the name typed in Template' });
+    this.renameTemplate = el('button', 'editor-small', 'Rename');
     this.renameTemplate.addEventListener('click', () => templateName() && on.renameTemplate(templateName()));
-    this.deleteTemplate = el('button', 'editor-small', 'Delete');
-    this.deleteTemplate.addEventListener('click', () => on.deleteTemplate());
-    this.templateOfRow = el('div', 'editor-row');
-    this.templateOf = el('span', 'editor-value editor-grow');
-    this.templateOfRow.append(el('span', 'editor-label', 'Its template'), this.templateOf, this.renameTemplate, this.deleteTemplate);
+    const nameRow = el('div', 'editor-row');
+    nameRow.append(el('span', 'editor-label', 'Name'), this.templateInput, this.saveTemplate, this.renameTemplate);
     this.updateTemplate = el('button', 'editor-action');
     this.updateTemplate.addEventListener('click', () => on.updateTemplate());
-    this.enemyRows.append(templateRow, this.templateOfRow, this.updateTemplate);
-    this.setEnemyTypes(enemyTypes, {});
+    this.deleteTemplate = el('button', 'editor-action');
+    this.deleteTemplate.addEventListener('click', () => on.deleteTemplate());
+    this.enemyRows.append(nameRow, this.updateTemplate, this.deleteTemplate);
+    this.setEnemyTemplates(enemyTemplates, {});
 
     this.pathMode = select([['pingpong', 'there and back'], ['loop', 'loop']]);
     this.pathMode.addEventListener('change', () => on.path('mode', this.pathMode.value === PATH_DEFAULTS.mode ? undefined : this.pathMode.value));
@@ -310,15 +347,14 @@ export class EditorPanel {
   }
 
   /**
-   * The enemy types to pick from; templates show their base.
-   * @param {Record<string, object>} types enemy types, templates filled in
-   * @param {Record<string, string>} models each type's base type (itself for a base)
+   * The enemy templates to pick from; one built on another names it.
+   * @param {Record<string, object>} templates enemy templates, filled in
+   * @param {Record<string, object>} written the templates as written (their `extends`)
    */
-  setEnemyTypes(types, models) {
-    this.enemyTypes = types;
-    this.enemyModels = models;
-    this.enemyType.replaceChildren(
-      ...Object.keys(types).map((id) => option(id, models[id] && models[id] !== id ? `${id} (${models[id]} template)` : id)),
+  setEnemyTemplates(templates, written) {
+    this.enemyTemplates = templates;
+    this.enemyTemplate.replaceChildren(
+      ...Object.keys(templates).map((id) => option(id, written[id]?.extends ? `${id} (on ${written[id].extends})` : id)),
     );
   }
 
@@ -340,10 +376,9 @@ export class EditorPanel {
    * @param {string} state.tool
    * @param {string} state.blockType the Block tool's type
    * @param {string} state.objectType
-   * @param {{ id?: string, type: string, overrides: object }} state.enemy enemy settings: the picked enemy's (with its id), or for new ones
-   * @param {boolean} state.template their type is a template (it can be renamed or deleted)
+   * @param {{ id?: string, template: string, overrides: object }} state.enemy enemy settings: the picked enemy's (with its id), or for new ones
    * @param {object|null} state.pathItem the platform or enemy whose path is edited
-   * @param {boolean} state.pathItemIsEnemy it is an enemy (its speed defaults to its type's)
+   * @param {boolean} state.pathItemIsEnemy it is an enemy (its speed defaults to its template's)
    * @param {{ id: string|null, width: number, height: number, link: string|null, links: string[] }} state.exit
    *   the picked exit (id null: the settings for new ones) and the exits it can lead to
    * @param {number} state.layer
@@ -353,7 +388,7 @@ export class EditorPanel {
    * @param {string} state.status a line about the last action
    * @param {boolean} state.unsaved there are unsaved edits (any room, or world.json)
    */
-  show({ edit, rooms, tool, blockType, objectType, enemy, template, pathItem, pathItemIsEnemy, exit, layer, cut, errors, status, unsaved }) {
+  show({ edit, rooms, tool, blockType, objectType, enemy, pathItem, pathItemIsEnemy, exit, layer, cut, errors, status, unsaved }) {
     const data = edit.data;
     const changed = edit.dirty || edit.linksChanged;
     this.roomLabel.textContent = `${data.id}${changed ? ' • unsaved' : unsaved ? ' • other rooms unsaved' : ''}`;
@@ -374,28 +409,30 @@ export class EditorPanel {
     const picked = { enemy: enemy.id, path: pathItem?.id, exit: exit.id };
     for (const [key, [idle, busy]] of Object.entries(HINTS)) this.hints[key].textContent = picked[key] ? busy(picked[key]) : idle;
 
-    this.enemyType.value = enemy.type;
-    const typeValues = this.enemyTypes[enemy.type] ?? {};
+    this.enemyTemplate.value = enemy.template;
+    const values = this.enemyTemplates[enemy.template] ?? {};
     for (const [field, node] of Object.entries(this.enemySelects)) {
-      node.options[0].textContent = `type's (${yesNo(typeValues[field] ?? false)})`;
+      node.options[0].textContent = `template's (${yesNo(values[field] ?? false)})`;
       node.value = field in enemy.overrides ? String(enemy.overrides[field]) : '';
     }
     for (const [field, node] of Object.entries(this.enemyNumbers)) {
-      node.placeholder = `type's (${typeValues[field]})`;
+      node.placeholder = `template's (${values[field]})`;
       this.setNumber(node, enemy.overrides[field]);
     }
-    this.enemyColor.placeholder = `type's (${typeValues.color})`;
+    this.enemyColor.placeholder = `template's (${values.color})`;
     if (document.activeElement !== this.enemyColor) this.enemyColor.value = enemy.overrides.color ?? '';
-    // An enemy of a template with settings of its own can move them into the template.
-    this.updateTemplate.hidden = !template || Object.keys(enemy.overrides).length === 0;
-    this.updateTemplate.textContent = `Update template ${enemy.type}`;
-    this.templateOfRow.hidden = !template;
-    this.templateOf.textContent = enemy.type;
+    // Settings of its own can move into the template: every enemy of it changes.
+    this.updateTemplate.hidden = Object.keys(enemy.overrides).length === 0;
+    this.updateTemplate.textContent = `Update template ${enemy.template}`;
+    this.updateTemplate.title = `Move these settings into ${enemy.template}: every ${enemy.template} in every room changes, and the templates built on it`;
+    this.deleteTemplate.textContent = `Delete template ${enemy.template}`;
+    this.saveTemplate.title = `A new template built on ${enemy.template}, with these settings`;
+    this.renameTemplate.title = `Rename ${enemy.template} to this name`;
 
     const path = pathItem?.path;
     for (const node of [this.pathMode, this.pathSpeed, this.pathPause, this.clearPath]) node.disabled = !path;
     this.pathMode.value = path?.mode ?? PATH_DEFAULTS.mode;
-    this.pathSpeed.placeholder = pathItemIsEnemy ? `type's` : String(PATH_DEFAULTS.speed);
+    this.pathSpeed.placeholder = pathItemIsEnemy ? `template's` : String(PATH_DEFAULTS.speed);
     this.setNumber(this.pathSpeed, path?.speed);
     this.setNumber(this.pathPause, path?.pause);
 

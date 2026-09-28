@@ -13,7 +13,7 @@
 import { DATA_SCHEMA_VERSION } from '../core/version.js';
 import { MAX_ROOM_FOOTPRINT, PLAYER_HITBOX } from '../core/rules.js';
 import {
-  ENEMY_DEFAULTS,
+  DISCHARGES,
   ENEMY_OPTIONS,
   ENEMY_REQUIRED,
   OBJECT_STYLES,
@@ -25,7 +25,9 @@ import {
   holeTiles,
   sideLength,
   resolveBlockTypes,
-  resolveEnemyTypes,
+  resolveEnemyTemplates,
+  templateChain,
+  withEnemyDefaults,
   withExitDefaults,
   KIND_BLOCK_VALUES,
   STATIC_BLOCK_VALUES,
@@ -87,7 +89,7 @@ export function validateData(files) {
     objectTypes: files['defs.json'].objects ?? {},
     pickupTypes,
     blockTypes: resolveBlockTypes(blocks),
-    enemyTypes: resolveEnemyTypes(enemies),
+    enemyTemplates: resolveEnemyTemplates(enemies),
     biomes: files['biomes.json'].biomes ?? {},
   };
   /** room id (from the file name) → room data */
@@ -102,19 +104,18 @@ export function validateData(files) {
 }
 
 /**
- * Enemy templates (D58): `extends` names a base type (one without
- * `extends`), and the type is complete once filled in from it.
+ * Enemy templates (D58, D79): `extends` names a known template, the chain
+ * of them has no loop, and each template is complete once filled in.
  */
 function validateTemplates(enemies, report) {
-  const resolved = resolveEnemyTypes(enemies);
-  for (const [id, type] of Object.entries(enemies)) {
+  const resolved = resolveEnemyTemplates(enemies);
+  for (const id of Object.keys(enemies)) {
     const path = `enemies.${id}`;
-    if (type.extends === undefined) continue;
-    const base = enemies[type.extends];
-    if (!base) report('defs.json', `${path}.extends`, `unknown enemy type "${type.extends}"`);
-    else if (base.extends !== undefined) report('defs.json', `${path}.extends`, `"${type.extends}" is a template itself; extend its base "${base.extends}"`);
+    const { chain, loop, unknown } = templateChain(enemies, id);
+    if (unknown) report('defs.json', `${path}.extends`, `unknown enemy template "${unknown}"`);
+    else if (loop) report('defs.json', `${path}.extends`, `a loop: ${[...chain, enemies[chain.at(-1)].extends].join(' → ')}`);
     const missing = ENEMY_REQUIRED.filter((key) => resolved[id][key] === undefined);
-    if (base && missing.length > 0) report('defs.json', path, `missing ${missing.join(', ')}`);
+    if (!unknown && !loop && missing.length > 0) report('defs.json', path, `missing ${missing.join(', ')}`);
   }
 }
 
@@ -181,7 +182,7 @@ function guarded(file, report, check) {
   }
 }
 
-function validateRoom(file, room, { objectTypes, pickupTypes, blockTypes, enemyTypes, biomes }, report) {
+function validateRoom(file, room, { objectTypes, pickupTypes, blockTypes, enemyTemplates, biomes }, report) {
   const expectedId = roomIdFromFile(file);
   if (room.id !== expectedId) report(file, 'id', `"${room.id}" must match the file name ("${expectedId}")`);
 
@@ -215,7 +216,7 @@ function validateRoom(file, room, { objectTypes, pickupTypes, blockTypes, enemyT
   validateBlocks(checks, blockTypes);
   validateObjects(checks, objectTypes);
   validateHoles(checks);
-  validateEnemies(checks, enemyTypes);
+  validateEnemies(checks, enemyTemplates);
   validatePickups(checks, pickupTypes);
   validateExitPassage(checks, exits, exitFits);
   validateLocks(checks, exits, objectTypes);
@@ -373,12 +374,14 @@ function validatePathShape(room, report, path, at, points, mode, level = false) 
 }
 
 /**
- * Enemies (D48): unique ids (shared with objects), known types and valid
- * overrides, each in a free cell of its own, not starting over a hole;
- * patrols have a path, level (legs along x or z) and through no static
- * block; stationary enemies have none.
+ * Enemies (D48, D78): unique ids (shared with objects), known types and
+ * valid overrides, each in a free cell of its own, not starting over a
+ * hole; patrols have a path, level (legs along x or z) and through no
+ * static block; chasers may have one (walked while calm); stationary
+ * enemies have none. A burst or arc only fires at a wizard it sees,
+ * so its aggro range must reach its attack range.
  */
-function validateEnemies(checks, enemyTypes) {
+function validateEnemies(checks, enemyTemplates) {
   const { room, report, ids, filled, holes } = checks;
   const [w, h, d] = room.size;
   const taken = new Map();
@@ -386,9 +389,15 @@ function validateEnemies(checks, enemyTypes) {
     const path = `enemies[${i}]`;
     if (ids.has(enemy.id)) report(path, `duplicate id "${enemy.id}"`);
     ids.add(enemy.id);
-    const type = enemyTypes[enemy.type] && { ...ENEMY_DEFAULTS, ...enemyTypes[enemy.type] };
-    if (!type) report(path, `unknown enemy type "${enemy.type}"`);
-    else validateOverrides(report, `${path}.overrides`, enemy, type, ENEMY_OPTIONS);
+    const type = enemyTemplates[enemy.template] && withEnemyDefaults(enemyTemplates[enemy.template]);
+    if (!type) report(path, `unknown enemy template "${enemy.template}"`);
+    else {
+      validateOverrides(report, `${path}.overrides`, enemy, type, ENEMY_OPTIONS);
+      const values = { ...type, ...enemy.overrides };
+      if (DISCHARGES.includes(values.attack) && values.aggroRange < values.attackRange) {
+        report(path, `its aggroRange ${values.aggroRange} is shorter than its attackRange ${values.attackRange}: it only fires at a wizard it has noticed`);
+      }
+    }
     // A patrol walks its path; a stationary enemy has none.
     const movement = enemy.overrides?.movement ?? type?.movement;
     if (movement === 'patrol' && !enemy.path) report(path, 'a patrolling enemy needs a "path"');
@@ -438,9 +447,17 @@ const OVERRIDE_RANGES = {
   tint: [0, 1, false],
   aggroRange: [0, 32, false],
   speed: [0.01, 8, false],
+  chaseSpeed: [0.01, 8, false],
+  memory: [0, 10, false],
+  attackRange: [0.5, 16, false],
+  attackCharge: [0, 3, false],
+  attackCooldown: [0, 10, false],
   integrity: [1, 15, true],
   damage: [1, 99, true],
 };
+
+/** Override values that are colors (#rrggbb). */
+const COLOR_KEYS = ['color', 'attackColor'];
 
 /**
  * Overrides can only change existing properties of the type, with valid
@@ -453,7 +470,7 @@ function validateOverrides(report, path, object, type, enums = OBJECT_STYLES) {
     else if (typeof value !== typeof type[key]) report(path, `"${key}" must be a ${typeof type[key]}`);
     else if (enums[key] && !enums[key].includes(value)) {
       report(path, `"${key}" must be one of ${enums[key].join(', ')}`);
-    } else if (key === 'color' && !/^#[0-9a-fA-F]{6}$/.test(value)) report(path, `"color" must be #rrggbb`);
+    } else if (COLOR_KEYS.includes(key) && !/^#[0-9a-fA-F]{6}$/.test(value)) report(path, `"${key}" must be #rrggbb`);
     else if (range && !(value >= range[0] && value <= range[1] && (!range[2] || Number.isInteger(value)))) {
       report(path, `"${key}" must be ${range[2] ? 'a whole number ' : ''}between ${range[0]} and ${range[1]}`);
     }

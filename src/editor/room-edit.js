@@ -202,7 +202,7 @@ export class RoomEdit {
     const here = this.at(cell);
     const what = [];
     if (here?.kind === 'block') what.push(here.type === 'block' ? 'block' : `${here.type} block`);
-    else if (here) what.push(`${here.item.id} (${here.item.type})`);
+    else if (here) what.push(`${here.item.id} (${here.item.template ?? here.item.type})`);
     const [w, , d] = this.size;
     const edges = { '-x': x === 0, '+x': x === w - 1, '-z': z === 0, '+z': z === d - 1 };
     for (const side of Object.keys(edges).filter((key) => edges[key])) {
@@ -409,47 +409,49 @@ export class RoomEdit {
   }
 
   /**
-   * The id an object or enemy should have as one of `type`: one the editor
-   * made (`bug_1`) follows the type (`virus_1`); one written by hand stays.
+   * The id an object or enemy of `was` should have as one of `name`: one
+   * the editor made (`bug_1`) follows the name (`virus_1`); one written by
+   * hand stays.
    * @param {object} item
-   * @param {string} type
+   * @param {string} was its type or template now
+   * @param {string} name
    */
-  idForType(item, type) {
-    if (type === item.type || !new RegExp(`^${item.type}_\\d+$`).test(item.id)) return item.id;
-    return this.freeId(type);
+  idFor(item, was, name) {
+    if (name === was || !new RegExp(`^${was}_\\d+$`).test(item.id)) return item.id;
+    return this.freeId(name);
   }
 
   /**
-   * Give an enemy a type and overrides (none: `{}`); its id follows the type
-   * (idForType()), and one that doesn't patrol loses its path.
+   * Give an enemy a template and overrides (none: `{}`); its id follows the
+   * template (idFor()), and a stationary one loses its path.
    * @param {string} id
-   * @param {{ type: string, overrides: object }} settings
-   * @param {boolean} patrols it walks a path with these settings
+   * @param {{ template: string, overrides: object }} settings
+   * @param {boolean} walksPath it may have a path with these settings (not stationary)
    * @returns {string|null} its id afterwards, or null if nothing changed
    */
-  setEnemy(id, { type, overrides }, patrols) {
+  setEnemy(id, { template, overrides }, walksPath) {
     const enemy = this.item(id);
     if (!enemy) return null;
-    const next = this.idForType(enemy, type);
-    const fields = { id: next, type, overrides: Object.keys(overrides).length > 0 ? overrides : undefined, path: patrols ? enemy.path : undefined };
+    const next = this.idFor(enemy, enemy.template, template);
+    const fields = { id: next, template, overrides: Object.keys(overrides).length > 0 ? overrides : undefined, path: walksPath ? enemy.path : undefined };
     return this.updateItem(id, fields) ? next : null;
   }
 
   /**
-   * Put a new enemy of `type` in a cell, replacing a block or object there
-   * (not an enemy: the editor picks that one instead). Its id is the type
-   * name with the first free number (`bug_1`).
+   * Put a new enemy of `template` in a cell, replacing a block or object
+   * there (not an enemy: the editor picks that one instead). Its id is the
+   * template name with the first free number (`bug_1`).
    * @param {number[]} cell
-   * @param {string} type enemy type id (defs.json)
-   * @param {object} [overrides] values that replace the type's
+   * @param {string} template enemy template id (defs.json "enemies", D79)
+   * @param {object} [overrides] values that replace the template's
    * @returns {string|null} the new enemy's id, or null if nothing changed
    */
-  placeEnemy(cell, type, overrides = {}) {
+  placeEnemy(cell, template, overrides = {}) {
     if (!this.inside(cell) || this.at(cell)?.kind === 'enemy') return null;
-    const id = this.freeId(type);
+    const id = this.freeId(template);
     this.edit(() => {
       this.remove(cell);
-      const enemy = { id, type, at: [...cell] };
+      const enemy = { id, template, at: [...cell] };
       if (Object.keys(overrides).length > 0) enemy.overrides = structuredClone(overrides);
       this.data.enemies = [...(this.data.enemies ?? []), enemy];
     });
