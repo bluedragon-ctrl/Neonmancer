@@ -162,7 +162,11 @@ bit on its disk (D71).
   and burns enemies touching it (D84)
 - **Pause** — a bolt that freezes an enemy for a while; frozen enemies
   are harmless solid platforms, still hittable (D85)
-- **Warp** — short teleport through gaps or past hazards
+- **Blink** — a super-speed dash up to 3 units forward through open
+  space, over gaps and hazards; it hits enemies it passes through, and
+  hurts the wizard if a wall cuts it short (D86)
+- **Warp** — a teleport forward as far as the first wall or object, over
+  gaps of any width; safe, a later and stronger spell (D86)
 - **Cut & Paste** — cut one object into inventory, paste it at a valid
   grid spot in front of the wizard
 

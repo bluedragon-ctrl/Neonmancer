@@ -22,7 +22,7 @@
     },
     "spells": {
       "type": "object",
-      "description": "Spell tuning, by spell id. What each spell does is built into the engine (SPELL_EFFECTS in src/game.js; Zap: src/entities/bolt.js, Shield and Firewall: Player.raiseShield(), Pause: a bolt that freezes, Enemy.freeze()).",
+      "description": "Spell tuning, by spell id. What each spell does is built into the engine (SPELL_EFFECTS in src/game.js; Zap: src/entities/bolt.js, Shield and Firewall: Player.raiseShield(), Pause: a bolt that freezes, Enemy.freeze(); Blink and Warp: Game.teleport(), src/entities/warp.js).",
       "required": ["zap"],
       "additionalProperties": false,
       "properties": {
@@ -80,6 +80,33 @@
             "cooldown": { "$ref": "#/$defs/spellCooldown" },
             "speed": { "type": "number", "exclusiveMinimum": 0, "maximum": 30, "description": "Bolt speed in units per second." },
             "duration": { "type": "number", "exclusiveMinimum": 0, "maximum": 30, "description": "Seconds an enemy stays frozen; freezing it again starts it over." }
+          }
+        },
+        "blink": {
+          "description": "A short teleport the way he aims, level, through open space only (D86): over holes, hazard and void floors and through enemies, hitting each it passes; a block, an object or the room's side stops it, and he lands short of it, hurt. Right against one, it fizzles and costs nothing.",
+          "type": "object",
+          "required": ["slot", "color", "cost", "cooldown", "range", "damage", "hitDamage"],
+          "additionalProperties": false,
+          "properties": {
+            "slot": { "$ref": "#/$defs/spellSlot" },
+            "color": { "$ref": "#/$defs/spellColor" },
+            "cost": { "$ref": "#/$defs/spellCost" },
+            "cooldown": { "$ref": "#/$defs/spellCooldown" },
+            "range": { "type": "number", "exclusiveMinimum": 0, "maximum": 8, "description": "Farthest it goes, in units (3 crosses a 2-tile gap, never a 3-tile one)." },
+            "damage": { "type": "integer", "minimum": 0, "description": "Integrity he loses when a block, an object or the room's side cuts it short (0: never)." },
+            "hitDamage": { "type": "integer", "minimum": 0, "description": "Integrity each enemy it passes through loses (a spell hit: it provokes and alarms, D81)." }
+          }
+        },
+        "warp": {
+          "description": "A teleport the way he aims, level, through open space only, as far as the first block, object or room side (D86); safe. Right against one, it fizzles and costs nothing.",
+          "type": "object",
+          "required": ["slot", "color", "cost", "cooldown"],
+          "additionalProperties": false,
+          "properties": {
+            "slot": { "$ref": "#/$defs/spellSlot" },
+            "color": { "$ref": "#/$defs/spellColor" },
+            "cost": { "$ref": "#/$defs/spellCost" },
+            "cooldown": { "$ref": "#/$defs/spellCooldown" }
           }
         }
       }

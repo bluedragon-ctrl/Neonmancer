@@ -7,6 +7,15 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The Blink and Warp spells (Phase 3 step 9, D86). Blink (slot 4, 15
+  energy): a super-speed dash up to 3 units the way the wizard aims,
+  through open space only (over holes, hazards and through enemies),
+  hitting every enemy it passes for 2; cut short by a wall, it hurts him
+  for 1. Warp (slot 5, 30 energy): a teleport as far as the first wall or
+  object, harmless, drawn as a stream of pixels. Right against a wall
+  either fizzles and costs nothing. Both disks lie in the new test room
+  Fast Path, north of Room 1. Showcase `blink`, `warp`, `disk-blink`,
+  `disk-warp`.
 - The Pause spell (Phase 3 step 8, D85, slot 3): 25 energy, a lavender
   bolt the way the wizard aims that freezes the first enemy it hits for
   5 s. A frozen enemy holds its pose in a cage of corner brackets, sees,

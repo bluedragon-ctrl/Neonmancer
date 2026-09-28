@@ -45,6 +45,8 @@ import { createShield, placeShield } from './shield-view.js';
 import { createFirewall, placeFirewall } from './firewall-view.js';
 import { PAUSE_FX, pauseLook } from './pause-fx.js';
 import { createPauseCage, placePauseCage } from './pause-view.js';
+import { warpFlash } from './warp-fx.js';
+import { createWarpTrail, dashPose, placeWarpTrail } from './warp-view.js';
 
 /**
  * Which bodies get a drop shadow besides the wizard (who always has one).
@@ -193,6 +195,19 @@ export class PlayerView {
     this.installs = new Map();
     /** The Shield and Firewall rings by spell id, made when first cast. */
     this.rings = new Map();
+    /** The Blink and Warp afterimages by spell id, made when first cast (D86). */
+    this.trails = new Map();
+  }
+
+  /** The afterimage of a Blink or Warp `spell`, made on first use. */
+  trailView(spell) {
+    let view = this.trails.get(spell);
+    if (!view) {
+      view = createWarpTrail(this.game.content.spells[spell].color, spell);
+      this.trails.set(spell, view);
+      this.group.add(view);
+    }
+    return view;
   }
 
   /** The install animation of `spell`, made on first use. */
@@ -221,15 +236,27 @@ export class PlayerView {
   /** @param {number} alpha interpolation factor 0..1 between the last two ticks */
   sync(alpha) {
     const player = this.game.player;
-    const pos = lerpPosition(player.prev, player.pos, alpha);
+    const { warp } = player;
+    // A Blink draws him dashing there over a few frames, stretched (D86).
+    const dash = dashPose(warp, lerpPosition(player.prev, player.pos, alpha), warp ? warp.tick + alpha : 0);
+    const { pos } = dash;
 
     this.wizard.position.set(pos[0], pos[1], pos[2]);
     this.wizard.rotation.y = lerpAngle(player.prevFacing, player.facing, alpha);
     // Blinking after a hit; derezzing when he dies out of a hole.
     const look = wizardLook(player, PLAYER.deathTicks);
     this.wizard.visible = look.visible;
-    this.wizard.scale.set(...look.scale);
-    showHitFlash(this.wizard, hitFlash(player));
+    this.wizard.scale.set(look.scale[0] / Math.sqrt(dash.stretch), look.scale[1] / Math.sqrt(dash.stretch), look.scale[2] * dash.stretch);
+    // A hit's flash wins over the arrival flash of a Warp (D86).
+    const hit = hitFlash(player);
+    const arrival = warp?.spell === 'warp' ? warpFlash(warp.tick + alpha) : 0;
+    if (hit.amount > 0 || arrival === 0) showHitFlash(this.wizard, hit);
+    else {
+      this.wizard.userData.flash.amount.value = arrival;
+      this.wizard.userData.flash.color.value.set(this.game.content.spells[warp.spell].color);
+    }
+    for (const [spell, view] of this.trails) if (warp?.spell !== spell) placeWarpTrail(view, null, 0);
+    if (warp) placeWarpTrail(this.trailView(warp.spell), warp, warp.tick + alpha);
     // Installing a spell: the disk's bits flow from where it hung into him, wherever he goes, and tint him.
     const { install, shield } = player;
     for (const [spell, view] of this.installs) view.visible = install?.spell === spell;

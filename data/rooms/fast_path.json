@@ -1,0 +1,21 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "fast_path",
+  "name": "Fast Path",
+  "biome": "frostbyte_wastes",
+  "size": [12, 4, 12],
+  "spawn": [6, 0, 10.5],
+  "exits": [{ "id": "south", "side": "+z", "at": 5 }],
+  "blocks": [{ "at": [10, 0, 5], "to": [10, 1, 5] }],
+  "holes": [
+    { "at": [0, 7], "to": [11, 8] },
+    { "at": [3, 0], "to": [8, 3] }
+  ],
+  "enemies": [{ "id": "runner", "template": "bug", "at": [1, 0, 5], "path": { "points": [[8, 0, 5]], "pause": 0.4 } }],
+  "pickups": [
+    { "id": "disk_blink", "type": "disk_blink", "at": [8, 0, 10] },
+    { "id": "disk_warp", "type": "disk_warp", "at": [1, 0, 4] },
+    { "id": "energy", "type": "refill_energy", "at": [11, 0, 1] }
+  ]
+}

@@ -1477,3 +1477,43 @@ flag leaves the Warden decision to Phase 4 without new code then. The
 cage reads as "selected, held" without covering the enemy's own look;
 lavender sits clear of the Shield's blue and the Zap's cyan, lighter than
 the void's violet.
+
+### D86 — 2026-09-28 — Blink and Warp
+Settled with the author at the start of Phase 3 step 9:
+- **Two spells instead of one Warp.** **Blink** (slot 4) is the early,
+  limited one; **Warp** (slot 5) the stronger, later one (for now its
+  disk lies in the test room too). Cut & Paste moves to slot 6.
+- **Both go the way he aims, level at his height, through open space
+  only:** over holes, hazard and void floors, and through enemies; a
+  block, a room object or the room's side stops them (never through a
+  wall, however thin), and neither leaves the room. He lands at the
+  farthest free spot short of the stop, backing off an enemy standing
+  there. Right against a wall (no spot at least 0.1 away) the spell
+  **fizzles**: he stays and the energy comes back. Mid-jump works: he
+  keeps his fall or jump.
+- **Blink:** at most **3 units** (a 2-tile gap, never 3), **15 energy**.
+  It hits every enemy it passes through for **2** (`hitDamage`; a spell
+  hit, so it provokes and alarms, D81), and when a wall, object or the
+  room's side cuts it short he takes **1** (`damage`): blinking into a
+  wall hurts.
+- **Warp:** no range limit, as far as the first stop, **30 energy**;
+  harmless both ways.
+- **Looks:** Blink is drawn as a super-speed dash rather than a
+  teleport: the logic moves him at once, but he is drawn shooting there
+  over 6 ticks, stretched along the way, with light streaks at his feet,
+  hands and head trailing behind and pixels kicked up where he pushed
+  off. Warp: he bursts into pixels that stream to where he lands, and he
+  flashes in its color (picked in the showcase over ghosts of him along
+  the way; the third proposal, a streak, became Blink's).
+  Colors, provisional: Blink pale cyan `#9ef0ff`, Warp pink `#ff6ee8`.
+- New test room **Fast Path** (Frostbyte Wastes) north of Room 1, two
+  rooms from Boot Sector (D49): the Blink disk by the entrance, a 2-wide
+  pit across the room to blink over, a bug patrolling the lane beyond
+  (blink through it), the Warp disk there, and a 6-wide pit only Warp
+  crosses to an energy refill.
+**Why:** author's choices. With Warp reaching as far as the first wall,
+a short spell of its own keeps a place early in the game; hitting enemies
+on the way and hurting on a wall keep Blink worth casting once Warp is
+known: a risky attack dash against a safe way across. "Open space only"
+keeps walls meaningful for level design, and landing short of a stop
+never strands him inside something.
