@@ -48,7 +48,8 @@ import { createRefill, refillMotion } from '../src/render/refill.js';
 import { INSTALL_FX } from '../src/render/install-fx.js';
 import { createInstall, placeInstall } from '../src/render/install-view.js';
 import { createShield, placeShield } from '../src/render/shield-view.js';
-import { SWITCH_COLORS, createLock, createPlate, createTarget } from '../src/render/switch-view.js';
+import { createLock, createPlate, createTarget } from '../src/render/switch-view.js';
+import { SWITCH_KINDS } from '../src/entities/switch.js';
 
 /** Block types with variants filled in (D60). */
 const BLOCK_TYPES = resolveBlockTypes(defs.blocks);
@@ -66,8 +67,8 @@ const ALL_ASSETS = [
   { label: 'wizard', build: () => createWizard(), shadow: PALETTE.cyan },
   { label: 'wizard-hit', build: buildWizardHit, shadow: PALETTE.cyan },
   // Every object type from defs.json, in its own style (destructible ones
-  // with data bits missing).
-  ...Object.entries(defs.objects).map(([type, props]) => ({
+  // with data bits missing); switches have their own looks (below).
+  ...Object.entries(defs.objects).filter(([, props]) => !SWITCH_KINDS.includes(props.kind)).map(([type, props]) => ({
     label: type,
     build: () => {
       const view = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...props, at: [0, 0, 0] });
@@ -117,55 +118,23 @@ const ALL_ASSETS = [
   { label: 'refill-energy', group: 'refills', spin: false, build: () => buildRefill('energy') },
   { label: 'refill-collect', group: 'refills', spin: false, build: buildRefillCollect },
   { label: 'pickups-in-room', group: 'refills', span: 5.5, spin: false, build: buildPickupsInRoom },
-  // Switches and locked exits (Phase 3 step 4): proposals in variants. The
-  // switch colors side by side (target behind, plate in front); each target
-  // look zapped on and off; each plate look pressed by a crate dropping on
-  // it and the wizard stepping on it; each lock look with two switches
-  // coming on one by one, opening, then going off.
-  { label: 'switch-colors', group: 'switches', span: 6, spin: false, build: buildSwitchColors },
-  ...['glow', 'led', 'bullseye'].map((variant) => ({
-    label: `target-${variant}`, group: 'switches', span: 5, spin: false, build: () => buildTargetZap(variant),
-  })),
-  ...['halo', 'brackets', 'slab'].map((variant) => ({
-    label: `plate-${variant}`, group: 'switches', span: 4, spin: false, build: () => buildPlate(variant),
-  })),
-  ...['bars', 'panel', 'grid'].map((variant) => ({
-    label: `lock-${variant}`, group: 'switches', span: 5.5, spin: false, build: () => buildLock(variant),
-  })),
+  // Switches and locked exits (Phase 3 step 4, D75): a target zapped on
+  // and off; a plate pressed by a crate dropping on it, then by the wizard;
+  // a room with a locked doorway (panel) and a locked front exit (bars)
+  // whose lights follow its two switches.
+  { label: 'target', group: 'switches', span: 5, spin: false, build: buildTargetZap },
+  { label: 'plate', group: 'switches', span: 4, spin: false, build: buildPlate },
+  { label: 'locks-in-room', group: 'switches', span: 5.5, spin: false, build: buildLocks },
 ];
 
-/** Switch color from ?switchColor= (yellow, white, redGreen), white by default. */
-const SWITCH_COLOR = SWITCH_COLORS[new URLSearchParams(location.search).get('switchColor')] ?? SWITCH_COLORS.white;
-
-/** Target (behind) and plate (in front) in each candidate color, on and off together. */
-function buildSwitchColors() {
-  const asset = new Group();
-  const views = Object.values(SWITCH_COLORS).flatMap((colors, i) => {
-    const target = createTarget({ variant: 'glow', colors });
-    const plate = createPlate({ variant: 'halo', colors });
-    const a = (i - 1) * 1.6;
-    target.position.set(a - 0.5 - 0.6, 0, -a - 0.5 - 0.6);
-    plate.position.set(a - 0.5 + 0.6, 0, -a - 0.5 + 0.6);
-    asset.add(target, plate);
-    return [target, plate];
-  });
-  let time = 0;
-  asset.userData.update = (dt) => {
-    time += dt;
-    const on = time % 2.4 > 1.2;
-    for (const view of views) {
-      view.userData.set(on);
-      view.userData.update(dt);
-    }
-  };
-  return asset;
-}
+/** Switch color, from defs.json. */
+const SWITCH_COLOR = defs.objects.target.color;
 
 /** The wizard zapping a target on and off. */
-function buildTargetZap(variant) {
+function buildTargetZap() {
   const asset = new Group();
   const zapper = new Zapper(asset, -1.8, 0.3);
-  const target = createTarget({ variant, colors: SWITCH_COLOR });
+  const target = createTarget(SWITCH_COLOR);
   target.position.set(0.3, 0, -0.5);
   asset.add(target);
   let on = false;
@@ -192,9 +161,9 @@ function buildTargetZap(variant) {
  * A plate in a floor patch: a crate drops on it, sits, slides off; then the
  * wizard walks over it and stops on it for a moment.
  */
-function buildPlate(variant) {
+function buildPlate() {
   const asset = new Group();
-  const plate = createPlate({ variant, colors: SWITCH_COLOR });
+  const plate = createPlate(SWITCH_COLOR);
   plate.position.set(-0.5, 0, -0.5);
   const crate = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...defs.objects.crate, at: [0, 0, 0] });
   const wizard = createWizard();
@@ -227,14 +196,14 @@ function buildPlate(variant) {
  * switches: they come on one by one, the exits open, then one goes off and
  * they close again.
  */
-function buildLock(variant) {
+function buildLocks() {
   const size = [4, 3, 4];
   const exits = [withExitDefaults({ id: 'back', side: '-z', at: 1 }), withExitDefaults({ id: 'front', side: '+x', at: 1 })];
   const flows = [new ExitView(exits[0], size, PALETTE.magenta), new ExitView(exits[1], size, PALETTE.cyan)];
-  const locks = exits.map((exit) => createLock(exit, size, { variant, colors: SWITCH_COLOR, switches: 2 }));
-  const target = createTarget({ variant: 'glow', colors: SWITCH_COLOR });
+  const locks = exits.map((exit) => createLock(exit, size, { color: SWITCH_COLOR, switches: 2 }));
+  const target = createTarget(SWITCH_COLOR);
   target.position.set(0, 0, 3);
-  const plate = createPlate({ variant: 'halo', colors: SWITCH_COLOR });
+  const plate = createPlate(SWITCH_COLOR);
   plate.position.set(2, 0, 2);
   const room = new Group().add(
     createRoomView({ size, blocks: {}, blockTypes: BLOCK_TYPES, exits, color: PALETTE.amber }),
@@ -255,7 +224,7 @@ function buildLock(variant) {
     plate.userData.set(plateOn);
     const lit = Number(targetOn) + Number(plateOn);
     for (const [i, lock] of locks.entries()) {
-      lock.userData.set({ lit });
+      lock.userData.set({ lit, open: lit === 2 });
       lock.userData.update(dt);
       flows[i].group.visible = lock.userData.openness > 0.5;
       flows[i].update(dt);

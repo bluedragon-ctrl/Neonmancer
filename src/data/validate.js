@@ -30,6 +30,7 @@ import {
   KIND_BLOCK_VALUES,
   STATIC_BLOCK_VALUES,
 } from './room-data.js';
+import { SWITCH_KINDS } from '../entities/switch.js';
 import { mapKey } from '../world/map.js';
 import { legAxis, pathCells } from '../world/path.js';
 
@@ -206,6 +207,8 @@ function validateRoom(file, room, { objectTypes, pickupTypes, blockTypes, enemyT
     collapsing: new Set(),
     /** Ids of objects, enemies and pickups (one namespace per room) */
     ids: new Set(),
+    /** "x,z" → path of the plate on that floor tile (D75) */
+    plates: new Map(),
   };
   const exits = (room.exits ?? []).map(withExitDefaults);
   const exitFits = validateExitBounds(checks, exits);
@@ -215,6 +218,7 @@ function validateRoom(file, room, { objectTypes, pickupTypes, blockTypes, enemyT
   validateEnemies(checks, enemyTypes);
   validatePickups(checks, pickupTypes);
   validateExitPassage(checks, exits, exitFits);
+  validateLocks(checks, exits, objectTypes);
 
   // Spawn and reset (D39). reset defaults to spawn (buildRoom does the
   // same), so it only needs its own check when a room gives it explicitly.
@@ -303,6 +307,8 @@ function validateObjects(checks, objectTypes) {
     const type = objectTypes[object.type] && { ...OBJECT_STYLE_DEFAULTS, ...objectTypes[object.type] };
     if (!type) report(path, `unknown object type "${object.type}"`);
     else validateOverrides(report, `${path}.overrides`, object, type);
+    // A plate is a floor tile, no body (D75): things may stand on it.
+    if (type?.kind === 'plate') return validatePlate(checks, path, object.at);
     const inside = fillCell(checks, object.at, path);
 
     // Platforms follow a path (D46); nothing else does yet.
@@ -454,8 +460,29 @@ function validateOverrides(report, path, object, type, enums = OBJECT_STYLES) {
   }
 }
 
+/**
+ * A plate (D75) lies on the floor (y 0), inside the room, in a cell no block
+ * fills (blocks are checked first) and on no hole (checked with the holes).
+ */
+function validatePlate({ room, report, filled, plates }, path, [x, y, z]) {
+  const [w, , d] = room.size;
+  if (y !== 0) report(`${path}.at`, 'a plate lies on the floor (y 0)');
+  else if (x < 0 || z < 0 || x >= w || z >= d) report(`${path}.at`, `cell ${cellText([x, y, z])} is outside size ${cellText(room.size)}`);
+  else if (filled.has(cellKey([x, y, z]))) report(`${path}.at`, `cell ${cellText([x, y, z])} is filled by ${filled.get(cellKey([x, y, z]))}`);
+  else if (plates.has(cellKey([x, z]))) report(`${path}.at`, `tile ${cellText([x, z])} has ${plates.get(cellKey([x, z]))} already`);
+  else plates.set(cellKey([x, z]), path);
+}
+
+/** A locked exit (D75) opens when every switch in the room is on, so the room needs one. */
+function validateLocks({ room, report }, exits, objectTypes) {
+  const switches = (room.objects ?? []).filter((object) => SWITCH_KINDS.includes(objectTypes[object.type]?.kind));
+  exits.forEach((exit, i) => {
+    if (exit.locked && switches.length === 0) report(`exits[${i}].locked`, 'a locked exit needs a switch in the room (a target or a plate)');
+  });
+}
+
 /** Holes: floor tiles inside the room, nothing standing in them but platforms and collapsing blocks. */
-function validateHoles({ room, report, filled, holes, pathCells, collapsing }) {
+function validateHoles({ room, report, filled, holes, pathCells, collapsing, plates }) {
   const [w, , d] = room.size;
   (room.holes ?? []).forEach((hole, i) => {
     const path = `holes[${i}]`;
@@ -471,6 +498,7 @@ function validateHoles({ room, report, filled, holes, pathCells, collapsing }) {
       if (x >= w || z >= d) problem = `tile ${tile} is outside size ${cellText(room.size)}`;
       else if (holes.has(key)) problem = `tile ${tile} is already a hole in ${holes.get(key)}`;
       else if (under) problem = `tile ${tile} is under ${under}`;
+      else if (plates.has(key)) problem = `tile ${tile} is under ${plates.get(key)}`;
       if (problem) {
         report(path, problem);
         break; // one problem per entry is enough

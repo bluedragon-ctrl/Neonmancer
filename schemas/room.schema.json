@@ -80,7 +80,12 @@
         },
         "width": { "type": "integer", "minimum": 1, "default": 2 },
         "y": { "type": "integer", "minimum": 0, "default": 0, "description": "Floor level of the opening." },
-        "height": { "type": "integer", "minimum": 2, "default": 2 }
+        "height": { "type": "integer", "minimum": 2, "default": 2 },
+        "locked": {
+          "type": "boolean",
+          "default": false,
+          "description": "Closed (solid) until every switch in the room (targets and plates) is on; it closes again when one goes off, but not while the wizard stands in it. Always open for the wizard when he came in through it (D75). The room needs at least one switch."
+        }
       }
     },
     "block": {

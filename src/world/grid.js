@@ -103,6 +103,18 @@ export class Grid {
     return this.isInside(tx, tz) && this.holes[tz * this.w + tx] === 1;
   }
 
+  /**
+   * Open or close an exit's opening (a locked exit, D75): closed, its row
+   * of cells beyond the side is solid like the rest of the room's edge.
+   * @param {object} exit exit with defaults applied
+   * @param {boolean} open
+   */
+  setOpening(exit, open) {
+    for (const [x, y, z] of exitCells(exit, this.size).outside) {
+      if (y >= 0 && y < this.h) this.cells[this.index(x, y, z)] = open ? CELL.empty : CELL.edge;
+    }
+  }
+
   /** A block dropped into the hole tile [x, z]: it is floor from now on (D18). */
   fillHole(x, z) {
     if (this.isInside(x, z)) this.holes[z * this.w + x] = 0;

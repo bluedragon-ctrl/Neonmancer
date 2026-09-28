@@ -203,8 +203,8 @@
       "additionalProperties": false,
       "properties": {
         "kind": {
-          "enum": ["pushable", "platform"],
-          "description": "Which engine behavior the object uses. pushable: the wizard pushes it; platform: follows its path (room data \"path\") carrying the wizard and pushables. Collapsing blocks are block types (\"blocks\", D60)."
+          "enum": ["pushable", "platform", "target", "plate"],
+          "description": "Which engine behavior the object uses. pushable: the wizard pushes it; platform: follows its path (room data \"path\") carrying the wizard and pushables; target: a fixed block a Zap switches on and off; plate: a floor tile (y 0) that is on while a crate, an enemy or the wizard stands on it. Targets and plates are switches: the room's locked exits open while all of them are on (D75); their look is fixed (render/switch-view.js), only the color comes from here. Collapsing blocks are block types (\"blocks\", D60)."
         },
         "color": { "$ref": "common.schema.json#/$defs/color" },
         "edges": {

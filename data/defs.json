@@ -6,6 +6,8 @@
     "crate_plain": { "kind": "pushable", "color": "#b6ff3c" },
     "crate_cross": { "kind": "pushable", "color": "#b6ff3c", "faces": "tinted", "integrity": 1 },
     "crate_dashed": { "kind": "pushable", "color": "#b6ff3c", "edges": "dashed" },
+    "target": { "kind": "target", "color": "#eef3ff" },
+    "plate": { "kind": "plate", "color": "#eef3ff", "edges": "dashed" },
     "platform": { "kind": "platform", "color": "#00f0ff", "mark": "brackets", "faces": "tinted" }
   },
   "enemies": {

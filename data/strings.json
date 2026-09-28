@@ -26,6 +26,7 @@
     "msg.spellInstalled": "> SPELL INSTALLED: {spell}",
     "msg.refillIntegrity": "> INTEGRITY RESTORED",
     "msg.refillEnergy": "> ENERGY RECHARGED",
+    "msg.unlocked": "> ACCESS GRANTED: EXIT UNLOCKED",
     "msg.movementGrid": "> MOVEMENT: GRID-ALIGNED",
     "msg.movementScreen": "> MOVEMENT: SCREEN-RELATIVE"
   }
