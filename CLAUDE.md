@@ -59,6 +59,9 @@ mobile/touch support, backend or accounts.
     with render height, never fixed pixel values.
   - Render scale setting (50–100%) separate from window size; cap
     devicePixelRatio.
+  - Automatic quality fallback: when frames run slow, MSAA and then
+    render scale step down (D76). Extra full-screen effect passes are
+    costly on weak GPUs; add effects to the existing effect pass.
   - HUD and text scale with screen size.
 - Optional setting (off by default): zoom to fit smaller rooms.
 

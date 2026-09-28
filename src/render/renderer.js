@@ -100,10 +100,24 @@ export class Renderer {
     this.bufferHeight = buffer.height;
   }
 
+  /** MSAA samples in use (the composer may allow fewer than asked for). */
+  get multisampling() {
+    return this.composer.multisampling;
+  }
+
   /** @param {number} scale 0.5–1 */
   setRenderScale(scale) {
     this.renderScale = clampRenderScale(scale);
     this.resize();
+  }
+
+  /**
+   * Change multisampling and render scale at once (render/quality.js).
+   * @param {{ multisampling: number, renderScale: number }} quality
+   */
+  setQuality({ multisampling, renderScale }) {
+    this.composer.multisampling = multisampling;
+    this.setRenderScale(renderScale);
   }
 
   /**
@@ -127,9 +141,26 @@ export class Renderer {
    * Compile the shaders of everything in the scene now. Called before the
    * old room's views are disposed, so the shaders both rooms use are kept
    * instead of being freed and compiled again.
+   *
+   * three.js compiles only visible objects, so hidden ones (pixel bursts,
+   * the cast flare) are shown for the moment: otherwise their shaders
+   * would compile the first time they appear, a hitch in the middle of
+   * play instead of behind the room transition. They are compiled for the
+   * composer's buffer, which the scene is drawn into: shaders for the
+   * canvas differ (output color space) and would not be the ones used.
    */
   compile() {
+    const hidden = [];
+    this.scene.traverse((node) => {
+      if (node.visible) return;
+      hidden.push(node);
+      node.visible = true;
+    });
+    const target = this.webgl.getRenderTarget();
+    this.webgl.setRenderTarget(this.composer.inputBuffer);
     this.webgl.compile(this.scene, this.camera);
+    this.webgl.setRenderTarget(target);
+    for (const node of hidden) node.visible = false;
   }
 
   render() {

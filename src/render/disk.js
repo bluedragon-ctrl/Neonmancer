@@ -119,6 +119,7 @@ export function createDisk({ color = PALETTE.cyan, slot = 0, ghost = false } = {
   const litFaces = faceMaterial(new Color(PALETTE.face).lerp(new Color(bitColor), ghost ? 0.1 : DISK.bitTint));
   const edgeSegments = edgePairs(bitEdges);
   const cells = [];
+  const zeros = [];
   for (const side of [1, -1]) {
     for (let row = 0; row < 4; row++) {
       for (let col = 0; col < 4; col++) {
@@ -126,9 +127,7 @@ export function createDisk({ color = PALETTE.cyan, slot = 0, ghost = false } = {
         const x = side * (col - 1.5) * pitch;
         const y = (1.5 - row) * pitch - 0.02 * s;
         if (row * 4 + col !== slot) {
-          const zero = neonLines(loop([[x - half, y - half], [x + half, y - half], [x + half, y + half], [x - half, y + half]], side * t), zeroMaterial);
-          zero.renderOrder = 2;
-          cells.push(zero);
+          zeros.push(...loop([[x - half, y - half], [x + half, y - half], [x + half, y + half], [x - half, y + half]], side * t));
           continue;
         }
         const cubeLines = neonLines(edgeSegments, litLines);
@@ -139,12 +138,39 @@ export function createDisk({ color = PALETTE.cyan, slot = 0, ghost = false } = {
       }
     }
   }
+  // All zero bits are one line object: one draw call instead of 30.
+  const zeroLines = neonLines(zeros, zeroMaterial);
+  if (ghost) restartDashes(zeroLines, 4);
+  zeroLines.renderOrder = 2;
+  cells.push(zeroLines);
 
   const spin = new Group().add(body, lines, ...cells);
   const model = new Group().add(spin);
   model.userData = { spin, color: bodyColor, bitColor };
   spin.position.y = DISK.hover;
   return model;
+}
+
+/**
+ * Make the dash pattern of a dashed line start over every `every`
+ * segments. LineSegments2 measures dashes along all its segments in a row,
+ * so loops merged into one line would each start at a different point of
+ * the pattern; this dashes each loop as if it were its own line.
+ * @param {import('three/addons/lines/LineSegments2.js').LineSegments2} line after computeLineDistances()
+ * @param {number} every segments per loop
+ */
+export function restartDashes(line, every) {
+  const start = line.geometry.attributes.instanceDistanceStart;
+  const end = line.geometry.attributes.instanceDistanceEnd;
+  let run = 0;
+  for (let i = 0; i < start.count; i++) {
+    if (i % every === 0) run = 0;
+    const length = end.getX(i) - start.getX(i);
+    start.setX(i, run);
+    run += length;
+    end.setX(i, run);
+  }
+  start.data.needsUpdate = true;
 }
 
 /** Segment pairs of an EdgesGeometry, for neonLines(). */
