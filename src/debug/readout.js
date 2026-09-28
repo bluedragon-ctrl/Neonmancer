@@ -25,9 +25,11 @@ export class DebugReadout {
    * Once per frame: count it, and show or hide the readout.
    * @param {boolean} shown whether debug mode is on
    * @param {{ game: import('../game.js').Game, input: import('../core/input.js').Input,
-   *   renderer: import('../render/renderer.js').Renderer, alpha: number }} state
+   *   renderer: import('../render/renderer.js').Renderer, alpha: number,
+   *   autoQuality?: import('../render/quality.js').AutoQuality | null }} state
+   *   autoQuality: null when quality was set by hand (?msaa, ?scale)
    */
-  update(shown, { game, input, renderer, alpha }) {
+  update(shown, { game, input, renderer, alpha, autoQuality = null }) {
     this.frames++;
     const now = performance.now();
     if (now - this.secondStart >= 1000) {
@@ -42,10 +44,11 @@ export class DebugReadout {
     const { info } = renderer.webgl;
     const { player } = game;
     const actions = input.activeActions().join(' ') || '-';
+    const quality = autoQuality === null ? 'MANUAL' : autoQuality.done ? 'AUTO, SETTLED' : 'AUTO';
     this.element.textContent =
       `> ROOM ${game.room.id}${game.invincible ? '  INVINCIBLE' : ''}\n` +
       `> TICK/S ${this.tps}  FPS ${this.fps}  ALPHA ${alpha.toFixed(2)}\n` +
-      `> BUFFER ${renderer.bufferWidth}x${renderer.bufferHeight}\n` +
+      `> BUFFER ${renderer.bufferWidth}x${renderer.bufferHeight}  MSAA ${renderer.multisampling}  SCALE ${renderer.renderScale.toFixed(2)} (${quality})\n` +
       `> GPU SHADERS ${info.programs.length}  GEOMETRIES ${info.memory.geometries}  TEXTURES ${info.memory.textures}\n` +
       `> ACTIONS ${actions}\n` +
       `> POS ${player.pos.map((v) => v.toFixed(2)).join(' ')}${player.grounded ? '  GROUNDED' : ''}\n` +

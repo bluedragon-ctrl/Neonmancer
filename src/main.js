@@ -11,6 +11,7 @@ import { Editor } from './editor/editor.js';
 import { Game } from './game.js';
 import { PlayerView } from './render/entity-view.js';
 import { HOLO_TIME } from './render/holo.js';
+import { AutoQuality } from './render/quality.js';
 import { Renderer } from './render/renderer.js';
 import { RoomScene } from './render/room-scene.js';
 import { showErrorScreen } from './ui/error-screen.js';
@@ -36,17 +37,24 @@ function boot() {
   const devRoom = DEV_SERVER && content.rooms.has(params.get('room')) ? params.get('room') : undefined;
   const game = new Game(content, { start: devRoom });
 
-  // ?scale=0.5 tries a lower render scale and ?msaa=0 turns multisampling
-  // off, until there is a settings menu with quality presets.
-  const renderer = new Renderer(app, {
-    renderScale: Number(params.get('scale') ?? 1),
-    multisampling: Number(params.get('msaa') ?? 4),
-  });
+  // Quality steps down by itself when frames run slow (D76). ?scale=0.5
+  // and ?msaa=0 set it by hand instead, until there is a settings menu
+  // with quality presets.
+  const manualQuality = params.has('scale') || params.has('msaa');
+  const autoQuality = manualQuality ? null : new AutoQuality();
+  const renderer = new Renderer(
+    app,
+    autoQuality?.settings ?? { renderScale: Number(params.get('scale') ?? 1), multisampling: Number(params.get('msaa') ?? 4) },
+  );
   const hud = new Hud(renderer.hud, content.strings);
   const debug = new DebugOverlay();
   const readout = new DebugReadout(renderer.hud);
   renderer.scene.add(debug.group);
 
+  // The wizard's view is in the scene before the first room is shown, so
+  // his effects' shaders are compiled with it (Renderer.compile()).
+  const playerView = new PlayerView(game);
+  renderer.scene.add(playerView.group);
   const roomScene = new RoomScene(renderer);
   /** @param {{ rebuild?: boolean }} [options] see RoomScene.show() */
   function showRoom(options) {
@@ -54,8 +62,6 @@ function boot() {
     debug.setRoom(game.room, game.objects, game.enemies);
   }
   showRoom();
-  const playerView = new PlayerView(game);
-  renderer.scene.add(playerView.group);
 
   // F2: the room editor (saves in the dev server, exports in a build).
   const editor = new Editor({ game, renderer, files: DATA_FILES, canSave: DEV_SERVER, onRoom: (options) => showRoom({ rebuild: true, ...options }) });
@@ -97,6 +103,11 @@ function boot() {
   let lastFrame = performance.now() / 1000;
   function render(alpha) {
     const time = performance.now() / 1000;
+    const lowered = autoQuality?.frame(time - lastFrame);
+    if (lowered) {
+      renderer.setQuality(lowered);
+      console.info(`Frames run slow: quality now MSAA ${renderer.multisampling}, render scale ${renderer.renderScale}`);
+    }
     const dt = Math.min(time - lastFrame, 0.1);
     lastFrame = time;
 
@@ -114,7 +125,7 @@ function boot() {
     hud.update(dt);
     HOLO_TIME.value = time;
     renderer.render();
-    readout.update(debug.active, { game, input, renderer, alpha });
+    readout.update(debug.active, { game, input, renderer, alpha, autoQuality });
   }
 
   new FixedLoop({ update, render }).start();
