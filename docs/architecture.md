@@ -83,6 +83,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/exit-view.js` | Exit effect in the destination color: dashed stream into doorway tunnels, arrows gliding out of front exits |
 | `render/exit-layout.js` | Exit effect layout and timing, `EXIT_FX` tuning (pure, tested) |
 | `render/walls.js` | Back walls with doorways and dark tunnels behind them, front edges with gaps, arrow shape for front exits (pure, tested) |
+| `render/spikes.js` | The spiked object shape (D82): pyramids on a core cube inside the cell, as face triangles and outline segments, `SPIKES` tuning; pure, tested |
 | `render/marks.js` | Face-mark line patterns for object styles, including the data bits, whole (`bits`) or with holes for destructible objects (`bitsBroken`, `bitLayout()`); pure, tested |
 | `render/break-fx.js` | Destructible object's jolt on a hit that doesn't break it, `BREAK_FX` tuning (pure, tested) |
 | `render/hole-view.js` | Hole pits: walls fading to black, rim, short fading corner lines; outline math (tested) |

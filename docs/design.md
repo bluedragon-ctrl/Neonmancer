@@ -208,7 +208,9 @@ follows a path given on the room object.
   hazard block that moves (then he is invulnerable for a while and
   blinks). `spiked_platform` in `defs.json`: hazard red, `faces: "hazard"`
   (the hazard block's flickering pixels, flaring when it hurts him) and
-  `mark: "spikes"` (a ring of pale teeth on every face). It moves, waits
+  `shape: "spiked"` (a smaller core cube with four pyramids on each side,
+  their tips reaching the faces of its cell, so what shows is what hurts;
+  `SPIKES` in `src/render/spikes.js`). It moves, waits
   and carries crates like any platform; a short up-and-down path makes a
   hopper to time a run past, a long one a sliding trap. Only platforms
   take `damage` (validation).
@@ -1221,10 +1223,11 @@ Example room (12×12):
   spawn cell, `path` a patrol path (level legs), `overrides` any template field
   (see Enemies). Ids are shared with objects.
 - Object type style (D17): `edges` `solid`/`dashed`, `mark`
-  `none`/`inset`/`cross`/`brackets`/`bits`/`spikes`, `faces`
-  `dark`/`tinted`/`hazard` (defaults first; `hazard`: the hazard block's
-  flickering pixels, D82), `tint` 0–1 (color share of a tinted top face,
-  default 0.1).
+  `none`/`inset`/`cross`/`brackets`/`bits`, `faces`
+  `dark`/`tinted`/`hazard` (`hazard`: the hazard block's flickering
+  pixels, D82), `shape` `cube`/`spiked` (spiked: pyramids on every side,
+  dark or hazard faces, no mark, D82) (defaults first), `tint` 0–1 (color
+  share of a tinted top face, default 0.1).
   Objects may override them.
 - `world.json` pairs exits: `"connections": [["boot_sector.north", "cache_hall.south"]]`.
   Paired exits are on opposite sides and equally wide; every exit is connected.

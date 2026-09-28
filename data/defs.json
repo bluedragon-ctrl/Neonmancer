@@ -9,7 +9,7 @@
     "target": { "kind": "target", "color": "#eef3ff" },
     "plate": { "kind": "plate", "color": "#eef3ff", "edges": "dashed" },
     "platform": { "kind": "platform", "color": "#00f0ff", "mark": "brackets", "faces": "tinted" },
-    "spiked_platform": { "kind": "platform", "color": "#ff3b30", "mark": "spikes", "faces": "hazard", "damage": 1 }
+    "spiked_platform": { "kind": "platform", "color": "#ff3b30", "faces": "hazard", "shape": "spiked", "damage": 1 }
   },
   "enemies": {
     "bug": {

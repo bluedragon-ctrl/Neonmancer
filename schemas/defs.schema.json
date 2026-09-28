@@ -236,14 +236,19 @@
           "description": "Outline style."
         },
         "mark": {
-          "enum": ["none", "inset", "cross", "brackets", "bits", "spikes"],
+          "enum": ["none", "inset", "cross", "brackets", "bits"],
           "default": "none",
-          "description": "Pattern drawn on every face; spikes: a ring of teeth pointing in from the edges (for objects that hurt, D82)."
+          "description": "Pattern drawn on every face (on a cube-shaped object)."
         },
         "faces": {
           "enum": ["dark", "tinted", "hazard"],
           "default": "dark",
-          "description": "dark: like static blocks; tinted: faces shaded in the object color (top lighter); hazard: the hazard block look, pixels flickering in the object color (D82)."
+          "description": "dark: like static blocks; tinted: faces shaded in the object color (top lighter, cube only); hazard: the hazard block look, pixels flickering in the object color (D82)."
+        },
+        "shape": {
+          "enum": ["cube", "spiked"],
+          "default": "cube",
+          "description": "cube: fills its cell; spiked: a smaller core with four pyramids on each side, their tips reaching the cell's faces (for objects that hurt, D82). Either way it collides as its whole cell."
         },
         "tint": {
           "type": "number",

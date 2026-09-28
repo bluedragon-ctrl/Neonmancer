@@ -257,6 +257,7 @@ test('buildRoom expands blocks, merges type defaults and applies exit defaults',
       edges: 'solid',
       mark: 'none',
       faces: 'dark',
+      shape: 'cube',
       tint: 0.1,
     },
   ]);
@@ -332,7 +333,7 @@ test('object styles: overrides must use known values', () => {
 });
 
 test('spiked platforms (D82): only platforms can hurt', () => {
-  assert.deepEqual(errorsAfter((f) => (f['defs.json'].objects.spikes = { ...LIFT, color: '#ff3b30', faces: 'hazard', mark: 'spikes', damage: 1 })), []);
+  assert.deepEqual(errorsAfter((f) => (f['defs.json'].objects.spikes = { ...LIFT, color: '#ff3b30', faces: 'hazard', shape: 'spiked', damage: 1 })), []);
   assertError(
     errorsAfter((f) => (f['defs.json'].objects.crate.damage = 1)),
     'defs.json › objects.crate.damage',
@@ -586,6 +587,7 @@ test('collapsing blocks: each cell of a box becomes a room object with its type\
     edges: 'solid',
     mark: 'none',
     faces: 'dark',
+    shape: 'cube',
     tint: 0.1,
     regrow: 3,
   });

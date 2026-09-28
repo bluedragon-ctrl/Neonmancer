@@ -1373,9 +1373,12 @@ damaging object with coloring from the hazard block.
   moves, waits and carries crates like any platform (same class, same
   paths), so a hopper is a platform on a short up-and-down path.
 - Look: `faces: "hazard"` gives an object the hazard block's flickering
-  pixels, flaring when it hurts the wizard; `mark: "spikes"` draws a ring
-  of pale teeth on every face. `spiked_platform` combines both in hazard
-  red; showcase `spiked-platforms`.
+  pixels, flaring when it hurts the wizard; `shape: "spiked"` makes it a
+  smaller core cube with four pyramids on each side (the author asked for
+  real spikes rather than a face pattern), their tips on the faces of
+  its cell: it still collides as the whole cell, so what shows is what
+  hurts. `spiked_platform` combines both in hazard red; showcase
+  `spiked-platforms`.
 **Why:** a mechanism with a fixed rhythm is an object, not a monster
 (enemies are for things that sense and react; a Zap, Pause or alarm means
 nothing to it). Reusing platforms and the hazard look makes it data plus

@@ -17,6 +17,7 @@ import { BoxGeometry, BufferGeometry, Color, DoubleSide, Float32BufferAttribute,
 import { createActiveBlockView, hazardFaceMaterial } from './block-fx.js';
 import { blockEdges, edgeUnitKeys, groupedBlockEdges } from './edges.js';
 import { BITS, markSegments } from './marks.js';
+import { spikeSegments, spikeTriangles } from './spikes.js';
 import { doorwayTunnels, wallLayout } from './walls.js';
 import {
   PALETTE,
@@ -140,6 +141,13 @@ function createTunnels({ quads, lines: corners }, color) {
   return new Group().add(shadedFaces(positions, colors), fadingLines(corners, { color, width: 1.5, brightness: 0.6 }));
 }
 
+/** The spiked shape (D82) at the origin, shared by every spiked object view. */
+const SPIKED_BODY = shared(new BufferGeometry().setAttribute('position', new Float32BufferAttribute(spikeTriangles(), 3)));
+SPIKED_BODY.computeVertexNormals();
+
+/** Outline width of a spiked shape: its ridges are short, so thinner than a cube's edges. */
+const SPIKED_EDGE_WIDTH = 2;
+
 /** Outline width by object kind, where it differs: collapsing blocks look fragile. */
 const EDGE_WIDTH = { collapsing: 1.5 };
 
@@ -151,39 +159,43 @@ const EDGE_WIDTH = { collapsing: 1.5 };
  * missing instead of its mark. Hazard faces (a spiked platform, D82) are
  * the hazard block's flickering pixels (block-fx.js), one material per
  * object so it can flare on its own: `userData.faces` and
- * `userData.flareCell` (for flareHazard()).
- * @param {{ at: number[], kind?: string, color: string, edges: string, mark: string, faces: string, tint: number, integrity?: number }} object
+ * `userData.flareCell` (for flareHazard()). A spiked shape (D82,
+ * spikes.js) has dark or hazard faces, its own outline and no mark.
+ * @param {{ at: number[], kind?: string, color: string, edges: string, mark: string, faces: string, shape?: string, tint: number, integrity?: number }} object
  */
-export function createObjectView({ at, kind, color, edges, mark, faces, tint, integrity }) {
+export function createObjectView({ at, kind, color, edges, mark, faces, shape = 'cube', tint, integrity }) {
   const group = new Group();
+  const spiked = shape === 'spiked';
+  const geometry = spiked ? SPIKED_BODY : UNIT_BOX;
 
   if (faces === 'hazard') {
     // The hazard shader places its pixels by instance, so this is a one-instance mesh.
     const material = hazardFaceMaterial(color);
-    const box = new InstancedMesh(UNIT_BOX, material, 1);
-    box.setMatrixAt(0, new Matrix4().makeTranslation(...at));
-    group.add(box);
+    const body = new InstancedMesh(geometry, material, 1);
+    body.setMatrixAt(0, new Matrix4().makeTranslation(...at));
+    group.add(body);
     group.userData.faces = material;
     group.userData.flareCell = [...at];
   } else {
-    const materials = faces === 'tinted' ? tintedFaceMaterials(color, tint) : faceMaterial();
-    const box = new Mesh(UNIT_BOX, materials);
-    box.position.set(...at);
-    group.add(box);
+    const materials = faces === 'tinted' && !spiked ? tintedFaceMaterials(color, tint) : faceMaterial();
+    const body = new Mesh(geometry, materials);
+    body.position.set(...at);
+    group.add(body);
   }
 
   const dashed = edges === 'dashed';
-  const outline = neonLines(blockEdges([at]), lineMaterial({ color, width: EDGE_WIDTH[kind] ?? 2.5, brightness: 1.6, dashed }));
+  const segments = spiked ? spikeSegments(at) : blockEdges([at]);
+  const width = spiked ? SPIKED_EDGE_WIDTH : EDGE_WIDTH[kind] ?? 2.5;
+  const outline = neonLines(segments, lineMaterial({ color, width, brightness: 1.6, dashed }));
   outline.renderOrder = 2;
   group.add(outline);
+  if (spiked) return group;
 
   // A destructible object shows its data bits with some missing, whatever its mark.
   const drawn = integrity !== undefined ? 'bitsBroken' : mark;
   if (drawn !== 'none') {
-    // Data bits and spikes are drawn pale, so they read over the faces
-    // (spikes over the hazard pixels, D82).
-    const pale = drawn === 'bits' || drawn === 'bitsBroken' || drawn === 'spikes';
-    const style = pale
+    const bits = drawn === 'bits' || drawn === 'bitsBroken';
+    const style = bits
       ? { color: new Color(color).lerp(new Color(0xffffff), BITS.whiten), width: BITS.width, brightness: BITS.brightness }
       : { color, width: 1.5, brightness: 1 };
     const marks = neonLines(markSegments(drawn, at), lineMaterial(style));

@@ -26,39 +26,12 @@ const PATTERNS = {
     [[u, v], [u + 0.25 * du, v]],
     [[u, v], [u, v + 0.25 * dv]],
   ]),
-  // Spikes (D82): a ring of teeth pointing in from the edges, for objects that hurt.
-  spikes: spikeTeeth(3, 0.12, 0.2),
   // Data bits: a full grid of small squares.
   bits: () => bitSquares(null),
   // Destructible objects (not a style: drawn for any object with integrity,
   // in place of its mark): the grid with bits missing, per face.
   bitsBroken: (face) => bitSquares(face),
 };
-
-/**
- * Teeth along the four sides of a face, pointing inwards: `count` per
- * side, their bases on a square `margin` in from the edges, `height` tall.
- */
-function spikeTeeth(count, margin, height) {
-  const segments = [];
-  const width = (1 - 2 * margin) / count;
-  // Each side as a start corner, the way along it and the way inwards.
-  const sides = [
-    [[margin, margin], [1, 0], [0, 1]],
-    [[1 - margin, margin], [0, 1], [-1, 0]],
-    [[1 - margin, 1 - margin], [-1, 0], [0, -1]],
-    [[margin, 1 - margin], [0, -1], [1, 0]],
-  ];
-  for (const [[u, v], [du, dv], [iu, iv]] of sides) {
-    for (let k = 0; k < count; k++) {
-      const base = [u + du * k * width, v + dv * k * width];
-      const next = [base[0] + du * width, base[1] + dv * width];
-      const tip = [base[0] + du * width / 2 + iu * height, base[1] + dv * width / 2 + iv * height];
-      segments.push([base, tip], [tip, next]);
-    }
-  }
-  return segments;
-}
 
 function square(margin) {
   const a = margin;
@@ -114,7 +87,7 @@ function bitSquares(face) {
 }
 
 /** Names of the marks an object type can choose (its `mark` style); `bitsBroken` is not one. */
-export const MARKS = ['none', 'inset', 'cross', 'brackets', 'bits', 'spikes'];
+export const MARKS = ['none', 'inset', 'cross', 'brackets', 'bits'];
 
 /**
  * Mark segments on all six faces of the unit cube at `cell`.

@@ -8,7 +8,7 @@ import { createObjectView } from '../src/render/room-view.js';
 import { CRATE, LIFT, eventTypes, gameData, hold, idle, roomFile } from './helpers.js';
 
 /** A spiked platform type (D82), like spiked_platform in defs.json. */
-const SPIKES = { ...LIFT, color: '#ff3b30', faces: 'hazard', mark: 'spikes', damage: 1 };
+const SPIKES = { ...LIFT, color: '#ff3b30', faces: 'hazard', shape: 'spiked', damage: 1 };
 
 const near = (a, b, eps = 1e-6) => Math.abs(a - b) < eps;
 
