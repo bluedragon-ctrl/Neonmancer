@@ -46,7 +46,7 @@ function boot() {
     app,
     autoQuality?.settings ?? { renderScale: Number(params.get('scale') ?? 1), multisampling: Number(params.get('msaa') ?? 4) },
   );
-  const hud = new Hud(renderer.hud, content.strings);
+  const hud = new Hud(renderer.hud, content.strings, { pauseColor: content.spells.pause?.color });
   const debug = new DebugOverlay();
   const readout = new DebugReadout(renderer.hud);
   renderer.scene.add(debug.group);
@@ -98,6 +98,10 @@ function boot() {
       if (event.type === 'zap') roomScene.sparks(event.bolt);
       if (event.type === 'ricochet') roomScene.sparks(event.bolt, event.pos, event.dir);
       if (event.type === 'deny') hud.denyEnergy();
+      if (event.type === 'cut' || event.type === 'paste') {
+        roomScene.clip(event);
+        debug.setRoom(game.room, game.objects, game.enemies);
+      }
     }
     readout.countTick();
   }
@@ -114,7 +118,7 @@ function boot() {
     lastFrame = time;
 
     editor.frame();
-    playerView.sync(alpha);
+    playerView.sync(alpha, dt);
     roomScene.update(alpha, dt);
     debug.sync(game, alpha);
     renderer.setFade(game.fadeLevel(alpha));
@@ -122,6 +126,7 @@ function boot() {
     // No energy bar before he knows a spell.
     hud.setEnergy(game.player.energy, game.player.maxEnergy, game.player.spell !== null);
     hud.setSpell(game.player.spell, game.player.spells.length);
+    hud.setClipboard(game.player.spell === 'cut_paste', game.player.clipboard);
     hud.setMovementMode(game.movementMode);
     hud.setHintWanted(wantsFullscreenHint(renderer.stageHeight, window.devicePixelRatio, !!document.fullscreenElement));
     hud.update(dt);

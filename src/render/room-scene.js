@@ -2,6 +2,8 @@
  * The views of the current room, rebuilt whenever the game rebuilds the room.
  * A respawn rebuilds the same room, where only the objects can have changed,
  * so the static views (floor, holes, walls, blocks, exits) are kept then.
+ * Cut & Paste (D87) takes objects and enemies out and puts new ones in
+ * while the room runs (clip()).
  */
 import { Group } from 'three';
 import { frameRoom } from './camera.js';
@@ -12,6 +14,8 @@ import { createHoleView } from './hole-view.js';
 import { disposeTree } from './neon.js';
 import { PickupView } from './pickup-view.js';
 import { flareHazard } from './block-fx.js';
+import { CLIP_FX, pasteGrow } from './clip-fx.js';
+import { clipBounds } from './clip-view.js';
 import { createRoomView } from './room-view.js';
 import { LockView, PlateView, TargetView } from './switch-view.js';
 import { ZapView } from './zap-view.js';
@@ -65,6 +69,12 @@ export class RoomScene {
      * material of a hazard block type, the object).
      */
     this.flare = null;
+    /** Views of things just cut away (D87), kept until the marquee has snapped onto them. */
+    this.leaving = [];
+    /** The view of a thing being pasted in, scaled as it grows in. */
+    this.growing = null;
+    /** @type {import('../game.js').Game|null} */
+    this.game = null;
   }
 
   /**
@@ -79,6 +89,9 @@ export class RoomScene {
   show(game, { rebuild = false, cutAbove = null } = {}) {
     const { room } = game;
     const { renderer } = this;
+    this.game = game;
+    this.leaving = [];
+    this.growing = null;
     const old = [this.objectGroup];
     // A spiked platform's flare goes with its old view.
     if (this.flare?.object) this.flare = null;
@@ -127,6 +140,7 @@ export class RoomScene {
   update(alpha, dt) {
     for (const view of this.objectViews) view.sync(alpha, dt);
     for (const view of this.enemyViews) view.sync(alpha, dt);
+    this.updateClip(alpha, dt);
     for (const view of this.pickupViews) view.sync(alpha, dt);
     this.zapView.sync(alpha, dt);
     for (const view of this.lockViews.values()) view.sync(dt);
@@ -140,6 +154,51 @@ export class RoomScene {
       this.flare.time += dt;
       this.flare.apply(this.flare.time);
     }
+  }
+
+  /**
+   * Cut & Paste (D87): a crate or an enemy was cut away or pasted in. A
+   * cut one's view stays until the marquee has snapped onto it; a pasted
+   * one gets a new view, which grows in (updateClip()).
+   * @param {import('../game.js').GameEvent} event 'cut' or 'paste'
+   */
+  clip({ type, object, enemy }) {
+    const list = object ? this.objectViews : this.enemyViews;
+    if (type === 'cut') {
+      const i = list.findIndex((view) => viewed(view) === (object ?? enemy));
+      if (i >= 0) this.leaving.push(...list.splice(i, 1));
+      return;
+    }
+    const view = object ? new OBJECT_VIEWS[object.kind](this.game, object) : new EnemyView(this.game, enemy);
+    list.push(view);
+    this.objectGroup.add(view.group);
+  }
+
+  /** Once per frame: views of things cut away go, a pasted one grows in round its middle. */
+  updateClip(alpha, dt) {
+    const clip = this.game?.player.clip;
+    const tick = clip ? clip.tick + alpha : 0;
+    this.leaving = this.leaving.filter((view) => {
+      if (clip?.mode === 'cut' && clip.target === viewed(view) && tick < CLIP_FX.snapTicks) {
+        view.sync(alpha, dt);
+        return true;
+      }
+      this.objectGroup.remove(view.group);
+      disposeTree(view.group);
+      return false;
+    });
+    const growing = clip?.mode === 'paste' ? [...this.objectViews, ...this.enemyViews].find((view) => viewed(view) === clip.target) : null;
+    if (this.growing && this.growing !== growing) {
+      this.growing.group.scale.setScalar(1);
+      this.growing.group.position.set(0, 0, 0);
+    }
+    this.growing = growing ?? null;
+    if (!growing) return;
+    // Scale the view (drawn at the origin) round the middle of what it shows.
+    const scale = Math.max(pasteGrow(tick), 1e-3);
+    const { center } = clipBounds(clip.target, growing instanceof EnemyView);
+    growing.group.scale.setScalar(scale);
+    growing.group.position.set(...center.map((v) => v * (1 - scale)));
   }
 
   /**
@@ -176,4 +235,9 @@ export class RoomScene {
     if (this.flare && this.flare.owner !== flare.owner) this.flare.apply(Infinity);
     this.flare = { ...flare, time: 0 };
   }
+}
+
+/** The crate or enemy a view shows (Cut & Paste takes only those). */
+function viewed(view) {
+  return view.pushable ?? view.enemy;
 }

@@ -2,7 +2,7 @@
  * The wizard: movement along the grid axes, jump, gravity, pushing,
  * integrity (health), invulnerability after a hit, energy (mana) for
  * spells, installing a spell, the Shield and Firewall rings, Blink and
- * Warp (a teleport, D86), death (in a hole, on a void block, or with no integrity left) and
+ * Warp (a teleport, D86), the Cut & Paste clipboard (D87), death (in a hole, on a void block, or with no integrity left) and
  * respawn. Pure logic, one call to update() per fixed tick. One Player lasts
  * the whole game: entering a room places him (enter()), so integrity and
  * energy carry over.
@@ -65,6 +65,8 @@ export const PLAYER = {
   shieldRadius: 0.55,
   /** Ticks the afterimage of a Blink or Warp lasts (D86); it doesn't hold him up. */
   warpTicks: 24,
+  /** Ticks the effect of a cut or a paste lasts (D87, render/clip-fx.js); it doesn't hold him up. */
+  clipTicks: 40,
 };
 
 
@@ -139,6 +141,19 @@ export class Player {
      * { spell, from, to, tick }, tick counting up to PLAYER.warpTicks.
      */
     this.warp = null;
+    /**
+     * What Cut & Paste holds (D87), or null: { kind: 'object', data,
+     * integrity } for a crate, { kind: 'enemy', data, integrity, provoked,
+     * frozen, facing } for a frozen enemy (its freeze paused), `data` its
+     * runtime room data. It goes with him from room to room; dying loses it.
+     */
+    this.clipboard = null;
+    /**
+     * The last cut or paste (D87) while its effect lasts, or null: { mode:
+     * 'cut' | 'paste', target, tick }, target the object or enemy cut or
+     * pasted, tick counting up to PLAYER.clipTicks.
+     */
+    this.clip = null;
     this.enter(pos, resetPoint);
   }
 
@@ -229,6 +244,8 @@ export class Player {
     this.vy = 0;
     this.install = null;
     this.shield = null;
+    this.clipboard = null;
+    this.clip = null;
   }
 
   /**
@@ -341,6 +358,7 @@ export class Player {
     /** Set when a push is due this tick: { body, dir: [dx, dz] }; the game carries it out. */
     this.pushIntent = null;
     this.warp = null;
+    this.clip = null;
   }
 
   /** Keep this tick's start for render interpolation (copied in place: no new array every tick). */
@@ -393,6 +411,7 @@ export class Player {
     if (this.shield && ++this.shield.tick >= this.shield.ticks) this.shield = null;
     if (this.install && ++this.install.tick > PLAYER.installTicks) this.install = null;
     if (this.warp && ++this.warp.tick > PLAYER.warpTicks) this.warp = null;
+    if (this.clip && ++this.clip.tick > PLAYER.clipTicks) this.clip = null;
 
     // Walk along the grid axes, or screen-relative (D38); diagonals are normalised.
     const directions = movementMode === 'screen' ? SCREEN_DIRECTIONS : GRID_DIRECTIONS;

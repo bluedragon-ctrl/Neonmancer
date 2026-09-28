@@ -1517,3 +1517,53 @@ on the way and hurting on a wall keep Blink worth casting once Warp is
 known: a risky attack dash against a safe way across. "Open space only"
 keeps walls meaningful for level design, and landing short of a stop
 never strands him inside something.
+
+### D87 — 2026-09-28 — Cut & Paste
+Settled with the author at the start of Phase 3 step 10:
+- **What it cuts:** crates (every pushable type, destructible ones too)
+  and frozen enemies, the thing right in front of him: the first whole
+  cell ahead of his box on his grid axis, **on his own level only** (the
+  author turned down reaching one level up). One with something resting
+  on it stays (like pushing, D4), so cutting never makes anything fall
+  out of a stack. Targets, plates, platforms, collapsing blocks and
+  awake enemies can't.
+- **One slot, taken along:** what he holds goes with him from room to
+  room and pastes into any room; dying loses it. The room it came from
+  resets as usual, so it is back there on re-entry while he still holds
+  the cut one: **copies are allowed.** Leaving it out while held was
+  turned down: it would mean remembering exactly which item was cut
+  while he travels through many rooms and back. It is a late-game spell
+  moving one object at a time, so room design can count with it.
+- **Pasting:** into the free cell in front of him at his feet (inside the
+  room, clear of blocks, bodies and pickups lying there); it falls from
+  there, and over a hole a crate plugs it. A pasted crate keeps its
+  integrity; a pasted enemy keeps its integrity, provocation, facing and
+  its freeze, **paused while held** (it pastes with the time it had
+  left), and its patrol path moves with it.
+- **Cost:** cut 20 energy, paste free (`pasteCost` 0), so he is never
+  stuck holding something with an empty bar. Nothing to cut or no room
+  to paste: it fizzles and costs nothing.
+- **Look,** picked in the showcase from three proposals (a marquee and a
+  pixel stream, a scan line wiping it out and printing it back, the
+  object shrinking and flying over his hat): the **marquee**: dashed
+  "marching ants" snap onto the object, which streams into his hands as
+  pixels; pasting streams them back into a marquee and it grows in.
+  **Aim marker:** while the spell is selected, a dim marquee marks what a
+  cut would take and a dashed ghost of what he holds where a paste would
+  go. **HUD:** a dashed slot after the spell tag while Cut & Paste is
+  selected, with an icon of what he holds (a cube in the crate's color,
+  an enemy glyph in its color, caged while frozen). Color **white**
+  `#f4f6ff` (over gold and coral), slot 6.
+- New test room **Clipboard** (Abyssal Buffer) west of Room 1, two rooms
+  from Boot Sector (D49): the disk by the entrance, a crate on a 1-high
+  ledge to cut standing on the ledge and paste as a step up a 2-high pillar (an
+  energy refill on top), a crate walled into a nook that can only be cut
+  out, a 2-wide pit to fill with both crates (an integrity refill
+  beyond), and a patrolling bug to freeze and move.
+**Why:** author's choices. Crates and frozen enemies keep Cut & Paste a
+puzzle spell with a combo (Pause, then move the platform), without
+letting it lift walls or switches. Carrying between rooms makes it
+stronger late in the game; copies keep the rules simple (rooms reset,
+the save holds no room state, D68). A free paste avoids a soft lock. The
+marquee is the classic "selection" and reads as editing the world; the
+aim marker makes adjacent-cell targeting clear with free movement.

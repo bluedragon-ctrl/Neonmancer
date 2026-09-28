@@ -125,7 +125,8 @@
     },
     "pause": { "slot": 3, "color": "#c9a2ff", "cost": 25, "cooldown": 0.25, "speed": 10, "duration": 5 },
     "blink": { "slot": 4, "color": "#9ef0ff", "cost": 15, "cooldown": 0.25, "range": 3, "damage": 1, "hitDamage": 2 },
-    "warp": { "slot": 5, "color": "#ff6ee8", "cost": 30, "cooldown": 0.25 }
+    "warp": { "slot": 5, "color": "#ff6ee8", "cost": 30, "cooldown": 0.25 },
+    "cut_paste": { "slot": 6, "color": "#f4f6ff", "cost": 20, "pasteCost": 0, "cooldown": 0.25 }
   },
   "pickups": {
     "disk_zap": { "kind": "disk", "spell": "zap" },
@@ -134,6 +135,7 @@
     "disk_pause": { "kind": "disk", "spell": "pause" },
     "disk_blink": { "kind": "disk", "spell": "blink" },
     "disk_warp": { "kind": "disk", "spell": "warp" },
+    "disk_cut_paste": { "kind": "disk", "spell": "cut_paste" },
     "refill_integrity": { "kind": "refill", "stat": "integrity", "amount": 3 },
     "refill_energy": { "kind": "refill", "stat": "energy", "amount": 30 }
   },

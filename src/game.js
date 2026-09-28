@@ -16,6 +16,7 @@ import { cellBox, groundBelow, overlaps, overlapsBox, surfaceBelow, touchedCell,
 import { arrival, exitAt } from './world/exits.js';
 import { Grid } from './world/grid.js';
 import { warpTarget } from './entities/warp.js';
+import { cutTarget, pasteCell } from './entities/clip.js';
 import { Progress, pickupBit } from './world/progress.js';
 import { buildRoom } from './world/room.js';
 
@@ -37,6 +38,8 @@ const SPELL_EFFECTS = {
   blink: (game, spell) => game.teleport('blink', spell),
   /** A teleport the way he aims, as far as the first wall or object, harmless (D86). */
   warp: (game, spell) => game.teleport('warp', spell),
+  /** Cut the crate or frozen enemy in front of him into his clipboard, or paste what it holds (D87). */
+  cut_paste: (game) => game.cutOrPaste(),
 };
 
 /** Terminal message for each way to die (Player.deathCause). */
@@ -60,19 +63,24 @@ export const TRANSITION = {
  * Something that happened, for views, the HUD and (later) sound. Returned
  * by Game.update() for the tick it happened in.
  * @typedef {object} GameEvent
- * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'|'warp'|'fizzle'} type
+ * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'|'warp'|'fizzle'|'cut'|'paste'} type
  * @property {string} [spell] the spell cast, failed, fizzled (nowhere to
  *   go, energy kept) or selected (cast, deny, fizzle, spell); the teleport (warp)
  * @property {number[]} [from] where a Blink or Warp started (warp)
  * @property {number[]} [to] where it ended (warp)
+ * @property {number[]} [cell] the cell a crate or enemy was cut from or
+ *   pasted into (cut, paste; the enemy's own cell, rounded down, for a
+ *   frozen one stopped mid-step)
  * @property {object} [object] the room object it happened to (push, plug,
  *   land of an object; shake, collapse and regrow of a collapsing block;
  *   hit by a spell, break of a destructible one; a switch going on or off;
+ *   a crate cut or pasted;
  *   a spiked platform that hurt the wizard: hurt)
  * @property {object} [enemy] the enemy it happened to (pop, land of an
  *   enemy, bounce off it, hit by a spell, a discharge or a bolt; it noticed
  *   the wizard or something hit it: alert; its charged attack: charge,
- *   discharge (a burst, an arc or bolts fired)) or that hurt the wizard (hurt)
+ *   discharge (a burst, an arc or bolts fired); cut or pasted) or that
+ *   hurt the wizard (hurt)
  * @property {Bolt} [bolt] the bolt that stopped (zap: the wizard's or an
  *   enemy's), where it is now, or that bounced (ricochet)
  * @property {number[]} [pos] where a bolt bounced (ricochet)
@@ -103,6 +111,8 @@ export class Game {
     this.events = [];
     /** The wizard, for the whole game; each room places him (enterRoom()). */
     this.player = new Player([0, 0, 0]);
+    /** Things pasted so far, for their ids. */
+    this.pastes = 0;
     this.learnSpells();
     this.enterRoom(start);
     /**
@@ -228,9 +238,11 @@ export class Game {
     const id = this.player.spell;
     if (!id) return;
     const spell = this.content.spells[id];
-    const result = this.player.cast(spell.cost, Math.round(spell.cooldown / DT));
+    // Pasting costs its own (D87): nothing by default.
+    const cost = this.player.clipboard && spell.pasteCost !== undefined ? spell.pasteCost : spell.cost;
+    const result = this.player.cast(cost, Math.round(spell.cooldown / DT));
     if (result === 'cast' && SPELL_EFFECTS[id](this, spell) === false) {
-      this.player.refund(spell.cost);
+      this.player.refund(cost);
       this.emit('fizzle', { spell: id });
       return;
     }
@@ -257,6 +269,71 @@ export class Game {
     this.emit('warp', { spell: id, from: player.warp.from, to: target.to });
     if (hitDamage > 0) for (const enemy of target.passed) this.hitEnemy(enemy, hitDamage, 'blink');
     if (target.cut && damage > 0) this.hurt(damage);
+    return true;
+  }
+
+  /**
+   * Cut & Paste (D87): with an empty clipboard, cut the crate or frozen
+   * enemy in front of him (entities/clip.js) out of the room into it
+   * ('cut'); holding something, paste it into the free cell in front of
+   * him ('paste'), in this room or another. A pasted crate keeps its
+   * integrity; a pasted enemy its integrity, provocation, facing and what
+   * was left of its freeze (paused while held), and its patrol path moves
+   * with it. Nothing to cut, or no room to paste: it fizzles.
+   * @returns {boolean} false if it fizzled
+   */
+  cutOrPaste() {
+    const { player } = this;
+    if (player.clipboard) return this.paste();
+    const target = cutTarget(this);
+    if (!target) return false;
+    const { object, enemy, cell } = target;
+    if (object) {
+      this.objects.splice(this.objects.indexOf(object), 1);
+      this.updateOrder.splice(this.updateOrder.indexOf(object), 1);
+      player.clipboard = { kind: 'object', data: object.object, integrity: object.integrity };
+    } else {
+      this.enemies.splice(this.enemies.indexOf(enemy), 1);
+      const { data, integrity, provoked, frozen, facing } = enemy;
+      player.clipboard = { kind: 'enemy', data, integrity, provoked, frozen: { ...frozen }, facing };
+    }
+    player.clip = { mode: 'cut', target: object ?? enemy, tick: 0 };
+    this.refreshBodies();
+    this.emit('cut', { ...(object ? { object } : { enemy }), cell });
+    return true;
+  }
+
+  /**
+   * Paste what the wizard holds into the free cell in front of him (D87),
+   * as a new object or enemy of this room; it falls from there. See
+   * cutOrPaste().
+   * @returns {boolean} false if there is no room (it fizzled)
+   */
+  paste() {
+    const { player } = this;
+    const cell = pasteCell(this);
+    if (!cell) return false;
+    const held = player.clipboard;
+    player.clipboard = null;
+    const id = `${held.data.id.split('~')[0]}~${++this.pastes}`;
+    let target;
+    if (held.kind === 'object') {
+      target = createObject({ ...held.data, id, at: cell });
+      target.integrity = held.integrity;
+      this.objects.push(target);
+      this.updateOrder.push(target);
+      this.emit('paste', { object: target, cell });
+    } else {
+      const { path } = held.data;
+      const offset = cell.map((v, i) => v - held.data.at[i]);
+      const moved = path && { ...path, points: path.points.map((point) => point.map((v, i) => v + offset[i])) };
+      target = new Enemy({ ...held.data, id, at: cell, ...(moved && { path: moved }) });
+      Object.assign(target, { integrity: held.integrity, provoked: held.provoked, frozen: { ...held.frozen }, facing: held.facing });
+      this.enemies.push(target);
+      this.emit('paste', { enemy: target, cell });
+    }
+    player.clip = { mode: 'paste', target, tick: 0 };
+    this.refreshBodies();
     return true;
   }
 
@@ -520,8 +597,9 @@ export class Game {
     }
     if (!player.dead && input.pressed('cast')) this.castSpell();
 
+    // (Not an object he has just cut away.)
     const intent = player.pushIntent;
-    if (intent && intent.body.push(intent.dir, this)) this.emit('push', { object: intent.body });
+    if (intent && this.objects.includes(intent.body) && intent.body.push(intent.dir, this)) this.emit('push', { object: intent.body });
 
     // Lower objects first, so a stack settles in one tick.
     this.updateOrder.sort((a, b) => a.pos[1] - b.pos[1]);

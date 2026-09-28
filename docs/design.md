@@ -479,7 +479,8 @@ enemies).
   `?asset=install`.
 - **Spell colors:** each spell has a `color` in `defs.json` (Zap cyan
   `#00f0ff`, Shield neon blue `#3b82ff`, Firewall ember `#ff5a14`, Pause
-  lavender `#c9a2ff`, Blink pale cyan `#9ef0ff`, Warp pink `#ff6ee8`):
+  lavender `#c9a2ff`, Blink pale cyan `#9ef0ff`, Warp pink `#ff6ee8`,
+  Cut & Paste white `#f4f6ff`):
   its disk's lit bit, its
   install animation and its banner.
 - **Found before:** a permanent pickup whose bit is set shows as a ghost
@@ -670,6 +671,51 @@ Path (slot 4), Warp from one further in (slot 5).
   is `WARP_FX` in `src/render/warp-fx.js`; showcase
   `?asset=blink,warp,disk-blink,disk-warp`.
 
+## Cut & Paste
+
+The seventh spell (D87), from a data disk by the entrance of Clipboard
+(slot 6).
+
+- **Where:** the cell right in front of him: the first whole cell ahead
+  of his box along the grid axis he aims on (the larger part of his aim,
+  x on a tie), in his column across it, at the height of his feet
+  (rounded to the nearest level mid-jump). `frontCell()`, `cutTarget()`
+  and `pasteCell()` in `src/entities/clip.js`.
+- **Cut** (E, clipboard empty; 20 energy): takes the crate (any pushable
+  at rest) or the frozen enemy in that cell, on his own level only, out
+  of the room into his clipboard. One with something resting on it
+  stays (D4): cutting never makes anything fall. Nothing to cut: it fizzles
+  (energy back, no cooldown).
+- **Paste** (E, holding something; free, `pasteCost`): puts it into that
+  cell, if it is inside the room and clear of blocks, bodies (objects,
+  enemies, him) and pickups lying there; else it fizzles and he keeps it.
+  It falls from there: over a hole a crate plugs it, an enemy pops. A
+  crate keeps its integrity; an enemy its integrity, provocation, facing
+  and what was left of its freeze (paused while held), and its patrol
+  path moves with it (translated by how far it moved). A pasted thing is
+  new to the room: its id is the old one with `~n`.
+- **Carried:** what he holds goes with him through exits and pastes into
+  any room. Dying loses it. The room it was cut from resets as usual, so
+  it is back there on re-entry: copies are allowed (D87).
+- **Look:** a bright dashed marquee in white (marching ants) snaps onto
+  what he cuts (from 1.35 times its size, 8 ticks); the object shows
+  until then, then streams into his hands as pixels in its color and
+  white (22 ticks). Pasting streams the pixels from his hands into a
+  marquee on the cell, and the object grows in with a small overshoot.
+  The effect lasts `PLAYER.clipTicks` (40) and doesn't hold him up.
+- **Aim marker:** while Cut & Paste is selected (alive, no transition, no
+  effect running), a dim marquee marks what a cut would take, or a
+  dashed ghost of what he holds (its size, its color) marks where a paste
+  would go; nothing shows without a target.
+- **HUD:** while Cut & Paste is selected, a dashed slot after the spell
+  tag: empty, or an icon of what he holds (an isometric cube in the
+  crate's color; an enemy's round body with eyes in its color, in the
+  Pause cage's corner brackets while frozen).
+- Tuning: `defs.json` `spells.cut_paste` (cost, pasteCost, cooldown,
+  color); the look is `CLIP_FX` in `src/render/clip-fx.js` with
+  `src/render/clip-view.js`, the icons `src/ui/clip-icon.js`; showcase
+  `?asset=cut-paste,disk-cut-paste`.
+
 ## X-ray outline
 
 The parts of the wizard hidden behind blocks, crates, platforms or enemies
@@ -843,6 +889,7 @@ The world map tool flags any room further out.
 | `crawl_space` (Phase 2) | 12×12 | west doorway → Volatile Memory; east (front) → Boot Sector | bugs: a sentry crossing the entrance lane, one walking off a ledge and patrolling the floor below, a solid one shoving along a lane with a crate to push in its way, a provoked one circling a pillar, a peaceful stationary one to bounce up to a 2-high ledge, a solid peaceful one along the front edge to ride; Zap targets: the provoked one turns hostile when hit, and an amber stationary one with 4 integrity; an energy refill near the entrance (Phase 3) |
 | `quarantine` (Phase 3) | 10×10, Glitchmire | east doorway → Boot Sector; west doorway → Scheduler | chasers (step 5, D78): a virus at the back that chases and bursts, a sentinel in the far corner that keeps its distance and fires arcs, a stationary bug with a burst guarding an integrity refill; a 2-high pillar to hide behind, a trench of holes the chasers won't cross, a crate for cover and a 1-high ledge; the Pause data disk on the pillar (step 8, D85), reached by pushing the crate against it |
 | `fast_path` (Phase 3) | 12×12, Frostbyte Wastes | south (front) → Room 1 | Blink and Warp (step 9, D86): the Blink disk by the entrance, a 2-wide pit across the room to blink over, a bug patrolling the lane beyond (blink through it) past a 2-high pillar to blink into, the Warp disk at the lane's end, and a 6-wide pit only Warp crosses to an energy refill against the side wall |
+| `clipboard` (Phase 3) | 12×12, Abyssal Buffer | east doorway → Room 1 | Cut & Paste (step 10, D87): the disk by the entrance; a crate on a 2-long 1-high ledge, cut standing on the ledge and pasted on the floor as a step up a 2-high pillar with an energy refill on top; a crate walled into a nook, only cut out; a 2-wide pit to fill with both crates, an integrity refill beyond; a patrolling bug to freeze and move |
 | `scheduler` (Phase 3) | 10×10, Abyssal Buffer | east doorway → Quarantine | the cron, worm and crawler looks (D83): a tower in the middle firing four ways, placed off the entrance's axes; a worm patrolling the back row across the tower's line of fire (its bolts can pop it); a crawler chasing from the far corner; pillars, a low wall and a crate to hide behind, an integrity refill in the far corner, and the Firewall data disk on the low wall (step 7, D84) |
 
 ### Room design checklist
@@ -1232,7 +1279,7 @@ the author; the answers are recorded as decisions before the code lands.
 | 7 | `feat/firewall-spell` | The Shield blocks bolts, arcs and bursts (absorbing bolts at its ring, which flares); Firewall: a ring of flames that also blocks touch and burns enemies touching it (D84). Its disk lies in Scheduler. |
 | 8 | `feat/pause-spell` | Pause: a bolt that freezes the enemy it hits for 5 s; a frozen enemy is harmless and a solid platform (the solid-enemy rules, D51), still hittable; a `pausable` template field (D85). Its disk lies in Quarantine. |
 | 9 | `feat/warp-spell` | Two spells (D86): Blink, a 3-unit dash through open space that hits enemies on the way and hurts on a wall; Warp, a teleport as far as the first wall. Both disks lie in the new test room Fast Path. |
-| 10 | `feat/cut-paste-spell` | Cut & Paste: cut one object into a one-slot inventory, paste it at a valid grid cell in front of the wizard. |
+| 10 | `feat/cut-paste-spell` | Cut & Paste (D87): cut a crate or a frozen enemy into a one-slot clipboard that goes from room to room, paste it into the free cell in front of the wizard; the disk lies in the new test room Clipboard. |
 | 11 | `docs/spell-roster` | Discussion step, docs only: the roster towards 16 spells (D68) — new spells, some letting the wizard skip easier rooms, and upgrades of the basic ones — and the buff items, now that the first five spells can be played; stronger ones should let the wizard speedrun simple rooms or solve them differently (D67). Accepted spells get their own steps (in this phase or later) and CLAUDE.md §5 is updated; the result is a decision. |
 | 12 | `feat/buff-items` | The first buff items from the roster: pickups that raise the wizard's maximum integrity or energy, or his jump height, kept in `Progress`; HUD bars grow with them. |
 | 13 | `feat/score-and-bits` | Starts with a short discussion (below). Then: bonus bits (up to 4 slots per room), secrets, score for bits, enemies, secrets and pickups, floating score popups, HUD score, the "all bits collected" room bonus, local high score. |
@@ -1247,9 +1294,7 @@ Open questions, settled at the start of their step:
 - **7 Firewall:** settled (D84).
 - **8 Pause:** settled (D85).
 - **9 Warp:** settled (D86).
-- **10 Cut & Paste:** what can be cut (objects only, enemies, a crate with
-  something on it); does the cut object leave the room with the wizard or
-  go back on reset?
+- **10 Cut & Paste:** settled (D87).
 - **11 Roster:** which spells and upgrades (up to 16 in all), which buff
   items and how many of each, and the order they appear in the world.
 - **12 Buff items:** how much each raises (e.g. +2 integrity, +2 energy);

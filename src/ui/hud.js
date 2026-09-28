@@ -1,6 +1,6 @@
 /**
  * The HUD: a DOM overlay on the stage with the integrity bar, the energy
- * bar with the selected spell under it, the room name banner, terminal messages and the fullscreen hint. It only shows state;
+ * bar with the selected spell under it (and the Cut & Paste clipboard), the room name banner, terminal messages and the fullscreen hint. It only shows state;
  * main.js feeds it every frame. Sizes use --u (one pixel at 1080p), so it
  * scales with the stage. All text comes from data/strings.json; terminal
  * messages and banners arrive through say() and announce()
@@ -8,6 +8,7 @@
  */
 import { takeAnnouncements, takeMessages } from '../core/messages.js';
 import { GAME_VERSION } from '../core/version.js';
+import { clipIcon } from './clip-icon.js';
 import { EnergyBar } from './energy-bar.js';
 import { HINT_SECONDS } from './fullscreen.js';
 import { Terminal, bannerState } from './terminal.js';
@@ -21,7 +22,7 @@ export class Hud {
    * @param {HTMLElement} root the renderer's HUD overlay
    * @param {Record<string, string>} strings
    */
-  constructor(root, strings) {
+  constructor(root, strings, { pauseColor = '#c9a2ff' } = {}) {
     this.strings = strings;
     root.insertAdjacentHTML(
       'beforeend',
@@ -47,12 +48,16 @@ export class Hud {
     this.movementTag = find('.hud-movement');
     this.movementMode = null;
     this.energy = new EnergyBar(root, this.text('hud.energy'));
-    root.insertAdjacentHTML('beforeend', '<div class="hud-spell"><span class="hud-spell-name"></span><span class="hud-spell-key"></span></div>');
+    root.insertAdjacentHTML('beforeend', '<div class="hud-spell"><span class="hud-spell-name"></span><span class="hud-clip" hidden></span><span class="hud-spell-key"></span></div>');
     this.spellBox = find('.hud-spell');
     this.spellName = find('.hud-spell-name');
     this.spellKey = find('.hud-spell-key');
     this.spellKey.textContent = this.text('hud.spellSwitch');
     this.spell = null;
+    this.clipBox = find('.hud-clip');
+    /** What the clipboard slot shows (clipIcon() markup), or null while it is hidden. */
+    this.clipShown = null;
+    this.pauseColor = pauseColor;
 
     this.cells = [];
     this.integrity = null;
@@ -128,6 +133,20 @@ export class Hud {
     this.spellBox.classList.remove('switched');
     void this.spellBox.offsetWidth; // restart the animation
     this.spellBox.classList.add('switched');
+  }
+
+  /**
+   * The Cut & Paste clipboard (D87): a slot after the spell tag while the
+   * spell is selected, empty or with an icon of what he holds.
+   * @param {boolean} shown whether Cut & Paste is selected
+   * @param {object|null} held Player.clipboard
+   */
+  setClipboard(shown, held) {
+    const icon = shown ? clipIcon(held, this.pauseColor) : null;
+    if (icon === this.clipShown) return;
+    this.clipShown = icon;
+    this.clipBox.hidden = icon === null;
+    this.clipBox.innerHTML = icon ?? '';
   }
 
   /** A cast failed for lack of energy: flash the energy bar. */

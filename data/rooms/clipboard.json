@@ -1,0 +1,27 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "clipboard",
+  "name": "Clipboard",
+  "biome": "abyssal_buffer",
+  "size": [12, 4, 12],
+  "spawn": [10.5, 0, 5.5],
+  "exits": [{ "id": "east", "side": "+x", "at": 5 }],
+  "blocks": [
+    { "at": [1, 0, 1], "to": [2, 1, 2] },
+    { "at": [4, 0, 1], "to": [5, 0, 1] },
+    { "at": [5, 0, 9], "to": [5, 0, 11] },
+    { "at": [7, 0, 9], "to": [7, 0, 11] }
+  ],
+  "holes": [{ "at": [8, 8], "to": [11, 9] }],
+  "objects": [
+    { "id": "ledge_crate", "type": "crate", "at": [4, 1, 1] },
+    { "id": "nook_crate", "type": "crate", "at": [6, 0, 11] }
+  ],
+  "enemies": [{ "id": "bug", "template": "bug", "at": [1, 0, 6], "path": { "points": [[4, 0, 6]], "pause": 0.4 } }],
+  "pickups": [
+    { "id": "disk_cut_paste", "type": "disk_cut_paste", "at": [9, 0, 3] },
+    { "id": "energy", "type": "refill_energy", "at": [1, 2, 1] },
+    { "id": "integrity", "type": "refill_integrity", "at": [10, 0, 11] }
+  ]
+}
