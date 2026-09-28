@@ -55,7 +55,7 @@ export const ENEMY_NUMBERS = {
  * wizard can do with it. Each with its tooltip.
  */
 export const ENEMY_ROWS = [
-  ['look', 'Its body: bug, virus or sentinel. Any look goes with any movement and attack.'],
+  ['look', 'Its body: bug, virus, sentinel, cron, worm or crawler. Any look goes with any movement and attack.'],
   ['color', 'Body color, #rrggbb (the eyes show hostility).'],
   ['movement', 'patrol: walks its path; stationary: stays put; chase: goes after the wizard it sees.'],
   ['speed', 'Walking speed, units per second.'],

@@ -12,7 +12,8 @@
     ["volatile_memory.north", "boot_sector.south"],
     ["volatile_memory.south", "stack_yard.north"],
     ["room_1.south", "boot_sector.north"],
-    ["boot_sector.west", "quarantine.east"]
+    ["boot_sector.west", "quarantine.east"],
+    ["quarantine.west", "scheduler.east"]
   ],
   "positions": {
     "boot_sector": [-1, -1],
@@ -24,6 +25,7 @@
     "volatile_memory": [-1, 0],
     "relay_station": [0, 0],
     "room_1": [-1, -2],
-    "quarantine": [-2, -1]
+    "quarantine": [-2, -1],
+    "scheduler": [-3, -1]
   }
 }

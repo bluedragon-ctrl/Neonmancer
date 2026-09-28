@@ -1,7 +1,8 @@
 /**
- * What every enemy model shares (bug.js, virus.js, sentinel.js): the eye
- * colors by mood, the eye geometry, how bright the eyes glow, and the
- * burst of pixels an enemy pops into. Pure functions are tested.
+ * What every enemy model shares (bug.js, virus.js, sentinel.js, cron.js,
+ * worm.js, crawler.js): the eye colors by mood, the eye geometry, how
+ * bright the eyes glow, and the burst of pixels an enemy pops into. Pure
+ * functions are tested.
  *
  * A model keeps its eye material in `userData.eyes`, its mood in
  * `userData.mood` and its calm eye brightness in `userData.glow`, so one

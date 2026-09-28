@@ -182,6 +182,8 @@ can always leave it again the way he came.
 - **Viruses** — chase on line of sight, give up when it breaks; a
   close-range electric burst
 - **Sentinels** — keep their distance and fire a long aimed bolt (D78)
+- **Worms** and **Crawlers** — a patroller and a chaser that bite on
+  touch; **towers** (the cron look) fire bolts four ways (D83)
 - **Pop-ups** — stationary, fire slow projectiles
 - **Firewall Wardens** — tougher guardians blocking key rooms
 

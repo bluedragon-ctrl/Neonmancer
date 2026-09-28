@@ -20,6 +20,7 @@ import { PLAYER_HITBOX } from '../src/core/rules.js';
 import { COLLAPSING } from '../src/entities/collapsing.js';
 import {
   CollapsingView,
+  ENEMY_MODELS,
   createDerezPixels,
   createPixelBurst,
   createDropShadow,
@@ -107,8 +108,9 @@ const ALL_ASSETS = [
   // The bolt attack (D80): a shooter (a stationary bug) charging and
   // firing a slow shot in its color at the wizard.
   { label: 'bug-bolt', group: 'bugs', span: 6, spin: false, build: buildBoltShot },
-  // Bolt patterns and bounces (D81): a tower firing four ways, a
-  // ricochet glancing a bolt off a crate into the wizard.
+  // Bolt patterns and bounces (D81): a tower (the cron look, D83) firing
+  // four ways, hitting the wizard on an axis, then missing him in a corner;
+  // a ricochet glancing a bolt off a crate into the wizard.
   { label: 'bolt-cross', group: 'bolts', span: 6, spin: false, build: buildBoltCross },
   { label: 'bolt-ricochet', group: 'bolts', span: 6, spin: false, build: buildBoltRicochet },
   // Viruses (Phase 3 step 5, D78): gliding calm, then after the wizard
@@ -122,6 +124,16 @@ const ALL_ASSETS = [
   { label: 'sentinel', group: 'sentinels', build: buildSentinel },
   { label: 'sentinel-attack', group: 'sentinels', span: 7, spin: false, build: buildSentinelAttack },
   { label: 'sentinel-pop', group: 'sentinels', build: buildSentinelPop },
+  // Cron, worm and crawler looks (D83): a tower (the cron) calm, then after
+  // the wizard and charging, its dial holding the grid; a worm (patrol)
+  // inching along; a crawler (chase) on six legs; calm, then after the
+  // wizard (faster); their pops.
+  { label: 'cron', group: 'crons', build: buildCron },
+  { label: 'cron-pop', group: 'crons', build: () => buildEnemyPop('tower') },
+  { label: 'worm', group: 'worms', build: () => buildWalker('worm') },
+  { label: 'worm-pop', group: 'worms', build: () => buildEnemyPop('worm') },
+  { label: 'crawler', group: 'crawlers', build: () => buildWalker('crawler') },
+  { label: 'crawler-pop', group: 'crawlers', build: () => buildEnemyPop('crawler') },
   // Zap (step 6): the bolt close up, two hits on a bug (the second pops
   // it), and rapid fire at a crate until the energy bar runs dry.
   { label: 'zap-bolt', group: 'zap', build: buildZapBolt },
@@ -874,28 +886,6 @@ function buildBoltShot() {
 }
 
 /**
- * The four-way bolt (D81) in a loop: a tower (defs.json, a stationary
- * sentinel) charges, then fires four level bolts along the grid axes; the
- * one along +z hits the wizard, the others spark out 2.4 away (walls).
- */
-function buildBoltCross() {
-  const { color, attackColor, attackCharge, boltSpeed } = enemyValues('tower');
-  const tower = createSentinel(color);
-  const wizard = createWizard();
-  wizard.position.set(0, 0, 2.2);
-  wizard.rotation.y = Math.PI;
-  const asset = new Group().add(tower, wizard);
-  const eyes = [0, ENEMY.eyeHeight, 0];
-  const routes = [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]].map((dir) => {
-    const reach = dir[2] === 1 ? 2.2 - PLAYER_HITBOX[2] / 2 - BOLT.size / 2 : 2.4;
-    return [BOLT.reach, reach].map((d) => eyes.map((e, k) => e + dir[k] * d));
-  });
-  const runs = boltRuns(asset, attackColor, routes, boltSpeed);
-  loopBoltAttack(asset, { model: tower, animate: animateSentinel, markHeight: SENTINEL.markHeight, charge: Math.round(attackCharge * 60), runs, wizard, hit: runs.ticks[2] });
-  return asset;
-}
-
-/**
  * The bouncing bolt (D81) in a loop: a ricochet (defs.json, a virus)
  * fires a level shot at a crate, which it glances off (sparks) into the
  * wizard beside it.
@@ -922,6 +912,114 @@ function buildBoltRicochet() {
   wizard.position.z = stop[2];
   const runs = boltRuns(asset, attackColor, [[from, bounce, stop]], boltSpeed);
   loopBoltAttack(asset, { model: virus, animate: animateVirus, markHeight: VIRUS.markHeight, charge: Math.round(attackCharge * 60), runs, wizard, hit: runs.ticks[0] });
+  return asset;
+}
+
+/**
+ * The four-way bolt (D81) in a loop, two shots: a tower (defs.json, a
+ * stationary cron, D83) it charges, then fires four level bolts along the
+ * grid axes out of its dial's emitters; the first time the wizard stands
+ * on its +z axis and is hit, the second time he stands off the axes (a
+ * safe corner) and the bolts spark out 2.4 away (walls) past him.
+ */
+function buildBoltCross() {
+  const { look, color, attackColor, attackCharge, boltSpeed } = enemyValues('tower');
+  const model = ENEMY_MODELS[look];
+  const cron = model.create(color);
+  const wizard = createWizard();
+  const asset = new Group().add(cron, wizard);
+  const eyes = [0, ENEMY.eyeHeight, 0];
+  const axes = [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]];
+  const reach = (dir) => (dir[2] === 1 ? 2 - PLAYER_HITBOX[2] / 2 - BOLT.size / 2 : 2.4);
+  const hitting = boltRuns(asset, attackColor, axes.map((dir) => [BOLT.reach, reach(dir)].map((d) => eyes.map((e, k) => e + dir[k] * d))), boltSpeed);
+  const missing = boltRuns(asset, attackColor, axes.map((dir) => [BOLT.reach, 2.4].map((d) => eyes.map((e, k) => e + dir[k] * d))), boltSpeed);
+  const charge = Math.round(attackCharge * 60);
+  const shot = Math.ceil(charge + Math.max(...missing.ticks) + 50);
+  const mark = addMark(asset, model.markHeight);
+  let tick = 0;
+  asset.userData.update = (dt, time) => {
+    tick = (tick + dt * 60) % (shot * 2);
+    const second = tick >= shot;
+    const local = tick % shot;
+    // On the +z axis, then stepped aside into the corner between +z and +x.
+    const at = second ? [1.4, 0, 1.4] : [0, 0, 2];
+    wizard.position.set(...at);
+    wizard.rotation.y = Math.atan2(-at[0], -at[2]);
+    // The pedestal turns to watch him; the dial holds the grid.
+    cron.rotation.y = Math.atan2(at[0], at[2]);
+    const attack = local < charge + ENEMY.dischargeTicks ? local : null;
+    model.animate(cron, { time, alert: 1, attack, charge });
+    showGlow(cron, attack, charge);
+    mark(1, time);
+    const flown = local - charge;
+    hitting.update(second ? -1 : flown);
+    missing.update(second ? flown : -1);
+    showWizardHit(wizard, !second && flown >= hitting.ticks[2] ? flown - hitting.ticks[2] : null);
+  };
+  return asset;
+}
+
+/**
+ * A tower (defs.json, the cron look) alone, calm, then after the wizard
+ * (a faster hand), charging and firing without bolts, in a loop.
+ */
+function buildCron() {
+  const { look, color, attackCharge } = enemyValues('tower');
+  const model = ENEMY_MODELS[look];
+  const cron = model.create(color);
+  const asset = new Group().add(cron);
+  const mark = addMark(asset, model.markHeight);
+  const charge = Math.round(attackCharge * 60);
+  asset.userData.update = (dt, time) => {
+    const alert = alertAt(time);
+    // It charges and fires while after the wizard: from 3.5 s into the 6 s loop.
+    const tick = ((time % 6) - 3.5) * 60;
+    const attack = tick >= 0 && tick < charge + ENEMY.dischargeTicks ? tick : null;
+    model.animate(cron, { time, alert, attack, charge });
+    showGlow(cron, attack, charge);
+    mark(alert, time);
+  };
+  return asset;
+}
+
+/**
+ * An enemy of type `type` (defs.json) walking in place at its speed, calm,
+ * then after the wizard (at its chase speed), in a loop.
+ * @param {string} type
+ */
+function buildWalker(type) {
+  const { look, color, speed, chaseSpeed = speed } = enemyValues(type);
+  const model = ENEMY_MODELS[look];
+  const walker = model.create(color);
+  const asset = new Group().add(walker);
+  const mark = addMark(asset, model.markHeight);
+  let walked = 0;
+  asset.userData.update = (dt, time) => {
+    const alert = alertAt(time);
+    walked += dt * (speed + (chaseSpeed - speed) * alert);
+    model.animate(walker, { state: 'walk', walked, time, alert });
+    mark(alert, time);
+  };
+  return asset;
+}
+
+/**
+ * An enemy of type `type` (defs.json) popping into pixels, in a loop.
+ * @param {string} type
+ */
+function buildEnemyPop(type) {
+  const { look, color } = enemyValues(type);
+  const model = ENEMY_MODELS[look];
+  const enemy = model.create(color);
+  const pixels = createPixelBurst(model.pop.pixels, model.pop.pixelSize, [color, 0xffffff]);
+  const asset = new Group().add(enemy, pixels);
+  let tick = 0;
+  asset.userData.update = (dt, time) => {
+    tick = (tick + dt * 60) % 90;
+    enemy.visible = tick < 40;
+    model.animate(enemy, { time });
+    placePixels(pixels, tick >= 40 ? model.popPixels(tick - 40) : [], [0, 0, 0]);
+  };
   return asset;
 }
 

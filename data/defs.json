@@ -55,6 +55,28 @@
       "attackCharge": 0.7,
       "attackCooldown": 2
     },
+    "worm": {
+      "look": "worm",
+      "movement": "patrol",
+      "attack": "touch",
+      "hostility": "hostile",
+      "integrity": 2,
+      "damage": 1,
+      "speed": 2,
+      "color": "#4f7dff"
+    },
+    "crawler": {
+      "look": "crawler",
+      "movement": "chase",
+      "attack": "touch",
+      "hostility": "hostile",
+      "aggroRange": 5,
+      "integrity": 2,
+      "damage": 1,
+      "speed": 2,
+      "chaseSpeed": 3.5,
+      "color": "#3dffd0"
+    },
     "shooter": {
       "extends": "bug",
       "movement": "stationary",
@@ -67,6 +89,8 @@
     },
     "tower": {
       "extends": "sentinel",
+      "look": "cron",
+      "color": "#ff4f7a",
       "movement": "stationary",
       "attack": "bolt",
       "boltPattern": "cross",

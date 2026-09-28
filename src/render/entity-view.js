@@ -24,6 +24,9 @@ import { BUG_MODEL } from './bug.js';
 import { chargeGlow, createDischarge, dischargeLook, placeDischarge } from './discharge.js';
 import { eyeMood } from './enemy-look.js';
 import { SENTINEL_MODEL } from './sentinel.js';
+import { CRON_MODEL } from './cron.js';
+import { WORM_MODEL } from './worm.js';
+import { CRAWLER_MODEL } from './crawler.js';
 import { VIRUS_MODEL } from './virus.js';
 import { hitJolt } from './break-fx.js';
 import { COLLAPSE_FX, COLLAPSE_PIXELS, collapseLook, collapsePixels } from './collapse-fx.js';
@@ -366,7 +369,14 @@ export function createRails(track, color) {
  * floats and where an arc leaves it. A model has its own flash uniforms
  * (`userData.flash`, holo.js) for spell hits and its charge glow.
  */
-export const ENEMY_MODELS = { bug: BUG_MODEL, virus: VIRUS_MODEL, sentinel: SENTINEL_MODEL };
+export const ENEMY_MODELS = {
+  bug: BUG_MODEL,
+  virus: VIRUS_MODEL,
+  sentinel: SENTINEL_MODEL,
+  cron: CRON_MODEL,
+  worm: WORM_MODEL,
+  crawler: CRAWLER_MODEL,
+};
 
 /** How fast its after-the-wizard look (faster bits, flaring eyes) comes and goes, per second. */
 const ALERT_RATE = 6;

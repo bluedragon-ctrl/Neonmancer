@@ -98,6 +98,9 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/bug.js` | Bug model (ball, eyes colored by mood), hop pose, bounce squash, pop pixels, `BUG` tuning (pure parts tested); `BUG_MODEL` for `EnemyView` |
 | `render/virus.js` | Virus model (D78): sharp tipped cube, orbiting bits, glide, charge pose, pop pixels, `VIRUS` tuning; `VIRUS_MODEL` |
 | `render/sentinel.js` | Sentinel model (D78): sharp octahedron, visor eye, shards gathering like a barrel, recoil, pop pixels, `SENTINEL` tuning; `SENTINEL_MODEL` |
+| `render/cron.js` | Cron model (D83), the tower's look: hex pedestal, bell, a dial holding the grid axes with four emitters where a cross's bolts leave, sweeping hand, slam, `CRON` tuning; `CRON_MODEL` |
+| `render/worm.js` | Worm model (D83): head with antennae dragging a tail of balls, inching hump and wiggle (`wormSpine()`), rearing up, `WORM` tuning; `WORM_MODEL` |
+| `render/crawler.js` | Crawler model (D83): six-legged spider, tripod gait (`crawlerFoot()`, `placeLimb()`), crouch and pawing, `CRAWLER` tuning; `CRAWLER_MODEL` |
 | `render/discharge.js` | Discharge lightning (D78): charge timing and glow (`dischargeLook()`, `chargeGlow()`), burst and arc zigzags (pure, tested), the aim line, `DISCHARGE` tuning |
 | `render/alert-mark.js` | The red "!" over an enemy that noticed the wizard |
 | `render/hash.js` | Fixed pseudo-random numbers for pixel bursts (pure) |
