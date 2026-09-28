@@ -16,6 +16,7 @@ import strings from '../data/strings.json';
 import { OBJECT_STYLE_DEFAULTS, resolveBlockTypes, withExitDefaults } from '../src/data/room-data.js';
 import { VIEW_HEIGHT, frameRoom } from '../src/render/camera.js';
 import { PLAYER } from '../src/entities/player.js';
+import { PLAYER_HITBOX } from '../src/core/rules.js';
 import { COLLAPSING } from '../src/entities/collapsing.js';
 import {
   CollapsingView,
@@ -41,10 +42,11 @@ import { createWizard } from '../src/render/wizard.js';
 import { addXray } from '../src/render/xray.js';
 import { BUG, BUG_MODEL, animateBug, createBug, popPixels, setEyeMood } from '../src/render/bug.js';
 import { VIRUS, VIRUS_MIDDLE, animateVirus, createVirus, virusPopPixels } from '../src/render/virus.js';
-import { SENTINEL, SENTINEL_EYE, animateSentinel, createSentinel, sentinelPopPixels } from '../src/render/sentinel.js';
+import { SENTINEL, SENTINEL_MODEL, animateSentinel, createSentinel, sentinelPopPixels } from '../src/render/sentinel.js';
 import { DISCHARGE, chargeGlow, createDischarge, dischargeLook, placeDischarge } from '../src/render/discharge.js';
 import { createAlertMark, placeAlertMark } from '../src/render/alert-mark.js';
 import { ENEMY } from '../src/entities/enemy.js';
+import { BOLT } from '../src/entities/bolt.js';
 import { ZAP_FX, damagedGlitch, enemyHitLook } from '../src/render/zap-fx.js';
 import { createBolt, createCastFlare, createSparks, placeBolt, placeCastFlare, placeSparks } from '../src/render/zap-view.js';
 import { EnergyBar } from '../src/ui/energy-bar.js';
@@ -99,6 +101,9 @@ const ALL_ASSETS = [
   // burst discharge instead of its touch attack.
   { label: 'bug-alert', group: 'bugs', build: buildBugAlert },
   { label: 'bug-burst', group: 'bugs', span: 4, spin: false, build: () => buildBurst('bug') },
+  // The bolt attack (D80): a shooter (a stationary bug) charging and
+  // firing a slow shot in its color at the wizard.
+  { label: 'bug-bolt', group: 'bugs', span: 6, spin: false, build: buildBoltShot },
   // Viruses (Phase 3 step 5, D78): gliding calm, then after the wizard
   // ("!"); the burst discharge on the wizard; a pop.
   { label: 'virus', group: 'viruses', build: buildVirus },
@@ -487,7 +492,7 @@ function buildZapBolt() {
   asset.userData.update = (dt) => {
     tick += dt * 60;
     const traveled = ((tick * defs.spells.zap.speed) / 60) % 3;
-    placeBolt(bolt, [0, ZAP_FX.height, traveled - 1.5], [0, 1], tick, traveled);
+    placeBolt(bolt, [0, ZAP_FX.height, traveled - 1.5], [0, 0, 1], tick, traveled);
   };
   return asset;
 }
@@ -540,9 +545,9 @@ class Zapper {
     placeCastFlare(this.flare, [this.x0, 0, 0], Math.PI / 2, this.castTick);
     for (const bolt of this.bolts) {
       bolt.view.visible = bolt.live;
-      if (bolt.live) placeBolt(bolt.view, [this.x0 + ZAP_FX.reach + bolt.traveled, ZAP_FX.height, 0], [1, 0], bolt.age, bolt.traveled);
+      if (bolt.live) placeBolt(bolt.view, [this.x0 + ZAP_FX.reach + bolt.traveled, ZAP_FX.height, 0], [1, 0, 0], bolt.age, bolt.traveled);
     }
-    for (const spark of this.sparks) placeSparks(spark.view, [spark.x, ZAP_FX.height, 0], [1, 0], spark.tick);
+    for (const spark of this.sparks) placeSparks(spark.view, [spark.x, ZAP_FX.height, 0], [1, 0, 0], spark.tick);
   }
 }
 
@@ -760,6 +765,55 @@ function buildBurst(type) {
   return asset;
 }
 
+/**
+ * The bolt attack (D80) in a loop: a shooter (defs.json, a stationary bug)
+ * charges, then fires a slow shot in its attack color at the wizard 4
+ * away; it bursts into sparks on him and he flashes.
+ */
+function buildBoltShot() {
+  const values = { ...defs.enemies.bug, ...defs.enemies.shooter };
+  const { color, attackCharge, boltSpeed } = values;
+  const attackColor = values.attackColor ?? color;
+  const charge = Math.round(attackCharge * 60);
+  // Along the row on screen.
+  const u = [Math.SQRT1_2, 0, -Math.SQRT1_2];
+  const bug = createBug(color);
+  bug.position.set(u[0] * -2, 0, u[2] * -2);
+  bug.rotation.y = Math.atan2(u[0], u[2]);
+  const wizard = createWizard();
+  wizard.position.set(u[0] * 2, 0, u[2] * 2);
+  wizard.rotation.y = Math.atan2(-u[0], -u[2]);
+  const bolt = createBolt(attackColor);
+  const sparks = createSparks(attackColor);
+  const asset = new Group().add(bug, wizard, bolt, sparks);
+  const mark = addMark(asset, BUG_MODEL.markHeight, bug.position);
+  // From its eyes at his middle (Bolt.shoot()); it stops at his box (half 0.3) with its own (half size).
+  const eyes = [bug.position.x, ENEMY.eyeHeight, bug.position.z];
+  const d = [wizard.position.x - eyes[0], PLAYER_HITBOX[1] / 2 - eyes[1], wizard.position.z - eyes[2]];
+  const length = Math.hypot(...d);
+  const dir = d.map((c) => c / length);
+  const from = eyes.map((e, k) => e + dir[k] * BOLT.reach);
+  const flight = length - BOLT.reach - PLAYER_HITBOX[0] / 2 - BOLT.size / 2;
+  const flyTicks = (flight / boltSpeed) * 60;
+  const loop = Math.ceil(charge + flyTicks + 80);
+  let tick = 0;
+  asset.userData.update = (dt, time) => {
+    tick = (tick + dt * 60) % loop;
+    const attack = tick < charge + ENEMY.dischargeTicks ? tick : null;
+    animateBug(bug, { time, attack, charge });
+    showGlow(bug, attack, charge);
+    mark(1, time);
+    const flown = tick - charge;
+    bolt.visible = flown >= 0 && flown < flyTicks;
+    const traveled = (Math.max(0, flown) / 60) * boltSpeed;
+    if (bolt.visible) placeBolt(bolt, from.map((f, k) => f + dir[k] * traveled), dir, flown, traveled);
+    const since = flown >= flyTicks ? flown - flyTicks : null;
+    placeSparks(sparks, from.map((f, k) => f + dir[k] * flight), dir, since ?? -1);
+    showWizardHit(wizard, since);
+  };
+  return asset;
+}
+
 /** A sentinel gliding calm, then after the wizard, in a loop. */
 function buildSentinel() {
   const sentinel = createSentinel(defs.enemies.sentinel.color);
@@ -812,12 +866,13 @@ function buildSentinelAttack() {
     animateSentinel(sentinel, { time, alert: 1, attack, charge });
     showGlow(sentinel, attack, charge);
     mark(1, time);
-    const turn = sentinel.rotation.y;
-    const eye = [sx + Math.sin(turn) * SENTINEL_EYE[2], SENTINEL_EYE[1], sz + Math.cos(turn) * SENTINEL_EYE[2]];
-    const d = [target.x - eye[0], 0.75 - eye[1], target.z - eye[2]];
+    // As in the game: along the line from its eyes, starting at its visor.
+    const eyes = [sx, ENEMY.eyeHeight, sz];
+    const d = [target.x - sx, 0.75 - ENEMY.eyeHeight, target.z - sz];
     const length = Math.hypot(...d);
-    const end = eye.map((e, k) => e + (d[k] / length) * range);
-    placeDischarge(discharge, attack === null ? null : Math.floor(attack), charge, eye, end);
+    const from = eyes.map((e, k) => e + (d[k] / length) * SENTINEL_MODEL.muzzle);
+    const end = eyes.map((e, k) => e + (d[k] / length) * range);
+    placeDischarge(discharge, attack === null ? null : Math.floor(attack), charge, from, end);
     const hit = shots[0] + charge;
     showWizardHit(wizard, tick >= hit && tick < shots[1] ? tick - hit : null);
   };

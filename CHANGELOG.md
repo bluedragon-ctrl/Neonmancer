@@ -7,6 +7,13 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The `bolt` attack (D80): an enemy charges, then fires a slow shot
+  (`boltSpeed`, default 4 units/s) in its attack color at the wizard,
+  up or down too; it stops at him, another enemy, a block, an object or
+  the room's side, and stepping aside dodges it. A `shooter` template (a
+  stationary bug with a bolt), editor field, showcase `bug-bolt`.
+- An enemy the wizard's Zap hits turns to him with a "!" (D80); a chaser
+  searches where he stood.
 - Viruses and Sentinels, and universal enemies (Phase 3 step 5, D78). An
   enemy type now names its look (`look`: bug, virus, sentinel), and any
   look combines with any movement and attack in data. A new `chase`
@@ -85,6 +92,17 @@ and the project uses [Semantic Versioning](https://semver.org/).
   or the world map (`map`) or the asset showcase (`showcase`).
 
 ### Changed
+- Enemy review (D80): searching and going home a chaser finds its way
+  round walls (a shortest walk over the room's cells), as does a patrol
+  knocked off its path; with no way home it stays. Two enemies never
+  start into the same cell, and one turned back mid-step waits a beat, so
+  chasers no longer bump back and forth. An enemy whose ground goes
+  mid-step drops as it walks on. The arc is drawn on the line it hits
+  along. Popped enemies stop thinking. The enemy models share their mood
+  colors, eyes and pop (`render/enemy-look.js`).
+- Validation (D80): a chaser needs an aggro range, a peaceful enemy can't
+  have a charged attack, no enemy may start on a lethal block, and an
+  enemy's bad override names its template (it said `type "undefined"`).
 - Every enemy type is an enemy template now (D79): a room enemy names its
   `"template"` (was `"type"`), a template may build on another
   (`extends` chains), and the room editor updates, renames and deletes

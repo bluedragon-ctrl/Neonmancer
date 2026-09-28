@@ -43,7 +43,8 @@ test('casting Zap spends energy and sends a bolt from his hands the way he aims'
   assert.ok(eventTypes(events).includes('cast'));
   assert.equal(game.bolts.length, 1);
   const [bolt] = game.bolts;
-  assert.deepEqual(bolt.dir.map((d) => Math.round(d * 1e9) / 1e9), [1, 0]);
+  assert.deepEqual(bolt.dir.map((d) => Math.round(d * 1e9) / 1e9 + 0), [1, 0, 0]);
+  assert.equal(bolt.owner, null, "the wizard's own");
   assert.ok(Math.abs(bolt.pos[1] - BOLT.height) < 1e-9);
   // Cast, then one tick of flight.
   assert.ok(Math.abs(bolt.pos[0] - (0.5 + BOLT.reach + SPELLS.zap.speed / 60)) < 1e-9);

@@ -178,7 +178,8 @@ test('a chasing virus never follows the wizard into a hole', () => {
 });
 
 test('a peaceful virus never chases nor attacks', () => {
-  const game = gameWith({ enemies: [virus([1, 0, 1], 'v', { hostility: 'peaceful' })], pos: [2.5, 0, 1.5] });
+  // Peaceful with a burst is a data error (D80: it could never fire), so no attack here.
+  const game = gameWith({ enemies: [virus([1, 0, 1], 'v', { hostility: 'peaceful', attack: 'none' })], pos: [2.5, 0, 1.5] });
   const events = run(game, 120);
   assert.deepEqual(eventTypes(events).filter((t) => ['alert', 'charge', 'hurt'].includes(t)), []);
   assert.deepEqual(game.enemies[0].pos, [1, 0, 1]);
@@ -277,9 +278,9 @@ test('data: discharge values are checked; a discharge enemy must notice what it 
   assert.match(errors([virus([1, 0, 1], 'v', { aggroRange: 1 })]), /aggroRange 1 is shorter than its attackRange 1\.2/);
   assert.match(errors([virus([1, 0, 1], 'v', { attackColor: 'yellow' })]), /"attackColor" must be #rrggbb/);
   assert.match(errors([virus([1, 0, 1], 'v', { attackRange: 40 })]), /"attackRange" must be between/);
-  assert.match(errors([virus([1, 0, 1], 'v', { attack: 'ring' })]), /"attack" must be one of touch, burst, arc, none/);
+  assert.match(errors([virus([1, 0, 1], 'v', { attack: 'ring' })]), /"attack" must be one of touch, burst, arc, bolt, none/);
   assert.match(errors([virus([1, 0, 1], 'v', { look: 'dragon' })]), /"look" must be one of bug, virus, sentinel/);
-  assert.equal(errors([virus([1, 0, 1], 'v', { attack: 'touch', aggroRange: 0 })]), '', 'only a burst or arc needs the aggro range');
+  assert.equal(errors([virus([1, 0, 1], 'v', { attack: 'touch', aggroRange: 0, movement: 'stationary' })]), '', 'only a charged attack or a chaser needs the aggro range');
   assert.equal(errors([virus([1, 0, 1], 'v', { chaseSpeed: 4, memory: 3, attackColor: '#ffffff' })]), '');
   assert.equal(errors([virus([1, 0, 1], 'v')]), '', 'a chaser needs no path');
 });

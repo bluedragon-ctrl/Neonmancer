@@ -44,6 +44,7 @@ export const ENEMY_NUMBERS = {
   chaseSpeed: [0.5, 0.5],
   aggroRange: [0, 0.5],
   attackRange: [0.5, 0.5],
+  boltSpeed: [0.5, 0.5],
 };
 
 /**
@@ -57,10 +58,11 @@ export const ENEMY_ROWS = [
   ['movement', 'patrol: walks its path; stationary: stays put; chase: goes after the wizard it sees.'],
   ['speed', 'Walking speed, units per second.'],
   ['chaseSpeed', 'Speed while chasing.'],
-  ['hostility', 'hostile: attacks; peaceful: never; provoked: once a spell hits it.'],
+  ['hostility', 'hostile: attacks; peaceful: never; provoked: once something hits it.'],
   ['aggroRange', 'How far it notices the wizard (a "!" pops up); 0: never.'],
-  ['attack', 'touch: touching it hurts; burst: charged lightning all round it; arc: a charged bolt aimed at the wizard; none: harmless.'],
-  ['attackRange', 'Reach of a burst or arc.'],
+  ['attack', 'touch: touching it hurts; burst: charged lightning all round it; arc: a charged lightning bolt aimed at the wizard; bolt: a charged slow shot at him; none: harmless.'],
+  ['attackRange', 'Reach of a burst or arc; how near he must be for a bolt.'],
+  ['boltSpeed', 'Speed of a bolt, units per second.'],
   ['damage', 'Integrity the wizard loses per attack.'],
   ['integrity', 'Hits it takes before it pops.'],
   ['bounce', 'Landing on it bounces the wizard up.'],

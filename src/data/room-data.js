@@ -118,30 +118,38 @@ export const OBJECT_STYLE_DEFAULTS = {
  * schema too). Enemies are universal (D78): any look, movement and attack
  * combine. look: its body (render/entity-view.js ENEMY_MODELS); movement:
  * a behavior module (ai/behaviors.js); attack: how it hurts (touch: touching
- * it; burst and arc: discharges, DISCHARGES; none: never); hostility:
- * hostile hurts, peaceful never does, provoked turns hostile once a spell
- * hits it.
+ * it; burst, arc and bolt: charged attacks, CHARGED_ATTACKS; none: never);
+ * hostility: hostile hurts, peaceful never does, provoked turns hostile once
+ * a spell, a discharge or a bolt hits it.
  */
 export const ENEMY_OPTIONS = {
   look: ['bug', 'virus', 'sentinel'],
   movement: ['patrol', 'stationary', 'chase'],
-  attack: ['touch', 'burst', 'arc', 'none'],
+  attack: ['touch', 'burst', 'arc', 'bolt', 'none'],
   hostility: ['hostile', 'peaceful', 'provoked'],
 };
 
 /**
  * The discharge attacks (D78): charged lightning all round it (burst) or
- * one bolt aimed at the wizard (arc). They share attackRange, attackCharge,
- * attackCooldown and attackColor.
+ * one bolt of lightning aimed at the wizard (arc).
  */
 export const DISCHARGES = ['burst', 'arc'];
 
 /**
+ * The charged attacks (D78, D80): the discharges and the bolt, a slow shot
+ * flying at the wizard (entities/bolt.js). Seeing him within attackRange,
+ * the enemy stops, charges for attackCharge, fires and cools down for
+ * attackCooldown; attackColor colors the lightning or the shot.
+ */
+export const CHARGED_ATTACKS = [...DISCHARGES, 'bolt'];
+
+/**
  * Enemy template fields that may be left out: aggro range (units), bounce (a
  * trampoline top), solid (blocks, carries and shoves the wizard), memory
- * (seconds a chaser searches after losing sight of him) and a discharge's
- * range (units), charge and cooldown (seconds). chaseSpeed
- * and attackColor default to the enemy's speed and color (withEnemyDefaults()).
+ * (seconds a chaser searches after losing sight of him), a charged attack's
+ * range (units), charge and cooldown (seconds), and a bolt's speed (units
+ * per second). chaseSpeed and attackColor default to the enemy's speed and
+ * color (withEnemyDefaults()).
  */
 export const ENEMY_DEFAULTS = {
   aggroRange: 0,
@@ -151,6 +159,7 @@ export const ENEMY_DEFAULTS = {
   attackRange: 1.2,
   attackCharge: 0.4,
   attackCooldown: 1.5,
+  boltSpeed: 4,
 };
 
 /** Enemy template fields every template needs, its own or from the ones it extends (as in the schema). */

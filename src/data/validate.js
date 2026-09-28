@@ -13,7 +13,7 @@
 import { DATA_SCHEMA_VERSION } from '../core/version.js';
 import { MAX_ROOM_FOOTPRINT, PLAYER_HITBOX } from '../core/rules.js';
 import {
-  DISCHARGES,
+  CHARGED_ATTACKS,
   ENEMY_OPTIONS,
   ENEMY_REQUIRED,
   OBJECT_STYLES,
@@ -374,15 +374,17 @@ function validatePathShape(room, report, path, at, points, mode, level = false) 
 }
 
 /**
- * Enemies (D48, D78): unique ids (shared with objects), known types and
- * valid overrides, each in a free cell of its own, not starting over a
- * hole; patrols have a path, level (legs along x or z) and through no
- * static block; chasers may have one (walked while calm); stationary
- * enemies have none. A burst or arc only fires at a wizard it sees,
- * so its aggro range must reach its attack range.
+ * Enemies (D48, D78, D80): unique ids (shared with objects), known types
+ * and valid overrides, each in a free cell of its own, not starting over a
+ * hole nor on a lethal block; patrols have a path, level (legs along x or
+ * z) and through no static block; chasers may have one (walked while
+ * calm); stationary enemies have none. What could never happen is an
+ * error: a chaser needs an aggro range to see the wizard; a charged attack
+ * only fires at a wizard it has noticed, so its aggro range must reach its
+ * attack range, and a peaceful enemy never fires one.
  */
 function validateEnemies(checks, enemyTemplates) {
-  const { room, report, ids, filled, holes } = checks;
+  const { room, report, ids, filled, holes, blockTypes } = checks;
   const [w, h, d] = room.size;
   const taken = new Map();
   (room.enemies ?? []).forEach((enemy, i) => {
@@ -392,10 +394,16 @@ function validateEnemies(checks, enemyTemplates) {
     const type = enemyTemplates[enemy.template] && withEnemyDefaults(enemyTemplates[enemy.template]);
     if (!type) report(path, `unknown enemy template "${enemy.template}"`);
     else {
-      validateOverrides(report, `${path}.overrides`, enemy, type, ENEMY_OPTIONS);
+      validateOverrides(report, `${path}.overrides`, enemy, type, ENEMY_OPTIONS, `template "${enemy.template}"`);
       const values = { ...type, ...enemy.overrides };
-      if (DISCHARGES.includes(values.attack) && values.aggroRange < values.attackRange) {
-        report(path, `its aggroRange ${values.aggroRange} is shorter than its attackRange ${values.attackRange}: it only fires at a wizard it has noticed`);
+      if (values.movement === 'chase' && !(values.aggroRange > 0)) {
+        report(path, 'a chaser needs an aggroRange above 0: it never sees the wizard to chase');
+      }
+      if (CHARGED_ATTACKS.includes(values.attack)) {
+        if (values.aggroRange < values.attackRange) {
+          report(path, `its aggroRange ${values.aggroRange} is shorter than its attackRange ${values.attackRange}: it only fires at a wizard it has noticed`);
+        }
+        if (values.hostility === 'peaceful') report(path, `a peaceful enemy never fires its ${values.attack}: make it hostile or provoked, or its attack none`);
       }
     }
     // A patrol walks its path; a stationary enemy has none.
@@ -413,6 +421,7 @@ function validateEnemies(checks, enemyTemplates) {
     else if (taken.has(key)) report(path, `cell ${cellText(enemy.at)} is taken by ${taken.get(key)}`);
     taken.set(key, path);
     if (y === 0 && holes.has(cellKey([x, z]))) report(path, `it starts over ${holes.get(cellKey([x, z]))}`);
+    if (blockTypes.get(cellKey([x, y - 1, z]))?.lethal) report(path, `it starts on a lethal block at ${cellText([x, y - 1, z])}: it would pop at once`);
 
     if (!enemy.path) return;
     const { points, mode } = enemy.path;
@@ -452,6 +461,7 @@ const OVERRIDE_RANGES = {
   attackRange: [0.5, 16, false],
   attackCharge: [0, 3, false],
   attackCooldown: [0, 10, false],
+  boltSpeed: [0.5, 16, false],
   integrity: [1, 15, true],
   damage: [1, 99, true],
 };
@@ -462,11 +472,12 @@ const COLOR_KEYS = ['color', 'attackColor'];
 /**
  * Overrides can only change existing properties of the type, with valid
  * values (`enums`: the allowed values of listed properties).
+ * @param {string} [typeName] how errors name the type ('type "crate"'; an enemy's template)
  */
-function validateOverrides(report, path, object, type, enums = OBJECT_STYLES) {
+function validateOverrides(report, path, object, type, enums = OBJECT_STYLES, typeName = `type "${object.type}"`) {
   for (const [key, value] of Object.entries(object.overrides ?? {})) {
     const range = OVERRIDE_RANGES[key];
-    if (!(key in type)) report(path, `"${key}" is not a property of type "${object.type}"`);
+    if (!(key in type)) report(path, `"${key}" is not a property of ${typeName}`);
     else if (typeof value !== typeof type[key]) report(path, `"${key}" must be a ${typeof type[key]}`);
     else if (enums[key] && !enums[key].includes(value)) {
       report(path, `"${key}" must be one of ${enums[key].join(', ')}`);

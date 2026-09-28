@@ -53,6 +53,16 @@
       "attackRange": 5,
       "attackCharge": 0.7,
       "attackCooldown": 2
+    },
+    "shooter": {
+      "extends": "bug",
+      "movement": "stationary",
+      "attack": "bolt",
+      "aggroRange": 6,
+      "attackRange": 6,
+      "attackCharge": 0.6,
+      "attackCooldown": 2,
+      "boltSpeed": 4
     }
   },
   "spells": {

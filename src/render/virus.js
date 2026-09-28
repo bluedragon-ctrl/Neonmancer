@@ -15,11 +15,11 @@
  * The model stands on y = 0 around the y axis and looks along +z, about
  * as big as the enemy hitbox (0.6).
  */
-import { BoxGeometry, Group, Mesh, MeshBasicMaterial, SphereGeometry } from 'three';
+import { BoxGeometry, Group, Mesh, MeshBasicMaterial } from 'three';
 import { dischargeLook } from './discharge.js';
+import { EYE, flaredGlow, glowEyes, popBurst, setMood } from './enemy-look.js';
 import { hash } from './hash.js';
 import { createFlash, sharpGeometry, sharpPart } from './holo.js';
-import { shared } from './neon.js';
 
 /** Proportions (world units) and animation tuning. */
 export const VIRUS = {
@@ -34,9 +34,7 @@ export const VIRUS = {
   lean: 0.25,
   /** Orbiting bits: how many, edge, orbit radius, turns per second (calm, chasing). */
   bits: { count: 4, size: 0.08, orbit: 0.33, speed: [1.5, 3.5] },
-  /** Eye color by mood, as bugs (red hostile, amber provoked, cyan peaceful). */
-  moods: { hostile: 0xff2a3a, provoked: 0xffb020, peaceful: 0x00f0ff },
-  /** Eye brightness: calm, and flared while chasing. */
+  /** Eye brightness: calm, and flared while chasing (colors by mood: enemy-look.js). */
   eyeGlow: { calm: 2.2, alert: 4 },
   /** Height of the "!" above its feet. */
   markHeight: 0.95,
@@ -48,7 +46,6 @@ export const VIRUS = {
 const GEO = {
   cube: sharpGeometry(new BoxGeometry(VIRUS.size, VIRUS.size, VIRUS.size)),
   bit: sharpGeometry(new BoxGeometry(VIRUS.bits.size, VIRUS.bits.size, VIRUS.bits.size)),
-  eye: shared(new SphereGeometry(1, 12, 8)),
 };
 
 /**
@@ -79,7 +76,7 @@ export function createVirus(color) {
   // Slanted eyes on the front face, bright (above 1, for bloom).
   const eyes = new MeshBasicMaterial();
   for (const side of [-1, 1]) {
-    const eye = new Mesh(GEO.eye, eyes);
+    const eye = new Mesh(EYE, eyes);
     eye.position.set(side * 0.065, VIRUS.y + 0.025, VIRUS.size / 2 + 0.005);
     eye.scale.set(0.055, 0.03, 0.015);
     eye.rotation.z = side * 0.5;
@@ -87,19 +84,9 @@ export function createVirus(color) {
   }
 
   const group = new Group().add(body);
-  Object.assign(group.userData, { body, cube, bits: orbiting, eyes, flash, mood: 'hostile' });
-  setVirusMood(group, 'hostile');
+  Object.assign(group.userData, { body, cube, bits: orbiting, eyes, flash, glow: VIRUS.eyeGlow.calm });
+  setMood(group, 'hostile');
   return group;
-}
-
-/**
- * The mood its eyes show (bug.js eyeMood() works for viruses too).
- * @param {Group} virus from createVirus()
- * @param {'hostile'|'provoked'|'peaceful'} mood
- */
-export function setVirusMood(virus, mood) {
-  virus.userData.mood = mood;
-  virus.userData.eyes.color.set(VIRUS.moods[mood]).multiplyScalar(VIRUS.eyeGlow.calm);
 }
 
 /**
@@ -115,7 +102,7 @@ export function setVirusMood(virus, mood) {
  * @param {number} [state.shift] sideways shift (a glitch)
  */
 export function animateVirus(virus, { state = 'rest', time = 0, alert = 0, attack = null, charge = 24, squash = 0, shift = 0 }) {
-  const { body, cube, bits, eyes } = virus.userData;
+  const { body, cube, bits } = virus.userData;
   const look = dischargeLook(attack, charge);
   const bob = Math.sin(time * Math.PI * 2 * VIRUS.bob.rate) * VIRUS.bob.height;
   // Shaking while it charges: a new offset every other frame.
@@ -143,41 +130,24 @@ export function animateVirus(virus, { state = 'rest', time = 0, alert = 0, attac
   }
 
   // Eyes flare while chasing and while charging.
-  const glow = VIRUS.eyeGlow.calm + (VIRUS.eyeGlow.alert - VIRUS.eyeGlow.calm) * Math.max(alert, look.charge);
-  eyes.color.set(VIRUS.moods[virus.userData.mood]).multiplyScalar(glow);
+  glowEyes(virus, flaredGlow(VIRUS.eyeGlow, alert, look.charge));
 }
 
 /** The middle of a virus above its feet: where its discharge comes from. */
 export const VIRUS_MIDDLE = VIRUS.hover + VIRUS.y;
 
-/**
- * The pixels of a popping virus `tick` ticks after it died.
- * @param {number} tick may be fractional
- * @returns {{ offset: number[], scale: number }[]}
- */
-export function virusPopPixels(tick) {
-  const { pixels, ticks, spread, rise } = VIRUS.pop;
-  if (tick < 0 || tick >= ticks) return [];
-  const t = tick / ticks;
-  const out = [];
-  for (let i = 0; i < pixels; i++) {
-    const angle = hash(i, 11) * Math.PI * 2;
-    const radius = (0.15 + hash(i, 12) * spread) * Math.sqrt(t);
-    const height = VIRUS_MIDDLE + (hash(i, 13) - 0.3) * rise * t;
-    out.push({ offset: [Math.cos(angle) * radius, height, Math.sin(angle) * radius], scale: 1 - t });
-  }
-  return out;
-}
+/** The pixels of a popping virus `tick` ticks after it died (enemy-look.js popBurst()). */
+export const virusPopPixels = popBurst(VIRUS.pop, { seed: 11, middle: VIRUS_MIDDLE });
 
 /** Everything EnemyView needs to show a virus (see BUG_MODEL in bug.js). */
 export const VIRUS_MODEL = {
   create: createVirus,
-  setMood: setVirusMood,
+  setMood,
   animate: animateVirus,
   popPixels: virusPopPixels,
   pop: VIRUS.pop,
   turnRate: VIRUS.turnRate,
   markHeight: VIRUS.markHeight,
-  /** Where an arc leaves it, from its feet center looking along +z. */
-  muzzle: [0, VIRUS_MIDDLE, VIRUS.size / 2],
+  /** How far in front of its eyes an arc leaves it (along the line of fire). */
+  muzzle: VIRUS.size / 2,
 };

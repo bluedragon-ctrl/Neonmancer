@@ -2,12 +2,15 @@
  * Movement behaviors by name, as enemy templates in defs.json refer to them
  * ("movement"). A behavior is made with the enemy's start cell, its path
  * (if any) and its values (the enemy template with overrides) and has:
- * - `next(x, z, senses)`: the next step [dx, dz] from the enemy's column,
- *   or a list of steps to try, best first, or null to stay put this tick;
- *   `senses` is the enemy (sees, lastSeen, inRange; see Enemy.sense());
+ * - `next(x, z, senses, route)`: the next step [dx, dz] from the enemy's
+ *   column, or a list of steps to try, best first, or null to stay put this
+ *   tick; `senses` is the enemy (sees, lastSeen, inRange; see
+ *   Enemy.sense()), `route(column)` the first step of a shortest walk to a
+ *   column round walls, or null (Enemy.route());
  * - `turnBack()`: the step it was taking is blocked;
- * - optionally `update(senses)`, called every tick, and `chasing` (true
- *   while it moves at its chase speed).
+ * - optionally `update(senses)`, called every tick, `alarm()`, when the
+ *   wizard's Zap hits it (Enemy.alarm()), and `chasing` (true while it
+ *   moves at its chase speed).
  * A new behavior is a class here, listed in ENEMY_OPTIONS (data/room-data.js)
  * and schemas/defs.schema.json.
  */

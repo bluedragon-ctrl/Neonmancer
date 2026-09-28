@@ -1,18 +1,20 @@
 /**
- * Chase behavior (D78): go after the wizard while seeing him, search where
- * he was last seen for a while, then go home. Pure logic; the enemy does
- * the seeing (Enemy.sense()) and hands it over every tick (update()).
+ * Chase behavior (D78, D80): go after the wizard while seeing him, search
+ * where he was last seen for a while, then go home. Pure logic; the enemy
+ * does the seeing (Enemy.sense()) and hands it over every tick (update()).
  *
- *   calm ──sees him──► chase ──loses sight──► search ──memory runs out──► return ──home──► calm
- *     ▲                  ▲                      │                            │
- *     │                  └──────sees him────────┴────────────────────────────┘
+ *   calm ──sees him, or his Zap hits it──► chase / search ──memory runs out──► return ──home──► calm
+ *     ▲                                      ▲    │                               │
+ *     │                                      └────┴──────────sees him─────────────┘
  *     └── with a path, it patrols while calm, and goes straight back to it after a search
  *
- * Stepping is greedy: towards the target along the axis where it is
- * farther, else along the other one; the enemy takes the first of these
- * steps that is free and safe. So a wall between them stops it: the wizard
- * can hide behind blocks and trap it with crates. While he is within its
- * attack range it holds its ground (it attacks from there).
+ * Chasing is greedy: towards him along the axis where he is farther, else
+ * along the other one; the enemy takes the first of these steps that is
+ * free and safe. So a wall between them stops it: the wizard can hide
+ * behind blocks and trap it with crates. While he is within its attack
+ * range it holds its ground (it attacks from there). Searching and going
+ * home it finds its way round walls (the enemy's route(), a shortest
+ * walk); going home it gives up only when there is no way back.
  */
 import { DT } from '../core/loop.js';
 import { Patrol } from './patrol.js';
@@ -53,6 +55,13 @@ export class Chase {
     if (this.mode === 'search' && --this.search <= 0) this.mode = this.patrol ? 'calm' : 'return';
   }
 
+  /** The wizard's Zap hit it (Enemy.alarm()): it searches where he stood, unless it is after him already. */
+  alarm() {
+    if (this.mode === 'chase') return;
+    this.mode = 'search';
+    this.search = this.memoryTicks;
+  }
+
   /**
    * The steps worth trying from the column [x, z], best first, or null to
    * stay put.
@@ -60,24 +69,30 @@ export class Chase {
    * @param {number} z
    * @param {{ lastSeen: number[]|null, inRange: boolean }} senses where it last saw
    *   him (a column), and whether he is within its attack range
+   * @param {(column: number[]) => number[]|null} [route] first step of a
+   *   shortest walk to a column, null if there or no way (Enemy.route());
+   *   without it, it steps greedily
    * @returns {number[]|number[][]|null}
    */
-  next(x, z, { lastSeen, inRange }) {
+  next(x, z, senses, route) {
+    const { lastSeen, inRange } = senses;
     if (this.mode === 'chase') return inRange ? null : towards(x, z, lastSeen);
-    // Searching: to where he was, then it waits there, looking.
-    if (this.mode === 'search') return towards(x, z, lastSeen);
+    // Searching: to where he was, round walls if it can, then it waits there, looking.
+    if (this.mode === 'search') return (route && lastSeen && route(lastSeen)) || towards(x, z, lastSeen);
     if (this.mode === 'return') {
-      const steps = towards(x, z, this.home);
-      if (!steps) this.mode = 'calm';
-      return steps;
+      const step = route ? route(this.home) : towards(x, z, this.home);
+      if (!step) this.mode = 'calm'; // home, or no way back: it stays
+      return step;
     }
-    return this.patrol ? this.patrol.next(x, z) : null;
+    return this.patrol ? this.patrol.next(x, z, senses, route) : null;
   }
 
-  /** Its way was blocked. Calm: the patrol turns back; going home: it gives up and stays. */
+  /**
+   * Its way was blocked (by something that may move on). Calm: the patrol
+   * turns back; going home it tries again after its wait.
+   */
   turnBack() {
     if (this.mode === 'calm') this.patrol?.turnBack();
-    else if (this.mode === 'return') this.mode = 'calm';
   }
 }
 
