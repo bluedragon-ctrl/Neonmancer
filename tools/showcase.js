@@ -48,6 +48,7 @@ import { createRefill, refillMotion } from '../src/render/refill.js';
 import { INSTALL_FX } from '../src/render/install-fx.js';
 import { createInstall, placeInstall } from '../src/render/install-view.js';
 import { createShield, placeShield } from '../src/render/shield-view.js';
+import { SWITCH_COLORS, createLock, createPlate, createTarget } from '../src/render/switch-view.js';
 
 /** Block types with variants filled in (D60). */
 const BLOCK_TYPES = resolveBlockTypes(defs.blocks);
@@ -116,7 +117,154 @@ const ALL_ASSETS = [
   { label: 'refill-energy', group: 'refills', spin: false, build: () => buildRefill('energy') },
   { label: 'refill-collect', group: 'refills', spin: false, build: buildRefillCollect },
   { label: 'pickups-in-room', group: 'refills', span: 5.5, spin: false, build: buildPickupsInRoom },
+  // Switches and locked exits (Phase 3 step 4): proposals in variants. The
+  // switch colors side by side (target behind, plate in front); each target
+  // look zapped on and off; each plate look pressed by a crate dropping on
+  // it and the wizard stepping on it; each lock look with two switches
+  // coming on one by one, opening, then going off.
+  { label: 'switch-colors', group: 'switches', span: 6, spin: false, build: buildSwitchColors },
+  ...['glow', 'led', 'bullseye'].map((variant) => ({
+    label: `target-${variant}`, group: 'switches', span: 5, spin: false, build: () => buildTargetZap(variant),
+  })),
+  ...['halo', 'brackets', 'slab'].map((variant) => ({
+    label: `plate-${variant}`, group: 'switches', span: 4, spin: false, build: () => buildPlate(variant),
+  })),
+  ...['bars', 'panel', 'grid'].map((variant) => ({
+    label: `lock-${variant}`, group: 'switches', span: 5.5, spin: false, build: () => buildLock(variant),
+  })),
 ];
+
+/** Switch color from ?switchColor= (yellow, white, redGreen), white by default. */
+const SWITCH_COLOR = SWITCH_COLORS[new URLSearchParams(location.search).get('switchColor')] ?? SWITCH_COLORS.white;
+
+/** Target (behind) and plate (in front) in each candidate color, on and off together. */
+function buildSwitchColors() {
+  const asset = new Group();
+  const views = Object.values(SWITCH_COLORS).flatMap((colors, i) => {
+    const target = createTarget({ variant: 'glow', colors });
+    const plate = createPlate({ variant: 'halo', colors });
+    const a = (i - 1) * 1.6;
+    target.position.set(a - 0.5 - 0.6, 0, -a - 0.5 - 0.6);
+    plate.position.set(a - 0.5 + 0.6, 0, -a - 0.5 + 0.6);
+    asset.add(target, plate);
+    return [target, plate];
+  });
+  let time = 0;
+  asset.userData.update = (dt) => {
+    time += dt;
+    const on = time % 2.4 > 1.2;
+    for (const view of views) {
+      view.userData.set(on);
+      view.userData.update(dt);
+    }
+  };
+  return asset;
+}
+
+/** The wizard zapping a target on and off. */
+function buildTargetZap(variant) {
+  const asset = new Group();
+  const zapper = new Zapper(asset, -1.8, 0.3);
+  const target = createTarget({ variant, colors: SWITCH_COLOR });
+  target.position.set(0.3, 0, -0.5);
+  asset.add(target);
+  let on = false;
+  let wait = 40;
+  let carry = 0;
+  asset.userData.update = (dt) => {
+    for (carry += dt * 60; carry >= 1; carry--) {
+      if (--wait <= 0) {
+        zapper.cast();
+        wait = 90;
+      }
+      if (zapper.tick() > 0) {
+        on = !on;
+        target.userData.set(on, { hit: true });
+      }
+    }
+    zapper.sync();
+    target.userData.update(dt);
+  };
+  return asset;
+}
+
+/**
+ * A plate in a floor patch: a crate drops on it, sits, slides off; then the
+ * wizard walks over it and stops on it for a moment.
+ */
+function buildPlate(variant) {
+  const asset = new Group();
+  const plate = createPlate({ variant, colors: SWITCH_COLOR });
+  plate.position.set(-0.5, 0, -0.5);
+  const crate = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...defs.objects.crate, at: [0, 0, 0] });
+  const wizard = createWizard();
+  wizard.rotation.y = Math.PI / 2;
+  asset.add(plate, crate, wizard);
+  const loop = 6;
+  let time = 0;
+  asset.userData.update = (dt) => {
+    time = (time + dt) % loop;
+    // 0–2.2 s: the crate drops (0.35 s) and sits; 2.2–2.6 s it slides off +z and vanishes.
+    let cy = 1.6 - 0.5 * 20 * Math.min(time, 0.4) ** 2;
+    cy = Math.max(0, cy);
+    const slide = Math.max(0, Math.min(1, (time - 2.2) / 0.4));
+    crate.visible = time < 2.6;
+    crate.position.set(-0.5, cy, -0.5 + slide);
+    // 3–6 s: the wizard walks in from −x, stands on it 3.6–5 s, walks on.
+    const wx = time < 3 ? -3 : time < 3.6 ? -1.5 + (time - 3) * 2.5 : time < 5 ? 0 : (time - 5) * 2.5;
+    wizard.visible = time >= 3;
+    wizard.position.set(wx, 0, 0);
+    const onCrate = crate.visible && cy < 0.05 && slide < 0.5;
+    const onWizard = wizard.visible && Math.abs(wx) < 0.5;
+    plate.userData.set(onCrate || onWizard);
+    plate.userData.update(dt);
+  };
+  return asset;
+}
+
+/**
+ * Two locked exits of a small room (a back doorway, a front exit) with two
+ * switches: they come on one by one, the exits open, then one goes off and
+ * they close again.
+ */
+function buildLock(variant) {
+  const size = [4, 3, 4];
+  const exits = [withExitDefaults({ id: 'back', side: '-z', at: 1 }), withExitDefaults({ id: 'front', side: '+x', at: 1 })];
+  const flows = [new ExitView(exits[0], size, PALETTE.magenta), new ExitView(exits[1], size, PALETTE.cyan)];
+  const locks = exits.map((exit) => createLock(exit, size, { variant, colors: SWITCH_COLOR, switches: 2 }));
+  const target = createTarget({ variant: 'glow', colors: SWITCH_COLOR });
+  target.position.set(0, 0, 3);
+  const plate = createPlate({ variant: 'halo', colors: SWITCH_COLOR });
+  plate.position.set(2, 0, 2);
+  const room = new Group().add(
+    createRoomView({ size, blocks: {}, blockTypes: BLOCK_TYPES, exits, color: PALETTE.amber }),
+    ...flows.map((v) => v.group),
+    ...locks,
+    target,
+    plate,
+  );
+  room.position.set(-2, 0, -2);
+  const asset = new Group().add(room);
+  let time = 0;
+  asset.userData.update = (dt) => {
+    time = (time + dt) % 7;
+    // 1 s: the target comes on; 2.5 s: the plate; 5 s: the target goes off.
+    const targetOn = time > 1 && time < 5;
+    const plateOn = time > 2.5;
+    target.userData.set(targetOn, { hit: Math.abs(time - 1) < dt || Math.abs(time - 5) < dt });
+    plate.userData.set(plateOn);
+    const lit = Number(targetOn) + Number(plateOn);
+    for (const [i, lock] of locks.entries()) {
+      lock.userData.set({ lit });
+      lock.userData.update(dt);
+      flows[i].group.visible = lock.userData.openness > 0.5;
+      flows[i].update(dt);
+    }
+    target.userData.update(dt);
+    plate.userData.update(dt);
+  };
+  return asset;
+}
 
 /** The wizard installing Zap, then Shield, in a loop. */
 function buildInstall() {
