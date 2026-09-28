@@ -179,18 +179,24 @@ can always leave it again the way he came.
 
 ### Enemies (corrupted programs; cute but clearly dangerous)
 - **Bugs** — patrol fixed paths
-- **Viruses** — chase on line of sight, give up when it breaks
+- **Viruses** — chase on line of sight, give up when it breaks; a
+  close-range electric burst
+- **Sentinels** — keep their distance and fire a long aimed bolt (D77)
 - **Pop-ups** — stationary, fire slow projectiles
 - **Firewall Wardens** — tougher guardians blocking key rooms
 
-Each has a distinct color, silhouette and bouncy animation.
+Each has a distinct color, silhouette and animation.
 AI is implemented as named behavior modules referenced from data.
-Enemies are fully data-driven (D48): type fields in `defs.json` (movement,
-attack, hostility — hostile / peaceful / provoked —, aggro range,
-integrity, damage, speed, bounce, solid, color), overridable per enemy in
-the room. Eye color shows hostility (red hostile, amber provoked, cyan
-peaceful). Enemies move cell by cell with physics (fall, ride platforms,
-pop in holes and on void).
+Enemies are universal and fully data-driven (D48, D77): an enemy is a
+look (`model`), a movement, an attack and a color, and any of them
+combine. Type fields in `defs.json` (model, movement, attack, hostility
+— hostile / peaceful / provoked —, aggro range, integrity, damage, speed,
+chase speed, bounce, solid, color, and the discharge attack's shape,
+range, charge, cooldown and color), overridable per enemy in the room.
+Eye color shows hostility (red hostile, amber provoked, cyan peaceful);
+a red "!" pops up over one that notices the wizard. Enemies move cell by
+cell with physics (fall, ride platforms), never step into holes or onto
+void, and pop if the ground goes from under them.
 
 ### Biomes (Grid sectors)
 Each room has a biome defining look and optional environmental effects,
@@ -259,9 +265,9 @@ The engine is generic; all content lives in data.
 
 - `data/defs.json` — object types, block types (look or kind, color,
   properties such as damage and lethal; variants `extend` a base, D60),
-  enemy types (movement, attack,
-  hostility, aggro range, integrity, damage, speed, bounce, solid, color;
-  templates `extend` a base type, D58), spells
+  enemy types (model, movement, attack,
+  hostility, aggro range, integrity, damage, speeds, bounce, solid, color,
+  discharge values; templates `extend` a base type, D58, D77), spells
 - `data/biomes.json` — palette, floor pattern, effect settings,
   environmental effects
 - `data/rooms/*.json` — one file per room: biome, size [x, y, z], exits,
@@ -399,8 +405,8 @@ In-game room editor with JSON export. Step plan: docs/design.md (D43).
 
 **Phase 3 (v0.3) — Spells and pickups**
 World map tool for the developer. Pickups and a progress model, data
-disks. Switches (pressure plates, bolt targets) unlocking exits. Viruses
-and Pop-ups. Shield, Firewall, Pause, Warp and Cut & Paste spells.
+disks. Switches (pressure plates, bolt targets) unlocking exits. Viruses,
+Sentinels and Pop-ups. Shield, Firewall, Pause, Warp and Cut & Paste spells.
 A discussion step on further spells, spell upgrades and buff items; the
 first buff items. Score, bonus bits and secrets. Fragments, access levels
 and the core. Step plan: docs/design.md (D65).

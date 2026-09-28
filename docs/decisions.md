@@ -1156,3 +1156,66 @@ buffers: estimated 13–19 ms at 1080p on an Intel UHD 620, most of the
 the fallback is what those presets will start from. Effects added to the
 existing effect pass are nearly free, while every extra full-screen pass
 costs (~1.6 ms at 1080p on a UHD 620); keep that in mind for Phase 5.
+
+### D77 — 2026-09-28 — Universal enemies; chase and discharge; Viruses and Sentinels
+Phase 3 step 5's open questions, settled with the author:
+- **Universal enemies:** an enemy type's look is a field, `model` (`bug`,
+  `virus`, `sentinel`), beside `movement`, `attack` and `color`. Any look
+  combines with any movement and attack, all set in data and overridable
+  per enemy in a room (a bug can chase and discharge). Templates (D58)
+  still take their base's look, now through the inherited `model`.
+- **Chase** (`movement: "chase"`): a hostile enemy notices the wizard
+  within `aggroRange` when nothing solid (blocks, objects, closed exits)
+  lies between its eyes and his middle, and steps cell by cell towards
+  him at `chaseSpeed`, greedily: along the axis where he is farther, else
+  the other; a wall stops it, so he can hide and trap it with crates.
+  Losing sight, it goes to where it last saw him and searches for
+  `memory` seconds (1.5), then goes back to its post, or to its path: a
+  chaser may have one, walked while calm. While he is within its attack
+  range it holds its ground.
+- **No enemy walks into a hole or onto a lethal block**, nor off a ledge
+  onto one (bugs too; amends D48). They still fall in when the ground goes
+  from under them.
+- **"!" mark** over any enemy that notices the wizard, and over a
+  provoked one turned hostile; it stays up at least 1 s and as long as it
+  sees him.
+- **Discharge attack** (`attack: "discharge"`), instead of contact
+  (touching such an enemy doesn't hurt): seeing him within `attackRange`
+  and standing still, it stops, charges for `attackCharge` seconds
+  (shaking, glowing white, crackling), fires lightning for 10 ticks, then
+  waits `attackCooldown` seconds. Two shapes, `attackShape`:
+  - `burst`: lightning all round it, hitting everything within range it
+    can see: the wizard and other enemies (not objects);
+  - `arc`: one bolt aimed where the wizard stood when it started charging
+    (a dashed aim line, blinking before it fires), as long as its range
+    unless a block or an object stops it first; it hits every body in the
+    squares it passes through (the wizard and other enemies, all of them,
+    at the author's request). Stepping aside dodges it.
+  `attackColor` is its color by default; `damage` applies as before. A
+  discharge enemy only fires at a wizard it has noticed, so validation
+  wants `aggroRange` ≥ `attackRange`.
+- **Virus:** a sharp-edged cube tipped onto an edge, slanted eyes on its
+  front face, four small cubes of itself orbiting (the glitch shape,
+  picked over a spiky ball and a phage; hard, flat edges at the author's
+  request); yellow `#ffe23a`; it glides instead of hopping. A chaser with
+  a burst: range 1.2, charge 0.4 s, cooldown 1.5 s, aggro range 5, speed
+  2, chase speed 3.5, integrity 2.
+- **Sentinel** (new, the author's addition): a tall sharp octahedron on
+  its point with one visor eye and three shards that swing in front of it
+  like a barrel as it charges; orange `#ff8a1a`. A chaser with an arc:
+  range 5, charge 0.7 s, cooldown 2 s, aggro range 7, speed 1.5, chase
+  speed 2.5, integrity 3. It keeps its distance: it stops once he is in
+  range.
+- Test room **Quarantine** (10×10, Glitchmire), behind a new north
+  doorway of Crawl Space: a virus, a sentinel, a stationary bug with a
+  burst guarding an integrity refill, a pillar to hide behind, a trench
+  of holes, a crate and a ledge.
+**Why:** author's choices. The author wants one universal enemy whose
+look, attack, color and movement all come from data, so new enemies are
+data, not code. A charged discharge warns before it hurts, and stops a
+chaser that sits inside the wizard (he walks through enemies) from
+hitting him each time his invulnerability runs out, as contact damage
+would. Aiming an arc when the charge starts keeps long shots dodgeable.
+Greedy chasing is readable and lets rooms use cover and crates as
+puzzles. Enemies throwing themselves into pits looked silly; the author
+wants them to keep out.

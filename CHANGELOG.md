@@ -7,6 +7,23 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Viruses and Sentinels, and universal enemies (Phase 3 step 5, D77). An
+  enemy type now names its look (`model`: bug, virus, sentinel), and any
+  look combines with any movement and attack in data. A new `chase`
+  movement: a hostile enemy that sees the wizard within its aggro range
+  (nothing solid in between) goes after him, searches where it lost him,
+  then goes home or back to its path. A new `discharge` attack: it stops,
+  charges (glowing white) and fires lightning — a `burst` all round it
+  that hits the wizard and other enemies in range, or an `arc` aimed
+  where he stood when it started charging, hitting everything in the
+  squares along its path until a block or an object stops it.
+  The Virus (a sharp yellow glitch cube, bursts up close) and the
+  Sentinel (a tall orange octahedron that keeps its distance and fires a
+  5-unit arc). A red "!" pops up over any enemy that notices him. New
+  test room Quarantine, behind Crawl Space. Editor: model, attack, attack
+  shape, chase speed, aggro and attack range in the Enemy panel; chasers
+  keep a path. Showcase `?asset=viruses`, `?asset=sentinels`,
+  `bug-alert`, `bug-burst`.
 - Automatic quality fallback (D76): when frames run below 50 fps for a
   few seconds, multisampling steps down (4 → 2 → 0), then the render
   scale (0.75, 0.5), so weak laptops stay smooth. `?msaa` / `?scale`
@@ -58,6 +75,9 @@ and the project uses [Semantic Versioning](https://semver.org/).
   or the world map (`map`) or the asset showcase (`showcase`).
 
 ### Changed
+- Enemies never walk into a hole or onto a void block any more, nor off a
+  ledge onto one (D77); they still fall in if the ground goes from under
+  them.
 - Shaders of hidden effects (pixel bursts, the cast flare) and of each
   new room are compiled while the room loads, for the buffer they are
   really drawn into, instead of on first use during play (D76).
