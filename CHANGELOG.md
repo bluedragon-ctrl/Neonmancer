@@ -7,6 +7,15 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The Shield blocks enemies' ranged attacks (Phase 3 step 7, D84): a
+  bolt is absorbed at its ring in sparks, an arc or burst does nothing;
+  the ring flares. Touch attacks still hurt. Showcase `shield-block`.
+- The Firewall spell (D84, slot 2): 40 energy, 7 s, a ring of ember
+  flames round the wizard's feet that blocks what the Shield blocks and
+  touch attacks too, and burns every enemy touching it (1 damage, again
+  every 0.5 s). Casting one ring spell replaces the other. Its data disk
+  lies on the low wall in Scheduler. Showcase `firewall`,
+  `disk-firewall`.
 - Cron, worm and crawler enemy looks (D83). The `tower` template now
   looks like a cron: a pedestal and a clock dial whose four emitters hold
   the grid axes, where its four-way bolts leave. New templates `worm` (a
@@ -112,6 +121,8 @@ and the project uses [Semantic Versioning](https://semver.org/).
   or the world map (`map`) or the asset showcase (`showcase`).
 
 ### Changed
+- Phase 3 step 6 (Pop-ups) is closed: the bolt attack (D80, D81) and
+  the new looks (D83) covered it; more enemies go on as side work (D84).
 - Enemy review (D80): searching and going home a chaser finds its way
   round walls (a shortest walk over the room's cells), as does a patrol
   knocked off its path; with no way home it stays. Two enemies never

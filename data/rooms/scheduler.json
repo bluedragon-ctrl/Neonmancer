@@ -18,5 +18,8 @@
     { "id": "worm", "template": "worm", "at": [1, 0, 8], "path": { "points": [[8, 0, 8]], "pause": 0.4 } },
     { "id": "crawler", "template": "crawler", "at": [1, 0, 1] }
   ],
-  "pickups": [{ "id": "integrity", "type": "refill_integrity", "at": [8, 0, 0] }]
+  "pickups": [
+    { "id": "integrity", "type": "refill_integrity", "at": [8, 0, 0] },
+    { "id": "disk_firewall", "type": "disk_firewall", "at": [1, 1, 5] }
+  ]
 }

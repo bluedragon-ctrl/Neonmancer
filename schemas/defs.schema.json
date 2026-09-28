@@ -22,7 +22,7 @@
     },
     "spells": {
       "type": "object",
-      "description": "Spell tuning, by spell id. What each spell does is built into the engine (SPELL_EFFECTS in src/game.js; Zap: src/entities/bolt.js, Shield: Player.raiseShield()).",
+      "description": "Spell tuning, by spell id. What each spell does is built into the engine (SPELL_EFFECTS in src/game.js; Zap: src/entities/bolt.js, Shield and Firewall: Player.raiseShield()).",
       "required": ["zap"],
       "additionalProperties": false,
       "properties": {
@@ -41,7 +41,7 @@
           }
         },
         "shield": {
-          "description": "A crackling ring of electricity round the wizard for a while (D73); it will block projectiles once there are any.",
+          "description": "A crackling ring of electricity round the wizard for a while (D73); it blocks enemies' ranged attacks: bolts, arcs and bursts (D84).",
           "type": "object",
           "required": ["slot", "color", "cost", "cooldown", "duration"],
           "additionalProperties": false,
@@ -51,6 +51,21 @@
             "cost": { "$ref": "#/$defs/spellCost" },
             "cooldown": { "$ref": "#/$defs/spellCooldown" },
             "duration": { "type": "number", "exclusiveMinimum": 0, "maximum": 30, "description": "Seconds the shield stays up; casting it again starts it over." }
+          }
+        },
+        "firewall": {
+          "description": "A ring like the Shield (D84) that also blocks touch attacks and burns every enemy touching it; casting it or the Shield replaces the other.",
+          "type": "object",
+          "required": ["slot", "color", "cost", "cooldown", "duration", "damage", "burnInterval"],
+          "additionalProperties": false,
+          "properties": {
+            "slot": { "$ref": "#/$defs/spellSlot" },
+            "color": { "$ref": "#/$defs/spellColor" },
+            "cost": { "$ref": "#/$defs/spellCost" },
+            "cooldown": { "$ref": "#/$defs/spellCooldown" },
+            "duration": { "type": "number", "exclusiveMinimum": 0, "maximum": 30, "description": "Seconds it stays up; casting it again starts it over." },
+            "damage": { "type": "integer", "minimum": 1, "description": "Integrity an enemy touching the ring loses per burn." },
+            "burnInterval": { "type": "number", "exclusiveMinimum": 0, "maximum": 5, "description": "Seconds before it burns the same enemy again while it stays touching." }
           }
         }
       }

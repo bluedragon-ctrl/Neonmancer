@@ -1,7 +1,7 @@
 /**
  * The wizard: movement along the grid axes, jump, gravity, pushing,
  * integrity (health), invulnerability after a hit, energy (mana) for
- * spells, installing a spell, the Shield, death (in a hole, on a void block, or with no integrity left) and
+ * spells, installing a spell, the Shield and Firewall rings, death (in a hole, on a void block, or with no integrity left) and
  * respawn. Pure logic, one call to update() per fixed tick. One Player lasts
  * the whole game: entering a room places him (enter()), so integrity and
  * energy carry over.
@@ -57,6 +57,11 @@ export const PLAYER = {
    * meanwhile (D74).
    */
   installTicks: 60,
+  /**
+   * Radius of the Shield's and Firewall's ring round his feet center (D73,
+   * D84): what it blocks and what Firewall burns is measured from there.
+   */
+  shieldRadius: 0.55,
 };
 
 
@@ -119,7 +124,12 @@ export class Player {
      * PLAYER.installTicks. It doesn't hold him up (D74).
      */
     this.install = null;
-    /** The Shield while it is up, or null: { tick, ticks }, tick counting up to its duration ticks. */
+    /**
+     * The Shield or Firewall ring while it is up (D73, D84), or null:
+     * { spell, tick, ticks, blockedAt }, tick counting up to its duration
+     * ticks, blockedAt the tick it last blocked an attack (for its flare) or
+     * null. Firewall also keeps `burns`: ticks until it may burn each enemy again.
+     */
     this.shield = null;
     this.enter(pos, resetPoint);
   }
@@ -159,12 +169,25 @@ export class Player {
   }
 
   /**
-   * Raise the Shield for `ticks` ticks; casting it again while it is up
-   * starts it over. It blocks projectiles once there are any (Phase 3 step 6).
+   * Raise a ring spell for `ticks` ticks: the Shield, or Firewall, which
+   * also burns (D84). Casting either while one is up replaces it, starting
+   * over.
+   * @param {'shield'|'firewall'} spell
    * @param {number} ticks
    */
-  raiseShield(ticks) {
-    this.shield = { tick: 0, ticks };
+  raiseShield(spell, ticks) {
+    this.shield = { spell, tick: 0, ticks, blockedAt: null, ...(spell === 'firewall' && { burns: new Map() }) };
+  }
+
+  /**
+   * The box the ring guards while it is up: his own, widened to the ring
+   * on the ground plane (PLAYER.shieldRadius). An enemy's shot stops at it,
+   * and Firewall burns what touches it.
+   */
+  shieldBox() {
+    const box = this.box();
+    for (const axis of [0, 2]) box[axis] = [this.pos[axis] - PLAYER.shieldRadius, this.pos[axis] + PLAYER.shieldRadius];
+    return box;
   }
 
   /**

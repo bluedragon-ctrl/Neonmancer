@@ -42,6 +42,7 @@ import { damagedGlitch, enemyHitLook } from './zap-fx.js';
 import { createCastFlare, placeCastFlare } from './zap-view.js';
 import { createInstall, placeInstall } from './install-view.js';
 import { createShield, placeShield } from './shield-view.js';
+import { createFirewall, placeFirewall } from './firewall-view.js';
 
 /**
  * Which bodies get a drop shadow besides the wizard (who always has one).
@@ -188,8 +189,8 @@ export class PlayerView {
     this.group.add(this.wizard, this.shadow, this.pixels, this.flare);
     /** Install animations by spell id, made when first needed (D73). */
     this.installs = new Map();
-    /** The Shield, made when first cast. */
-    this.shield = null;
+    /** The Shield and Firewall rings by spell id, made when first cast. */
+    this.rings = new Map();
   }
 
   /** The install animation of `spell`, made on first use. */
@@ -198,6 +199,18 @@ export class PlayerView {
     if (!view) {
       view = createInstall(this.game.content.spells[spell]);
       this.installs.set(spell, view);
+      this.group.add(view);
+    }
+    return view;
+  }
+
+  /** The ring of a Shield or Firewall `spell`, made on first use. */
+  ringView(spell) {
+    let view = this.rings.get(spell);
+    if (!view) {
+      const { color } = this.game.content.spells[spell];
+      view = spell === 'firewall' ? createFirewall(color) : createShield(color);
+      this.rings.set(spell, view);
       this.group.add(view);
     }
     return view;
@@ -219,10 +232,12 @@ export class PlayerView {
     const { install, shield } = player;
     for (const [spell, view] of this.installs) view.visible = install?.spell === spell;
     if (install) placeInstall(this.installView(install.spell), this.wizard, pos, install.tick + alpha, install.at.map((v, i) => v - pos[i]));
+    for (const [spell, view] of this.rings) view.visible = shield?.spell === spell;
     if (shield) {
-      if (!this.shield) this.group.add((this.shield = createShield(this.game.content.spells.shield.color)));
-      placeShield(this.shield, pos, shield.tick + alpha, shield.ticks);
-    } else if (this.shield) this.shield.visible = false;
+      const place = shield.spell === 'firewall' ? placeFirewall : placeShield;
+      const sinceBlock = shield.blockedAt === null ? null : shield.tick - shield.blockedAt + alpha;
+      place(this.ringView(shield.spell), pos, shield.tick + alpha, shield.ticks, sinceBlock);
+    }
     // No ghost while dead: not of him falling into a pit, nor of the derez.
     for (const ghost of this.xray) ghost.visible = !player.dead;
     const derezzing = player.dead && player.deathCause !== 'hole';
@@ -267,6 +282,18 @@ export class PushableView {
       this.pixels = createPixelBurst(COLLAPSE_PIXELS, COLLAPSE_FX.pixelSize, [pushable.object.color, 0xffffff]);
       this.group.add(this.pixels);
     }
+  }
+
+  /** The ring of a Shield or Firewall `spell`, made on first use. */
+  ringView(spell) {
+    let view = this.rings.get(spell);
+    if (!view) {
+      const { color } = this.game.content.spells[spell];
+      view = spell === 'firewall' ? createFirewall(color) : createShield(color);
+      this.rings.set(spell, view);
+      this.group.add(view);
+    }
+    return view;
   }
 
   /** @param {number} alpha interpolation factor 0..1 between the last two ticks */
@@ -314,6 +341,18 @@ export class PlatformView {
     this.group.add(this.rails, this.block);
   }
 
+  /** The ring of a Shield or Firewall `spell`, made on first use. */
+  ringView(spell) {
+    let view = this.rings.get(spell);
+    if (!view) {
+      const { color } = this.game.content.spells[spell];
+      view = spell === 'firewall' ? createFirewall(color) : createShield(color);
+      this.rings.set(spell, view);
+      this.group.add(view);
+    }
+    return view;
+  }
+
   /** @param {number} alpha interpolation factor 0..1 between the last two ticks */
   sync(alpha) {
     const { platform } = this;
@@ -339,6 +378,18 @@ export class CollapsingView {
     // Pixels falling into a pit disappear at the floor, like objects.
     this.pixels.material.clippingPlanes = FLOOR_CLIP;
     this.group = new Group().add(this.center, this.pixels);
+  }
+
+  /** The ring of a Shield or Firewall `spell`, made on first use. */
+  ringView(spell) {
+    let view = this.rings.get(spell);
+    if (!view) {
+      const { color } = this.game.content.spells[spell];
+      view = spell === 'firewall' ? createFirewall(color) : createShield(color);
+      this.rings.set(spell, view);
+      this.group.add(view);
+    }
+    return view;
   }
 
   /** @param {number} alpha interpolation factor 0..1 between the last two ticks */

@@ -73,12 +73,14 @@ export const SENTINEL = {
 export const SPELLS = {
   zap: { slot: 0, color: '#00f0ff', cost: 10, cooldown: 0.25, speed: 12, damage: 1 },
   shield: { slot: 1, color: '#3b82ff', cost: 20, cooldown: 0.25, duration: 7 },
+  firewall: { slot: 2, color: '#ff5a14', cost: 40, cooldown: 0.25, duration: 7, damage: 1, burnInterval: 0.5 },
 };
 
-/** Pickup types (D71): both data disks and both refills. */
+/** Pickup types (D71): the data disks and both refills. */
 export const PICKUPS = {
   disk_zap: { kind: 'disk', spell: 'zap' },
   disk_shield: { kind: 'disk', spell: 'shield' },
+  disk_firewall: { kind: 'disk', spell: 'firewall' },
   refill_integrity: { kind: 'refill', stat: 'integrity', amount: 2 },
   refill_energy: { kind: 'refill', stat: 'energy', amount: 30 },
 };

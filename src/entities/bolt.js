@@ -7,7 +7,8 @@
  * - an enemy's shot (`attack: "bolt"`, Bolt.shoot()): slow, from its eyes
  *   (boltDirections(): at the wizard's middle, or four ways); it stops at
  *   the wizard, another live enemy (not the one that fired it), a block, a
- *   room object or the room's side.
+ *   room object or the room's side. While his Shield or Firewall is up,
+ *   it stops at the ring instead, absorbed (D84).
  * A bouncing bolt (an enemy's `boltBounces`, D81) glances off blocks, the
  * room's sides and room objects that many times, turning back along the
  * axis it ran into; after its first bounce it can hit its own shooter too.
@@ -169,7 +170,7 @@ export class Bolt {
 
   /**
    * Does something stop it where it is now? A body first (an enemy; for a
-   * shot the wizard, then an enemy other than its own until it bounced),
+   * shot the wizard or his ring, then an enemy other than its own until it bounced),
    * then a room object (either is its `target`), a block or the room's
    * side (an exit included), or its range running out. Marks it stopped.
    */
@@ -177,7 +178,9 @@ export class Bolt {
     const box = this.box();
     const hits = (body) => overlapsBox(box, body.box());
     const { owner } = this;
-    const wizard = owner && !player.dead && hits(player) ? player : null;
+    // A shot stops at his ring while it is up (D84), else at him.
+    const wizardBox = player.shield ? player.shieldBox() : player.box();
+    const wizard = owner && !player.dead && overlapsBox(box, wizardBox) ? player : null;
     // Every live enemy counts (solid or not); objects only while there (not collapsed or broken).
     this.target =
       wizard ??

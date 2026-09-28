@@ -380,7 +380,7 @@ and burst; a virus can patrol).
     one that fired it), a block, an object or the room's side, and
     sparks there. Room objects shrug it off (it breaks no crate and
     switches no target). Stepping aside while it flies dodges it. The
-    Shield doesn't stop it yet (Phase 3 step 7).
+    Shield and Firewall absorb it at their ring (D84).
     - `boltPattern: "cross"` (D81, towers): four level shots at eye
       height along the grid axes (the screen diagonals), fired like any
       charged attack when it sees him within range; the corners between
@@ -476,7 +476,7 @@ enemies).
   once. Tuning: `INSTALL_FX` in `src/render/install-fx.js`; showcase
   `?asset=install`.
 - **Spell colors:** each spell has a `color` in `defs.json` (Zap cyan
-  `#00f0ff`, Shield neon blue `#3b82ff`): its disk's lit bit, its
+  `#00f0ff`, Shield neon blue `#3b82ff`, Firewall ember `#ff5a14`): its disk's lit bit, its
   install animation and its banner.
 - **Found before:** a permanent pickup whose bit is set shows as a ghost
   (gray, dashed, spinning without the bob, D74) and can't be taken again
@@ -554,8 +554,12 @@ The second spell (D73), from a data disk in Cache Hall (slot 1).
 - Cast (E) with Shield selected: costs 20 energy, then 0.25 s before the
   next cast. It stays up for 7 s (D74); casting it again while it is up starts
   it over. Death ends it; it carries over between rooms.
-- For now it only shows: it blocks projectiles once there are any (Pop-ups,
-  step 6; blocking with step 7). Contact damage is still open.
+- It blocks enemies' ranged attacks (D84): a bolt stops at the ring
+  (radius `PLAYER.shieldRadius`, 0.55, round his feet) in sparks, and an
+  arc or burst that reaches him does nothing. The ring flares for 12
+  ticks (brighter, a little bigger) and no invulnerability starts.
+  Touching an enemy, hazard blocks and spiked platforms still hurt.
+  Casting Firewall replaces it.
 - **Look:** a jagged ring of lightning round him at hand height (radius
   0.55), neon blue outside with a thin white core, turning slowly and
   flickering between four zigzags every 2 ticks. It pops up in 6 ticks
@@ -563,6 +567,33 @@ The second spell (D73), from a data disk in Cache Hall (slot 1).
 - Tuning: `defs.json` `spells.shield` (cost, cooldown, duration, color);
   the look is `SHIELD_FX` in `src/render/shield-fx.js`; showcase
   `?asset=shield`.
+
+## Firewall
+
+The third spell (D84), from a data disk in Scheduler (slot 2), on the low
+wall by the west side.
+
+- Cast (E) with Firewall selected: costs 40 energy, then 0.25 s before the
+  next cast. It stays up for 7 s; casting it again starts it over, casting
+  the Shield replaces it (and the other way round). Death ends it.
+- It blocks everything the Shield blocks, and touch attacks too: touching
+  an enemy doesn't hurt while it is up. Hazard blocks and spiked
+  platforms still do.
+- It burns every live enemy touching its ring (`shieldBox()`: his box
+  widened to the ring on the ground plane): 1 damage (`damage`) at once,
+  then again every 0.5 s (`burnInterval`) while it stays. A burn is a
+  hit like a Zap's: it provokes and alarms the enemy (D81); an enemy it
+  pops has the death cause `firewall`.
+- **Look:** a low jagged ring round his feet with 11 tongues of flame
+  licking up from it (0.3–0.75 high), ember orange outside with a thin
+  white core, turning slowly the other way from the Shield and flickering
+  between four sets of flames. Timing as the Shield (pops up, blinks in
+  its last 40 ticks, flares when it blocks). Picked from three proposals
+  (flames, two rings with lightning, a brick wall), ember over gold and
+  hot rose.
+- Tuning: `defs.json` `spells.firewall` (cost, cooldown, duration, color,
+  damage, burnInterval); the look is `FIREWALL_FX` in
+  `src/render/firewall-fx.js`; showcase `?asset=firewall,shield-block`.
 
 ## X-ray outline
 
@@ -736,7 +767,7 @@ The world map tool flags any room further out.
 | `volatile_memory` (Phase 2) | 12×12, 5 high | west doorway → Transit Bus; raised east exit on the high ledge → Crawl Space | a pit across the room with two collapsing bridges: one regrowing after 3 s (the way back), one that stays gone, with a crate on a plain ledge in front of it to push onto the bridge from solid ground (it doesn't trigger the blocks, so it is a safe spot to hop onto); two one-shot collapsing steps up to a high ledge |
 | `crawl_space` (Phase 2) | 12×12 | west doorway → Volatile Memory; east (front) → Boot Sector | bugs: a sentry crossing the entrance lane, one walking off a ledge and patrolling the floor below, a solid one shoving along a lane with a crate to push in its way, a provoked one circling a pillar, a peaceful stationary one to bounce up to a 2-high ledge, a solid peaceful one along the front edge to ride; Zap targets: the provoked one turns hostile when hit, and an amber stationary one with 4 integrity; an energy refill near the entrance (Phase 3) |
 | `quarantine` (Phase 3) | 10×10, Glitchmire | east doorway → Boot Sector; west doorway → Scheduler | chasers (step 5, D78): a virus at the back that chases and bursts, a sentinel in the far corner that keeps its distance and fires arcs, a stationary bug with a burst guarding an integrity refill; a 2-high pillar to hide behind, a trench of holes the chasers won't cross, a crate for cover and a 1-high ledge |
-| `scheduler` (Phase 3) | 10×10, Abyssal Buffer | east doorway → Quarantine | the cron, worm and crawler looks (D83): a tower in the middle firing four ways, placed off the entrance's axes; a worm patrolling the back row across the tower's line of fire (its bolts can pop it); a crawler chasing from the far corner; pillars, a low wall and a crate to hide behind, and an integrity refill in the far corner |
+| `scheduler` (Phase 3) | 10×10, Abyssal Buffer | east doorway → Quarantine | the cron, worm and crawler looks (D83): a tower in the middle firing four ways, placed off the entrance's axes; a worm patrolling the back row across the tower's line of fire (its bolts can pop it); a crawler chasing from the far corner; pillars, a low wall and a crate to hide behind, an integrity refill in the far corner, and the Firewall data disk on the low wall (step 7, D84) |
 
 ### Room design checklist
 
@@ -1121,8 +1152,8 @@ the author; the answers are recorded as decisions before the code lands.
 | 3 | `feat/data-disks` | More disks (D73): an install animation on the wizard, and a second spell to switch to (Tab / Q): Shield, a crackling ring round him; it blocks projectiles once there are any (step 6). Its disk lies in Cache Hall. |
 | 4 | `feat/switches` | Switches that unlock exits: a pressure plate held down by a crate, and a target that a Zap bolt hits. An exit in room data can be locked until its switches are on; a locked exit looks closed and is solid. Switch state resets with the room. The locked exit is the same mechanism access levels use later (step 14). Editor, validation (switches point at exits that exist), showcase, a test room. |
 | 5 | `feat/viruses` | Universal enemies (a `look` field, D78); every enemy type an enemy template (D79); a `chase` movement behavior: a hostile enemy follows the wizard while it sees him within `aggroRange`, searches, then goes home; charged discharge attacks (`burst`, `arc`; `contact` renamed `touch`); the Virus and the Sentinel; the "!" mark; enemies keep out of holes. Test room Quarantine. |
-| 6 | `feat/popups` | Pop-ups: stationary enemies firing slow shots, with a look of their own. The projectile is there already: the `bolt` attack (D80, the enemy review), a bolt that stops at the wizard, another enemy, a block, an object or the room's side. |
-| 7 | `feat/firewall-spell` | Shield blocks projectiles; Firewall: a shield that also damages (D73). |
+| 6 | ~~`feat/popups`~~ | Closed without a branch (D84): the projectile came with the enemy review (the `bolt` attack and the `shooter` template, D80, D81), and the looks with D83. More enemies go on as side work, discussed and playtested outside the step plan. |
+| 7 | `feat/firewall-spell` | The Shield blocks bolts, arcs and bursts (absorbing bolts at its ring, which flares); Firewall: a ring of flames that also blocks touch and burns enemies touching it (D84). Its disk lies in Scheduler. |
 | 8 | `feat/pause-spell` | Pause: freezes an enemy for a while; a frozen enemy is a solid platform (reusing the solid-enemy rules, D51). |
 | 9 | `feat/warp-spell` | Warp: a short teleport through gaps or past hazards, with an afterimage. |
 | 10 | `feat/cut-paste-spell` | Cut & Paste: cut one object into a one-slot inventory, paste it at a valid grid cell in front of the wizard. |
@@ -1136,11 +1167,8 @@ Open questions, settled at the start of their step:
 - **2 Pickups** and **3 Data disks:** settled (D71, D73).
 - **4 Switches:** settled (D75).
 - **5 Viruses:** settled (D78).
-- **6 Pop-ups:** aimed at the wizard or in a fixed direction; fire rate,
-  shot speed and range; what stops a shot (blocks, crates, Zap).
-- **7 Firewall:** Shield's projectile blocking; Firewall's duration, cost
-  and damage (what it hurts: enemies touching it, projectiles); does
-  Shield or Firewall stop contact damage?
+- **6 Pop-ups:** closed; answered by the bolt attack (D80, D81) (D84).
+- **7 Firewall:** settled (D84).
 - **8 Pause:** duration and cost; how it picks its target (a bolt, or the
   nearest enemy in front); does it work on Wardens (Phase 4)?
 - **9 Warp:** distance and direction; through a one-block wall, or only
@@ -1194,7 +1222,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 | File | Contents |
 |---|---|
 | `data/rooms/<id>.json` | One room (id = file name) |
-| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; `spiked_platform`: a platform that hurts on touch, hazard red (D82); switches `target` and `plate`, white, see Switches and locked exits); `enemies`: enemy templates (`bug`, `virus`, `sentinel`, see Enemies), each complete or `extend`ing another (D58, D79); `spells`: spell tuning and color (`zap`, see Zap and energy; `shield`, see Shield); `pickups`: pickup types (see Pickups and progress); `blocks`: block types (D60): look or kind, color, properties (`damage`, `lethal`, `regrow`), `extends` for variants; see Block types |
+| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; `spiked_platform`: a platform that hurts on touch, hazard red (D82); switches `target` and `plate`, white, see Switches and locked exits); `enemies`: enemy templates (`bug`, `virus`, `sentinel`, see Enemies), each complete or `extend`ing another (D58, D79); `spells`: spell tuning and color (`zap`, see Zap and energy; `shield`, see Shield; `firewall`, see Firewall); `pickups`: pickup types (see Pickups and progress); `blocks`: block types (D60): look or kind, color, properties (`damage`, `lethal`, `regrow`), `extends` for variants; see Block types |
 | `data/biomes.json` | Biome name and room color: `home_lattice` (core, amber), `glitchmire` (pink), `frostbyte_wastes` (ice blue), `abyssal_buffer` (graphite), `firewall_citadel` (ember orange), `phantom_partition` (special, silver-white); optional `look` for the surroundings (background, outer grid and its fade, wall grid, bloom); see Biomes (D61, D62) |
 | `data/world.json` | Start room, exit connections and every room's cell on the world map (`positions`, D66) |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |
