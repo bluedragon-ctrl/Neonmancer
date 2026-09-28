@@ -157,8 +157,9 @@ Sector. Each spell has a slot (0–15), its save bit, shown as the one lit
 bit on its disk (D71).
 - **Zap** — fast bolt, short cooldown
 - **Shield** — a crackling electric ring round the wizard for a while;
-  blocks projectiles (D73)
-- **Firewall** — a shield that also damages (details at its step, D73)
+  blocks enemies' ranged attacks: bolts, arcs and bursts (D73, D84)
+- **Firewall** — a ring of flames like the Shield that also blocks touch
+  and burns enemies touching it (D84)
 - **Pause** — freezes an enemy; frozen enemies act as platforms
 - **Warp** — short teleport through gaps or past hazards
 - **Cut & Paste** — cut one object into inventory, paste it at a valid

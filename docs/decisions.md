@@ -1414,3 +1414,33 @@ grid axes shows at a glance which lines are dangerous and that the
 corners are safe. Colors are provisional: nearly every hue is taken, so
 the rose sits near hazard red and the mint between the bug's green and
 the platforms' cyan; the silhouettes carry the difference.
+
+### D84 — 2026-09-28 — Step 6 closed; Shield blocking and the Firewall spell
+Settled with the author at the start of Phase 3 step 7:
+- **Step 6 (Pop-ups) is closed** without a branch of its own: its
+  projectile arrived with the enemy review (the `bolt` attack and the
+  `shooter` template, D80, D81), and new looks with D83. More enemies go
+  on as side work, discussed and playtested outside the step plan.
+- **Shield** blocks all of enemies' ranged attacks: bolts, arcs and
+  bursts. A bolt is **absorbed** at the ring (radius
+  `PLAYER.shieldRadius`, 0.55, round his feet; sparks), not reflected or
+  deflected; an arc or burst reaching him does nothing. A block flares
+  the ring and starts no invulnerability. Touch attacks, hazard blocks
+  and spiked platforms still hurt.
+- **Firewall** (slot 2): blocks what the Shield blocks and touch attacks
+  too, and burns every live enemy touching its ring: 1 damage at once,
+  then every 0.5 s while it stays (`damage`, `burnInterval`). A burn is a
+  hit (it provokes and alarms, D81). **40 energy, 7 s** (the author
+  raised the proposed 30 energy, 5 s). Casting either ring spell
+  replaces the other.
+- Look, picked in the showcase from three proposals (flames, two rings
+  with lightning, a brick wall): **flames**, a low jagged ring with
+  tongues of flame licking up, flickering; color **ember** `#ff5a14`,
+  over gold and hot rose.
+- The Firewall disk lies in **Scheduler**, on its low wall: the tower's
+  bolts try out blocking, the worm and crawler touching and burning.
+**Why:** author's choices. Leaving touch to Firewall gives the two ring
+spells distinct jobs: the Shield for shooters, Firewall for crowds. An
+absorbed bolt is the simplest to read. Ember reads as fire; every hue is
+near something taken, and the ring's silhouette on the wizard carries the
+difference (as in D83).

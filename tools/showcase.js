@@ -56,6 +56,7 @@ import { createRefill, refillMotion } from '../src/render/refill.js';
 import { INSTALL_FX } from '../src/render/install-fx.js';
 import { createInstall, placeInstall } from '../src/render/install-view.js';
 import { createShield, placeShield } from '../src/render/shield-view.js';
+import { createFirewall, placeFirewall } from '../src/render/firewall-view.js';
 import { createLock, createPlate, createTarget } from '../src/render/switch-view.js';
 import { SWITCH_KINDS } from '../src/entities/switch.js';
 
@@ -152,10 +153,17 @@ const ALL_ASSETS = [
   { label: 'disk-in-room', group: 'disks', span: 5.5, spin: false, build: buildDiskInRoom },
   { label: 'disk-slots', group: 'disks', span: 6, spin: false, build: buildDiskSlots },
   { label: 'disk-shield', group: 'disks', spin: false, build: () => buildDisk(defs.spells.shield) },
+  { label: 'disk-firewall', group: 'disks', spin: false, build: () => buildDisk(defs.spells.firewall) },
   // Installing a spell (Phase 3 step 3, D73): Zap, then Shield, in a loop.
   { label: 'install', spin: false, shadow: PALETTE.cyan, build: buildInstall },
   // Shield (D73): up for its duration, blinking before it ends.
   { label: 'shield', spin: false, shadow: PALETTE.cyan, build: buildShield },
+  // Shield blocking (Phase 3 step 7, D84): a shooter's bolt is absorbed at
+  // the ring in sparks, and the ring flares.
+  { label: 'shield-block', span: 6, spin: false, build: buildShieldBlock },
+  // Firewall (D84): flames licking up from a low ring, up for its
+  // duration, blinking before it ends.
+  { label: 'firewall', spin: false, shadow: PALETTE.cyan, build: buildFirewall },
   // Refills (temporary pickups): integrity and energy, hovering and spinning
   // like a disk; picked up the same way; beside a disk and the wizard for scale.
   { label: 'refill-integrity', group: 'refills', spin: false, build: () => buildRefill('integrity') },
@@ -313,6 +321,58 @@ function buildShield() {
   asset.userData.update = (dt) => {
     tick = (tick + dt * 60) % loop;
     placeShield(shield, [0, 0, 0], tick, ticks);
+  };
+  return asset;
+}
+
+/** The wizard casting Firewall: up for its duration, then down for a moment. */
+function buildFirewall() {
+  const wizard = createWizard();
+  wizard.rotation.y = Math.PI / 4;
+  const ring = createFirewall(defs.spells.firewall.color);
+  const asset = new Group().add(wizard, ring);
+  const ticks = Math.round(defs.spells.firewall.duration * 60);
+  const loop = ticks + 50;
+  let tick = 0;
+  asset.userData.update = (dt) => {
+    tick = (tick + dt * 60) % loop;
+    placeFirewall(ring, [0, 0, 0], tick, ticks);
+  };
+  return asset;
+}
+
+/**
+ * Shield blocking (D84) in a loop: a shooter (defs.json) charges and fires
+ * at the wizard with his Shield up; the bolt stops at the ring in sparks,
+ * the ring flares, he is unhurt.
+ */
+function buildShieldBlock() {
+  const { color, attackColor, attackCharge, boltSpeed } = enemyValues('shooter');
+  const u = [Math.SQRT1_2, 0, -Math.SQRT1_2];
+  const bug = createBug(color);
+  bug.position.set(u[0] * -2, 0, u[2] * -2);
+  bug.rotation.y = Math.atan2(u[0], u[2]);
+  const wizard = createWizard();
+  wizard.position.set(u[0] * 2, 0, u[2] * 2);
+  wizard.rotation.y = Math.atan2(-u[0], -u[2]);
+  const shield = createShield(defs.spells.shield.color);
+  const asset = new Group().add(bug, wizard, shield);
+  const eyes = [bug.position.x, ENEMY.eyeHeight, bug.position.z];
+  const middle = [wizard.position.x, PLAYER_HITBOX[1] / 2, wizard.position.z];
+  // Level enough: it stops where its box meets the ring (PLAYER.shieldRadius).
+  const stop = towards3(eyes, middle, Math.hypot(...middle.map((v, k) => v - eyes[k])) - PLAYER.shieldRadius - BOLT.size / 2);
+  const from = towards3(eyes, stop, BOLT.reach);
+  const runs = boltRuns(asset, attackColor, [[from, stop]], boltSpeed);
+  const charge = Math.round(attackCharge * 60);
+  loopBoltAttack(asset, { model: bug, animate: animateBug, markHeight: BUG_MODEL.markHeight, charge, runs, wizard, hit: Infinity });
+  const attack = asset.userData.update;
+  const loop = Math.ceil(charge + runs.ticks[0] + 80);
+  const up = 10000;
+  let tick = 0;
+  asset.userData.update = (dt, time) => {
+    attack(dt, time);
+    tick = (tick + dt * 60) % loop;
+    placeShield(shield, wizard.position.toArray(), 100 + tick, up, tick - charge - runs.ticks[0]);
   };
   return asset;
 }

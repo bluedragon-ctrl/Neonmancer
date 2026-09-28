@@ -9,6 +9,7 @@
     "hud.spellSwitch": "TAB",
     "spell.zap": "ZAP",
     "spell.shield": "SHIELD",
+    "spell.firewall": "FIREWALL",
     "hud.movementGrid": "GRID MOVE (G)",
     "hud.movementScreen": "SCREEN MOVE (G)",
     "hint.fullscreen": "PRESS F FOR FULLSCREEN",

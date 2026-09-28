@@ -64,7 +64,7 @@ test('Shield costs its energy and stays up for its duration; casting again start
   assert.deepEqual(game.update(press('cast')).find((e) => e.type === 'cast'), { type: 'cast', spell: 'shield' });
   assert.equal(player.energy, PLAYER.maxEnergy - SPELLS.shield.cost);
   const ticks = SPELLS.shield.duration * 60;
-  assert.deepEqual(player.shield, { tick: 0, ticks });
+  assert.deepEqual(player.shield, { spell: 'shield', tick: 0, ticks, blockedAt: null });
   for (let i = 0; i < ticks - 1; i++) game.update(idle);
   assert.ok(player.shield, 'still up');
   game.update(press('cast'));

@@ -92,7 +92,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/zap-fx.js` | Zap look: trail zigzags, bolt flicker, cast flare, sparks, enemy hit flash and damaged glitch, `ZAP_FX` tuning (pure, tested) |
 | `render/zap-view.js` | Zap meshes: bolt, cast flare, sparks, in the Zap's cyan or an enemy bolt's color; `ZapView` keeps a room's bolts and sparks (pooled by color) |
 | `render/install-fx.js`, `render/install-view.js` | Installing a spell from a data disk (D73): the look (pure, tested) and its meshes, shown by `PlayerView` |
-| `render/shield-fx.js`, `render/shield-view.js` | The Shield's lightning ring (D73): the look (pure, tested) and its meshes, shown by `PlayerView` |
+| `render/shield-fx.js`, `render/shield-view.js` | The Shield's lightning ring (D73): the look (pure, tested; its flare when it blocks, D84) and its meshes, shown by `PlayerView` |
+| `render/firewall-fx.js`, `render/firewall-view.js` | Firewall's ring of flames (D84): the segments (pure, tested; timing is the Shield's) and its meshes, shown by `PlayerView` |
 | `render/collapse-fx.js` | Collapsing-block look: shake, pixels breaking off, regrow, `COLLAPSE_FX` tuning (pure, tested) |
 | `render/enemy-look.js` | What every enemy model shares (D80): mood colors (`MOODS`, `eyeMood()`, `setMood()`), the eye geometry and glow, the pop burst (`popBurst()`) (pure parts tested) |
 | `render/bug.js` | Bug model (ball, eyes colored by mood), hop pose, bounce squash, pop pixels, `BUG` tuning (pure parts tested); `BUG_MODEL` for `EnemyView` |

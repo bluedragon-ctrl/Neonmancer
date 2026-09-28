@@ -25,8 +25,10 @@ import { buildRoom } from './world/room.js';
 const SPELL_EFFECTS = {
   /** A bolt from his hands the way he aims (entities/bolt.js). */
   zap: (game, spell) => game.bolts.push(Bolt.cast(game.player.pos, game.player.aim(), spell)),
-  /** A ring of electricity round him for a while (D73). */
-  shield: (game, spell) => game.player.raiseShield(Math.round(spell.duration / DT)),
+  /** A ring of electricity round him for a while that blocks ranged attacks (D73, D84). */
+  shield: (game, spell) => game.player.raiseShield('shield', Math.round(spell.duration / DT)),
+  /** A ring like the Shield that also blocks touch and burns enemies touching it (D84). */
+  firewall: (game, spell) => game.player.raiseShield('firewall', Math.round(spell.duration / DT)),
 };
 
 /** Terminal message for each way to die (Player.deathCause). */
@@ -50,7 +52,7 @@ export const TRANSITION = {
  * Something that happened, for views, the HUD and (later) sound. Returned
  * by Game.update() for the tick it happened in.
  * @typedef {object} GameEvent
- * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'} type
+ * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'} type
  * @property {string} [spell] the spell cast, failed or selected (cast, deny, spell)
  * @property {object} [object] the room object it happened to (push, plug,
  *   land of an object; shake, collapse and regrow of a collapsing block;
@@ -224,7 +226,7 @@ export class Game {
    * Bolts fly on. A bounce is reported ('ricochet', with where and the way
    * it came in, for sparks). One that stops is reported ('zap', for its
    * sparks) and gone. If it stopped at the wizard (an enemy's shot), he is
-   * hurt; at an enemy, that takes its damage (hitEnemy()). A room object
+   * hurt, unless his ring absorbed it ('block', D84); at an enemy, that takes its damage (hitEnemy()). A room object
    * only minds the wizard's Zap: a destructible one 'hit' or 'break', a
    * target 'switch' (others shrug it off).
    */
@@ -236,7 +238,8 @@ export class Game {
       this.emit('zap', { bolt });
       const { target, owner } = bolt;
       if (target === this.player) {
-        this.hurt(bolt.damage, { enemy: owner });
+        if (this.player.shield) this.block({ enemy: owner, bolt });
+        else this.hurt(bolt.damage, { enemy: owner });
         continue;
       }
       if (target instanceof Enemy) {
@@ -260,7 +263,7 @@ export class Game {
    * the wizard gets the blame, so it turns to him ('alert').
    * @param {Enemy} enemy
    * @param {number} damage
-   * @param {'zap'|'discharge'|'bolt'} cause
+   * @param {'zap'|'discharge'|'bolt'|'firewall'} cause
    */
   hitEnemy(enemy, damage, cause) {
     const event = enemy.hit(damage, cause);
@@ -329,15 +332,29 @@ export class Game {
   }
 
   /**
-   * A discharge from `enemy` hits the wizard (hurt) or another enemy
-   * (hitEnemy()).
+   * A discharge from `enemy` hits the wizard (hurt; his Shield or Firewall
+   * blocks it: 'block', D84) or another enemy (hitEnemy()).
    * @param {Player|Enemy} body
    * @param {Enemy} enemy
    */
   strike(body, enemy) {
     const { damage } = enemy.data;
-    if (body === this.player) return this.hurt(damage, { enemy });
+    if (body === this.player) {
+      if (this.player.shield) return this.block({ enemy });
+      return this.hurt(damage, { enemy });
+    }
     this.hitEnemy(body, damage, 'discharge');
+  }
+
+  /**
+   * His Shield or Firewall blocked an attack (D84): it flares (its
+   * `blockedAt` tick, for the view) and 'block' is reported.
+   * @param {{ enemy: Enemy, bolt?: Bolt }} details the attacker, and the bolt it absorbed
+   */
+  block(details) {
+    const { shield } = this.player;
+    shield.blockedAt = shield.tick;
+    this.emit('block', details);
   }
 
   /**
@@ -457,6 +474,7 @@ export class Game {
     this.updateAttacks();
     const bounced = this.bounceOffEnemies();
     this.touchEnemies(bounced);
+    this.burnEnemies();
     this.takePickups();
     this.updateSwitches();
     return this.takeEvents();
@@ -606,12 +624,13 @@ export class Game {
   /**
    * Touching a hostile enemy with a touch attack hurts the wizard (D43):
    * overlapping it, or leaning on or standing on a solid one (the hazard
-   * rule, D44). Not the enemy he just bounced off.
+   * rule, D44). Not the enemy he just bounced off, and nothing while his
+   * Firewall is up (D84).
    * @param {Enemy|null} bounced
    */
   touchEnemies(bounced) {
     const { player } = this;
-    if (player.dead) return;
+    if (player.dead || player.shield?.spell === 'firewall') return;
     const box = player.box();
     for (const enemy of this.liveEnemies) {
       if (!enemy.hurtsOnContact || enemy === bounced) continue;
@@ -619,6 +638,27 @@ export class Game {
         this.hurt(enemy.data.damage, { enemy });
         return;
       }
+    }
+  }
+
+  /**
+   * Firewall burns every live enemy touching its ring (D84): a hit of its
+   * damage ('firewall'), then again every burnInterval while it stays.
+   */
+  burnEnemies() {
+    const { player } = this;
+    const { shield } = player;
+    if (player.dead || shield?.spell !== 'firewall') return;
+    const { damage, burnInterval } = this.content.spells.firewall;
+    const box = player.shieldBox();
+    for (const [enemy, ticks] of shield.burns) {
+      if (ticks > 1) shield.burns.set(enemy, ticks - 1);
+      else shield.burns.delete(enemy);
+    }
+    for (const enemy of this.liveEnemies) {
+      if (shield.burns.has(enemy) || !touchesBox(box, enemy.box())) continue;
+      shield.burns.set(enemy, Math.round(burnInterval / DT));
+      this.hitEnemy(enemy, damage, 'firewall');
     }
   }
 
