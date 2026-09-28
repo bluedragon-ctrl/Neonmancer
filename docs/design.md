@@ -459,10 +459,10 @@ enemies).
   terminal line `> SPELL INSTALLED: ZAP`, selects the spell and brings up
   the energy bar and the spell tag in the HUD (both hidden until then:
   energy is only for spells; see Zap and energy).
-- **Save bits in blocks:** spells 0–15, buffs 16–31, equipment 32–47,
-  fragments 48–111; 112 in all. The index comes from what the item
-  unlocks: a spell's `slot` in `defs.json` for its disk (Zap: 0); later a
-  buff's or piece of equipment's slot on its pickup type, and a
+- **Save bits in blocks:** spells 0–15, buffs 16–31, upgrades 32–47
+  (spell upgrades, D88), fragments 48–111; 112 in all. The index comes
+  from what the item unlocks: a spell's `slot` in `defs.json` for its
+  disk (Zap: 0); later a buff's or an upgrade's slot on its pickup type, and a
   fragment's number on the placement. A bit is the item, not the place:
   the same disk may lie in several rooms, and finding one grays out all.
 - **Progress** (`src/world/progress.js`) holds the bits found for the
@@ -715,6 +715,49 @@ The seventh spell (D87), from a data disk by the entrance of Clipboard
   color); the look is `CLIP_FX` in `src/render/clip-fx.js` with
   `src/render/clip-view.js`, the icons `src/ui/clip-icon.js`; showcase
   `?asset=cut-paste,disk-cut-paste`.
+
+## Spell roster
+
+Settled in Phase 3 step 11 (D88). Up to 16 spells and 16 upgrades, each
+its own save bit (an upgrade in the upgrades block, not spells). Ten
+spells and two upgrades are set; the rest stay spare for what content
+production shows a need for.
+
+| Spell | Slot | What it does | Built |
+|---|---|---|---|
+| Zap | 0 | Fast bolt | Phase 2–3 |
+| Shield | 1 | Ring that blocks ranged attacks | Phase 3 |
+| Firewall | 2 | Ring of flames: blocks touch too, burns | Phase 3 |
+| Pause | 3 | Bolt that freezes an enemy into a platform | Phase 3 |
+| Blink | 4 | 3-unit dash, hits enemies, hurts on a wall | Phase 3 |
+| Warp | 5 | Teleport to the first wall | Phase 3 |
+| Cut & Paste | 6 | Move a crate or frozen enemy, room to room | Phase 3 |
+| Compile | 7 | Temporary block in the cell in front: a step or a bridge tile | Phase 4 |
+| Fork | 8 | Hologram decoy for a while: holds plates, draws enemies | Phase 4 |
+| Scan | 9 | Reveals hidden blocks, fake walls and secret pickups for a while | Phase 4 |
+
+| Upgrade | Of | What it does | Built |
+|---|---|---|---|
+| Zap+ | Zap | The bolt bounces off walls: targets round corners | Phase 4 |
+| Mirror | Shield | Reflects bolts back at the shooter | Phase 4 |
+
+- **Upgrades** have their own disks. Found, an upgrade replaces its base
+  spell in the Tab cycle (ZAP becomes ZAP+), so the cycle stays short.
+- **Order in the world** (intended; rooms place the disks later):
+  early Zap, Shield, Blink, Pause; middle Cut & Paste, Firewall, Fork,
+  Scan and the jump buff; late Compile, Warp, Zap+ and Mirror.
+- **Buff items** (draft, settled in step 12): 4× +1 integrity (8 → 12,
+  within the key's 4-bit health field), 5× +10 energy (one bar segment
+  each, 50 → 100), one jump buff (1 → 2 blocks), one faster recharge:
+  11 of the 16 buff bits.
+- **Turned down for now:** Pull (fetch a crate), Patch (an enemy turns
+  peaceful), Overclock (a speed burst), Decrypt (dissolves an encrypted
+  wall type), Rollback (back to where he was 3 s ago); upgrades Halt
+  (Pause freezing the whole room), Lift (Warp landing on top of what
+  stops it), Firewall+ (hazard immunity) and Cut & Paste+ (a level up or
+  down). They remain candidates for the spare bits.
+- Slots 7–9 and the upgrade slots are provisional until each spell's
+  step; colors and costs are settled there.
 
 ## X-ray outline
 
@@ -1295,9 +1338,10 @@ Open questions, settled at the start of their step:
 - **8 Pause:** settled (D85).
 - **9 Warp:** settled (D86).
 - **10 Cut & Paste:** settled (D87).
-- **11 Roster:** which spells and upgrades (up to 16 in all), which buff
-  items and how many of each, and the order they appear in the world.
-- **12 Buff items:** how much each raises (e.g. +2 integrity, +2 energy);
+- **11 Roster:** settled (D88); see Spell roster.
+- **12 Buff items:** the draft from the roster (D88): 4× +1 integrity
+  (8 → 12), 5× +10 energy (50 → 100), one jump buff (to 2 blocks), one
+  faster-recharge buff; confirm how much each raises;
   the jump buff (it opens areas and skips rooms, D68): how high, and does
   it stack; the access-key health field (4 bits) must hold the highest
   maximum.
@@ -1317,7 +1361,8 @@ Open questions, settled at the start of their step:
 ## Phase 4 (v0.4) outline
 
 Guardians, saves and tooling (D65); planned in detail when Phase 3 is
-released. Firewall Wardens; title screen and pause menu (the save UI needs
+released. Firewall Wardens; the roster's new spells and upgrades, one
+step each (D88): Compile, Fork, Scan, Zap+ and Mirror; title screen and pause menu (the save UI needs
 both); access-key codec with tests; URL saves and localStorage autosave;
 map screen; reachability checker; design skills and subagents. Open so
 far: what writes a save (save shrines, room entry, or both); how deep

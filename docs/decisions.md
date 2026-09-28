@@ -1567,3 +1567,40 @@ stronger late in the game; copies keep the rules simple (rooms reset,
 the save holds no room state, D68). A free paste avoids a soft lock. The
 marquee is the classic "selection" and reads as editing the world; the
 aim marker makes adjacent-cell targeting clear with free movement.
+
+### D88 — 2026-09-28 — Spell roster: Compile, Fork, Scan; Zap+ and Mirror
+Settled with the author in Phase 3 step 11, after playing the first
+seven spells:
+- **New spells:** **Compile** (a temporary block in the cell in front of
+  the wizard: a step up or a bridge tile), **Fork** (a hologram decoy
+  that stands for a while, holds floor plates down and draws enemies)
+  and **Scan** (reveals hidden blocks, fake walls and secret pickups for
+  a while). Slots 7–9, provisional.
+- **Upgrades:** **Zap+** (the bolt bounces off walls, reusing the bolt
+  bounces of D81) and **Mirror** (the Shield reflects bolts back at the
+  shooter). An upgrade has its own disk and replaces its base spell in
+  the Tab cycle (ZAP becomes ZAP+).
+- **Upgrades are tracked as upgrades, not spells:** the save block that
+  was reserved for equipment (bits 32–47, never used) becomes the
+  upgrades block. Spells keep their 16 bits and the layout stays at 112
+  pickup bits. So D68's "up to 16 spells in all, upgrades included"
+  becomes up to 16 spells and 16 upgrades; 10 spells and 2 upgrades are
+  set, the rest stay spare for what content production shows a need for.
+- **When:** the five get one step each in Phase 4; Phase 3 goes on with
+  buffs, score and fragments.
+- **Buff draft** (settled in step 12): 4× +1 integrity (8 → 12, within
+  the key's 4-bit health field), 5× +10 energy (50 → 100), one jump buff
+  (to 2 blocks), one faster-recharge buff.
+- **Order in the world** (intended): early Zap, Shield, Blink, Pause;
+  middle Cut & Paste, Firewall, Fork, Scan and the jump buff; late
+  Compile, Warp, Zap+ and Mirror.
+- **Turned down for now,** candidates for the spare bits: Pull, Patch,
+  Overclock, Decrypt, Rollback; upgrades Halt, Lift, Firewall+ and
+  Cut & Paste+ (docs/design.md, Spell roster).
+**Why:** author's choices. Compile and Fork give puzzles new answers
+(a step or bridge without a crate, a plate held without one) and Scan
+serves the secrets and the Phantom Partition; Zap+ and Mirror make the
+first two spells worth having late. Replacing the base keeps the Tab
+cycle short. A block of their own keeps upgrades apart from spells in
+the save and the code; equipment was never defined. Keeping bits spare
+leaves the roster open to what the rooms turn out to need.

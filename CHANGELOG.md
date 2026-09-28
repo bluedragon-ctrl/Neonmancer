@@ -7,6 +7,10 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The spell roster (Phase 3 step 11, D88): three new spells (Compile,
+  Fork, Scan) and two upgrades (Zap+, Mirror), planned for Phase 4; a
+  draft of the buff items; the intended order in the world. docs/design.md
+  gets a Spell roster section.
 - The Cut & Paste spell (Phase 3 step 10, D87, slot 6, white). With an
   empty clipboard it cuts the crate or frozen enemy right in front of
   the wizard, on his own level (20 energy); holding one, it
@@ -151,6 +155,8 @@ and the project uses [Semantic Versioning](https://semver.org/).
   or the world map (`map`) or the asset showcase (`showcase`).
 
 ### Changed
+- The save block reserved for equipment (bits 32–47, never used) is now
+  the upgrades block, for spell upgrades (D88); `SAVE_BLOCKS.upgrades`.
 - Phase 3 step 6 (Pop-ups) is closed: the bolt attack (D80, D81) and
   the new looks (D83) covered it; more enemies go on as side work (D84).
 - Enemy review (D80): searching and going home a chaser finds its way

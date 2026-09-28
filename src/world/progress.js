@@ -11,14 +11,14 @@
 /**
  * The save bits in blocks (D71): where each block starts and how many bits
  * it has. A block's index comes from what the item unlocks: a spell's
- * `slot` (defs.json spells) for its data disk; later a buff's or a piece of
- * equipment's slot on its pickup type, and a fragment's number on the
+ * `slot` (defs.json spells) for its data disk; later a buff's or a spell
+ * upgrade's slot on its pickup type (D88), and a fragment's number on the
  * placement.
  */
 export const SAVE_BLOCKS = {
   spells: { start: 0, size: 16 },
   buffs: { start: 16, size: 16 },
-  equipment: { start: 32, size: 16 },
+  upgrades: { start: 32, size: 16 },
   fragments: { start: 48, size: 64 },
 };
 
