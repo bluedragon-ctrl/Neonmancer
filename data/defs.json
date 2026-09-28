@@ -122,12 +122,14 @@
       "duration": 7,
       "damage": 1,
       "burnInterval": 0.5
-    }
+    },
+    "pause": { "slot": 3, "color": "#c9a2ff", "cost": 25, "cooldown": 0.25, "speed": 10, "duration": 5 }
   },
   "pickups": {
     "disk_zap": { "kind": "disk", "spell": "zap" },
     "disk_shield": { "kind": "disk", "spell": "shield" },
     "disk_firewall": { "kind": "disk", "spell": "firewall" },
+    "disk_pause": { "kind": "disk", "spell": "pause" },
     "refill_integrity": { "kind": "refill", "stat": "integrity", "amount": 3 },
     "refill_energy": { "kind": "refill", "stat": "energy", "amount": 30 }
   },

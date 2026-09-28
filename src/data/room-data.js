@@ -148,7 +148,8 @@ export const CHARGED_ATTACKS = [...DISCHARGES, 'bolt'];
 
 /**
  * Enemy template fields that may be left out: aggro range (units), bounce (a
- * trampoline top), solid (blocks, carries and shoves the wizard), memory
+ * trampoline top), solid (blocks, carries and shoves the wizard), pausable
+ * (Pause freezes it, D85), memory
  * (seconds a chaser searches after losing sight of him), a charged attack's
  * range (units), charge and cooldown (seconds), and a bolt attack's speed
  * (units per second), pattern and bounces (D81). chaseSpeed and attackColor
@@ -158,6 +159,7 @@ export const ENEMY_DEFAULTS = {
   aggroRange: 0,
   bounce: false,
   solid: false,
+  pausable: true,
   memory: 1.5,
   attackRange: 1.2,
   attackCharge: 0.4,

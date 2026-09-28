@@ -105,12 +105,12 @@ export class Platform {
       if (!moving.has(object) && overlapsBox(box, object.box())) return { ok: false };
     }
     // Riders must fit where they are carried: clear of blocks and other
-    // bodies (a non-solid enemy may overlap the wizard, it doesn't block him).
+    // bodies (a non-solid enemy, or a frozen one he is still inside, may overlap the wizard).
     const still = objects.filter((object) => !moving.has(object));
     const stillAndPlayer = alive && !carriesPlayer ? [...still, player] : still;
     for (const crate of crates) {
       const moved = crate.box().map(([min, max], i) => [min + delta[i], max + delta[i]]);
-      const others = crate instanceof Enemy && !crate.solid ? still : stillAndPlayer;
+      const others = crate instanceof Enemy && (!crate.solid || crate.passable) ? still : stillAndPlayer;
       if (overlapsSolid(moved, grid) || others.some((body) => overlapsBox(moved, body.box()))) return { ok: false };
     }
     if (!alive) return { ok: true, crates, player: null };

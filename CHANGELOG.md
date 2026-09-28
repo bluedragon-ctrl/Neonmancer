@@ -7,6 +7,14 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The Pause spell (Phase 3 step 8, D85, slot 3): 25 energy, a lavender
+  bolt the way the wizard aims that freezes the first enemy it hits for
+  5 s. A frozen enemy holds its pose in a cage of corner brackets, sees,
+  attacks and hurts nothing, and is a solid platform (D51 rules) that
+  doesn't bounce; hits still hurt it; it blinks before it thaws. One
+  frozen round the wizard lets him out first. An enemy template field
+  `pausable` (default true) lets guardians shrug it off. Its data disk
+  lies on the pillar in Quarantine. Showcase `pause`, `disk-pause`.
 - The Shield blocks enemies' ranged attacks (Phase 3 step 7, D84): a
   bolt is absorbed at its ring in sparks, an arc or burst does nothing;
   the ring flares. Touch attacks still hurt. Showcase `shield-block`.

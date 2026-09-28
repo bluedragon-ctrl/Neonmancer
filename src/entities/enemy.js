@@ -13,6 +13,7 @@
  *     └──no support──► fall ──land──► rest
  *   falls into a hole or onto a void block ──► dead (pops; gone until the room resets)
  *   hit by a spell, a discharge or a bolt ──► integrity − damage; at 0 ──► dead (pops)
+ *   hit by Pause ──► frozen for a while (still falls; hits still hurt it) ──► thaws
  *
  * It never steps into a hole or where it would land on a lethal block
  * (D78); it only ends up in one when the ground goes from under it (while
@@ -25,6 +26,9 @@
  * it (it turns to the wizard and looks for him there, alarm(), D80, D81).
  * Charged attack (burst, arc or bolt): seeing him within its attack range
  * at rest, it stops, charges, fires (Game.discharge()), then cools down.
+ * Frozen by Pause (D85), it stops where it is, even mid-step, sees nothing,
+ * attacks nothing and hurts nothing, and is solid (a platform, the D51
+ * rules) until it thaws; it still falls, rides platforms and takes hits.
  *
  * It only starts a step from a whole cell (so on a platform, only at a
  * stop). The wizard walks through it, unless it is solid: then it blocks
@@ -126,6 +130,13 @@ export class Enemy {
     this.bounced = null;
     /** Ticks left before it may start a step (after being blocked). */
     this.wait = 0;
+    /** Frozen by Pause (D85): { tick, ticks }, tick counting up to its duration ticks; null while not. */
+    this.frozen = null;
+    /**
+     * Frozen round the wizard (he was inside it): not solid for him until he
+     * has stepped out of it, so freezing never traps him (Game.updateFrozen()).
+     */
+    this.passable = false;
     /** How it died: 'hole' | 'void' | 'zap' | 'discharge' | 'bolt' | 'firewall'; null while alive. */
     this.deathCause = null;
     /** Ticks since it died, for the pop. */
@@ -136,9 +147,9 @@ export class Enemy {
     return this.state !== 'dead';
   }
 
-  /** Does it block the wizard (and carry and shove him)? */
+  /** Does it block the wizard (and carry and shove him)? Solid ones, and frozen ones (D85). */
   get solid() {
-    return this.alive && this.data.solid;
+    return this.alive && (this.data.solid || this.frozen !== null);
   }
 
   /** Does it attack the wizard: hostile by type, or provoked by an attack? */
@@ -147,9 +158,33 @@ export class Enemy {
     return this.alive && (hostility === 'hostile' || (hostility === 'provoked' && this.provoked));
   }
 
-  /** Does touching it hurt: hostile, with a touch attack? */
+  /** Does touching it hurt: hostile, with a touch attack, and not frozen? */
   get hurtsOnContact() {
-    return this.hostile && this.data.attack === 'touch';
+    return this.hostile && this.data.attack === 'touch' && this.frozen === null;
+  }
+
+  /** Does landing on it bounce the wizard up: a bouncy one, not frozen (then it is a plain platform)? */
+  get bouncy() {
+    return this.data.bounce && this.frozen === null;
+  }
+
+  /**
+   * Pause hits it (D85): it is provoked (a provoked one thaws hostile) and,
+   * unless its type isn't pausable, frozen for `ticks`; freezing a frozen
+   * one starts it over. Whatever it was doing stops: an attack is cut off
+   * and it sees nothing (sense()).
+   * @param {number} ticks
+   * @returns {'freeze'|null} event (null if it was dead already or can't be paused)
+   */
+  freeze(ticks) {
+    if (!this.alive) return null;
+    this.provoke();
+    if (!this.data.pausable) return null;
+    if (this.attackTick !== null) this.endAttack();
+    this.frozen = { tick: 0, ticks };
+    this.sees = false;
+    this.inRange = false;
+    return 'freeze';
   }
 
   /** Is its attack charged (a burst, an arc or a bolt)? */
@@ -211,6 +246,7 @@ export class Enemy {
     const saw = this.sees;
     this.sees = false;
     this.inRange = false;
+    if (this.frozen) return false;
     if (this.hostile && !player.dead && this.data.aggroRange > 0) {
       const eyes = this.middle();
       const box = player.box();
@@ -247,7 +283,7 @@ export class Enemy {
    * @returns {'charge'|'discharge'|null}
    */
   updateAttack(game) {
-    if (!this.charged) return null;
+    if (!this.charged || this.frozen) return null;
     if (this.cooldown > 0) this.cooldown--;
     if (this.attackTick !== null) {
       if (!this.alive || this.state === 'fall') {
@@ -305,7 +341,7 @@ export class Enemy {
   /**
    * One fixed tick.
    * @param {import('../game.js').Game} game grid and `obstacles` (solid objects and live enemies)
-   * @returns {'pop'|'land'|null} event
+   * @returns {'pop'|'land'|'thaw'|null} event
    */
   update(game) {
     this.savePrevious();
@@ -315,6 +351,11 @@ export class Enemy {
     }
     if (this.bounced !== null) this.bounced++;
     if (this.hitTicks !== null) this.hitTicks++;
+    if (this.frozen && ++this.frozen.tick >= this.frozen.ticks) {
+      this.frozen = null;
+      this.passable = false;
+      return 'thaw';
+    }
     if (this.state === 'walk') return this.walk(game);
     if (this.state === 'fall') return this.fall(game);
     return this.rest(game);
@@ -328,7 +369,7 @@ export class Enemy {
   rest(game) {
     if (this.startFalling(game)) return this.fall(game);
     if (this.onLethal(game.grid)) return this.die('void');
-    if (this.attackTick !== null || this.readyToAttack) return null;
+    if (this.frozen || this.attackTick !== null || this.readyToAttack) return null;
     if (this.wait > 0) {
       this.wait--;
       return null;
@@ -372,6 +413,7 @@ export class Enemy {
       if (this.drop(support) && support < 0) return this.die('hole');
       from[1] = target[1] = this.pos[1];
     }
+    if (this.frozen) return null; // stopped mid-step; it walks on once it thaws
     // Distance from the cell it left, counted on its own so that whole
     // cells are exact (adding up small float steps drifts).
     const walked = Math.min(this.walked + this.stepSpeed * DT, 1);
@@ -443,6 +485,7 @@ export class Enemy {
   /** @param {'hole'|'void'|'zap'|'discharge'|'bolt'|'firewall'} cause */
   die(cause) {
     this.state = 'dead';
+    this.frozen = null;
     this.deathCause = cause;
     this.timer = 0;
     this.sees = false;
@@ -575,7 +618,7 @@ export class Enemy {
   supportAt(pos, { grid, obstacles, player }, bodies = obstacles) {
     const box = enemyBox(pos, this.size);
     let top = surfaceBelow(box, grid, bodies, this);
-    if (this.solid && !player.dead) top = Math.max(top, surfaceBelow(box, grid, [player], this));
+    if (this.solid && !this.passable && !player.dead) top = Math.max(top, surfaceBelow(box, grid, [player], this));
     const [x, , z] = pos;
     if (top === 0 && grid.isHole(x + 0.5, z + 0.5)) return -1;
     return top;

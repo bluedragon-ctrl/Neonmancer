@@ -22,7 +22,7 @@
     },
     "spells": {
       "type": "object",
-      "description": "Spell tuning, by spell id. What each spell does is built into the engine (SPELL_EFFECTS in src/game.js; Zap: src/entities/bolt.js, Shield and Firewall: Player.raiseShield()).",
+      "description": "Spell tuning, by spell id. What each spell does is built into the engine (SPELL_EFFECTS in src/game.js; Zap: src/entities/bolt.js, Shield and Firewall: Player.raiseShield(), Pause: a bolt that freezes, Enemy.freeze()).",
       "required": ["zap"],
       "additionalProperties": false,
       "properties": {
@@ -66,6 +66,20 @@
             "duration": { "type": "number", "exclusiveMinimum": 0, "maximum": 30, "description": "Seconds it stays up; casting it again starts it over." },
             "damage": { "type": "integer", "minimum": 1, "description": "Integrity an enemy touching the ring loses per burn." },
             "burnInterval": { "type": "number", "exclusiveMinimum": 0, "maximum": 5, "description": "Seconds before it burns the same enemy again while it stays touching." }
+          }
+        },
+        "pause": {
+          "description": "A bolt the way he aims that freezes the first enemy it hits (D85): it stands still, harmless and solid, a platform, until it thaws; hits still hurt it. Enemies with pausable false shrug it off.",
+          "type": "object",
+          "required": ["slot", "color", "cost", "cooldown", "speed", "duration"],
+          "additionalProperties": false,
+          "properties": {
+            "slot": { "$ref": "#/$defs/spellSlot" },
+            "color": { "$ref": "#/$defs/spellColor" },
+            "cost": { "$ref": "#/$defs/spellCost" },
+            "cooldown": { "$ref": "#/$defs/spellCooldown" },
+            "speed": { "type": "number", "exclusiveMinimum": 0, "maximum": 30, "description": "Bolt speed in units per second." },
+            "duration": { "type": "number", "exclusiveMinimum": 0, "maximum": 30, "description": "Seconds an enemy stays frozen; freezing it again starts it over." }
           }
         }
       }
@@ -231,6 +245,11 @@
           "type": "boolean",
           "default": false,
           "description": "Solid: the wizard can not walk through it; he stands on it and rides along, and it shoves him when it walks into him (turning back if he is pinned). Touching it counts when he leans against it. Not solid: he walks through it."
+        },
+        "pausable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Pause freezes it (D85). False: the spell's bolt stops at it and does nothing (for guardians)."
         },
         "color": { "$ref": "common.schema.json#/$defs/color", "description": "Body (hologram) color; the eyes show hostility." }
       }

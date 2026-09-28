@@ -35,6 +35,7 @@ export const ENEMY_FIELDS = {
   boltPattern: ENEMY_OPTIONS.boltPattern,
   bounce: [true, false],
   solid: [true, false],
+  pausable: [true, false],
 };
 
 /** Enemy settings typed in as numbers: [min, step] (the schema's limits are checked on validation). */
@@ -71,6 +72,7 @@ export const ENEMY_ROWS = [
   ['integrity', 'Hits it takes before it pops.'],
   ['bounce', 'Landing on it bounces the wizard up.'],
   ['solid', 'The wizard can not walk through it; he can stand on it.'],
+  ['pausable', 'Pause freezes it; false: it shrugs the spell off.'],
 ];
 
 const HELP = [

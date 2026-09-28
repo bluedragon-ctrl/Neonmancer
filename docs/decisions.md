@@ -1444,3 +1444,36 @@ spells distinct jobs: the Shield for shooters, Firewall for crowds. An
 absorbed bolt is the simplest to read. Ember reads as fire; every hue is
 near something taken, and the ring's silhouette on the wizard carries the
 difference (as in D83).
+
+### D85 — 2026-09-28 — The Pause spell
+Settled with the author at the start of Phase 3 step 8:
+- **Targeting: a bolt.** Pause (slot 3) fires a bolt the way he aims,
+  like a Zap (10 units per second); the first live enemy it stops at
+  freezes. It can miss; room objects shrug it off.
+- **5 s, 25 energy** (between the Shield's 20 and Firewall's 40);
+  freezing a frozen enemy starts it over.
+- **A frozen enemy is solid, harmless and still hittable:** it stops
+  where it is (mid-step too), sees and attacks nothing, doesn't hurt on
+  touch and doesn't bounce; it is a platform by the solid-enemy rules
+  (D51), still falls and rides platforms, and Zap, Firewall and other
+  enemies' attacks still hurt and pop it. It blinks in its last second.
+  One frozen round the wizard is solid for him only once he has stepped
+  out of it, so a freeze never traps him.
+- A Pause hit provokes (a provoked enemy thaws hostile), but alarms only
+  an enemy it doesn't freeze.
+- **Wardens:** a `pausable` enemy template field, default true; guardians
+  set it false in Phase 4 and shrug Pause off (a hit: it alarms them).
+- **Look,** picked in the showcase from three proposals (a pause sign
+  "||" over it, a cage of corner brackets, a clock draining round its
+  feet): the **cage**; the enemy holds its pose, tinted towards the
+  spell's color, **pale lavender** `#c9a2ff` (over a richer lavender and
+  ice white).
+- The disk lies in **Quarantine**, on the 2-high pillar (the crate pushed
+  against it is the way up); no new test room.
+**Why:** author's choices. A bolt keeps Pause a skill shot like Zap and
+reuses its code; hittable frozen enemies allow freeze-and-zap combos,
+which suit a platform spell that is also a combat tool. A per-template
+flag leaves the Warden decision to Phase 4 without new code then. The
+cage reads as "selected, held" without covering the enemy's own look;
+lavender sits clear of the Shield's blue and the Zap's cyan, lighter than
+the void's violet.
