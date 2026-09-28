@@ -3,25 +3,23 @@
   "schemaVersion": 1,
   "start": "boot_sector",
   "connections": [
-    ["stack_yard.east", "fault_line.west"],
-    ["fault_line.east", "transit_bus.west"],
-    ["transit_bus.east", "volatile_memory.west"],
-    ["volatile_memory.east", "crawl_space.west"],
-    ["boot_sector.south", "transit_bus.north"],
-    ["cache_hall.east", "relay_station.west"],
-    ["relay_station.south", "stack_yard.north"],
-    ["boot_sector.east", "stack_yard.west"],
-    ["boot_sector.west", "crawl_space.east"],
-    ["boot_sector.north", "cache_hall.south"]
+    ["crawl_space.south", "cache_hall.north"],
+    ["boot_sector.east", "cache_hall.west"],
+    ["cache_hall.east", "fault_line.west"],
+    ["cache_hall.south", "relay_station.north"],
+    ["relay_station.west", "volatile_memory.east"],
+    ["volatile_memory.west", "transit_bus.east"],
+    ["volatile_memory.north", "boot_sector.south"],
+    ["volatile_memory.south", "stack_yard.north"]
   ],
   "positions": {
-    "boot_sector": [0, 0],
+    "boot_sector": [-1, -1],
     "cache_hall": [0, -1],
-    "stack_yard": [1, 0],
-    "fault_line": [2, 0],
-    "crawl_space": [-1, 0],
-    "transit_bus": [0, 1],
-    "volatile_memory": [1, 1],
-    "relay_station": [1, -1]
+    "stack_yard": [-1, 1],
+    "fault_line": [1, -1],
+    "crawl_space": [0, -2],
+    "transit_bus": [-2, 0],
+    "volatile_memory": [-1, 0],
+    "relay_station": [0, 0]
   }
 }
