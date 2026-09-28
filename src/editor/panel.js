@@ -28,11 +28,10 @@ export const TOOLS = [
  * blank is the type's own. Any look, movement and attack combine (D77).
  */
 export const ENEMY_FIELDS = {
-  model: ENEMY_OPTIONS.model,
+  look: ENEMY_OPTIONS.look,
   movement: ENEMY_OPTIONS.movement,
-  attack: ENEMY_OPTIONS.attack,
   hostility: ENEMY_OPTIONS.hostility,
-  attackShape: ENEMY_OPTIONS.attackShape,
+  attack: ENEMY_OPTIONS.attack,
   bounce: [true, false],
   solid: [true, false],
 };
@@ -46,6 +45,27 @@ export const ENEMY_NUMBERS = {
   aggroRange: [0, 0.5],
   attackRange: [0.5, 0.5],
 };
+
+/**
+ * The enemy rows in panel order, grouped: how it looks, how it moves, how
+ * it notices and hurts the wizard, then how it takes hits and what the
+ * wizard can do with it. Each with its tooltip.
+ */
+export const ENEMY_ROWS = [
+  ['look', 'Its body: bug, virus or sentinel. Any look goes with any movement and attack.'],
+  ['color', 'Body color, #rrggbb (the eyes show hostility).'],
+  ['movement', 'patrol: walks its path; stationary: stays put; chase: goes after the wizard it sees.'],
+  ['speed', 'Walking speed, units per second.'],
+  ['chaseSpeed', 'Speed while chasing.'],
+  ['hostility', 'hostile: attacks; peaceful: never; provoked: once a spell hits it.'],
+  ['aggroRange', 'How far it notices the wizard (a "!" pops up); 0: never.'],
+  ['attack', 'touch: touching it hurts; burst: charged lightning all round it; arc: a charged bolt aimed at the wizard; none: harmless.'],
+  ['attackRange', 'Reach of a burst or arc.'],
+  ['damage', 'Integrity the wizard loses per attack.'],
+  ['integrity', 'Hits it takes before it pops.'],
+  ['bounce', 'Landing on it bounces the wizard up.'],
+  ['solid', 'The wizard can not walk through it; he can stand on it.'],
+];
 
 const HELP = [
   'Left click: place / pick · Right click: erase',
@@ -204,25 +224,31 @@ export class EditorPanel {
     this.enemyType.addEventListener('change', () => on.enemy('type', this.enemyType.value));
     this.enemySelects = {};
     this.enemyRows = this.group('enemy');
-    this.enemyRows.append(this.row('Type', this.enemyType));
+    const typeRow = this.row('Type', this.enemyType);
+    typeRow.title = 'The enemy type (defs.json). Every setting below is the type\'s unless set here for this one enemy.';
+    this.enemyRows.append(typeRow);
     // chaseSpeed → Chase speed
     const label = (field) => field[0].toUpperCase() + field.slice(1).replace(/[A-Z]/g, (c) => ` ${c.toLowerCase()}`);
-    for (const [field, values] of Object.entries(ENEMY_FIELDS)) {
-      const node = select([['', ''], ...values.map((value) => [String(value), yesNo(value)])]);
-      node.addEventListener('change', () => on.enemy(field, node.value === '' ? undefined : values.find((v) => String(v) === node.value)));
-      this.enemySelects[field] = node;
-      this.enemyRows.append(this.row(label(field), node));
-    }
     this.enemyNumbers = {};
-    for (const [field, [min, step]] of Object.entries(ENEMY_NUMBERS)) {
-      const node = numberInput({ min, step });
-      node.addEventListener('change', () => on.enemy(field, numberValue(node)));
-      this.enemyNumbers[field] = node;
-      this.enemyRows.append(this.row(label(field), node));
-    }
     this.enemyColor = Object.assign(el('input'), { type: 'text' });
     this.enemyColor.addEventListener('change', () => on.enemy('color', this.enemyColor.value.trim() || undefined));
-    this.enemyRows.append(this.row('Color', this.enemyColor));
+    for (const [field, tip] of ENEMY_ROWS) {
+      let node = this.enemyColor;
+      const values = ENEMY_FIELDS[field];
+      if (values) {
+        node = select([['', ''], ...values.map((value) => [String(value), yesNo(value)])]);
+        node.addEventListener('change', () => on.enemy(field, node.value === '' ? undefined : values.find((v) => String(v) === node.value)));
+        this.enemySelects[field] = node;
+      } else if (ENEMY_NUMBERS[field]) {
+        const [min, step] = ENEMY_NUMBERS[field];
+        node = numberInput({ min, step });
+        node.addEventListener('change', () => on.enemy(field, numberValue(node)));
+        this.enemyNumbers[field] = node;
+      }
+      const row = this.row(label(field), node);
+      row.title = tip;
+      this.enemyRows.append(row);
+    }
     // Templates (D58): these settings as a new enemy type, or into the type they are of.
     this.templateInput = Object.assign(el('input'), { type: 'text', placeholder: 'template_name' });
     const templateName = () => this.templateInput.value.trim();

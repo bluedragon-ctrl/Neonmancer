@@ -183,9 +183,9 @@ test('every object kind in the schema (objects and block types, D60) has a logic
   assert.deepEqual(Object.keys(OBJECT_VIEWS).sort(), [...kinds].sort());
 });
 
-test('every enemy model in the schema has a look, and so every enemy type in defs.json', () => {
-  assert.deepEqual(Object.keys(ENEMY_MODELS).sort(), [...DEFS_SCHEMA.$defs.enemyType.properties.model.enum].sort());
-  for (const [type, { model }] of Object.entries(DEFS.enemies)) assert.ok(!model || ENEMY_MODELS[model], `no model "${model}" for "${type}"`);
+test('every enemy look in the schema has a model, and so every enemy type in defs.json', () => {
+  assert.deepEqual(Object.keys(ENEMY_MODELS).sort(), [...DEFS_SCHEMA.$defs.enemyType.properties.look.enum].sort());
+  for (const [type, { look }] of Object.entries(DEFS.enemies)) assert.ok(!look || ENEMY_MODELS[look], `no model for look "${look}" of "${type}"`);
 });
 
 test('discharge: it charges, then discharges for its ticks, glowing white', () => {

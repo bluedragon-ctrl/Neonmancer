@@ -8,21 +8,22 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 - Viruses and Sentinels, and universal enemies (Phase 3 step 5, D77). An
-  enemy type now names its look (`model`: bug, virus, sentinel), and any
+  enemy type now names its look (`look`: bug, virus, sentinel), and any
   look combines with any movement and attack in data. A new `chase`
   movement: a hostile enemy that sees the wizard within its aggro range
   (nothing solid in between) goes after him, searches where it lost him,
-  then goes home or back to its path. A new `discharge` attack: it stops,
-  charges (glowing white) and fires lightning — a `burst` all round it
-  that hits the wizard and other enemies in range, or an `arc` aimed
+  then goes home or back to its path. Two new attacks, `burst` and
+  `arc` (the old `contact` is now `touch`): it stops, charges (glowing
+  white) and fires lightning — a burst all round it that hits the
+  wizard and other enemies in range, or an arc aimed
   where he stood when it started charging, hitting everything in the
   squares along its path until a block or an object stops it.
   The Virus (a sharp yellow glitch cube, bursts up close) and the
   Sentinel (a tall orange octahedron that keeps its distance and fires a
   5-unit arc). A red "!" pops up over any enemy that notices him. New
-  test room Quarantine, behind Crawl Space. Editor: model, attack, attack
-  shape, chase speed, aggro and attack range in the Enemy panel; chasers
-  keep a path. Showcase `?asset=viruses`, `?asset=sentinels`,
+  test room Quarantine, behind Crawl Space. Editor: the Enemy panel
+  groups its settings (look, attack, chase speed, aggro and attack range
+  added), each with a tooltip; chasers keep a path. Showcase `?asset=viruses`, `?asset=sentinels`,
   `bug-alert`, `bug-burst`.
 - Automatic quality fallback (D76): when frames run below 50 fps for a
   few seconds, multisampling steps down (4 → 2 → 0), then the render

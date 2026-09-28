@@ -96,7 +96,7 @@ const ALL_ASSETS = [
   { label: 'bug-bounce', group: 'bugs', build: () => buildBug('hostile', { bounced: true }) },
   { label: 'bug-pop', group: 'bugs', build: buildBugPop },
   // Any enemy (D77): a bug noticing the wizard ("!"), and a bug with a
-  // burst discharge instead of its contact attack.
+  // burst discharge instead of its touch attack.
   { label: 'bug-alert', group: 'bugs', build: buildBugAlert },
   { label: 'bug-burst', group: 'bugs', span: 4, spin: false, build: () => buildBurst('bug') },
   // Viruses (Phase 3 step 5, D77): gliding calm, then after the wizard

@@ -251,11 +251,11 @@ test('a crate in the way hides the wizard from a sentinel, and a crate stops an 
 // ---- any enemy (D77)
 
 test('any enemy can have any attack: a bug with a burst hurts from a cell away, not by touch', () => {
-  const zapper = { extends: 'bug', movement: 'stationary', attack: 'discharge', aggroRange: 3, attackRange: 1.2, attackCharge: 0.2 };
+  const zapper = { extends: 'bug', movement: 'stationary', attack: 'burst', aggroRange: 3, attackRange: 1.2, attackCharge: 0.2 };
   const game = gameWith({ enemies: [{ id: 'b', type: 'zapper', at: [2, 0, 2] }], pos: [3.5, 0, 2.5], enemyTypes: { zapper } });
   const events = run(game, 13);
   assert.deepEqual(eventTypes(events).filter((t) => ['alert', 'charge', 'discharge', 'hurt'].includes(t)), ['alert', 'charge', 'discharge', 'hurt']);
-  assert.equal(game.enemies[0].data.model, 'bug');
+  assert.equal(game.enemies[0].data.look, 'bug');
 });
 
 test('a "!" pops up over a provoked enemy when a spell turns it hostile, and goes after a while', () => {
@@ -277,8 +277,9 @@ test('data: discharge values are checked; a discharge enemy must notice what it 
   assert.match(errors([virus([1, 0, 1], 'v', { aggroRange: 1 })]), /aggroRange 1 is shorter than its attackRange 1\.2/);
   assert.match(errors([virus([1, 0, 1], 'v', { attackColor: 'yellow' })]), /"attackColor" must be #rrggbb/);
   assert.match(errors([virus([1, 0, 1], 'v', { attackRange: 40 })]), /"attackRange" must be between/);
-  assert.match(errors([virus([1, 0, 1], 'v', { attackShape: 'ring' })]), /"attackShape" must be one of burst, arc/);
-  assert.match(errors([virus([1, 0, 1], 'v', { model: 'dragon' })]), /"model" must be one of bug, virus, sentinel/);
+  assert.match(errors([virus([1, 0, 1], 'v', { attack: 'ring' })]), /"attack" must be one of touch, burst, arc, none/);
+  assert.match(errors([virus([1, 0, 1], 'v', { look: 'dragon' })]), /"look" must be one of bug, virus, sentinel/);
+  assert.equal(errors([virus([1, 0, 1], 'v', { attack: 'touch', aggroRange: 0 })]), '', 'only a burst or arc needs the aggro range');
   assert.equal(errors([virus([1, 0, 1], 'v', { chaseSpeed: 4, memory: 3, attackColor: '#ffffff' })]), '');
   assert.equal(errors([virus([1, 0, 1], 'v')]), '', 'a chaser needs no path');
 });

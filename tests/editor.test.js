@@ -14,7 +14,7 @@ import { cutRoom } from '../src/render/room-scene.js';
 import { validateData } from '../src/data/validate.js';
 import { loadGameData } from '../src/data/load.js';
 import { enemyBases, resolveBlockTypes, resolveEnemyTypes } from '../src/data/room-data.js';
-import { blockTypeText } from '../src/editor/panel.js';
+import { ENEMY_FIELDS, ENEMY_NUMBERS, ENEMY_ROWS, blockTypeText } from '../src/editor/panel.js';
 import { buildRoom } from '../src/world/room.js';
 import { checkSchemas, readSchemas } from '../tools/check-data.js';
 import { refuseSaveRequest, saveEdits } from '../tools/room-save.js';
@@ -476,7 +476,7 @@ test('enemy templates take their base type values and look; validation checks th
   assert.deepEqual(validateData(files), []);
   assert.deepEqual(checkSchemas(files, readSchemas(fileURLToPath(new URL('..', import.meta.url)))), [], 'a template needs only what it changes');
   const built = buildRoom(room, loadGameData(files));
-  assert.equal(built.enemies[0].model, 'bug');
+  assert.equal(built.enemies[0].look, 'bug');
   assert.equal(built.enemies[0].integrity, 4);
 
   const bad = (enemies) => validateData(dataFiles({ rooms: [roomFile('lab')], enemies })).join('\n');
@@ -655,3 +655,8 @@ test('blockTypeText: what a block type does, for the Block tool\'s type list', (
   assert.equal(blockTypeText(types.collapsing_regrow), 'collapsing, regrows 3 s');
 });
 
+
+test('the Enemy panel has one row for each enemy setting, in its order', () => {
+  const fields = ENEMY_ROWS.map(([field]) => field);
+  assert.deepEqual([...fields].sort(), [...Object.keys(ENEMY_FIELDS), ...Object.keys(ENEMY_NUMBERS), 'color'].sort());
+});

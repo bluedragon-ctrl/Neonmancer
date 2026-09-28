@@ -243,15 +243,15 @@ Corrupted programs (D48), listed in a room's `enemies`. Everything about one
 comes from data: its type in `defs.json` `enemies`, and the room's
 `overrides` for that one enemy. Enemies are universal (D77): a look, a
 movement, an attack and a color, and any of them combine (a bug can chase
-and discharge; a virus can patrol).
+and burst; a virus can patrol).
 
 | Field | Values | Meaning |
 |---|---|---|
-| `model` | `bug`, `virus`, `sentinel` | its look (below). A template takes its base's. |
+| `look` | `bug`, `virus`, `sentinel` | its body (below). A template takes its base's. |
 | `movement` | `patrol`, `stationary`, `chase` | patrol walks the enemy's `path` (required); stationary stays in its cell (no path); chase goes after the wizard (below), walking its `path` while calm if it has one. |
-| `attack` | `contact`, `discharge`, `none` | contact: touching it hurts while it is hostile; discharge: a charged electric attack (below), touching it doesn't hurt. Projectiles come with Pop-ups. |
+| `attack` | `touch`, `burst`, `arc`, `none` | touch: touching it hurts while it is hostile; burst and arc: charged lightning (discharges, below), all round it or one bolt aimed at the wizard; touching it doesn't hurt. Projectiles come with Pop-ups. |
 | `hostility` | `hostile`, `peaceful`, `provoked` | hostile attacks; peaceful never does; provoked is peaceful until a spell (Zap) or a discharge hits it, then hostile. |
-| `aggroRange` | units (default 0) | how far a hostile enemy notices the wizard, with nothing solid in between (a "!" pops up); a chaser goes after him, a discharge fires at him. 0: it never notices him. |
+| `aggroRange` | units (default 0) | how far a hostile enemy notices the wizard, with nothing solid in between (a "!" pops up); a chaser goes after him, a burst or arc fires at him. 0: it never notices him. |
 | `integrity` | 1–15 | how much spell damage it takes before it pops (bug: 2, so two Zaps). |
 | `damage` | ≥ 1 | integrity the wizard loses per attack. |
 | `speed` | units/s | walking speed; a path's own `speed` overrides it. |
@@ -259,16 +259,15 @@ and discharge; a virus can patrol).
 | `memory` | seconds (default 1.5) | how long a chaser searches where it lost him. |
 | `bounce` | true / false (default false; bug: true) | trampoline top (below). |
 | `solid` | true / false (default false) | blocks the wizard, carries him and shoves him (below). |
-| `color` | #rrggbb | body color; the eyes always show hostility, so a room can recolor one enemy with `overrides` without a new type or model. |
-| `attackShape` | `burst`, `arc` (default burst) | discharge: all round it, or one bolt at the wizard. |
-| `attackRange` | units (default 1.2) | discharge reach, from its eyes to the nearest point of the wizard; `aggroRange` must be at least this. |
+| `color` | #rrggbb | body color; the eyes always show hostility, so a room can recolor one enemy with `overrides` without a new type or look. |
+| `attackRange` | units (default 1.2) | burst or arc reach, from its eyes to the nearest point of the wizard; `aggroRange` must be at least this. |
 | `attackCharge` | seconds (default 0.4) | the warning before it fires. |
 | `attackCooldown` | seconds (default 1.5) | the wait after firing. |
 | `attackColor` | #rrggbb (default: `color`) | lightning color. |
 
 | Type | Look | Moves | Attack |
 |---|---|---|---|
-| `bug` | mint-green ball `#2bff88`, hops, bouncy | patrol, 3 cells/s | contact, 1 |
+| `bug` | mint-green ball `#2bff88`, hops, bouncy | patrol, 3 cells/s | touch, 1 |
 | `virus` | yellow sharp cube `#ffe23a`, glides | chase: aggro 5, 2 cells/s calm, 3.5 chasing | burst, range 1.2, charge 0.4 s, cooldown 1.5 s; integrity 2 |
 | `sentinel` | orange sharp octahedron `#ff8a1a`, glides | chase: aggro 7, 1.5 calm, 2.5 chasing; stops 5 away | arc, range 5, charge 0.7 s, cooldown 2 s; integrity 3 |
 
@@ -312,14 +311,14 @@ and discharge; a virus can patrol).
   and it carries him as it walks, walls scraping him off; walking into him
   it shoves him along (at most 0.35 per tick), and if he is pinned it
   turns back instead. A crate resting on a solid enemy holds it in place.
-- Touching a hostile enemy with a contact attack hurts him (`Game.hurt()`,
+- Touching a hostile enemy with a touch attack hurts him (`Game.hurt()`,
   then the usual invulnerability): overlapping it, or for a solid one
   leaning on it or standing on it (the hazard rule, D44).
   Landing on top of a **bouncy** one (every bug by default: a round ball
   reads as bouncy) bounces him up 2.2 above its top (clears 2 blocks)
   without hurting him; its sides still hurt if it is hostile. Enemies with
   `bounce` false can be stood on only if they are solid.
-- **Discharge** (D77): a hostile enemy with this attack that sees him
+- **Discharges** (D77): a hostile enemy with a burst or arc that sees him
   within `attackRange` stops (at a whole cell), charges for
   `attackCharge` seconds (it trembles and glows white, lightning crackles
   round it), then fires lightning in `attackColor` for 10 ticks and cools
@@ -357,7 +356,7 @@ and discharge; a virus can patrol).
 - Validation: known type, valid overrides, a free cell of its own not over
   a hole, ids unique among objects and enemies, a patrol has a level path
   clear of static blocks (so does a chaser's, if it has one), a
-  stationary enemy has none; a discharge enemy's `aggroRange` reaches its
+  stationary enemy has none; a burst or arc enemy's `aggroRange` reaches its
   `attackRange`.
 - Tuning: `ENEMY` in `src/entities/enemy.js`, `PLAYER.bounceHeight`; the
   looks are `BUG` in `src/render/bug.js`, `VIRUS` in
@@ -844,8 +843,10 @@ list switches to another room; New room makes an empty one (D57).
   object of the same type leaves it as it is (a platform keeps its path). A new platform is picked, ready for its path.
   Erasing removes an object or enemy standing in the cell.
 - **Enemy** places an enemy of the panel's type with its settings
-  (model, movement, attack, hostility, attack shape, bounce, solid: blank
-  is the type's own; other overrides written by hand stay), id
+  (grouped: look and color; movement, speed and chase speed; hostility
+  and aggro range; attack, attack range and damage; integrity, bounce,
+  solid; each with a tooltip. Blank is the type's own; other overrides
+  written by hand stay), id
   `<type>_<n>`, and picks it. A click on an enemy picks it: the fields
   then show and change it, and new enemies get the same. A patrolling
   enemy needs a path (the panel says so), a chaser may have one; making
@@ -1023,7 +1024,7 @@ the author; the answers are recorded as decisions before the code lands.
 | 2 | `feat/pickups-and-progress` | Pickup types in `defs.json` and room data, and a `Progress` model (save bits found, known spells) that survives room resets and death: permanent pickups have a save bit in blocks (D71) and stay as grayed-out ghosts once found; temporary pickups (integrity and energy refills) have none and come back with the room (D67). The first data disk: Zap is no longer known from the start, its disk lies in Boot Sector (`> SPELL INSTALLED: ZAP` banner). Pickup burst; editor and validation support. |
 | 3 | `feat/data-disks` | More disks (D73): an install animation on the wizard, and a second spell to switch to (Tab / Q): Shield, a crackling ring round him; it blocks projectiles once there are any (step 6). Its disk lies in Cache Hall. |
 | 4 | `feat/switches` | Switches that unlock exits: a pressure plate held down by a crate, and a target that a Zap bolt hits. An exit in room data can be locked until its switches are on; a locked exit looks closed and is solid. Switch state resets with the room. The locked exit is the same mechanism access levels use later (step 14). Editor, validation (switches point at exits that exist), showcase, a test room. |
-| 5 | `feat/viruses` | Universal enemies (a `model` field, D77); a `chase` movement behavior: a hostile enemy follows the wizard while it sees him within `aggroRange`, searches, then goes home; a charged `discharge` attack (burst or arc); the Virus and the Sentinel; the "!" mark; enemies keep out of holes. Test room Quarantine. |
+| 5 | `feat/viruses` | Universal enemies (a `look` field, D77); a `chase` movement behavior: a hostile enemy follows the wizard while it sees him within `aggroRange`, searches, then goes home; charged discharge attacks (`burst`, `arc`; `contact` renamed `touch`); the Virus and the Sentinel; the "!" mark; enemies keep out of holes. Test room Quarantine. |
 | 6 | `feat/popups` | A projectile attack: Pop-ups are stationary enemies firing slow shots; a projectile entity with its own rules for what stops it. |
 | 7 | `feat/firewall-spell` | Shield blocks projectiles; Firewall: a shield that also damages (D73). |
 | 8 | `feat/pause-spell` | Pause: freezes an enemy for a while; a frozen enemy is a solid platform (reusing the solid-enemy rules, D51). |

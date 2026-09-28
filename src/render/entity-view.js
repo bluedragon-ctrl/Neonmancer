@@ -360,7 +360,7 @@ export function createRails(track, color) {
 }
 
 /**
- * The enemy looks (defs.json enemy "model", D77), by name: how to build,
+ * The enemy bodies (defs.json enemy "look", D77), by name: how to build,
  * color, animate and pop one (see BUG_MODEL in bug.js), how high its "!"
  * floats and where an arc leaves it. A model has its own flash uniforms
  * (`userData.flash`, holo.js) for spell hits and its charge glow.
@@ -378,9 +378,9 @@ export class EnemyView {
   constructor(game, enemy) {
     this.game = game;
     this.enemy = enemy;
-    const { model, color, attack, attackColor, attackShape, attackRange } = enemy.data;
-    this.kind = ENEMY_MODELS[model];
-    if (!this.kind) throw new Error(`No enemy model "${model}" (ENEMY_MODELS)`);
+    const { look, color, attack, attackColor, attackRange } = enemy.data;
+    this.kind = ENEMY_MODELS[look];
+    if (!this.kind) throw new Error(`No enemy look "${look}" (ENEMY_MODELS)`);
     this.model = this.kind.create(color);
     this.pixels = createPixelBurst(this.kind.pop.pixels, this.kind.pop.pixelSize, [color, 0xffffff]);
     this.mood = null;
@@ -389,7 +389,7 @@ export class EnemyView {
     this.markHolder = new Group().add(this.mark);
     this.group = new Group().add(this.model, this.pixels, this.markHolder);
     /** Its discharge lightning (world space), if it has that attack. */
-    this.discharge = attack === 'discharge' ? createDischarge({ color: attackColor, shape: attackShape, range: attackRange }) : null;
+    this.discharge = enemy.discharges ? createDischarge({ color: attackColor, shape: attack, range: attackRange }) : null;
     if (this.discharge) this.group.add(this.discharge);
     /** Its own offset into the glitch rhythm of damaged enemies, so they don't glitch in step. */
     this.seed = game.enemies.indexOf(enemy);
@@ -468,7 +468,7 @@ export class EnemyView {
    */
   placeDischarge(feet, attack) {
     const { enemy, kind } = this;
-    if (enemy.data.attackShape !== 'arc') {
+    if (enemy.data.attack !== 'arc') {
       placeDischarge(this.discharge, attack, enemy.chargeTicks, [feet[0], feet[1] + ENEMY.eyeHeight, feet[2]]);
       return;
     }

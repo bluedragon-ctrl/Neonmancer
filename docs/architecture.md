@@ -87,7 +87,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/break-fx.js` | Destructible object's jolt on a hit that doesn't break it, `BREAK_FX` tuning (pure, tested) |
 | `render/hole-view.js` | Hole pits: walls fading to black, rim, short fading corner lines; outline math (tested) |
 | `render/room-view.js` | Static blocks (merged edges + instanced occluder faces), back walls, styled object views |
-| `render/entity-view.js` | Player (with the cast flare), pushable, platform, collapsing-block and enemy views (enemy looks by `model`: `ENEMY_MODELS`; spell-hit flash and glitch, charge glow, "!" and discharge), glowing drop shadows, pixel bursts (derez, collapse), platform guide lines |
+| `render/entity-view.js` | Player (with the cast flare), pushable, platform, collapsing-block and enemy views (enemy bodies by `look`: `ENEMY_MODELS`; spell-hit flash and glitch, charge glow, "!" and discharge), glowing drop shadows, pixel bursts (derez, collapse), platform guide lines |
 | `render/zap-fx.js` | Zap look: trail zigzags, bolt flicker, cast flare, sparks, enemy hit flash and damaged glitch, `ZAP_FX` tuning (pure, tested) |
 | `render/zap-view.js` | Zap meshes: bolt, cast flare, sparks; `ZapView` keeps a room's bolts and sparks (pooled) |
 | `render/install-fx.js`, `render/install-view.js` | Installing a spell from a data disk (D73): the look (pure, tested) and its meshes, shown by `PlayerView` |

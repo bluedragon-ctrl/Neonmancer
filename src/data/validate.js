@@ -13,6 +13,7 @@
 import { DATA_SCHEMA_VERSION } from '../core/version.js';
 import { MAX_ROOM_FOOTPRINT, PLAYER_HITBOX } from '../core/rules.js';
 import {
+  DISCHARGES,
   ENEMY_OPTIONS,
   ENEMY_REQUIRED,
   OBJECT_STYLES,
@@ -377,7 +378,7 @@ function validatePathShape(room, report, path, at, points, mode, level = false) 
  * valid overrides, each in a free cell of its own, not starting over a
  * hole; patrols have a path, level (legs along x or z) and through no
  * static block; chasers may have one (walked while calm); stationary
- * enemies have none. A discharge attack only fires at a wizard it sees,
+ * enemies have none. A burst or arc only fires at a wizard it sees,
  * so its aggro range must reach its attack range.
  */
 function validateEnemies(checks, enemyTypes) {
@@ -393,7 +394,7 @@ function validateEnemies(checks, enemyTypes) {
     else {
       validateOverrides(report, `${path}.overrides`, enemy, type, ENEMY_OPTIONS);
       const values = { ...type, ...enemy.overrides };
-      if (values.attack === 'discharge' && values.aggroRange < values.attackRange) {
+      if (DISCHARGES.includes(values.attack) && values.aggroRange < values.attackRange) {
         report(path, `its aggroRange ${values.aggroRange} is shorter than its attackRange ${values.attackRange}: it only fires at a wizard it has noticed`);
       }
     }

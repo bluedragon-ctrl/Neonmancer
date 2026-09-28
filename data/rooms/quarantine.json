@@ -20,7 +20,7 @@
       "id": "zapbug",
       "type": "bug",
       "at": [8, 0, 6],
-      "overrides": { "movement": "stationary", "attack": "discharge", "aggroRange": 2 }
+      "overrides": { "movement": "stationary", "attack": "burst", "aggroRange": 2 }
     }
   ],
   "pickups": [{ "id": "integrity", "type": "refill_integrity", "at": [9, 0, 7] }]

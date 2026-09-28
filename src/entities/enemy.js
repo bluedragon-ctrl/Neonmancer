@@ -26,13 +26,14 @@
  * stop). The wizard walks through it, unless it is solid: then it blocks
  * him, carries him when he stands on it and shoves him when it walks into
  * him (turning back if he is pinned), like a moving platform. Touching a
- * hostile one with a contact attack hurts him, and landing on a bouncy one
+ * hostile one with a touch attack hurts him, and landing on a bouncy one
  * bounces him up (Game.update()). Crates, platforms, walls, other
  * enemies and a step up block it. Pushables rest on it and can't be pushed
  * into it; platforms carry it and wait for it (entities/platform.js).
  */
 import { DT } from '../core/loop.js';
 import { BEHAVIORS } from '../ai/behaviors.js';
+import { DISCHARGES } from '../data/room-data.js';
 import { boxCenter, lineOfSight, reach } from '../ai/sight.js';
 import { REST_EPS, moveAxis, overlapsBox, overlapsSolid, restsOn, shoveClear, surfaceBelow } from '../physics/collision.js';
 
@@ -134,9 +135,14 @@ export class Enemy {
     return this.alive && (hostility === 'hostile' || (hostility === 'provoked' && this.provoked));
   }
 
-  /** Does touching it hurt: hostile, with a contact attack? */
+  /** Does touching it hurt: hostile, with a touch attack? */
   get hurtsOnContact() {
-    return this.hostile && this.data.attack === 'contact';
+    return this.hostile && this.data.attack === 'touch';
+  }
+
+  /** Is its attack a discharge (burst or arc)? */
+  get discharges() {
+    return DISCHARGES.includes(this.data.attack);
   }
 
   /** It was attacked (a spell hit it): a 'provoked' enemy turns hostile, and a "!" pops up. */
@@ -175,7 +181,7 @@ export class Enemy {
       this.sees = distance <= this.data.aggroRange && lineOfSight(eyes, boxCenter(box), grid, sightBlockers);
       if (this.sees) {
         this.lastSeen = [Math.floor(player.pos[0]), Math.floor(player.pos[2])];
-        this.inRange = this.data.attack === 'discharge' && distance <= this.data.attackRange;
+        this.inRange = this.discharges && distance <= this.data.attackRange;
       }
     }
     this.behavior.update?.(this);
@@ -204,7 +210,7 @@ export class Enemy {
    * @returns {'charge'|'discharge'|null}
    */
   updateAttack(game) {
-    if (this.data.attack !== 'discharge') return null;
+    if (!this.discharges) return null;
     if (this.cooldown > 0) this.cooldown--;
     if (this.attackTick !== null) {
       if (!this.alive || this.state === 'fall') {

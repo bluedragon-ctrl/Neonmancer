@@ -1159,11 +1159,17 @@ costs (~1.6 ms at 1080p on a UHD 620); keep that in mind for Phase 5.
 
 ### D77 — 2026-09-28 — Universal enemies; chase and discharge; Viruses and Sentinels
 Phase 3 step 5's open questions, settled with the author:
-- **Universal enemies:** an enemy type's look is a field, `model` (`bug`,
-  `virus`, `sentinel`), beside `movement`, `attack` and `color`. Any look
-  combines with any movement and attack, all set in data and overridable
-  per enemy in a room (a bug can chase and discharge). Templates (D58)
-  still take their base's look, now through the inherited `model`.
+- **Universal enemies:** an enemy type's body is a field, `look` (`bug`,
+  `virus`, `sentinel`; the word block types use too, D60), beside
+  `movement`, `attack` and `color`. Any look combines with any movement
+  and attack, all set in data and overridable per enemy in a room (a bug
+  can chase and burst). Templates (D58) still take their base's look, now
+  through the inherited `look`.
+- **One attack field:** `attack` is `touch` (touching it hurts; was
+  `contact`, D48), `burst`, `arc` or `none`. Burst and arc, the
+  discharges, share `attackRange`, `attackCharge`, `attackCooldown` and
+  `attackColor`. A separate shape field beside the attack read as two
+  names for the same thing in the editor.
 - **Chase** (`movement: "chase"`): a hostile enemy notices the wizard
   within `aggroRange` when nothing solid (blocks, objects, closed exits)
   lies between its eyes and his middle, and steps cell by cell towards
@@ -1179,11 +1185,11 @@ Phase 3 step 5's open questions, settled with the author:
 - **"!" mark** over any enemy that notices the wizard, and over a
   provoked one turned hostile; it stays up at least 1 s and as long as it
   sees him.
-- **Discharge attack** (`attack: "discharge"`), instead of contact
+- **Discharges** (`attack: "burst"` or `"arc"`), instead of touch
   (touching such an enemy doesn't hurt): seeing him within `attackRange`
   and standing still, it stops, charges for `attackCharge` seconds
   (shaking, glowing white, crackling), fires lightning for 10 ticks, then
-  waits `attackCooldown` seconds. Two shapes, `attackShape`:
+  waits `attackCooldown` seconds. Two kinds:
   - `burst`: lightning all round it, hitting everything within range it
     can see: the wizard and other enemies (not objects);
   - `arc`: one bolt aimed where the wizard stood when it started charging
@@ -1192,8 +1198,12 @@ Phase 3 step 5's open questions, settled with the author:
     squares it passes through (the wizard and other enemies, all of them,
     at the author's request). Stepping aside dodges it.
   `attackColor` is its color by default; `damage` applies as before. A
-  discharge enemy only fires at a wizard it has noticed, so validation
-  wants `aggroRange` ≥ `attackRange`.
+  burst or arc only fires at a wizard it has noticed, so validation wants
+  `aggroRange` ≥ `attackRange`.
+- **Editor:** the Enemy panel lists the settings grouped (look and color,
+  movement and speeds, hostility and aggro range, attack, range and
+  damage, integrity, bounce, solid), each with a tooltip; Type is the
+  enemy type all of them come from unless set for the one enemy.
 - **Virus:** a sharp-edged cube tipped onto an edge, slanted eyes on its
   front face, four small cubes of itself orbiting (the glitch shape,
   picked over a spiky ball and a phage; hard, flat edges at the author's

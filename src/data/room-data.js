@@ -116,25 +116,31 @@ export const OBJECT_STYLE_DEFAULTS = {
 /**
  * Values an enemy type's fields can take (the first is listed first in the
  * schema too). Enemies are universal (D77): any look, movement and attack
- * combine. model: its look (render/entity-view.js ENEMY_MODELS); movement:
- * a behavior module (ai/behaviors.js); attack: how it hurts; hostility:
+ * combine. look: its body (render/entity-view.js ENEMY_MODELS); movement:
+ * a behavior module (ai/behaviors.js); attack: how it hurts (touch: touching
+ * it; burst and arc: discharges, DISCHARGES; none: never); hostility:
  * hostile hurts, peaceful never does, provoked turns hostile once a spell
- * hits it; attackShape: a discharge all round it (burst) or one bolt at the
- * wizard (arc).
+ * hits it.
  */
 export const ENEMY_OPTIONS = {
-  model: ['bug', 'virus', 'sentinel'],
+  look: ['bug', 'virus', 'sentinel'],
   movement: ['patrol', 'stationary', 'chase'],
-  attack: ['contact', 'none', 'discharge'],
+  attack: ['touch', 'burst', 'arc', 'none'],
   hostility: ['hostile', 'peaceful', 'provoked'],
-  attackShape: ['burst', 'arc'],
 };
+
+/**
+ * The discharge attacks (D77): charged lightning all round it (burst) or
+ * one bolt aimed at the wizard (arc). They share attackRange, attackCharge,
+ * attackCooldown and attackColor.
+ */
+export const DISCHARGES = ['burst', 'arc'];
 
 /**
  * Enemy type fields that may be left out: aggro range (units), bounce (a
  * trampoline top), solid (blocks, carries and shoves the wizard), memory
- * (seconds a chaser searches after losing sight of him) and the discharge
- * attack's shape, range (units), charge and cooldown (seconds). chaseSpeed
+ * (seconds a chaser searches after losing sight of him) and a discharge's
+ * range (units), charge and cooldown (seconds). chaseSpeed
  * and attackColor default to the enemy's speed and color (withEnemyDefaults()).
  */
 export const ENEMY_DEFAULTS = {
@@ -142,14 +148,13 @@ export const ENEMY_DEFAULTS = {
   bounce: false,
   solid: false,
   memory: 1.5,
-  attackShape: 'burst',
   attackRange: 1.2,
   attackCharge: 0.4,
   attackCooldown: 1.5,
 };
 
 /** Enemy type fields a type needs (a template gets them from its base), as in the schema. */
-export const ENEMY_REQUIRED = ['model', 'movement', 'attack', 'hostility', 'integrity', 'damage', 'speed', 'color'];
+export const ENEMY_REQUIRED = ['look', 'movement', 'attack', 'hostility', 'integrity', 'damage', 'speed', 'color'];
 
 /**
  * An enemy's values with every default filled in: ENEMY_DEFAULTS, then

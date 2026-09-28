@@ -153,8 +153,8 @@
       "description": "A base type has every required value; a template (\"extends\") only the ones it changes.",
       "if": { "properties": { "extends": true }, "required": ["extends"] },
       "else": {
-        "properties": { "model": true, "movement": true, "attack": true, "hostility": true, "integrity": true, "damage": true, "speed": true, "color": true },
-        "required": ["model", "movement", "attack", "hostility", "integrity", "damage", "speed", "color"]
+        "properties": { "look": true, "movement": true, "attack": true, "hostility": true, "integrity": true, "damage": true, "speed": true, "color": true },
+        "required": ["look", "movement", "attack", "hostility", "integrity", "damage", "speed", "color"]
       },
       "additionalProperties": false,
       "properties": {
@@ -162,17 +162,17 @@
           "$ref": "common.schema.json#/$defs/id",
           "description": "Template (D58): the base enemy type (one without \"extends\") whose values and look it takes; its own values replace the base's. Saved from the room editor."
         },
-        "model": {
+        "look": {
           "enum": ["bug", "virus", "sentinel"],
-          "description": "Its look (src/render/entity-view.js ENEMY_MODELS). Any look combines with any movement and attack (D77). bug: a hopping ball; virus: a gliding sharp cube with orbiting bits; sentinel: a tall sharp octahedron with one eye."
+          "description": "Its body (src/render/entity-view.js ENEMY_MODELS). Any look combines with any movement and attack (D77). bug: a hopping ball; virus: a gliding sharp cube with orbiting bits; sentinel: a tall sharp octahedron with one eye."
         },
         "movement": {
           "enum": ["patrol", "stationary", "chase"],
           "description": "Movement behavior (src/ai/behaviors.js). patrol: walks its path (room data \"path\", required) cell by cell, turning back when blocked; stationary: stays in its cell (still falls and rides platforms); chase: goes after the wizard while it sees him within aggroRange (chaseSpeed), searches where it lost him for memory seconds, then goes back to its post, or walks its path if it has one. Enemies never step into a hole or onto a lethal block."
         },
         "attack": {
-          "enum": ["contact", "none", "discharge"],
-          "description": "How it hurts the wizard while hostile. contact: touching it; none: never; discharge: when it sees him within attackRange it stops, charges for attackCharge seconds and fires lightning (attackShape), then waits attackCooldown seconds. Touching it doesn't hurt."
+          "enum": ["touch", "burst", "arc", "none"],
+          "description": "How it hurts the wizard while hostile. touch: touching it; none: never. burst and arc are discharges (touching it doesn't hurt): when it sees him within attackRange it stops, charges for attackCharge seconds, fires lightning, then waits attackCooldown seconds. burst: lightning all round it, hitting the wizard and other enemies within attackRange; arc: one bolt, aimed where the wizard stood when it started charging, up to attackRange or the first block or object; it hits every body (the wizard, other enemies) in the squares it passes through."
         },
         "hostility": {
           "enum": ["hostile", "peaceful", "provoked"],
@@ -183,19 +183,14 @@
           "minimum": 0,
           "maximum": 32,
           "default": 0,
-          "description": "Units within which a hostile enemy notices the wizard, if nothing blocks its line of sight: a chaser goes after him, a discharge attack fires; a \"!\" pops up over it (any enemy). At least attackRange for a discharge attack."
+          "description": "Units within which a hostile enemy notices the wizard, if nothing blocks its line of sight: a chaser goes after him, a burst or arc fires; a \"!\" pops up over it (any enemy). At least attackRange for a burst or arc."
         },
         "chaseSpeed": { "type": "number", "exclusiveMinimum": 0, "maximum": 8, "description": "Speed in units per second while it chases or searches (chase movement); its speed by default." },
         "memory": { "type": "number", "minimum": 0, "maximum": 10, "default": 1.5, "description": "Seconds a chaser searches where it last saw the wizard before it gives up." },
-        "attackShape": {
-          "enum": ["burst", "arc"],
-          "default": "burst",
-          "description": "Discharge attack. burst: lightning all round it, hitting the wizard and other enemies within attackRange; arc: one bolt, aimed where the wizard stood when it started charging, up to attackRange or the first block or object; it hits every body (the wizard, other enemies) in the squares it passes through."
-        },
-        "attackRange": { "type": "number", "minimum": 0.5, "maximum": 16, "default": 1.2, "description": "Discharge reach in units, from its middle to the nearest point of the wizard." },
-        "attackCharge": { "type": "number", "minimum": 0, "maximum": 3, "default": 0.4, "description": "Seconds it charges (the warning) before a discharge fires." },
-        "attackCooldown": { "type": "number", "minimum": 0, "maximum": 10, "default": 1.5, "description": "Seconds after a discharge before it can charge again." },
-        "attackColor": { "$ref": "common.schema.json#/$defs/color", "description": "Lightning color of a discharge; its color by default." },
+        "attackRange": { "type": "number", "minimum": 0.5, "maximum": 16, "default": 1.2, "description": "Burst or arc reach in units, from its middle to the nearest point of the wizard." },
+        "attackCharge": { "type": "number", "minimum": 0, "maximum": 3, "default": 0.4, "description": "Seconds it charges (the warning) before a burst or arc fires." },
+        "attackCooldown": { "type": "number", "minimum": 0, "maximum": 10, "default": 1.5, "description": "Seconds after a burst or arc before it can charge again." },
+        "attackColor": { "$ref": "common.schema.json#/$defs/color", "description": "Lightning color of a burst or arc; its color by default." },
         "integrity": { "type": "integer", "minimum": 1, "maximum": 15, "description": "Hits it takes to destroy (spells, from step 6)." },
         "damage": { "type": "integer", "minimum": 1, "description": "Integrity the wizard loses per attack." },
         "speed": { "type": "number", "exclusiveMinimum": 0, "maximum": 8, "description": "Walking speed in units per second (a path's own speed overrides it)." },

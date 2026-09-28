@@ -15,9 +15,9 @@ export const LIFT = { kind: 'platform', color: '#00f0ff' };
 
 /** A bug enemy type, as in defs.json (3 units per second: 20 ticks per cell). */
 export const BUG = {
-  model: 'bug',
+  look: 'bug',
   movement: 'patrol',
-  attack: 'contact',
+  attack: 'touch',
   hostility: 'hostile',
   aggroRange: 0,
   integrity: 2,
@@ -30,13 +30,13 @@ export const BUG = {
 
 /**
  * A virus enemy type, as in defs.json but chasing at 3 units per second (20
- * ticks per cell): a burst discharge (range 1.2, 24 ticks of charge, 90 of
+ * ticks per cell): a burst (range 1.2, 24 ticks of charge, 90 of
  * cooldown).
  */
 export const VIRUS = {
-  model: 'virus',
+  look: 'virus',
   movement: 'chase',
-  attack: 'discharge',
+  attack: 'burst',
   hostility: 'hostile',
   aggroRange: 5,
   integrity: 2,
@@ -44,17 +44,16 @@ export const VIRUS = {
   speed: 2,
   chaseSpeed: 3,
   color: '#ffe23a',
-  attackShape: 'burst',
   attackRange: 1.2,
   attackCharge: 0.4,
   attackCooldown: 1.5,
 };
 
-/** A sentinel enemy type, as in defs.json: an arc discharge (range 5, 42 ticks of charge). */
+/** A sentinel enemy type, as in defs.json: an arc (range 5, 42 ticks of charge). */
 export const SENTINEL = {
-  model: 'sentinel',
+  look: 'sentinel',
   movement: 'chase',
-  attack: 'discharge',
+  attack: 'arc',
   hostility: 'hostile',
   aggroRange: 7,
   integrity: 3,
@@ -62,7 +61,6 @@ export const SENTINEL = {
   speed: 1.5,
   chaseSpeed: 3,
   color: '#ff8a1a',
-  attackShape: 'arc',
   attackRange: 5,
   attackCharge: 0.7,
   attackCooldown: 2,

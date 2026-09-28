@@ -253,7 +253,7 @@ export class Game {
    * @param {Enemy} enemy
    */
   aimDischarge(enemy) {
-    if (enemy.data.attackShape !== 'arc') return;
+    if (enemy.data.attack !== 'arc') return;
     const from = enemy.middle();
     const dir = direction(from, boxCenter(this.player.box()));
     const { point } = castRay(from, dir, enemy.data.attackRange, this.grid, this.sightBlockers);
@@ -269,11 +269,11 @@ export class Game {
    * @param {Enemy} enemy
    */
   discharge(enemy) {
-    const { attackShape, attackRange } = enemy.data;
+    const { attack, attackRange } = enemy.data;
     const from = enemy.middle();
     const { player } = this;
     const others = this.liveEnemies.filter((other) => other !== enemy);
-    if (attackShape === 'arc') {
+    if (attack === 'arc') {
       const { dir } = enemy.aim;
       const { point, distance } = castRay(from, dir, attackRange, this.grid, this.sightBlockers);
       enemy.boltEnd = point;
@@ -565,7 +565,7 @@ export class Game {
   }
 
   /**
-   * Touching a hostile enemy with a contact attack hurts the wizard (D43):
+   * Touching a hostile enemy with a touch attack hurts the wizard (D43):
    * overlapping it, or leaning on or standing on a solid one (the hazard
    * rule, D44). Not the enemy he just bounced off.
    * @param {Enemy|null} bounced

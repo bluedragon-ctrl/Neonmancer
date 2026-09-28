@@ -12,9 +12,9 @@
   },
   "enemies": {
     "bug": {
-      "model": "bug",
+      "look": "bug",
       "movement": "patrol",
-      "attack": "contact",
+      "attack": "touch",
       "hostility": "hostile",
       "aggroRange": 0,
       "integrity": 2,
@@ -25,9 +25,9 @@
       "color": "#2bff88"
     },
     "virus": {
-      "model": "virus",
+      "look": "virus",
       "movement": "chase",
-      "attack": "discharge",
+      "attack": "burst",
       "hostility": "hostile",
       "aggroRange": 5,
       "integrity": 2,
@@ -35,15 +35,14 @@
       "speed": 2,
       "chaseSpeed": 3.5,
       "color": "#ffe23a",
-      "attackShape": "burst",
       "attackRange": 1.2,
       "attackCharge": 0.4,
       "attackCooldown": 1.5
     },
     "sentinel": {
-      "model": "sentinel",
+      "look": "sentinel",
       "movement": "chase",
-      "attack": "discharge",
+      "attack": "arc",
       "hostility": "hostile",
       "aggroRange": 7,
       "integrity": 3,
@@ -51,7 +50,6 @@
       "speed": 1.5,
       "chaseSpeed": 2.5,
       "color": "#ff8a1a",
-      "attackShape": "arc",
       "attackRange": 5,
       "attackCharge": 0.7,
       "attackCooldown": 2
