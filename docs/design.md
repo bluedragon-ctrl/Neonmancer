@@ -203,9 +203,21 @@ follows a path given on the room object.
 - Validation: points inside the room, legs along one axis, nothing static
   on the path, and no path through the first row inside an exit. Crates on
   the path and holes under it are fine.
+- **Spiked platforms** (D82): a platform type with `damage` hurts the
+  wizard whenever he touches it, its sides, its top or riding it, like a
+  hazard block that moves (then he is invulnerable for a while and
+  blinks). `spiked_platform` in `defs.json`: hazard red, dark faces and
+  `shape: "spiked"` (a smaller core cube with four pyramids on each side,
+  their tips reaching the faces of its cell, so what shows is what hurts;
+  `SPIKES` in `src/render/spikes.js`); its outline flares when it hurts
+  him (hazard faces would flare too, but their pixels are too small to
+  read on the spikes). It moves, waits
+  and carries crates like any platform; a short up-and-down path makes a
+  hopper to time a run past, a long one a sliding trap. Only platforms
+  take `damage` (validation).
 - Tuning: `PLATFORM` in `src/entities/platform.js`, `RAILS` in
   `src/render/rails.js`; review in the asset showcase
-  (`/tools/showcase.html?asset=platform,platforms`).
+  (`/tools/showcase.html?asset=platform,platforms,spiked_platform,spiked-platforms`).
 
 ## Collapsing blocks
 
@@ -252,9 +264,9 @@ and burst; a virus can patrol).
 |---|---|---|
 | `look` | `bug`, `virus`, `sentinel` | its body (below). A template takes its base's. |
 | `movement` | `patrol`, `stationary`, `chase` | patrol walks the enemy's `path` (required); stationary stays in its cell (no path); chase goes after the wizard (below), walking its `path` while calm if it has one. |
-| `attack` | `touch`, `burst`, `arc`, `none` | touch: touching it hurts while it is hostile; burst and arc: charged lightning (discharges, below), all round it or one bolt aimed at the wizard; touching it doesn't hurt. Projectiles come with Pop-ups. |
-| `hostility` | `hostile`, `peaceful`, `provoked` | hostile attacks; peaceful never does; provoked is peaceful until a spell (Zap) or a discharge hits it, then hostile. |
-| `aggroRange` | units (default 0) | how far a hostile enemy notices the wizard, with nothing solid in between (a "!" pops up); a chaser goes after him, a burst or arc fires at him. 0: it never notices him. |
+| `attack` | `touch`, `burst`, `arc`, `bolt`, `none` | touch: touching it hurts while it is hostile; burst, arc and bolt: charged attacks (below): lightning all round it, a lightning bolt aimed at the wizard, or a slow shot at him (D80); touching it doesn't hurt. |
+| `hostility` | `hostile`, `peaceful`, `provoked` | hostile attacks; peaceful never does; provoked is peaceful until a spell (Zap), a discharge or a bolt hits it, then hostile. |
+| `aggroRange` | units (default 0) | how far a hostile enemy notices the wizard, with nothing solid in between (a "!" pops up); a chaser goes after him, a charged attack fires at him. 0: it never notices him (a chaser must have one). |
 | `integrity` | 1–15 | how much spell damage it takes before it pops (bug: 2, so two Zaps). |
 | `damage` | ≥ 1 | integrity the wizard loses per attack. |
 | `speed` | units/s | walking speed; a path's own `speed` overrides it. |
@@ -263,21 +275,29 @@ and burst; a virus can patrol).
 | `bounce` | true / false (default false; bug: true) | trampoline top (below). |
 | `solid` | true / false (default false) | blocks the wizard, carries him and shoves him (below). |
 | `color` | #rrggbb | body color; the eyes always show hostility, so a room can recolor one enemy with `overrides` without a new template. |
-| `attackRange` | units (default 1.2) | burst or arc reach, from its eyes to the nearest point of the wizard; `aggroRange` must be at least this. |
+| `attackRange` | units (default 1.2) | burst or arc reach, from its eyes to the nearest point of the wizard; for a bolt, how near he must be; `aggroRange` must be at least this. |
 | `attackCharge` | seconds (default 0.4) | the warning before it fires. |
 | `attackCooldown` | seconds (default 1.5) | the wait after firing. |
-| `attackColor` | #rrggbb (default: `color`) | lightning color. |
+| `attackColor` | #rrggbb (default: `color`) | lightning or bolt color. |
+| `boltSpeed` | units/s (default 4) | how fast a bolt flies (slow enough to dodge). |
+| `boltPattern` | `aimed`, `cross` (default `aimed`) | a bolt attack's shots: one at the wizard, or four level ones along the grid axes (a tower, D81). |
+| `boltBounces` | 0–8 (default 0) | how often a bolt glances off walls and objects before they stop it (D81). |
 
 | Type | Look | Moves | Attack |
 |---|---|---|---|
 | `bug` | mint-green ball `#2bff88`, hops, bouncy | patrol, 3 cells/s | touch, 1 |
 | `virus` | yellow sharp cube `#ffe23a`, glides | chase: aggro 5, 2 cells/s calm, 3.5 chasing | burst, range 1.2, charge 0.4 s, cooldown 1.5 s; integrity 2 |
 | `sentinel` | orange sharp octahedron `#ff8a1a`, glides | chase: aggro 7, 1.5 calm, 2.5 chasing; stops 5 away | arc, range 5, charge 0.7 s, cooldown 2 s; integrity 3 |
+| `shooter` | a bug (extends `bug`) | stationary | bolt at 4 units/s, range 6 (aggro 6), charge 0.6 s, cooldown 2 s (D80) |
+| `tower` | a sentinel (extends `sentinel`) | stationary | bolts four ways (`cross`) at 3.5 units/s, range 5 (aggro 5), charge 0.6 s, cooldown 1.8 s (D81) |
+| `ricochet` | a virus (extends `virus`) | chase: aggro 6, stops 5 away | a bolt bouncing twice, 5 units/s, charge 0.6 s, cooldown 2.2 s (D81) |
 
 - **Moving:** an enemy stands in a grid cell (hitbox 0.6 × 0.6 × 0.6,
   centered) and steps one cell at a time (bug: one hop per cell, 3 cells
   per second). It only starts a step from a whole cell, so on a platform
-  only at a stop.
+  only at a stop. It never starts a step into a cell another enemy is
+  walking into (D80), so two enemies never meet head-on in the middle of
+  a cell.
 - **Seeing:** a hostile enemy with an `aggroRange` sees the wizard when
   he is within it (from its eyes, 0.4 above its cell floor, to the
   nearest point of him) and nothing solid lies on the line to his middle:
@@ -293,22 +313,35 @@ and burst; a virus can patrol).
   faces him (a sentinel keeps its distance). Losing sight of him, it goes
   to the column where it last saw him and searches for `memory` seconds,
   then goes back to its post (its start cell), or walks its path again
-  if it has one. It notices him again at any time.
+  if it has one. Searching and going back it finds its way round walls
+  (a shortest walk over the room's cells, `Enemy.route()`, D80), down
+  ledges but never up a step; going back, it stays where it is only when
+  there is no way home. It notices him again at any time.
+- **Alarm** (D80, D81): any hit that leaves an enemy hostile (a provoked
+  one included, once it turns) pops up a "!", turns it to the wizard,
+  and a chaser searches where he stands, as if it had seen him there:
+  his Zap, and friendly fire too (another enemy's burst, arc or bolt).
+  The wizard always gets the blame, so he can stir enemies up with
+  friendly fire. Peaceful ones only take the damage.
 - **Patrol:** the shared path format (D46) with level legs (along x or z,
   all at the height of `at`); only x and z count once it walks, so after
   falling off a ledge it keeps to its path below. Ping-pong or loop, pause
-  at the ends.
+  at the ends. Off its path (a chaser back from a search), it finds its
+  way back round walls (D80).
 - **Blocked:** a wall, a block, a step up, a crate, a platform or another
   enemy in the way turns it back to the waypoint it came from, after a
-  0.2 s beat (`turnTicks`). It never leaves the room.
+  0.2 s beat (`turnTicks`); something in its way mid-step sends it back to
+  the cell it left, where it waits the same beat (D80). It never leaves
+  the room.
 - **Physics:** it walks off ledges and falls, rides platforms (which wait
   while it steps on or off, and wait for one in their way), and a crate
   can rest on it but can't be pushed into it. It never steps into a hole
   or onto a void block, nor off a ledge onto one (D78): that cell counts
-  as blocked. Falling into a hole or onto a void block anyway (the ground
-  gone from under it) pops it into pixels; it stays gone until the room
-  resets. Hazard blocks don't hurt it; it never triggers collapsing
-  blocks.
+  as blocked. When the ground goes from under it mid-step (a block
+  collapses, a crate breaks), it drops as it walks on (D80). Falling into
+  a hole or onto a void block anyway pops it into pixels; it stays gone
+  until the room resets. Hazard blocks don't hurt it; it never triggers
+  collapsing blocks.
 - **The wizard** walks through enemies unless they are **solid**. A solid
   enemy blocks him like a crate; he can stand on it (if it doesn't bounce)
   and it carries him as it walks, walls scraping him off; walking into him
@@ -321,11 +354,12 @@ and burst; a virus can patrol).
   reads as bouncy) bounces him up 2.2 above its top (clears 2 blocks)
   without hurting him; its sides still hurt if it is hostile. Enemies with
   `bounce` false can be stood on only if they are solid.
-- **Discharges** (D78): a hostile enemy with a burst or arc that sees him
-  within `attackRange` stops (at a whole cell), charges for
-  `attackCharge` seconds (it trembles and glows white, lightning crackles
-  round it), then fires lightning in `attackColor` for 10 ticks and cools
-  down for `attackCooldown` seconds. Falling cuts the attack off.
+- **Charged attacks** (D78, D80): a hostile enemy with a burst, an arc or
+  a bolt that sees him within `attackRange` stops (at a whole cell),
+  charges for `attackCharge` seconds (it trembles and glows white;
+  lightning crackles round a burst), then fires (lightning in
+  `attackColor` for 10 ticks, or a bolt) and cools down for
+  `attackCooldown` seconds. Falling cuts the attack off.
   - **Burst:** lightning all round it, out to its range. It hits every
     body within range it can see (the line to its middle not blocked):
     the wizard and other enemies (they lose `damage` integrity and are
@@ -335,7 +369,26 @@ and burst; a virus can patrol).
     fires). The bolt flies along that line for its range, or until a
     block or an object stops it, and hits every body in the squares it
     passes through: the wizard (if he is still there) and other enemies.
-    Stepping out of the line during the charge dodges it.
+    Stepping out of the line during the charge dodges it. It is drawn on
+    the line it hits along, from its eyes (starting at its muzzle).
+  - **Bolt** (D80): when charged it fires a slow shot (`boltSpeed`) from
+    its eyes at the wizard's middle as he is then, up or down too; a Zap
+    in its `attackColor`. The shot flies straight until it meets the
+    wizard (hurt, `damage`), another enemy (hit and provoked; never the
+    one that fired it), a block, an object or the room's side, and
+    sparks there. Room objects shrug it off (it breaks no crate and
+    switches no target). Stepping aside while it flies dodges it. The
+    Shield doesn't stop it yet (Phase 3 step 7).
+    - `boltPattern: "cross"` (D81, towers): four level shots at eye
+      height along the grid axes (the screen diagonals), fired like any
+      charged attack when it sees him within range; the corners between
+      the axes are safe.
+    - `boltBounces` (D81): a bouncing bolt is aimed level at him and
+      glances off blocks, the room's sides (closed exits too) and room
+      objects that many times, turning back along the axis it ran into
+      (sparks at each bounce, a 'ricochet' event); then the next of them
+      stops it. After its first bounce it can hit its own shooter, so
+      the wizard can dodge and let it come back at the shooter.
 - **Look (bug):** a mint-green hologram ball with two slanted eyes whose
   color shows its mood: red hostile, amber calm until provoked, cyan
   peaceful. It squashes when bounced on, hops as it walks, bobs while
@@ -357,15 +410,19 @@ and burst; a virus can patrol).
   recoil squash; while damaged it glitches every ~0.8 s (a small sideways
   jump and a faint flash).
 - Validation: known type, valid overrides, a free cell of its own not over
-  a hole, ids unique among objects and enemies, a patrol has a level path
-  clear of static blocks (so does a chaser's, if it has one), a
-  stationary enemy has none; a burst or arc enemy's `aggroRange` reaches its
-  `attackRange`.
-- Tuning: `ENEMY` in `src/entities/enemy.js`, `PLAYER.bounceHeight`; the
-  looks are `BUG` in `src/render/bug.js`, `VIRUS` in
-  `src/render/virus.js`, `SENTINEL` in `src/render/sentinel.js`, the
-  lightning `DISCHARGE` in `src/render/discharge.js`; review in the asset
-  showcase (`/tools/showcase.html?asset=bugs,viruses,sentinels`).
+  a hole nor on a lethal block, ids unique among objects and enemies, a
+  patrol has a level path clear of static blocks (so does a chaser's, if
+  it has one), a stationary enemy has none; a chaser has an `aggroRange`;
+  a charged attack's `aggroRange` reaches its `attackRange`, and no
+  peaceful enemy has one (D80).
+- Tuning: `ENEMY` in `src/entities/enemy.js`, `BOLT` in
+  `src/entities/bolt.js`, `PLAYER.bounceHeight`; the looks are `BUG` in
+  `src/render/bug.js`, `VIRUS` in `src/render/virus.js`, `SENTINEL` in
+  `src/render/sentinel.js` (what they share, mood colors, eyes and the
+  pop, in `src/render/enemy-look.js`), the lightning `DISCHARGE` in
+  `src/render/discharge.js`; review in the asset showcase
+  (`/tools/showcase.html?asset=bugs,viruses,sentinels`; the bolt:
+  `bug-bolt`, `?asset=bolts` for the tower and the ricochet).
 
 ## Pickups and progress
 
@@ -654,7 +711,7 @@ The world map tool flags any room further out.
 | `cache_hall` | 16×8 | south (front) → Boot Sector; east (front) → Relay Station | a 3-wide pit across the room: push a crate in, then jump the rest; the Shield data disk behind it (Phase 3 step 3) |
 | `relay_station` (Phase 3) | 12×12 | west doorway → Cache Hall; south (front, locked) → Stack Yard | switches (step 4): a Zap target by the back wall, a crate to push onto a plate, and a peaceful bug resting 2 s on a plate near the locked exit, so the exit opens while the bug is on it (the wizard can press that plate himself, but the exit closes as he steps off) |
 | `stack_yard` | 8×8, Glitchmire color | raised west doorway → Boot Sector; east (front) → Fault Line; north doorway (locked) → Relay Station | stacked crates, a 2-high block to climb via a crate; a plate in front of the locked doorway and a crate to push onto it (Phase 3 step 4) |
-| `fault_line` (Phase 2) | 12×12 | west doorway → Stack Yard; raised east exit on the lookout → Transit Bus | a corridor between hazard walls with an integrity refill at its end (Phase 3), hazard blocks between two plain ones to walk across, a zigzag path of plain blocks through a field of void blocks up to a lookout |
+| `fault_line` (Phase 2) | 12×12 | west doorway → Stack Yard; raised east exit on the lookout → Transit Bus | a corridor between hazard walls with an integrity refill at its end (Phase 3), guarded by two gates of spiked hoppers going up and down out of step, with a one-cell pocket between them to wait in (D82), hazard blocks between two plain ones to walk across, a zigzag path of plain blocks through a field of void blocks up to a lookout |
 | `transit_bus` (Phase 2) | 12×12, 5 high | west doorway → Fault Line; north doorway → Boot Sector; raised east exit on the high ledge → Volatile Memory | a ferry across a pit between two ledges, a lift up to a high ledge, a loop carrying a crate, a press coming down (with a crate to jam it) and a pusher squeezing the wizard against the room's edge |
 | `volatile_memory` (Phase 2) | 12×12, 5 high | west doorway → Transit Bus; raised east exit on the high ledge → Crawl Space | a pit across the room with two collapsing bridges: one regrowing after 3 s (the way back), one that stays gone, with a crate on a plain ledge in front of it to push onto the bridge from solid ground (it doesn't trigger the blocks, so it is a safe spot to hop onto); two one-shot collapsing steps up to a high ledge |
 | `crawl_space` (Phase 2) | 12×12 | west doorway → Volatile Memory; east (front) → Boot Sector | bugs: a sentry crossing the entrance lane, one walking off a ledge and patrolling the floor below, a solid one shoving along a lane with a crate to push in its way, a provoked one circling a pillar, a peaceful stationary one to bounce up to a 2-high ledge, a solid peaceful one along the front edge to ride; Zap targets: the provoked one turns hostile when hit, and an amber stationary one with 4 integrity; an energy refill near the entrance (Phase 3) |
@@ -1043,7 +1100,7 @@ the author; the answers are recorded as decisions before the code lands.
 | 3 | `feat/data-disks` | More disks (D73): an install animation on the wizard, and a second spell to switch to (Tab / Q): Shield, a crackling ring round him; it blocks projectiles once there are any (step 6). Its disk lies in Cache Hall. |
 | 4 | `feat/switches` | Switches that unlock exits: a pressure plate held down by a crate, and a target that a Zap bolt hits. An exit in room data can be locked until its switches are on; a locked exit looks closed and is solid. Switch state resets with the room. The locked exit is the same mechanism access levels use later (step 14). Editor, validation (switches point at exits that exist), showcase, a test room. |
 | 5 | `feat/viruses` | Universal enemies (a `look` field, D78); every enemy type an enemy template (D79); a `chase` movement behavior: a hostile enemy follows the wizard while it sees him within `aggroRange`, searches, then goes home; charged discharge attacks (`burst`, `arc`; `contact` renamed `touch`); the Virus and the Sentinel; the "!" mark; enemies keep out of holes. Test room Quarantine. |
-| 6 | `feat/popups` | A projectile attack: Pop-ups are stationary enemies firing slow shots; a projectile entity with its own rules for what stops it. |
+| 6 | `feat/popups` | Pop-ups: stationary enemies firing slow shots, with a look of their own. The projectile is there already: the `bolt` attack (D80, the enemy review), a bolt that stops at the wizard, another enemy, a block, an object or the room's side. |
 | 7 | `feat/firewall-spell` | Shield blocks projectiles; Firewall: a shield that also damages (D73). |
 | 8 | `feat/pause-spell` | Pause: freezes an enemy for a while; a frozen enemy is a solid platform (reusing the solid-enemy rules, D51). |
 | 9 | `feat/warp-spell` | Warp: a short teleport through gaps or past hazards, with an afterimage. |
@@ -1116,7 +1173,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 | File | Contents |
 |---|---|
 | `data/rooms/<id>.json` | One room (id = file name) |
-| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; switches `target` and `plate`, white, see Switches and locked exits); `enemies`: enemy templates (`bug`, `virus`, `sentinel`, see Enemies), each complete or `extend`ing another (D58, D79); `spells`: spell tuning and color (`zap`, see Zap and energy; `shield`, see Shield); `pickups`: pickup types (see Pickups and progress); `blocks`: block types (D60): look or kind, color, properties (`damage`, `lethal`, `regrow`), `extends` for variants; see Block types |
+| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; `spiked_platform`: a platform that hurts on touch, hazard red (D82); switches `target` and `plate`, white, see Switches and locked exits); `enemies`: enemy templates (`bug`, `virus`, `sentinel`, see Enemies), each complete or `extend`ing another (D58, D79); `spells`: spell tuning and color (`zap`, see Zap and energy; `shield`, see Shield); `pickups`: pickup types (see Pickups and progress); `blocks`: block types (D60): look or kind, color, properties (`damage`, `lethal`, `regrow`), `extends` for variants; see Block types |
 | `data/biomes.json` | Biome name and room color: `home_lattice` (core, amber), `glitchmire` (pink), `frostbyte_wastes` (ice blue), `abyssal_buffer` (graphite), `firewall_citadel` (ember orange), `phantom_partition` (special, silver-white); optional `look` for the surroundings (background, outer grid and its fade, wall grid, bloom); see Biomes (D61, D62) |
 | `data/world.json` | Start room, exit connections and every room's cell on the world map (`positions`, D66) |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |
@@ -1167,8 +1224,11 @@ Example room (12×12):
   spawn cell, `path` a patrol path (level legs), `overrides` any template field
   (see Enemies). Ids are shared with objects.
 - Object type style (D17): `edges` `solid`/`dashed`, `mark`
-  `none`/`inset`/`cross`/`brackets`, `faces` `dark`/`tinted` (defaults first),
-  `tint` 0–1 (color share of a tinted top face, default 0.1).
+  `none`/`inset`/`cross`/`brackets`/`bits`, `faces`
+  `dark`/`tinted`/`hazard` (`hazard`: the hazard block's flickering
+  pixels, D82), `shape` `cube`/`spiked` (spiked: pyramids on every side,
+  dark or hazard faces, no mark, D82) (defaults first), `tint` 0–1 (color
+  share of a tinted top face, default 0.1).
   Objects may override them.
 - `world.json` pairs exits: `"connections": [["boot_sector.north", "cache_hall.south"]]`.
   Paired exits are on opposite sides and equally wide; every exit is connected.

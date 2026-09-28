@@ -10,6 +10,7 @@ import {
 import { VIEW_HEIGHT, createIsoCamera, frameRoom, projectedHeight } from '../src/render/camera.js';
 import { blockEdges, edgeUnitKeys, groupedBlockEdges } from '../src/render/edges.js';
 import { MARKS, markSegments } from '../src/render/marks.js';
+import { SPIKES, spikePyramids, spikeSegments, spikeTriangles } from '../src/render/spikes.js';
 import { holeSides } from '../src/render/hole-view.js';
 import { OBJECT_VIEWS } from '../src/render/room-scene.js';
 import { OBJECT_KINDS } from '../src/entities/kinds.js';
@@ -263,4 +264,31 @@ test('x-ray: parts of one color share a ghost material with the wizard flash', (
 test('roomLook fills in the Home Lattice look where a biome sets nothing (D62)', () => {
   assert.deepEqual(roomLook(undefined), LOOK_DEFAULTS);
   assert.deepEqual(roomLook({ bloom: 1.7 }), { ...LOOK_DEFAULTS, bloom: 1.7 });
+});
+
+test('spiked shape (D82): four pyramids on each side of a core, inside the cell, tips on its faces', () => {
+  const cell = [2, 1, 3];
+  const pyramids = spikePyramids(cell);
+  assert.equal(pyramids.length, 6 * 4);
+  const local = (p) => p.map((v, i) => v - cell[i]);
+  for (const { base, tip } of pyramids) {
+    // The tip lies on a face of the cell, the base on the core, SPIKES.inset in.
+    assert.equal(local(tip).filter((v) => v === 0 || v === 1).length, 1);
+    for (const corner of base) assert.ok(local(corner).every((v) => v >= SPIKES.inset - 1e-9 && v <= 1 - SPIKES.inset + 1e-9));
+  }
+  // Four sides per pyramid, three corners each.
+  const positions = spikeTriangles(cell);
+  assert.equal(positions.length, 6 * 4 * 4 * 3 * 3);
+  // Every triangle faces out of the cell's middle side (its normal points away from the core's center).
+  const center = cell.map((v) => v + 0.5);
+  for (let i = 0; i < positions.length; i += 9) {
+    const [a, b, c] = [0, 3, 6].map((k) => positions.slice(i + k, i + k + 3));
+    const u = b.map((v, k) => v - a[k]);
+    const w = c.map((v, k) => v - a[k]);
+    const normal = [u[1] * w[2] - u[2] * w[1], u[2] * w[0] - u[0] * w[2], u[0] * w[1] - u[1] * w[0]];
+    const out = c.map((v, k) => v - center[k]); // c is the tip
+    assert.ok(normal[0] * out[0] + normal[1] * out[1] + normal[2] * out[2] > 0);
+  }
+  // Outline: 4 ridges per pyramid, plus the core's 12 edges (2 pieces each, drawn once).
+  assert.equal(spikeSegments(cell).length, 6 * 4 * 4 + 12 * 2);
 });

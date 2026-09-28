@@ -13,6 +13,8 @@
  * fits the enemy hitbox (0.6), its feet reach a little beyond.
  */
 import { CylinderGeometry, Group, IcosahedronGeometry, Mesh, MeshBasicMaterial, Quaternion, SphereGeometry, Vector3 } from 'three';
+import { dischargeLook } from './discharge.js';
+import { EYE, flaredGlow, glowEyes, popBurst, setMood } from './enemy-look.js';
 import { hash } from './hash.js';
 import { createFlash, holoPart, sharpGeometry, sharpPart } from './holo.js';
 import { shared } from './neon.js';
@@ -35,7 +37,7 @@ export const CRAWLER = {
   step: { stride: 0.18, lift: 0.09, perCell: 2 },
   /** Front legs raised between steps while alert. */
   threat: 0.18,
-  moods: { hostile: 0xff2a3a, provoked: 0xffb020, peaceful: 0x00f0ff },
+  /** Eye brightness: calm, and flared while after the wizard (colors by mood: enemy-look.js). */
   eyeGlow: { calm: 2.2, alert: 4 },
   markHeight: 0.8,
   turnRate: 12,
@@ -47,7 +49,6 @@ const GEO = {
   head: shared(new SphereGeometry(CRAWLER.head.r, 24, 12)),
   limb: shared(new CylinderGeometry(0.017, 0.017, 1, 6)),
   joint: shared(new SphereGeometry(0.024, 10, 6)),
-  eye: shared(new SphereGeometry(1, 12, 8)),
 };
 
 const UP = new Vector3(0, 1, 0);
@@ -91,7 +92,7 @@ export function createCrawler(color) {
   const r = headSize.r;
   for (const [x, y, size] of [[0.045, 0.01, 0.034], [0.03, 0.06, 0.02]]) {
     for (const side of [-1, 1]) {
-      const eye = new Mesh(GEO.eye, eyes);
+      const eye = new Mesh(EYE, eyes);
       eye.position.set(side * x, y, headSize.z + Math.sqrt(r * r - x * x - y * y) - 0.004);
       eye.scale.set(size, size * 0.8, 0.012);
       eye.rotation.set(-y * 3, side * 0.35, side * 0.35);
@@ -111,18 +112,9 @@ export function createCrawler(color) {
   }
 
   const group = new Group().add(body, ...legs.flatMap(({ upper, lower, knee }) => [upper, lower, knee]));
-  Object.assign(group.userData, { body, legs, eyes, flash, mood: 'hostile' });
-  setCrawlerMood(group, 'hostile');
+  Object.assign(group.userData, { body, legs, eyes, flash, glow: CRAWLER.eyeGlow.calm });
+  setMood(group, 'hostile');
   return group;
-}
-
-/**
- * @param {Group} crawler from createCrawler()
- * @param {'hostile'|'provoked'|'peaceful'} mood
- */
-export function setCrawlerMood(crawler, mood) {
-  crawler.userData.mood = mood;
-  crawler.userData.eyes.color.set(CRAWLER.moods[mood]).multiplyScalar(CRAWLER.eyeGlow.calm);
 }
 
 /**
@@ -149,11 +141,16 @@ export function crawlerFoot(phase) {
  * @param {number} [state.walked] cells walked (while walking)
  * @param {number} [state.time] seconds
  * @param {number} [state.alert] 0..1, how much it is after the wizard
+ * @param {number|null} [state.attack] ticks since its attack started, or null (any attack, D78)
+ * @param {number} [state.charge] ticks that attack charges
  * @param {number} [state.squash] extra squash (a hit)
  * @param {number} [state.shift] sideways shift (a glitch)
  */
-export function animateCrawler(crawler, { state = 'rest', walked = 0, time = 0, alert = 0, squash = 0, shift = 0 }) {
-  const { body, legs, eyes } = crawler.userData;
+export function animateCrawler(crawler, { state = 'rest', walked = 0, time = 0, alert = 0, attack = null, charge = 1, squash = 0, shift = 0 }) {
+  // It trembles while it charges an attack.
+  const look = dischargeLook(attack, charge);
+  if (look.shake > 0) shift += look.shake * (hash(Math.floor(time * 30), 5) - 0.5) * 2;
+  const { body, legs } = crawler.userData;
   const walking = state === 'walk';
   const falling = state === 'fall';
   const phase = walking ? walked * CRAWLER.step.perCell : 0;
@@ -186,33 +183,16 @@ export function animateCrawler(crawler, { state = 'rest', walked = 0, time = 0, 
     knee.position.set(...kneeAt);
   }
 
-  const glow = CRAWLER.eyeGlow.calm + (CRAWLER.eyeGlow.alert - CRAWLER.eyeGlow.calm) * alert;
-  eyes.color.set(CRAWLER.moods[crawler.userData.mood]).multiplyScalar(glow);
+  glowEyes(crawler, flaredGlow(CRAWLER.eyeGlow, alert, look.charge));
 }
 
-/**
- * The pixels of it popping `tick` ticks after it died.
- * @param {number} tick may be fractional
- * @returns {{ offset: number[], scale: number }[]}
- */
-export function crawlerPopPixels(tick) {
-  const { pixels, ticks, spread, rise } = CRAWLER.pop;
-  if (tick < 0 || tick >= ticks) return [];
-  const t = tick / ticks;
-  const out = [];
-  for (let i = 0; i < pixels; i++) {
-    const angle = hash(i, 61) * Math.PI * 2;
-    const radius = (0.15 + hash(i, 62) * spread) * Math.sqrt(t);
-    const height = CRAWLER.y * (0.5 + hash(i, 63)) + (hash(i, 64) - 0.3) * rise * t;
-    out.push({ offset: [Math.cos(angle) * radius, height, Math.sin(angle) * radius], scale: 1 - t });
-  }
-  return out;
-}
+/** The pixels of it popping `tick` ticks after it died (enemy-look.js popBurst()). */
+export const crawlerPopPixels = popBurst(CRAWLER.pop, { seed: 61, middle: CRAWLER.y, scatter: 0.2 });
 
 /** Everything EnemyView needs to show a crawler (see BUG_MODEL in bug.js). */
 export const CRAWLER_MODEL = {
   create: createCrawler,
-  setMood: setCrawlerMood,
+  setMood,
   animate: animateCrawler,
   popPixels: crawlerPopPixels,
   pop: CRAWLER.pop,

@@ -1289,3 +1289,100 @@ Changing `bug` now reaches every bug and every template built on it,
 which the author wants: templates tune the enemies of a whole area at
 once, and different sets of templates give different areas their own
 enemies.
+
+### D80 — 2026-09-28 — Enemy review: bolt attack, alarm, routes, cell claims
+From a review of the enemy code, the author asked for its fixes, the
+duplication gone, a bolt attack and enemies alerted by the wizard's hits:
+- **Bolt attack** (`attack: "bolt"`): a third charged attack beside the
+  burst and arc (`CHARGED_ATTACKS`), sharing `attackRange`,
+  `attackCharge`, `attackCooldown` and `attackColor`, plus `boltSpeed`
+  (default 4 units/s). When charged it fires a bolt (the Zap's entity,
+  `Bolt.shoot()`) from its eyes at the wizard's middle as he is then, in
+  3D, so it reaches him on a ledge. It stops at the first body (the
+  wizard: hurt; another enemy, never its own shooter: hit and provoked),
+  block, room object or the room's side. Room objects shrug it off: it
+  breaks no crate and switches no target (those answer the wizard's Zap
+  only). Aiming when it fires, not when it charges, is fair because it is
+  slow. A `shooter` template (a stationary bug) uses it; Pop-ups (step 6)
+  get their own look. The Shield blocking it stays with step 7.
+- **Alarm:** the wizard's Zap hitting an enemy that is hostile after the
+  hit (a provoked one included) pops up a "!" ('alert'), turns it to him
+  and sets where it last saw him to where he stood; a chaser searches
+  there for `memory` seconds. Peaceful ones only take the damage.
+- **Routes:** searching and going home, a chaser walks a shortest way
+  round walls (`Enemy.route()`, a breadth-first search over the room's
+  cells, down ledges but never up a step, past objects and enemies
+  standing still), and a patrol off its path walks back to it the same
+  way. Chasing stays greedy (D78), so hiding and crate traps still work.
+  Going home it gives up only when there is no way.
+- **Cell claims:** an enemy never starts a step into a cell another enemy
+  is walking into, and one turned back mid-step waits `turnTicks` in the
+  cell it left. Two chasers heading for one cell used to meet in the
+  middle, both turn back and repeat for ever.
+- **Ground gone mid-step:** an enemy drops as it walks on (it used to
+  float until the end of the step).
+- **Arc drawn where it hits:** from its eyes along the aim, starting its
+  model's muzzle reach in front, instead of from the model's muzzle
+  height (a sentinel's eye is 0.2 higher than the line the arc hits
+  along).
+- **Validation:** a chaser needs an `aggroRange` above 0, a peaceful enemy
+  can't have a charged attack, and no enemy may start on a lethal block
+  (each could never work); an enemy's bad override names its template.
+- **Shared looks:** the three enemy models share their mood colors, eye
+  geometry, eye glow and pop burst (`render/enemy-look.js`).
+**Why:** the author's request after the review. Claims and the wait end
+a livelock between chasers; routes stop chasers stranding themselves
+behind a wall they walked round; a bolt reuses the Zap's entity and
+rules instead of a second projectile.
+
+### D81 — 2026-09-28 — Bolt patterns and bounces; any hit alarms
+Amends D80, after the enemy review; the author's answers to four
+questions (each the proposed option):
+- **Bolt options, not new attacks:** the `bolt` attack gets
+  `boltPattern` (`aimed`, the default, or `cross`) and `boltBounces` (0–8,
+  default 0), which combine freely (a tower firing bouncing bolts four
+  ways), instead of two fixed attacks.
+- **Cross** (towers): fired like every charged attack, when it sees the
+  wizard within `attackRange`; four level shots at eye height along the
+  grid axes (`boltDirections()`); the corners between them are safe.
+- **Bounces:** a bouncing bolt is aimed level at the wizard (it bounces
+  in the level plane only) and glances off blocks, the room's sides
+  (closed exits included) and room objects, turning back along the axis
+  it ran into, `boltBounces` times; then the next of them stops it. After
+  its first bounce it can hit its own shooter. Each bounce is a
+  `ricochet` event (sparks). Objects are still never harmed by it.
+- **Any hit alarms:** not only the wizard's Zap but every hit that leaves
+  an enemy hostile, friendly fire from another enemy's burst, arc or bolt
+  included (`Game.hitEnemy()`). The wizard always gets the blame: it
+  turns to him and a chaser searches where he stands.
+- Templates `tower` (a stationary sentinel with a cross) and `ricochet`
+  (a chasing virus whose bolt bounces twice); showcase `?asset=bolts`.
+**Why:** the author's choices. Options keep enemies universal (D78):
+new combinations are data, not code. Level bounces stay readable on the
+isometric screen; a bolt that can come back at its shooter gives the
+wizard a trick. Blaming the wizard for friendly fire lets him stir up a
+room on purpose.
+
+### D82 — 2026-09-28 — Spiked platforms
+Knight Lore's bouncing spiked balls, as an object rather than an enemy:
+the author asked for the hopper only, reusing the platform code, as a
+damaging object with coloring from the hazard block.
+- A platform type may have `damage` (validated: platforms only): the
+  wizard touching it, its sides, its top or riding it, loses that much
+  integrity, like touching a hazard block (then invulnerability). It
+  moves, waits and carries crates like any platform (same class, same
+  paths), so a hopper is a platform on a short up-and-down path.
+- Look: `faces: "hazard"` gives an object the hazard block's flickering
+  pixels, flaring when it hurts the wizard; `shape: "spiked"` makes it a
+  smaller core cube with four pyramids on each side (the author asked for
+  real spikes rather than a face pattern), their tips on the faces of
+  its cell: it still collides as the whole cell, so what shows is what
+  hurts. An object that hurts flares when it hurts the wizard (its
+  outline, or its hazard faces). `spiked_platform` is spiked with dark
+  faces in hazard red (the author: the hazard pixels are too small to
+  see on the spikes); showcase `spiked-platforms`.
+**Why:** a mechanism with a fixed rhythm is an object, not a monster
+(enemies are for things that sense and react; a Zap, Pause or alarm means
+nothing to it). Reusing platforms and the hazard look makes it data plus
+a touch check, and red with flickering pixels already means "hurts" in
+every room.

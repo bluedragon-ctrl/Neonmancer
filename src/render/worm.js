@@ -15,6 +15,8 @@
  * (visual only).
  */
 import { CylinderGeometry, Group, Mesh, MeshBasicMaterial, SphereGeometry } from 'three';
+import { dischargeLook } from './discharge.js';
+import { EYE, flaredGlow, glowEyes, setMood } from './enemy-look.js';
 import { hash } from './hash.js';
 import { createFlash, holoPart } from './holo.js';
 import { shared } from './neon.js';
@@ -36,7 +38,7 @@ export const WORM = {
   idleRate: 0.5,
   /** Rearing up while alert: head lift and tilt back. */
   rear: { lift: 0.14, tilt: 0.35 },
-  moods: { hostile: 0xff2a3a, provoked: 0xffb020, peaceful: 0x00f0ff },
+  /** Eye brightness: calm, and flared while after the wizard (colors by mood: enemy-look.js). */
   eyeGlow: { calm: 2.2, alert: 4 },
   markHeight: 0.85,
   turnRate: 8,
@@ -48,7 +50,6 @@ const GEO = {
   balls: WORM.tail.map(([r]) => shared(new SphereGeometry(r, 24, 12))),
   antenna: shared(new CylinderGeometry(0.012, 0.012, 1, 6)),
   knob: shared(new SphereGeometry(0.03, 10, 6)),
-  eye: shared(new SphereGeometry(1, 12, 8)),
 };
 
 /**
@@ -67,7 +68,7 @@ export function createWorm(color) {
   // Big frowning eyes on the front of the head.
   const eyes = new MeshBasicMaterial();
   for (const side of [-1, 1]) {
-    const eye = new Mesh(GEO.eye, eyes);
+    const eye = new Mesh(EYE, eyes);
     const x = side * 0.065;
     const y = 0.035;
     eye.position.set(x, y, Math.sqrt(r * r - x * x - y * y) - 0.004);
@@ -96,18 +97,9 @@ export function createWorm(color) {
   const balls = GEO.balls.map((geometry) => holoPart(geometry, color, flash));
   const body = new Group().add(head, ...balls);
   const group = new Group().add(body);
-  Object.assign(group.userData, { body, head, balls, antennae, eyes, flash, mood: 'hostile' });
-  setWormMood(group, 'hostile');
+  Object.assign(group.userData, { body, head, balls, antennae, eyes, flash, glow: WORM.eyeGlow.calm });
+  setMood(group, 'hostile');
   return group;
-}
-
-/**
- * @param {Group} worm from createWorm()
- * @param {'hostile'|'provoked'|'peaceful'} mood
- */
-export function setWormMood(worm, mood) {
-  worm.userData.mood = mood;
-  worm.userData.eyes.color.set(WORM.moods[mood]).multiplyScalar(WORM.eyeGlow.calm);
 }
 
 /**
@@ -140,11 +132,16 @@ export function wormSpine(phase, size = 1) {
  * @param {number} [state.walked] cells walked (while walking)
  * @param {number} [state.time] seconds
  * @param {number} [state.alert] 0..1, how much it is after the wizard
+ * @param {number|null} [state.attack] ticks since its attack started, or null (any attack, D78)
+ * @param {number} [state.charge] ticks that attack charges
  * @param {number} [state.squash] extra squash (a hit)
  * @param {number} [state.shift] sideways shift (a glitch)
  */
-export function animateWorm(worm, { state = 'rest', walked = 0, time = 0, alert = 0, squash = 0, shift = 0 }) {
-  const { body, head, balls, antennae, eyes } = worm.userData;
+export function animateWorm(worm, { state = 'rest', walked = 0, time = 0, alert = 0, attack = null, charge = 1, squash = 0, shift = 0 }) {
+  // It trembles while it charges an attack.
+  const look = dischargeLook(attack, charge);
+  if (look.shake > 0) shift += look.shake * (hash(Math.floor(time * 30), 5) - 0.5) * 2;
+  const { body, head, balls, antennae } = worm.userData;
   const walking = state === 'walk';
   const phase = walking ? walked * Math.PI * 2 : time * WORM.idleRate * Math.PI * 2;
   const spine = wormSpine(phase, walking ? 1 : 0.4);
@@ -170,8 +167,7 @@ export function animateWorm(worm, { state = 'rest', walked = 0, time = 0, alert 
 
   body.position.x = shift;
   body.scale.set(1 + squash * 0.5, 1 - squash, 1 + squash * 0.5);
-  const glow = WORM.eyeGlow.calm + (WORM.eyeGlow.alert - WORM.eyeGlow.calm) * alert;
-  eyes.color.set(WORM.moods[worm.userData.mood]).multiplyScalar(glow);
+  glowEyes(worm, flaredGlow(WORM.eyeGlow, alert, look.charge));
 }
 
 /**
@@ -199,7 +195,7 @@ export function wormPopPixels(tick) {
 /** Everything EnemyView needs to show a worm (see BUG_MODEL in bug.js). */
 export const WORM_MODEL = {
   create: createWorm,
-  setMood: setWormMood,
+  setMood,
   animate: animateWorm,
   popPixels: wormPopPixels,
   pop: WORM.pop,

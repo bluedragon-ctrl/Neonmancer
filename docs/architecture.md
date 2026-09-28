@@ -59,14 +59,14 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `entities/player.js` | Movement, jump, gravity, turning, pushing, integrity, invulnerability after a hit, death (hole or damage), respawn; one wizard for the whole game |
 | `entities/kinds.js` | Object kind → logic class (`OBJECT_KINDS`); the room's objects are built from it |
 | `entities/pushable.js` | Rest → slide → fall → land / plug-a-hole state machine; destructible ones break (`hit()` → `broken`) |
-| `entities/platform.js` | Moving platform: follows its path, carries riders, waits when blocked, shoves or squeezes the wizard (D46) |
+| `entities/platform.js` | Moving platform: follows its path, carries riders, waits when blocked, shoves or squeezes the wizard (D46); a spiked one hurts on touch (D82) |
 | `entities/collapsing.js` | Collapsing block: solid → shake (the wizard stood on it) → gone → optional regrow once its cell is clear (D47) |
-| `entities/enemy.js` | Enemy body: steps cell by cell where its movement behavior leads (never into a hole or onto void), turns back when blocked, falls, rides platforms, pops in holes and on void; hostility, provoke, bounce state (D48); seeing the wizard, the "!", the discharge attack's charge and cooldown (D78) |
+| `entities/enemy.js` | Enemy body: steps cell by cell where its movement behavior leads (never into a hole or onto void, never into a cell another enemy is walking into), turns back when blocked, falls (mid-step too), rides platforms, pops in holes and on void; hostility, provoke, bounce state (D48); seeing the wizard, the "!", the charged attack's charge and cooldown (D78); `alarm()` when anything hits it (D81) and `route()`, a shortest walk to a column (D80) |
 | `entities/switch.js` | Switches (D75): `Target` (a fixed body a bolt switches over) and `Plate` (a floor tile, no body, on while something stands on it); `SWITCH_KINDS` (pure, tested) |
-| `entities/bolt.js` | Zap bolt: flies level in sub-steps, stops at the first enemy, block, object or room side (`BOLT` tuning) |
+| `entities/bolt.js` | A bolt: the wizard's Zap (`Bolt.cast()`, level) or an enemy's shot (`Bolt.shoot()`, D80; `boltDirections()`: aimed, or four ways, D81); flies in sub-steps one axis at a time, bounces off walls and objects if it has bounces left (D81), stops at the first body it may hit, block, object or room side (`BOLT` tuning) |
 | `ai/behaviors.js` | Movement behaviors by name (`BEHAVIORS`: `patrol`, `stationary`, `chase`), as enemy templates refer to them |
-| `ai/patrol.js` | Patrol: next step towards the next waypoint column, pauses at the ends, turns back (pure, tested) |
-| `ai/chase.js` | Chase (D78): calm → chase → search → return, greedy steps towards the wizard or home, patrols while calm if it has a path (pure, tested) |
+| `ai/patrol.js` | Patrol: next step towards the next waypoint column, pauses at the ends, turns back; off its path it takes the enemy's route back (pure, tested) |
+| `ai/chase.js` | Chase (D78, D80): calm → chase → search → return, greedy steps towards the wizard, routes (round walls) to where it last saw him and home, searches when his Zap hits it, patrols while calm if it has a path (pure, tested) |
 | `ai/sight.js` | Rays through the grid and bodies (`castRay()`), `lineOfSight()`, `reach()` from a point to a box (pure, tested) |
 | `world/progress.js` | What the wizard has for the whole game (D71): save bits in blocks (`SAVE_BLOCKS`, `saveBit()`, `pickupBit()`), `Progress` (bits found, known spells) (pure, tested) |
 | `entities/pickup.js` | A pickup in a room: its box, save bit, state (idle, ghost, taken) and pick-up ticks (pure, tested) |
@@ -83,16 +83,18 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/exit-view.js` | Exit effect in the destination color: dashed stream into doorway tunnels, arrows gliding out of front exits |
 | `render/exit-layout.js` | Exit effect layout and timing, `EXIT_FX` tuning (pure, tested) |
 | `render/walls.js` | Back walls with doorways and dark tunnels behind them, front edges with gaps, arrow shape for front exits (pure, tested) |
+| `render/spikes.js` | The spiked object shape (D82): pyramids on a core cube inside the cell, as face triangles and outline segments, `SPIKES` tuning; pure, tested |
 | `render/marks.js` | Face-mark line patterns for object styles, including the data bits, whole (`bits`) or with holes for destructible objects (`bitsBroken`, `bitLayout()`); pure, tested |
 | `render/break-fx.js` | Destructible object's jolt on a hit that doesn't break it, `BREAK_FX` tuning (pure, tested) |
 | `render/hole-view.js` | Hole pits: walls fading to black, rim, short fading corner lines; outline math (tested) |
 | `render/room-view.js` | Static blocks (merged edges + instanced occluder faces), back walls, styled object views |
 | `render/entity-view.js` | Player (with the cast flare), pushable, platform, collapsing-block and enemy views (enemy bodies by `look`: `ENEMY_MODELS`; spell-hit flash and glitch, charge glow, "!" and discharge), glowing drop shadows, pixel bursts (derez, collapse), platform guide lines |
 | `render/zap-fx.js` | Zap look: trail zigzags, bolt flicker, cast flare, sparks, enemy hit flash and damaged glitch, `ZAP_FX` tuning (pure, tested) |
-| `render/zap-view.js` | Zap meshes: bolt, cast flare, sparks; `ZapView` keeps a room's bolts and sparks (pooled) |
+| `render/zap-view.js` | Zap meshes: bolt, cast flare, sparks, in the Zap's cyan or an enemy bolt's color; `ZapView` keeps a room's bolts and sparks (pooled by color) |
 | `render/install-fx.js`, `render/install-view.js` | Installing a spell from a data disk (D73): the look (pure, tested) and its meshes, shown by `PlayerView` |
 | `render/shield-fx.js`, `render/shield-view.js` | The Shield's lightning ring (D73): the look (pure, tested) and its meshes, shown by `PlayerView` |
 | `render/collapse-fx.js` | Collapsing-block look: shake, pixels breaking off, regrow, `COLLAPSE_FX` tuning (pure, tested) |
+| `render/enemy-look.js` | What every enemy model shares (D80): mood colors (`MOODS`, `eyeMood()`, `setMood()`), the eye geometry and glow, the pop burst (`popBurst()`) (pure parts tested) |
 | `render/bug.js` | Bug model (ball, eyes colored by mood), hop pose, bounce squash, pop pixels, `BUG` tuning (pure parts tested); `BUG_MODEL` for `EnemyView` |
 | `render/virus.js` | Virus model (D78): sharp tipped cube, orbiting bits, glide, charge pose, pop pixels, `VIRUS` tuning; `VIRUS_MODEL` |
 | `render/sentinel.js` | Sentinel model (D78): sharp octahedron, visor eye, shards gathering like a barrel, recoil, pop pixels, `SENTINEL` tuning; `SENTINEL_MODEL` |
@@ -220,6 +222,10 @@ scrape him off), then shoved clear of the new box by the smallest move of
 at most `maxShove` along any axis. If none fits, it calls `Game.hurt()`
 and waits. Carried crates keep whole-cell positions at stops (a tiny
 rounding snap), and `push()` only moves a crate standing on whole cells.
+A spiked platform (D82) is the same class with a `damage` from its type:
+`Game.spiked` lists those objects, and each tick, right after the hazard
+blocks, touching one (`touchesBox()`) calls `Game.hurt()` with the object,
+whose view flares (`RoomScene.flareObject()`).
 
 Collapsing blocks (D47) are room objects that never move but can vanish.
 Each tick one checks whether the wizard stands on it (alive, grounded, feet
@@ -263,17 +269,30 @@ asks `Player.cast(cost, cooldown)` with the selected spell's tuning: while
 dead or cooling down nothing happens; without the energy it reports
 `deny`; else it spends the energy and runs the spell's effect
 (`SPELL_EFFECTS` in game.js). Zap's puts a `Bolt` at his hands in
-`Game.bolts`, aimed along `Player.aim()` (his `targetFacing`). Bolts
-update after the enemies (`updateBolts()`), in sub-steps of at most 0.1,
-and stop at the first live enemy, solid cell, solid object or room side;
-a stopped bolt is reported (`zap`, with the bolt, for the sparks) and
-dropped. The enemy it stopped at takes `Enemy.hit(damage, 'zap')`: it is
-provoked and loses integrity, `hit` or, at 0, `pop` (then
-`refreshBodies()`), before `touchEnemies()` runs, so a popped enemy can't
-hurt him that tick. A room object it stopped at takes `hit(damage)` if it
-has one: a pushable with `integrity` reports `hit` or, at 0, `break` (state
-`broken`, `solid` false, so `refreshBodies()` drops it and what stood on
-it falls next tick); indestructible ones return null. Bolts belong to the room: `enterRoom()` clears them.
+`Game.bolts` (`Bolt.cast()`), aimed along `Player.aim()` (his
+`targetFacing`). Bolts update after the enemies (`updateBolts()`), in
+sub-steps of at most 0.1, and stop at the first live enemy, solid cell,
+solid object or room side; a stopped bolt is reported (`zap`, with the
+bolt, for the sparks) and dropped. The enemy it stopped at takes
+`Enemy.hit(damage, 'zap')`: it is provoked and loses integrity, `hit` or,
+at 0, `pop` (then `refreshBodies()`), before `touchEnemies()` runs, so a
+popped enemy can't hurt him that tick; one left hostile takes
+`Enemy.alarm()` (D80: it turns to him, a chaser searches where he stood;
+an `alert` event unless it saw him already). A room object it stopped at
+takes `hit(damage)` if it has one: a pushable with `integrity` reports
+`hit` or, at 0, `break` (state `broken`, `solid` false, so
+`refreshBodies()` drops it and what stood on it falls next tick);
+indestructible ones return null. An enemy's `bolt` attack (D80) puts
+`Bolt.shoot()`s in the same list when `Game.discharge()` fires it (one,
+or four for a `cross`, D81), with the enemy as their `owner`: a bolt
+stops at the wizard (`hurt()` with the enemy), another enemy (or, after
+a bounce, its own; `hit(damage, 'bolt')`), a block, an object (unharmed)
+or the room side; a bouncing one glances off blocks and objects first
+(`ricochet` events, passed to `RoomScene.sparks()` too). Every hit on an
+enemy, a spell's, a discharge's or a bolt's, goes through
+`Game.hitEnemy()`: it emits `hit` or `pop`, and alarms one left hostile
+(`Enemy.alarm()`, D81). Bolts belong to the room: `enterRoom()` clears
+them.
 Energy recharges in `Player.update()` and lives on the `Player`, so it
 carries over between rooms.
 

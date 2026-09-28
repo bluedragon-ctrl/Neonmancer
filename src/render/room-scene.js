@@ -58,7 +58,12 @@ export class RoomScene {
     this.zapView = null;
     /** "x,y,z" of each hazard-look block → its face material (room-view.js). */
     this.flares = new Map();
-    /** The hazard block that last hurt the wizard, flaring: { faces, cell, time } (seconds since). */
+    /**
+     * The hazard block or spiked platform (D82) that last hurt the wizard,
+     * flaring: { owner, apply, object?, time }: `apply(since)` sets its
+     * look `time` seconds after; `owner` tells flares apart (the face
+     * material of a hazard block type, the object).
+     */
     this.flare = null;
   }
 
@@ -75,6 +80,8 @@ export class RoomScene {
     const { room } = game;
     const { renderer } = this;
     const old = [this.objectGroup];
+    // A spiked platform's flare goes with its old view.
+    if (this.flare?.object) this.flare = null;
     const shown = (thing) => cutAbove === null || Math.floor(thing.pos[1]) <= cutAbove;
     this.objectViews = game.objects.filter(shown).map((object) => new OBJECT_VIEWS[object.kind](game, object));
     this.enemyViews = game.enemies.filter(shown).map((enemy) => new EnemyView(game, enemy));
@@ -131,16 +138,18 @@ export class RoomScene {
     }
     if (this.flare) {
       this.flare.time += dt;
-      flareHazard(this.flare.faces, this.flare.cell, this.flare.time);
+      this.flare.apply(this.flare.time);
     }
   }
 
   /**
-   * A bolt stopped: sparks where it is.
+   * A bolt stopped, or bounced: sparks where it is (or bounced).
    * @param {import('../entities/bolt.js').Bolt} bolt
+   * @param {number[]} [pos] where it bounced; where it is by default
+   * @param {number[]} [dir] the way it came in; its flight by default
    */
-  sparks(bolt) {
-    this.zapView.spark(bolt);
+  sparks(bolt, pos, dir) {
+    this.zapView.spark(bolt, pos, dir);
   }
 
   /**
@@ -150,8 +159,21 @@ export class RoomScene {
   flareHazard(cell) {
     const faces = this.flares.get(cell.join());
     if (!faces) return; // a block that hurts without the hazard look
-    // A flare still fading on another hazard type's blocks goes out.
-    if (this.flare && this.flare.faces !== faces) flareHazard(this.flare.faces, this.flare.cell, Infinity);
-    this.flare = { faces, cell, time: 0 };
+    this.startFlare({ owner: faces, apply: (since) => flareHazard(faces, cell, since) });
+  }
+
+  /**
+   * A spiked platform (D82) just hurt the wizard: make it flare.
+   * @param {object} object the room object (entities/platform.js)
+   */
+  flareObject(object) {
+    const apply = this.objectViews.find((view) => view.platform === object)?.block.userData.flare;
+    if (apply) this.startFlare({ owner: object, apply, object });
+  }
+
+  /** Start a flare; one still fading on something else goes out. */
+  startFlare(flare) {
+    if (this.flare && this.flare.owner !== flare.owner) this.flare.apply(Infinity);
+    this.flare = { ...flare, time: 0 };
   }
 }

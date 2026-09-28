@@ -168,29 +168,42 @@
         },
         "movement": {
           "enum": ["patrol", "stationary", "chase"],
-          "description": "Movement behavior (src/ai/behaviors.js). patrol: walks its path (room data \"path\", required) cell by cell, turning back when blocked; stationary: stays in its cell (still falls and rides platforms); chase: goes after the wizard while it sees him within aggroRange (chaseSpeed), searches where it lost him for memory seconds, then goes back to its post, or walks its path if it has one. Enemies never step into a hole or onto a lethal block."
+          "description": "Movement behavior (src/ai/behaviors.js). patrol: walks its path (room data \"path\", required) cell by cell, turning back when blocked; stationary: stays in its cell (still falls and rides platforms); chase: goes after the wizard while it sees him within aggroRange (chaseSpeed; needs an aggroRange), searches where it lost him (or where he stood when his Zap hit it) for memory seconds, then goes back to its post, or walks its path if it has one; searching and going back it finds its way round walls. Enemies never step into a hole or onto a lethal block."
         },
         "attack": {
-          "enum": ["touch", "burst", "arc", "none"],
-          "description": "How it hurts the wizard while hostile. touch: touching it; none: never. burst and arc are discharges (touching it doesn't hurt): when it sees him within attackRange it stops, charges for attackCharge seconds, fires lightning, then waits attackCooldown seconds. burst: lightning all round it, hitting the wizard and other enemies within attackRange; arc: one bolt, aimed where the wizard stood when it started charging, up to attackRange or the first block or object; it hits every body (the wizard, other enemies) in the squares it passes through."
+          "enum": ["touch", "burst", "arc", "bolt", "none"],
+          "description": "How it hurts the wizard while hostile. touch: touching it; none: never. burst, arc and bolt are charged attacks (touching it doesn't hurt): when it sees him within attackRange it stops, charges for attackCharge seconds, fires, then waits attackCooldown seconds. burst: lightning all round it, hitting the wizard and other enemies within attackRange; arc: one bolt of lightning, aimed where the wizard stood when it started charging, up to attackRange or the first block or object; it hits every body (the wizard, other enemies) in the squares it passes through; bolt: a slow shot (boltSpeed) at where he is when it fires, stopped by the first body (the wizard, another enemy), block or object it meets."
         },
         "hostility": {
           "enum": ["hostile", "peaceful", "provoked"],
-          "description": "hostile: attacks (red eyes); peaceful: never attacks (cyan eyes); provoked: peaceful (amber eyes) until a spell hits it, then hostile."
+          "description": "hostile: attacks (red eyes); peaceful: never attacks (cyan eyes); provoked: peaceful (amber eyes) until a spell, a discharge or a bolt hits it, then hostile."
         },
         "aggroRange": {
           "type": "number",
           "minimum": 0,
           "maximum": 32,
           "default": 0,
-          "description": "Units within which a hostile enemy notices the wizard, if nothing blocks its line of sight: a chaser goes after him, a burst or arc fires; a \"!\" pops up over it (any enemy). At least attackRange for a burst or arc."
+          "description": "Units within which a hostile enemy notices the wizard, if nothing blocks its line of sight: a chaser goes after him, a charged attack fires; a \"!\" pops up over it (any enemy). Above 0 for a chaser, at least attackRange for a charged attack."
         },
         "chaseSpeed": { "type": "number", "exclusiveMinimum": 0, "maximum": 8, "description": "Speed in units per second while it chases or searches (chase movement); its speed by default." },
-        "memory": { "type": "number", "minimum": 0, "maximum": 10, "default": 1.5, "description": "Seconds a chaser searches where it last saw the wizard before it gives up." },
-        "attackRange": { "type": "number", "minimum": 0.5, "maximum": 16, "default": 1.2, "description": "Burst or arc reach in units, from its middle to the nearest point of the wizard." },
-        "attackCharge": { "type": "number", "minimum": 0, "maximum": 3, "default": 0.4, "description": "Seconds it charges (the warning) before a burst or arc fires." },
-        "attackCooldown": { "type": "number", "minimum": 0, "maximum": 10, "default": 1.5, "description": "Seconds after a burst or arc before it can charge again." },
-        "attackColor": { "$ref": "common.schema.json#/$defs/color", "description": "Lightning color of a burst or arc; its color by default." },
+        "memory": { "type": "number", "minimum": 0, "maximum": 10, "default": 1.5, "description": "Seconds a chaser searches where it last saw the wizard (or where he stood when his Zap hit it) before it gives up." },
+        "attackRange": { "type": "number", "minimum": 0.5, "maximum": 16, "default": 1.2, "description": "Charged attack range in units, from its middle to the nearest point of the wizard: a burst's or arc's reach, how near he must be for a bolt." },
+        "attackCharge": { "type": "number", "minimum": 0, "maximum": 3, "default": 0.4, "description": "Seconds it charges (the warning) before a charged attack fires." },
+        "attackCooldown": { "type": "number", "minimum": 0, "maximum": 10, "default": 1.5, "description": "Seconds after a charged attack before it can charge again." },
+        "attackColor": { "$ref": "common.schema.json#/$defs/color", "description": "Color of a burst's or arc's lightning or of a bolt; its color by default." },
+        "boltSpeed": { "type": "number", "minimum": 0.5, "maximum": 16, "default": 4, "description": "Speed of a bolt in units per second (attack bolt); slow enough to dodge." },
+        "boltPattern": {
+          "enum": ["aimed", "cross"],
+          "default": "aimed",
+          "description": "Shots of a bolt attack (D81). aimed: one at the wizard's middle (level if it bounces); cross: four level shots along the grid axes (a tower), fired when it sees him within attackRange like any charged attack."
+        },
+        "boltBounces": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8,
+          "default": 0,
+          "description": "How often a bolt glances off blocks, room sides and objects before they stop it (D81); after its first bounce it can hit its own shooter too. 0: it doesn't bounce."
+        },
         "integrity": { "type": "integer", "minimum": 1, "maximum": 15, "description": "Hits it takes to destroy (spells, from step 6)." },
         "damage": { "type": "integer", "minimum": 1, "description": "Integrity the wizard loses per attack." },
         "speed": { "type": "number", "exclusiveMinimum": 0, "maximum": 8, "description": "Walking speed in units per second (a path's own speed overrides it)." },
@@ -214,7 +227,7 @@
       "properties": {
         "kind": {
           "enum": ["pushable", "platform", "target", "plate"],
-          "description": "Which engine behavior the object uses. pushable: the wizard pushes it; platform: follows its path (room data \"path\") carrying the wizard and pushables; target: a fixed block a Zap switches on and off; plate: a floor tile (y 0) that is on while a crate, an enemy or the wizard stands on it. Targets and plates are switches: the room's locked exits open while all of them are on (D75); their look is fixed (render/switch-view.js), only the color comes from here. Collapsing blocks are block types (\"blocks\", D60)."
+          "description": "Which engine behavior the object uses. pushable: the wizard pushes it; platform: follows its path (room data \"path\") carrying the wizard and pushables (with \"damage\" it hurts him instead, a spiked platform, D82); target: a fixed block a Zap switches on and off; plate: a floor tile (y 0) that is on while a crate, an enemy or the wizard stands on it. Targets and plates are switches: the room's locked exits open while all of them are on (D75); their look is fixed (render/switch-view.js), only the color comes from here. Collapsing blocks are block types (\"blocks\", D60)."
         },
         "color": { "$ref": "common.schema.json#/$defs/color" },
         "edges": {
@@ -225,12 +238,17 @@
         "mark": {
           "enum": ["none", "inset", "cross", "brackets", "bits"],
           "default": "none",
-          "description": "Pattern drawn on every face."
+          "description": "Pattern drawn on every face (on a cube-shaped object)."
         },
         "faces": {
-          "enum": ["dark", "tinted"],
+          "enum": ["dark", "tinted", "hazard"],
           "default": "dark",
-          "description": "dark: like static blocks; tinted: faces shaded in the object color (top lighter)."
+          "description": "dark: like static blocks; tinted: faces shaded in the object color (top lighter, cube only); hazard: the hazard block look, pixels flickering in the object color (D82)."
+        },
+        "shape": {
+          "enum": ["cube", "spiked"],
+          "default": "cube",
+          "description": "cube: fills its cell; spiked: a smaller core with four pyramids on each side, their tips reaching the cell's faces (for objects that hurt, D82). Either way it collides as its whole cell."
         },
         "tint": {
           "type": "number",
@@ -244,6 +262,12 @@
           "minimum": 1,
           "maximum": 15,
           "description": "Pushable objects only: makes it destructible, taking this much spell damage (Zap: 1 per hit) before it breaks into pixels. It is drawn with its data bits with some missing (a grid of small squares, holes in it) instead of its mark, so it reads as breakable next to a crate with the whole grid. Without it the object is indestructible."
+        },
+        "damage": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 99,
+          "description": "Platforms only: touching it (its sides, its top, riding it) hurts the wizard by this much, like a hazard block (D82). Without it the object is harmless."
         }
       }
     }

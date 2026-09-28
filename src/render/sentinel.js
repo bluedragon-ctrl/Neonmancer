@@ -15,11 +15,11 @@
  * taller than the enemy hitbox (0.6), for a silhouette unlike the bug's
  * and the virus's.
  */
-import { Group, Mesh, MeshBasicMaterial, OctahedronGeometry, SphereGeometry, TetrahedronGeometry } from 'three';
+import { Group, Mesh, MeshBasicMaterial, OctahedronGeometry, TetrahedronGeometry } from 'three';
 import { dischargeLook } from './discharge.js';
+import { EYE, flaredGlow, glowEyes, popBurst, setMood } from './enemy-look.js';
 import { hash } from './hash.js';
 import { createFlash, sharpGeometry, sharpPart } from './holo.js';
-import { shared } from './neon.js';
 
 /** Proportions (world units) and animation tuning. */
 export const SENTINEL = {
@@ -35,26 +35,25 @@ export const SENTINEL = {
   barrel: { z: 0.34, radius: 0.1, spin: 14 },
   /** Recoil when it fires: how far back, over how many ticks. */
   recoil: { distance: 0.08, ticks: 10 },
-  moods: { hostile: 0xff2a3a, provoked: 0xffb020, peaceful: 0x00f0ff },
+  /** Eye brightness: calm, and flared while chasing (colors by mood: enemy-look.js). */
   eyeGlow: { calm: 2.4, alert: 4.5 },
   markHeight: 1.2,
   turnRate: 6,
   pop: { pixels: 32, pixelSize: 0.07, ticks: 36, spread: 0.9, rise: 0.8 },
 };
 
-/** Where its eye (the bolt's start) is, from its feet center, looking along +z. */
+/** Where its visor eye is, from its feet center, looking along +z (its arc starts this far in front). */
 export const SENTINEL_EYE = [0, SENTINEL.hover + SENTINEL.y, (SENTINEL.r / Math.SQRT2) + 0.01];
 
 const GEO = {
   body: sharpGeometry(new OctahedronGeometry(SENTINEL.r)),
   shard: sharpGeometry(new TetrahedronGeometry(SENTINEL.shards.size)),
-  eye: shared(new SphereGeometry(1, 16, 8)),
 };
 
 /**
  * The ranged enemy as a three.js group (origin at the feet center, looking
  * along +z). `userData.body` floats and recoils, `userData.shards` circle
- * it, `userData.eye` is the eye material, `userData.flash` its flash
+ * it, `userData.eyes` is the eye material, `userData.flash` its flash
  * uniforms (holo.js).
  * @param {number|string} color
  */
@@ -77,25 +76,16 @@ export function createSentinel(color) {
   });
 
   // One visor eye across the front ridge, bright for bloom.
-  const eye = new MeshBasicMaterial();
-  const visor = new Mesh(GEO.eye, eye);
+  const eyes = new MeshBasicMaterial();
+  const visor = new Mesh(EYE, eyes);
   visor.position.set(0, SENTINEL.y, SENTINEL_EYE[2] - 0.005);
   visor.scale.set(0.11, 0.028, 0.02);
   body.add(visor);
 
   const group = new Group().add(body);
-  Object.assign(group.userData, { body, shards, eye, flash, mood: 'hostile' });
-  setSentinelMood(group, 'hostile');
+  Object.assign(group.userData, { body, shards, eyes, flash, glow: SENTINEL.eyeGlow.calm });
+  setMood(group, 'hostile');
   return group;
-}
-
-/**
- * @param {Group} sentinel from createSentinel()
- * @param {'hostile'|'provoked'|'peaceful'} mood
- */
-export function setSentinelMood(sentinel, mood) {
-  sentinel.userData.mood = mood;
-  sentinel.userData.eye.color.set(SENTINEL.moods[mood]).multiplyScalar(SENTINEL.eyeGlow.calm);
 }
 
 /** Smooth 0..1 ease. */
@@ -114,7 +104,7 @@ const ease = (t) => t * t * (3 - 2 * t);
  * @param {number} [state.shift] sideways shift (a glitch)
  */
 export function animateSentinel(sentinel, { state = 'rest', time = 0, alert = 0, attack = null, charge = 42, squash = 0, shift = 0 }) {
-  const { body, shards, eye } = sentinel.userData;
+  const { body, shards } = sentinel.userData;
   const look = dischargeLook(attack, charge);
   const bob = Math.sin(time * Math.PI * 2 * SENTINEL.bob.rate) * SENTINEL.bob.height;
   // Recoil: thrown back when it fires, settling over recoil.ticks.
@@ -148,37 +138,24 @@ export function animateSentinel(sentinel, { state = 'rest', time = 0, alert = 0,
     shard.rotation.set(gather * -Math.PI / 2, -angle * (1 - gather), around * gather);
   }
 
-  const glow = SENTINEL.eyeGlow.calm + (SENTINEL.eyeGlow.alert - SENTINEL.eyeGlow.calm) * Math.max(alert, look.charge);
-  eye.color.set(SENTINEL.moods[sentinel.userData.mood]).multiplyScalar(glow);
+  glowEyes(sentinel, flaredGlow(SENTINEL.eyeGlow, alert, look.charge));
 }
 
 /**
- * The pixels of it popping `tick` ticks after it died.
- * @param {number} tick may be fractional
- * @returns {{ offset: number[], scale: number }[]}
+ * The pixels of it popping `tick` ticks after it died (enemy-look.js
+ * popBurst()), starting spread over its tall body.
  */
-export function sentinelPopPixels(tick) {
-  const { pixels, ticks, spread, rise } = SENTINEL.pop;
-  if (tick < 0 || tick >= ticks) return [];
-  const t = tick / ticks;
-  const out = [];
-  for (let i = 0; i < pixels; i++) {
-    const angle = hash(i, 21) * Math.PI * 2;
-    const radius = (0.1 + hash(i, 22) * spread) * Math.sqrt(t);
-    const height = SENTINEL.hover + SENTINEL.y + (hash(i, 23) - 0.5) * 0.6 + (hash(i, 24) - 0.3) * rise * t;
-    out.push({ offset: [Math.cos(angle) * radius, height, Math.sin(angle) * radius], scale: 1 - t });
-  }
-  return out;
-}
+export const sentinelPopPixels = popBurst(SENTINEL.pop, { seed: 21, middle: SENTINEL.hover + SENTINEL.y, start: 0.1, scatter: 0.6 });
 
 /** Everything EnemyView needs to show a sentinel (see BUG_MODEL in bug.js). */
 export const SENTINEL_MODEL = {
   create: createSentinel,
-  setMood: setSentinelMood,
+  setMood,
   animate: animateSentinel,
   popPixels: sentinelPopPixels,
   pop: SENTINEL.pop,
   turnRate: SENTINEL.turnRate,
   markHeight: SENTINEL.markHeight,
-  muzzle: SENTINEL_EYE,
+  /** How far in front of its eyes an arc leaves it (along the line of fire): its visor. */
+  muzzle: SENTINEL_EYE[2],
 };

@@ -103,7 +103,8 @@ export function exitCells({ side, at, width, y, height }, size) {
 export const OBJECT_STYLES = {
   edges: ['solid', 'dashed'],
   mark: ['none', 'inset', 'cross', 'brackets', 'bits'],
-  faces: ['dark', 'tinted'],
+  faces: ['dark', 'tinted', 'hazard'],
+  shape: ['cube', 'spiked'],
 };
 
 /** Style defaults: the first value of each OBJECT_STYLES list, plus the tint. */
@@ -118,30 +119,40 @@ export const OBJECT_STYLE_DEFAULTS = {
  * schema too). Enemies are universal (D78): any look, movement and attack
  * combine. look: its body (render/entity-view.js ENEMY_MODELS); movement:
  * a behavior module (ai/behaviors.js); attack: how it hurts (touch: touching
- * it; burst and arc: discharges, DISCHARGES; none: never); hostility:
- * hostile hurts, peaceful never does, provoked turns hostile once a spell
- * hits it.
+ * it; burst, arc and bolt: charged attacks, CHARGED_ATTACKS; none: never);
+ * hostility: hostile hurts, peaceful never does, provoked turns hostile once
+ * a spell, a discharge or a bolt hits it; boltPattern: a bolt attack's
+ * shots, one aimed at the wizard or four along the grid axes (D81).
  */
 export const ENEMY_OPTIONS = {
   look: ['bug', 'virus', 'sentinel'],
   movement: ['patrol', 'stationary', 'chase'],
-  attack: ['touch', 'burst', 'arc', 'none'],
+  attack: ['touch', 'burst', 'arc', 'bolt', 'none'],
   hostility: ['hostile', 'peaceful', 'provoked'],
+  boltPattern: ['aimed', 'cross'],
 };
 
 /**
  * The discharge attacks (D78): charged lightning all round it (burst) or
- * one bolt aimed at the wizard (arc). They share attackRange, attackCharge,
- * attackCooldown and attackColor.
+ * one bolt of lightning aimed at the wizard (arc).
  */
 export const DISCHARGES = ['burst', 'arc'];
 
 /**
+ * The charged attacks (D78, D80): the discharges and the bolt, a slow shot
+ * flying at the wizard (entities/bolt.js). Seeing him within attackRange,
+ * the enemy stops, charges for attackCharge, fires and cools down for
+ * attackCooldown; attackColor colors the lightning or the shot.
+ */
+export const CHARGED_ATTACKS = [...DISCHARGES, 'bolt'];
+
+/**
  * Enemy template fields that may be left out: aggro range (units), bounce (a
  * trampoline top), solid (blocks, carries and shoves the wizard), memory
- * (seconds a chaser searches after losing sight of him) and a discharge's
- * range (units), charge and cooldown (seconds). chaseSpeed
- * and attackColor default to the enemy's speed and color (withEnemyDefaults()).
+ * (seconds a chaser searches after losing sight of him), a charged attack's
+ * range (units), charge and cooldown (seconds), and a bolt attack's speed
+ * (units per second), pattern and bounces (D81). chaseSpeed and attackColor
+ * default to the enemy's speed and color (withEnemyDefaults()).
  */
 export const ENEMY_DEFAULTS = {
   aggroRange: 0,
@@ -151,6 +162,9 @@ export const ENEMY_DEFAULTS = {
   attackRange: 1.2,
   attackCharge: 0.4,
   attackCooldown: 1.5,
+  boltSpeed: 4,
+  boltPattern: 'aimed',
+  boltBounces: 0,
 };
 
 /** Enemy template fields every template needs, its own or from the ones it extends (as in the schema). */

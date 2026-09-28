@@ -257,6 +257,7 @@ test('buildRoom expands blocks, merges type defaults and applies exit defaults',
       edges: 'solid',
       mark: 'none',
       faces: 'dark',
+      shape: 'cube',
       tint: 0.1,
     },
   ]);
@@ -329,6 +330,16 @@ test('object styles: overrides must use known values', () => {
     errorsAfter((f) => (f['rooms/alpha.json'].objects[0].overrides = { edges: 'dashed' })),
     [],
   );
+});
+
+test('spiked platforms (D82): only platforms can hurt', () => {
+  assert.deepEqual(errorsAfter((f) => (f['defs.json'].objects.spikes = { ...LIFT, color: '#ff3b30', shape: 'spiked', damage: 1 })), []);
+  assertError(
+    errorsAfter((f) => (f['defs.json'].objects.crate.damage = 1)),
+    'defs.json › objects.crate.damage',
+    'only platforms can hurt, not a pushable',
+  );
+  assertError(errorsAfter((f) => (f['defs.json'].objects.spikes = { ...LIFT, damage: 0 })), 'objects.spikes.damage');
 });
 
 test('object styles: the schema rejects unknown values in defs.json', () => {
@@ -576,6 +587,7 @@ test('collapsing blocks: each cell of a box becomes a room object with its type\
     edges: 'solid',
     mark: 'none',
     faces: 'dark',
+    shape: 'cube',
     tint: 0.1,
     regrow: 3,
   });
