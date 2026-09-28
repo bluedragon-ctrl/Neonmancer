@@ -178,7 +178,7 @@ li[data-room]:hover {
   opacity: 0.45;
 }
 
-/* An exit on its room's edge (D78): cyan connected, magenta loose. */
+/* An exit on its room's edge (D102): cyan connected, magenta loose. */
 .exit-mark .exit {
   fill: var(--cyan);
 }

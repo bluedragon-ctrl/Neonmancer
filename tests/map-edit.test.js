@@ -124,7 +124,7 @@ test('MapEdit removes a connection with both its exits, and a room with the exit
   assert.deepEqual(edit.changes().remove, ['lane']);
 });
 
-test('MapEdit removes a connected exit with its partner, and a loose exit alone (D78)', () => {
+test('MapEdit removes a connected exit with its partner, and a loose exit alone (D102)', () => {
   const edit = new MapEdit(world());
   assert.deepEqual(edit.removeExit('hub.south'), ['hub.south', 'lane.north']);
   assert.deepEqual(edit.rooms.get('hub').exits.map((e) => e.id), ['east']);
@@ -157,7 +157,7 @@ test('MapEdit connects through a loose exit already in the facing wall', () => {
   assert.equal(edit.rooms.get('annex').exits.length, 2, 'no new exit');
 });
 
-test('MapEdit rolls the last save back: a removed room, the exits into it and world.json come back (D79)', () => {
+test('MapEdit rolls the last save back: a removed room, the exits into it and world.json come back (D103)', () => {
   const edit = new MapEdit(world());
   const text = (files) => JSON.stringify(Object.keys(files).sort().map((file) => [file, files[file]]));
   const original = text(structuredClone(edit.dataFiles()));

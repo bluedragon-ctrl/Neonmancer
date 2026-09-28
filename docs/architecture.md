@@ -149,7 +149,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `editor/editor.js` | Room editor (F2, D56, D57): opens on the current room, switches rooms and makes new ones, mouse picking on a height layer, tools, picking things, keys, rebuilding the room from the edited data, save or export |
 | `editor/errors.js` | The error list: errors grouped by file, and the room, tool and thing each one points at (pure, tested) |
 | `editor/format-json.js` | JSON in the data files' hand-written style (pure, tested against every data file) |
-| `editor/map-edit.js` | The world as the world map tool edits it (D77): `MapEdit` moves, adds and removes rooms, connects rooms with an exit in the middle of each facing wall (`addExit()`), removes connections with both exits (`disconnectExit()`), undo, and what a save sends (`changes()`) (pure, tested) |
+| `editor/map-edit.js` | The world as the world map tool edits it (D77): `MapEdit` moves, adds and removes rooms, connects rooms with an exit in the middle of each facing wall (`addExit()`), removes connections with both exits (`disconnectExit()`), removes one exit (`removeExit()`, D102) and reuses loose ones (`looseExit()`), undo, rolling back the last save (`rollbackPoint()`, `rollBack()`, D103), and what a save sends (`changes()`) (pure, tested) |
 | `editor/overlay.js` | Editor gizmos: layer grid, cursor, spawn and reset markers, paths, the picked thing's box, `EDITOR_LOOK` |
 | `editor/panel.js` | Editor side panel (DOM): room list, tools and their fields, layer, room settings, actions, errors |
 | `editor/room-edit.js` | One room being edited: place/erase edits, enemies, paths, exits and their connections, spawn/reset, name, biome, size (with a report), undo/redo (with the step's template changes), dirty state, cell descriptions; `roomErrors()`, `newRoom()` (pure, tested) |
@@ -168,7 +168,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `tools/validate-data.js` | Dev only: `npm run validate:data` for CI |
 | `tools/vite-plugin-data.js` | Dev only: runs the check in the dev server and fails the build on errors |
 | `tools/world-map.bat` | Windows: double-click to start the dev server on the world map tool (`dev.bat map`) |
-| `tools/world-map.html`, `tools/world-map.js`, `tools/world-map.css` | World map tool (D66, D70, D77): every room on the map grid with its connections and checks; move, add and delete rooms, connect rooms and delete connections, then save; click to open a room in the editor; F3 opens the pickup report. Dev server only, not built |
+| `tools/world-map.html`, `tools/world-map.js`, `tools/world-map.css` | World map tool (D66, D70, D77, D102, D103): every room on the map grid with its connections and checks; move, add and delete rooms, connect rooms, delete connections and exits, then save; undo, also of the last save; click to open a room in the editor; F3 opens the pickup report. Dev server only, not built |
 
 ## Input
 

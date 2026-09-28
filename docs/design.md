@@ -1451,7 +1451,7 @@ players never see it (D67).
     and passes the room's checks. Fine-tune it in the room editor.
   - **Delete:** click a room to remove it with the exits into it (not the
     start room), a connection to remove it and both its exits, or an
-    exit's mark on a room edge (D78): a connected exit goes with its
+    exit's mark on a room edge (D102): a connected exit goes with its
     partner, a loose one alone.
 - **Exits** show as marks on the room edges, where they are along the
   side: cyan when connected, magenta when loose (not connected: a data
@@ -1464,7 +1464,7 @@ players never see it (D67).
   positions into `world.json` as it is on disk, checks everything and
   writes it all or nothing (removed room files are deleted). **Undo**
   (or Ctrl+Z) undoes the last edit; with nothing left to undo it becomes
-  **Undo last save** (D79): what the last save changed or deleted comes
+  **Undo last save** (D103): what the last save changed or deleted comes
   back as unsaved changes (Save writes it). It survives the reload a
   saved new or deleted room causes, and is dropped when another page
   (the room editor) saves. A room file with no position yet gets a free cell

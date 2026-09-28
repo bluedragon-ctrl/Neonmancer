@@ -8,6 +8,19 @@ docs/decisions.md).
 
 ## [Unreleased]
 
+### Added
+- World map tool: exits show as marks on the room edges (cyan connected,
+  magenta loose), and Delete removes one by a click on its mark (D102): a
+  connected exit goes with its partner, a loose one alone. Connect uses a
+  loose exit already in the facing wall before making a new one.
+- World map tool: an Undo button, and **Undo last save** once there is
+  nothing left to undo (D103): what the last save changed or deleted, even
+  a deleted room after the reload, comes back as unsaved changes.
+
+### Fixed
+- The map tool's tests use a small world of their own instead of the
+  real rooms, so map redesigns no longer break them.
+
 ## [0.3.0] - 2026-09-29
 
 Phase 3 — Spells and pickups.

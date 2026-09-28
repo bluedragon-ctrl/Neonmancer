@@ -10,7 +10,7 @@
  * the room editor); Add puts a new, empty room in a free cell; Connect
  * joins two rooms with an exit in the middle of each one's facing wall;
  * Delete removes a room (with the exits leading into it), a connection
- * (with both its exits) or an exit (D78: click its mark on the room's edge). Save sends it all to the dev server, which checks
+ * (with both its exits) or an exit (D102: click its mark on the room's edge). Save sends it all to the dev server, which checks
  * it and writes the room files and world.json (MapEdit, editor/map-edit.js).
  *
  * F3 opens the pickup report: every permanent item (disks, upgrades,
@@ -43,7 +43,7 @@ const MARGIN = 1;
 const DRAG_START = 5;
 /** Session storage key of the status line kept over a reload after saving. */
 const STATUS_KEY = 'neonmancer-world-map-status';
-/** Session storage key of the last save's rollback point (D79), kept over a reload. */
+/** Session storage key of the last save's rollback point (D103), kept over a reload. */
 const ROLLBACK_KEY = 'neonmancer-world-map-rollback';
 /** Window the game opens in from here: one tab, reused. */
 const GAME_WINDOW = 'neonmancer-game';
@@ -700,7 +700,7 @@ window.addEventListener('keydown', (event) => {
 });
 
 /**
- * Undo the last edit; with none left, roll the last save back (D79): what
+ * Undo the last edit; with none left, roll the last save back (D103): what
  * it overwrote comes back as unsaved changes, for Save to write.
  */
 function undo() {

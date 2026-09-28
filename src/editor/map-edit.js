@@ -1,5 +1,5 @@
 /**
- * The world as the world map tool edits it (D66, D77, D78, D79): room
+ * The world as the world map tool edits it (D66, D77, D102, D103): room
  * positions, rooms added and removed, connections made and broken, exits
  * removed, and rolling back the last save. A connection made on the map
  * opens an exit in the middle of each room's facing wall (or takes a loose
@@ -176,7 +176,7 @@ export class MapEdit {
 
   /**
    * Before saving: what the save is about to overwrite, so it can be rolled
-   * back (D79): world.json and each room the save writes or deletes, as on
+   * back (D103): world.json and each room the save writes or deletes, as on
    * disk (null for a room the save adds). Plain JSON, to keep over a reload.
    * @returns {{ world: object, rooms: Record<string, object|null> }}
    */
