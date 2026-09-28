@@ -20,8 +20,9 @@ import {
 import { ENEMY } from '../entities/enemy.js';
 import { PLAYER } from '../entities/player.js';
 import { createAlertMark, placeAlertMark } from './alert-mark.js';
-import { BUG_MODEL, eyeMood } from './bug.js';
+import { BUG_MODEL } from './bug.js';
 import { chargeGlow, createDischarge, dischargeLook, placeDischarge } from './discharge.js';
+import { eyeMood } from './enemy-look.js';
 import { SENTINEL_MODEL } from './sentinel.js';
 import { VIRUS_MODEL } from './virus.js';
 import { hitJolt } from './break-fx.js';
@@ -461,20 +462,27 @@ export class EnemyView {
   }
 
   /**
-   * Its discharge: a burst from its middle; an arc from its muzzle along
-   * its aim while charging, and to where it stopped once fired.
+   * Its discharge: a burst from its eyes (Enemy.middle()); an arc along
+   * its aim while charging, and to where it stopped once fired. The arc is
+   * drawn on the very line it hits along (from its eyes, Game.discharge()),
+   * starting its muzzle's reach out in front of it.
    * @param {number[]} feet
    * @param {number|null} attack ticks since the attack started
    */
   placeDischarge(feet, attack) {
     const { enemy, kind } = this;
+    const eyes = [feet[0], feet[1] + ENEMY.eyeHeight, feet[2]];
     if (enemy.data.attack !== 'arc') {
-      placeDischarge(this.discharge, attack, enemy.chargeTicks, [feet[0], feet[1] + ENEMY.eyeHeight, feet[2]]);
+      placeDischarge(this.discharge, attack, enemy.chargeTicks, eyes);
       return;
     }
-    const [, my, mz] = kind.muzzle;
-    const from = [feet[0] + Math.sin(this.angle) * mz, feet[1] + my, feet[2] + Math.cos(this.angle) * mz];
     const target = attack !== null && attack >= enemy.chargeTicks ? enemy.boltEnd : enemy.aim?.end;
-    placeDischarge(this.discharge, target ? attack : null, enemy.chargeTicks, from, target);
+    if (!target || !enemy.aim) {
+      placeDischarge(this.discharge, null, enemy.chargeTicks, eyes);
+      return;
+    }
+    const { dir } = enemy.aim;
+    const from = eyes.map((v, i) => v + dir[i] * kind.muzzle);
+    placeDischarge(this.discharge, attack, enemy.chargeTicks, from, target);
   }
 }

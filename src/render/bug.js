@@ -10,6 +10,7 @@
  */
 import { Group, Mesh, MeshBasicMaterial, SphereGeometry } from 'three';
 import { dischargeLook } from './discharge.js';
+import { EYE, eyeMood, popBurst, setMood } from './enemy-look.js';
 import { hash } from './hash.js';
 import { createFlash, holoPart } from './holo.js';
 import { shared } from './neon.js';
@@ -19,8 +20,8 @@ export const BUG = {
   r: 0.3,
   /** Eyes: offset from the middle, height, size of the flattened spheres, frown slant (radians). */
   eyes: { x: 0.1, y: 0.36, size: [0.06, 0.04, 0.03], slant: 0.45 },
-  /** Eye color by mood (see eyeMood()). */
-  moods: { hostile: 0xff2a3a, provoked: 0xffb020, peaceful: 0x00f0ff },
+  /** Eye brightness (colors by mood: enemy-look.js). */
+  eyeGlow: 2.2,
   /** Squash when the wizard bounces off it: ticks and depth. */
   bounceSquash: { ticks: 14, depth: 0.35 },
   /** One hop per cell: in the air for the first `air` of it, then squashed on landing. */
@@ -38,7 +39,6 @@ const SEGMENTS = 32;
 
 /** Geometry every bug shares (never disposed with a room, see shared()). */
 const BALL = shared(new SphereGeometry(BUG.r, SEGMENTS, SEGMENTS / 2));
-const EYE = shared(new SphereGeometry(1, 12, 8));
 
 /** Pose while falling: stretched tall. */
 const FALL_POSE = { lift: 0, scale: [0.92, 1.15, 0.92] };
@@ -70,31 +70,13 @@ export function createBug(color) {
   }
 
   const group = new Group().add(body);
-  group.userData.body = body;
-  group.userData.eyes = material;
-  group.userData.flash = flash;
-  setEyeMood(group, 'hostile');
+  Object.assign(group.userData, { body, eyes: material, flash, glow: BUG.eyeGlow });
+  setMood(group, 'hostile');
   return group;
 }
 
-/**
- * The mood its eyes show: 'hostile', 'provoked' (calm, but will turn
- * hostile when attacked) or 'peaceful'.
- * @param {{ hostile: boolean, data: { hostility: string } }} enemy
- */
-export function eyeMood(enemy) {
-  if (enemy.hostile) return 'hostile';
-  return enemy.data.hostility === 'provoked' ? 'provoked' : 'peaceful';
-}
-
-/**
- * Color a bug's eyes for a mood.
- * @param {Group} bug from createBug()
- * @param {'hostile'|'provoked'|'peaceful'} mood
- */
-export function setEyeMood(bug, mood) {
-  bug.userData.eyes.color.set(BUG.moods[mood]).multiplyScalar(2.2);
-}
+// The mood helpers every enemy shares, under the names the showcase knows.
+export { eyeMood, setMood as setEyeMood };
 
 /**
  * Extra squash `ticks` after the wizard bounced off it: flattened at once,
@@ -156,24 +138,9 @@ export function animateBug(bug, { state = 'rest', walked = 0, time = 0, bounced 
 
 /**
  * The pixels of a popping bug `tick` ticks after it died: a burst flying
- * out from the ball's middle, rising a little and shrinking to nothing.
- * @param {number} tick may be fractional, for interpolation
- * @returns {{ offset: number[], scale: number }[]} offsets from its feet
- *   center; empty once the burst is over
+ * out from the ball's middle (enemy-look.js popBurst()).
  */
-export function popPixels(tick) {
-  const { pixels, ticks, spread, rise } = BUG.pop;
-  if (tick < 0 || tick >= ticks) return [];
-  const t = tick / ticks;
-  const out = [];
-  for (let i = 0; i < pixels; i++) {
-    const angle = hash(i, 1) * Math.PI * 2;
-    const radius = (0.15 + hash(i, 2) * spread) * Math.sqrt(t);
-    const height = BUG.r + (hash(i, 3) - 0.3) * rise * t;
-    out.push({ offset: [Math.cos(angle) * radius, height, Math.sin(angle) * radius], scale: 1 - t });
-  }
-  return out;
-}
+export const popPixels = popBurst(BUG.pop, { seed: 1, middle: BUG.r });
 
 /**
  * Everything EnemyView needs to show a bug: build it, color its eyes,
@@ -181,13 +148,13 @@ export function popPixels(tick) {
  */
 export const BUG_MODEL = {
   create: createBug,
-  setMood: setEyeMood,
+  setMood,
   animate: animateBug,
   popPixels,
   pop: BUG.pop,
   turnRate: BUG.turnRate,
   /** Height of the "!" above its feet. */
   markHeight: 0.85,
-  /** Where an arc leaves it, from its feet center looking along +z. */
-  muzzle: [0, BUG.r, BUG.r],
+  /** How far in front of its eyes an arc leaves it (along the line of fire). */
+  muzzle: BUG.r,
 };

@@ -136,11 +136,13 @@ export class RoomScene {
   }
 
   /**
-   * A bolt stopped: sparks where it is.
+   * A bolt stopped, or bounced: sparks where it is (or bounced).
    * @param {import('../entities/bolt.js').Bolt} bolt
+   * @param {number[]} [pos] where it bounced; where it is by default
+   * @param {number[]} [dir] the way it came in; its flight by default
    */
-  sparks(bolt) {
-    this.zapView.spark(bolt);
+  sparks(bolt, pos, dir) {
+    this.zapView.spark(bolt, pos, dir);
   }
 
   /**

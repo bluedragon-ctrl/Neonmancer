@@ -1,6 +1,7 @@
 /**
- * The shared path format (D46): moving platforms follow one, and patrolling
- * enemies will too. Pure logic.
+ * The shared path format (D46): moving platforms glide along one with
+ * this module; patrolling enemies walk the same format cell by cell with
+ * their own stepping (ai/patrol.js). Pure logic.
  *
  * A path starts at the object's own `at` and runs through `points` (grid
  * cells, the object's lower corner), one axis at a time. `pingpong` runs

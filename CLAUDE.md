@@ -187,12 +187,14 @@ can always leave it again the way he came.
 
 Each has a distinct color, silhouette and animation.
 AI is implemented as named behavior modules referenced from data.
-Enemies are universal and fully data-driven (D48, D78): an enemy is a
-look, a movement, an attack (touch, burst, arc or none) and a color, and
-any of them combine. Template fields in `defs.json` (look, movement, attack,
-hostility — hostile / peaceful / provoked —, aggro range, integrity,
-damage, speed, chase speed, bounce, solid, color, and a burst's or arc's
-range, charge, cooldown and color), overridable per enemy in the room.
+Enemies are universal and fully data-driven (D48, D78, D80): an enemy is
+a look, a movement, an attack (touch, burst, arc, bolt or none) and a
+color, and any of them combine. Template fields in `defs.json` (look,
+movement, attack, hostility — hostile / peaceful / provoked —, aggro
+range, integrity, damage, speed, chase speed, bounce, solid, color, a
+charged attack's range, charge, cooldown and color, and a bolt's speed,
+pattern — aimed or four ways — and bounces), overridable per enemy in
+the room. Any hit alerts an enemy, and the wizard gets the blame (D81).
 Eye color shows hostility (red hostile, amber provoked, cyan peaceful);
 a red "!" pops up over one that notices the wizard. Enemies move cell by
 cell with physics (fall, ride platforms), never step into holes or onto
@@ -267,7 +269,8 @@ The engine is generic; all content lives in data.
   properties such as damage and lethal; variants `extend` a base, D60),
   enemy templates (look, movement, attack,
   hostility, aggro range, integrity, damage, speeds, bounce, solid, color,
-  discharge values; a template may `extend` another, D58, D78, D79), spells
+  charged attack values; a template may `extend` another, D58, D78, D79,
+  D80), spells
 - `data/biomes.json` — palette, floor pattern, effect settings,
   environmental effects
 - `data/rooms/*.json` — one file per room: biome, size [x, y, z], exits,
