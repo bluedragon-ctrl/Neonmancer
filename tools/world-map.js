@@ -9,8 +9,8 @@
  * Tools (D77): Move drags a room to another free cell (click opens it in
  * the room editor); Add puts a new, empty room in a free cell; Connect
  * joins two rooms with an exit in the middle of each one's facing wall;
- * Delete removes a room (with the exits leading into it) or a connection
- * (with both its exits). Save sends it all to the dev server, which checks
+ * Delete removes a room (with the exits leading into it), a connection
+ * (with both its exits) or an exit (D78: click its mark on the room's edge). Save sends it all to the dev server, which checks
  * it and writes the room files and world.json (MapEdit, editor/map-edit.js).
  *
  * F3 opens the pickup report: every permanent item (disks, upgrades,
@@ -34,6 +34,9 @@ import { SAVE_BLOCKS } from '../src/world/progress.js';
 /** Map units per grid cell, and a room node's size in them. */
 const CELL = 180;
 const NODE = 128;
+/** An exit's mark on the node edge, and the area that takes a click: [along, across] in map units. */
+const EXIT_MARK = [16, 6];
+const EXIT_HIT = [24, 18];
 /** Empty cells shown around the rooms, to drag them into. */
 const MARGIN = 1;
 /** Pointer travel (px) that turns a click into a drag. */
@@ -51,8 +54,18 @@ const SIDE_DIR = { '-x': [-1, 0], '+x': [1, 0], '-z': [0, -1], '+z': [0, 1] };
 const TOOLS = [
   { id: 'move', label: 'Move', key: '1', help: 'Drag a room to a free cell; click it to open it in the room editor.' },
   { id: 'add', label: 'Add', key: '2', help: 'Click a free cell to put a new, empty room there (12×4×12, no exits).' },
-  { id: 'connect', label: 'Connect', key: '3', help: 'Drag from one room to another (or click both): each gets an exit in the middle of the wall facing the other.' },
-  { id: 'delete', label: 'Delete', key: '4', help: 'Click a room to remove it (and the exits into it), or a connection to remove it and both its exits.' },
+  {
+    id: 'connect',
+    label: 'Connect',
+    key: '3',
+    help: 'Drag from one room to another (or click both): each gets an exit in the middle of the wall facing the other, or uses a loose exit already in that wall.',
+  },
+  {
+    id: 'delete',
+    label: 'Delete',
+    key: '4',
+    help: 'Click a room to remove it (and the exits into it), a connection to remove it and both its exits, or an exit mark on a room edge: a connected exit goes with its partner, a loose one (magenta) alone.',
+  },
 ];
 
 const mapEl = document.getElementById('map');
@@ -220,7 +233,7 @@ function draw() {
     // A wide invisible stroke to click (Delete tool).
     const hit = svg('path', { class: 'link-hit', d });
     hit.append(svg('title', {}, `${refA} ↔ ${refB}`));
-    group.append(svg('path', { class: `link${across ? ' across' : ''}`, d }), svg('circle', { class: 'link-end', cx: a.point[0], cy: a.point[1], r: 4 }), svg('circle', { class: 'link-end', cx: b.point[0], cy: b.point[1], r: 4 }), hit);
+    group.append(svg('path', { class: `link${across ? ' across' : ''}`, d }), hit);
     links.append(group);
   });
   svgEl.append(links);
@@ -278,6 +291,7 @@ function roomNode(id, { unreachable, far, moved }) {
   const half = NODE / 2;
   if (id === world.start) g.append(svg('rect', { class: 'start', x: -half - 7, y: -half - 7, width: NODE + 14, height: NODE + 14 }));
   g.append(svg('rect', { class: 'box', x: -half, y: -half, width: NODE, height: NODE, stroke: color, style: `filter: drop-shadow(0 0 6px ${color})` }));
+  for (const exit of room.exits ?? []) g.append(exitMark(id, exit));
 
   const name = wrap(room.name);
   name.forEach((line, i) => g.append(svg('text', { class: 'name', x: 0, y: -26 + i * 16 - (name.length - 1) * 8, fill: color }, line)));
@@ -290,6 +304,23 @@ function roomNode(id, { unreachable, far, moved }) {
   if (room.authored) g.append(svg('text', { class: 'flag', x: 0, y: -half + 14, fill: 'var(--cyan)' }, 'AUTHORED'));
   if (moved) g.append(svg('circle', { class: 'moved', cx: half - 10, cy: -half + 10, r: 5 }, undefined));
   g.append(svg('title', {}, `${room.name} (${id})${room.authored ? ', authored' : ''}`));
+  return g;
+}
+
+/** An exit's mark on its room's edge (in the node's own coordinates): cyan connected, magenta loose. */
+function exitMark(roomId, exit) {
+  const ref = `${roomId}.${exit.id}`;
+  const { point, dir } = exitAnchor(roomId, exit.id, [0, 0]);
+  // Long along the side, short across it.
+  const [w, h] = dir[0] !== 0 ? [EXIT_MARK[1], EXIT_MARK[0]] : EXIT_MARK;
+  const [hw, hh] = dir[0] !== 0 ? [EXIT_HIT[1], EXIT_HIT[0]] : EXIT_HIT;
+  const loose = !edit.connected(ref);
+  const g = svg('g', { class: `exit-mark${loose ? ' loose' : ''}`, 'data-exit': ref });
+  g.append(
+    svg('rect', { class: 'exit-hit', x: point[0] - hw / 2, y: point[1] - hh / 2, width: hw, height: hh }),
+    svg('rect', { class: 'exit', x: point[0] - w / 2, y: point[1] - h / 2, width: w, height: h }),
+    svg('title', {}, `${ref} (${exit.side}, at ${exit.at})${loose ? ' — not connected' : ` ↔ ${edit.connections.find((p) => p.includes(ref)).find((r) => r !== ref)}`}`),
+  );
   return g;
 }
 
@@ -533,7 +564,11 @@ mapEl.addEventListener('pointerdown', (event) => {
   }
   if (state.tool === 'delete') {
     const link = event.target.closest?.('.link-group')?.dataset.link;
-    if (id) done(edit.removeRoom(id), `Removed ${id} and the exits into it.`);
+    const exit = event.target.closest?.('.exit-mark')?.dataset.exit;
+    if (exit) {
+      const removed = edit.removeExit(exit);
+      done(null, `Removed ${removed.length > 1 ? 'exits' : 'exit'} ${removed.join(' and ')}.`);
+    } else if (id) done(edit.removeRoom(id), `Removed ${id} and the exits into it.`);
     else if (link !== undefined) {
       const pair = edit.connections[Number(link)];
       edit.disconnect(Number(link));

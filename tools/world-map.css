@@ -159,8 +159,21 @@ li[data-room]:hover {
   opacity: 0.45;
 }
 
-.link-end {
+/* An exit on its room's edge (D78): cyan connected, magenta loose. */
+.exit-mark .exit {
   fill: var(--cyan);
+}
+
+.exit-mark.loose .exit {
+  fill: var(--magenta);
+}
+
+.exit-hit {
+  fill: transparent;
+}
+
+.tool-delete .exit-mark:hover .exit {
+  fill: var(--red);
 }
 
 .room {
@@ -315,7 +328,7 @@ li[data-room]:hover {
   cursor: pointer;
 }
 
-.tool-delete .room:hover .box {
+.tool-delete .room:hover:not(:has(.exit-mark:hover)) .box {
   stroke: var(--red);
 }
 

@@ -1,8 +1,9 @@
 /**
- * The world as the world map tool edits it (D66, D77): room positions,
- * rooms added and removed, and connections made and broken. A connection
- * made on the map opens an exit in the middle of each room's facing wall;
- * breaking one closes both exits (every exit must be connected). Fine
+ * The world as the world map tool edits it (D66, D77, D78): room positions,
+ * rooms added and removed, connections made and broken, exits removed. A
+ * connection made on the map opens an exit in the middle of each room's
+ * facing wall (or takes a loose exit already there); breaking one closes
+ * both exits (every exit must be connected). Fine
  * tuning (where along the wall, height, width) stays with the room editor.
  * Plain logic, no browser, so tests can drive it.
  */
@@ -258,8 +259,8 @@ export class MapEdit {
     let pair = null;
     let problem = null;
     this.edit(() => {
-      const exitA = this.addExit(a, side);
-      const exitB = exitA && this.addExit(b, OPPOSITE_SIDE[side]);
+      const exitA = this.looseExit(a, side) ?? this.addExit(a, side);
+      const exitB = exitA && (this.looseExit(b, OPPOSITE_SIDE[side]) ?? this.addExit(b, OPPOSITE_SIDE[side]));
       if (!exitA || !exitB) {
         const full = exitA ? b : a;
         problem = `No room for another exit in ${full}'s ${SIDE_NAMES[exitA ? OPPOSITE_SIDE[side] : side]} wall.`;
@@ -284,6 +285,41 @@ export class MapEdit {
       this.disconnectExit(pair[0]);
       return true;
     });
+  }
+
+  /**
+   * Remove one exit: a connected one with its connection and the exit at
+   * the other end (an exit can't stay unconnected), a loose one alone.
+   * @param {string} ref "room.exit"
+   * @returns {string[]} the exits removed ("room.exit"), none if there was no such exit
+   */
+  removeExit(ref) {
+    const [roomId, exitId] = ref.split('.');
+    if (!this.rooms.get(roomId)?.exits?.some((e) => e.id === exitId)) return [];
+    const refs = this.connections.find((pair) => pair.includes(ref)) ?? [ref];
+    this.edit(() => this.disconnectExit(ref));
+    return [...refs];
+  }
+
+  /**
+   * An exit of the room not connected to anything, `EXIT_WIDTH` wide, in
+   * `side` (the middle-most first), or null.
+   * @param {string} roomId
+   * @param {string} side
+   * @returns {string|null} its id
+   */
+  looseExit(roomId, side) {
+    const room = this.rooms.get(roomId);
+    const middle = (sideLength(side, room.size) - EXIT_WIDTH) / 2;
+    const loose = (room.exits ?? [])
+      .filter((exit) => exit.side === side && withExitDefaults(exit).width === EXIT_WIDTH && !this.connected(`${roomId}.${exit.id}`))
+      .sort((a, b) => Math.abs(a.at - middle) - Math.abs(b.at - middle));
+    return loose[0]?.id ?? null;
+  }
+
+  /** Is the exit "room.exit" connected? */
+  connected(ref) {
+    return this.connections.some((pair) => pair.includes(ref));
   }
 
   /**

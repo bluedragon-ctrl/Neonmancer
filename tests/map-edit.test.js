@@ -122,3 +122,31 @@ test('saveEdits writes the map tool\'s new, changed and removed rooms with world
     rmSync(tmp, { recursive: true, force: true });
   }
 });
+
+test('MapEdit removes a connected exit with its partner, and a loose exit alone (D78)', () => {
+  const edit = new MapEdit(dataFiles());
+  assert.deepEqual(edit.removeExit('boot_sector.south'), ['boot_sector.south', 'transit_bus.north']);
+  assert.equal(edit.rooms.get('boot_sector').exits.some((exit) => exit.id === 'south'), false);
+  assert.equal(edit.rooms.get('transit_bus').exits.some((exit) => exit.id === 'north'), false);
+  assert.equal(edit.connected('boot_sector.south'), false);
+  assert.deepEqual(validateData(edit.dataFiles()), []);
+  assert.deepEqual(edit.removeExit('boot_sector.nowhere'), []);
+
+  // A loose exit (made by hand): only it goes.
+  edit.addRoom('annex', [0, 2], 'home_lattice');
+  edit.rooms.set('annex', { ...edit.rooms.get('annex'), exits: [{ id: 'door', side: '+x', at: 3 }] });
+  assert.deepEqual(edit.removeExit('annex.door'), ['annex.door']);
+  assert.equal(edit.rooms.get('annex').exits, undefined);
+  assert.equal(edit.undo(), true);
+  assert.deepEqual(edit.rooms.get('annex').exits, [{ id: 'door', side: '+x', at: 3 }]);
+});
+
+test('MapEdit connects through a loose exit already in the facing wall', () => {
+  const edit = new MapEdit(dataFiles());
+  edit.addRoom('annex', [0, 2], 'home_lattice');
+  edit.rooms.set('annex', { ...edit.rooms.get('annex'), exits: [{ id: 'door', side: '-z', at: 2 }, { id: 'wide', side: '-z', at: 7, width: 3 }] });
+  const { ref, problem } = edit.connect('transit_bus', 'annex');
+  assert.equal(problem, null);
+  assert.deepEqual(ref, ['transit_bus.south', 'annex.door'], 'the 2-wide loose exit, not the 3-wide one');
+  assert.equal(edit.rooms.get('annex').exits.length, 2, 'no new exit');
+});
