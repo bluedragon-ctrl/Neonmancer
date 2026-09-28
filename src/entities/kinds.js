@@ -13,11 +13,14 @@
 import { Collapsing } from './collapsing.js';
 import { Platform } from './platform.js';
 import { Pushable } from './pushable.js';
+import { Plate, Target } from './switch.js';
 
 export const OBJECT_KINDS = {
   pushable: Pushable,
   platform: Platform,
   collapsing: Collapsing,
+  target: Target,
+  plate: Plate,
 };
 
 /**

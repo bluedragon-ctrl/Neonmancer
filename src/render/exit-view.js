@@ -23,6 +23,8 @@ export class ExitView {
    * @param {number|string} color color of the room the exit leads to
    */
   constructor(exit, size, color) {
+    /** The exit it shows (room data, defaults applied). */
+    this.exit = exit;
     this.color = new Color(color);
     this.group = new Group();
     this.time = 0;

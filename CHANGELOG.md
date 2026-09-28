@@ -7,6 +7,17 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Switches and locked exits (Phase 3 step 4, D75): a Zap target (a fixed
+  block a bolt switches on and off) and a floor plate (on while a crate,
+  an enemy or the wizard stands on it), both white with a square
+  bull's-eye that lights up when on. An exit with `"locked": true` is
+  solid until every switch in its room is on, closes again when one goes
+  off (never on the wizard), and stays open for him if he came in through
+  it. A locked doorway is a sinking panel, a locked front exit retracting
+  bars, with one light per switch. New test room Relay Station (east of
+  Cache Hall), and a locked doorway with a plate in Stack Yard. Editor:
+  switch types in the Object tool, a Locked checkbox for exits. Showcase
+  `?asset=switches`.
 - Data disks (Phase 3 step 3, D73): taking a disk plays an install
   animation on the wizard (its bits spiral in, rings sweep up him in the
   spell's color, a white flash; he plays on meanwhile, D74). A

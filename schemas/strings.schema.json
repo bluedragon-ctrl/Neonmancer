@@ -39,6 +39,7 @@
         "msg.spellInstalled",
         "msg.refillIntegrity",
         "msg.refillEnergy",
+        "msg.unlocked",
         "msg.movementGrid",
         "msg.movementScreen"
       ],
@@ -67,6 +68,7 @@
         "msg.spellInstalled": { "type": "string", "description": "Terminal message when a data disk installs a spell; {spell} is its name." },
         "msg.refillIntegrity": { "type": "string", "description": "Terminal message when a refill restores integrity." },
         "msg.refillEnergy": { "type": "string", "description": "Terminal message when a refill restores energy." },
+        "msg.unlocked": { "type": "string", "description": "Terminal message when every switch in the room is on and its locked exits open." },
         "msg.movementGrid": { "type": "string", "description": "Terminal message when movement switches to grid-aligned." },
         "msg.movementScreen": { "type": "string", "description": "Terminal message when movement switches to screen-relative." }
       }

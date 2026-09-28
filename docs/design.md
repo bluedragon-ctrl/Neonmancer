@@ -497,6 +497,54 @@ usual, so half behind a wall he is half ghost (D55).
   dropping in sinks out of sight). Puzzle idea: push the crate into the pit to cross it.
 - No way down: holes are only a look plus a rule, never a real lower level.
 
+## Switches and locked exits
+
+Switches unlock a room's exits (D69, D75). Two object types in
+`defs.json`, placed in `objects` like crates; their state resets with the
+room.
+
+- **Target** (`target`, kind `target`): a fixed 1×1×1 block. A Zap bolt
+  stops at it and switches it on; the next one switches it off again. It
+  is a body like a crate (the wizard, crates and enemies stand on it and
+  bump into it) but can't be pushed.
+- **Plate** (`plate`, kind `plate`): a floor tile, flush with the floor
+  like a hole, only at y 0. It is on while something stands on it: a
+  crate, an enemy (any hostility) or the wizard, with the middle of its
+  footprint over the tile and its feet on the floor (jumping over it
+  doesn't count). It is no body: things move over it as over the floor,
+  and a crate may start on it.
+- **Locked exit** (`"locked": true` on an exit): solid, like the room's
+  edge, until every switch in the room is on; then it opens (`> ACCESS
+  GRANTED: EXIT UNLOCKED`). When a switch goes off it closes again, but
+  never on the wizard: while he stands in the opening it waits. The exit
+  he came in through stays open for him while he is in the room, even
+  after a respawn, so he can always leave the way he came (D67). The room
+  needs at least one switch.
+- **Look** (D75, after two showcase rounds): white (`#eef3ff`, the
+  type's `color`). Both switches carry a square bull's-eye, a small square
+  inside a bigger one, so they read as switches by shape, not only by
+  color. Off, its lines are dim; on, they brighten and the inner square
+  fills with light. A target has the bull's-eye on every face and a
+  plain crate's outline; a hit flashes and jolts it. A plate has a dashed
+  tile outline; pressed, the outline turns solid, brackets light up just
+  outside its corners and a glow spills onto the floor round it, so it
+  shows round a crate standing on it. A locked back doorway is a dark
+  panel that sinks into the threshold; a locked front exit is four bars
+  that retract into the frame (a panel there would hide the room behind
+  it). Both carry one small bull's-eye light per switch in the room, lit
+  for each switch that is on. The exit's stream shows once it is open.
+- Events: `switch` (a switch went on or off), `unlock` and `lock` (a
+  locked exit opened or closed).
+- Validation: a plate lies on the floor, inside the room, not in a block
+  and not over a hole; a locked exit needs a switch in its room.
+- Room design: a plate the wizard can reach next to the locked exit is
+  no puzzle, since the exit closes as soon as he steps off; give him
+  something that stays (a crate) or something that comes and goes (a
+  patrolling enemy resting on it, a timing puzzle). Access levels
+  (fragments step) will reuse the locked exit.
+- Tuning: the look is `SWITCH_FX` in `src/render/switch-view.js`;
+  showcase `?asset=switches`.
+
 ## Rooms and exits
 
 - Horizontal exits only in Phase 1: an opening on one side of the room
@@ -538,8 +586,9 @@ The world map tool flags any room further out.
 | Room | Size | Exits | Shows |
 |---|---|---|---|
 | `boot_sector` (start, hub) | 12×12 | north doorway → Cache Hall; raised east exit on a ledge → Stack Yard; west doorway → Crawl Space; south (front) → Transit Bus | blocks, holes, two crates, a 2-high wall near the front to walk behind (X-ray outline); the Zap data disk two steps from the spawn (Phase 3) |
-| `cache_hall` | 16×8 | south (front) → Boot Sector | a 3-wide pit across the room: push a crate in, then jump the rest; the Shield data disk behind it (Phase 3 step 3) |
-| `stack_yard` | 8×8, Glitchmire color | raised west doorway → Boot Sector; east (front) → Fault Line | stacked crates, a 2-high block to climb via a crate |
+| `cache_hall` | 16×8 | south (front) → Boot Sector; east (front) → Relay Station | a 3-wide pit across the room: push a crate in, then jump the rest; the Shield data disk behind it (Phase 3 step 3) |
+| `relay_station` (Phase 3) | 12×12 | west doorway → Cache Hall; south (front, locked) → Stack Yard | switches (step 4): a Zap target by the back wall, a crate to push onto a plate, and a peaceful bug resting 2 s on a plate near the locked exit, so the exit opens while the bug is on it (the wizard can press that plate himself, but the exit closes as he steps off) |
+| `stack_yard` | 8×8, Glitchmire color | raised west doorway → Boot Sector; east (front) → Fault Line; north doorway (locked) → Relay Station | stacked crates, a 2-high block to climb via a crate; a plate in front of the locked doorway and a crate to push onto it (Phase 3 step 4) |
 | `fault_line` (Phase 2) | 12×12 | west doorway → Stack Yard; raised east exit on the lookout → Transit Bus | a corridor between hazard walls with an integrity refill at its end (Phase 3), hazard blocks between two plain ones to walk across, a zigzag path of plain blocks through a field of void blocks up to a lookout |
 | `transit_bus` (Phase 2) | 12×12, 5 high | west doorway → Fault Line; north doorway → Boot Sector; raised east exit on the high ledge → Volatile Memory | a ferry across a pit between two ledges, a lift up to a high ledge, a loop carrying a crate, a press coming down (with a crate to jam it) and a pusher squeezing the wizard against the room's edge |
 | `volatile_memory` (Phase 2) | 12×12, 5 high | west doorway → Transit Bus; raised east exit on the high ledge → Crawl Space | a pit across the room with two collapsing bridges: one regrowing after 3 s (the way back), one that stays gone, with a crate on a plain ledge in front of it to push onto the bridge from solid ground (it doesn't trigger the blocks, so it is a safe spot to hop onto); two one-shot collapsing steps up to a high ledge |
@@ -765,7 +814,7 @@ list switches to another room; New room makes an empty one (D57).
   equally wide and not connected yet); a change that would overlap
   another exit is refused. A new width goes to the exit it leads to as
   well (an undo step of that room), moving either back to stay within its
-  side. Right click removes an exit and its connection. An exit must be connected before
+  side. **Locked** makes it a locked exit (D75). Right click removes an exit and its connection. An exit must be connected before
   the room plays or saves.
 - **Spawn, Reset** put the start or respawn point in the middle of the
   cell, standing on the layer; erasing with Reset removes the reset point
@@ -923,13 +972,7 @@ the author; the answers are recorded as decisions before the code lands.
 
 Open questions, settled at the start of their step:
 - **2 Pickups** and **3 Data disks:** settled (D71, D73).
-- **4 Switches:** does the wizard's own weight (or an enemy's) press a
-  plate, or only crates; does a plate hold the exit open only while it is
-  pressed, or latch; does a bolt target latch, toggle or stay on for a
-  time; can one exit need several switches (all of them) and one switch
-  open several exits; can switches later drive other things (blocks,
-  platforms); is the connected exit in the next room locked too (the
-  player must always be able to leave the way he came, D67).
+- **4 Switches:** settled (D75).
 - **5 Viruses:** what blocks line of sight (blocks, crates, height
   differences); what a Virus does after giving up (stops, returns to its
   post or path); chase speed.
@@ -991,7 +1034,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 | File | Contents |
 |---|---|
 | `data/rooms/<id>.json` | One room (id = file name) |
-| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan); `enemies`: enemy types (`bug`, see Enemies) and templates that `extend` one (D58); `spells`: spell tuning and color (`zap`, see Zap and energy; `shield`, see Shield); `pickups`: pickup types (see Pickups and progress); `blocks`: block types (D60): look or kind, color, properties (`damage`, `lethal`, `regrow`), `extends` for variants; see Block types |
+| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; switches `target` and `plate`, white, see Switches and locked exits); `enemies`: enemy types (`bug`, see Enemies) and templates that `extend` one (D58); `spells`: spell tuning and color (`zap`, see Zap and energy; `shield`, see Shield); `pickups`: pickup types (see Pickups and progress); `blocks`: block types (D60): look or kind, color, properties (`damage`, `lethal`, `regrow`), `extends` for variants; see Block types |
 | `data/biomes.json` | Biome name and room color: `home_lattice` (core, amber), `glitchmire` (pink), `frostbyte_wastes` (ice blue), `abyssal_buffer` (graphite), `firewall_citadel` (ember orange), `phantom_partition` (special, silver-white); optional `look` for the surroundings (background, outer grid and its fade, wall grid, bloom); see Biomes (D61, D62) |
 | `data/world.json` | Start room, exit connections and every room's cell on the world map (`positions`, D66) |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |

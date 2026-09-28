@@ -4,13 +4,14 @@
  */
 import { DT } from './core/loop.js';
 import { announce, say } from './core/messages.js';
-import { isBackSide, sideAxes, withExitDefaults } from './data/room-data.js';
+import { exitCells, isBackSide, sideAxes, withExitDefaults } from './data/room-data.js';
 import { Bolt } from './entities/bolt.js';
 import { Enemy } from './entities/enemy.js';
 import { createObject } from './entities/kinds.js';
 import { Pickup } from './entities/pickup.js';
 import { PLAYER, Player } from './entities/player.js';
-import { groundBelow, overlaps, overlapsBox, surfaceBelow, touchedCell, touchesBox } from './physics/collision.js';
+import { SWITCH_KINDS } from './entities/switch.js';
+import { cellBox, groundBelow, overlaps, overlapsBox, surfaceBelow, touchedCell, touchesBox } from './physics/collision.js';
 import { arrival, exitAt } from './world/exits.js';
 import { Grid } from './world/grid.js';
 import { Progress, pickupBit } from './world/progress.js';
@@ -48,18 +49,19 @@ export const TRANSITION = {
  * Something that happened, for views, the HUD and (later) sound. Returned
  * by Game.update() for the tick it happened in.
  * @typedef {object} GameEvent
- * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'exit'|'room'} type
+ * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'} type
  * @property {string} [spell] the spell cast, failed or selected (cast, deny, spell)
  * @property {object} [object] the room object it happened to (push, plug,
  *   land of an object; shake, collapse and regrow of a collapsing block;
- *   hit by a spell, break of a destructible one)
+ *   hit by a spell, break of a destructible one; a switch going on or off)
  * @property {object} [enemy] the enemy it happened to (pop, land of an
  *   enemy, bounce off it, hit by a spell) or that hurt the wizard (hurt)
  * @property {Bolt} [bolt] the bolt that stopped (zap), where it is now
  * @property {number} [amount] integrity lost (hurt)
  * @property {number[]} [cell] the block that hurt him (hurt), [x, y, z]
  * @property {'hole'|'void'|'damage'} [cause] how the wizard died (die)
- * @property {object} [exit] the exit walked out through (exit)
+ * @property {object} [exit] the exit walked out through (exit); a locked
+ *   exit opening (unlock) or closing again (lock)
  */
 
 export class Game {
@@ -97,8 +99,10 @@ export class Game {
    * @param {string} id room id
    * @param {number[]} [pos] feet center to appear at (e.g. arriving through an
    *   exit, mid-jump); the room's own spawn by default
+   * @param {string|null} [entry] id of the exit he came in through, open for
+   *   him even if locked (D75); kept on a respawn in the same room
    */
-  enterRoom(id, pos) {
+  enterRoom(id, pos, entry = id === this.room?.id ? this.entryExit : null) {
     // Announce the room when it is a different one (not on a respawn).
     if (id !== this.room?.id) {
       const data = this.content.rooms.get(id);
@@ -111,6 +115,13 @@ export class Game {
     this.objects = this.room.objects.map(createObject);
     /** The objects in update order, lowest first; re-sorted in place every tick. */
     this.updateOrder = [...this.objects];
+    /** The room's switches (entities/switch.js): targets and plates, all off. */
+    this.switches = this.objects.filter((object) => SWITCH_KINDS.includes(object.kind));
+    /** The exit he came in through: it stays open for him while he is in the room (D75). */
+    this.entryExit = entry;
+    /** Locked exits (D75), open while every switch is on; closed ones are solid (Grid.setOpening()). */
+    this.locks = this.room.exits.filter((exit) => exit.locked).map((exit) => ({ exit, open: false }));
+    for (const lock of this.locks) this.setLock(lock, this.lockWanted(lock));
     /** The room's enemies (entities/enemy.js), dead ones included until the room resets. */
     this.enemies = this.room.enemies.map((enemy) => new Enemy(enemy));
     /** Zap bolts in flight (entities/bolt.js); a room starts without any. */
@@ -151,7 +162,7 @@ export class Game {
     const target = this.content.rooms.get(link.room);
     const to = withExitDefaults(target.exits.find((e) => e.id === link.exit));
 
-    this.enterRoom(link.room, arrival(exit, pos, to, target.size));
+    this.enterRoom(link.room, arrival(exit, pos, to, target.size), to.id);
     const player = this.player;
     player.vy = vy;
     player.facing = player.prevFacing = player.targetFacing = facing;
@@ -328,7 +339,68 @@ export class Game {
     const bounced = this.bounceOffEnemies();
     this.touchEnemies(bounced);
     this.takePickups();
+    this.updateSwitches();
     return this.takeEvents();
+  }
+
+  /**
+   * Plates follow what stands on them (a crate, an enemy, the wizard);
+   * targets were switched by bolts already. Then the locked exits follow
+   * the switches: open while every one is on (reported as 'unlock', with a
+   * terminal line), closed again ('lock') once one goes off, but never on
+   * the wizard: while he stands in the opening it waits (D75).
+   */
+  updateSwitches() {
+    if (this.switches.length === 0) return;
+    const boxes = [
+      ...this.objects.filter((object) => object.kind === 'pushable' && object.solid).map((object) => object.box()),
+      ...this.liveEnemies.map((enemy) => enemy.box()),
+      ...(this.player.dead ? [] : [this.player.box()]),
+    ];
+    for (const plate of this.switches) {
+      if (plate.kind !== 'plate') continue;
+      if (plate.press(plate.pressedBy(boxes))) this.emit('switch', { object: plate });
+    }
+    let unlocked = false;
+    for (const lock of this.locks) {
+      const open = this.lockWanted(lock);
+      if (open === lock.open || (!open && this.inOpening(lock.exit))) continue;
+      this.setLock(lock, open);
+      this.emit(open ? 'unlock' : 'lock', { exit: lock.exit });
+      unlocked ||= open;
+    }
+    if (unlocked) say('msg.unlocked');
+  }
+
+  /** Should a locked exit be open: every switch on, or the wizard came in through it? */
+  lockWanted({ exit }) {
+    return exit.id === this.entryExit || this.switches.every((object) => object.on);
+  }
+
+  /** Open or close a locked exit (its opening in the grid). */
+  setLock(lock, open) {
+    lock.open = open;
+    this.grid.setOpening(lock.exit, open);
+  }
+
+  /** Is the wizard in the opening of `exit` (its row of cells beyond the side)? */
+  inOpening(exit) {
+    const box = this.player.box();
+    return exitCells(exit, this.room.size).outside.some((cell) => overlapsBox(box, cellBox(cell)));
+  }
+
+  /**
+   * Is the exit open? Every exit is, except a locked one while its switches
+   * are not all on (D75).
+   * @param {object} exit exit of the current room
+   */
+  exitOpen(exit) {
+    return this.locks.find((lock) => lock.exit === exit)?.open ?? true;
+  }
+
+  /** How many of the room's switches are on (the lights on its locked exits). */
+  switchesOn() {
+    return this.switches.filter((object) => object.on).length;
   }
 
   /**
