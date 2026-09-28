@@ -167,8 +167,9 @@ bit on its disk (D71).
   hurts the wizard if a wall cuts it short (D86)
 - **Warp** — a teleport forward as far as the first wall or object, over
   gaps of any width; safe, a later and stronger spell (D86)
-- **Cut & Paste** — cut one object into inventory, paste it at a valid
-  grid spot in front of the wizard
+- **Cut & Paste** — cut a crate or a frozen enemy in front of the wizard
+  into a one-slot clipboard, paste it into the free cell in front of him,
+  in any room (it goes with him; copies allowed, D87)
 
 Up to 16 spells in all (D68): new ones, some letting the wizard skip
 easier rooms, and upgrades of the basic ones. Buff items make the wizard

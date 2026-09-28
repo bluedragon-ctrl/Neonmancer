@@ -47,6 +47,7 @@ import { PAUSE_FX, pauseLook } from './pause-fx.js';
 import { createPauseCage, placePauseCage } from './pause-view.js';
 import { warpFlash } from './warp-fx.js';
 import { createWarpTrail, dashPose, placeWarpTrail } from './warp-view.js';
+import { ClipView } from './clip-view.js';
 
 /**
  * Which bodies get a drop shadow besides the wizard (who always has one).
@@ -197,6 +198,8 @@ export class PlayerView {
     this.rings = new Map();
     /** The Blink and Warp afterimages by spell id, made when first cast (D86). */
     this.trails = new Map();
+    /** Cut & Paste (D87): its effect and aim marker, made when he first knows the spell. */
+    this.clip = null;
   }
 
   /** The afterimage of a Blink or Warp `spell`, made on first use. */
@@ -233,8 +236,11 @@ export class PlayerView {
     return view;
   }
 
-  /** @param {number} alpha interpolation factor 0..1 between the last two ticks */
-  sync(alpha) {
+  /**
+   * @param {number} alpha interpolation factor 0..1 between the last two ticks
+   * @param {number} [dt] seconds since the last frame
+   */
+  sync(alpha, dt = 0) {
     const player = this.game.player;
     const { warp } = player;
     // A Blink draws him dashing there over a few frames, stretched (D86).
@@ -267,6 +273,13 @@ export class PlayerView {
       const sinceBlock = shield.blockedAt === null ? null : shield.tick - shield.blockedAt + alpha;
       place(this.ringView(shield.spell), pos, shield.tick + alpha, shield.ticks, sinceBlock);
     }
+    // Cut & Paste: its effect wherever he goes, and its aim marker (D87).
+    const clipSpell = this.game.content.spells.cut_paste;
+    if (!this.clip && clipSpell && player.spells.includes('cut_paste')) {
+      this.clip = new ClipView(clipSpell.color);
+      this.group.add(this.clip.group);
+    }
+    this.clip?.sync(this.game, pos, alpha, dt);
     // No ghost while dead: not of him falling into a pit, nor of the derez.
     for (const ghost of this.xray) ghost.visible = !player.dead;
     const derezzing = player.dead && player.deathCause !== 'hole';

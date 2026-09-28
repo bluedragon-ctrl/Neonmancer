@@ -7,6 +7,19 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The Cut & Paste spell (Phase 3 step 10, D87, slot 6, white). With an
+  empty clipboard it cuts the crate or frozen enemy right in front of
+  the wizard (at his feet or one level up; 20 energy); holding one, it
+  pastes it into the free cell in front of him for free, in this room or
+  another: the clipboard goes with him, and dying loses it. A pasted
+  enemy keeps its freeze (paused while held), integrity and patrol path.
+  A marquee snaps onto the object and it streams into his hands as
+  pixels; pasting streams them back and it grows in. While the spell is
+  selected an aim marker shows what a cut would take or a ghost where a
+  paste would go, and the HUD shows a clipboard slot with an icon of
+  what he holds. Its disk lies in the new test room Clipboard, west of
+  Room 1. Showcase `cut-paste`, `cut-paste-enemy`, `clip-hud`,
+  `disk-cut-paste`.
 - The Blink and Warp spells (Phase 3 step 9, D86). Blink (slot 4, 15
   energy): a super-speed dash up to 3 units the way the wizard aims,
   through open space only (over holes, hazards and through enemies),

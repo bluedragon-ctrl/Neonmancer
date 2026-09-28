@@ -11,8 +11,8 @@
     "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
     "strings": {
       "type": "object",
-      "description": "Key → text. Keys are dotted groups, e.g. \"hud.integrity\". The listed keys are the ones the game uses; others are allowed while drafting.",
-      "propertyNames": { "pattern": "^[a-z][a-zA-Z0-9]*(\\.[a-z][a-zA-Z0-9]*)+$" },
+      "description": "Key → text. Keys are dotted groups, e.g. \"hud.integrity\"; a group may hold an id with underscores (\"spell.cut_paste\"). The listed keys are the ones the game uses; others are allowed while drafting.",
+      "propertyNames": { "pattern": "^[a-z][a-zA-Z0-9]*(\\.[a-z][a-zA-Z0-9_]*)+$" },
       "additionalProperties": { "type": "string" },
       "required": [
         "game.title",

@@ -13,6 +13,7 @@
     "spell.pause": "PAUSE",
     "spell.blink": "BLINK",
     "spell.warp": "WARP",
+    "spell.cut_paste": "CUT & PASTE",
     "hud.movementGrid": "GRID MOVE (G)",
     "hud.movementScreen": "SCREEN MOVE (G)",
     "hint.fullscreen": "PRESS F FOR FULLSCREEN",

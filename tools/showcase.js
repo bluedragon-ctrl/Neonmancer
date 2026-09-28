@@ -64,6 +64,9 @@ import { createWarpTrail, dashPose, placeWarpTrail } from '../src/render/warp-vi
 import { createHoleView } from '../src/render/hole-view.js';
 import { createLock, createPlate, createTarget } from '../src/render/switch-view.js';
 import { SWITCH_KINDS } from '../src/entities/switch.js';
+import { CLIP_FX, clipPixels, marqueeLook, pasteGrow } from '../src/render/clip-fx.js';
+import { createMarquee, placeMarquee } from '../src/render/clip-view.js';
+import { clipIcon } from '../src/ui/clip-icon.js';
 
 /** Block types with variants filled in (D60). */
 const BLOCK_TYPES = resolveBlockTypes(defs.blocks);
@@ -162,6 +165,7 @@ const ALL_ASSETS = [
   { label: 'disk-pause', group: 'disks', spin: false, build: () => buildDisk(defs.spells.pause) },
   { label: 'disk-blink', group: 'disks', spin: false, build: () => buildDisk(defs.spells.blink) },
   { label: 'disk-warp', group: 'disks', spin: false, build: () => buildDisk(defs.spells.warp) },
+  { label: 'disk-cut-paste', group: 'disks', spin: false, build: () => buildDisk(defs.spells.cut_paste) },
   // Installing a spell (Phase 3 step 3, D73): Zap, then Shield, in a loop.
   { label: 'install', spin: false, shadow: PALETTE.cyan, build: buildInstall },
   // Shield (D73): up for its duration, blinking before it ends.
@@ -194,6 +198,15 @@ const ALL_ASSETS = [
   { label: 'target', group: 'switches', span: 5, spin: false, build: buildTargetZap },
   { label: 'plate', group: 'switches', span: 4, spin: false, build: buildPlate },
   { label: 'locks-in-room', group: 'switches', span: 5.5, spin: false, build: buildLocks },
+  // Cut & Paste (Phase 3 step 10, D87): the wizard cuts the crate in front
+  // of him (a marquee snaps on, it streams into his hands as pixels), holds
+  // it, and pastes it back (the pixels stream into a marquee, it grows in);
+  // the aim marker before, the ghost while he holds it. The same with a
+  // frozen bug; the HUD's clipboard slot, empty, with a crate and with a
+  // frozen bug (its disk: disk-cut-paste).
+  { label: 'cut-paste', group: 'cut-paste', span: 4.5, spin: false, build: () => buildCutPaste('crate') },
+  { label: 'cut-paste-enemy', group: 'cut-paste', span: 4.5, spin: false, build: () => buildCutPaste('bug') },
+  { label: 'clip-hud', group: 'cut-paste', span: 1, spin: false, build: buildClipHud },
 ];
 
 /** Switch color, from defs.json. */
@@ -1560,3 +1573,86 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
+
+
+/**
+ * Cut & Paste (D87) in a loop: the wizard (left, facing +x) cuts the
+ * crate or frozen bug in front of him, holds it, and pastes it back.
+ * @param {'crate'|'bug'} kind
+ */
+function buildCutPaste(kind) {
+  const { color } = defs.spells.cut_paste;
+  const at = [-1.6, 0, 0];
+  const wizard = createWizard();
+  wizard.position.set(...at);
+  wizard.rotation.y = Math.PI / 2;
+  const flare = createCastFlare();
+  const crate = kind === 'crate';
+  const thingColor = crate ? defs.objects.crate.color : defs.enemies.bug.color;
+  const thing = new Group();
+  if (crate) {
+    const view = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...defs.objects.crate, at: [0, 0, 0] });
+    view.position.set(-0.5, 0, -0.5);
+    thing.add(view);
+  } else {
+    // Frozen: tinted, in its cage, holding its pose.
+    const pause = defs.spells.pause.color;
+    const bug = createBug(thingColor);
+    bug.rotation.y = -Math.PI / 2;
+    animateBug(bug, { state: 'rest', time: 0.3 });
+    bug.userData.flash.amount.value = PAUSE_FX.tint;
+    bug.userData.flash.color.value.set(pause);
+    const cage = createPauseCage(pause);
+    placePauseCage(cage, [0, 0, 0], { frozen: true, grow: 1, on: true });
+    thing.add(bug, cage);
+  }
+  const size = crate ? 1 : ENEMY.size[0];
+  const center = [0, size / 2, 0];
+  const frame = crate ? CLIP_FX.crateMarquee : CLIP_FX.enemyMarquee;
+  const marquee = createMarquee(color, CLIP_FX.brightness);
+  const aim = createMarquee(color, CLIP_FX.aimBrightness);
+  const ghost = createMarquee(thingColor, CLIP_FX.ghostBrightness);
+  const pixels = createPixelBurst(CLIP_FX.pixels, CLIP_FX.pixelSize, [thingColor, color]);
+  const asset = new Group().add(wizard, flare, thing, marquee, aim, ghost, pixels);
+  const hands = [at[0] + ZAP_FX.reach, ZAP_FX.height, 0];
+  // Cut at tick 50, paste at 170; loop 280.
+  const cutAt = 50;
+  const pasteAt = 170;
+  const loop = 280;
+  let tick = 0;
+  asset.userData.update = (dt, time) => {
+    tick = (tick + dt * 60) % loop;
+    const cast = tick >= pasteAt ? pasteAt : cutAt;
+    placeCastFlare(flare, at, Math.PI / 2, tick - cast);
+    const held = tick >= cutAt && tick < pasteAt;
+    const mode = tick >= pasteAt ? 'paste' : tick >= cutAt ? 'cut' : null;
+    const since = tick - cast;
+    const effect = mode !== null && since < PLAYER.clipTicks;
+    // The cut thing shows until the marquee has snapped on; a pasted one grows in.
+    thing.visible = !held || since < CLIP_FX.snapTicks;
+    const scale = mode === 'paste' ? Math.max(pasteGrow(since), 1e-3) : 1;
+    thing.scale.setScalar(scale);
+    thing.position.set(...center.map((v) => v * (1 - scale)));
+    const look = effect ? marqueeLook(mode, since) : { visible: false };
+    marquee.visible = false;
+    if (look.visible) placeMarquee(marquee, center, frame * look.scale, time);
+    placePixels(pixels, effect ? clipPixels(mode, since, center, size, hands) : [], [0, 0, 0]);
+    aim.visible = false;
+    ghost.visible = false;
+    if (!effect && !held) placeMarquee(aim, center, crate ? CLIP_FX.aimMarquee : CLIP_FX.enemyMarquee, time);
+    if (!effect && held) placeMarquee(ghost, center, size, time);
+  };
+  return asset;
+}
+
+/** The HUD's clipboard slot (D87): empty, holding a crate, holding a frozen bug. */
+function buildClipHud() {
+  const pause = defs.spells.pause.color;
+  const held = [null, { kind: 'object', data: defs.objects.crate }, { kind: 'enemy', data: defs.enemies.bug, frozen: {} }];
+  const tags = held.map(
+    (thing, i) =>
+      `<div class="hud-spell" style="top:calc(${182 + i * 52} * var(--u))"><span class="hud-spell-name">${strings.strings['spell.cut_paste']}</span><span class="hud-clip">${clipIcon(thing, pause)}</span></div>`,
+  );
+  renderer.hud.insertAdjacentHTML('beforeend', tags.join(''));
+  return new Group();
+}
