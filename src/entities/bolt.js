@@ -1,9 +1,10 @@
 /**
  * A bolt: a small box flying straight on until something stops it. Pure
  * logic, one call to update() per fixed tick. Two kinds (D80):
- * - the wizard's Zap (Bolt.cast()): level from his hands the way he aims;
- *   it stops at the first live enemy it touches, a block, a room object
- *   (crate, platform, standing collapsing block) or the room's side;
+ * - the wizard's Zap or Pause (Bolt.cast()): level from his hands the way
+ *   he aims; it stops at the first live enemy it touches, a block, a room
+ *   object (crate, platform, standing collapsing block) or the room's side.
+ *   A Pause bolt freezes the enemy it stops at instead of hurting it (D85);
  * - an enemy's shot (`attack: "bolt"`, Bolt.shoot()): slow, from its eyes
  *   (boltDirections(): at the wizard's middle, or four ways); it stops at
  *   the wizard, another live enemy (not the one that fired it), a block, a
@@ -66,15 +67,17 @@ export class Bolt {
   /**
    * @param {number[]} pos its middle [x, y, z] where it starts
    * @param {number[]} dir flight direction [dx, dy, dz], normalized
-   * @param {{ speed: number, damage: number, color?: number|string, owner?: object, bounces?: number }} options
-   *   `owner`: the enemy that fired it (none: the wizard's Zap); `color`
+   * @param {{ speed: number, damage?: number, color?: number|string, owner?: object, bounces?: number, freeze?: number }} options
+   *   `owner`: the enemy that fired it (none: the wizard's spell); `color`
    *   its color (the Zap's cyan by default); `bounces`: how often it
-   *   glances off walls and objects before they stop it
+   *   glances off walls and objects before they stop it; `freeze`: ticks a
+   *   Pause bolt freezes an enemy for (0: not a Pause bolt)
    */
-  constructor(pos, dir, { speed, damage, color = null, owner = null, bounces = 0 }) {
+  constructor(pos, dir, { speed, damage = 0, color = null, owner = null, bounces = 0, freeze = 0 }) {
     this.dir = [...dir];
     this.speed = speed;
     this.damage = damage;
+    this.freeze = freeze;
     this.color = color;
     this.owner = owner;
     /** Bounces left, and whether it has bounced at all (then its owner is fair game). */
@@ -95,10 +98,11 @@ export class Bolt {
   }
 
   /**
-   * The wizard's Zap, from his hands.
+   * The wizard's Zap or Pause, from his hands.
    * @param {number[]} feet the wizard's feet center
    * @param {number[]} aim [dx, dz], normalized
-   * @param {{ speed: number, damage: number }} spell the Zap's tuning (defs.json spells.zap)
+   * @param {{ speed: number, damage?: number, color: string, freeze?: number }} spell the spell's
+   *   tuning (defs.json spells.zap), or Pause's with the ticks it freezes for
    */
   static cast(feet, [dx, dz], spell) {
     const pos = [feet[0] + dx * BOLT.reach, feet[1] + BOLT.height, feet[2] + dz * BOLT.reach];

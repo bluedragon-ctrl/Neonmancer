@@ -29,6 +29,8 @@ const SPELL_EFFECTS = {
   shield: (game, spell) => game.player.raiseShield('shield', Math.round(spell.duration / DT)),
   /** A ring like the Shield that also blocks touch and burns enemies touching it (D84). */
   firewall: (game, spell) => game.player.raiseShield('firewall', Math.round(spell.duration / DT)),
+  /** A bolt the way he aims that freezes the first enemy it hits (D85). */
+  pause: (game, spell) => game.bolts.push(Bolt.cast(game.player.pos, game.player.aim(), { ...spell, freeze: Math.round(spell.duration / DT) })),
 };
 
 /** Terminal message for each way to die (Player.deathCause). */
@@ -52,7 +54,7 @@ export const TRANSITION = {
  * Something that happened, for views, the HUD and (later) sound. Returned
  * by Game.update() for the tick it happened in.
  * @typedef {object} GameEvent
- * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'} type
+ * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'} type
  * @property {string} [spell] the spell cast, failed or selected (cast, deny, spell)
  * @property {object} [object] the room object it happened to (push, plug,
  *   land of an object; shake, collapse and regrow of a collapsing block;
@@ -154,8 +156,8 @@ export class Game {
     const objects = this.objects.filter((object) => object.solid !== false);
     /** The enemies still alive. */
     this.liveEnemies = this.enemies.filter((enemy) => enemy.alive);
-    /** What the wizard collides with: objects (all but collapsed blocks) and solid enemies. */
-    this.solids = [...objects, ...this.liveEnemies.filter((enemy) => enemy.solid)];
+    /** What the wizard collides with: objects (all but collapsed blocks) and solid enemies (frozen ones too, D85). */
+    this.solids = [...objects, ...this.liveEnemies.filter((enemy) => enemy.solid && !enemy.passable)];
     /** What enemies collide with: the objects and the other live enemies (not the wizard). */
     this.obstacles = [...objects, ...this.liveEnemies];
     /** What blocks an enemy's line of sight and stops an arc (besides blocks): the objects. */
@@ -226,9 +228,10 @@ export class Game {
    * Bolts fly on. A bounce is reported ('ricochet', with where and the way
    * it came in, for sparks). One that stops is reported ('zap', for its
    * sparks) and gone. If it stopped at the wizard (an enemy's shot), he is
-   * hurt, unless his ring absorbed it ('block', D84); at an enemy, that takes its damage (hitEnemy()). A room object
-   * only minds the wizard's Zap: a destructible one 'hit' or 'break', a
-   * target 'switch' (others shrug it off).
+   * hurt, unless his ring absorbed it ('block', D84); at an enemy, that takes its damage (hitEnemy()),
+   * or a Pause bolt freezes it (pauseEnemy()). A room object only minds
+   * the wizard's Zap: a destructible one 'hit' or 'break', a target
+   * 'switch' (others shrug it off).
    */
   updateBolts() {
     for (const bolt of this.bolts) {
@@ -243,10 +246,11 @@ export class Game {
         continue;
       }
       if (target instanceof Enemy) {
-        this.hitEnemy(target, bolt.damage, owner ? 'bolt' : 'zap');
+        if (bolt.freeze) this.pauseEnemy(target, bolt.freeze);
+        else this.hitEnemy(target, bolt.damage, owner ? 'bolt' : 'zap');
         continue;
       }
-      if (owner) continue;
+      if (owner || bolt.freeze) continue;
       const event = target?.hit?.(bolt.damage, 'zap');
       if (!event) continue;
       this.emit(event, { object: target });
@@ -271,6 +275,38 @@ export class Game {
     this.emit(event, { enemy });
     if (event === 'pop') this.refreshBodies();
     else if (enemy.alarm(this.player)) this.emit('alert', { enemy });
+  }
+
+  /**
+   * A Pause bolt hits an enemy (D85): it freezes ('freeze') and turns
+   * solid, but not for the wizard while he is inside it (Enemy.passable,
+   * updateFrozen()). One that can't be paused shrugs it off; that still
+   * counts as a hit, so it is alarmed (D81) like any enemy left unfrozen.
+   * @param {Enemy} enemy
+   * @param {number} ticks
+   */
+  pauseEnemy(enemy, ticks) {
+    const event = enemy.freeze(ticks);
+    if (!event) {
+      if (enemy.alarm(this.player)) this.emit('alert', { enemy });
+      return;
+    }
+    enemy.passable = !this.player.dead && overlapsBox(this.player.box(), enemy.box());
+    this.emit(event, { enemy });
+    this.refreshBodies();
+  }
+
+  /**
+   * A frozen enemy the wizard was inside turns solid for him once he has
+   * stepped out of it (D85).
+   */
+  updateFrozen() {
+    const box = this.player.box();
+    for (const enemy of this.liveEnemies) {
+      if (!enemy.passable || (!this.player.dead && overlapsBox(box, enemy.box()))) continue;
+      enemy.passable = false;
+      this.refreshBodies();
+    }
   }
 
   /**
@@ -467,10 +503,11 @@ export class Game {
       if (enemy.sense(this)) this.emit('alert', { enemy });
       const event = enemy.update(this);
       if (event) this.emit(event, { enemy });
-      if (event === 'pop') this.refreshBodies();
+      if (event === 'pop' || event === 'thaw') this.refreshBodies();
     }
     // Bolts after enemies, so they hit enemies where those are now.
     this.updateBolts();
+    this.updateFrozen();
     this.updateAttacks();
     const bounced = this.bounceOffEnemies();
     this.touchEnemies(bounced);
@@ -598,7 +635,7 @@ export class Game {
   }
 
   /**
-   * Falling onto the top of a bouncy enemy bounces the wizard up (D48),
+   * Falling onto the top of a bouncy enemy (not a frozen one, D85) bounces the wizard up (D48),
    * harmlessly: his feet were above its top last tick and are at or below
    * it now (on it, if it is solid), over its footprint.
    * @returns {Enemy|null} the enemy he bounced off
@@ -608,7 +645,7 @@ export class Game {
     if (player.dead || player.pos[1] >= player.prev[1]) return null;
     const [px, , pz] = player.box();
     for (const enemy of this.liveEnemies) {
-      if (!enemy.data.bounce) continue;
+      if (!enemy.bouncy) continue;
       const [bx, by, bz] = enemy.box();
       const top = by[1];
       if (player.prev[1] >= top - BOUNCE_REACH && player.pos[1] <= top + 1e-6 && overlaps(px, bx) && overlaps(pz, bz)) {

@@ -10,6 +10,7 @@
     "spell.zap": "ZAP",
     "spell.shield": "SHIELD",
     "spell.firewall": "FIREWALL",
+    "spell.pause": "PAUSE",
     "hud.movementGrid": "GRID MOVE (G)",
     "hud.movementScreen": "SCREEN MOVE (G)",
     "hint.fullscreen": "PRESS F FOR FULLSCREEN",

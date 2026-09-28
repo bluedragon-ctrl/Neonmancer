@@ -43,6 +43,8 @@ import { createCastFlare, placeCastFlare } from './zap-view.js';
 import { createInstall, placeInstall } from './install-view.js';
 import { createShield, placeShield } from './shield-view.js';
 import { createFirewall, placeFirewall } from './firewall-view.js';
+import { PAUSE_FX, pauseLook } from './pause-fx.js';
+import { createPauseCage, placePauseCage } from './pause-view.js';
 
 /**
  * Which bodies get a drop shadow besides the wizard (who always has one).
@@ -425,6 +427,17 @@ export class EnemyView {
     this.time = 0;
     /** 0..1: how much it looks after the wizard (it sees him or searches for him). */
     this.alert = 0;
+    /** The cage round it while Pause freezes it (D85), made on its first freeze. */
+    this.cage = null;
+  }
+
+  /** The cage for a freeze, made on first use. */
+  cageView() {
+    if (!this.cage) {
+      this.cage = createPauseCage(this.game.content.spells.pause.color);
+      this.group.add(this.cage);
+    }
+    return this.cage;
   }
 
   /**
@@ -438,6 +451,7 @@ export class EnemyView {
     if (enemy.state === 'dead') {
       this.model.visible = false;
       this.mark.visible = false;
+      if (this.cage) this.cage.visible = false;
       if (this.discharge) this.discharge.visible = false;
       // Popped in a pit: the burst comes out at the floor. Once it is over
       // (hidden by an empty burst), there is nothing left to update.
@@ -445,8 +459,15 @@ export class EnemyView {
       return;
     }
 
-    this.time += dt;
-    this.angle = lerpAngle(this.angle, enemy.facing, Math.min(1, dt * kind.turnRate));
+    // Frozen (D85): it holds its pose (its clock and turning stop), tinted, in a cage.
+    const { frozen } = enemy;
+    const pause = frozen ? pauseLook(frozen.tick + alpha, frozen.ticks) : null;
+    if (pause) placePauseCage(this.cageView(), feet, pause);
+    else if (this.cage) this.cage.visible = false;
+    if (!frozen) {
+      this.time += dt;
+      this.angle = lerpAngle(this.angle, enemy.facing, Math.min(1, dt * kind.turnRate));
+    }
     this.model.position.set(...feet);
     this.model.rotation.y = this.angle;
     const after = enemy.sees || enemy.behavior.chasing ? 1 : 0;
@@ -474,12 +495,14 @@ export class EnemyView {
     // white glow of charging and discharging.
     const glow = chargeGlow(dischargeLook(attack, enemy.chargeTicks));
     const flash = this.model.userData.flash;
-    flash.amount.value = Math.max(hit.flash, glitch.flash, glow);
+    const tint = pause?.on ? PAUSE_FX.tint * pause.grow : 0;
+    flash.amount.value = Math.max(hit.flash, glitch.flash, glow, tint);
     const white = (hit.flash > 0 && hit.color === 'white') || glow > Math.max(hit.flash, glitch.flash);
-    flash.color.value.set(white ? 0xffffff : PALETTE.cyan);
+    const tinted = tint > Math.max(hit.flash, glitch.flash, glow);
+    flash.color.value.set(tinted ? this.game.content.spells.pause.color : white ? 0xffffff : PALETTE.cyan);
 
     this.markHolder.position.set(...feet);
-    placeAlertMark(this.mark, enemy.alerted ? 1 : 0, this.time, kind.markHeight);
+    placeAlertMark(this.mark, enemy.alerted && !frozen ? 1 : 0, this.time, kind.markHeight);
     if (this.discharge) this.placeDischarge(feet, attack);
 
     const mood = eyeMood(enemy);

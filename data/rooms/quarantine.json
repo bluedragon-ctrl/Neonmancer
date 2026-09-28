@@ -26,5 +26,8 @@
       "overrides": { "movement": "stationary", "attack": "burst", "aggroRange": 2 }
     }
   ],
-  "pickups": [{ "id": "integrity", "type": "refill_integrity", "at": [7, 0, 9] }]
+  "pickups": [
+    { "id": "integrity", "type": "refill_integrity", "at": [7, 0, 9] },
+    { "id": "disk_pause", "type": "disk_pause", "at": [4, 2, 4] }
+  ]
 }

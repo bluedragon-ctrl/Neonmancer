@@ -274,6 +274,7 @@ and burst; a virus can patrol).
 | `memory` | seconds (default 1.5) | how long a chaser searches where it lost him. |
 | `bounce` | true / false (default false; bug: true) | trampoline top (below). |
 | `solid` | true / false (default false) | blocks the wizard, carries him and shoves him (below). |
+| `pausable` | true / false (default true) | Pause freezes it (D85); false: the spell's bolt stops at it and does nothing (for guardians). |
 | `color` | #rrggbb | body color; the eyes always show hostility, so a room can recolor one enemy with `overrides` without a new template. |
 | `attackRange` | units (default 1.2) | burst or arc reach, from its eyes to the nearest point of the wizard; for a bolt, how near he must be; `aggroRange` must be at least this. |
 | `attackCharge` | seconds (default 0.4) | the warning before it fires. |
@@ -355,7 +356,8 @@ and burst; a virus can patrol).
   Landing on top of a **bouncy** one (every bug by default: a round ball
   reads as bouncy) bounces him up 2.2 above its top (clears 2 blocks)
   without hurting him; its sides still hurt if it is hostile. Enemies with
-  `bounce` false can be stood on only if they are solid.
+  `bounce` false can be stood on only if they are solid. A frozen enemy
+  (Pause, D85) is solid and never bounces or hurts.
 - **Charged attacks** (D78, D80): a hostile enemy with a burst, an arc or
   a bolt that sees him within `attackRange` stops (at a whole cell),
   charges for `attackCharge` seconds (it trembles and glows white;
@@ -476,7 +478,8 @@ enemies).
   once. Tuning: `INSTALL_FX` in `src/render/install-fx.js`; showcase
   `?asset=install`.
 - **Spell colors:** each spell has a `color` in `defs.json` (Zap cyan
-  `#00f0ff`, Shield neon blue `#3b82ff`, Firewall ember `#ff5a14`): its disk's lit bit, its
+  `#00f0ff`, Shield neon blue `#3b82ff`, Firewall ember `#ff5a14`, Pause
+  lavender `#c9a2ff`): its disk's lit bit, its
   install animation and its banner.
 - **Found before:** a permanent pickup whose bit is set shows as a ghost
   (gray, dashed, spinning without the bob, D74) and can't be taken again
@@ -594,6 +597,43 @@ wall by the west side.
 - Tuning: `defs.json` `spells.firewall` (cost, cooldown, duration, color,
   damage, burnInterval); the look is `FIREWALL_FX` in
   `src/render/firewall-fx.js`; showcase `?asset=firewall,shield-block`.
+
+## Pause
+
+The fourth spell (D85), from a data disk in Quarantine (slot 3), on top
+of the 2-high pillar (push the crate against it and climb).
+
+- Cast (E) with Pause selected: costs 25 energy, then 0.25 s before the
+  next cast. A bolt in its color flies the way he aims (10 units per
+  second), like a Zap: it stops at the first live enemy, block, object or
+  room side, in sparks. Room objects shrug it off (it switches no target
+  and breaks no crate).
+- The enemy it stops at freezes for 5 s (`duration`); freezing a frozen
+  one starts it over. A frozen enemy stops where it is, mid-step too, and
+  walks on from there when it thaws. It sees nothing, cuts off a charged
+  attack and fires none, and touching it doesn't hurt. It is solid, by
+  the solid-enemy rules (D51): he bumps into it and stands on it, and a
+  bouncy one doesn't bounce him. It still falls, rides platforms, holds a
+  plate down and takes hits (a Zap, a burn, another enemy's discharge or
+  bolt); it pops as usual.
+- A frozen enemy he stands inside when it freezes doesn't trap him: it is
+  solid for him only once he has stepped out of it (`Enemy.passable`).
+  Standing on one as it thaws: a solid one carries on carrying him, any
+  other drops him through (and hurts if it touches). It blinks in its
+  last second as a warning.
+- A Pause hit provokes (a provoked enemy thaws hostile) but doesn't
+  alarm a frozen enemy. An enemy with `pausable` false (Firewall Wardens,
+  Phase 4) shrugs it off: it counts as a hit, so it is alarmed (D81).
+- **Look:** the enemy holds its pose (its animation stops), tinted 30 %
+  towards lavender, inside a cage of corner brackets in the spell's
+  color (a box of 0.84 round it, growing up from the floor over 8 ticks),
+  blinking every 5 ticks in its last 60. Picked in the showcase over a
+  pause sign "||" above it and a clock of ticks draining round its feet;
+  the pale lavender over a richer one and ice white.
+- Tuning: `defs.json` `spells.pause` (cost, cooldown, speed, duration,
+  color); the look is `PAUSE_FX` in `src/render/pause-fx.js` and
+  `PAUSE_VIEW` in `src/render/pause-view.js`; showcase
+  `?asset=pause,disk-pause`.
 
 ## X-ray outline
 
@@ -766,7 +806,7 @@ The world map tool flags any room further out.
 | `transit_bus` (Phase 2) | 12×12, 5 high | west doorway → Fault Line; north doorway → Boot Sector; raised east exit on the high ledge → Volatile Memory | a ferry across a pit between two ledges, a lift up to a high ledge, a loop carrying a crate, a press coming down (with a crate to jam it) and a pusher squeezing the wizard against the room's edge |
 | `volatile_memory` (Phase 2) | 12×12, 5 high | west doorway → Transit Bus; raised east exit on the high ledge → Crawl Space | a pit across the room with two collapsing bridges: one regrowing after 3 s (the way back), one that stays gone, with a crate on a plain ledge in front of it to push onto the bridge from solid ground (it doesn't trigger the blocks, so it is a safe spot to hop onto); two one-shot collapsing steps up to a high ledge |
 | `crawl_space` (Phase 2) | 12×12 | west doorway → Volatile Memory; east (front) → Boot Sector | bugs: a sentry crossing the entrance lane, one walking off a ledge and patrolling the floor below, a solid one shoving along a lane with a crate to push in its way, a provoked one circling a pillar, a peaceful stationary one to bounce up to a 2-high ledge, a solid peaceful one along the front edge to ride; Zap targets: the provoked one turns hostile when hit, and an amber stationary one with 4 integrity; an energy refill near the entrance (Phase 3) |
-| `quarantine` (Phase 3) | 10×10, Glitchmire | east doorway → Boot Sector; west doorway → Scheduler | chasers (step 5, D78): a virus at the back that chases and bursts, a sentinel in the far corner that keeps its distance and fires arcs, a stationary bug with a burst guarding an integrity refill; a 2-high pillar to hide behind, a trench of holes the chasers won't cross, a crate for cover and a 1-high ledge |
+| `quarantine` (Phase 3) | 10×10, Glitchmire | east doorway → Boot Sector; west doorway → Scheduler | chasers (step 5, D78): a virus at the back that chases and bursts, a sentinel in the far corner that keeps its distance and fires arcs, a stationary bug with a burst guarding an integrity refill; a 2-high pillar to hide behind, a trench of holes the chasers won't cross, a crate for cover and a 1-high ledge; the Pause data disk on the pillar (step 8, D85), reached by pushing the crate against it |
 | `scheduler` (Phase 3) | 10×10, Abyssal Buffer | east doorway → Quarantine | the cron, worm and crawler looks (D83): a tower in the middle firing four ways, placed off the entrance's axes; a worm patrolling the back row across the tower's line of fire (its bolts can pop it); a crawler chasing from the far corner; pillars, a low wall and a crate to hide behind, an integrity refill in the far corner, and the Firewall data disk on the low wall (step 7, D84) |
 
 ### Room design checklist
@@ -1154,7 +1194,7 @@ the author; the answers are recorded as decisions before the code lands.
 | 5 | `feat/viruses` | Universal enemies (a `look` field, D78); every enemy type an enemy template (D79); a `chase` movement behavior: a hostile enemy follows the wizard while it sees him within `aggroRange`, searches, then goes home; charged discharge attacks (`burst`, `arc`; `contact` renamed `touch`); the Virus and the Sentinel; the "!" mark; enemies keep out of holes. Test room Quarantine. |
 | 6 | ~~`feat/popups`~~ | Closed without a branch (D84): the projectile came with the enemy review (the `bolt` attack and the `shooter` template, D80, D81), and the looks with D83. More enemies go on as side work, discussed and playtested outside the step plan. |
 | 7 | `feat/firewall-spell` | The Shield blocks bolts, arcs and bursts (absorbing bolts at its ring, which flares); Firewall: a ring of flames that also blocks touch and burns enemies touching it (D84). Its disk lies in Scheduler. |
-| 8 | `feat/pause-spell` | Pause: freezes an enemy for a while; a frozen enemy is a solid platform (reusing the solid-enemy rules, D51). |
+| 8 | `feat/pause-spell` | Pause: a bolt that freezes the enemy it hits for 5 s; a frozen enemy is harmless and a solid platform (the solid-enemy rules, D51), still hittable; a `pausable` template field (D85). Its disk lies in Quarantine. |
 | 9 | `feat/warp-spell` | Warp: a short teleport through gaps or past hazards, with an afterimage. |
 | 10 | `feat/cut-paste-spell` | Cut & Paste: cut one object into a one-slot inventory, paste it at a valid grid cell in front of the wizard. |
 | 11 | `docs/spell-roster` | Discussion step, docs only: the roster towards 16 spells (D68) — new spells, some letting the wizard skip easier rooms, and upgrades of the basic ones — and the buff items, now that the first five spells can be played; stronger ones should let the wizard speedrun simple rooms or solve them differently (D67). Accepted spells get their own steps (in this phase or later) and CLAUDE.md §5 is updated; the result is a decision. |
@@ -1169,8 +1209,7 @@ Open questions, settled at the start of their step:
 - **5 Viruses:** settled (D78).
 - **6 Pop-ups:** closed; answered by the bolt attack (D80, D81) (D84).
 - **7 Firewall:** settled (D84).
-- **8 Pause:** duration and cost; how it picks its target (a bolt, or the
-  nearest enemy in front); does it work on Wardens (Phase 4)?
+- **8 Pause:** settled (D85).
 - **9 Warp:** distance and direction; through a one-block wall, or only
   across gaps and hazards; where it lands when the target cell is taken.
 - **10 Cut & Paste:** what can be cut (objects only, enemies, a crate with
@@ -1222,7 +1261,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 | File | Contents |
 |---|---|
 | `data/rooms/<id>.json` | One room (id = file name) |
-| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; `spiked_platform`: a platform that hurts on touch, hazard red (D82); switches `target` and `plate`, white, see Switches and locked exits); `enemies`: enemy templates (`bug`, `virus`, `sentinel`, see Enemies), each complete or `extend`ing another (D58, D79); `spells`: spell tuning and color (`zap`, see Zap and energy; `shield`, see Shield; `firewall`, see Firewall); `pickups`: pickup types (see Pickups and progress); `blocks`: block types (D60): look or kind, color, properties (`damage`, `lethal`, `regrow`), `extends` for variants; see Block types |
+| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; `spiked_platform`: a platform that hurts on touch, hazard red (D82); switches `target` and `plate`, white, see Switches and locked exits); `enemies`: enemy templates (`bug`, `virus`, `sentinel`, see Enemies), each complete or `extend`ing another (D58, D79); `spells`: spell tuning and color (`zap`, see Zap and energy; `shield`, see Shield; `firewall`, see Firewall; `pause`, see Pause); `pickups`: pickup types (see Pickups and progress); `blocks`: block types (D60): look or kind, color, properties (`damage`, `lethal`, `regrow`), `extends` for variants; see Block types |
 | `data/biomes.json` | Biome name and room color: `home_lattice` (core, amber), `glitchmire` (pink), `frostbyte_wastes` (ice blue), `abyssal_buffer` (graphite), `firewall_citadel` (ember orange), `phantom_partition` (special, silver-white); optional `look` for the surroundings (background, outer grid and its fade, wall grid, bloom); see Biomes (D61, D62) |
 | `data/world.json` | Start room, exit connections and every room's cell on the world map (`positions`, D66) |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |

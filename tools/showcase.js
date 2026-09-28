@@ -57,6 +57,8 @@ import { INSTALL_FX } from '../src/render/install-fx.js';
 import { createInstall, placeInstall } from '../src/render/install-view.js';
 import { createShield, placeShield } from '../src/render/shield-view.js';
 import { createFirewall, placeFirewall } from '../src/render/firewall-view.js';
+import { PAUSE_FX, pauseLook } from '../src/render/pause-fx.js';
+import { createPauseCage, placePauseCage } from '../src/render/pause-view.js';
 import { createLock, createPlate, createTarget } from '../src/render/switch-view.js';
 import { SWITCH_KINDS } from '../src/entities/switch.js';
 
@@ -154,6 +156,7 @@ const ALL_ASSETS = [
   { label: 'disk-slots', group: 'disks', span: 6, spin: false, build: buildDiskSlots },
   { label: 'disk-shield', group: 'disks', spin: false, build: () => buildDisk(defs.spells.shield) },
   { label: 'disk-firewall', group: 'disks', spin: false, build: () => buildDisk(defs.spells.firewall) },
+  { label: 'disk-pause', group: 'disks', spin: false, build: () => buildDisk(defs.spells.pause) },
   // Installing a spell (Phase 3 step 3, D73): Zap, then Shield, in a loop.
   { label: 'install', spin: false, shadow: PALETTE.cyan, build: buildInstall },
   // Shield (D73): up for its duration, blinking before it ends.
@@ -164,6 +167,10 @@ const ALL_ASSETS = [
   // Firewall (D84): flames licking up from a low ring, up for its
   // duration, blinking before it ends.
   { label: 'firewall', spin: false, shadow: PALETTE.cyan, build: buildFirewall },
+  // Pause (Phase 3 step 8, D85): the wizard fires a Pause bolt at a
+  // hopping bug, which freezes in its pose for the spell's duration,
+  // tinted, in a cage of corner brackets, blinking before it thaws.
+  { label: 'pause', span: 6, spin: false, build: buildPauseFreeze },
   // Refills (temporary pickups): integrity and energy, hovering and spinning
   // like a disk; picked up the same way; beside a disk and the wizard for scale.
   { label: 'refill-integrity', group: 'refills', spin: false, build: () => buildRefill('integrity') },
@@ -373,6 +380,54 @@ function buildShieldBlock() {
     attack(dt, time);
     tick = (tick + dt * 60) % loop;
     placeShield(shield, wizard.position.toArray(), 100 + tick, up, tick - charge - runs.ticks[0]);
+  };
+  return asset;
+}
+
+/**
+ * Pause (D85) in a loop: the wizard at the left fires a Pause bolt at a
+ * bug hopping in place on the right; it freezes in its pose, tinted, in
+ * its cage, blinks before it thaws, and hops on.
+ */
+function buildPauseFreeze() {
+  const { color: pauseColor, speed: boltSpeed, duration } = defs.spells.pause;
+  const asset = new Group();
+  const wizard = createWizard();
+  wizard.position.x = -2.2;
+  wizard.rotation.y = Math.PI / 2;
+  const flare = createCastFlare();
+  const bolt = createBolt(pauseColor);
+  const sparks = createSparks(pauseColor);
+  const { color, speed } = defs.enemies.bug;
+  const bug = createBug(color);
+  bug.position.x = 1.5;
+  bug.rotation.y = -Math.PI / 2;
+  const cage = createPauseCage(pauseColor);
+  asset.add(wizard, flare, bolt, sparks, bug, cage);
+
+  const start = -2.2 + ZAP_FX.reach;
+  const stop = 1.5 - ENEMY_HALF;
+  const cast = 40;
+  const hit = cast + ((stop - start) / boltSpeed) * 60;
+  const ticks = Math.round(duration * 60);
+  const loop = Math.ceil(hit + ticks + 80);
+  let tick = 0;
+  let frozenAt = 0;
+  asset.userData.update = (dt, time) => {
+    tick = (tick + dt * 60) % loop;
+    placeCastFlare(flare, [-2.2, 0, 0], Math.PI / 2, tick - cast);
+    const flown = tick - cast;
+    const traveled = (Math.max(0, flown) / 60) * boltSpeed;
+    bolt.visible = flown >= 0 && tick < hit;
+    if (bolt.visible) placeBolt(bolt, [start + traveled, ZAP_FX.height, 0], [1, 0, 0], flown, traveled);
+    placeSparks(sparks, [stop, ZAP_FX.height, 0], [1, 0, 0], tick - hit);
+    const look = pauseLook(tick - hit, ticks);
+    // Frozen: it keeps the pose it was hit in.
+    if (!look.frozen) frozenAt = time;
+    animateBug(bug, { state: 'walk', walked: (look.frozen ? frozenAt : time) * speed });
+    bug.userData.flash.amount.value = look.frozen && look.on ? PAUSE_FX.tint * look.grow : 0;
+    bug.userData.flash.color.value.set(pauseColor);
+    placePauseCage(cage, [1.5, 0, 0], look);
   };
   return asset;
 }
