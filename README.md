@@ -14,7 +14,8 @@ and collect key fragments to reboot the Grid.
 > a score from what he has found, and the central core that raises his
 > access level and, with every fragment, reboots the Grid. Fifteen test
 > rooms, with a world map tool for the developer. Next: Phase 4
-> (Wardens, more spells, title screen, saves, the map, tooling).
+> (Wardens, more spells, saves, the map, tooling); the title screen and
+> pause menu are in.
 > Latest `main` build: https://bluedragon-ctrl.github.io/Neonmancer/
 
 ## Requirements

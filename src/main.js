@@ -1,6 +1,7 @@
-// Entry point: load and validate the game data, show the start room, run
-// the loop. Any startup problem shows the error screen instead.
-import { FixedLoop } from './core/loop.js';
+// Entry point: load and validate the game data, show the title screen over
+// the start room, run the loop. Any startup problem shows the error screen
+// instead.
+import { DT, FixedLoop } from './core/loop.js';
 import { Input } from './core/input.js';
 import { say } from './core/messages.js';
 import { DATA_FILES, DEV_SERVER, SCHEMA_ERRORS } from './data/bundle.js';
@@ -12,12 +13,17 @@ import { Game } from './game.js';
 import { PLAYER } from './entities/player.js';
 import { PlayerView } from './render/entity-view.js';
 import { HOLO_TIME } from './render/holo.js';
+import { bootState } from './render/boot-fx.js';
 import { AutoQuality } from './render/quality.js';
 import { Renderer } from './render/renderer.js';
 import { RoomScene } from './render/room-scene.js';
 import { showErrorScreen } from './ui/error-screen.js';
 import { toggleFullscreen, wantsFullscreenHint } from './ui/fullscreen.js';
+import { BootScreen } from './ui/boot-screen.js';
 import { Hud } from './ui/hud.js';
+import { MenuScreen } from './ui/menu-screen.js';
+import { MenuFlow } from './ui/menus.js';
+import { Settings } from './ui/settings.js';
 
 const app = document.getElementById('app');
 
@@ -68,19 +74,104 @@ function boot() {
   const editor = new Editor({ game, renderer, files: DATA_FILES, canSave: DEV_SERVER, onRoom: (options) => showRoom({ rebuild: true, ...options }) });
   if (DEV_SERVER && params.has('edit')) editor.open();
 
-  say('msg.boot');
-  say('msg.welcome');
+  // The title screen first; the world map tool's links go straight in.
+  // Volumes and visual settings: stubs, stored but not applied yet (D109).
+  const settings = Settings.load();
+  const flow = new MenuFlow(devRoom || (DEV_SERVER && params.has('edit')) ? 'playing' : 'title', settings);
+  /** A menu command (ui/menus.js): a new game from the title, or back to it, or a setting changed. */
+  function run(command) {
+    if (command === 'settings') settings.save();
+    if (command === 'start') newGame();
+    // The title shows the start room behind it again.
+    if (command === 'quit') newGame({ quiet: true });
+  }
+  const menuScreen = new MenuScreen(renderer.stage, content.strings, {
+    onHover: (index) => flow.select(index),
+    onClick: (index) => {
+      flow.select(index);
+      run(flow.choose());
+    },
+    onStep: (index, step) => {
+      flow.select(index);
+      run(flow.adjust(step));
+    },
+  });
+  const bootScreen = new BootScreen(renderer.stage, renderer.camera);
+  /** Seconds into the boot sequence after Start (D110), or null when none runs. */
+  let boot = null;
+
+  /**
+   * Start over in the start room with nothing found (nothing is saved yet,
+   * D105). Unless `quiet` (behind the title), the boot sequence plays: the
+   * room compiles and the wizard pops in (D110).
+   */
+  function newGame({ quiet = false } = {}) {
+    hud.clear();
+    game.reset({ start: devRoom });
+    // The room's banner waits until he is in (finishBoot()).
+    hud.clear();
+    if (quiet) {
+      showTitleShape();
+      return;
+    }
+    showRoom();
+    playerView.group.visible = true;
+    say('msg.loading', { room: content.rooms.get(game.room.id).name.toUpperCase() });
+    bootScreen.start(game.room.size);
+    boot = 0;
+  }
+
+  /** The boot sequence is over (or skipped): the banner, the greeting, and he is yours. */
+  function finishBoot() {
+    boot = null;
+    bootScreen.stop();
+    game.announceRoom();
+    say('msg.boot');
+    say('msg.welcome');
+  }
+  /** Behind the title only the start room's empty shape, without him: the room loads after Start. */
+  function showTitleShape() {
+    roomScene.showShape(game);
+    debug.setRoom(game.room, [], []);
+    playerView.group.visible = false;
+  }
+  if (flow.playing) {
+    say('msg.boot');
+    say('msg.welcome');
+  } else showTitleShape();
 
   const input = new Input();
   input.attach(window);
+  // Leaving the window pauses the game (checked in the next tick).
+  let blurred = false;
+  window.addEventListener('blur', () => (blurred = true));
 
   function update() {
     input.sample();
     if (input.pressed('fullscreen')) toggleFullscreen(document.documentElement);
     if (input.pressed('debug')) debug.toggle();
-    if (input.pressed('editor')) editor.toggle();
+    if (input.pressed('editor') && flow.playing) editor.toggle();
     // The game stands still while the room is being edited.
     if (editor.active) {
+      blurred = false;
+      readout.countTick();
+      return;
+    }
+    // The boot sequence holds the game too; a menu key skips it.
+    if (boot !== null) {
+      boot += DT;
+      blurred = false;
+      if (bootState(boot).done || ['confirm', 'jump', 'pause'].some((action) => input.pressed(action))) finishBoot();
+      readout.countTick();
+      return;
+    }
+    // The title screen and pause menu hold the game; the tick that closes
+    // one doesn't run it either, so its key does nothing in the game.
+    const wasPlaying = flow.playing;
+    if (blurred && !hud.winShown) flow.pause();
+    blurred = false;
+    run(flow.update(input));
+    if (!wasPlaying || !flow.playing) {
       readout.countTick();
       return;
     }
@@ -112,9 +203,16 @@ function boot() {
       renderer.setQuality(lowered);
       console.info(`Frames run slow: quality now MSAA ${renderer.multisampling}, render scale ${renderer.renderScale}`);
     }
-    const dt = Math.min(time - lastFrame, 0.1);
+    // Behind a menu the game stands still: no animation, no interpolation.
+    // While booting nothing moves either, but the room animates.
+    const dt = flow.playing ? Math.min(time - lastFrame, 0.1) : 0;
     lastFrame = time;
+    if (!flow.playing || boot !== null) alpha = 1;
 
+    const booting = boot === null ? null : bootState(boot);
+    menuScreen.show(flow, booting?.logo ?? null);
+    bootScreen.show(booting?.wipe ?? null);
+    playerView.boot = booting;
     editor.frame();
     playerView.sync(alpha, dt);
     roomScene.update(alpha, dt);
