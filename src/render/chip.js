@@ -1,15 +1,14 @@
 /**
- * Buff chip look (Phase 3 step 12, D93): a permanent buff, a square chip
+ * Buff chip look (D93): a permanent buff, a square chip
  * in the color of the stat it raises (BUFF_COLORS: cyan integrity, lime
- * energy and recharge, the HUD bars' colors, D94), thicker than a data disk and hovering and
- * spinning the same way (diskMotion()). Pins stick out of its left and
+ * energy and recharge, the HUD bars' colors, D94), thicker than a data
+ * disk and hovering and spinning the same way (diskMotion()). Pins stick out of its left and
  * right sides; the front carries the stat's icon (a plus, a crystal, a
  * lightning bolt), the back the 4×4 bit grid with the buff's slot lit, one
  * of the 16 buff bits of the save. A chip already found is a gray ghost
  * like a found disk, solid-lined (D94).
  *
- * Looks are reviewed in the asset showcase (`?asset=chips`) before they go
- * into the game.
+ * Showcase: `?asset=chips`.
  */
 import { Color, ExtrudeGeometry, Group, Mesh, Shape } from 'three';
 import { BUFF_COLORS } from '../entities/pickup.js';

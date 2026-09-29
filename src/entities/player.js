@@ -1,10 +1,10 @@
 /**
  * The wizard: movement along the grid axes, jump (a double jump with its
- * upgrade, D95), gravity, pushing,
- * integrity (health), invulnerability after a hit, energy (mana) for
- * spells, installing a spell, the Shield and Firewall rings, Blink and
- * Warp (a teleport, D86), the Cut & Paste clipboard (D87), death (in a hole, on a void block, or with no integrity left) and
- * respawn. Pure logic, one call to update() per fixed tick. One Player lasts
+ * upgrade, D95), gravity, pushing, integrity (health), backups,
+ * invulnerability after a hit, energy (mana) for spells, installing a
+ * pickup, the Shield and Firewall rings, Blink and Warp (D86), the
+ * Cut & Paste clipboard (D87), death (in a hole, on a void block, or with
+ * no integrity left) and respawn. Pure logic, one call to update() per fixed tick. One Player lasts
  * the whole game: entering a room places him (enter()), so integrity and
  * energy carry over.
  */
@@ -18,7 +18,7 @@ export const PLAYER = {
   speed: 4.5,
   /**
    * Share of the walking speed kept in the air. A full jump lasts ~0.57 s, so
-   * it covers ~1.65 units: over a 1-tile gap, never a 2-tile one (D34).
+   * it covers ~1.65 units: over a 1-tile gap, never a 2-tile one (D36).
    */
   airSpeed: 0.65,
   gravity: 30,
@@ -52,7 +52,7 @@ export const PLAYER = {
   /** Integrity (health) at the start and after respawning; at most 15 fits the save key. */
   maxIntegrity: 8,
   /**
-   * Backups (lives, D92, D97): a death uses one; dying with none left
+   * Backups (lives, D97): a death uses one; dying with none left
    * crashes the system and he reboots on the nearest backup shrine, which
    * refills them.
    */

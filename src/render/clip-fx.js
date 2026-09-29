@@ -1,7 +1,6 @@
 /**
  * How Cut & Paste looks (D87; pure, tested; no three.js), with
- * clip-view.js; picked in the showcase over a scan line wiping the object
- * out and the object flying over his hat.
+ * clip-view.js.
  *
  * Cut: a bright dashed marquee ("marching ants") in the spell's color
  * snaps onto the object, which then streams as pixels into his hands.

@@ -1,5 +1,5 @@
 /**
- * Switches and locked exits (Phase 3 step 4, D69, D75). Both switches
+ * Switches and locked exits (D75). Both switches
  * carry a square bull's-eye, a small square inside a bigger one, so they
  * read as switches by shape and not only by color; switched on, the inner
  * square fills with light.
@@ -11,10 +11,10 @@
  *   outside its corners and a glow spills onto the floor round it, so it
  *   shows round a crate standing on it.
  * - Lock: the barrier across a locked exit, on back doorways and front
- *   exits alike: a dark panel that sinks into the threshold (front exits
- *   had bars until D101: one door style, readable). It carries one small
- *   bull's-eye light per switch in the room, lit when that many switches
- *   are on; an access lock its level in gold Roman numerals (D101).
+ *   exits alike: a dark panel that sinks into the threshold. It carries
+ *   one small bull's-eye light per switch in the room, lit when that many
+ *   switches are on; an access lock its level in gold Roman numerals
+ *   (D101).
  *
  * Each view has `userData.set(...)` and `userData.update(dt)`; states ease
  * in over a few frames. Reviewed in the asset showcase (`?asset=switches`).

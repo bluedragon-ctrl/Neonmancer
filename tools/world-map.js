@@ -13,8 +13,8 @@
  * (with both its exits). Save sends it all to the dev server, which checks
  * it and writes the room files and world.json (MapEdit, editor/map-edit.js).
  *
- * F3 opens the pickup report: every permanent item (data disks, buff
- * chips) by its save bit and the rooms it lies in, flagging items not
+ * F3 opens the pickup report: every permanent item (disks, upgrades,
+ * buffs, fragments, secrets) by its save bit and the rooms it lies in, flagging items not
  * placed yet and items placed more than once (pickup-report.js).
  *
  * Open /tools/world-map.html in the dev server; it is not part of the

@@ -3,586 +3,182 @@
 All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project uses [Semantic Versioning](https://semver.org/).
+Details are in docs/design.md; the reasons in the decisions named (Dnn,
+docs/decisions.md).
 
 ## [Unreleased]
 
-### Changed
-- Locked front exits are the same dark door panel as locked doorways,
-  instead of four retracting bars, so every locked door looks alike and
-  its lights and access numeral read clearly (D101).
-- Color rules for objects and blocks (D99): red hurts, the room color is
-  structure, black is a pit, white is a mechanism, cyan moves, magenta is
-  the wizard, lime is pushable. Hazards and spiked platforms use the one
-  danger red of hostile eyes and the alert mark (`#ff2a3a`); collapsing
-  blocks take the room color (dashed edges); void blocks are black mist
-  with slowly sinking gray wisps instead of violet; Phantom Partition is
-  pale violet instead of silver-white, so switches stand out in it; the
-  wizard's drop shadow is magenta. A test keeps biome colors clear of
-  object and block colors.
-- Destructible glass crates are empty shells of thinner, more
-  translucent glass (no loose bits inside), so they read as breakable
-  (D99).
-- Collapsing blocks are pale white-blue (dashed edges, faces barely
-  tinted) instead of magenta, which is now the wizard's color (D98);
-  since D99 they take the room color.
+## [0.3.0] - 2026-09-29
+
+Phase 3 — Spells and pickups.
 
 ### Added
-- Fragments and access (Phase 3 step 16, D101): 64 key fragments with
-  their own save bits (`> FRAGMENT n/N GET!`), the modules of one 8×8
-  QR-like boot key: each is a gold tile with its module lit, and the HUD
-  shows the key filling in as they are found. The
-  central core, a placeable object now in Boot Sector, raises the
-  wizard's access level when he touches it: level 1 at 16 fragments, 2
-  at 32, 3 at 48 (`world.json` `fragments`), 500 points each; a gold
-  band round his hat per level. Exits can ask for an access level
-  (`"access": n`): a white panel with the level as a thick gold Roman
-  numeral. All 64 at the core reboot the Grid: a placeholder end screen
-  with the whole key and the final score. The core is a gold crystal in
-  orbit rings, one per level; a Vault test room behind Quarantine's level-1 lock; the
-  room editor sets an exit's access level; debug key K finds 8
-  fragments; the HUD shows `FRAGMENTS n/64 ACCESS n`.
-- Score and secrets (Phase 3 step 15, D100): the score is what the
-  wizard has found, 50 per permanent pickup, 200 per secret (500 per
-  access level to come), shown in gold under the title with the share
-  of the world's permanent pickups found; a new score rolls up to its
-  value, flashing. Secrets are magenta stars with their own 16 save bits, two in
-  the test rooms (Crawl Space, Upgrade Lab); the world map's pickup
-  report (F3) lists them. No bonus bits and no high score; the save key
-  drops its score field.
-- Backups (Phase 3 step 14, D97): the wizard has 8 backups, shown as
-  pips under the integrity bar; each death uses one. Dying with none
-  left crashes the system (`SYSTEM CRASH` banner) and he reboots on the
-  backup shrine nearest on the world map, keeping everything found.
-  Backup shrines are floor tiles (`"shrine": [x, z]` in room data):
-  stepping onto one refills integrity, energy and backups (`> BACKUP
-  SAVED`) and it flares. Shrine and pips are in the wizard's magenta
-  (showcase `?asset=shrine`); a Shrine tool (9) in the
-  room editor, validation, and shrines in Boot Sector, Scheduler and
-  Upgrade Lab.
-- Glass crates (D96): every crate type is see-through frosted glass
-  tinted in its color, with the data bits on a small dark core inside; a
-  destructible crate has no core, its bits float loose inside. Hazard
-  blocks have a glass option shown in the asset showcase only
-  (`?asset=glass`, with a room corner comparing glass and the old
-  tinted crate).
-- Upgrades (Phase 3 step 13, D95): permanent upgrade cards with their
-  own save bits (the upgrade block, bits 32–47): an expansion card with
-  contact fingers in the upgrade's color. Zap+ replaces Zap in the Tab cycle and
-  its bolt bounces three times off blocks and walls; Shield+ makes the
-  Shield send enemy bolts back the way they came, hurting the first
-  enemy they meet; the double jump gives the wizard one more jump in
-  mid-air, with kick-off rings. `UPGRADE INSTALLED` banner, validation,
-  showcase entries (`?asset=upgrades`), the pickup report lists them,
-  and the new test room Upgrade Lab off Room 1.
-- World map tool: a pickup report on F3 lists every permanent item
-  (spell disks, buff chips) by save bit with the rooms it lies in, and
-  flags items not placed yet or placed more than once; refills by type.
-- Buff items (Phase 3 step 12, D93): chips that raise the wizard's
-  maximum integrity (4× +1, 8 → 12) or energy (5× +10, 50 → 100), or
-  speed up his energy recharge (one, 12 → 8 ticks per unit). Each has a
-  save bit in the buff block; taking one fills the stat it raises, plays
-  the install animation and shows `BUFF INSTALLED`. The HUD bars grow
-  with the maxima; chips and refills take the color of the bar they
-  improve, and found disks and chips are solid gray (D94). Chip look in the showcase (`?asset=chips`); one of
-  each in the test rooms Fault Line, Cache Hall and Fast Path;
-  validation of buff slots and the key's integrity limit.
-- The save key's layout gets an 8-bit access-level field (D91, 4 bits
-  used). The spell upgrades Zap+ and Mirror move to Phase 3 as their
-  own step (13 `feat/spell-upgrades`); the later Phase 3 steps are
-  renumbered.
-- Backups (lives) and backup shrines are planned as Phase 3 step 14
-  `feat/backups` (D92): with no backups left the game restores the last
-  shrine. The jump buff becomes the jump upgrade (a double jump is
-  considered); step 13 is now `feat/upgrades`.
-- Authored rooms (D90): a room's `"authored": true` flag, a checkbox in
-  the room editor, marks the author's real game rooms. The world map tool
-  shows them as AUTHORED and doesn't flag them for lying far from the
-  start. CLAUDE.md gets the rule that development steps never change
-  them or attach new rooms to them.
-- Pull joins the spell roster (D89, slot 10, planned for Phase 4): it
-  pulls the closest crate or enemy in the facing direction one tile
-  towards the wizard.
-- The spell roster (Phase 3 step 11, D88): three new spells (Compile,
-  Fork, Scan) and two upgrades (Zap+, Mirror), planned for Phase 4; a
-  draft of the buff items; the intended order in the world. docs/design.md
-  gets a Spell roster section.
-- The Cut & Paste spell (Phase 3 step 10, D87, slot 6, white). With an
-  empty clipboard it cuts the crate or frozen enemy right in front of
-  the wizard, on his own level (20 energy); holding one, it
-  pastes it into the free cell in front of him for free, in this room or
-  another: the clipboard goes with him, and dying loses it. A pasted
-  enemy keeps its freeze (paused while held), integrity and patrol path.
-  A marquee snaps onto the object and it streams into his hands as
-  pixels; pasting streams them back and it grows in. While the spell is
-  selected an aim marker shows what a cut would take or a ghost where a
-  paste would go, and the HUD shows a clipboard slot with an icon of
-  what he holds. Its disk lies in the new test room Clipboard, west of
-  Room 1. Showcase `cut-paste`, `cut-paste-enemy`, `clip-hud`,
-  `disk-cut-paste`.
-- The Blink and Warp spells (Phase 3 step 9, D86). Blink (slot 4, 15
-  energy): a super-speed dash up to 3 units the way the wizard aims,
-  through open space only (over holes, hazards and through enemies),
-  hitting every enemy it passes for 2; cut short by a wall, it hurts him
-  for 1. Warp (slot 5, 30 energy): a teleport as far as the first wall or
-  object, harmless, drawn as a stream of pixels. Right against a wall
-  either fizzles and costs nothing. Both disks lie in the new test room
-  Fast Path, north of Room 1. Showcase `blink`, `warp`, `disk-blink`,
-  `disk-warp`.
-- The Pause spell (Phase 3 step 8, D85, slot 3): 25 energy, a lavender
-  bolt the way the wizard aims that freezes the first enemy it hits for
-  5 s. A frozen enemy holds its pose in a cage of corner brackets, sees,
-  attacks and hurts nothing, and is a solid platform (D51 rules) that
-  doesn't bounce; hits still hurt it; it blinks before it thaws. One
-  frozen round the wizard lets him out first. An enemy template field
-  `pausable` (default true) lets guardians shrug it off. Its data disk
-  lies on the pillar in Quarantine. Showcase `pause`, `disk-pause`.
-- The Shield blocks enemies' ranged attacks (Phase 3 step 7, D84): a
-  bolt is absorbed at its ring in sparks, an arc or burst does nothing;
-  the ring flares. Touch attacks still hurt. Showcase `shield-block`.
-- The Firewall spell (D84, slot 2): 40 energy, 7 s, a ring of ember
-  flames round the wizard's feet that blocks what the Shield blocks and
-  touch attacks too, and burns every enemy touching it (1 damage, again
-  every 0.5 s). Casting one ring spell replaces the other. Its data disk
-  lies on the low wall in Scheduler. Showcase `firewall`,
-  `disk-firewall`.
-- Cron, worm and crawler enemy looks (D83). The `tower` template now
-  looks like a cron: a pedestal and a clock dial whose four emitters hold
-  the grid axes, where its four-way bolts leave. New templates `worm` (a
-  patroller inching along on a tail of balls) and `crawler` (a six-legged
-  spider that chases), both with touch attacks. A new test room,
-  Scheduler, west of Quarantine, has all three. Showcase
-  `?asset=crons,worms,crawlers`; `bolt-cross` shows the cron.
-- Spiked platforms (D82): a platform type with `damage` hurts the wizard
-  on any touch, like a moving hazard block. `spiked_platform` in hazard
-  red, shaped as a core with four pyramids on each side, its outline
-  flaring when it hurts; object styles `shape: "spiked"` and
-  `faces: "hazard"` (the hazard block's flickering pixels). Showcase `spiked-platforms`. Fault Line's
-  hazard corridor is now guarded by two gates of spiked hoppers, out of
-  step, with a pocket between them to wait in.
-- The `bolt` attack (D80): an enemy charges, then fires a slow shot
-  (`boltSpeed`, default 4 units/s) in its attack color at the wizard,
-  up or down too; it stops at him, another enemy, a block, an object or
-  the room's side, and stepping aside dodges it. A `shooter` template (a
-  stationary bug with a bolt), editor field, showcase `bug-bolt`.
-- An enemy that is hit turns to the wizard with a "!" and a chaser
-  searches where he stands (D80, D81): by his Zap, and by another enemy's
-  burst, arc or bolt too (he gets the blame).
-- Bolt patterns and bounces (D81): `boltPattern: "cross"` fires four
-  level bolts along the grid axes (towers); `boltBounces` makes a bolt
-  glance off walls and objects (sparks at each bounce), and after a
-  bounce it can hit its own shooter. Templates `tower` and `ricochet`,
-  editor fields, showcase `?asset=bolts`.
-- Viruses and Sentinels, and universal enemies (Phase 3 step 5, D78). An
-  enemy type now names its look (`look`: bug, virus, sentinel), and any
-  look combines with any movement and attack in data. A new `chase`
-  movement: a hostile enemy that sees the wizard within its aggro range
-  (nothing solid in between) goes after him, searches where it lost him,
-  then goes home or back to its path. Two new attacks, `burst` and
-  `arc` (the old `contact` is now `touch`): it stops, charges (glowing
-  white) and fires lightning — a burst all round it that hits the
-  wizard and other enemies in range, or an arc aimed
-  where he stood when it started charging, hitting everything in the
-  squares along its path until a block or an object stops it.
-  The Virus (a sharp yellow glitch cube, bursts up close) and the
-  Sentinel (a tall orange octahedron that keeps its distance and fires a
-  5-unit arc). A red "!" pops up over any enemy that notices him. New
-  test room Quarantine, off a new west doorway of Boot Sector. Editor:
-  the Enemy panel groups its settings (look, attack, chase speed, aggro
-  and attack range added), each with a tooltip; chasers keep a path.
-  Showcase `?asset=viruses`, `?asset=sentinels`, `bug-alert`,
-  `bug-burst`.
-- World map tool edits the world's structure (D77): tools to add a room
-  (a new, empty 12×4×12 room in a free cell), connect two rooms (each
-  gets an exit in the middle of the wall facing the other, moved along
-  the wall if that spot is taken or blocked), and delete a room (with the
-  exits leading into it) or a connection (with both its exits). Undo
-  covers every edit; Save writes the new, changed and removed room files
-  and `world.json` after the usual checks. `tools\world-map.bat` starts
-  the dev server on the map (double-click on Windows).
-- Automatic quality fallback (D76): when frames run below 50 fps for a
-  few seconds, multisampling steps down (4 → 2 → 0), then the render
-  scale (0.75, 0.5), so weak laptops stay smooth. `?msaa` / `?scale`
-  still set quality by hand. The debug readout (F3) shows the level.
-- Switches and locked exits (Phase 3 step 4, D75): a Zap target (a fixed
-  block a bolt switches on and off) and a floor plate (on while a crate,
-  an enemy or the wizard stands on it), both white with a square
-  bull's-eye that lights up when on. An exit with `"locked": true` is
-  solid until every switch in its room is on, closes again when one goes
-  off (never on the wizard), and stays open for him if he came in through
-  it. A locked doorway is a sinking panel, a locked front exit retracting
-  bars, with one light per switch. New test room Relay Station (east of
-  Cache Hall), and a locked doorway with a plate in Stack Yard. Editor:
-  switch types in the Object tool, a Locked checkbox for exits. Showcase
-  `?asset=switches`.
-- Data disks (Phase 3 step 3, D73): taking a disk plays an install
-  animation on the wizard (its bits spiral in, rings sweep up him in the
-  spell's color, a white flash; he plays on meanwhile, D74). A
-  second spell, Shield: a crackling neon-blue ring of lightning round him
-  for 7 s (20 energy); it will block projectiles once there are any. Its
-  disk lies in Cache Hall, behind the pit; with two spells Tab / Q switch
-  between them. Each spell has a color in `defs.json`. Showcase
-  `?asset=install`, `?asset=shield`, `disk-shield`.
-- Pickups and progress (Phase 3 step 2, D71): pickup types in
-  `defs.json` and rooms; a `Progress` model of save bits found (112, in
-  blocks: spells, buffs, equipment, fragments) that room resets and death
-  leave alone. The first data disk: the wizard starts without Zap and
-  learns it from a disk in Boot Sector (banner and terminal line; the HUD
-  spell tag appears). A found disk is a gray ghost on revisits.
-  Integrity and energy refills (Fault Line, Crawl Space) come back with
-  the room. Looks in the showcase (`?asset=disks`, `?asset=refills`);
-  validation and room editor support (pickups in the Object tool).
-
-- World map tool (Phase 3 step 1, D66, D70): `/tools/world-map.html` in
-  the dev server (not built, never shown to players) draws every room as a
-  node in its biome color on a map grid, with lines between connected
-  exits (dashed when a connection runs across the map) and the start room
-  marked. Drag rooms to free cells and save (Ctrl+S; Ctrl+Z undoes a
-  move); click a room to open it in the room editor. The side panel lists
-  data errors, rooms the start can't reach and test rooms more than two
-  rooms from the start (D49).
-- `world.json` `positions`: every room's cell on the world map, validated
-  (one per room, no two in one cell).
-- Room editor: a new room gets the free map cell nearest to the room it
-  was made from.
-- Dev server: `?room=<id>` starts the game in that room and `?edit`
-  opens the room editor on it.
-- `tools\dev.bat` (Windows): starts the dev server and opens the game,
-  or the world map (`map`) or the asset showcase (`showcase`).
+- Pickups and progress (D71): pickup types in `defs.json` and rooms; a
+  `Progress` of save bits in blocks (spells, buffs, upgrades, fragments,
+  secrets: 128) that survives room resets and death; found permanent
+  pickups stay as gray ghosts; integrity and energy refills come back
+  with the room.
+- Data disks (D73, D74): the wizard learns Zap from a disk in Boot Sector;
+  every permanent pickup plays an install animation, then a banner and a
+  terminal line. Tab / Q switch spells.
+- Spells: Shield (D73, D84), a lightning ring that blocks bolts, arcs and
+  bursts; Firewall (D84), a ring of flames that also blocks touch and
+  burns; Pause (D85), a bolt that freezes an enemy into a platform; Blink
+  and Warp (D86), a dash that hits enemies and a teleport to the first
+  wall; Cut & Paste (D87), a one-slot clipboard for crates and frozen
+  enemies that goes from room to room.
+- Upgrades (D95): Zap+ (the bolt bounces three times), Shield+ (the
+  Shield sends bolts back) and the double jump, as expansion cards that
+  replace their spell in the Tab cycle.
+- Buff items (D93, D94): chips raising maximum integrity (8 → 12), energy
+  (50 → 100) and the recharge rate; HUD bars grow with them.
+- Backups (D97): 8 lives shown as pips; with none left the system crashes
+  and he reboots on the nearest backup shrine, keeping everything found.
+  Shrines are floor tiles that refill integrity, energy and backups.
+- Score and secrets (D100): the score is worked out from what he has
+  found, with the share of the world found; secrets are magenta stars
+  with their own save bits.
+- Fragments and access (D101): 64 key fragments, the modules of an 8×8
+  boot key the HUD fills in; the central core raises the access level
+  (16, 32, 48 fragments), shown as gold bands on his hat; exits locked to
+  an access level show a gold Roman numeral; all 64 reboot the Grid (a
+  placeholder end screen). Debug key K finds 8 fragments.
+- Switches (D75): Zap targets and floor plates unlock `"locked"` exits;
+  the exit he came in through stays open for him.
+- Universal enemies (D78–D81): any look with any movement and attack in
+  data; a `chase` movement; charged `burst`, `arc` and `bolt` attacks
+  with bolt patterns and bounces; a "!" when an enemy notices him; any hit
+  alarms an enemy. Viruses, Sentinels, shooters, towers, ricochets; cron,
+  worm and crawler looks (D83).
+- Spiked platforms (D82): platforms with `damage`, shaped as spikes.
+- Glass crates (D96): every crate is frosted glass.
+- World map tool (D66, D70, D77): `/tools/world-map.html` in the dev
+  server shows every room and connection, moves, adds, connects and
+  deletes rooms, flags rooms out of reach, and lists every permanent item
+  by save bit (F3). `?room=<id>&edit` opens a room in the editor.
+- Automatic quality fallback (D76): MSAA, then render scale, step down
+  when frames run slow.
+- Authored rooms (D90): `"authored": true` marks the author's real rooms.
+- Test rooms Quarantine, Relay Station, Scheduler, Room 1, Fast Path,
+  Clipboard, Upgrade Lab and Vault; editor tools and validation for every
+  new type; showcase entries for every new look.
+- `tools\dev.bat` and `tools\world-map.bat` start the dev server on the
+  game, the map or the showcase (Windows).
 
 ### Changed
-- Shorter modules, no change in play: spells, combat and switches move
-  out of `game.js` into `spells.js`, `combat.js` and `switches.js`; the
-  room editor's enemy template actions into `editor/templates.js`; the
-  editor panel builds each control group in its own method.
-- The save block reserved for equipment (bits 32–47, never used) is now
-  the upgrades block, for spell upgrades (D88); `SAVE_BLOCKS.upgrades`.
-- Phase 3 step 6 (Pop-ups) is closed: the bolt attack (D80, D81) and
-  the new looks (D83) covered it; more enemies go on as side work (D84).
-- Enemy review (D80): searching and going home a chaser finds its way
-  round walls (a shortest walk over the room's cells), as does a patrol
-  knocked off its path; with no way home it stays. Two enemies never
-  start into the same cell, and one turned back mid-step waits a beat, so
-  chasers no longer bump back and forth. An enemy whose ground goes
-  mid-step drops as it walks on. The arc is drawn on the line it hits
-  along. Popped enemies stop thinking. The enemy models share their mood
-  colors, eyes and pop (`render/enemy-look.js`).
-- Validation (D80): a chaser needs an aggro range, a peaceful enemy can't
-  have a charged attack, no enemy may start on a lethal block, and an
-  enemy's bad override names its template (it said `type "undefined"`).
-- Every enemy type is an enemy template now (D79): a room enemy names its
-  `"template"` (was `"type"`), a template may build on another
-  (`extends` chains), and the room editor updates, renames and deletes
-  any template, the base ones too; Update says which rooms and templates
-  a change reaches.
-- Enemies never walk into a hole or onto a void block any more, nor off a
-  ledge onto one (D78); they still fall in if the ground goes from under
-  them.
-- Shaders of hidden effects (pixel bursts, the cast flare) and of each
-  new room are compiled while the room loads, for the buffer they are
-  really drawn into, instead of on first use during play (D76).
-- A data disk takes 7 draw calls instead of 36 (its zero bits are one
-  line); it looks the same (D76).
-- Energy in whole units (D72): 50 at most, one back every 0.2 s, Zap
-  costs 10. The HUD energy bar has segments of 10 energy whatever the
-  spell (spell costs stay multiples of 10); hidden until the first spell.
-- `tools\room-pr.bat` is now `tools\map-pr.bat`: one PR for room and
-  world map changes (branch `feat/map-<date>`, title `feat(map): …`); its
-  summary says whether rooms, the map or enemy templates changed.
-- Phase plan (D65): the old Phase 3 splits into Phase 3 (v0.3, spells and
-  pickups) and Phase 4 (v0.4, Wardens, saves, map, tooling); polish moves
-  to Phase 5. Phase 3 step plan in docs/design.md: a world map tool for
-  the developer first (its own page, room positions in `world.json`,
-  D66), a spell roster discussion step, and a world-targets discussion
-  opening the score step.
-- Design direction (D67): exploring is part of the game, so development
-  tools stay hidden from players; the world is a maze with backtracking,
-  so a room need not be fully solvable on first arrival; later spells let
-  the wizard speedrun simple rooms or solve them differently; every
-  permanent pickup is one save bit and shows grayed out on revisits.
-- Switches (D69): pressure plates held by a crate and targets hit by a
-  bolt unlock exits; a new Phase 3 step after data disks.
-- World targets (D68): towards 128 rooms (more small rooms), up to 16
-  spells including upgrades, buff items (integrity, energy, jump) and
-  access levels locking areas; stronger spells and buffs skip rooms and
-  open areas; saves keep what the wizard has, no per-room data. Phase 3
-  gains a buff-items step and access levels.
+- Energy is whole units (D72): 50, one back every 0.2 s, Zap 10; the bar
+  has segments of 10 and shows once a spell is known.
+- Enemy types are templates (D79): a room enemy names its `template`,
+  templates may `extend` in chains, and the editor updates, renames and
+  deletes any of them. `contact` attacks are `touch` (D78).
+- Enemies never walk into holes or onto void (D78); chasers route round
+  walls, never meet head-on in a cell, and drop when the ground goes
+  mid-step (D80).
+- Color rules (D98, D99): red hurts, the room color is structure (with
+  collapsing blocks), black is a pit (void is black mist), white a
+  mechanism, cyan moves, magenta is the wizard, lime is pushable;
+  Phantom Partition is pale violet. A test keeps biome colors clear.
+- Every locked exit is a dark door panel with one light per switch (D101).
+- Shaders compile while a room loads, hidden effects included; a data disk
+  takes 7 draw calls instead of 36 (D76).
+- `tools\room-pr.bat` is `tools\map-pr.bat`: one PR for room, map and
+  template changes.
+- `game.js` split into `spells.js`, `combat.js` and `switches.js`.
+- Plans (D65, D67, D68, D88, D89, D91): Phase 3 split from Phase 4; the
+  world is a maze with backtracking; targets towards 128 rooms; the spell
+  roster (Compile, Fork, Scan, Pull planned for Phase 4).
+- Docs pass: finished phase plans dropped from docs/design.md, stale
+  descriptions fixed; CLAUDE.md, the decision log and this changelog
+  condensed; code comments lose phase and step tags and design-history
+  asides, and a wrong decision citation is fixed.
 
 ## [0.2.0] - 2026-09-27
 
 Phase 2 — Hazards, combat, editor.
 
 ### Added
-- Damage (Phase 2 step 1): every source goes through `Game.hurt()`; after
-  a hit his hologram flashes white, then magenta, and he is invulnerable
-  for 1 s and blinks. At 0 integrity he derezzes into pixels and recompiles
-  at the room's reset point after about 1.1 s. Death events name their cause (`hole` or
-  `damage`), each with its own terminal line.
-- Asset showcase: `wizard-hit` loops the hit flash, the blink and the derez.
-- Hazard and void blocks (Phase 2 step 2): a `type` on room blocks, with
-  their color and the hazard's damage in `defs.json` `blocks`. Touching a
-  hazard hurts, and the block flares; landing on void is instant death
-  (cause `void`, own terminal line). Both have animated looks: red pixels
-  switching on and off, and grains sinking inside a black void block.
-  Validation keeps spawn and reset points off them and raised exits off
-  void. New test room Fault Line east of Stack Yard; showcase
-  `block-hazard`, `block-void` and `blocks-in-room`.
-- Moving platforms (Phase 2 step 3): a `platform` object type following a
-  `path` in room data (from `at` through `points`, ping-pong or loop,
-  speed, pause at the ends), the format patrolling enemies will share. The
-  wizard and resting crates (and stacks) ride them; a crate in the way
-  makes a platform wait; the wizard in the way is shoved aside, or hurt if
-  there is no room, never killed outright. A glowing guide line through the
-  middle of each path.
-  Validation checks path legs, blocks on the path and exits. New test
-  room Transit Bus behind a raised exit on Fault Line's lookout; showcase
-  `platform` and `platforms`.
-- Collapsing blocks (Phase 2 step 4): a `collapsing` object type that
-  shakes for 0.5 s once the wizard stands on it, then breaks into pixels
-  and is gone; whatever stood on it falls. Crates don't trigger them. An
-  optional `regrow` time in room data brings one back once its cell is
-  clear. They may stand in holes as bridges that give way. New test room
-  Volatile Memory behind a raised exit on Transit Bus's high ledge;
-  showcase `collapsing` and `collapsing-cycle`.
-- Enemies and bugs (Phase 2 step 5): data-driven enemy types in
-  `defs.json` `enemies` (movement, attack, hostility, aggro range,
-  integrity, damage, speed, bounce, color) and an `enemies` list in room
-  data with per-enemy overrides. Movement behaviors in `src/ai/` (`patrol`
-  on the shared path format, `stationary`). Enemies step cell by cell,
-  turn back when blocked, walk off ledges and fall, ride platforms, and pop
-  in holes and on void blocks; crates rest on them. The wizard walks
-  through them; touching a hostile one hurts, and landing on a bouncy one
-  (every bug by default) launches him 2 blocks up. `solid` enemies block
-  him, carry him when he stands on them and shove him (D51). The bug: a mint-green
-  hologram ball whose eyes show its mood (red hostile, amber provoked,
-  cyan peaceful), hopping as it walks and squashing when bounced on. Enemy
-  collision boxes in debug mode. New test
-  room Crawl Space behind a raised exit on Volatile Memory's high ledge;
-  showcase `bug`, `bug-provoked`, `bug-peaceful`, `bug-bounce`, `bug-pop`.
-- Zap and energy (Phase 2 step 6): E or Numpad 0 fires a Zap bolt the
-  way the wizard aims, for 2 of his 10 energy (1 per second comes back, a
-  0.25 s cooldown between casts). The bolt stops at the first enemy,
-  block, object or room side; a hit takes 1 integrity and provokes the
-  enemy. A bug now takes two hits (D52): the first flashes it and leaves it
-  glitching, the second pops it. A lime energy bar under integrity, one
-  segment per Zap, flashes when a cast fails. Spell tuning in `defs.json`
-  `spells`; bolt boxes in debug mode. The selected spell shows in a tag
-  under the energy bar; Tab switches spells once there are more (D54). Crawl Space gets an amber bug with 4
-  integrity; showcase `zap-bolt`, `zap-bug`, `zap-crate`.
-- Destructible crates (D53): a pushable type with `integrity` breaks into
-  pixels once Zaps have taken it all; what stood on it falls. `crate_cross`
-  is destructible (1 Zap). Crates show data bits: the plain `crate` a
-  whole grid of small pale squares on each face (new `bits` mark, tinted faces like `crate_cross`), a
-  destructible one the grid with holes. Showcase `zap-break`.
-- X-ray outline (Phase 2 step 7): the parts of the wizard hidden behind
-  blocks, objects or enemies show through as a ghost with a bright rim in
-  his own colors (D55); it blinks and flashes with him and is hidden while
-  he is dead. Boot Sector gets a 2-high wall near the front to walk
-  behind; showcase `xray` (showcase assets can now stand still).
-- Room editor, static part (Phase 2 step 8a, D56): F2 freezes the game
-  and edits the current room in the real look, one height layer at a time.
-  Place and erase plain, hazard and void blocks, holes, objects (crates,
-  collapsing blocks with a regrow time), the spawn and reset points; set
-  the room's name, biome and size; undo and redo; errors listed live. F2
-  again plays the edited room. In the dev server Save checks the room with
-  all the data and writes `data/rooms/<id>.json`, keeping untouched block
-  entries and the hand-written JSON style; the deployed build exports the
-  file. Keys typed into the editor's fields no longer reach the game.
-- Room editor, moving part (Phase 2 step 8b, D57): Enemy, Path and Exit
-  tools (keys 6–8; Spawn and Reset move to 9 and 0). Place enemies with
-  their movement, hostility, bounce and solid settings, or click one to
-  pick and change it; draw platform and patrol paths cell by cell (corners
-  added, right click takes a point off; mode, speed and pause in the
-  panel), shown as dashed lines; open exits in edge cells and pick what
-  they lead to from the fitting exits of other rooms. Platforms can be
-  placed now. The panel lists every room to switch to and makes new, empty
-  ones. Save writes all edited rooms and `world.json` together once the
-  whole data checks out; the build exports each changed file.
-- Enemy templates (D58): an enemy type in `defs.json` can `extend` a base
-  type with only the values it changes, and looks like its base. The room
-  editor saves the Enemy panel's settings as a template, lists templates
-  in the Type list, and Update template moves an enemy's own settings into
-  its template; `defs.json` is saved with the rooms. The Enemy panel also
-  sets integrity, damage, speed and color.
-- Room editor improvements (second review, D59): **hide above** draws the
-  room without what is above the edited layer; a line names what is in
-  the cell under the mouse; Delete removes the picked object, enemy or
-  exit; a picked exit's position and floor level are set in the panel,
-  and a new width goes to the exit it leads to too; an enemy's editor-made
-  id follows its type (`bug_1` → `virus_1`); errors are grouped by file
-  and a click goes to the room, tool, thing and layer; a new room never
-  saved can be discarded; templates can be renamed and deleted, and
-  template changes are undo steps of their room; shrinking a room moves
-  spawn and reset inside and lists what was dropped. Editor logic moved
-  into tested modules (`defs-edit.js`, `errors.js`, `linkChoices()`), and
-  a room's text is kept until it changes, so the unsaved check doesn't
-  re-format every open room on each painted cell.
-- Room design checklist in docs/design.md: reach, timing budgets,
-  readability and soft-lock checks collected from playtests; the basis for
-  the Phase 3 room design skill and level review subagent.
-- Six biomes (D61): Home Lattice (core), Glitchmire, Frostbyte Wastes,
-  Abyssal Buffer, Firewall Citadel and Phantom Partition (special), with
-  names and room colors; looks planned in docs/design.md.
-- Biome surroundings (D62): an optional `look` in `biomes.json` sets the
-  background, the color and fade of the floor grid outside the room, the
-  wall grid brightness and the bloom strength; each of the six biomes has
-  its own.
+- Damage (D43): every source goes through `Game.hurt()`; a hit flashes
+  the wizard and leaves him invulnerable for 1 s, blinking; at 0
+  integrity he derezzes and recompiles at the room's reset point.
+- Hazard and void blocks (D44): hazards hurt on touch, landing on void
+  kills; animated looks. Test room Fault Line.
+- Moving platforms (D46): objects on a `path` that carry the wizard and
+  crates, wait for crates, shove or squeeze him (never fatally), with a
+  guide line. Test room Transit Bus.
+- Collapsing blocks (D47): give way 0.5 s after he stands on one,
+  optionally regrow; may bridge holes. Test room Volatile Memory.
+- Enemies and bugs (D48, D50, D51): data-driven enemy types with
+  per-room overrides, cell-by-cell movement with physics, hostility shown
+  by eye color, bouncy and solid enemies; movement behaviors in `src/ai/`.
+  Test room Crawl Space.
+- Zap and energy (D52, D54): E or Numpad 0 fires a bolt the way he aims;
+  a bug takes two hits; an energy bar and a spell tag in the HUD.
+- Destructible crates (D53): pushables with `integrity`, drawn with data
+  bits.
+- X-ray outline (D55): the hidden parts of the wizard show as a ghost.
+- Room editor (D56, D57, D59): F2 edits the current room in place, one
+  layer at a time: blocks, holes, objects, enemies, paths, exits and their
+  connections, spawn and reset, room settings, undo and redo, live errors;
+  the dev server saves rooms and `world.json` together, a build exports.
+- Enemy templates (D58): enemy types that `extend` a base, made and
+  updated from the room editor.
+- Six biomes with their own surroundings (D61, D62).
+- Room design checklist in docs/design.md.
 
 ### Fixed
-- Volatile Memory: the crate on the one-shot bridge now starts on a plain
-  ledge, so it can be pushed onto the bridge from solid ground (pushing
-  from a collapsing block took as long as the block's shake).
+- Volatile Memory's one-shot bridge crate starts on solid ground.
 - A room without objects logged a three.js error on entry.
-- `npm test` failed on Node 22+ (CI) after the Node 20 change: it now runs
-  through `tools/run-tests.js`, which lists the test files itself.
-- A moving platform could carry a solid enemy into the wizard (mid-jump
-  beside it); it now waits, as it does for crates.
-- Room resets no longer free the hologram materials that the new views
-  share, so enemy shaders aren't compiled again after each death or
-  re-entry.
-- Room editor review fixes: F2 leaves the editor even while a panel field
-  has focus, and the typed value counts; leaving checks and plays the room
-  with the edit made that same frame; placing a collapsing block again
-  without a regrow time clears its `regrow`; the dev server takes saves
-  only as a JSON POST from the game's own page, so other sites open in the
-  browser can't overwrite rooms; `tools/room-pr.bat` takes a description
-  with `( ) & < > |` in it.
-- Room editor, second review: a click with the Object tool on a platform of
-  the same type no longer replaces it and drops its path (an object of
-  the same type only takes the regrow time); the Path tool no longer gives
-  a stationary enemy an invalid path; Save checks an edit made that same
-  frame and ignores a second click while saving; Ctrl+S in a panel field
-  saves instead of opening the browser's Save Page; the cursor follows a
-  layer or tool change without moving the mouse; blanking the room name
-  shows the name again; Revert is enabled only when the room or its own
-  connections changed, and a room whose connections changed shows as
-  unsaved; `tools/room-pr.bat` sends `data/defs.json` (enemy templates)
-  too.
+- `npm test` on Node 22+ runs through `tools/run-tests.js`.
+- A platform could carry a solid enemy into the wizard.
+- Room resets no longer recompile shared hologram shaders.
+- Room editor review fixes (focus, saving, paths, platforms, Revert) and
+  the dev server's save endpoint accepts only the game's own page.
 
 ### Changed
-- Block types are open and data-driven (D60): `defs.json` `blocks` lists
-  every block type (`block`, `hazard`, `void`, `collapsing`,
-  `collapsing_regrow`) with a look or a kind, a color and properties
-  (`damage`, `lethal`, `regrow`); variants `extend` a base type. The grid
-  holds a type code per cell and the rules ask about properties, not
-  names. Collapsing blocks are painted as block boxes (each cell still runs
-  as its own object; regrow time on the type), so Volatile Memory's
-  bridges are one line each. The editor has one Block tool with a type
-  list; tools are now 1–8.
-- Block edges (D64): neighbouring plain blocks of different types join
-  without a seam, each edge in the color of a type around it; hazard and
-  void blocks always show their outline, and a line they share with plain
-  blocks is theirs alone (no amber showing around the thin void frame).
-- Glitch Zone is now Glitchmire (`glitchmire`), hot pink instead of
-  magenta so collapsing blocks stand out; Stack Yard uses it.
-- Enemy code cleanup: shared collision helpers (`restsOn()`, `cellBox()`,
-  `REST_EPS`) replace copies in every entity; `EnemyView` draws any enemy
-  type through `ENEMY_MODELS` (the bug is `BUG_MODEL`); fewer allocations
-  per enemy per tick; shared bug geometry.
-- Drop shadows only under the wizard for now (D50): falling crates' shadow
-  is switched off (`DROP_SHADOWS` in `render/entity-view.js`); enemies
-  have none.
-- Test rooms hang off Boot Sector instead of one long row (D49): new west
-  and south exits lead to Crawl Space and Transit Bus, so every test room
-  is at most two rooms from the start.
-- Phase 2 planned step by step (docs/design.md, D43); biome environmental
-  effects moved to Phase 4.
-- Versioning (D42): `package.json` holds the phase (MAJOR.MINOR.0) and
-  the patch number counts pull requests merged since the phase's tag,
-  computed at build time.
+- Block types are open and data-driven (D60): properties, a look or a
+  kind, `extends`; collapsing blocks are painted as block boxes.
+- Edges between block types (D64): plain types join without a seam;
+  hazard and void always show their outline.
+- Glitch Zone is Glitchmire, hot pink.
+- Drop shadows only under the wizard (D50).
+- Test rooms hang off Boot Sector (D49).
+- Versioning (D42): PATCH counts merged PRs since the phase's tag.
+- Enemy code cleanup: shared collision helpers, enemy models by look.
 
 ## [0.1.0] - 2026-09-26
 
 Phase 1 — Foundations.
 
 ### Added
-- Project scaffolding: Vite, placeholder title screen, unit tests with
-  `node --test`, GitHub Actions CI (test + build), GitHub Pages deploy of
-  `main`, PR template, docs skeleton.
-- Fixed-timestep game loop (60 logic updates per second, interpolation
-  alpha for rendering, capped catch-up).
-- Action-mapped keyboard input with default bindings; taps shorter than a
-  tick are never lost.
-- Isometric neon renderer: letterboxed 16:9 stage, capped pixel ratio and
-  render scale (`?scale=0.5`), fixed isometric camera, thick neon edges
-  scaled with render height, bloom, amber room grid on a fading dark-gray
-  infinite floor grid, back walls and dark occluding block faces.
-- Game data in `data/` (rooms, object types, biomes, world) with JSON
-  Schemas in `schemas/`; Ajv check in the dev server, the build and
-  `npm run validate:data` (CI); semantic checks at load time; the start
-  room is built from JSON; error screen listing every data problem.
-- First room "Boot Sector" with two crates (not pushable yet).
-- Object type styles (dashed edges, face marks, tinted faces) so types
-  differ by shape, not only color; box variants as named types in
-  `defs.json`, shown side by side in Boot Sector.
-- Floor holes in room data (`holes`): drawn as black pits on a faintly
-  tinted room floor, validated (inside the room, nothing standing in them,
-  spawn not above one).
-- The wizard, drawn as a hologram (dark core, glowing silhouette,
-  scanlines, neon outline, glowing eyes): magenta cone body and tilted
-  pointy hat, cyan ball head and floating hands; walks along the grid axes
-  (Right ↗, Up ↖, Left ↙, Down ↘), jumps exactly one block high
-  (with coyote time and a jump buffer), falls with gravity and collides
-  with blocks, objects and the room sides. Motion is interpolated between
-  logic ticks; a glowing drop shadow shows where he will land.
-- Falling into a hole: the wizard drops into the pit and respawns at the
-  room spawn.
-- Asset showcase (`/tools/showcase.html`): every character and object look
-  on a turntable, also on the deployed site.
-- Pushable crates: walk into one to shove it a cell (hold to keep pushing);
-  crates fall off ledges, stack, rest on the wizard, show a drop shadow
-  while falling and can't be pushed with something on top. A crate pushed
-  into a hole plugs it and the tile becomes floor.
-- Dying resets the room.
-- Flip-screen exits: doorways in the back walls leading into a dark
-  tunnel, gaps on the front sides; walking out loads the connected room at
-  the matching exit (offset along the edge kept), which becomes the respawn
-  point. Rooms fade out and in through black. Exits show where they lead
-  in the color of the next room: dashes flowing into the doorway tunnel,
-  arrows gliding out of front exits (also in the asset showcase).
-  Crates can't be pushed out of a room; the first row inside an exit is
-  validated to be free.
-- Three connected test rooms: Boot Sector, Cache Hall (pit puzzle) and
-  Stack Yard (stacked crates, Glitch Zone color).
-- HUD: integrity bar (8 cells, flashing when lost, blinking when low), room
-  name banner that decodes in on entering a room, terminal messages typed
-  out bottom left (start, death, respawn, plugged hole), and a fullscreen
-  hint while the game is drawn below 1080 pixels high. F toggles
-  fullscreen. Bundled fonts (Orbitron, Share Tech Mono).
-- `data/strings.json` with its schema: every UI text by key.
-- `say()` and `announce()` (`src/core/messages.js`): any module can print a
-  terminal message or show a banner (used for room names).
-- Integrity: falling into a hole drains it, respawning restores it; it
-  carries over between rooms.
-- Debug mode (F3): wireframe collision boxes for blocks, the wizard and
-  pushables; a stats readout (room, tick/frame rate, buffer size, actions,
-  position); jumping straight to the next/previous room (`]` / `[`);
-  toggling invincibility (`I`); and a key to test damage (`H`) through the
-  same `Game.hurt()` real hazards will use later.
-- Screen-relative movement as an alternative to the default grid-aligned
-  keys: `G` switches between them, with a terminal message and a small
-  permanent HUD tag (bottom right) naming the active mode.
-- Rooms define their own death-respawn point (`reset`, defaults to `spawn`)
-  instead of respawning wherever the wizard last entered through a door.
-- `?msaa=0` turns multisampling off; the debug readout shows GPU shaders,
-  geometries and textures.
+- Project scaffolding: Vite, `node --test` unit tests, CI (test + build),
+  GitHub Pages deploy of `main`, PR template, docs.
+- Fixed-timestep loop (60 ticks per second, interpolated rendering) and
+  action-mapped keyboard input.
+- Isometric neon renderer: letterboxed 16:9 stage, render scale, fixed
+  camera, thick neon edges scaled with render height, bloom, a fading
+  floor grid, back walls and dark occluding faces.
+- Game data with JSON Schemas, Ajv checks in the dev server, build and
+  CI, semantic checks at load time and an error screen.
+- Object type styles (D17), holes (D18) and pushable crates that fall,
+  stack and plug holes (D25).
+- The wizard as a hologram (D21, D22): walks along the grid axes, jumps
+  exactly one block with coyote time and a jump buffer, falls, collides;
+  a glowing drop shadow. Screen-relative movement on G (D38).
+- Flip-screen exits with fades and exit effects in the destination color
+  (D26–D33); rooms reset on entry and on death (D24); each room has its
+  own respawn point (D39). Test rooms Boot Sector, Cache Hall, Stack Yard.
+- HUD (D34): integrity bar, room banner, terminal messages, fullscreen
+  hint (F), bundled fonts, all text in `data/strings.json`.
+- Debug mode (F3): collision boxes, stats, room jump, invincibility, test
+  damage (D37).
+- Asset showcase (`/tools/showcase.html`, D20).
 
 ### Changed
-- Phase 1 code review: rooms free the floor's hole-mask texture (it leaked
-  one per room entry and death), keep shared shaders across room changes,
-  and a respawn rebuilds only the object views. Window resizing
-  reallocates buffers only once it pauses.
-- The occupancy grid is typed arrays and the logic tick no longer
-  allocates per entity: about 1.7× more logic ticks per second.
-- Phase 2 groundwork: room objects are built and drawn by kind; grid cells
-  hold a type (D40); one Player for the whole game owns integrity, and the
-  tick returns typed events (D41).
-- Shared render builders (`neonLines`, `fadingLines`, `shadedFaces`),
-  `main.js` and `validateRoom()` split into focused parts, pure helpers
-  moved out of three.js view modules.
+- Phase 1 review: no leaked hole textures, shared shaders kept across
+  rooms, allocation-free ticks (about 1.7× faster logic), render builders
+  and validation split into focused parts; Phase 2 groundwork (D40, D41).
 
-### Removed
-- The four box-look crates in Boot Sector (the asset showcase shows them).
-
-[Unreleased]: https://github.com/bluedragon-ctrl/Neonmancer/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/bluedragon-ctrl/Neonmancer/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/bluedragon-ctrl/Neonmancer/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/bluedragon-ctrl/Neonmancer/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/bluedragon-ctrl/Neonmancer/releases/tag/v0.1.0

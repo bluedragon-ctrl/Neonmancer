@@ -1,8 +1,8 @@
 /**
  * An enemy (a corrupted program): a small body that moves one grid cell at
  * a time where its movement behavior (ai/behaviors.js) leads it, and falls
- * when nothing holds it up (D48). Everything about it comes from its type
- * in defs.json and the room's overrides: model, movement, attack,
+ * when nothing holds it up (D48). Everything about it comes from its
+ * template in defs.json and the room's overrides: look, movement, attack,
  * hostility, aggro range, integrity, damage, speeds, bounce, color and the
  * charged attack's values; any look, movement and attack combine (D78).
  * Pure logic, one call each to sense(), update() and updateAttack() per

@@ -1,7 +1,7 @@
 /**
  * three.js pieces of a frozen enemy (Pause, D85; timing in pause-fx.js):
  * corner brackets of a box round it in the spell's color, like a
- * selection, picked in the showcase over a pause sign and a draining clock.
+ * selection.
  */
 import { Group } from 'three';
 import { lineMaterial, neonLines } from './neon.js';

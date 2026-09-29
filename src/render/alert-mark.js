@@ -1,6 +1,6 @@
 /**
- * The alert mark: a red "!" bobbing above an enemy while it chases the
- * wizard (Phase 3 step 5), so a chase reads at a glance.
+ * The alert mark: a red "!" bobbing above an enemy that has noticed the
+ * wizard, so a chase reads at a glance.
  */
 import { BoxGeometry, Group, Mesh, MeshBasicMaterial } from 'three';
 import { PALETTE, shared } from './neon.js';

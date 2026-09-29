@@ -1,11 +1,10 @@
 /**
- * Refill looks (Phase 3 step 2): temporary pickups, smaller than a data
+ * Refill looks (D71): temporary pickups, smaller than a data
  * disk, hovering and spinning the same way (diskMotion()), in the color of
  * the HUD bar they fill. Integrity: a plus of five voxels (cyan). Energy: a
  * crystal, an octahedron (lime).
  *
- * Looks are reviewed in the asset showcase (`?asset=refills`) before they
- * go into the game.
+ * Showcase: `?asset=refills`.
  */
 import { BoxGeometry, Color, EdgesGeometry, Group, Mesh, OctahedronGeometry } from 'three';
 import { blockEdges } from './edges.js';

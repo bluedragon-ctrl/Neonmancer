@@ -130,28 +130,25 @@ mobile/touch support, backend or accounts.
 - No fall damage. The only instant death is falling onto void blocks.
 - On death the wizard derezzes into pixels and recompiles at the room
   entrance — quick and non-punishing.
-- Backups (lives, D92, D97): 8; each death uses one. With none left the
-  system crashes (`> SYSTEM CRASH`) and he reboots on the backup shrine
-  nearest on the world map (map cells |dx| + |dz|; ties to the one used
-  last), keeping everything found; only the clipboard and the room's
-  state are lost. A backup shrine is a floor tile (one per room at most);
-  stepping onto it refills integrity, energy and backups. A load always
-  starts with full backups, so the save key holds no backups field.
+- Backups (lives, D97): 8; each death uses one. With none left the
+  system crashes and he reboots on the backup shrine nearest on the world
+  map, keeping everything found; only the clipboard and the room's state
+  are lost. A shrine is a floor tile (one per room at most) that refills
+  integrity, energy and backups. A load starts with full backups, so the
+  save key holds none.
 
 ### Persistence
 - Rooms fully reset on re-entry (enemies, blocks, moving platforms).
 - Collected things stay collected: fragments, spells, upgrades, buffs and
   secrets.
-- The save holds what the wizard has (fragments, spells, items), not the
-  state of rooms: no per-room data such as the map (D68). There are no
-  bonus bits (D100).
-- Every permanent pickup (fragments, data disks, buff items, secrets) is
-  one bit in the save, found or not; there are only a limited number of
-  them. A bit is the item, not a place: the same item may lie in several
-  rooms (D71). A found one shows grayed out when its room is revisited (D67).
-  Temporary pickups (e.g. refills) are not saved and come back with the
-  room. Death resets the wizard to his base state, so a detour for a
-  temporary pickup can be worth it.
+- The save holds what the wizard has (permanent pickups, access level),
+  not the state of rooms or the map (D68). Every permanent pickup
+  (spells, upgrades, buffs, fragments, secrets) is one save bit, found or
+  not; a bit is the item, not a place, so the same item may lie in
+  several rooms (D71). A found one shows grayed out on revisits (D67).
+  Temporary pickups (refills) are not saved and come back with the room.
+  Death resets the wizard to his base state, so a detour for a refill
+  can be worth it.
 
 ---
 
@@ -190,43 +187,22 @@ Planned for Phase 4 (the roster, D88); details settle in their steps:
 - **Pull** — pulls the closest movable object (a crate) or enemy in the
   facing direction one tile towards the wizard (D89)
 
-Upgrades have their own cards and save bits (the upgrades block, not
-spells, D88); a spell upgrade replaces its base spell in the Tab cycle
-(ZAP becomes ZAP+):
-- **Zap+** — the bolt bounces three times off blocks and walls, reaching
-  targets round corners (D95)
-- **Shield+** (Shield upgrade) — reflects every bolt back the way it came;
-  it hurts the first enemy it meets (D95)
-- **Double jump** (D92, D95) — one more jump in mid-air, once until he
-  lands
+Upgrades (Zap+, Shield+, the double jump, D95) have their own save
+bits; a spell upgrade replaces its base spell in the Tab cycle (ZAP
+becomes ZAP+). Up to 16 spells and 16 upgrades; the spare ones wait for
+what content production needs (D88). Buff items make the wizard himself
+stronger (D93): +1 integrity ×4 (8 → 12), +10 energy ×5 (50 → 100), one
+faster recharge. A pickup's shape tells what it is (white disk: spell,
+card: upgrade, chip: buff, gold tile: fragment, magenta star: secret,
+small voxel: refill), its color the HUD bar it improves; found ones are
+gray (D94). Every permanent pickup plays the same install animation,
+then a banner and a terminal line (D93).
 
-An upgrade is an expansion card with contact fingers in its color (D95).
-
-Up to 16 spells and 16 upgrades; 11 spells and 3 upgrades are set, the
-rest stay spare for what content production needs (D88, D89). Intended order
-in the world: early Zap, Shield, Blink, Pause; middle Cut & Paste,
-Firewall, Fork, Scan and the double jump; late Compile, Warp, Zap+ and
-Shield+. Buff items make the wizard himself stronger: more integrity,
-more energy, faster recharge (D93): 4× +1 integrity (8 → 12), 5× +10
-energy (50 → 100) and one recharge buff (a unit every 8 ticks instead
-of 12); taking one fills the stat it raises. Each is a chip with its
-own save bit (buff slots 0–9). For the player, a pickup's shape tells
-what it is (white disk: spell, card: upgrade, chip: buff, magenta star: secret,
-small voxel: refill) and its color the HUD bar it improves (light blue
-integrity, yellow-green energy and recharge; a secret is magenta, D100); found ones are solid gray (D94). Stronger spells, upgrades
-and buffs all let him skip easier rooms and reach areas he couldn't
-before.
-
-Mana recharges slowly. Every permanent pickup (a spell disk, a buff,
-later upgrades and fragments) plays the same install animation as a
-spell: the item shrinks, its bits spiral into the wizard, rings in its
-color sweep up him and he flashes white; then a banner and a terminal
-line (D93). A new permanent pickup gets it too, with its own model.
-Later spells and upgrades are stronger: they let the wizard speedrun
-simple rooms or solve them differently. The world is a maze, not a line:
-a room need not be fully solvable on first arrival, and some of its exits
-and pickups wait for a spell or buff found later (backtracking, D67). He
-can always leave it again the way he came.
+Mana recharges slowly. Later spells and upgrades are stronger: they let
+the wizard skip easier rooms or solve them differently. The world is a
+maze, not a line: a room need not be fully solvable on first arrival,
+and some exits and pickups wait for a spell or buff found later
+(backtracking, D67). He can always leave a room the way he came.
 
 ### Enemies (corrupted programs; cute but clearly dangerous)
 - **Bugs** — patrol fixed paths
@@ -235,23 +211,20 @@ can always leave it again the way he came.
 - **Sentinels** — keep their distance and fire a long aimed bolt (D78)
 - **Worms** and **Crawlers** — a patroller and a chaser that bite on
   touch; **towers** (the cron look) fire bolts four ways (D83)
-- **Pop-ups** — stationary, fire slow projectiles
+- **Shooters** — stationary, fire slow bolts (the Pop-up idea, D84)
 - **Firewall Wardens** — tougher guardians blocking key rooms
 
-Each has a distinct color, silhouette and animation.
-AI is implemented as named behavior modules referenced from data.
-Enemies are universal and fully data-driven (D48, D78, D80): an enemy is
-a look, a movement, an attack (touch, burst, arc, bolt or none) and a
-color, and any of them combine. Template fields in `defs.json` (look,
-movement, attack, hostility — hostile / peaceful / provoked —, aggro
-range, integrity, damage, speed, chase speed, bounce, solid, pausable,
-color, a charged attack's range, charge, cooldown and color, and a bolt's
-speed, pattern — aimed or four ways — and bounces), overridable per enemy
-in the room. Any hit alerts an enemy, and the wizard gets the blame (D81).
-Eye color shows hostility (red hostile, amber provoked, cyan peaceful);
-a red "!" pops up over one that notices the wizard. Enemies move cell by
-cell with physics (fall, ride platforms), never step into holes or onto
-void, and pop if the ground goes from under them.
+Each has a distinct color, silhouette and animation. Enemies are
+universal and data-driven (D48, D78, D80): a template in `defs.json` is a
+look, a movement, an attack (touch, burst, arc, bolt or none), a
+hostility (hostile, peaceful, provoked) and a color, plus tuning; any of
+them combine, a template may `extend` another, and a room overrides any
+field per enemy (docs/design.md, Enemies); movement AI is named behavior
+modules referenced from data. Any hit alerts an enemy, and
+the wizard gets the blame (D81). Eye color shows hostility (red hostile,
+amber provoked, cyan peaceful); a red "!" pops up over one that notices
+him. Enemies move cell by cell with physics, never step into holes or
+onto void, and pop if the ground goes from under them.
 
 ### Biomes (Grid sectors)
 Each room has a biome defining look and optional environmental effects,
@@ -280,25 +253,19 @@ Behaviors below are ideas for Phase 5; for now biomes are look only.
   through the hues
 
 ### Goal
-Collect all key fragments (64, count in world data) and bring them to the
-central core. No time limit. Touching the core raises the wizard's access
-level to what his fragments earn (16 → 1, 32 → 2, 48 → 3, the last), which
-opens access-locked exits; with all 64 the Grid reboots, the end of the
-game (a placeholder screen for now), and he plays on (D101). The core is a
-placeable object, at most one in the world; a gold band round his hat per
-level shows his access. The fragments are the 64 modules of one 8×8
-QR-like code, the boot key, which the HUD shows filling in; an access lock
-shows its level as a gold Roman numeral.
+Collect the 64 key fragments and bring them to the central core (D101).
+Touching the core raises the wizard's access level to what his fragments
+earn (16 → 1, 32 → 2, 48 → 3), which opens access-locked exits; with all
+64 the Grid reboots (the end, a placeholder screen for now) and he plays
+on. No time limit. The fragments are the modules of one 8×8 QR-like boot
+key, which the HUD fills in; a gold band round his hat per level.
 
 ### Arcade layer
-The score is what the wizard has, not what he did (D100): 50 points per
-permanent pickup found, 200 per secret, 500 per access level (values in
-`defs.json` `score`); nothing for enemies, refills or rooms. It is
-worked out from the save bits, never saved itself. The HUD shows it in
-gold under the title with the share of the world's permanent pickups
-found (`42%`); a new score rolls up to its value, flashing. Secrets are
-permanent pickups (a star in the wizard's magenta) hidden where it takes an extra move, with
-their own save block. No bonus bits, no high score.
+The score is what the wizard has, not what he did (D100): points per
+permanent pickup, secret and access level (`defs.json` `score`), worked
+out from the save bits and never saved. The HUD shows it with the share
+of the world's permanent pickups found. Secrets are permanent pickups
+hidden where it takes an extra move. No bonus bits, no high score.
 
 ### Map
 Map screen showing visited rooms, connections and fragment markers.
@@ -406,15 +373,11 @@ not critical.
   visual asset (monsters, pickups) to it.
 - **Room editor** (in-game, Phase 2): place blocks, enemies and pickups
   with the mouse, preview in the real neon look, export room JSON.
-- **World map tool** (`tools/world-map.html`, Phase 3, D66): every room
-  as a node on a simple map grid (positions in `world.json`), with its
-  connections; drag rooms and save; adds and removes rooms and
-  connections (exits in the middle of the facing walls, D77); flags rooms
-  not reachable from the start; opens a room in the room editor; F3
-  shows the pickup report (every permanent item by save bit, where it
-  lies, not placed or placed twice). Dev
-  server only, never shown to players: exploring is part of the game
-  (D67).
+- **World map tool** (`tools/world-map.html`, D66, D77): every room on a
+  map grid with its connections; move, add and remove rooms and
+  connections; flags rooms out of reach; opens a room in the room editor;
+  F3 lists every permanent item by save bit and where it lies. Dev server
+  only, never shown to players: exploring is part of the game (D67).
 - **Reachability checker** (Phase 4): script that searches the grid with
   jump height, pushable objects and available spells to flag unsolvable
   rooms. Used by CI, the editor, and design skills/subagents.
@@ -487,29 +450,8 @@ not critical.
 
 ## 11. Phases
 
-**Phase 1 (v0.1) — Foundations**
-Vite setup, repo scaffolding, README, docs skeleton, PR template, CI
-(test + build). Fixed-timestep loop and input mapping. Isometric camera,
-resolution-independent rendering, neon wireframe room with bloom, back
-walls only. Player movement, jumping, gravity, grid collision, drop
-shadow. Pushable objects that fall and stack; floor holes (death trap,
-filled by pushed blocks). JSON Schema + validated
-room loading; 2–3 connected test rooms with flip-screen exits. Health
-HUD. Debug mode.
-
-**Phase 2 (v0.2) — Hazards, combat, editor**
-Damage, invulnerability and death at 0 integrity. Moving, collapsing,
-hazard and void blocks. Bugs enemy. Zap spell and mana. X-ray outline.
-In-game room editor with JSON export. Step plan: docs/design.md (D43).
-
-**Phase 3 (v0.3) — Spells and pickups**
-World map tool for the developer. Pickups and a progress model, data
-disks. Switches (pressure plates, bolt targets) unlocking exits. Viruses,
-Sentinels and Pop-ups. Shield, Firewall, Pause, Warp and Cut & Paste spells.
-A discussion step on further spells, spell upgrades and buff items; the
-first buff items; the upgrades Zap+, Shield+ and the double jump (D91, D92, D95).
-Backups (lives) and backup shrines (D92). Score and secrets (D100). Fragments, access levels
-and the core. Step plan: docs/design.md (D65).
+Done: Phase 1 (v0.1.0, foundations), Phase 2 (v0.2.0, hazards, combat,
+editor), Phase 3 (v0.3.0, spells and pickups); see CHANGELOG.md.
 
 **Phase 4 (v0.4) — Guardians, saves, tooling**
 Firewall Wardens. The roster's new spells (D88, D89): Compile, Fork,

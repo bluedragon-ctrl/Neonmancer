@@ -5,17 +5,16 @@ zapped into the Grid, a neon digital kingdom where magic and code are the same
 thing. Explore rooms, solve block puzzles, fight corrupted programs with spells
 and collect key fragments to reboot the Grid.
 
-> Status: early development. Phase 2 (v0.2.0, hazards, combat, editor) is
-> done: on top of Phase 1's walking, jumping and crate pushing, the wizard
-> takes damage and derezzes, crosses hazard and void blocks, rides moving
-> platforms, runs over collapsing blocks, fights bugs with the Zap spell and
-> shows through walls as an X-ray outline, across seven test rooms. Rooms
-> are made in the in-game room editor (F2), with open, data-driven block
-> types and six biome looks. No goal yet. Now: Phase 3 (spells and
-> pickups: a world map tool for the developer, data disks, switches,
-> Viruses and Pop-ups, four more spells, buff items, score and secrets,
-> fragments and the core), then Phase 4 (Wardens, more spells, saves,
-> the map, tooling).
+> Status: early development. Phase 3 (v0.3.0, spells and pickups) is
+> done: the wizard finds data disks for seven spells (Zap, Shield,
+> Firewall, Pause, Blink, Warp, Cut & Paste) and three upgrades (Zap+,
+> Shield+, the double jump), buff chips, secrets and the 64 key
+> fragments; switches and access levels lock exits; viruses, sentinels,
+> worms, crawlers and towers join the bugs; backups and backup shrines,
+> a score from what he has found, and the central core that raises his
+> access level and, with every fragment, reboots the Grid. Fifteen test
+> rooms, with a world map tool for the developer. Next: Phase 4
+> (Wardens, more spells, title screen, saves, the map, tooling).
 > Latest `main` build: https://bluedragon-ctrl.github.io/Neonmancer/
 
 ## Requirements
@@ -72,7 +71,7 @@ and map changes as one pull request.
 
 ## Versioning
 
-MAJOR.MINOR.PATCH: MINOR is the phase (0.2 = Phase 2), PATCH counts the
+MAJOR.MINOR.PATCH: MINOR is the phase (0.3 = Phase 3), PATCH counts the
 pull requests merged since that phase's release, computed at build time;
 1.0.0 will be the first full release. See CLAUDE.md §10 and D42.
 

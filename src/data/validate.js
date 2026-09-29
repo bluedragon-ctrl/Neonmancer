@@ -368,7 +368,7 @@ function validateObjects(checks, objectTypes) {
     // The core stands 2 high (D101): the cell above is its too.
     if (type?.kind === 'core') fillCell(checks, [object.at[0], object.at[1] + 1, object.at[2]], path);
 
-    // Platforms follow a path (D46); nothing else does yet.
+    // Among objects only platforms follow a path (D46).
     if (type?.kind === 'platform' && !object.path) report(path, 'a platform needs a "path"');
     if (type && type.kind !== 'platform' && object.path) report(`${path}.path`, `only platforms follow a path, not "${object.type}"`);
     if (type?.kind === 'platform' && object.path && inside) validatePath(checks, `${path}.path`, object);
