@@ -210,7 +210,7 @@ more energy, faster recharge (D93): 4× +1 integrity (8 → 12), 5× +10
 energy (50 → 100) and one recharge buff (a unit every 8 ticks instead
 of 12); taking one fills the stat it raises. Each is a chip with its
 own save bit (buff slots 0–9). For the player, a pickup's shape tells
-what it is (white disk: spell, card: upgrade, chip: buff, gem: secret,
+what it is (white disk: spell, card: upgrade, chip: buff, gold egg: secret,
 small voxel: refill) and its color the HUD bar it improves (light blue
 integrity, yellow-green energy and recharge, gold the score, D100); found ones are solid gray (D94). Stronger spells, upgrades
 and buffs all let him skip easier rooms and reach areas he couldn't
@@ -288,8 +288,8 @@ permanent pickup found, 200 per secret, 500 per access level (values in
 `defs.json` `score`); nothing for enemies, refills or rooms. It is
 worked out from the save bits, never saved itself. The HUD shows it in
 gold under the title with the share of the world's permanent pickups
-found (`42%`); each scoring pickup floats a `+50` popup. Secrets are
-permanent pickups (a gold gem) hidden where it takes an extra move, with
+found (`42%`); a new score rolls up to its value, flashing. Secrets are
+permanent pickups (a gold look, still being chosen) hidden where it takes an extra move, with
 their own save block. No bonus bits, no high score.
 
 ### Map

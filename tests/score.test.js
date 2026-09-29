@@ -4,8 +4,8 @@ import { takeAnnouncements, takeMessages } from '../src/core/messages.js';
 import { validateData } from '../src/data/validate.js';
 import { SCORE_COLOR } from '../src/entities/pickup.js';
 import { Game } from '../src/game.js';
-import { createGem } from '../src/render/gem.js';
-import { SCORE_POPUP, popupState } from '../src/render/score-popup.js';
+import { SECRET_VARIANTS, createSecret } from '../src/render/secret.js';
+import { SCORE_ROLL, rollScore } from '../src/ui/hud.js';
 import { Progress, saveBit } from '../src/world/progress.js';
 import { completion, placedBits, scoreOf } from '../src/world/score.js';
 import { PICKUPS, SCORE, SPELLS, dataFiles, gameData, idle, roomFile } from './helpers.js';
@@ -41,7 +41,7 @@ test('completion: the share of permanent pickups placed in the world that he fou
   assert.equal(completion(new Progress([0]), new Set()), 0);
 });
 
-test('a secret: a permanent pickup in its own save block; taking it scores 200 with a popup event and a banner (D100)', () => {
+test('a secret: a permanent pickup in its own save block; taking it scores 200 with a banner (D100)', () => {
   takeMessages();
   takeAnnouncements();
   const game = gameWith([
@@ -51,33 +51,30 @@ test('a secret: a permanent pickup in its own save block; taking it scores 200 w
   ]);
   assert.equal(game.score, 0);
   assert.equal(game.completion, 0);
-  const events = stepOnto(game, [4, 0, 4]);
-  const score = events.find((event) => event.type === 'score');
-  assert.deepEqual(score, { type: 'score', points: 200, at: [4.5, 0.5, 4.5], color: SCORE_COLOR });
+  assert.ok(stepOnto(game, [4, 0, 4]).some((event) => event.type === 'pickup'));
   assert.ok(game.progress.has(saveBit('secrets', 0)));
   assert.equal(game.score, 200);
   assert.equal(game.completion, 33);
   assert.deepEqual(takeMessages().map(({ key, values }) => [key, values]), [['msg.secretFound', { found: 1, total: 2 }]]);
   assert.equal(takeAnnouncements().at(-1).key, 'banner.secret');
 
-  const disk = stepOnto(game, [2, 0, 5]).find((event) => event.type === 'score');
-  assert.equal(disk.points, 50);
-  assert.equal(game.score, 250);
+  stepOnto(game, [2, 0, 5]);
+  assert.equal(game.score, 250, 'a disk adds 50');
 });
 
 test('the score follows the save: a loaded one scores what it holds, and found items stay ghosts', () => {
   const game = gameWith([{ id: 'a', type: 'secret_0', at: [4, 0, 4] }], { progress: new Progress([saveBit('secrets', 0), 0]) });
   assert.equal(game.score, 250);
   assert.equal(game.pickups[0].state, 'ghost');
-  assert.ok(!stepOnto(game, [4, 0, 4]).some((event) => event.type === 'score'), 'a ghost scores nothing');
+  assert.ok(!stepOnto(game, [4, 0, 4]).some((event) => event.type === 'pickup'), 'a ghost cannot be taken');
+  assert.equal(game.score, 250);
 });
 
 test('refills score nothing', () => {
   const game = gameWith([{ id: 'e', type: 'refill_energy', at: [4, 0, 4] }]);
   game.player.energy = 0;
-  const events = stepOnto(game, [4, 0, 4]);
-  assert.ok(events.some((event) => event.type === 'pickup'));
-  assert.ok(!events.some((event) => event.type === 'score'));
+  assert.ok(stepOnto(game, [4, 0, 4]).some((event) => event.type === 'pickup'));
+  assert.equal(game.score, 0);
 });
 
 test('defs: secret slots are unique (D100)', () => {
@@ -86,17 +83,17 @@ test('defs: secret slots are unique (D100)', () => {
   assert.match(validateData(files).join('\n'), /pickups\.secret_1\.slot: secret slot 0 is taken by "secret_0"/);
 });
 
-test('gem model: gold, gray once found', () => {
-  assert.equal(createGem().userData.color, SCORE_COLOR);
-  assert.notEqual(createGem({ ghost: true }).userData.color, SCORE_COLOR);
+test('secret model: every variant gold, gray once found', () => {
+  for (const variant of SECRET_VARIANTS) {
+    assert.equal(createSecret({ variant }).userData.color, SCORE_COLOR);
+    assert.notEqual(createSecret({ variant, ghost: true }).userData.color, SCORE_COLOR);
+  }
 });
 
-test('score popup: rises easing out, fades in its last part, then goes', () => {
-  const start = popupState(0);
-  assert.deepEqual(start, { rise: 0, opacity: 1 });
-  const mid = popupState(SCORE_POPUP.seconds * 0.5);
-  assert.ok(mid.rise > SCORE_POPUP.rise * 0.5, 'eases out');
-  assert.equal(mid.opacity, 1);
-  assert.ok(popupState(SCORE_POPUP.seconds * 0.9).opacity < 0.5);
-  assert.equal(popupState(SCORE_POPUP.seconds), null);
+test('HUD score rolls up to a new value: fast at first, then settling on it', () => {
+  assert.equal(rollScore(100, 300, 0), 100);
+  assert.ok(rollScore(100, 300, SCORE_ROLL / 2) > 200, 'eases out');
+  assert.equal(rollScore(100, 300, SCORE_ROLL), 300);
+  assert.equal(rollScore(100, 300, SCORE_ROLL * 2), 300);
+  assert.ok(Number.isInteger(rollScore(0, 50, 0.123)));
 });

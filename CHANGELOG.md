@@ -27,8 +27,8 @@ and the project uses [Semantic Versioning](https://semver.org/).
 - Score and secrets (Phase 3 step 15, D100): the score is what the
   wizard has found, 50 per permanent pickup, 200 per secret (500 per
   access level to come), shown in gold under the title with the share
-  of the world's permanent pickups found; each scoring pickup floats a
-  `+50` popup. Secrets are gold gems with their own 16 save bits, two in
+  of the world's permanent pickups found; a new score rolls up to its
+  value, flashing. Secrets are gold pickups with their own 16 save bits, two in
   the test rooms (Crawl Space, Upgrade Lab); the world map's pickup
   report (F3) lists them. No bonus bits and no high score; the save key
   drops its score field.

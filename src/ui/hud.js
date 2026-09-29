@@ -19,6 +19,21 @@ import { formatText, scrambleText } from './text.js';
 /** Integrity at or below this blinks as a warning. */
 const LOW_INTEGRITY = 2;
 
+/** The score rolling up to a new value (D100): seconds it takes. */
+export const SCORE_ROLL = 0.9;
+
+/**
+ * The score shown `t` seconds into a roll from `from` to `to`: fast at
+ * first, settling on the new value (ease out), whole points only.
+ * @param {number} from
+ * @param {number} to
+ * @param {number} t
+ */
+export function rollScore(from, to, t) {
+  const k = Math.min(1, Math.max(0, t / SCORE_ROLL));
+  return Math.round(from + (to - from) * (1 - (1 - k) ** 3));
+}
+
 export class Hud {
   /**
    * @param {HTMLElement} root the renderer's HUD overlay
@@ -58,7 +73,10 @@ export class Hud {
     this.scoreBox = find('.hud-score');
     this.scoreValue = find('.hud-score-value');
     this.scoreDone = find('.hud-score-done');
+    /** The score to show, the one shown, and the roll towards it: { from, time } or null. */
     this.score = null;
+    this.shownScore = 0;
+    this.roll = null;
     this.done = null;
     this.movementMode = null;
     this.energy = new EnergyBar(root, this.text('hud.energy'));
@@ -195,7 +213,8 @@ export class Hud {
 
   /**
    * The score and how much of the world's permanent pickups he has found
-   * (D100); a new score flashes.
+   * (D100). A new score rolls up to its value and flashes while it rolls
+   * (update()); the first one shows at once.
    * @param {number} score
    * @param {number} percent 0-100
    */
@@ -207,11 +226,18 @@ export class Hud {
     if (score === this.score) return;
     const first = this.score === null;
     this.score = score;
-    this.scoreValue.textContent = String(score).padStart(6, '0');
-    if (first) return;
-    this.scoreBox.classList.remove('scored');
-    void this.scoreBox.offsetWidth; // restart the animation
-    this.scoreBox.classList.add('scored');
+    if (first) {
+      this.showScore(score);
+      return;
+    }
+    this.roll = { from: this.shownScore, time: 0 };
+    this.scoreBox.classList.add('rolling');
+  }
+
+  /** @param {number} value */
+  showScore(value) {
+    this.shownScore = value;
+    this.scoreValue.textContent = String(value).padStart(6, '0');
   }
 
   /** A cast failed for lack of energy: flash the energy bar. */
@@ -254,6 +280,16 @@ export class Hud {
   /** @param {number} dt seconds since the last frame */
   update(dt) {
     this.frame++;
+
+    if (this.roll) {
+      this.roll.time += dt;
+      const value = rollScore(this.roll.from, this.score, this.roll.time);
+      if (value !== this.shownScore) this.showScore(value);
+      if (this.roll.time >= SCORE_ROLL) {
+        this.roll = null;
+        this.scoreBox.classList.remove('rolling');
+      }
+    }
 
     for (const { key, values } of takeMessages()) this.terminal.push(this.text(key, values));
     this.terminal.update(dt);

@@ -142,8 +142,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/card.js` | Upgrade card look (D95): a white expansion card, contact fingers in the upgrade's color with a key notch, a bracket, the upgrade's bit on both faces, ghost |
 | `render/switch-view.js` | Switch and locked-exit looks (`SWITCH_FX`): target and plate with their square bull's-eye, the lock's panel or bars with one light per switch; `TargetView`, `PlateView`, `LockView` (marks pure, tested) |
 | `render/chip.js` | Buff chip look (D93): chip in the stat's color, icon on the front, the buff's bit on the back, ghost |
-| `render/gem.js` | Secret look (D100): a gold gem, a stretched octahedron in the score's gold, ghost |
-| `render/score-popup.js` | Score popups (D100): `+50` sprites rising from a pickup in its color and fading, drawn over everything |
+| `render/secret.js` | Secret look (D100) in the score's gold, three variants under review (Easter egg, pixel "?", star), ghost |
 | `render/pickup-model.js` | A pickup's model by kind (disk, upgrade card, chip or refill), for the room view and the install animation |
 | `render/pickup-view.js` | A room pickup's view: its look, idle motion, ghost, pick-up effect |
 | `tools/showcase.html`, `tools/showcase.js` | Asset showcase page: every look on a turntable with the real renderer (also deployed) |

@@ -19,7 +19,7 @@ import { Grid } from './world/grid.js';
 import { nearestShrine } from './world/map.js';
 import { Progress, pickupBit } from './world/progress.js';
 import { buildRoom } from './world/room.js';
-import { bitPoints, completion, placedBits, scoreOf } from './world/score.js';
+import { completion, placedBits, scoreOf } from './world/score.js';
 
 /** Terminal message for each way to die (Player.deathCause). */
 const DEATH_MESSAGES = { hole: 'msg.die', void: 'msg.void', damage: 'msg.derez' };
@@ -39,7 +39,7 @@ export const TRANSITION = {
  * Something that happened, for views, the HUD and (later) sound. Returned
  * by Game.update() for the tick it happened in.
  * @typedef {object} GameEvent
- * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'|'warp'|'fizzle'|'cut'|'paste'|'airjump'|'reflect'|'shrine'|'crash'|'score'} type
+ * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'|'warp'|'fizzle'|'cut'|'paste'|'airjump'|'reflect'|'shrine'|'crash'} type
  * @property {string} [spell] the spell cast, failed, fizzled (nowhere to
  *   go, energy kept) or selected (cast, deny, fizzle, spell); the teleport (warp)
  * @property {number[]} [from] where a Blink or Warp started (warp)
@@ -69,9 +69,6 @@ export const TRANSITION = {
  *   reboots on the nearest backup shrine (D97)
  * @property {object} [exit] the exit walked out through (exit); a locked
  *   exit opening (unlock) or closing again (lock)
- * @property {number} [points] points a permanent pickup added (score, D100)
- * @property {number[]} [at] where it lay, the middle of its cell (score)
- * @property {string} [color] its color, for the popup (score)
  */
 
 export class Game {
@@ -449,7 +446,6 @@ export class Game {
       const { banner, message } = this.gain(data);
       announce(banner.key, banner.values, banner.options);
       say(message.key, message.values);
-      this.emit('score', { points: bitPoints(bit, this.content.score), at: [x + 0.5, y + 0.5, z + 0.5], color: banner.options.color });
       return true;
     }
     // A refill: integrity or energy, up to his maximum.

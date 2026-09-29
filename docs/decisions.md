@@ -1897,17 +1897,17 @@ Settles the score step (Phase 3 step 15):
 - **Secrets:** a permanent pickup of kind `secret`, hidden in
   hard-to-reach places, with its own save block of 16 bits after the
   fragments (bits 112–127; the pickups grow from 112 to 128 bits, and
-  fragments keep all 64). Its look is a gold gem (a stretched octahedron,
-  `render/gem.js`), in the gold of the HUD score it raises (D94); a found
-  one is a gray ghost. Taking one plays the install animation with
+  fragments keep all 64). Its look, in the gold of the HUD score it raises
+  (D94), is a gold Easter egg, a pixel "?" or a gold star (`render/secret.js`, three variants up for review; the egg until one is chosen); a found one is a gray ghost. A first draft, an
+  octahedron gem, read as the energy refill. Taking one plays the install animation with
   `> SECRET FOUND n/N` (N: the secrets placed in the world).
 - **No bonus bits:** the per-room collectibles, their slots and the "all
   bits collected" room bonus are dropped, and so is the local high score:
   with a fixed maximum it would only mean "found everything".
 - **HUD:** the score top right under the title, in gold, with the share
   of the world's permanent pickups found (`42%`; items placed in no room
-  don't count). Every pickup that scores floats a `+50` (`+200`) popup up
-  from where it lay, in its own color.
+  don't count). A new score rolls up to its value, flashing while it
+  rolls; there are no points popups over pickups (tried and dropped).
 **Why:** author's direction: the score should reward progress through
 the Grid (spells, upgrades, fragments, access), not room-by-room play or
 farming respawning enemies; an access level is an achievement, so it is

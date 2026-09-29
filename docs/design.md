@@ -840,17 +840,15 @@ Phase 3 step 15 (D100). The score is what the wizard has, not what he did.
   that he found, rounded down (`Game.completion`); items defined but
   placed in no room don't count.
 - **Secrets:** `{ "kind": "secret", "slot" }`, a bit in the secrets block
-  (slots unique, checked by validation). The look is a gold gem
-  (`render/gem.js`, a stretched octahedron, `SCORE_COLOR` `#ffe23d`), a
-  gray ghost once found. Taking one plays the install animation with the
+  (slots unique, checked by validation). The look, in `SCORE_COLOR` `#ffe23d`, is
+  a gold Easter egg, a pixel "?" or a gold star (`render/secret.js`, three variants up for review; the egg until one is chosen), a gray ghost once found. Taking one plays the install animation with the
   banner `SECRET FOUND / n / N` and `> SECRET FOUND n/N` (N: the secrets
   placed in the world). They lie where it takes an extra move: on the
   Crawl Space tower (the peaceful bouncy bug lifts the wizard there) and
   on the Upgrade Lab wall (the double jump).
 - **HUD:** `SCORE 000250 33%` in gold under the title, top right; a new
-  score flashes. Each scoring pickup floats `+50` / `+200` up from its
-  cell in its own color (`render/score-popup.js`, a sprite drawn over
-  everything, sized in world units).
+  score rolls up to its value in 0.9 s (`rollScore()` in `ui/hud.js`,
+  easing out), flashing while it rolls. No popups over pickups.
 - **Dropped:** bonus bits, their room slots, the "all bits collected"
   bonus and the local high score.
 
@@ -1496,7 +1494,7 @@ the author; the answers are recorded as decisions before the code lands.
 | 12 | `feat/buff-items` | The first buff items from the roster: pickups that raise the wizard's maximum integrity or energy, or his recharge rate, kept in `Progress`; HUD bars grow with them. The jump is an upgrade now (step 13, D92). |
 | 13 | `feat/upgrades` | Upgrades in the upgrades save block (bits 32–47, D88, D91, D92): an upgrade card that, once found, replaces its base spell in the Tab cycle (ZAP becomes ZAP+). Zap+: the bolt bounces off walls (the bolt bounces of D81), reaching targets round corners. Shield+: the Shield reflects bolts back at the shooter. The jump upgrade: a double jump or a higher jump (D92). Showcase, editor, validation, a test room. |
 | 14 | `feat/backups` | Backups, the wizard's lives (D92, D97): 8 on the Player, shown as pips under the integrity bar; each death uses one; with none left, `> SYSTEM CRASH` reboots him on the backup shrine nearest on the world map, keeping everything found (no rollback). A backup shrine is a floor tile in room data (`shrine`): stepping onto it refills integrity, energy and backups (`> BACKUP SAVED`). Shrine and pips in the wizard's magenta; showcase, editor tool, validation, shrines in three test rooms. |
-| 15 | `feat/score-and-secrets` | Score from what the wizard has (D100): 50 per permanent pickup, 200 per secret, 500 per access level; secrets (a gold gem, their own 16-bit save block); floating score popups; HUD score and completion. No bonus bits, no high score. |
+| 15 | `feat/score-and-secrets` | Score from what the wizard has (D100): 50 per permanent pickup, 200 per secret, 500 per access level; secrets (a gold look, their own 16-bit save block); HUD score rolling up, and completion. No bonus bits, no high score. |
 | 16 | `feat/fragments-and-access` | Fragment pickups, the fragment count and locations in `world.json`, the central core that takes them, `> FRAGMENT n/N GET!`, found fragments grayed out on revisits (D67), access levels that lock areas until the wizard's level is high enough (locked exits from step 4), the wizard's access level kept in `Progress` (its own 8-bit field in the save key, D91), and the end of the game. |
 | 17 | `chore/release-0.3.0` | Docs pass, CHANGELOG, `v0.3.0` tag and GitHub Release (CLAUDE.md §10) |
 

@@ -15,7 +15,6 @@ import { HOLO_TIME } from './render/holo.js';
 import { AutoQuality } from './render/quality.js';
 import { Renderer } from './render/renderer.js';
 import { RoomScene } from './render/room-scene.js';
-import { ScorePopups } from './render/score-popup.js';
 import { showErrorScreen } from './ui/error-screen.js';
 import { toggleFullscreen, wantsFullscreenHint } from './ui/fullscreen.js';
 import { Hud } from './ui/hud.js';
@@ -58,8 +57,6 @@ function boot() {
   const playerView = new PlayerView(game);
   renderer.scene.add(playerView.group);
   const roomScene = new RoomScene(renderer);
-  const popups = new ScorePopups();
-  renderer.scene.add(popups.group);
   /** @param {{ rebuild?: boolean }} [options] see RoomScene.show() */
   function showRoom(options) {
     roomScene.show(game, options);
@@ -95,11 +92,8 @@ function boot() {
       if (input.pressed('debugDamage')) game.hurt(1);
     }
     const events = game.update(input);
-    if (events.some((event) => event.type === 'room')) {
-      showRoom();
-      popups.clear();
-    }
-    showEvents(events, { game, roomScene, hud, debug, popups });
+    if (events.some((event) => event.type === 'room')) showRoom();
+    showEvents(events, { game, roomScene, hud, debug });
     readout.countTick();
   }
 
@@ -117,7 +111,6 @@ function boot() {
     editor.frame();
     playerView.sync(alpha, dt);
     roomScene.update(alpha, dt);
-    popups.update(dt);
     debug.sync(game, alpha);
     renderer.setFade(game.fadeLevel(alpha));
     syncHud(hud, game, renderer, dt);
@@ -131,10 +124,10 @@ function boot() {
 
 /**
  * One-off effects of a tick's game events in the views: flares, sparks,
- * the energy bar's denial, a cut or paste, score popups (D100).
+ * the energy bar's denial, a cut or paste.
  * @param {import('./game.js').GameEvent[]} events
  */
-function showEvents(events, { game, roomScene, hud, debug, popups }) {
+function showEvents(events, { game, roomScene, hud, debug }) {
   for (const event of events) {
     if (event.type === 'hurt' && event.cell) roomScene.flareHazard(event.cell);
     if (event.type === 'hurt' && event.object) roomScene.flareObject(event.object);
@@ -142,7 +135,6 @@ function showEvents(events, { game, roomScene, hud, debug, popups }) {
     if (event.type === 'ricochet') roomScene.sparks(event.bolt, event.pos, event.dir);
     if (event.type === 'deny') hud.denyEnergy();
     if (event.type === 'shrine') roomScene.useShrine();
-    if (event.type === 'score') popups.add(event);
     if (event.type === 'cut' || event.type === 'paste') {
       roomScene.clip(event);
       debug.setRoom(game.room, game.objects, game.enemies);
