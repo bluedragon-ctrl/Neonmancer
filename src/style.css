@@ -1196,9 +1196,13 @@ body {
     0 0 calc(10 * var(--u)) var(--room);
 }
 
+/* On a black plate, so they read against the glass. */
 .map-label-icons {
   display: flex;
   gap: calc(8 * var(--u) * var(--map-scale));
+  padding: calc(4 * var(--u) * var(--map-scale)) calc(7 * var(--u) * var(--map-scale));
+  border-radius: calc(4 * var(--u) * var(--map-scale));
+  background: rgba(0, 0, 0, 0.85);
 }
 
 .map-label .map-icon {

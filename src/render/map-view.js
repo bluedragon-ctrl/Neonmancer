@@ -23,8 +23,8 @@ export const MAP_LOOK = {
   /** World units (floor tiles) per map cell. */
   cell: 5,
   /** A room block's height, and the height its links and stubs run at. */
-  height: 1,
-  lineY: 0.5,
+  height: 0.7,
+  lineY: 0.35,
   /** Floor tiles round the rooms before the grid starts to fade. */
   margin: 1,
   /** Room edges: width (pixels at 1080p) and brightness, his room's brighter. */
