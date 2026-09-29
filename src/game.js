@@ -79,16 +79,30 @@ export class Game {
    * @param {string} [options.start] room to start in; world.json's start by default
    * @param {Progress} [options.progress] what he has found (a loaded save); nothing by default
    */
-  constructor(content, { start = content.world.start, progress = new Progress() } = {}) {
+  constructor(content, options) {
     this.content = content;
-    /** Permanent pickups found, for the whole game (D71): room resets and death leave it alone. */
-    this.progress = progress;
     /** Save bits of the permanent pickups placed in the world: what 100% means (D100). */
     this.placedBits = placedBits(content.pickupTypes, content.spells, content.rooms.values());
     /** Debug mode: holes and lethal blocks never kill and hurt() does nothing. */
     this.invincible = false;
     /** 'grid' (default, D23) or 'screen' (D38); toggled with G, not saved. */
     this.movementMode = 'grid';
+    this.reset(options);
+  }
+
+  /**
+   * Start the game over: a new wizard with what `progress` holds, in the
+   * room `start`, reset. Quitting to the title does this (a new game), and
+   * so will loading a save. Views keep this Game, so it changes in place.
+   * @param {object} [options] as for the constructor
+   * @param {string} [options.start]
+   * @param {Progress} [options.progress]
+   */
+  reset({ start = this.content.world.start, progress = new Progress() } = {}) {
+    /** Permanent pickups found, for the whole game (D71): room resets and death leave it alone. */
+    this.progress = progress;
+    // enterRoom() builds a different room even when it has the same id.
+    this.room = null;
     /** @type {GameEvent[]} events of the tick in progress (see emit()) */
     this.events = [];
     /** The wizard, for the whole game; each room places him (enterRoom()). */
@@ -100,7 +114,7 @@ export class Game {
     /** He died with no backups left: when he recompiles, the system crashes (D97). */
     this.crashing = false;
     /** Key fragments (world.json, D101): how many reboot the Grid, and the access levels they earn. */
-    this.fragmentRules = content.world.fragments ?? { required: SAVE_BLOCKS.fragments.size, access: [] };
+    this.fragmentRules = this.content.world.fragments ?? { required: SAVE_BLOCKS.fragments.size, access: [] };
     /** The core took every fragment it needs: the Grid rebooted (D101); he plays on. */
     this.won = false;
     this.learnSpells();
@@ -109,7 +123,7 @@ export class Game {
     this.applyBuffs();
     this.player.integrity = this.player.maxIntegrity;
     this.player.energy = this.player.maxEnergy;
-    this.enterRoom(start);
+    this.enterRoom(start, undefined, null);
     /**
      * Room transition in progress, or null: { phase: 'out' | 'in', tick, exit }.
      * Views read it through fadeLevel().

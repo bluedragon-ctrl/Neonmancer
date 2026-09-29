@@ -1,5 +1,6 @@
-// Entry point: load and validate the game data, show the start room, run
-// the loop. Any startup problem shows the error screen instead.
+// Entry point: load and validate the game data, show the title screen over
+// the start room, run the loop. Any startup problem shows the error screen
+// instead.
 import { FixedLoop } from './core/loop.js';
 import { Input } from './core/input.js';
 import { say } from './core/messages.js';
@@ -18,6 +19,8 @@ import { RoomScene } from './render/room-scene.js';
 import { showErrorScreen } from './ui/error-screen.js';
 import { toggleFullscreen, wantsFullscreenHint } from './ui/fullscreen.js';
 import { Hud } from './ui/hud.js';
+import { MenuScreen } from './ui/menu-screen.js';
+import { MenuFlow } from './ui/menus.js';
 
 const app = document.getElementById('app');
 
@@ -68,19 +71,65 @@ function boot() {
   const editor = new Editor({ game, renderer, files: DATA_FILES, canSave: DEV_SERVER, onRoom: (options) => showRoom({ rebuild: true, ...options }) });
   if (DEV_SERVER && params.has('edit')) editor.open();
 
-  say('msg.boot');
-  say('msg.welcome');
+  // The title screen first; the world map tool's links go straight in.
+  const flow = new MenuFlow(devRoom || (DEV_SERVER && params.has('edit')) ? 'playing' : 'title');
+  /** A menu command (ui/menus.js): a new game from the title, or back to it. */
+  function run(command) {
+    if (command === 'start') newGame();
+    // The title shows the start room behind it again.
+    if (command === 'quit') newGame({ quiet: true });
+  }
+  const menuScreen = new MenuScreen(renderer.stage, content.strings, {
+    onHover: (index) => flow.select(index),
+    onClick: (index) => {
+      flow.select(index);
+      run(flow.choose());
+    },
+  });
+  /**
+   * Start over in the start room with nothing found (nothing is saved yet,
+   * D105); `quiet` (behind the title) without the boot messages and banner.
+   */
+  function newGame({ quiet = false } = {}) {
+    hud.clear();
+    game.reset({ start: devRoom });
+    showRoom();
+    if (quiet) {
+      hud.clear();
+      return;
+    }
+    say('msg.boot');
+    say('msg.welcome');
+  }
+  if (flow.playing) {
+    say('msg.boot');
+    say('msg.welcome');
+  }
 
   const input = new Input();
   input.attach(window);
+  // Leaving the window pauses the game (checked in the next tick).
+  let blurred = false;
+  window.addEventListener('blur', () => (blurred = true));
 
   function update() {
     input.sample();
     if (input.pressed('fullscreen')) toggleFullscreen(document.documentElement);
     if (input.pressed('debug')) debug.toggle();
-    if (input.pressed('editor')) editor.toggle();
+    if (input.pressed('editor') && flow.playing) editor.toggle();
     // The game stands still while the room is being edited.
     if (editor.active) {
+      blurred = false;
+      readout.countTick();
+      return;
+    }
+    // The title screen and pause menu hold the game; the tick that closes
+    // one doesn't run it either, so its key does nothing in the game.
+    const wasPlaying = flow.playing;
+    if (blurred && !hud.winShown) flow.pause();
+    blurred = false;
+    run(flow.update(input));
+    if (!wasPlaying || !flow.playing) {
       readout.countTick();
       return;
     }
@@ -112,9 +161,12 @@ function boot() {
       renderer.setQuality(lowered);
       console.info(`Frames run slow: quality now MSAA ${renderer.multisampling}, render scale ${renderer.renderScale}`);
     }
-    const dt = Math.min(time - lastFrame, 0.1);
+    // Behind a menu the game stands still: no animation, no interpolation.
+    const dt = flow.playing ? Math.min(time - lastFrame, 0.1) : 0;
     lastFrame = time;
+    if (!flow.playing) alpha = 1;
 
+    menuScreen.show(flow);
     editor.frame();
     playerView.sync(alpha, dt);
     roomScene.update(alpha, dt);

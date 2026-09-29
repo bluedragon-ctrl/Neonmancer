@@ -12,13 +12,14 @@ for the current phase. Locked decisions live in CLAUDE.md; their reasons in
 | Jump | Space |
 | Cast (the selected spell) | E / Numpad 0 |
 | Switch spell | Tab (next) / Q (previous) |
-| Pause (Phase 4) | Esc / P |
+| Pause menu (and back, in a menu) | Esc / P |
 | Map (Phase 4) | M |
 | Switch movement mode | G |
 | Debug mode | F3 |
 | Room editor | F2 (see Room editor) |
 | Fullscreen | F |
 | Close the end-of-game screen | Enter |
+| Menus: choose, select | ↑ ↓ (or W S), Enter / Space; the mouse |
 
 Debug mode only, once toggled on with F3:
 
@@ -1570,7 +1571,7 @@ author, recorded as decisions before the code lands. Every step also
 Saves, guardians and tooling, in two parts (D105), planned step by step.
 
 **Phase 4a — saves and UI:** access-key codec with tests (done, D106);
-title screen and pause menu (the save UI needs both); saving and loading
+title screen and pause menu (done, D109); saving and loading
 (URL hash, localStorage); map screen.
 
 **Phase 4b — spells, bosses, tooling:** the roster's new spells, one
@@ -1671,6 +1672,22 @@ Open so far:
   come first (several enemies share them: phasing, blink, a slowing
   status, split on hit, mirroring, a directional shield); every new look
   goes to the showcase for the author's OK first.
+
+## Title screen and pause menu
+
+`src/ui/menus.js` (the logic, tested) and `src/ui/menu-screen.js` (the
+view), D109. The game opens on the title screen: the logo over the start
+room, dimmed and standing still, with **Start** and **Controls**. Esc or P
+in the game, or the window losing focus, opens the pause menu: **Resume**,
+**Controls**, **Quit to title**. Quitting asks first (*Keep playing* is
+selected), then starts a new game behind the title; nothing is saved yet
+(D105). Menus stack: Controls and the quit question open over the menu,
+and Esc or P closes the top one (the pause menu itself: back to the game).
+The tick that closes a menu does not run the game, so Enter or Space
+there never jumps. Behind a menu the game, its animations and the
+terminal stand still. Dev links from the world map tool (`?room`,
+`?edit`) start in the game. Coming with saving: Enter key on the title,
+Save, Copy key and Copy link in the pause menu.
 
 ## Access keys
 

@@ -39,8 +39,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 
 | Module | Responsibility |
 |---|---|
-| `main.js` | Bootstrap: load and validate data, build systems, route input, start the loop, error screen |
-| `game.js` | Owns game state; fixed-order `update()` returning typed events; room switching |
+| `main.js` | Bootstrap: load and validate data, build systems, route input (menus first), start the loop, error screen |
+| `game.js` | Owns game state; fixed-order `update()` returning typed events; room switching; `reset()` starts over in place (a new game) |
 | `spells.js` | What each spell does once cast (`SPELL_EFFECTS`): `castSpell(game)`, Blink and Warp, Cut & Paste |
 | `combat.js` | Bolts, enemies' charged attacks, bouncing off, touching and burning enemies; every hit on an enemy (`hitEnemy(game, …)`, `pauseEnemy(game, …)`) |
 | `switches.js` | Plates and the locked exits they open (D75): `updateSwitches(game)`, `exitOpen()`, `switchesOn()` |
@@ -149,6 +149,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `ui/energy-bar.js` | Energy bar: one segment per cast filling as it recharges; flashes on a denied cast |
 | `ui/error-screen.js` | Startup error screen listing every data problem |
 | `ui/fullscreen.js` | Fullscreen toggle and when to suggest it (below 1080 physical pixels; tested) |
+| `ui/menus.js` | Title screen and pause menu logic (D109): the stack of menus, selection, what an item does (pure, tested) |
+| `ui/menu-screen.js` | Title screen and pause menu on screen: logo, heading, items, controls table; mouse hover and click |
 | `ui/hud.js` | DOM overlay: integrity bar, backup pips, energy bar, spell tag and Cut & Paste clipboard slot, score, fragments and the boot key, room banner, terminal messages, end screen, fullscreen hint |
 | `ui/terminal.js` | Terminal message queue (typing, hold, fade) and banner timing (pure, tested) |
 | `ui/text.js` | String lookup with `{name}` values; scrambled "decoding" text for the banner (pure, tested) |

@@ -166,6 +166,8 @@ export class Hud {
       this.cellBox.append(cell);
       this.cells.push(cell);
     }
+    // Fewer after a new game (buffs gone).
+    while (this.cells.length > max) this.cells.pop().remove();
     this.cells.forEach((cell, i) => {
       const full = i < value;
       // Restart the flash animation on cells that were full a moment ago.
@@ -299,6 +301,27 @@ export class Hud {
     this.fragmentBox.hidden = found === 0 && level === 0;
     this.fragmentValue.textContent = `${String(found).padStart(String(total).length, '0')}/${total}`;
     this.accessTag.textContent = level > 0 ? `${this.text('hud.access')} ${level}` : '';
+  }
+
+  /**
+   * Forget the last game (a new one starts, ui/menus.js): its terminal
+   * lines, banner and end screen go, messages still queued are dropped,
+   * and the next score, integrity and backups show at once, without a
+   * roll or a flash.
+   */
+  clear() {
+    takeMessages();
+    takeAnnouncements();
+    this.terminal = new Terminal();
+    this.terminalBox.replaceChildren();
+    this.bannerTime = null;
+    this.banner.style.opacity = '0';
+    this.hideWin();
+    this.score = null;
+    this.roll = null;
+    this.scoreBox.classList.remove('rolling');
+    this.integrity = null;
+    this.backups = null;
   }
 
   /** Is the end-of-game screen up? */

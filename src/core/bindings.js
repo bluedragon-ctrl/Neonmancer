@@ -53,6 +53,6 @@ export const DEFAULT_BINDINGS = {
   fullscreen: ['KeyF'],
   // The room editor (src/editor/); its own keys are in src/editor/editor.js.
   editor: ['F2'],
-  // Closes the end-of-game screen (D101); later menus.
+  // Closes the end-of-game screen (D101); chooses in menus (D109).
   confirm: ['Enter', 'NumpadEnter'],
 };

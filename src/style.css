@@ -573,6 +573,167 @@ body {
   opacity: 0.7;
 }
 
+/* Title screen and pause menu (src/ui/menu-screen.js): an overlay over
+   the game and the HUD. The title screen hides the HUD and shows the start
+   room dimmed behind the logo. */
+.stage.titled .hud {
+  visibility: hidden;
+}
+
+.menu {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(34 * var(--u));
+  background: rgba(3, 4, 10, 0.72);
+  font-family: var(--arcade);
+  font-weight: 700;
+  text-align: center;
+  color: #fff;
+  user-select: none;
+  z-index: 10;
+}
+
+.menu.title {
+  background: radial-gradient(ellipse at center, rgba(3, 4, 10, 0.5), rgba(3, 4, 10, 0.9) 75%);
+}
+
+.menu[hidden],
+.menu [hidden] {
+  display: none;
+}
+
+.menu-logo-title {
+  font-size: calc(128 * var(--u));
+  letter-spacing: 0.1em;
+  color: #eaffff;
+  text-shadow:
+    0 0 calc(8 * var(--u)) var(--cyan),
+    0 0 calc(28 * var(--u)) var(--cyan),
+    0 0 calc(60 * var(--u)) var(--magenta);
+  animation: logo-flicker 5s steps(1) infinite;
+}
+
+/* Now and then the logo stutters, like a neon tube. */
+@keyframes logo-flicker {
+  0%,
+  93%,
+  95%,
+  100% {
+    opacity: 1;
+  }
+  94%,
+  96% {
+    opacity: 0.55;
+  }
+}
+
+.menu-logo-tag {
+  margin-top: calc(10 * var(--u));
+  font-size: calc(22 * var(--u));
+  letter-spacing: 0.6em;
+  color: var(--magenta);
+  text-shadow: 0 0 calc(10 * var(--u)) var(--magenta);
+}
+
+.menu-heading {
+  font-size: calc(64 * var(--u));
+  letter-spacing: 0.14em;
+  text-shadow:
+    0 0 calc(8 * var(--u)) var(--cyan),
+    0 0 calc(26 * var(--u)) var(--cyan);
+}
+
+.menu-body {
+  max-width: calc(1100 * var(--u));
+  font-family: var(--terminal);
+  font-weight: normal;
+  font-size: calc(24 * var(--u));
+  color: #dfe6ff;
+}
+
+/* Controls: action names right-aligned against their keys. */
+.menu-controls {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: calc(10 * var(--u)) calc(36 * var(--u));
+  margin: 0;
+  text-align: left;
+}
+
+.menu-controls dt {
+  font-family: var(--arcade);
+  font-weight: 700;
+  font-size: calc(18 * var(--u));
+  letter-spacing: 0.15em;
+  text-align: right;
+  color: var(--cyan);
+  text-shadow: 0 0 calc(8 * var(--u)) currentColor;
+}
+
+.menu-controls dd {
+  margin: 0;
+  color: var(--lime);
+}
+
+.menu-items {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(14 * var(--u));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.menu-items li {
+  padding: calc(6 * var(--u)) calc(28 * var(--u));
+  font-size: calc(30 * var(--u));
+  letter-spacing: 0.18em;
+  color: rgba(0, 240, 255, 0.55);
+  border: calc(2 * var(--u)) solid transparent;
+  transform: skewX(-12deg);
+  cursor: pointer;
+}
+
+/* The selected item: a glowing slanted frame, like the spell tag. */
+.menu-items li.selected {
+  color: #fff;
+  border-color: var(--cyan);
+  text-shadow: 0 0 calc(10 * var(--u)) var(--cyan);
+  box-shadow:
+    0 0 calc(12 * var(--u)) var(--cyan),
+    inset 0 0 calc(10 * var(--u)) rgba(0, 240, 255, 0.35);
+}
+
+.menu-help {
+  font-family: var(--terminal);
+  font-weight: normal;
+  font-size: calc(18 * var(--u));
+  letter-spacing: 0.1em;
+  white-space: pre;
+  color: var(--amber);
+  opacity: 0.75;
+}
+
+/* The version, bottom right on the title screen only. */
+.menu-version {
+  position: absolute;
+  right: calc(44 * var(--u));
+  bottom: calc(36 * var(--u));
+  font-size: calc(16 * var(--u));
+  letter-spacing: 0.12em;
+  color: var(--magenta);
+  text-shadow: 0 0 calc(6 * var(--u)) var(--magenta);
+}
+
+.menu:not(.title) .menu-version {
+  display: none;
+}
+
 /* Debug mode readout (F3), under the score: hidden until debug mode is on. */
 .readout {
   position: absolute;

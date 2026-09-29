@@ -12,10 +12,14 @@ Phase 4 splits into 4a (saves and UI) and 4b (spells, Firewall Wardens as
 bosses that drop loot, tooling) (D104, D105).
 
 ### Added
+- Title screen and pause menu (D109): the game opens on the logo over
+  the start room (Start, Controls); Esc or P, or leaving the window,
+  pauses it (Resume, Controls, Quit to title, which asks first). Arrows or
+  WASD, Enter or Space, and the mouse work in menus.
 - Access keys (D106): the save codec, 42 scrambled hex digits holding the
   room, access level, pickup bits and integrity with a CRC-16; reading
   forgives spaces, dashes, lowercase and look-alike letters, and says why
-  it refuses a key. Not in the game yet: saving comes with the pause menu.
+  it refuses a key. Not in the game yet: saving comes in the next step.
 - World map tool: exits show as marks on the room edges (cyan connected,
   magenta loose), and Delete removes one by a click on its mark (D102): a
   connected exit goes with its partner, a loose one alone. Connect uses a
