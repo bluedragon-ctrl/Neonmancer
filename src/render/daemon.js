@@ -1,6 +1,6 @@
 /**
  * The daemon model, a will-o'-the-wisp that is also a background process,
- * in the hologram look (D22). An enemy look (D104); no
+ * in the hologram look (D22). An enemy look (D107); no
  * defs.json template uses it yet, a room picks it with `look`.
  *
  * A floating teardrop flame with two slanted eyes, shedding square pixel

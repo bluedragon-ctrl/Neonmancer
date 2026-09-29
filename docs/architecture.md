@@ -62,6 +62,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `world/pickup-report.js` | The world map tool's pickup report: every permanent item by save bit, the rooms it lies in, refills per type, unknown types (pure, tested) |
 | `world/progress.js` | What the wizard has for the whole game (D71): save bits in blocks (`SAVE_BLOCKS`, `saveBit()`, `pickupBit()`), `Progress` (bits found, known spells, a block's count); blocks: spells, buffs, upgrades, fragments, secrets (D100) (pure, tested) |
 | `world/room.js` | Runtime room built fresh from data on every entry (type defaults + overrides; static block cells by type; cells of block types with a kind become room objects) |
+| `world/save-key.js` | Access keys (D106): `encodeKey()` writes what the wizard has (room number, access level, pickup bits, integrity) as 42 scrambled hex digits with a CRC-16; `decodeKey()` reads a typed or pasted key and names why it refuses one (pure, tested) |
 | `world/score.js` | The score (D100): points from the save bits (`scoreOf()`), the permanent pickups placed in the world (`placedBits()`) and the share found (`completion()`) (pure, tested) |
 | `physics/collision.js` | Axis-separated AABB movement against the grid; surface below a body; box helpers (`restsOn()`, `touchesBox()`, `shoveClear()`) shared by all entities |
 | `entities/bolt.js` | A bolt: the wizard's Zap or Pause (`Bolt.cast()`, level; a Pause bolt carries `freeze` ticks, D85) or an enemy's shot (`Bolt.shoot()`, D80; `boltDirections()`: aimed, or four ways, D81); flies in sub-steps one axis at a time, bounces off walls and objects if it has bounces left (D81), stops at the first body it may hit, block, object or room side (`BOLT` tuning) |
@@ -92,7 +93,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/core-view.js` | The core's reactor look (D101): crystal, pedestal, one orbit ring per access level, `CORE_FX` |
 | `render/crawler.js` | Crawler model (D83): six-legged spider, tripod gait (`crawlerFoot()`, `placeLimb()`), crouch and pawing, `CRAWLER` tuning; `CRAWLER_MODEL` |
 | `render/cron.js` | Cron model (D83), the tower's look: hex pedestal, bell, a dial holding the grid axes with four emitters where a cross's bolts leave, sweeping hand, slam, `CRON` tuning; `CRON_MODEL` |
-| `render/daemon.js` | Daemon model (D104): floating teardrop flame with embers, stretch and squeeze (`daemonStretch()`), `DAEMON` tuning; `DAEMON_MODEL` |
+| `render/daemon.js` | Daemon model (D107): floating teardrop flame with embers, stretch and squeeze (`daemonStretch()`), `DAEMON` tuning; `DAEMON_MODEL` |
 | `render/discharge.js` | Discharge lightning (D78): charge timing and glow (`dischargeLook()`, `chargeGlow()`), burst and arc zigzags (pure, tested), the aim line, `DISCHARGE` tuning |
 | `render/disk.js`, `render/refill.js` | Pickup looks: the data disk (bit grid showing the spell's slot, ghost, pick-up and pixel burst; motion pure, tested) and the refills |
 | `render/edges.js` | Visible block edges from grid occupancy; several plain types as one mass, each edge to a type (`groupedBlockEdges()`, D64); merging unit segments into runs (pure, tested) |
@@ -104,7 +105,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/floor.js` | Infinite grid floor fading into darkness; hole tiles cut out via a mask texture |
 | `render/fragment.js` | Key fragment look (D101): a gold tile with the boot key dim and its own module lit, ghost |
 | `render/glass.js` | Glass faces (D96): a see-through face shader (transparent, no depth written, clipping) and the data core's shrunk mark; a destructible glass crate is an empty shell (D99) |
-| `render/golem.js` | Golem model (D104): stacked rack units with blinking LEDs (`ledOn()`) and scrolling slats, block fists, stomping legs, `GOLEM` tuning; `GOLEM_MODEL` |
+| `render/golem.js` | Golem model (D107): stacked rack units with blinking LEDs (`ledOn()`) and scrolling slats, block fists, stomping legs, `GOLEM` tuning; `GOLEM_MODEL` |
 | `render/hash.js` | Fixed pseudo-random numbers for pixel bursts (pure) |
 | `render/hit-fx.js` | Damage look: blinking while invulnerable, derez flicker and pixel burst, `HIT_FX` tuning (pure, tested) |
 | `render/hole-view.js` | Hole pits: walls fading to black, rim, short fading corner lines; outline math (tested) |
@@ -115,12 +116,12 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/marks.js` | Face-mark line patterns for object styles, including the data bits, whole (`bits`) or with holes for destructible objects (`bitsBroken`, `bitLayout()`); pure, tested |
 | `render/mist.js` | Void blocks as black mist (D99): opaque black cubes with sinking gray wisps, a patchy fog shell and a dim frame, `MIST` tuning |
 | `render/neon.js` | Palette, line and face materials; line widths scaled by render height; `neonLines()`, `fadingLines()`, `shadedFaces()` builders; `disposeTree()` |
-| `render/overclock.js` | Overclock model (D104): burning CPU chip on its pins, flame crown (`overclockFire()`), sparks, glowing traces, `OVERCLOCK` tuning; `OVERCLOCK_MODEL` |
+| `render/overclock.js` | Overclock model (D107): burning CPU chip on its pins, flame crown (`overclockFire()`), sparks, glowing traces, `OVERCLOCK` tuning; `OVERCLOCK_MODEL` |
 | `render/pause-fx.js`, `render/pause-view.js` | A frozen enemy (Pause, D85): tint and blinking (pure, tested) and its cage of corner brackets, shown by `EnemyView` |
-| `render/phish.js` | Phish model (D104): a data disk (disk.js) that springs on legs with eye stalks and a toothed jaw, tell glitch (`phishGlitch()`), `PHISH` tuning; `PHISH_MODEL` |
+| `render/phish.js` | Phish model (D107): a data disk (disk.js) that springs on legs with eye stalks and a toothed jaw, tell glitch (`phishGlitch()`), `PHISH` tuning; `PHISH_MODEL` |
 | `render/pickup-model.js` | A pickup's model by kind (disk, upgrade card, chip, fragment, secret or refill), for the room view and the install animation |
 | `render/pickup-view.js` | A room pickup's view: its look, idle motion, ghost, pick-up effect |
-| `render/pixie.js` | Pixie model (D104): butterfly with pixel wings (`wingPixels()`), shimmer, flapping (`pixieFlap()`), dust, `PIXIE` tuning; `PIXIE_MODEL` |
+| `render/pixie.js` | Pixie model (D107): butterfly with pixel wings (`wingPixels()`), shimmer, flapping (`pixieFlap()`), dust, `PIXIE` tuning; `PIXIE_MODEL` |
 | `render/post.js` | pmndrs postprocessing composer (bloom) |
 | `render/quality.js` | Automatic quality fallback: steps MSAA, then render scale, down when frames run slow (D76; pure, tested) |
 | `render/rails.js` | Guide line along a platform's path, `RAILS` tuning (pure, tested) |
@@ -136,11 +137,11 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/viewport.js` | Letterbox, buffer size and 1080p-relative sizing math (pure, tested) |
 | `render/virus.js` | Virus model (D78): sharp tipped cube, orbiting bits, glide, charge pose, pop pixels, `VIRUS` tuning; `VIRUS_MODEL` |
 | `render/walls.js` | Back walls with doorways and dark tunnels behind them, front edges with gaps, arrow shape for front exits (pure, tested) |
-| `render/warden.js` | Warden model (D104): kite shield with brick seams, T-slit helm, gauntlets, greatsword poses (`swordAngle()`), `WARDEN` tuning; `WARDEN_MODEL` |
+| `render/warden.js` | Warden model (D107): kite shield with brick seams, T-slit helm, gauntlets, greatsword poses (`swordAngle()`), `WARDEN` tuning; `WARDEN_MODEL` |
 | `render/warp-fx.js`, `render/warp-view.js` | Blink's dash (drawn position and stretch, streaks, kicked-up pixels) and Warp's pixel stream and arrival flash (D86): the look (pure, tested) and its meshes, shown by `PlayerView` |
 | `render/wizard.js` | Wizard model: parts as data (pure, tested), built in the hologram look |
 | `render/worm.js` | Worm model (D83): head with antennae dragging a tail of balls, inching hump and wiggle (`wormSpine()`), rearing up, `WORM` tuning; `WORM_MODEL` |
-| `render/wyrm.js` | Wyrm model (D104): flying horned head trailing hex plates in shades of its color (`wyrmShades()`, `wyrmSpine()`), packets, jaw, `WYRM` tuning; `WYRM_MODEL` |
+| `render/wyrm.js` | Wyrm model (D107): flying horned head trailing hex plates in shades of its color (`wyrmShades()`, `wyrmSpine()`), packets, jaw, `WYRM` tuning; `WYRM_MODEL` |
 | `render/xray.js` | X-ray ghost of the wizard's hidden parts (reversed depth test), render orders of the ghost and the characters, `XRAY` tuning |
 | `render/zap-fx.js` | Zap look: trail zigzags, bolt flicker, cast flare, sparks, enemy hit flash and damaged glitch, `ZAP_FX` tuning (pure, tested) |
 | `render/zap-view.js` | Zap meshes: bolt, cast flare, sparks, in the Zap's cyan or an enemy bolt's color; `ZapView` keeps a room's bolts and sparks (pooled by color) |

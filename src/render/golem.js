@@ -1,6 +1,6 @@
 /**
  * The golem model, a stone golem built from a server rack, in the hologram
- * look (D22). An enemy look (D104); no defs.json template uses it yet, a
+ * look (D22). An enemy look (D107); no defs.json template uses it yet, a
  * room picks it with `look`. Meant for a slow solid patroller (D51) the wizard
  * can ride, or freeze with Pause for a step.
  *

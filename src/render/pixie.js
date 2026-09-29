@@ -1,6 +1,6 @@
 /**
  * The pixie model, a butterfly fairy whose wings are pixel displays, in
- * the hologram look (D22). An enemy look (D104); no
+ * the hologram look (D22). An enemy look (D107); no
  * defs.json template uses it yet, a room picks it with `look`. Meant for a flier with a bolt (it
  * flings pixel dust), or a peaceful one drifting about a room.
  *

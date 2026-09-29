@@ -449,7 +449,7 @@ and burst; a virus can patrol).
   round head with four eyes, thin jointed legs walking in a tripod gait
   (three feet down while the other three swing). After the wizard it
   crouches, walks faster and paws with its front legs.
-- **More looks (D104):** looks only so far: no `defs.json` template uses
+- **More looks (D107):** looks only so far: no `defs.json` template uses
   them, a room picks one with `look` in `overrides` (the showcase colors
   in brackets are suggestions). Each is taller or wider than its hitbox
   in places, for show.
@@ -499,14 +499,14 @@ and burst; a virus can patrol).
   `src/entities/bolt.js`, `PLAYER.bounceHeight`; the looks are `BUG` in
   `src/render/bug.js`, `VIRUS` in `src/render/virus.js`, `SENTINEL` in
   `src/render/sentinel.js`, `CRON`, `WORM` and `CRAWLER` in
-  `src/render/cron.js`, `worm.js` and `crawler.js`, and the D104 looks in
+  `src/render/cron.js`, `worm.js` and `crawler.js`, and the D107 looks in
   `warden.js`, `daemon.js`, `golem.js`, `wyrm.js`, `phish.js`,
   `overclock.js` and `pixie.js` (what they share, mood colors, eyes and the
   pop, in `src/render/enemy-look.js`), the lightning `DISCHARGE` in
   `src/render/discharge.js`; review in the asset showcase
   (`/tools/showcase.html?asset=bugs,viruses,sentinels,crons,worms,crawlers`;
   the bolt: `bug-bolt`, `?asset=bolts` for the tower and the ricochet;
-  the D104 looks: `?asset=concepts`, their pops `concept-pops`, wyrms in
+  the D107 looks: `?asset=concepts`, their pops `concept-pops`, wyrms in
   four colors `wyrm-colors`).
 
 ## Pickups and progress
@@ -531,8 +531,8 @@ enemies).
   the same disk may lie in several rooms, and finding one grays out all.
 - **Progress** (`src/world/progress.js`) holds the bits found for the
   whole game; room resets and death leave it alone. Known spells follow
-  from it (in slot order). The save key (Phase 4) will hold these bits
-  and the access level.
+  from it (in slot order). The access key holds these bits and the
+  access level (see Access keys).
 - **Installing** (D73): taking a disk plays a 1 s animation on the
   wizard (`PLAYER.installTicks`, 60 ticks). Every permanent pickup
   plays this same animation with its own model and color (D93): chips,
@@ -1184,7 +1184,7 @@ the world map tool shows the connections and flags any room further out.
 | `transit_bus` | 12×12, 5 high | platforms: a ferry, a lift, a loop with a crate, a press, a pusher |
 | `volatile_memory` | 12×12, 5 high | collapsing bridges (one regrowing) and one-shot steps |
 | `crawl_space` | 12×12 | bugs of every kind (solid, bouncy, provoked, peaceful); a secret |
-| `menagerie` | Home Lattice, 12×12, north of Quarantine | the D104 looks: a warden (burst), a daemon (arc, provoked), a solid golem to ride, a wyrm (bolt, provoked), a phish, an overclock (burst, provoked), a pixie (peaceful) |
+| `menagerie` | Home Lattice, 12×12, north of Quarantine | the D107 looks: a warden (burst), a daemon (arc, provoked), a solid golem to ride, a wyrm (bolt, provoked), a phish, an overclock (burst, provoked), a pixie (peaceful) |
 | `quarantine` | Glitchmire, 10×10 | a virus, a sentinel, a bursting bug; the Pause disk; the level-1 access lock |
 | `scheduler` | Abyssal Buffer, 10×10 | a tower, a worm, a crawler; the Firewall disk; a shrine |
 | `room_1` | 12×12 | an empty hub for the Phase 3 spell rooms |
@@ -1559,14 +1559,35 @@ author, recorded as decisions before the code lands. Every step also
 
 ## Phase 4 (v0.4) outline
 
-Guardians, saves and tooling (D65); planned step by step at its start.
-Firewall Wardens; the roster's new spells, one step each (D88, D89):
-Compile, Fork, Scan and Pull; title screen and pause menu (the save UI
-needs both); access-key codec with tests; URL saves and localStorage
-autosave; map screen; reachability checker; design skills and subagents.
+Saves, guardians and tooling, in two parts (D105), planned step by step.
+
+**Phase 4a — saves and UI:** access-key codec with tests (done, D106);
+title screen and pause menu (the save UI needs both); saving and loading
+(URL hash, localStorage); map screen.
+
+**Phase 4b — spells, bosses, tooling:** the roster's new spells, one
+step each (D88, D89): Pull, Compile, Scan (needs hidden blocks, fake
+walls and hidden pickups first), Fork (enemies target the decoy);
+Firewall Wardens; reachability checker; design skills and subagents.
+
+Settled:
+- Saving is a player action, any time, from the pause menu (D105); it
+  writes the key to the URL hash and to localStorage, and nothing saves on
+  its own. A load starts in the saved room with the room reset, full
+  backups and an empty clipboard; integrity comes from the key.
+- Firewall Wardens (D104) are the bosses of combat rooms. Each drops one
+  permanent pickup (a pickup naming the Warden, shown once it falls);
+  while that pickup's bit is found, the Warden is left out of its room
+  and counts as defeated. Data checks refuse a Warden without such a drop,
+  and a drop that is a refill. Shrines stay out of boss rooms.
 
 Open so far:
-- What writes a save: backup shrines (D97), room entry, or both.
+- Rooms need stable numbers for the key's room field (8 bits): a table
+  in `world.json` whose numbers are never reused after a room is deleted.
+  Settled with the saving step.
+- Wardens: size (a body wider than one cell needs multi-cell collision and
+  claims), phases or attack patterns, a boss integrity bar, weak points,
+  how many.
 - How deep the reachability checker searches pushables and spells; it
   works out which abilities each exit and pickup needs and checks that
   the world can be finished in some order (D67).
@@ -1576,6 +1597,29 @@ Open so far:
   map data); shrines show a map of the area around them. Still open: how
   far that area reaches, whether it shows rooms not visited yet, and
   whether they then stay on the run's map.
+
+## Access keys
+
+`src/world/save-key.js` (D106). A key holds what the wizard has, never the
+state of a room or the map (D68):
+
+| Field | Bits | |
+|---|---|---|
+| Format version | 4 | `SAVE_KEY_VERSION` in `src/core/version.js`; a key of another version is refused |
+| Room | 8 | The saved room's number |
+| Access level | 8 | 0–15 used (D91) |
+| Pickups | 128 | One bit per permanent item, in blocks (D71) |
+| Integrity | 4 | 1–15 |
+| Checksum | 16 | CRC-16/CCITT-FALSE of the 152 bits above |
+
+The payload is XORed with a stream seeded by the checksum, then all 168
+bits move by a fixed shuffle (seeded, never changed: old keys depend on
+it); so one more pickup changes most of the key. The key is 42 hex digits
+in groups of 6 (`E907D4-41B4A7-...`). Reading forgives spaces, dashes,
+lowercase, a leading `#`, O for 0 and I or L for 1, and names why it
+refuses a key: `empty`, `length`, `character`, `checksum` or `version`.
+Tests cover round trips, every single wrong digit and every swap of two
+neighbours.
 
 ## Data formats
 

@@ -1,6 +1,6 @@
 /**
  * The warden model, a Firewall Warden (Phase 4 guardians), a knight made
- * of firewall, in the hologram look (D22). An enemy look (D104); no
+ * of firewall, in the hologram look (D22). An enemy look (D107); no
  * defs.json template uses it yet, a room picks it with `look`.
  *
  * A kite shield for a body, its front bricked like the Firewall Citadel's

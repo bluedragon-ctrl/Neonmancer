@@ -90,7 +90,7 @@ const SPACING = 3;
 /** Turning speed in radians per second. */
 const SPIN = 0.6;
 
-/** The D104 enemy looks (see ALL_ASSETS): model, suggested color, and how the showcase runs them. */
+/** The D107 enemy looks (see ALL_ASSETS): model, suggested color, and how the showcase runs them. */
 const CONCEPTS = [
   { label: 'warden', model: WARDEN_MODEL, color: '#ff5a1f', attack: 'burst', speed: 0.8 },
   { label: 'daemon', model: DAEMON_MODEL, color: '#a45cff', attack: 'arc', speed: 1.5, chaseSpeed: 2.5 },
@@ -177,7 +177,7 @@ const ALL_ASSETS = [
   { label: 'worm-pop', group: 'worms', build: () => buildEnemyPop('worm') },
   { label: 'crawler', group: 'crawlers', build: () => buildWalker('crawler') },
   { label: 'crawler-pop', group: 'crawlers', build: () => buildEnemyPop('crawler') },
-  // The D104 looks (no defs.json template uses them yet): a Firewall
+  // The D107 looks (no defs.json template uses them yet): a Firewall
   // Warden (a knight of firewall) with a burst, a daemon (a wisp) with an
   // arc, a golem (a server rack, meant solid), a wyrm (a dragon of data
   // packets) with a bolt, a phish (a fake data disk that springs on legs),

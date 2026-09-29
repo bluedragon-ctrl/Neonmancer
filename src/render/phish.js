@@ -1,6 +1,6 @@
 /**
  * The phish model, a mimic: a fake data disk that is a trap, in the
- * hologram look (D22) once it springs. An enemy look (D104); no
+ * hologram look (D22) once it springs. An enemy look (D107); no
  * defs.json template uses it yet, a room picks it with `look`. Meant for a chaser with a
  * short aggro range and a touch attack, in the secret-heavy sectors.
  *

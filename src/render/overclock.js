@@ -1,6 +1,6 @@
 /**
  * The overclock model, a fire elemental that is an overheating processor,
- * in the hologram look (D22). An enemy look (D104); no
+ * in the hologram look (D22). An enemy look (D107); no
  * defs.json template uses it yet, a room picks it with `look`. Meant for a walker with a burst (a
  * blast of heat), or a touch attack: it burns.
  *

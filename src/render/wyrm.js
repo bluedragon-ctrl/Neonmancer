@@ -1,6 +1,6 @@
 /**
  * The wyrm model, a flying dragon made of a stream of data packets, in
- * the hologram look (D22). An enemy look (D104); no
+ * the hologram look (D22). An enemy look (D107); no
  * defs.json template uses it yet, a room picks it with `look`. Meant for a patroller spitting a
  * bolt, gliding along a long path in a big room.
  *

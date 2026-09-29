@@ -381,7 +381,7 @@ test('look: every enemy shares the mood colors, and every pop is over after its 
   assert.deepEqual(burst(5).map(({ offset }) => offset[1]), [0.5, 0.5, 0.5], 'no rise nor scatter: level');
 });
 
-test('look (D104): every model builds, poses in every state without NaN, arcs from a reach and pops', () => {
+test('look (D107): every model builds, poses in every state without NaN, arcs from a reach and pops', () => {
   for (const [look, model] of Object.entries(ENEMY_MODELS)) {
     const enemy = model.create('#7a7dff');
     assert.equal(typeof model.muzzle, 'number', `${look}: muzzle is a reach along the line of fire`);
