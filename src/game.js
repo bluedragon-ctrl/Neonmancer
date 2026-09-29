@@ -78,7 +78,7 @@ export class Game {
    * @param {object} [options]
    * @param {string} [options.start] room to start in; world.json's start by default
    * @param {Progress} [options.progress] what he has found (a loaded save); nothing by default
-   * @param {number} [options.integrity] his integrity (a loaded save); full by default
+   * @param {number} [options.backups] backups left (a loaded save, D106); full by default
    */
   constructor(content, options) {
     this.content = content;
@@ -99,9 +99,9 @@ export class Game {
    * @param {object} [options] as for the constructor
    * @param {string} [options.start]
    * @param {Progress} [options.progress]
-   * @param {number} [options.integrity]
+   * @param {number} [options.backups]
    */
-  reset({ start = this.content.world.start, progress = new Progress(), integrity = Infinity } = {}) {
+  reset({ start = this.content.world.start, progress = new Progress(), backups = PLAYER.backups } = {}) {
     /** Permanent pickups found, for the whole game (D71): room resets and death leave it alone. */
     this.progress = progress;
     // enterRoom() builds a different room even when it has the same id.
@@ -122,9 +122,10 @@ export class Game {
     this.won = false;
     this.learnSpells();
     this.applyUpgrades();
-    // A loaded save starts him buffed, with its integrity and full energy.
+    // A loaded save starts him buffed and full, with its backups left (D106).
     this.applyBuffs();
-    this.player.integrity = Math.max(1, Math.min(integrity, this.player.maxIntegrity));
+    this.player.integrity = this.player.maxIntegrity;
+    this.player.backups = Math.min(backups, PLAYER.backups);
     this.player.energy = this.player.maxEnergy;
     this.enterRoom(start, undefined, null);
     /**

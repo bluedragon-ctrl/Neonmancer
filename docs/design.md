@@ -73,8 +73,8 @@ drifting up and a thin neon outline. Proportions are `WIZARD` in
 
 ### Damage
 
-Integrity (health) is 8, 12 with every buff (at most 15, the save key's
-4 bits); it carries over between rooms and is full again after a respawn
+Integrity (health) is 8, 12 with every buff (not saved: a load starts
+full, D106); it carries over between rooms and is full again after a respawn
 (D35). Every damage source calls `Game.hurt(amount)` (D43): enemies,
 hazard blocks, spiked and squeezing platforms, Blink into a wall, the
 debug `H` key.
@@ -1584,14 +1584,16 @@ Settled:
 - Saving is a player action, any time, from the pause menu (D105); it
   writes the key to the URL hash and to localStorage, and nothing saves on
   its own. A load starts in the saved room with the room reset, full
-  backups and an empty clipboard; integrity comes from the key.
+  integrity and energy and an empty clipboard; the backups come from the
+  key (D106).
 - Firewall Wardens (D104) are the bosses of combat rooms. Each drops one
   permanent pickup (a pickup naming the Warden, shown once it falls);
   while that pickup's bit is found, the Warden is left out of its room
   and counts as defeated. Data checks refuse a Warden without such a drop,
   and a drop that is a refill. Shrines stay out of boss rooms.
-- Room numbers for the key's room field (D111): `world.json` `numbers`,
-  never reused after a room is deleted (see Saving and loading).
+
+- A key whose room cell holds no room (the room moved on the world map
+  since) still loads what he has and starts him in the start room.
 
 Open so far:
 - Wardens: size (a body wider than one cell needs multi-cell collision and
@@ -1714,13 +1716,13 @@ in the hash).
 
 ## Saving and loading
 
-D105, D111. `src/world/save-game.js` turns a Game into an access key and
+D105, D106, D111. `src/world/save-game.js` turns a Game into an access key and
 a key into `Game.reset()` options (tested); `src/ui/saves.js` keeps keys
 in the browser; `src/main.js` wires them to the menus.
 
 - **Save** (pause menu) writes the key of the game as it is: his room's
-  number, access level, the permanent pickups found and his integrity (a
-  derezzing wizard saves with 1). It goes into the URL hash
+  map cell, access level, the permanent pickups found and the backups
+  left (D106). It goes into the URL hash
   (`history.replaceState`: no reload, no history entry) and localStorage
   (`neonmancer.save`, apart from the settings). The notice says to
   bookmark the page or copy the key, and the pause menu shows the key
@@ -1739,36 +1741,33 @@ in the browser; `src/main.js` wires them to the menus.
   says why (`key.error.*` in `strings.json`: empty, length, character,
   checksum, version).
 - **A load** starts the game over in the saved room, reset, with the
-  key's pickups, access level and integrity (at most his maximum), full
-  energy, full backups and an empty clipboard; the terminal greets him
-  back. The key goes into the hash, not into localStorage: only Save
-  stores. A key naming a room that is gone loads in the start room. The
+  key's pickups, access level and backups, full integrity and energy and
+  an empty clipboard; the terminal greets him back. The key goes into the
+  hash, not into localStorage: only Save stores. A key whose map cell has
+  no room any more (moved or deleted) loads in the start room. The
   Grid-rebooted flag is not saved, so the core may play the reboot again.
-- **Room numbers**: `world.json` `numbers` (room id → 0–255). A deleted
-  room's entry stays, so its number is never given again. The room editor
-  and the world map tool give a new room the next number after the
-  highest ever given; the dev server's save keeps the numbers on disk and
-  numbers any room without one. Data checks want a number for every room,
-  none taken twice.
 
 ## Access keys
 
 `src/world/save-key.js` (D106). A key holds what the wizard has, never the
 state of a room or the map (D68):
 
-| Field | Bits | |
+| Bits | Field | |
 |---|---|---|
-| Format version | 4 | `SAVE_KEY_VERSION` in `src/core/version.js`; a key of another version is refused |
-| Room | 8 | The saved room's number |
-| Access level | 8 | 0–15 used (D91) |
-| Pickups | 128 | One bit per permanent item, in blocks (D71) |
-| Integrity | 4 | 1–15 |
-| Checksum | 16 | CRC-16/CCITT-FALSE of the 152 bits above |
+| 0–3 | Format version | `SAVE_KEY_VERSION` in `src/core/version.js`; a key of another version is refused |
+| 4–11 | Room cell x | The saved room's cell in `world.json` `positions`, signed (−128–127) |
+| 12–19 | Room cell z | Likewise |
+| 20–27 | Access level | 0–15 used (D91) |
+| 28–155 | Pickups | Save bit n at 28 + n (D71): spells 28–43, buffs 44–59, upgrades 60–75, fragments 76–139, secrets 140–155 |
+| 156–159 | Backups | Backups left (D97), 0–15 |
+| 160–175 | Checksum | CRC-16/CCITT-FALSE of bits 0–159 |
 
-The payload is XORed with a stream seeded by the checksum, then all 168
+Bits 0–159 are XORed with a stream seeded by the checksum, then all 176
 bits move by a fixed shuffle (seeded, never changed: old keys depend on
-it); so one more pickup changes most of the key. The key is 42 hex digits
-in groups of 6 (`E907D4-41B4A7-...`). Reading forgives spaces, dashes,
+it), so no field sits at a fixed digit and one more pickup changes most
+of the key. The key is 44 hex digits in groups of 4
+(`2DE0-279E-AE79-...`). The room is its map cell, so moving a room on the
+world map breaks keys saved in it. Reading forgives spaces, dashes,
 lowercase, a leading `#`, O for 0 and I or L for 1, and names why it
 refuses a key: `empty`, `length`, `character`, `checksum` or `version`.
 Tests cover round trips, every single wrong digit and every swap of two
@@ -1784,7 +1783,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 | `data/rooms/<id>.json` | One room (id = file name) |
 | `data/defs.json` | `objects`: object types and their defaults (crates, platforms, switches, the core); `enemies`: enemy templates, each complete or `extend`ing another (D58, D79); `spells`: tuning and color per spell; `pickups`: disks, buff chips, upgrade cards, fragments, secrets and refills; `blocks`: block types (D60); `score`: points per kind of pickup (D100). Each is described in its section above. |
 | `data/biomes.json` | Biome name and room color, optional `look` for the surroundings (see Biomes) |
-| `data/world.json` | Start room, exit connections, every room's cell on the world map (`positions`, D66), every room's number for the access key (`numbers`, D111) and the key fragments (`fragments`: how many the core needs, the access thresholds, D101) |
+| `data/world.json` | Start room, exit connections, every room's cell on the world map (`positions`, D66) and the key fragments (`fragments`: how many the core needs, the access thresholds, D101) |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |
 
 Example room:

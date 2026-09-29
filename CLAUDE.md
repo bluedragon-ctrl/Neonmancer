@@ -134,8 +134,8 @@ mobile/touch support, backend or accounts.
   system crashes and he reboots on the backup shrine nearest on the world
   map, keeping everything found; only the clipboard and the room's state
   are lost. A shrine is a floor tile (one per room at most) that refills
-  integrity, energy and backups. A load starts with full backups, so the
-  save key holds none.
+  integrity, energy and backups. The save key holds the backups left; a
+  load starts with full integrity and energy (D106).
 
 ### Persistence
 - Rooms fully reset on re-entry (enemies, blocks, moving platforms).
@@ -323,7 +323,7 @@ The engine is generic; all content lives in data.
   objects, enemies, pickups, a backup shrine tile; only overrides of type defaults;
   `"authored": true` marks the author's real game rooms (D90, §10)
 - `data/world.json` — room connections, room positions on the world map,
-  room numbers for the access key (never reused, D111), start room, the fragments the core needs and the access thresholds
+  start room, the fragments the core needs and the access thresholds
   (D101); fragments lie in the rooms' pickups, the core is a room object
 - `data/strings.json` — all UI text
 - `data/audio.json` — named audio events mapped to files
@@ -348,19 +348,19 @@ Keys are copied, pasted and bookmarked — never memorized — so length is
 not critical.
 
 - Bit layout (one versioned module, spare bits reserved), sized for the
-  world targets (D68) and finalized with the access-key step:
-  format version 4, room 8, access level 8 (4 bits used, levels 0–15,
+  world targets (D68), finalized in D106: format version 4, room cell
+  x 8 and z 8 (its `world.json` position, signed), access level 8 (4 bits used, levels 0–15,
   4 spare, D91), pickups 128 (one bit per permanent item, in
   blocks, D71: spells 16, buffs 16, upgrades 16 (D88), fragments 64,
   secrets 16 (D100); known spells, upgrades and buffs follow from them),
-  health 4, checksum 16. No score field: the score follows from the
+  backups 4, checksum 16. No score field: the score follows from the
   pickups and the access level (D100). No per-room data (map).
-- Encoding: 42 hex digits in groups of 6 (e.g. `E907D4-41B4A7-...`,
+- Encoding: 44 hex digits in groups of 4 (e.g. `2DE0-279E-AE79-...`,
   D106). Input tolerates spaces, dashes, lowercase, O for 0, I/L for 1.
 - Scramble with bit shuffle + XOR so keys are not trivially editable.
 - Saving is a player action, any time, from the pause menu (D105); nothing
-  saves on its own. A load starts in the saved room, reset, with full
-  backups and an empty clipboard.
+  saves on its own. A load starts in the saved room, reset, with the
+  saved backups, full integrity and energy, and an empty clipboard.
 - URL saves: a save writes the key into the URL hash (`#KEY`)
   with `history.replaceState` (no reload, no history spam). On load, a
   valid key in the hash loads that state directly; an invalid key shows

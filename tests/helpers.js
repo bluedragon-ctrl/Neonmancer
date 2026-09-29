@@ -150,7 +150,6 @@ export function roomFile(id, props = {}) {
  * @param {string[][]} [options.connections] pairs of "room.exit"
  * @param {string} [options.start] start room; the first room by default
  * @param {Record<string, number[]>} [options.positions] map cells; the rooms in a row by default
- * @param {Record<string, number>} [options.numbers] room numbers (D111); in order from 0 by default
  */
 export function dataFiles({
   rooms,
@@ -161,13 +160,12 @@ export function dataFiles({
   connections = [],
   start = rooms[0].id,
   positions = Object.fromEntries(rooms.map((room, i) => [room.id, [i, 0]])),
-  numbers = Object.fromEntries(rooms.map((room, i) => [room.id, i])),
   fragments,
 }) {
   return structuredClone({
     'defs.json': { schemaVersion: 1, score: SCORE, objects, enemies, spells: SPELLS, pickups, blocks },
     'biomes.json': { schemaVersion: 1, biomes: { home: { name: 'Home', color: '#ffb020' } } },
-    'world.json': { schemaVersion: 1, start, ...(fragments && { fragments }), connections, positions, numbers },
+    'world.json': { schemaVersion: 1, start, ...(fragments && { fragments }), connections, positions },
     'strings.json': STRINGS,
     ...Object.fromEntries(rooms.map((room) => [`rooms/${room.id}.json`, room])),
   });

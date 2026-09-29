@@ -24,8 +24,8 @@ bosses that drop loot, tooling) (D104, D105).
   compiles tile by tile from its back corner, and the wizard pops in out
   of pixels; any
   menu key skips it.
-- Access keys (D106): the save codec, 42 scrambled hex digits holding the
-  room, access level, pickup bits and integrity with a CRC-16; reading
+- Access keys (D106): the save codec, 44 scrambled hex digits holding the
+  room's map cell, access level, pickup bits and backups with a CRC-16; reading
   forgives spaces, dashes, lowercase and look-alike letters, and says why
   it refuses a key.
 - Saving and loading (D105, D111): **Save** in the pause menu writes the
@@ -33,10 +33,8 @@ bosses that drop loot, tooling) (D104, D105).
   and **Copy link** copy it. A link with a key loads straight into the
   saved room; the title has **Continue** (the last save in this browser)
   and **Enter key**, which says why it refuses a key. A load starts in the
-  saved room, reset, with the key's pickups, access level and integrity.
-- Room numbers (D111): `world.json` `numbers` gives every room a number
-  for the key, never reused after a room is deleted; the room editor and
-  the world map tool number new rooms.
+  saved room, reset, with the key's pickups, access level and backups,
+  full integrity and energy.
 - World map tool: exits show as marks on the room edges (cyan connected,
   magenta loose), and Delete removes one by a click on its mark (D102): a
   connected exit goes with its partner, a loose one alone. Connect uses a

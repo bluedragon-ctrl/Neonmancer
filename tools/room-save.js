@@ -5,13 +5,11 @@
  * passes. New rooms get a new file. The world map tool (D66) sends moved
  * rooms' positions, merged into world.json as it is on disk, and (D77) the
  * rooms it added, changed (exits) or removed, with world.json when its
- * connections changed. Every room gets a number for the access key
- * (D111): new rooms the next one, the numbers on disk kept.
+ * connections changed.
  */
 import { rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { formatJson } from '../src/editor/format-json.js';
-import { mergeRoomNumbers } from '../src/world/room-numbers.js';
 import { checkFiles, readDataFiles, readSchemas } from './check-data.js';
 
 export { DATA_SAVED_EVENT, SAVE_URL } from '../src/editor/save.js';
@@ -72,16 +70,6 @@ export function saveEdits(root, { rooms = [], world, defs, positions, remove = [
     if (typeof id !== 'string' || !/^[a-z][a-z0-9_]*$/.test(id)) return { ok: false, errors: ['a room has no valid id'], files: [] };
     names.push(`rooms/${id}.json`);
     files[`rooms/${id}.json`] = room;
-  }
-  // Every room keeps its number and a new one gets the next (D111): the
-  // numbers on disk win over an editor's older copy.
-  if (disk) {
-    const ids = Object.keys(files)
-      .filter((name) => name.startsWith('rooms/'))
-      .map((name) => files[name]?.id)
-      .filter((id) => typeof id === 'string');
-    const numbers = mergeRoomNumbers(disk.numbers, world?.numbers, ids);
-    if (world || JSON.stringify(numbers) !== JSON.stringify(disk.numbers)) world = { ...(world ?? disk), numbers };
   }
   for (const [name, data] of [['world.json', world], ['defs.json', defs]]) {
     if (!data) continue;
