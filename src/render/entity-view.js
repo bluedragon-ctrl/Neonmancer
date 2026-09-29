@@ -27,6 +27,13 @@ import { SENTINEL_MODEL } from './sentinel.js';
 import { CRON_MODEL } from './cron.js';
 import { WORM_MODEL } from './worm.js';
 import { CRAWLER_MODEL } from './crawler.js';
+import { WARDEN_MODEL } from './warden.js';
+import { DAEMON_MODEL } from './daemon.js';
+import { GOLEM_MODEL } from './golem.js';
+import { WYRM_MODEL } from './wyrm.js';
+import { PHISH_MODEL } from './phish.js';
+import { OVERCLOCK_MODEL } from './overclock.js';
+import { PIXIE_MODEL } from './pixie.js';
 import { VIRUS_MODEL } from './virus.js';
 import { hitJolt } from './break-fx.js';
 import { COLLAPSE_FX, COLLAPSE_PIXELS, collapseLook, collapsePixels } from './collapse-fx.js';
@@ -442,6 +449,13 @@ export const ENEMY_MODELS = {
   cron: CRON_MODEL,
   worm: WORM_MODEL,
   crawler: CRAWLER_MODEL,
+  warden: WARDEN_MODEL,
+  daemon: DAEMON_MODEL,
+  golem: GOLEM_MODEL,
+  wyrm: WYRM_MODEL,
+  phish: PHISH_MODEL,
+  overclock: OVERCLOCK_MODEL,
+  pixie: PIXIE_MODEL,
 };
 
 /** How fast its after-the-wizard look (faster bits, flaring eyes) comes and goes, per second. */

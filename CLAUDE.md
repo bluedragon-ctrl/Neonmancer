@@ -214,6 +214,9 @@ and some exits and pickups wait for a spell or buff found later
 - **Shooters** — stationary, fire slow bolts (the Pop-up idea, D84)
 - **Firewall Wardens** — bosses of combat rooms; each drops a permanent
   pickup and stays away once it is found (D104)
+- More looks for content (D107), no template yet: warden, daemon (wisp),
+  golem (server rack), wyrm (packet dragon), phish (a data disk mimic),
+  overclock (burning chip), pixie (pixel butterfly)
 
 Each has a distinct color, silhouette and animation. Enemies are
 universal and data-driven (D48, D78, D80): a template in `defs.json` is a

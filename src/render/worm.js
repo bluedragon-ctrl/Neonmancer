@@ -200,5 +200,5 @@ export const WORM_MODEL = {
   pop: WORM.pop,
   turnRate: WORM.turnRate,
   markHeight: WORM.markHeight,
-  muzzle: [0, WORM.head.r, WORM.head.z + WORM.head.r],
+  muzzle: WORM.head.z + WORM.head.r,
 };

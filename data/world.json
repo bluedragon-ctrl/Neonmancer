@@ -4,6 +4,7 @@
   "start": "boot_sector",
   "fragments": { "required": 64, "access": [16, 32, 48] },
   "connections": [
+    ["quarantine.north", "menagerie.south"],
     ["crawl_space.south", "cache_hall.north"],
     ["boot_sector.east", "cache_hall.west"],
     ["cache_hall.east", "fault_line.west"],
@@ -21,6 +22,7 @@
     ["quarantine.south", "vault.north"]
   ],
   "positions": {
+    "menagerie": [-3, -2],
     "boot_sector": [-1, -1],
     "cache_hall": [0, -1],
     "stack_yard": [-1, 1],

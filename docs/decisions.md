@@ -659,3 +659,15 @@ fixed shuffle. Input forgives spaces, dashes, lowercase, O for 0, I and L
 for 1. Replaces Base32 in CLAUDE.md §8.
 **Why:** the key is copied, not typed; hex is simpler to read and debug
 than a custom alphabet (Base32 without 0/O/1/I/L has only 31 symbols).
+
+### D107 — 2026-09-29 — Seven more enemy looks
+Warden, daemon, golem, wyrm, phish, overclock and pixie join the enemy
+looks, each a fantasy creature crossed with a computer thing (a knight of
+firewall, a wisp daemon, a rack golem, a packet dragon, a phishing mimic,
+a burning processor, a pixel butterfly). They are looks only: no template
+uses them yet, rooms pick them with `look`, and templates come with the
+content that needs them (the warden with the Firewall Wardens). A wyrm's
+plates are shades of its own color, so a room can recolor it. A model's
+`muzzle` is a reach along the line of fire (worm and crawler had points).
+**Why:** more silhouettes for content production; reviewed in the
+showcase first.

@@ -286,7 +286,7 @@ and burst; a virus can patrol).
 
 | Field | Values | Meaning |
 |---|---|---|
-| `look` | `bug`, `virus`, `sentinel`, `cron`, `worm`, `crawler` | its body (below). A template takes its base's. |
+| `look` | `bug`, `virus`, `sentinel`, `cron`, `worm`, `crawler`, `warden`, `daemon`, `golem`, `wyrm`, `phish`, `overclock`, `pixie` | its body (below). A template takes its base's. |
 | `movement` | `patrol`, `stationary`, `chase` | patrol walks the enemy's `path` (required); stationary stays in its cell (no path); chase goes after the wizard (below), walking its `path` while calm if it has one. |
 | `attack` | `touch`, `burst`, `arc`, `bolt`, `none` | touch: touching it hurts while it is hostile; burst, arc and bolt: charged attacks (below): lightning all round it, a lightning bolt aimed at the wizard, or a slow shot at him (D80); touching it doesn't hurt. |
 | `hostility` | `hostile`, `peaceful`, `provoked` | hostile attacks; peaceful never does; provoked is peaceful until a spell (Zap), a discharge or a bolt hits it, then hostile. |
@@ -449,6 +449,41 @@ and burst; a virus can patrol).
   round head with four eyes, thin jointed legs walking in a tripod gait
   (three feet down while the other three swing). After the wizard it
   crouches, walks faster and paws with its front legs.
+- **More looks (D107):** looks only so far: no `defs.json` template uses
+  them, a room picks one with `look` in `overrides` (the showcase colors
+  in brackets are suggestions). Each is taller or wider than its hitbox
+  in places, for show.
+  - **warden** (`#ff5a1f`): a Firewall Warden, a kite shield bricked like
+    the Citadel's floor, a helm with a T-slit visor for eyes, two floating
+    gauntlets and a greatsword planted point down. The seams breathe;
+    after the wizard the sword comes up to guard; charging, it rises
+    overhead while the seams light row by row; firing, it slams down.
+  - **daemon** (`#a45cff`): a floating teardrop flame, a will-o'-the-wisp,
+    shedding pixel embers off its flickering tip. After the wizard it
+    stretches tall; charging, it squeezes into a ball; firing, it flares.
+  - **golem** (`#38a8ff`): two stacked rack units with blinking LEDs and
+    vent slats, a visor head, block fists and stomping slab legs; meant
+    `solid`. After the wizard its LEDs turn to the eye color and the slats
+    scroll; charging, the LEDs fill up and the fists rise.
+  - **wyrm** (`#ffc83a`): a flying horned dragon mask trailing six hex
+    plates in shades of its color (the hue swinging a little either way,
+    darker to the tail), a glowing packet over each; a wave swims down it.
+    Charging, the packets light tail to head and the jaw opens; firing, it
+    snaps forward.
+  - **phish** (`#eef3ff`): a mimic. Calm it is a data disk with a red lit
+    bit, bobbing out of step with real disks and glitching now and then;
+    after the wizard it stands on four jointed legs, eye stalks pop from
+    its top corners and a red-toothed jaw chomps. Its eyes stay hidden
+    while it poses: the red bit is the warning.
+  - **overclock** (`#ff6a2a`): a burning CPU chip scuttling on its pins,
+    a die with two eyes, glowing traces, a crown of flame tongues round a
+    taller lighter one, sparks rising. After the wizard the fire roars;
+    charging, the tongues lean into one column; firing, they flare out.
+  - **pixie** (`#7a7dff`): a butterfly, a slim body with antennae and two
+    pairs of wings covered in pixels that shimmer in three phases; pixel
+    dust drifts down. It flutters along a figure eight; after the wizard
+    it flaps faster; charging, the wings fold over its back, all lit;
+    firing, they snap open.
 - **Spell hits:** a Zap takes `damage` (1) of its integrity and provokes
   it; the last point pops it into pixels. Any enemy can be hit, peaceful
   ones too (they stay peaceful). A hit flashes it white, then cyan, with a
@@ -464,11 +499,15 @@ and burst; a virus can patrol).
   `src/entities/bolt.js`, `PLAYER.bounceHeight`; the looks are `BUG` in
   `src/render/bug.js`, `VIRUS` in `src/render/virus.js`, `SENTINEL` in
   `src/render/sentinel.js`, `CRON`, `WORM` and `CRAWLER` in
-  `src/render/cron.js`, `worm.js` and `crawler.js` (what they share, mood colors, eyes and the
+  `src/render/cron.js`, `worm.js` and `crawler.js`, and the D107 looks in
+  `warden.js`, `daemon.js`, `golem.js`, `wyrm.js`, `phish.js`,
+  `overclock.js` and `pixie.js` (what they share, mood colors, eyes and the
   pop, in `src/render/enemy-look.js`), the lightning `DISCHARGE` in
   `src/render/discharge.js`; review in the asset showcase
   (`/tools/showcase.html?asset=bugs,viruses,sentinels,crons,worms,crawlers`;
-  the bolt: `bug-bolt`, `?asset=bolts` for the tower and the ricochet).
+  the bolt: `bug-bolt`, `?asset=bolts` for the tower and the ricochet;
+  the D107 looks: `?asset=concepts`, their pops `concept-pops`, wyrms in
+  four colors `wyrm-colors`).
 
 ## Pickups and progress
 
@@ -1145,6 +1184,7 @@ the world map tool shows the connections and flags any room further out.
 | `transit_bus` | 12×12, 5 high | platforms: a ferry, a lift, a loop with a crate, a press, a pusher |
 | `volatile_memory` | 12×12, 5 high | collapsing bridges (one regrowing) and one-shot steps |
 | `crawl_space` | 12×12 | bugs of every kind (solid, bouncy, provoked, peaceful); a secret |
+| `menagerie` | Home Lattice, 12×12, north of Quarantine | the D107 looks: a warden (burst), a daemon (arc, provoked), a solid golem to ride, a wyrm (bolt, provoked), a phish, an overclock (burst, provoked), a pixie (peaceful) |
 | `quarantine` | Glitchmire, 10×10 | a virus, a sentinel, a bursting bug; the Pause disk; the level-1 access lock |
 | `scheduler` | Abyssal Buffer, 10×10 | a tower, a worm, a crawler; the Firewall disk; a shrine |
 | `room_1` | 12×12 | an empty hub for the Phase 3 spell rooms |
