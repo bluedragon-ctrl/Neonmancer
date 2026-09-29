@@ -108,19 +108,46 @@ export function createDisk({ color = PALETTE.cyan, slot = 0, ghost = false } = {
   lines.renderOrder = 2;
 
   // The bit grid on both faces: a lit cube for the slot's bit, a dim square for the others.
-  const pitch = (DISK.size * DISK.grid) / 4;
+  const cells = createBitGrid({ size: DISK.size, depth: t, slot, color: bitColor, ghost, sides: [1, -1] });
+  const spin = new Group().add(body, lines, ...cells);
+  const model = new Group().add(spin);
+  model.userData = { spin, color: bodyColor, bitColor };
+  spin.position.y = DISK.hover;
+  return model;
+}
+
+/**
+ * A 4×4 grid of save bits on the faces of a slab (a data disk, a buff chip,
+ * D93): a raised cube in `color` for the slot's bit, dim squares for the
+ * others, row by row from the top left.
+ * @param {object} options
+ * @param {number} options.size edge of the slab's face; the grid covers DISK.grid of it
+ * @param {number} options.depth half the slab's thickness: the faces are at ±depth
+ * @param {number} options.slot the lit bit, 0-15
+ * @param {number|string} options.color the lit bit's color
+ * @param {boolean} [options.ghost] found already: gray, dim and dashed
+ * @param {number[]} [options.sides] the faces to cover: 1 the front (+z), -1 the back
+ * @returns {import('three').Object3D[]}
+ */
+export function createBitGrid({ size, depth, slot, color, ghost = false, sides = [1, -1] }) {
+  const s = size / 2;
+  const t = depth;
+  const bitColor = ghost ? DISK.ghost.color : color;
+  const glow = ghost ? DISK.ghost.brightness : DISK.brightness;
+  const pitch = (size * DISK.grid) / 4;
   const half = (pitch * DISK.bit) / 2;
   bitGeometry ??= new BoxGeometry(2 * half, 2 * half, DISK.raise);
+  const scale = (2 * half) / bitGeometry.parameters.width;
   bitEdges ??= new EdgesGeometry(bitGeometry);
   const zeroMaterial = ghost
-    ? lineMaterial({ color: bodyColor, width: 1.2, brightness: glow * DISK.zero, dashed: true })
+    ? lineMaterial({ color: DISK.ghost.color, width: 1.2, brightness: glow * DISK.zero, dashed: true })
     : lineMaterial({ color: DISK.zeroColor, width: 1.2, brightness: 1 });
   const litLines = lineMaterial({ color: bitColor, width: DISK.bitWidth, brightness: ghost ? glow : bitGlow(bitColor) });
   const litFaces = faceMaterial(new Color(PALETTE.face).lerp(new Color(bitColor), ghost ? 0.1 : DISK.bitTint));
   const edgeSegments = edgePairs(bitEdges);
   const cells = [];
   const zeros = [];
-  for (const side of [1, -1]) {
+  for (const side of sides) {
     for (let row = 0; row < 4; row++) {
       for (let col = 0; col < 4; col++) {
         // The back mirrors the front, so the code reads the same from both sides.
@@ -134,6 +161,7 @@ export function createDisk({ color = PALETTE.cyan, slot = 0, ghost = false } = {
         cubeLines.renderOrder = 2;
         const lit = new Group().add(new Mesh(bitGeometry, litFaces), cubeLines);
         lit.position.set(x, y, side * (t + DISK.raise / 2));
+        lit.scale.set(scale, scale, 1);
         cells.push(lit);
       }
     }
@@ -143,12 +171,7 @@ export function createDisk({ color = PALETTE.cyan, slot = 0, ghost = false } = {
   if (ghost) restartDashes(zeroLines, 4);
   zeroLines.renderOrder = 2;
   cells.push(zeroLines);
-
-  const spin = new Group().add(body, lines, ...cells);
-  const model = new Group().add(spin);
-  model.userData = { spin, color: bodyColor, bitColor };
-  spin.position.y = DISK.hover;
-  return model;
+  return cells;
 }
 
 /**
