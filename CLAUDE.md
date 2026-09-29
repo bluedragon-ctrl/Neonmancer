@@ -342,14 +342,14 @@ Keys are copied, pasted and bookmarked — never memorized — so length is
 not critical.
 
 - Bit layout (one versioned module, spare bits reserved), sized for the
-  world targets (D68) and finalized with the access-key step:
-  format version 4, room 8, access level 8 (4 bits used, levels 0–15,
+  world targets (D68), finalized in D106: format version 4, room cell
+  x 8 and z 8 (its `world.json` position, signed), access level 8 (4 bits used, levels 0–15,
   4 spare, D91), pickups 128 (one bit per permanent item, in
   blocks, D71: spells 16, buffs 16, upgrades 16 (D88), fragments 64,
   secrets 16 (D100); known spells, upgrades and buffs follow from them),
   health 4, checksum 16. No score field: the score follows from the
   pickups and the access level (D100). No per-room data (map).
-- Encoding: 42 hex digits in groups of 6 (e.g. `E907D4-41B4A7-...`,
+- Encoding: 44 hex digits in groups of 4 (e.g. `2DE0-279E-AE79-...`,
   D106). Input tolerates spaces, dashes, lowercase, O for 0, I/L for 1.
 - Scramble with bit shuffle + XOR so keys are not trivially editable.
 - Saving is a player action, any time, from the pause menu (D105); nothing

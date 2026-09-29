@@ -1542,9 +1542,9 @@ Settled:
   and a drop that is a refill. Shrines stay out of boss rooms.
 
 Open so far:
-- Rooms need stable numbers for the key's room field (8 bits): a table
-  in `world.json` whose numbers are never reused after a room is deleted.
-  Settled with the saving step.
+- A key whose room cell holds no room (the room moved on the map since):
+  probably load what he has and start in the start room. Settled with
+  the saving step.
 - Wardens: size (a body wider than one cell needs multi-cell collision and
   claims), phases or attack patterns, a boss integrity bar, weak points,
   how many.
@@ -1563,19 +1563,22 @@ Open so far:
 `src/world/save-key.js` (D106). A key holds what the wizard has, never the
 state of a room or the map (D68):
 
-| Field | Bits | |
+| Bits | Field | |
 |---|---|---|
-| Format version | 4 | `SAVE_KEY_VERSION` in `src/core/version.js`; a key of another version is refused |
-| Room | 8 | The saved room's number |
-| Access level | 8 | 0–15 used (D91) |
-| Pickups | 128 | One bit per permanent item, in blocks (D71) |
-| Integrity | 4 | 1–15 |
-| Checksum | 16 | CRC-16/CCITT-FALSE of the 152 bits above |
+| 0–3 | Format version | `SAVE_KEY_VERSION` in `src/core/version.js`; a key of another version is refused |
+| 4–11 | Room cell x | The saved room's cell in `world.json` `positions`, signed (−128–127) |
+| 12–19 | Room cell z | Likewise |
+| 20–27 | Access level | 0–15 used (D91) |
+| 28–155 | Pickups | Save bit n at 28 + n (D71): spells 28–43, buffs 44–59, upgrades 60–75, fragments 76–139, secrets 140–155 |
+| 156–159 | Integrity | 1–15 |
+| 160–175 | Checksum | CRC-16/CCITT-FALSE of bits 0–159 |
 
-The payload is XORed with a stream seeded by the checksum, then all 168
+Bits 0–159 are XORed with a stream seeded by the checksum, then all 176
 bits move by a fixed shuffle (seeded, never changed: old keys depend on
-it); so one more pickup changes most of the key. The key is 42 hex digits
-in groups of 6 (`E907D4-41B4A7-...`). Reading forgives spaces, dashes,
+it), so no field sits at a fixed digit and one more pickup changes most
+of the key. The key is 44 hex digits in groups of 4
+(`2DE0-279E-AE79-...`). The room is its map cell, so moving a room on the
+world map breaks keys saved in it. Reading forgives spaces, dashes,
 lowercase, a leading `#`, O for 0 and I or L for 1, and names why it
 refuses a key: `empty`, `length`, `character`, `checksum` or `version`.
 Tests cover round trips, every single wrong digit and every swap of two
