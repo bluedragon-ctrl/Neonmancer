@@ -1,6 +1,6 @@
 /**
  * Switches (D69, D75): room objects that unlock the room's locked exits
- * while every switch in the room is on (Game.updateSwitches()). Their
+ * while every switch in the room is on (updateSwitches() in switches.js). Their
  * state resets with the room. Pure logic.
  *
  * - Target: a fixed 1×1×1 block. A Zap bolt stopping at it switches it on,
