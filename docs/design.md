@@ -840,7 +840,8 @@ Phase 3 step 15 (D100). The score is what the wizard has, not what he did.
   that he found, rounded down (`Game.completion`); items defined but
   placed in no room don't count.
 - **Secrets:** `{ "kind": "secret", "slot" }`, a bit in the secrets block
-  (slots unique, checked by validation). The look is a thick five-pointed star
+  (slots unique, checked by validation); `defs.json` defines all 16
+  (`secret_0`–`secret_15`), so the room editor offers each one. The look is a thick five-pointed star
   in the wizard's magenta (`render/secret.js`, `SECRET_COLOR` `#ff2bd6`),
   a gray ghost once found. Taking one plays the install animation with the
   banner `SECRET FOUND / n / N` and `> SECRET FOUND n/N` (N: the secrets
