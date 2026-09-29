@@ -89,7 +89,7 @@ export function mapWarnings(world, roomIds, authored = new Set()) {
 }
 
 /**
- * The room with a backup shrine nearest to `from` on the world map (D96):
+ * The room with a backup shrine nearest to `from` on the world map (D97):
  * fewest map cells apart counted along the grid (|dx| + |dz|), the room
  * itself first. Ties go to `preferred` (the shrine used last), then to room
  * order.

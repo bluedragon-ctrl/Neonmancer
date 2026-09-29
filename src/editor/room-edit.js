@@ -298,7 +298,7 @@ export class RoomEdit {
   }
 
   /**
-   * Move the backup shrine (D96) to a floor tile, or remove it (`null`);
+   * Move the backup shrine (D97) to a floor tile, or remove it (`null`);
    * a room has one at most.
    * @param {number[]|null} tile [x, z]
    */

@@ -655,7 +655,7 @@ test('enemy templates: the schema and the code agree on the allowed values', () 
   );
 });
 
-test('backup shrine: a floor tile inside the room, on no block, hole or object (D96)', () => {
+test('backup shrine: a floor tile inside the room, on no block, hole or object (D97)', () => {
   const setShrine = (tile, holes) => (f) => Object.assign(f['rooms/alpha.json'], { shrine: tile }, holes && { holes });
   assert.deepEqual(errorsAfter(setShrine([6, 6])), []);
   assertError(errorsAfter(setShrine([8, 2])), 'shrine', 'tile [8,2] is outside size');

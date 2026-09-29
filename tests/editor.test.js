@@ -684,7 +684,7 @@ test('the Enemy panel has one row for each enemy setting, in its order', () => {
   assert.deepEqual([...fields].sort(), [...Object.keys(ENEMY_FIELDS), ...Object.keys(ENEMY_NUMBERS), 'color'].sort());
 });
 
-test('RoomEdit moves and removes the backup shrine, written after the holes; a resize drops it when outside (D96)', () => {
+test('RoomEdit moves and removes the backup shrine, written after the holes; a resize drops it when outside (D97)', () => {
   const edit = new RoomEdit(sampleRoom());
   assert.equal(edit.setShrine(null), false, 'no shrine to remove');
   assert.equal(edit.setShrine([2, 6]), true);

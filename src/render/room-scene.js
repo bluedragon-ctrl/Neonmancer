@@ -57,7 +57,7 @@ export class RoomScene {
     this.enemyViews = [];
     this.pickupViews = [];
     this.exitViews = [];
-    /** The room's backup shrine (shrine-view.js, D96), or null. */
+    /** The room's backup shrine (shrine-view.js, D97), or null. */
     this.shrine = null;
     /** Locked exits' barriers (switch-view.js), by exit id. */
     this.lockViews = new Map();
@@ -163,7 +163,7 @@ export class RoomScene {
     }
   }
 
-  /** The wizard used the room's backup shrine (D96): make it flare. */
+  /** The wizard used the room's backup shrine (D97): make it flare. */
   useShrine() {
     this.shrine?.userData.use();
   }

@@ -107,7 +107,7 @@ the ones it gives:
 | `block` | plain (room color) | none |
 | `hazard` | hazard, red | `damage: 1` |
 | `void` | void, violet | `lethal: true` |
-| `collapsing` | kind `collapsing`, frosted white glass: pale white-blue, dashed edges, faces barely tinted (D97) | gives way (see Collapsing blocks) |
+| `collapsing` | kind `collapsing`, frosted white glass: pale white-blue, dashed edges, faces barely tinted (D98) | gives way (see Collapsing blocks) |
 | `collapsing_regrow` | extends `collapsing` | `regrow: 3` |
 
 - **Static types** have a `look` (`plain`, `hazard`, `void`) and live in
@@ -1286,7 +1286,7 @@ list switches to another room; New room makes an empty one (D57).
   cell, standing on the layer; erasing with Reset removes the reset point
   (it falls back to spawn). Both show as dashed boxes of the wizard's size
   (spawn cyan, reset magenta).
-- **Shrine** puts the room's backup shrine (D96) on the floor tile under
+- **Shrine** puts the room's backup shrine (D97) on the floor tile under
   the mouse, whatever the layer, moving it if there is one; right click
   removes it.
 - The panel, from the top, picks the room (or makes a new one: an id,
@@ -1460,7 +1460,7 @@ the author; the answers are recorded as decisions before the code lands.
 | 11 | `docs/spell-roster` | Discussion step, docs only: the roster towards 16 spells (D68) — new spells, some letting the wizard skip easier rooms, and upgrades of the basic ones — and the buff items, now that the first five spells can be played; stronger ones should let the wizard speedrun simple rooms or solve them differently (D67). Accepted spells get their own steps (in this phase or later) and CLAUDE.md §5 is updated; the result is a decision. |
 | 12 | `feat/buff-items` | The first buff items from the roster: pickups that raise the wizard's maximum integrity or energy, or his recharge rate, kept in `Progress`; HUD bars grow with them. The jump is an upgrade now (step 13, D92). |
 | 13 | `feat/upgrades` | Upgrades in the upgrades save block (bits 32–47, D88, D91, D92): an upgrade card that, once found, replaces its base spell in the Tab cycle (ZAP becomes ZAP+). Zap+: the bolt bounces off walls (the bolt bounces of D81), reaching targets round corners. Shield+: the Shield reflects bolts back at the shooter. The jump upgrade: a double jump or a higher jump (D92). Showcase, editor, validation, a test room. |
-| 14 | `feat/backups` | Backups, the wizard's lives (D92, D96): 8 on the Player, shown as pips under the integrity bar; each death uses one; with none left, `> SYSTEM CRASH` reboots him on the backup shrine nearest on the world map, keeping everything found (no rollback). A backup shrine is a floor tile in room data (`shrine`): stepping onto it refills integrity, energy and backups (`> BACKUP SAVED`). Shrine and pips in the wizard's magenta; showcase, editor tool, validation, shrines in three test rooms. |
+| 14 | `feat/backups` | Backups, the wizard's lives (D92, D97): 8 on the Player, shown as pips under the integrity bar; each death uses one; with none left, `> SYSTEM CRASH` reboots him on the backup shrine nearest on the world map, keeping everything found (no rollback). A backup shrine is a floor tile in room data (`shrine`): stepping onto it refills integrity, energy and backups (`> BACKUP SAVED`). Shrine and pips in the wizard's magenta; showcase, editor tool, validation, shrines in three test rooms. |
 | 15 | `feat/score-and-bits` | Starts with a short discussion (below). Then: bonus bits (up to 4 slots per room), secrets, score for bits, enemies, secrets and pickups, floating score popups, HUD score, the "all bits collected" room bonus, local high score. |
 | 16 | `feat/fragments-and-access` | Fragment pickups, the fragment count and locations in `world.json`, the central core that takes them, `> FRAGMENT n/N GET!`, found fragments grayed out on revisits (D67), access levels that lock areas until the wizard's level is high enough (locked exits from step 4), the wizard's access level kept in `Progress` (its own 8-bit field in the save key, D91), and the end of the game. |
 | 17 | `chore/release-0.3.0` | Docs pass, CHANGELOG, `v0.3.0` tag and GitHub Release (CLAUDE.md §10) |
@@ -1477,7 +1477,7 @@ Open questions, settled at the start of their step:
 - **11 Roster:** settled (D88); see Spell roster.
 - **12 Buff items:** settled (D93).
 - **13 Upgrades:** settled (D95); see Upgrades.
-- **14 Backups:** settled (D96). Superseded questions: how many (3?); does a shrine also refill integrity and
+- **14 Backups:** settled (D97). Superseded questions: how many (3?); does a shrine also refill integrity and
   energy; what the shrine looks like and whether it is touched or used
   with a key; what else brings a backup back (a rare temporary pickup,
   score thresholds once there is a score); does the crash keep the

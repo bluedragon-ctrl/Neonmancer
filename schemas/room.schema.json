@@ -54,7 +54,7 @@
     },
     "shrine": {
       "$ref": "common.schema.json#/$defs/tile",
-      "description": "Backup shrine floor tile (D96): stepping on it refills integrity, energy and backups; with no backups left the wizard reboots on the nearest one (world map distance)."
+      "description": "Backup shrine floor tile (D97): stepping on it refills integrity, energy and backups; with no backups left the wizard reboots on the nearest one (world map distance)."
     },
     "objects": {
       "description": "Typed objects with stable ids (types from defs.json).",

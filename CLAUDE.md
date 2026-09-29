@@ -129,7 +129,7 @@ mobile/touch support, backend or accounts.
 - No fall damage. The only instant death is falling onto void blocks.
 - On death the wizard derezzes into pixels and recompiles at the room
   entrance — quick and non-punishing.
-- Backups (lives, D92, D96): 8; each death uses one. With none left the
+- Backups (lives, D92, D97): 8; each death uses one. With none left the
   system crashes (`> SYSTEM CRASH`) and he reboots on the backup shrine
   nearest on the world map (map cells |dx| + |dz|; ties to the one used
   last), keeping everything found; only the clipboard and the room's
@@ -258,7 +258,7 @@ defined in data and combinable. Health pickups and safe rooms balance
 drain effects. Six biomes (D61): one core, four side sectors, one special.
 Room colors stay clear of the gameplay colors (lime crates, cyan
 platforms, frosted white collapsing, red hazard, violet void, green bugs;
-magenta is the wizard's color, D97).
+magenta is the wizard's color, D98).
 Behaviors below are ideas for Phase 5; for now biomes are look only.
 - **Home Lattice** (core) — amber (the default room color), clean square
   grid, warm rising motes; safe; holds the central core

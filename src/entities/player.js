@@ -52,7 +52,7 @@ export const PLAYER = {
   /** Integrity (health) at the start and after respawning; at most 15 fits the save key. */
   maxIntegrity: 8,
   /**
-   * Backups (lives, D92, D96): a death uses one; dying with none left
+   * Backups (lives, D92, D97): a death uses one; dying with none left
    * crashes the system and he reboots on the nearest backup shrine, which
    * refills them.
    */
@@ -118,7 +118,7 @@ export class Player {
     this.maxIntegrity = PLAYER.maxIntegrity;
     /** Integrity (health), 0..maxIntegrity; it carries over between rooms. */
     this.integrity = this.maxIntegrity;
-    /** Backups left (D96), 0..PLAYER.backups; a death uses one, a backup shrine refills them. */
+    /** Backups left (D97), 0..PLAYER.backups; a death uses one, a backup shrine refills them. */
     this.backups = PLAYER.backups;
     /** Ticks left in which he can't be hurt (after a hit); carries over between rooms. */
     this.invulnerable = 0;

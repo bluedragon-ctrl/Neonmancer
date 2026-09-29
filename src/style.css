@@ -77,7 +77,7 @@ body {
   text-shadow: 0 0 calc(8 * var(--u)) currentColor;
 }
 
-/* Backups (D96): a row of pips under integrity, in the wizard's magenta. */
+/* Backups (D97): a row of pips under integrity, in the wizard's magenta. */
 .hud-backups {
   position: absolute;
   top: calc(106 * var(--u));

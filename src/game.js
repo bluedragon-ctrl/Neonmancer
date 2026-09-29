@@ -23,7 +23,7 @@ import { buildRoom } from './world/room.js';
 /** Terminal message for each way to die (Player.deathCause). */
 const DEATH_MESSAGES = { hole: 'msg.die', void: 'msg.void', damage: 'msg.derez' };
 
-/** Banner color of a system crash (D96): alarm red. */
+/** Banner color of a system crash (D97): alarm red. */
 const CRASH_COLOR = '#ff3b5c';
 
 /** Room transition timing in ticks (60 per second). */
@@ -65,7 +65,7 @@ export const TRANSITION = {
  * @property {number[]} [cell] the block that hurt him (hurt), [x, y, z]
  * @property {'hole'|'void'|'damage'} [cause] how the wizard died (die)
  * @property {boolean} [crash] he died with no backups left (die): he
- *   reboots on the nearest backup shrine (D96)
+ *   reboots on the nearest backup shrine (D97)
  * @property {object} [exit] the exit walked out through (exit); a locked
  *   exit opening (unlock) or closing again (lock)
  */
@@ -91,9 +91,9 @@ export class Game {
     this.player = new Player([0, 0, 0]);
     /** Things pasted so far, for their ids. */
     this.pastes = 0;
-    /** Room of the backup shrine used last (D96), or null: it wins a tie for the nearest one. */
+    /** Room of the backup shrine used last (D97), or null: it wins a tie for the nearest one. */
     this.lastShrine = null;
-    /** He died with no backups left: when he recompiles, the system crashes (D96). */
+    /** He died with no backups left: when he recompiles, the system crashes (D97). */
     this.crashing = false;
     this.learnSpells();
     this.applyUpgrades();
@@ -212,7 +212,7 @@ export class Game {
 
   /**
    * The wizard just died: report it, with a message naming the cause. It
-   * uses one of his backups (D96); with none left, the system crashes when
+   * uses one of his backups (D97); with none left, the system crashes when
    * he recompiles (crash()).
    */
   died() {
@@ -226,7 +226,7 @@ export class Game {
   }
 
   /**
-   * He recompiled with no backups left (D96): the system crashes and he
+   * He recompiled with no backups left (D97): the system crashes and he
    * reboots on the backup shrine nearest to the room on the world map
    * (lastShrine wins a tie), which refills him. Everything found stays
    * found; the clipboard went with his death. With no shrine in the world,
@@ -255,7 +255,7 @@ export class Game {
   }
 
   /**
-   * Stepping onto the room's backup shrine (D96) uses it: standing on its
+   * Stepping onto the room's backup shrine (D97) uses it: standing on its
    * floor tile, alive. Staying on it doesn't use it again.
    */
   touchShrine() {

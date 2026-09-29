@@ -8,10 +8,10 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ### Changed
 - Collapsing blocks are frosted white glass (pale white-blue, dashed
-  edges) instead of magenta, which is now the wizard's color (D97).
+  edges) instead of magenta, which is now the wizard's color (D98).
 
 ### Added
-- Backups (Phase 3 step 14, D96): the wizard has 8 backups, shown as
+- Backups (Phase 3 step 14, D97): the wizard has 8 backups, shown as
   pips under the integrity bar; each death uses one. Dying with none
   left crashes the system (`SYSTEM CRASH` banner) and he reboots on the
   backup shrine nearest on the world map, keeping everything found.

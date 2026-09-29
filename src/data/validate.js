@@ -579,7 +579,7 @@ function validateHoles({ room, report, filled, holes, pathCells, collapsing, pla
   });
 }
 
-/** The backup shrine (D96): a floor tile inside the room, on no hole, plate, block or object. */
+/** The backup shrine (D97): a floor tile inside the room, on no hole, plate, block or object. */
 function validateShrine({ room, report, filled, holes, plates }) {
   if (!room.shrine) return;
   const [x, z] = room.shrine;

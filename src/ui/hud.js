@@ -109,7 +109,7 @@ export class Hud {
   }
 
   /**
-   * Show the backups (D96) as a row of pips under the integrity bar; a
+   * Show the backups (D97) as a row of pips under the integrity bar; a
    * lost one flashes as it empties.
    * @param {number} value backups left
    * @param {number} max

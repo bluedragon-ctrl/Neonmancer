@@ -1,5 +1,5 @@
 /**
- * The backup shrine (D96): a floor tile, flush like a plate, that glows.
+ * The backup shrine (D97): a floor tile, flush like a plate, that glows.
  * A square outline with a rune (a diamond round a small square), a pulsing
  * glow on the tile, light rising from its corners, pixel motes drifting up
  * and a faint square ring floating up now and then. Used (stepped on, or
@@ -17,7 +17,7 @@ import { createPixelBurst, placePixels } from './entity-view.js';
 import { PALETTE, fadingLines, lineMaterial, neonLines } from './neon.js';
 
 export const SHRINE_FX = {
-  /** The wizard's magenta, his body's color (D96). */
+  /** The wizard's magenta, his body's color (D97). */
   color: PALETTE.magenta,
   /** Lines float this far above the floor. */
   lift: 0.012,

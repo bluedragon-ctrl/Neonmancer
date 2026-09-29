@@ -231,7 +231,7 @@ const ALL_ASSETS = [
   { label: 'cut-paste', group: 'cut-paste', span: 4.5, spin: false, build: () => buildCutPaste('crate') },
   { label: 'cut-paste-enemy', group: 'cut-paste', span: 4.5, spin: false, build: () => buildCutPaste('bug') },
   { label: 'clip-hud', group: 'cut-paste', span: 1, spin: false, build: buildClipHud },
-  // Backup shrine (Phase 3 step 14, D96): a glowing floor tile in the
+  // Backup shrine (Phase 3 step 14, D97): a glowing floor tile in the
   // wizard's magenta; he steps on and it flares.
   { label: 'shrine', spin: false, build: buildShrine },
 ];
