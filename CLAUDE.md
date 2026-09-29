@@ -178,6 +178,8 @@ Planned for Phase 4 (the roster, D88); details settle in their steps:
   holds floor plates down and draws enemies
 - **Scan** — reveals hidden blocks, fake walls and secret pickups for a
   while
+- **Pull** — pulls the closest movable object (a crate) or enemy in the
+  facing direction one tile towards the wizard (D89)
 
 Spell upgrades have their own disks and save bits (the upgrades block,
 not spells, D88); an upgrade replaces its base spell in the Tab cycle
@@ -185,8 +187,8 @@ not spells, D88); an upgrade replaces its base spell in the Tab cycle
 - **Zap+** — the bolt bounces off walls, reaching targets round corners
 - **Mirror** (Shield upgrade) — reflects bolts back at the shooter
 
-Up to 16 spells and 16 upgrades; 10 spells and 2 upgrades are set, the
-rest stay spare for what content production needs (D88). Intended order
+Up to 16 spells and 16 upgrades; 11 spells and 2 upgrades are set, the
+rest stay spare for what content production needs (D88, D89). Intended order
 in the world: early Zap, Shield, Blink, Pause; middle Cut & Paste,
 Firewall, Fork, Scan and the jump buff; late Compile, Warp, Zap+ and
 Mirror. Buff items make the wizard himself stronger: more integrity,
@@ -445,8 +447,8 @@ first buff items. Score, bonus bits and secrets. Fragments, access levels
 and the core. Step plan: docs/design.md (D65).
 
 **Phase 4 (v0.4) — Guardians, saves, tooling**
-Firewall Wardens. The roster's new spells and upgrades (D88): Compile,
-Fork, Scan, Zap+ and Mirror. Title screen and pause menu. Access keys,
+Firewall Wardens. The roster's new spells and upgrades (D88, D89):
+Compile, Fork, Scan, Pull, Zap+ and Mirror. Title screen and pause menu. Access keys,
 URL saves, localStorage autosave, tests. Map screen. Reachability
 checker. Design skills and subagents.
 

@@ -7,6 +7,9 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Pull joins the spell roster (D89, slot 10, planned for Phase 4): it
+  pulls the closest crate or enemy in the facing direction one tile
+  towards the wizard.
 - The spell roster (Phase 3 step 11, D88): three new spells (Compile,
   Fork, Scan) and two upgrades (Zap+, Mirror), planned for Phase 4; a
   draft of the buff items; the intended order in the world. docs/design.md

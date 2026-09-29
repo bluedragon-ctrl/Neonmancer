@@ -1604,3 +1604,16 @@ first two spells worth having late. Replacing the base keeps the Tab
 cycle short. A block of their own keeps upgrades apart from spells in
 the save and the code; equipment was never defined. Keeping bits spare
 leaves the roster open to what the rooms turn out to need.
+
+### D89 — 2026-09-29 — Pull joins the spell roster
+Pull, turned down in D88, becomes a planned spell (slot 10,
+provisional): it pulls the closest movable object (a crate) or enemy in
+the wizard's facing direction one tile towards him. The target is the
+first one along the facing grid axis; cost, color, range and what stops
+the pull (a stack, a wall behind, the wizard's own cell) settle in its
+Phase 4 step, as does its place in the world's order. The roster is now
+11 spells and 2 upgrades.
+**Why:** author's choice. Pushing can only move a crate away from the
+wizard, so a crate against a wall or across a gap is stuck; Pull gives
+it the other direction, and dragging an enemy one tile opens new ways
+to set up plates and fights.
