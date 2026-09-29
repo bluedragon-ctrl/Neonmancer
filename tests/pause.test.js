@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { DT } from '../src/core/loop.js';
+import { pauseEnemy } from '../src/combat.js';
 import { Game } from '../src/game.js';
 import { PAUSE_FX, pauseLook } from '../src/render/pause-fx.js';
 import { Progress, saveBit } from '../src/world/progress.js';
@@ -109,7 +110,7 @@ test('the wizard bumps into a frozen enemy and stands on it, unhurt; a frozen bo
 test('an enemy frozen round the wizard lets him out, then turns solid for him', () => {
   const game = gameWith([{ id: 'b', template: 'sitter', at: [3, 0, 3] }], [3.5, 0, 3.5]);
   // As a Pause bolt hitting it while he stands inside it.
-  game.pauseEnemy(game.enemies[0], FROZEN);
+  pauseEnemy(game, game.enemies[0], FROZEN);
   const [bug] = game.enemies;
   assert.ok(bug.passable);
   assert.ok(!game.solids.includes(bug), 'not solid for him while he is inside');
