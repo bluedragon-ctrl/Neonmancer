@@ -51,6 +51,7 @@ import { BOLT } from '../src/entities/bolt.js';
 import { ZAP_FX, damagedGlitch, enemyHitLook } from '../src/render/zap-fx.js';
 import { createBolt, createCastFlare, createSparks, placeBolt, placeCastFlare, placeSparks } from '../src/render/zap-view.js';
 import { EnergyBar } from '../src/ui/energy-bar.js';
+import { createChip } from '../src/render/chip.js';
 import { DISK, createDisk, diskMotion, diskPixels, poseDisk } from '../src/render/disk.js';
 import { createRefill, refillMotion } from '../src/render/refill.js';
 import { INSTALL_FX } from '../src/render/install-fx.js';
@@ -191,6 +192,14 @@ const ALL_ASSETS = [
   { label: 'refill-energy', group: 'refills', spin: false, build: () => buildRefill('energy') },
   { label: 'refill-collect', group: 'refills', spin: false, build: buildRefillCollect },
   { label: 'pickups-in-room', group: 'refills', span: 5.5, spin: false, build: buildPickupsInRoom },
+  // Buff chips (Phase 3 step 12, D93): permanent buffs, a chip in the
+  // stat's color with pins, its icon on the front and the save bit on the
+  // back; a found one as a gray ghost; all three in a row beside a disk.
+  { label: 'chip-integrity', group: 'chips', spin: false, build: () => buildChip({ stat: 'integrity', slot: 0 }) },
+  { label: 'chip-energy', group: 'chips', spin: false, build: () => buildChip({ stat: 'energy', slot: 4 }) },
+  { label: 'chip-recharge', group: 'chips', spin: false, build: () => buildChip({ stat: 'recharge', slot: 9 }) },
+  { label: 'chip-ghost', group: 'chips', spin: false, build: () => buildChip({ stat: 'energy', slot: 4, ghost: true }) },
+  { label: 'chips-row', group: 'chips', span: 4, spin: false, build: buildChipRow },
   // Switches and locked exits (Phase 3 step 4, D75): a target zapped on
   // and off; a plate pressed by a crate dropping on it, then by the wizard;
   // a room with a locked doorway (panel) and a locked front exit (bars)
@@ -317,11 +326,11 @@ function buildLocks() {
   return asset;
 }
 
-/** The wizard installing Zap, then Shield, in a loop. */
+/** The wizard installing Zap, then Shield, then an integrity buff, in a loop. */
 function buildInstall() {
   const wizard = createWizard();
   wizard.rotation.y = Math.PI / 4;
-  const views = [createInstall(defs.spells.zap), createInstall(defs.spells.shield)];
+  const views = [createInstall(createDisk(defs.spells.zap)), createInstall(createDisk(defs.spells.shield)), createInstall(createChip({ stat: 'integrity', slot: 0 }))];
   for (const view of views) view.rotation.y = Math.PI / 4;
   const asset = new Group().add(wizard, ...views);
   const loop = INSTALL_FX.ticks + 50;
@@ -330,7 +339,7 @@ function buildInstall() {
   asset.userData.update = (dt) => {
     tick += dt * 60;
     if (tick >= loop) [tick, round] = [tick - loop, round + 1];
-    const shown = views[round % 2];
+    const shown = views[round % views.length];
     for (const view of views) view.visible = view === shown;
     // Before it starts: the disk still hanging in front of him.
     placeInstall(shown, wizard, [0, 0, 0], Math.max(0, tick - 20));
@@ -519,6 +528,27 @@ function buildDisk(options = {}) {
   const disk = createDisk(options);
   const asset = new Group().add(disk);
   asset.userData.update = (dt, time) => poseDisk(disk, diskMotion({ time, ghost: options.ghost }));
+  return asset;
+}
+
+/** A buff chip idling. */
+function buildChip(options) {
+  const chip = createChip(options);
+  const asset = new Group().add(chip);
+  asset.userData.update = (dt, time) => poseDisk(chip, diskMotion({ time, ghost: options.ghost }));
+  return asset;
+}
+
+/** The three buff chips in a row along the screen's horizontal, a data disk at the end for scale. */
+function buildChipRow() {
+  const models = [createChip({ stat: 'integrity', slot: 0 }), createChip({ stat: 'energy', slot: 4 }), createChip({ stat: 'recharge', slot: 9 }), createDisk()];
+  const asset = new Group();
+  models.forEach((model, i) => {
+    const along = (i - 1.5) * 0.9;
+    model.position.set(along, 0, -along);
+    asset.add(model);
+  });
+  asset.userData.update = (dt, time) => models.forEach((model, i) => poseDisk(model, diskMotion({ time: time + i * 0.7 })));
   return asset;
 }
 

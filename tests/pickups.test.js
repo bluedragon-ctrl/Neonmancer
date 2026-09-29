@@ -4,6 +4,8 @@ import { loadGameData } from '../src/data/load.js';
 import { validateData } from '../src/data/validate.js';
 import { RoomEdit } from '../src/editor/room-edit.js';
 import { Game } from '../src/game.js';
+import { PLAYER } from '../src/entities/player.js';
+import { createChip } from '../src/render/chip.js';
 import { DISK, createDisk, diskMotion, diskPixels } from '../src/render/disk.js';
 import { PICKUP_BITS, Progress, SAVE_BLOCKS, pickupBit, saveBit } from '../src/world/progress.js';
 import { PICKUPS, SPELLS, dataFiles, eventTypes, gameData, idle, roomFile } from './helpers.js';
@@ -32,6 +34,7 @@ test('save bits come in blocks: spells, buffs, upgrades, fragments; 112 in all (
   assert.throws(() => saveBit('spells', 16), RangeError);
   assert.equal(pickupBit(PICKUPS.disk_zap, SPELLS), 0);
   assert.equal(pickupBit(PICKUPS.refill_energy, SPELLS), null, 'refills have no bit');
+  assert.equal(pickupBit(PICKUPS.buff_recharge, SPELLS), 25, 'a buff: its slot in the buff block');
 });
 
 test('Progress remembers bits found; known spells follow from the disks, in slot order', () => {
@@ -110,6 +113,51 @@ test('a refill is left lying while the stat is full, then restores up to the max
   assert.deepEqual(game.pickups.map((pickup) => pickup.state), ['idle', 'idle']);
 });
 
+test('Progress adds up the buffs found (D93)', () => {
+  const progress = new Progress([saveBit('buffs', 0), saveBit('buffs', 1), saveBit('buffs', 9)]);
+  assert.deepEqual(progress.buffs(PICKUPS), { integrity: 2, energy: 0, recharge: 4 });
+  assert.deepEqual(new Progress().buffs(PICKUPS), { integrity: 0, energy: 0, recharge: 0 });
+});
+
+test('buffs raise his maxima and fill the stat; they last through death and room resets (D93)', () => {
+  const game = gameWith([
+    { id: 'health', type: 'buff_integrity_1', at: [4, 0, 4] },
+    { id: 'mana', type: 'buff_energy_1', at: [6, 0, 6] },
+    { id: 'speed', type: 'buff_recharge', at: [2, 0, 6] },
+  ]);
+  const { player } = game;
+  player.integrity = 3;
+  assert.ok(stepOnto(game, [4, 0, 4]).includes('pickup'));
+  assert.equal(player.maxIntegrity, PLAYER.maxIntegrity + 1);
+  assert.equal(player.integrity, player.maxIntegrity, 'filled up');
+  assert.deepEqual(player.install, { item: 'buff_integrity_1', at: [4.5, 0.5, 4.5], tick: 0 }, 'the install animation plays');
+  assert.ok(game.progress.has(saveBit('buffs', 0)));
+
+  player.energy = 5;
+  stepOnto(game, [6, 0, 6]);
+  assert.equal(player.maxEnergy, PLAYER.maxEnergy + 10);
+  assert.equal(player.energy, player.maxEnergy, 'filled up');
+
+  stepOnto(game, [2, 0, 6]);
+  assert.equal(player.energyTicks, PLAYER.energyTicks - 4);
+
+  // Death resets the room: the chips are ghosts, the wizard keeps his buffs.
+  game.hurt(99);
+  for (let i = 0; i < 200 && player.dead; i++) game.update(idle);
+  assert.deepEqual(game.pickups.map((pickup) => pickup.state), ['ghost', 'ghost', 'ghost']);
+  assert.equal(player.integrity, PLAYER.maxIntegrity + 1);
+  assert.equal(player.energy, PLAYER.maxEnergy + 10);
+  assert.equal(player.energyTicks, PLAYER.energyTicks - 4);
+});
+
+test('a loaded save starts him with its buffs (D93)', () => {
+  const game = gameWith([], { progress: new Progress([saveBit('buffs', 0), saveBit('buffs', 1), saveBit('buffs', 4)]) });
+  assert.equal(game.player.maxIntegrity, PLAYER.maxIntegrity + 2);
+  assert.equal(game.player.integrity, game.player.maxIntegrity);
+  assert.equal(game.player.maxEnergy, PLAYER.maxEnergy + 10);
+  assert.equal(game.player.energy, game.player.maxEnergy);
+});
+
 test('a dead wizard takes nothing', () => {
   // The disk hovers where he stands (spawn [1.5, 0, 1.5]).
   const game = gameWith([{ id: 'disk', type: 'disk_zap', at: [1, 0, 1] }]);
@@ -144,6 +192,24 @@ test('defs: spell slots are unique, a disk names a known spell, pickup and objec
   assert.match(errors, /pickups\.crate: "crate" is an object type too/);
 });
 
+test('defs: buff slots are unique; all buffs keep integrity within the save key and recharging above 0 ticks (D93)', () => {
+  const files = dataFiles({ rooms: [roomFile('alpha')] });
+  files['defs.json'].pickups.buff_integrity_2 = { kind: 'buff', slot: 0, stat: 'integrity', amount: 7 };
+  files['defs.json'].pickups.buff_recharge = { kind: 'buff', slot: 9, stat: 'recharge', amount: PLAYER.energyTicks };
+  const errors = validateData(files).join('\n');
+  assert.match(errors, /pickups\.buff_integrity_2\.slot: buff slot 0 is taken by "buff_integrity_1"/);
+  assert.match(errors, /integrity buffs raise the maximum to 16; the save key holds at most 15/);
+  assert.match(errors, /recharge buffs take away 12 of 12 ticks/);
+});
+
+test('chip model: in its stat\'s color, gray once found; the bits on the back only', () => {
+  const chip = createChip({ stat: 'energy', slot: 4 });
+  assert.equal(chip.userData.color, '#b6ff3c');
+  assert.notEqual(createChip({ stat: 'energy', ghost: true }).userData.color, '#b6ff3c');
+  const zeros = chip.userData.spin.children.find((node) => node.isLineSegments2 && node.geometry.attributes.instanceStart.count === 15 * 4);
+  assert.ok(zeros, 'one face of 15 zero bits');
+});
+
 test('disk look: a ghost spins without the bob; a pick-up rises and flashes, then its pixels fly and fade', () => {
   const ghost = diskMotion({ time: 3, ghost: true });
   const later = diskMotion({ time: 3.7, ghost: true });
@@ -173,7 +239,7 @@ test('room editor: pickups are placed, picked by id and erased like objects', ()
   assert.deepEqual(edit.data.pickups, [], 'dropped outside the new size');
 });
 
-test('disk model: few draw calls; a ghost dashes each merged zero bit like its own line', () => {
+test('disk model: few draw calls; a ghost is solid-lined (D94)', () => {
   const draws = (model) => {
     let count = 0;
     model.traverse((node) => (count += node.isMesh ? 1 : 0)); // LineSegments2 is a Mesh too
@@ -185,10 +251,9 @@ test('disk model: few draw calls; a ghost dashes each merged zero bit like its o
   assert.equal(draws(ghost), 7);
   const zeros = ghost.userData.spin.children.find((node) => node.isLineSegments2 && node.geometry.attributes.instanceStart.count === 30 * 4);
   assert.ok(zeros, 'one line with the 4 sides of 15 zero bits on both faces');
-  const start = zeros.geometry.attributes.instanceDistanceStart;
-  const end = zeros.geometry.attributes.instanceDistanceEnd;
-  for (let i = 0; i < start.count; i++) {
-    if (i % 4 === 0) assert.equal(start.getX(i), 0, 'each square starts the dash pattern anew');
-    else assert.ok(Math.abs(start.getX(i) - end.getX(i - 1)) < 1e-6, 'and runs on round it');
+  const dashed = [];
+  for (const model of [ghost, createChip({ stat: 'energy', ghost: true })]) {
+    model.traverse((node) => node.isLineSegments2 && node.material.dashed && dashed.push(node));
   }
+  assert.deepEqual(dashed, [], 'found disks and chips are drawn with solid lines');
 });

@@ -1,10 +1,11 @@
 /**
- * three.js pieces of the spell install animation (D73; timing and shapes
- * in install-fx.js): the disk shrinking, its bits spiralling in, rings
- * sweeping up the wizard, and his hologram tinted and flashed.
+ * three.js pieces of the install animation (D73; timing and shapes in
+ * install-fx.js): the disk (or a buff's chip, D93) shrinking, its bits
+ * spiralling in, rings sweeping up the wizard, and his hologram tinted and
+ * flashed.
  */
 import { Color, Group } from 'three';
-import { createDisk, poseDisk } from './disk.js';
+import { poseDisk } from './disk.js';
 import { createPixelBurst, placePixels } from './entity-view.js';
 import { INSTALL_FX, installLook } from './install-fx.js';
 import { lineMaterial, neonLines } from './neon.js';
@@ -18,11 +19,12 @@ const CIRCLE = Array.from({ length: 48 }, (_, i) => {
 const WHITE = new Color(0xffffff);
 
 /**
- * The install animation's pieces for one spell (placeInstall()).
- * @param {{ slot: number, color: number|string }} spell its tuning (defs.json spells)
+ * The install animation's pieces for one data disk or buff chip (placeInstall()).
+ * @param {import('three').Group} disk the item's model (createDisk() or createChip()), taken over
  */
-export function createInstall({ slot, color }) {
-  const disk = createDisk({ slot, color });
+export function createInstall(disk) {
+  // A disk's spell color (its lit bit), a chip's own.
+  const color = disk.userData.bitColor;
   const pixels = createPixelBurst(INSTALL_FX.pixels, INSTALL_FX.pixelSize, [color, color, 0xffffff]);
   const rings = Array.from({ length: INSTALL_FX.rings }, () => {
     const ring = neonLines(CIRCLE, lineMaterial({ color, width: 2.6, brightness: 2 }));

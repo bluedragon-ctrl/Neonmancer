@@ -33,7 +33,7 @@ test('the install animation does not hold the wizard up: he walks, casts, switch
   game.player.place([6.5, 0, 4.5]);
   game.update(idle);
   const { player } = game;
-  assert.deepEqual(player.install, { spell: 'shield', at: [6.5, 0.5, 4.5], tick: 0 });
+  assert.deepEqual(player.install, { item: 'disk_shield', at: [6.5, 0.5, 4.5], tick: 0 });
   const x = player.pos[0];
   game.update(hold('down'));
   assert.notEqual(player.pos[0], x, 'he walks');

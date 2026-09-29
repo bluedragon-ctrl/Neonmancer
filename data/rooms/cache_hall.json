@@ -24,5 +24,8 @@
     { "id": "crate_a", "type": "crate", "at": [5, 0, 6] },
     { "id": "crate_b", "type": "crate", "at": [11, 0, 6] }
   ],
-  "pickups": [{ "id": "disk_shield", "type": "disk_shield", "at": [7, 0, 0] }]
+  "pickups": [
+    { "id": "disk_shield", "type": "disk_shield", "at": [7, 0, 0] },
+    { "id": "buff_energy_1", "type": "buff_energy_1", "at": [14, 2, 0] }
+  ]
 }

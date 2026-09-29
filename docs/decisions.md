@@ -1682,3 +1682,40 @@ good, and the save key already carries exactly the state to roll back
 to. A double jump may give the jump upgrade more play than a higher
 jump; the step decides. The jump makes the wizard stronger like the
 spell upgrades do, so it belongs with them.
+
+### D93 — 2026-09-29 — Buff items: amounts, taking one, the chip look
+The roster's draft (D88, without the jump, D92) is settled: 4× +1
+integrity (8 → 12), 5× +10 energy (50 → 100) and one recharge buff,
+from a unit of energy every 12 ticks to every 8 (5 → 7.5 per second).
+Each buff is its own pickup type with a slot in the save's buff block
+(slots 0–9; 10–15 spare). Taking an integrity or energy buff raises the
+maximum and fills that stat to it; the install animation plays with the
+buff's chip, and the banner reads e.g. `INTEGRITY +1 / BUFF INSTALLED`.
+Every permanent pickup (spell disks, buffs, later upgrades and
+fragments) plays this same install animation as a spell, with its own
+model and color, then a banner and a terminal line.
+The wizard's maxima and recharge rate follow from the buffs found, so a
+loaded save starts him buffed. Look: a hovering chip in the stat's color
+(cyan integrity, lime energy; recharge amber at first, lime since D94) with pins, the stat's icon
+on the front and the save bit lit on the back, bigger than a refill.
+Validation keeps all integrity buffs within the key's 4-bit health field.
+**Why:** author's choices. Filling the stat makes a buff feel like a
+reward at once; one install animation for every permanent improvement
+makes each one read as the wizard getting stronger for good; a faster recharge by a third is felt without making
+energy free. A chip reads as hardware for the wizard, apart from the
+disks that teach spells, and showing its bit like a disk keeps the save
+model visible.
+
+### D94 — 2026-09-29 — Pickup colors the player can read; found pickups solid gray
+Pickups follow two rules: the shape tells what one is (a white data
+disk teaches a spell, a chip is a permanent buff, a small voxel shape a
+temporary refill), and the color tells which stat it touches, the color
+of its HUD bar: light blue (cyan) integrity, yellow-green (lime) energy.
+The recharge buff turns from amber to lime, as it improves energy; its
+lightning icon tells it from the energy chip. A found disk or chip
+stays a gray ghost but is drawn with solid lines instead of dashed.
+Refines D74 (dashed ghosts) and D93 (amber recharge).
+**Why:** author's request, for a clean visual distinction. Amber is
+also the Home Lattice room color and the banner color, and no HUD bar
+is amber, so it said nothing about the stat. Solid gray reads cleaner
+than dashes on small spinning items.

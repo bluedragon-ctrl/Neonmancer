@@ -1,15 +1,16 @@
 /**
- * A room pickup's view (D71): a data disk (disk.js) or a refill
- * (refill.js), hovering and spinning in its cell; a found disk as a ghost;
- * once taken, a refill's pick-up effect and its pixel burst, then nothing;
- * a taken disk goes at once, as the install animation on the wizard takes
- * it over (install-view.js, D73).
+ * A room pickup's view (D71): a data disk (disk.js), a buff chip (chip.js,
+ * D93) or a refill (refill.js), hovering and spinning in its cell; a found
+ * disk or chip as a ghost; once taken, a refill's pick-up effect and its
+ * pixel burst, then nothing; a taken disk or chip goes at once, as the
+ * install animation on the wizard takes it over (install-view.js, D73).
  */
 import { Group } from 'three';
-import { DISK, createDisk, diskMotion, diskPixels, poseDisk } from './disk.js';
+import { DISK, diskMotion, diskPixels, poseDisk } from './disk.js';
 import { createPixelBurst, placePixels } from './entity-view.js';
 import { hash } from './hash.js';
-import { createRefill, refillMotion } from './refill.js';
+import { createPickupModel } from './pickup-model.js';
+import { refillMotion } from './refill.js';
 
 export class PickupView {
   /**
@@ -20,9 +21,7 @@ export class PickupView {
     this.pickup = pickup;
     const { data } = pickup;
     this.refill = data.kind === 'refill';
-    this.model = this.refill
-      ? createRefill(data.stat)
-      : createDisk({ ...game.content.spells[data.spell], ghost: pickup.state === 'ghost' });
+    this.model = createPickupModel(game.content, data, pickup.state === 'ghost');
     const [x, y, z] = data.at;
     this.model.position.set(x + 0.5, y, z + 0.5);
     const { pixels, pixelSize } = DISK.collect;

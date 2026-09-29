@@ -8,7 +8,7 @@ import { bounceOffEnemies, burnEnemies, touchEnemies, updateAttacks, updateBolts
 import { isBackSide, sideAxes, withExitDefaults } from './data/room-data.js';
 import { Enemy } from './entities/enemy.js';
 import { createObject } from './entities/kinds.js';
-import { Pickup } from './entities/pickup.js';
+import { BUFF_COLORS, Pickup } from './entities/pickup.js';
 import { PLAYER, Player } from './entities/player.js';
 import { SWITCH_KINDS } from './entities/switch.js';
 import { groundBelow, overlapsBox, surfaceBelow, touchedCell, touchesBox } from './physics/collision.js';
@@ -85,6 +85,10 @@ export class Game {
     /** Things pasted so far, for their ids. */
     this.pastes = 0;
     this.learnSpells();
+    // A loaded save starts him buffed and full.
+    this.applyBuffs();
+    this.player.integrity = this.player.maxIntegrity;
+    this.player.energy = this.player.maxEnergy;
     this.enterRoom(start);
     /**
      * Room transition in progress, or null: { phase: 'out' | 'in', tick, exit }.
@@ -327,7 +331,7 @@ export class Game {
   /**
    * The wizard takes the pickups he touches (D71), if they are any use: a
    * data disk installs its spell for good (with an install animation
-   * on him, D73); a refill restores integrity or
+   * on him, D73); a buff chip makes him stronger for good (D93); a refill restores integrity or
    * energy, and is left lying while that is full. Reported as 'pickup'.
    */
   takePickups() {
@@ -351,14 +355,15 @@ export class Game {
    */
   use(data, bit) {
     const { player } = this;
-    if (data.kind === 'disk') {
+    // Every permanent pickup installs into the wizard the same way (D93):
+    // saved, the install animation, a banner and a terminal line.
+    if (bit !== null) {
       this.progress.collect(bit);
-      this.learnSpells(data.spell);
       const [x, y, z] = data.at;
-      player.startInstall(data.spell, [x + 0.5, y + 0.5, z + 0.5]);
-      const name = this.content.strings[`spell.${data.spell}`] ?? data.spell.toUpperCase();
-      announce('banner.spell', { spell: name }, { sub: 'banner.spellSub', color: this.content.spells[data.spell].color });
-      say('msg.spellInstalled', { spell: name });
+      player.startInstall(data.type, [x + 0.5, y + 0.5, z + 0.5]);
+      const { banner, message } = this.gain(data);
+      announce(banner.key, banner.values, banner.options);
+      say(message.key, message.values);
       return true;
     }
     // A refill: integrity or energy, up to his maximum.
@@ -367,6 +372,48 @@ export class Game {
     player[data.stat] = Math.min(max, player[data.stat] + data.amount);
     say(data.stat === 'integrity' ? 'msg.refillIntegrity' : 'msg.refillEnergy');
     return true;
+  }
+
+  /**
+   * What a permanent pickup gives him, and how it is announced.
+   * @param {object} data the pickup (buildRoom()): a data disk or a buff chip
+   * @returns {{ banner: { key: string, values: object, options: object }, message: { key: string, values: object } }}
+   */
+  gain(data) {
+    const { player } = this;
+    if (data.kind === 'buff') {
+      this.applyBuffs();
+      // Taking one fills what it raised (D93).
+      if (data.stat === 'integrity') player.integrity = player.maxIntegrity;
+      if (data.stat === 'energy') player.energy = player.maxEnergy;
+      const stat = this.content.strings[`buff.${data.stat}`] ?? data.stat.toUpperCase();
+      const values = { stat, amount: data.stat === 'recharge' ? '' : ` +${data.amount}` };
+      return {
+        banner: { key: 'banner.buff', values, options: { sub: 'banner.buffSub', color: BUFF_COLORS[data.stat] } },
+        message: { key: 'msg.buffInstalled', values },
+      };
+    }
+    this.learnSpells(data.spell);
+    const spell = this.content.strings[`spell.${data.spell}`] ?? data.spell.toUpperCase();
+    return {
+      banner: { key: 'banner.spell', values: { spell }, options: { sub: 'banner.spellSub', color: this.content.spells[data.spell].color } },
+      message: { key: 'msg.spellInstalled', values: { spell } },
+    };
+  }
+
+  /**
+   * Make the wizard as strong as the buffs found say (D93): his maximum
+   * integrity and energy, and how fast energy recharges. Current values
+   * stay, within the new maxima.
+   */
+  applyBuffs() {
+    const { player } = this;
+    const buffs = this.progress.buffs(this.content.pickupTypes);
+    player.maxIntegrity = PLAYER.maxIntegrity + buffs.integrity;
+    player.maxEnergy = PLAYER.maxEnergy + buffs.energy;
+    player.energyTicks = Math.max(1, PLAYER.energyTicks - buffs.recharge);
+    player.integrity = Math.min(player.integrity, player.maxIntegrity);
+    player.energy = Math.min(player.energy, player.maxEnergy);
   }
 
   /**

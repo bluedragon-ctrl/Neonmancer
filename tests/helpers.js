@@ -80,7 +80,7 @@ export const SPELLS = {
   cut_paste: { slot: 6, color: '#f4f6ff', cost: 20, pasteCost: 0, cooldown: 0.25 },
 };
 
-/** Pickup types (D71): the data disks and both refills. */
+/** Pickup types (D71): the data disks, both refills and a buff of each stat (D93). */
 export const PICKUPS = {
   disk_zap: { kind: 'disk', spell: 'zap' },
   disk_shield: { kind: 'disk', spell: 'shield' },
@@ -91,6 +91,10 @@ export const PICKUPS = {
   disk_cut_paste: { kind: 'disk', spell: 'cut_paste' },
   refill_integrity: { kind: 'refill', stat: 'integrity', amount: 2 },
   refill_energy: { kind: 'refill', stat: 'energy', amount: 30 },
+  buff_integrity_1: { kind: 'buff', slot: 0, stat: 'integrity', amount: 1 },
+  buff_integrity_2: { kind: 'buff', slot: 1, stat: 'integrity', amount: 1 },
+  buff_energy_1: { kind: 'buff', slot: 4, stat: 'energy', amount: 10 },
+  buff_recharge: { kind: 'buff', slot: 9, stat: 'recharge', amount: 4 },
 };
 
 /** Block types, as in defs.json (D60): plain, hazard, void, collapsing and a variant that grows back after 3 s. */

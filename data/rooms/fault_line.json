@@ -50,5 +50,8 @@
       "path": { "points": [[5, 0, 6]], "speed": 2.5, "pause": 0.6 }
     }
   ],
-  "pickups": [{ "id": "integrity", "type": "refill_integrity", "at": [6, 0, 5] }]
+  "pickups": [
+    { "id": "integrity", "type": "refill_integrity", "at": [6, 0, 5] },
+    { "id": "buff_integrity_1", "type": "buff_integrity_1", "at": [11, 2, 9] }
+  ]
 }

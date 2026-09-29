@@ -5,7 +5,7 @@
  * carry a 4×4 grid of data bits (like a destructible crate's) showing the
  * spell's slot, one of the 16 spell bits of the save: set bits are small
  * raised cubes in the spell's color, the others dim squares. A disk already
- * found is a gray, dashed ghost, spinning without the bob (D67, D74). Picking one up lifts
+ * found is a gray ghost, solid-lined, spinning without the bob (D67, D74, D94). Picking one up lifts
  * it, flashes it and bursts its bits into pixels.
  *
  * Looks are reviewed in the asset showcase (`?asset=disks`) before they go
@@ -45,7 +45,7 @@ export const DISK = {
   /** A darker spell color glows brighter, up to this many times, so every lit bit reads like Zap's cyan (D74). */
   bitBoost: 2.5,
   bitTint: 0.35,
-  /** A found disk: gray, dim, dashed and still. */
+  /** A found disk: gray, dim and still. */
   ghost: { color: 0x9aa0b8, brightness: 0.9 },
   /** Pick-up: ticks it rises and flashes, how high; then the pixel burst. */
   collect: { riseTicks: 10, rise: 0.4, pixels: 24, pixelSize: 0.06, pixelTicks: 36, spread: 0.8, lift: 0.5 },
@@ -104,23 +104,50 @@ export function createDisk({ color = PALETTE.cyan, slot = 0, ghost = false } = {
 
   // Outline: both faces and the edges between them.
   const edges = [...loop(outline, t), ...loop(outline, -t), ...outline.map((p) => [[...p, t], [...p, -t]])];
-  const lines = neonLines(edges, lineMaterial({ color: bodyColor, width: DISK.width, brightness: glow, dashed: ghost }));
+  const lines = neonLines(edges, lineMaterial({ color: bodyColor, width: DISK.width, brightness: glow }));
   lines.renderOrder = 2;
 
   // The bit grid on both faces: a lit cube for the slot's bit, a dim square for the others.
-  const pitch = (DISK.size * DISK.grid) / 4;
+  const cells = createBitGrid({ size: DISK.size, depth: t, slot, color: bitColor, ghost, sides: [1, -1] });
+  const spin = new Group().add(body, lines, ...cells);
+  const model = new Group().add(spin);
+  model.userData = { spin, color: bodyColor, bitColor };
+  spin.position.y = DISK.hover;
+  return model;
+}
+
+/**
+ * A 4×4 grid of save bits on the faces of a slab (a data disk, a buff chip,
+ * D93): a raised cube in `color` for the slot's bit, dim squares for the
+ * others, row by row from the top left.
+ * @param {object} options
+ * @param {number} options.size edge of the slab's face; the grid covers DISK.grid of it
+ * @param {number} options.depth half the slab's thickness: the faces are at ±depth
+ * @param {number} options.slot the lit bit, 0-15
+ * @param {number|string} options.color the lit bit's color
+ * @param {boolean} [options.ghost] found already: gray and dim
+ * @param {number[]} [options.sides] the faces to cover: 1 the front (+z), -1 the back
+ * @returns {import('three').Object3D[]}
+ */
+export function createBitGrid({ size, depth, slot, color, ghost = false, sides = [1, -1] }) {
+  const s = size / 2;
+  const t = depth;
+  const bitColor = ghost ? DISK.ghost.color : color;
+  const glow = ghost ? DISK.ghost.brightness : DISK.brightness;
+  const pitch = (size * DISK.grid) / 4;
   const half = (pitch * DISK.bit) / 2;
   bitGeometry ??= new BoxGeometry(2 * half, 2 * half, DISK.raise);
+  const scale = (2 * half) / bitGeometry.parameters.width;
   bitEdges ??= new EdgesGeometry(bitGeometry);
   const zeroMaterial = ghost
-    ? lineMaterial({ color: bodyColor, width: 1.2, brightness: glow * DISK.zero, dashed: true })
+    ? lineMaterial({ color: DISK.ghost.color, width: 1.2, brightness: glow * DISK.zero })
     : lineMaterial({ color: DISK.zeroColor, width: 1.2, brightness: 1 });
   const litLines = lineMaterial({ color: bitColor, width: DISK.bitWidth, brightness: ghost ? glow : bitGlow(bitColor) });
   const litFaces = faceMaterial(new Color(PALETTE.face).lerp(new Color(bitColor), ghost ? 0.1 : DISK.bitTint));
   const edgeSegments = edgePairs(bitEdges);
   const cells = [];
   const zeros = [];
-  for (const side of [1, -1]) {
+  for (const side of sides) {
     for (let row = 0; row < 4; row++) {
       for (let col = 0; col < 4; col++) {
         // The back mirrors the front, so the code reads the same from both sides.
@@ -134,43 +161,16 @@ export function createDisk({ color = PALETTE.cyan, slot = 0, ghost = false } = {
         cubeLines.renderOrder = 2;
         const lit = new Group().add(new Mesh(bitGeometry, litFaces), cubeLines);
         lit.position.set(x, y, side * (t + DISK.raise / 2));
+        lit.scale.set(scale, scale, 1);
         cells.push(lit);
       }
     }
   }
   // All zero bits are one line object: one draw call instead of 30.
   const zeroLines = neonLines(zeros, zeroMaterial);
-  if (ghost) restartDashes(zeroLines, 4);
   zeroLines.renderOrder = 2;
   cells.push(zeroLines);
-
-  const spin = new Group().add(body, lines, ...cells);
-  const model = new Group().add(spin);
-  model.userData = { spin, color: bodyColor, bitColor };
-  spin.position.y = DISK.hover;
-  return model;
-}
-
-/**
- * Make the dash pattern of a dashed line start over every `every`
- * segments. LineSegments2 measures dashes along all its segments in a row,
- * so loops merged into one line would each start at a different point of
- * the pattern; this dashes each loop as if it were its own line.
- * @param {import('three/addons/lines/LineSegments2.js').LineSegments2} line after computeLineDistances()
- * @param {number} every segments per loop
- */
-export function restartDashes(line, every) {
-  const start = line.geometry.attributes.instanceDistanceStart;
-  const end = line.geometry.attributes.instanceDistanceEnd;
-  let run = 0;
-  for (let i = 0; i < start.count; i++) {
-    if (i % every === 0) run = 0;
-    const length = end.getX(i) - start.getX(i);
-    start.setX(i, run);
-    run += length;
-    end.setX(i, run);
-  }
-  start.data.needsUpdate = true;
+  return cells;
 }
 
 /** Segment pairs of an EdgesGeometry, for neonLines(). */

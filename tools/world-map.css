@@ -328,3 +328,96 @@ li[data-room]:hover {
   stroke: var(--red);
   opacity: 1;
 }
+
+/* --- Pickup report (F3) ------------------------------------------------- */
+
+.report {
+  position: fixed;
+  inset: 0 320px 0 0; /* the map, beside the 320px panel */
+  z-index: 1;
+  overflow-y: auto;
+  padding: 20px 28px;
+  box-sizing: border-box;
+  background: rgba(5, 6, 13, 0.96);
+}
+
+.report[hidden] {
+  display: none;
+}
+
+.report-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.report-head button {
+  width: auto;
+  margin: 0;
+}
+
+.report table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 8px;
+}
+
+.report td {
+  padding: 5px 10px 5px 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.report td.bit {
+  width: 3em;
+  padding-right: 14px;
+  color: var(--dim);
+  text-align: right;
+}
+
+.report td.item {
+  width: 30%;
+}
+
+.report td.item small {
+  display: block;
+  color: var(--dim);
+}
+
+.report td.status {
+  width: 6em;
+  text-align: right;
+}
+
+.report tr.flagged td.item span {
+  color: var(--amber);
+}
+
+.report .none {
+  color: var(--dim);
+}
+
+.report .swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 8px;
+  border-radius: 2px;
+}
+
+.report button.place {
+  display: inline-block;
+  width: auto;
+  margin: 0 6px 4px 0;
+  padding: 2px 8px;
+  font-size: 13px;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--line);
+}
+
+.report button.place:hover {
+  color: #fff;
+  border-color: var(--cyan);
+}

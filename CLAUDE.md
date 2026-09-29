@@ -201,12 +201,21 @@ rest stay spare for what content production needs (D88, D89). Intended order
 in the world: early Zap, Shield, Blink, Pause; middle Cut & Paste,
 Firewall, Fork, Scan and the jump upgrade; late Compile, Warp, Zap+ and
 Mirror. Buff items make the wizard himself stronger: more integrity,
-more energy, faster recharge (draft: 4× +1 integrity, 5× +10 energy,
-one recharge buff; settled in the buff step). Stronger spells, upgrades
+more energy, faster recharge (D93): 4× +1 integrity (8 → 12), 5× +10
+energy (50 → 100) and one recharge buff (a unit every 8 ticks instead
+of 12); taking one fills the stat it raises. Each is a chip with its
+own save bit (buff slots 0–9). For the player, a pickup's shape tells
+what it is (white disk: spell, chip: buff, small voxel: refill) and its
+color the HUD bar it improves (light blue integrity, yellow-green energy
+and recharge); found ones are solid gray (D94). Stronger spells, upgrades
 and buffs all let him skip easier rooms and reach areas he couldn't
 before.
 
-Mana recharges slowly. Installing a spell plays a short animation.
+Mana recharges slowly. Every permanent pickup (a spell disk, a buff,
+later upgrades and fragments) plays the same install animation as a
+spell: the item shrinks, its bits spiral into the wizard, rings in its
+color sweep up him and he flashes white; then a banner and a terminal
+line (D93). A new permanent pickup gets it too, with its own model.
 Later spells and upgrades are stronger: they let the wizard speedrun
 simple rooms or solve them differently. The world is a maze, not a line:
 a room need not be fully solvable on first arrival, and some of its exits
@@ -376,7 +385,9 @@ not critical.
   as a node on a simple map grid (positions in `world.json`), with its
   connections; drag rooms and save; adds and removes rooms and
   connections (exits in the middle of the facing walls, D77); flags rooms
-  not reachable from the start; opens a room in the room editor. Dev
+  not reachable from the start; opens a room in the room editor; F3
+  shows the pickup report (every permanent item by save bit, where it
+  lies, not placed or placed twice). Dev
   server only, never shown to players: exploring is part of the game
   (D67).
 - **Reachability checker** (Phase 4): script that searches the grid with

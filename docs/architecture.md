@@ -75,6 +75,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `entities/warp.js` | Where Blink and Warp take the wizard (D86): `warpTarget()` sweeps his box along his aim through open space, stops at blocks, objects and the room's side, lands short of enemies, reports the enemies passed (pure, tested) |
 | `entities/clip.js` | Where Cut & Paste works (D87): `aimAxis()`, `frontCell()` (the cell in front of him), `cutTarget()` (a resting crate or frozen enemy there or one up, nothing on it), `pasteCell()` (free of blocks, bodies and pickups) (pure, tested); `cutOrPaste()` (spells.js) moves things in and out of the room |
 | `entities/pickup.js` | A pickup in a room: its box, save bit, state (idle, ghost, taken) and pick-up ticks (pure, tested) |
+| `world/pickup-report.js` | The world map tool's pickup report: every permanent item by save bit, the rooms it lies in, refills per type, unknown types (pure, tested) |
 | `world/map.js` | The world map (D66): `nearestFreeCell()` for new rooms, `roomDistances()` from the start, `mapWarnings()` (unreachable rooms, test rooms too far out, D49; authored rooms exempt, D90) (pure, tested) |
 | `world/path.js` | Shared path format: legs from `at` through `points`, `advance()` / `positionOf()` on a small path state, swept cells |
 | `render/viewport.js` | Letterbox, buffer size and 1080p-relative sizing math (pure, tested) |
@@ -135,9 +136,11 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `tools/game-version.js` | Dev only: the game version for builds, PATCH counted from git merges since the phase tag (D42) |
 | `render/disk.js`, `render/refill.js` | Pickup looks: the data disk (bit grid showing the spell's slot, ghost, pick-up and pixel burst; motion pure, tested) and the refills |
 | `render/switch-view.js` | Switch and locked-exit looks (`SWITCH_FX`): target and plate with their square bull's-eye, the lock's panel or bars with one light per switch; `TargetView`, `PlateView`, `LockView` (marks pure, tested) |
+| `render/chip.js` | Buff chip look (D93): chip in the stat's color, icon on the front, the buff's bit on the back, ghost |
+| `render/pickup-model.js` | A pickup's model by kind (disk, chip or refill), for the room view and the install animation |
 | `render/pickup-view.js` | A room pickup's view: its look, idle motion, ghost, pick-up effect |
 | `tools/showcase.html`, `tools/showcase.js` | Asset showcase page: every look on a turntable with the real renderer (also deployed) |
-| `tools/world-map.html`, `tools/world-map.js`, `tools/world-map.css` | World map tool (D66, D70, D77): every room on the map grid with its connections and checks; move, add and delete rooms, connect rooms and delete connections, then save; click to open a room in the editor. Dev server only, not built |
+| `tools/world-map.html`, `tools/world-map.js`, `tools/world-map.css` | World map tool (D66, D70, D77): every room on the map grid with its connections and checks; move, add and delete rooms, connect rooms and delete connections, then save; click to open a room in the editor; F3 opens the pickup report. Dev server only, not built |
 | `editor/editor.js` | Room editor (F2, D56, D57): opens on the current room, switches rooms and makes new ones, mouse picking on a height layer, tools, picking things, keys, rebuilding the room from the edited data, save or export |
 | `editor/room-edit.js` | One room being edited: place/erase edits, enemies, paths, exits and their connections, spawn/reset, name, biome, size (with a report), undo/redo (with the step's template changes), dirty state, cell descriptions; `roomErrors()`, `newRoom()` (pure, tested) |
 | `editor/map-edit.js` | The world as the world map tool edits it (D77): `MapEdit` moves, adds and removes rooms, connects rooms with an exit in the middle of each facing wall (`addExit()`), removes connections with both exits (`disconnectExit()`), undo, and what a save sends (`changes()`) (pure, tested) |

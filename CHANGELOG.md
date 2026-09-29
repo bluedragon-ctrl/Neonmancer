@@ -7,6 +7,18 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- World map tool: a pickup report on F3 lists every permanent item
+  (spell disks, buff chips) by save bit with the rooms it lies in, and
+  flags items not placed yet or placed more than once; refills by type.
+- Buff items (Phase 3 step 12, D93): chips that raise the wizard's
+  maximum integrity (4× +1, 8 → 12) or energy (5× +10, 50 → 100), or
+  speed up his energy recharge (one, 12 → 8 ticks per unit). Each has a
+  save bit in the buff block; taking one fills the stat it raises, plays
+  the install animation and shows `BUFF INSTALLED`. The HUD bars grow
+  with the maxima; chips and refills take the color of the bar they
+  improve, and found disks and chips are solid gray (D94). Chip look in the showcase (`?asset=chips`); one of
+  each in the test rooms Fault Line, Cache Hall and Fast Path;
+  validation of buff slots and the key's integrity limit.
 - The save key's layout gets an 8-bit access-level field (D91, 4 bits
   used). The spell upgrades Zap+ and Mirror move to Phase 3 as their
   own step (13 `feat/spell-upgrades`); the later Phase 3 steps are

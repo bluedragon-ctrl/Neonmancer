@@ -41,6 +41,7 @@ import { addXray } from './xray.js';
 import { damagedGlitch, enemyHitLook } from './zap-fx.js';
 import { createCastFlare, placeCastFlare } from './zap-view.js';
 import { createInstall, placeInstall } from './install-view.js';
+import { createPickupModel } from './pickup-model.js';
 import { createShield, placeShield } from './shield-view.js';
 import { createFirewall, placeFirewall } from './firewall-view.js';
 import { PAUSE_FX, pauseLook } from './pause-fx.js';
@@ -213,12 +214,13 @@ export class PlayerView {
     return view;
   }
 
-  /** The install animation of `spell`, made on first use. */
-  installView(spell) {
-    let view = this.installs.get(spell);
+  /** The install animation of `item` (a data disk's or buff chip's pickup type id), made on first use. */
+  installView(item) {
+    let view = this.installs.get(item);
     if (!view) {
-      view = createInstall(this.game.content.spells[spell]);
-      this.installs.set(spell, view);
+      const { content } = this.game;
+      view = createInstall(createPickupModel(content, content.pickupTypes[item]));
+      this.installs.set(item, view);
       this.group.add(view);
     }
     return view;
@@ -263,10 +265,10 @@ export class PlayerView {
     }
     for (const [spell, view] of this.trails) if (warp?.spell !== spell) placeWarpTrail(view, null, 0);
     if (warp) placeWarpTrail(this.trailView(warp.spell), warp, warp.tick + alpha);
-    // Installing a spell: the disk's bits flow from where it hung into him, wherever he goes, and tint him.
+    // Installing a spell or buff: the disk's or chip's bits flow from where it hung into him, wherever he goes, and tint him.
     const { install, shield } = player;
-    for (const [spell, view] of this.installs) view.visible = install?.spell === spell;
-    if (install) placeInstall(this.installView(install.spell), this.wizard, pos, install.tick + alpha, install.at.map((v, i) => v - pos[i]));
+    for (const [item, view] of this.installs) view.visible = install?.item === item;
+    if (install) placeInstall(this.installView(install.item), this.wizard, pos, install.tick + alpha, install.at.map((v, i) => v - pos[i]));
     for (const [spell, view] of this.rings) view.visible = shield?.spell === spell;
     if (shield) {
       const place = shield.spell === 'firewall' ? placeFirewall : placeShield;

@@ -16,6 +16,7 @@
   "pickups": [
     { "id": "disk_blink", "type": "disk_blink", "at": [8, 0, 10] },
     { "id": "disk_warp", "type": "disk_warp", "at": [1, 0, 4] },
-    { "id": "energy", "type": "refill_energy", "at": [11, 0, 1] }
+    { "id": "energy", "type": "refill_energy", "at": [11, 0, 1] },
+    { "id": "buff_recharge", "type": "buff_recharge", "at": [11, 0, 2] }
   ]
 }

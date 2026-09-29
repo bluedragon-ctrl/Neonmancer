@@ -2,7 +2,8 @@
  * What the wizard has for the whole game (D67, D71): the permanent pickups
  * he found, one save bit each. Room resets and death leave it alone; the
  * save key (Phase 4) holds exactly these bits. Spells he knows follow from
- * the data disks found. Plain logic, no browser.
+ * the data disks found, how much stronger he is from the buffs found.
+ * Plain logic, no browser.
  *
  * A bit identifies an item, not a placement: the same item may lie in
  * several rooms, and finding it anywhere grays it out everywhere.
@@ -11,9 +12,9 @@
 /**
  * The save bits in blocks (D71): where each block starts and how many bits
  * it has. A block's index comes from what the item unlocks: a spell's
- * `slot` (defs.json spells) for its data disk; later a buff's or a spell
- * upgrade's slot on its pickup type (D88), and a fragment's number on the
- * placement.
+ * `slot` (defs.json spells) for its data disk; a buff's `slot` on its
+ * pickup type; later a spell upgrade's slot on its pickup type (D88), and a
+ * fragment's number on the placement.
  */
 export const SAVE_BLOCKS = {
   spells: { start: 0, size: 16 },
@@ -44,6 +45,7 @@ export function saveBit(block, index) {
  */
 export function pickupBit(type, spells) {
   if (type.kind === 'disk') return saveBit('spells', spells[type.spell].slot);
+  if (type.kind === 'buff') return saveBit('buffs', type.slot);
   return null;
 }
 
@@ -80,5 +82,19 @@ export class Progress {
       .filter(([, spell]) => this.has(saveBit('spells', spell.slot)))
       .sort(([, a], [, b]) => a.slot - b.slot)
       .map(([id]) => id);
+  }
+
+  /**
+   * What the buffs found add up to (D93): integrity and energy added to
+   * his maximum, and ticks taken off recharging a unit of energy.
+   * @param {Record<string, object>} pickups defs.json "pickups"
+   * @returns {{ integrity: number, energy: number, recharge: number }}
+   */
+  buffs(pickups) {
+    const total = { integrity: 0, energy: 0, recharge: 0 };
+    for (const type of Object.values(pickups)) {
+      if (type.kind === 'buff' && this.has(saveBit('buffs', type.slot))) total[type.stat] += type.amount;
+    }
+    return total;
   }
 }
