@@ -1,12 +1,10 @@
 /**
- * Secret look (Phase 3 step 15, D100): a thick five-pointed star in the
+ * Secret look (D100): a thick five-pointed star in the
  * wizard's magenta (SECRET_COLOR, D98), hovering and spinning like a data
  * disk (diskMotion()); a secret already found is a gray ghost like a found
- * disk. Chosen by the author over an Easter egg and a pixel "?"; the
- * octahedron of the first draft read as an energy refill.
+ * disk.
  *
- * Looks are reviewed in the asset showcase (`?asset=secret`) before they go
- * into the game.
+ * Showcase: `?asset=secret`.
  */
 import { Color, ExtrudeGeometry, Group, Mesh, Shape, Vector2 } from 'three';
 import { SECRET_COLOR } from '../entities/pickup.js';

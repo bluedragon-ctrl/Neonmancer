@@ -1,8 +1,8 @@
 /**
- * The model of a room pickup by its kind (D71, D93, D95): a data disk
- * (disk.js), an upgrade card (card.js, D95), a buff chip (chip.js), a secret (secret.js, D100), a key fragment
- * (fragment.js, D101) or a refill (refill.js). The room view
- * and the install animation both build them here.
+ * The model of a room pickup by its kind (D71): a data disk (disk.js), an
+ * upgrade card (card.js), a buff chip (chip.js), a secret (secret.js), a
+ * key fragment (fragment.js) or a refill (refill.js). The room view and
+ * the install animation both build them here.
  */
 import { createCard } from './card.js';
 import { createChip } from './chip.js';

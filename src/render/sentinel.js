@@ -1,6 +1,5 @@
 /**
- * The ranged enemy's model in the hologram look (D22), working name
- * "sentinel" (Phase 3 step 5): it keeps its distance and fires a long
+ * The sentinel model in the hologram look (D22, D78): it keeps its distance and fires a long
  * electric bolt at the wizard (the `arc` discharge, discharge.js).
  *
  * A tall, sharp octahedron standing on its point, a single visor eye

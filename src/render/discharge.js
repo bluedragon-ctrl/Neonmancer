@@ -1,5 +1,5 @@
 /**
- * The discharge attack's look (Phase 3 step 5): one electric attack for
+ * The discharge attack's look (D78): one electric attack for
  * every enemy that has it, set per enemy template by data — its color, shape
  * and range, and how long it charges. It charges (the enemy's own model
  * shakes and glows; here: crackle round its middle, and for an `arc` a

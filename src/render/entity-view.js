@@ -53,8 +53,8 @@ import { createJumpRings, placeJumpRings } from './jump-view.js';
 
 /**
  * Which bodies get a drop shadow besides the wizard (who always has one).
- * Falling objects' shadows are off while the author tries a shadow under
- * the wizard only (D50); enemies have none.
+ * Falling objects' shadows are off, so only the wizard has one (D50);
+ * enemies have none.
  */
 export const DROP_SHADOWS = { fallingObjects: false };
 

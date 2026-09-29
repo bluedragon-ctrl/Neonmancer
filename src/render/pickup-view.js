@@ -1,9 +1,9 @@
 /**
- * A room pickup's view (D71): a data disk (disk.js), a buff chip (chip.js,
- * D93) or a refill (refill.js), hovering and spinning in its cell; a found
- * disk or chip as a ghost; once taken, a refill's pick-up effect and its
- * pixel burst, then nothing; a taken disk or chip goes at once, as the
- * install animation on the wizard takes it over (install-view.js, D73).
+ * A room pickup's view (D71): its model (pickup-model.js) hovering and
+ * spinning in its cell; a found permanent one as a ghost; once taken, a
+ * refill's pick-up effect and its pixel burst, then nothing; any other
+ * goes at once, as the install animation on the wizard takes it over
+ * (install-view.js, D73).
  */
 import { Group } from 'three';
 import { DISK, diskMotion, diskPixels, poseDisk } from './disk.js';

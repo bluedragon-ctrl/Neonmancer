@@ -1,7 +1,7 @@
 /**
  * The virus model in the hologram look (D22): a chasing enemy that attacks
- * with a close-range electric discharge instead of by touch (Phase 3
- * step 5; the lightning itself is discharge.js).
+ * with a close-range electric discharge instead of by touch (D78; the
+ * lightning itself is discharge.js).
  *
  * A sharp-edged cube tipped onto an edge (a diamond seen from the front),
  * slanted eyes on its front face, and small cubes of itself orbiting and

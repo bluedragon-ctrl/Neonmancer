@@ -7,8 +7,7 @@
  * with light streaks at his feet, hands and head trailing behind (the
  * tail running after him) and a kick of pixels where he pushed off.
  * Warp is a teleport: he bursts into pixels where he was, and they
- * stream to where he is (picked in the showcase over ghosts of him along
- * the way).
+ * stream to where he is.
  */
 
 import { PLAYER } from '../entities/player.js';

@@ -1,8 +1,9 @@
 /**
  * A pickup in a room (D71): it hovers in its cell and the wizard takes it
- * by touching it. Permanent ones (data disks) have a save bit; one already
- * found shows as a ghost and can't be taken again (buff chips, upgrade cards and secrets too, D93, D100). Temporary ones
- * (refills) have none and come back when the room resets. Pure logic.
+ * by touching it. Permanent ones (data disks, buff chips, upgrade cards,
+ * fragments, secrets) have a save bit; one already found shows as a ghost
+ * and can't be taken again. Temporary ones (refills) have none and come
+ * back when the room resets. Pure logic.
  */
 
 /** Sizes in units. */

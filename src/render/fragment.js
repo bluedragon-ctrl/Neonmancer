@@ -1,5 +1,5 @@
 /**
- * Key fragment look (Phase 3 step 16, D101): a thin gold tile carrying the
+ * Key fragment look (D101): a thin gold tile carrying the
  * boot key, the 8×8 code the 64 fragments make up (world/boot-key.js),
  * dim, with its own module lit: filled for a dark module, a bright outline
  * for a light one, as a data disk lights its bit. It hovers and spins like
@@ -7,7 +7,7 @@
  * (FRAGMENT_COLOR) is the color of fragments and access: the core's
  * crystal, the key in the HUD and the bands on the wizard's hat.
  *
- * Reviewed in the asset showcase (`?asset=fragment`).
+ * Showcase: `?asset=fragment`.
  */
 import { AdditiveBlending, BoxGeometry, BufferGeometry, Color, DoubleSide, Float32BufferAttribute, Group, Mesh, MeshBasicMaterial } from 'three';
 import { FRAGMENT_COLOR } from '../entities/pickup.js';

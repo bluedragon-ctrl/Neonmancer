@@ -1,6 +1,5 @@
 /**
- * The central core (D101), its reactor look (chosen by the author over a
- * server monolith and a beating wireframe heart): a gold crystal floating
+ * The central core (D101), a reactor: a gold crystal floating
  * and spinning over a white pedestal (a mechanism, D99) in its 1×2×1 cell,
  * inside orbit rings, one per access level, each turning gold once reached;
  * the crystal glows brighter with the fragments found. A touch that raises

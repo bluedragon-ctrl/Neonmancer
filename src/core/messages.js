@@ -1,8 +1,8 @@
 /**
  * HUD text from anywhere in the game, by key from data/strings.json:
  * - say(): a terminal message, typed out bottom left;
- * - announce(): a big banner at the top (room names, later pickups such as
- *   a spell being installed).
+ * - announce(): a big banner at the top (room names, what a pickup
+ *   installs).
  * Both only queue; the HUD takes the queues every frame. Plain logic
  * without DOM, so game logic and tests can call them too. Visual only:
  * nothing in the simulation reads them back.

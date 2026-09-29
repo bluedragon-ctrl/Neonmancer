@@ -1,5 +1,5 @@
 /**
- * Upgrade card look (Phase 3 step 13, D95): an upgrade is an expansion
+ * Upgrade card look (D95): an upgrade is an expansion
  * card, not a disk, so it reads as "plug this into the wizard". A white
  * landscape card as thin as a disk, hovering and spinning the same way
  * (diskMotion()); along its bottom edge a connector of contact fingers in
@@ -8,8 +8,7 @@
  * the 16 upgrade bits of the save. A card already found is a gray ghost,
  * solid-lined, like a found disk (D94).
  *
- * Looks are reviewed in the asset showcase (`?asset=upgrades`) before they
- * go into the game.
+ * Showcase: `?asset=upgrades`.
  */
 import { Color, ExtrudeGeometry, Group, Mesh, Shape } from 'three';
 import { DISK, bitGlow, createBitGrid } from './disk.js';

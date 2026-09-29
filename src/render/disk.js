@@ -1,15 +1,15 @@
 /**
- * Data disk look (Phase 3 step 2): an abstract data disk, a thin neon slab
+ * Data disk look (D71): an abstract data disk, a thin neon slab
  * with both top corners clipped (it looks the same from either side),
  * hovering over its cell and spinning. Both faces
  * carry a 4×4 grid of data bits (like a destructible crate's) showing the
  * spell's slot, one of the 16 spell bits of the save: set bits are small
  * raised cubes in the spell's color, the others dim squares. A disk already
- * found is a gray ghost, solid-lined, spinning without the bob (D67, D74, D94). Picking one up lifts
- * it, flashes it and bursts its bits into pixels.
+ * found is a gray ghost, solid-lined, spinning without the bob (D67, D74,
+ * D94). Picking one up lifts it, flashes it and bursts its bits into
+ * pixels.
  *
- * Looks are reviewed in the asset showcase (`?asset=disks`) before they go
- * into the game.
+ * Showcase: `?asset=disks`.
  */
 import { BoxGeometry, Color, EdgesGeometry, ExtrudeGeometry, Group, Mesh, Shape } from 'three';
 import { hash } from './hash.js';

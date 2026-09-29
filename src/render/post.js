@@ -1,7 +1,7 @@
 /**
  * Post-processing chain (pmndrs postprocessing). Effects are merged into as
- * few passes as possible: one render pass plus one effect pass. Phase 1 only
- * has bloom; more effects join the same EffectPass later.
+ * few passes as possible: one render pass plus one effect pass. Bloom is
+ * the only effect so far; more join the same EffectPass (D13).
  */
 import { HalfFloatType } from 'three';
 import { BloomEffect, EffectComposer, EffectPass, RenderPass } from 'postprocessing';

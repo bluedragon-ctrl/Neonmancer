@@ -1,5 +1,5 @@
 /**
- * Hologram look for characters (the wizard, later monsters), decision D22:
+ * Hologram look for characters (the wizard and the enemies), D22:
  * a near-black core that glows towards the silhouette, faint scanlines
  * drifting up, a thin neon outline and glowing eyes. A character can
  * flash a solid color (a hit) through its own flash uniforms (createFlash()).

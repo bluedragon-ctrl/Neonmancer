@@ -89,7 +89,8 @@ Phase 3 — Spells and pickups.
   roster (Compile, Fork, Scan, Pull planned for Phase 4).
 - Docs pass: finished phase plans dropped from docs/design.md, stale
   descriptions fixed; CLAUDE.md, the decision log and this changelog
-  condensed.
+  condensed; code comments lose phase and step tags and design-history
+  asides, and a wrong decision citation is fixed.
 
 ## [0.2.0] - 2026-09-27
 

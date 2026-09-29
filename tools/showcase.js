@@ -91,8 +91,8 @@ const ALL_ASSETS = [
   { label: 'wizard', build: () => createWizard(), shadow: PALETTE.magenta },
   { label: 'wizard-hit', build: buildWizardHit, shadow: PALETTE.magenta },
   // Every object type from defs.json, in its own style (glass crates, D96:
-  // a data core, or empty thinner glass in a destructible one, D99); switches have their
-  // own looks (below), and so has the core (D101).
+  // a data core, or empty thinner glass in a destructible one, D99);
+  // switches have their own looks (below), and so has the core (D101).
   ...Object.entries(defs.objects).filter(([, props]) => !SWITCH_KINDS.includes(props.kind) && props.kind !== 'core').map(([type, props]) => ({
     label: type,
     build: () => {
@@ -106,10 +106,9 @@ const ALL_ASSETS = [
   { label: 'block-hazard', build: () => buildActiveBlock('hazard') },
   { label: 'block-void', build: () => buildActiveBlock('void') },
   { label: 'blocks-in-room', span: 5.5, build: buildBlocksInRoom },
-  // Glass (D96): every crate type is glass (above). Hazard
-  // blocks as glass are an option not used yet; then a room corner with
-  // glass crates stacked beside the old tinted crate, the wizard walking
-  // behind them.
+  // Glass (D96): every crate type is glass (above). Hazard blocks as glass
+  // are an option not used yet; then a room corner with glass crates
+  // stacked beside the old tinted crate, the wizard walking behind them.
   { label: 'glass-hazard', group: 'glass', build: () => buildActiveBlock('hazard', { glass: true }) },
   { label: 'glass-in-room', group: 'glass', span: 5.5, build: buildGlassInRoom },
   { label: 'exits', span: 5.5, build: buildExits },
@@ -136,12 +135,12 @@ const ALL_ASSETS = [
   // a ricochet glancing a bolt off a crate into the wizard.
   { label: 'bolt-cross', group: 'bolts', span: 6, spin: false, build: buildBoltCross },
   { label: 'bolt-ricochet', group: 'bolts', span: 6, spin: false, build: buildBoltRicochet },
-  // Viruses (Phase 3 step 5, D78): gliding calm, then after the wizard
+  // Viruses (D78): gliding calm, then after the wizard
   // ("!"); the burst discharge on the wizard; a pop.
   { label: 'virus', group: 'viruses', build: buildVirus },
   { label: 'virus-attack', group: 'viruses', span: 4, spin: false, build: () => buildBurst('virus') },
   { label: 'virus-pop', group: 'viruses', build: buildVirusPop },
-  // Sentinels (step 5, D78): calm, then after the wizard; the arc discharge
+  // Sentinels (D78): calm, then after the wizard; the arc discharge
   // (range 5), aimed, then fired: once hitting him, once missing as he
   // steps aside; a pop.
   { label: 'sentinel', group: 'sentinels', build: buildSentinel },
@@ -157,16 +156,16 @@ const ALL_ASSETS = [
   { label: 'worm-pop', group: 'worms', build: () => buildEnemyPop('worm') },
   { label: 'crawler', group: 'crawlers', build: () => buildWalker('crawler') },
   { label: 'crawler-pop', group: 'crawlers', build: () => buildEnemyPop('crawler') },
-  // Zap (step 6): the bolt close up, two hits on a bug (the second pops
+  // Zap: the bolt close up, two hits on a bug (the second pops
   // it), and rapid fire at a crate until the energy bar runs dry.
   { label: 'zap-bolt', group: 'zap', build: buildZapBolt },
   { label: 'zap-bug', group: 'zap', span: 6, build: buildZapBug },
   { label: 'zap-crate', group: 'zap', span: 5, build: buildZapCrate },
   { label: 'zap-break', group: 'zap', span: 5, build: buildZapBreak },
-  // X-ray (step 7): the wizard walking behind a wall shows through it; the
+  // X-ray: the wizard walking behind a wall shows through it; the
   // turntable stands still so the wall stays in front.
   { label: 'xray', span: 5.5, spin: false, build: buildXray },
-  // Data disks (Phase 3 step 2): spinning on their own with the spell's slot
+  // Data disks: spinning on their own with the spell's slot
   // as one lit bit (Zap: slot 0), a found one as a ghost, a pick-up in a
   // loop, and all 16 slots.
   { label: 'disk', group: 'disks', spin: false, build: () => buildDisk() },
@@ -180,21 +179,21 @@ const ALL_ASSETS = [
   { label: 'disk-blink', group: 'disks', spin: false, build: () => buildDisk(defs.spells.blink) },
   { label: 'disk-warp', group: 'disks', spin: false, build: () => buildDisk(defs.spells.warp) },
   { label: 'disk-cut-paste', group: 'disks', spin: false, build: () => buildDisk(defs.spells.cut_paste) },
-  // Installing a spell (Phase 3 step 3, D73): Zap, then Shield, in a loop.
+  // Installing a spell (D73): Zap, then Shield, in a loop.
   { label: 'install', spin: false, shadow: PALETTE.magenta, build: buildInstall },
   // Shield (D73): up for its duration, blinking before it ends.
   { label: 'shield', spin: false, shadow: PALETTE.magenta, build: buildShield },
-  // Shield blocking (Phase 3 step 7, D84): a shooter's bolt is absorbed at
+  // Shield blocking (D84): a shooter's bolt is absorbed at
   // the ring in sparks, and the ring flares.
   { label: 'shield-block', span: 6, spin: false, build: buildShieldBlock },
   // Firewall (D84): flames licking up from a low ring, up for its
   // duration, blinking before it ends.
   { label: 'firewall', spin: false, shadow: PALETTE.magenta, build: buildFirewall },
-  // Pause (Phase 3 step 8, D85): the wizard fires a Pause bolt at a
+  // Pause (D85): the wizard fires a Pause bolt at a
   // hopping bug, which freezes in its pose for the spell's duration,
   // tinted, in a cage of corner brackets, blinking before it thaws.
   { label: 'pause', span: 6, spin: false, build: buildPauseFreeze },
-  // Blink and Warp (Phase 3 step 9, D86): the wizard dashes over a
+  // Blink and Warp (D86): the wizard dashes over a
   // two-tile pit and back (Blink); he bursts into pixels that stream
   // across and back (Warp).
   { label: 'blink', group: 'warp', span: 6, spin: false, build: () => buildWarp('blink') },
@@ -205,7 +204,7 @@ const ALL_ASSETS = [
   { label: 'refill-energy', group: 'refills', spin: false, build: () => buildRefill('energy') },
   { label: 'refill-collect', group: 'refills', spin: false, build: buildRefillCollect },
   { label: 'pickups-in-room', group: 'refills', span: 5.5, spin: false, build: buildPickupsInRoom },
-  // Buff chips (Phase 3 step 12, D93): permanent buffs, a chip in the
+  // Buff chips (D93): permanent buffs, a chip in the
   // stat's color with pins, its icon on the front and the save bit on the
   // back; a found one as a gray ghost; all three in a row beside a disk.
   { label: 'chip-integrity', group: 'chips', spin: false, build: () => buildChip({ stat: 'integrity', slot: 0 }) },
@@ -213,7 +212,7 @@ const ALL_ASSETS = [
   { label: 'chip-recharge', group: 'chips', spin: false, build: () => buildChip({ stat: 'recharge', slot: 9 }) },
   { label: 'chip-ghost', group: 'chips', spin: false, build: () => buildChip({ stat: 'energy', slot: 4, ghost: true }) },
   { label: 'chips-row', group: 'chips', span: 4, spin: false, build: buildChipRow },
-  // Upgrades (Phase 3 step 13, D95): an upgrade is an expansion card, its
+  // Upgrades (D95): an upgrade is an expansion card, its
   // contact fingers in the upgrade's color and its slot lit in the bit grid;
   // a found one as a gray ghost; the three in a row beside the Zap disk.
   // Shield+ is the Shield's ring in its color; the double jump kicks
@@ -225,31 +224,31 @@ const ALL_ASSETS = [
   { label: 'upgrades-row', group: 'upgrades', span: 4, spin: false, build: buildUpgradeRow },
   { label: 'shield-plus', group: 'upgrades', spin: false, shadow: PALETTE.magenta, build: () => buildShield(defs.pickups.upgrade_shield_plus.color) },
   { label: 'double-jump', group: 'upgrades', span: 4, spin: false, build: buildDoubleJump },
-  // Secrets (Phase 3 step 15, D100): a star in the wizard's magenta; a
+  // Secrets (D100): a star in the wizard's magenta; a
   // found one as a gray ghost; beside a disk, a chip and the energy refill.
   { label: 'secret', group: 'secrets', spin: false, build: () => buildSecret({}) },
   { label: 'secret-ghost', group: 'secrets', spin: false, build: () => buildSecret({ ghost: true }) },
   { label: 'secrets-row', group: 'secrets', span: 4, spin: false, build: buildSecretRow },
-  // Fragments and access (Phase 3 step 16, D101): a gold tile carrying the
-  // boot key with its own module lit (a dark one and a light one), beside a
-  // disk and a found one as a gray ghost; the core (its reactor
-  // look) stepping through the access levels and fragments found,
-  // flashing as a level is reached; access locks asking for level 1 (a doorway)
-  // and 2 (a front exit), both panels, opening as he reaches them; the wizard's hat with 0–3 gold bands.
+  // Fragments and access (D101): a gold tile carrying the boot key with
+  // its own module lit (a dark one and a light one), beside a disk and a
+  // found one as a gray ghost; the core stepping through the access levels
+  // and fragments found, flashing as a level is reached; access locks
+  // asking for level 1 (a doorway) and 2 (a front exit), opening as he
+  // reaches them; the wizard's hat with 0–3 gold bands.
   { label: 'fragment', group: 'fragments', spin: false, build: () => buildFragment({}) },
   { label: 'fragment-ghost', group: 'fragments', spin: false, build: () => buildFragment({ ghost: true }) },
   { label: 'fragments-row', group: 'fragments', span: 4, spin: false, build: buildFragmentRow },
   { label: 'core', group: 'fragments', span: 2.5, spin: false, build: buildCore },
   { label: 'access-locks', group: 'fragments', span: 5.5, spin: false, build: buildAccessLocks },
   { label: 'wizard-access', group: 'fragments', span: 2.5, spin: false, shadow: PALETTE.magenta, build: buildWizardAccess },
-  // Switches and locked exits (Phase 3 step 4, D75): a target zapped on
+  // Switches and locked exits (D75): a target zapped on
   // and off; a plate pressed by a crate dropping on it, then by the wizard;
   // a room with a locked doorway and a locked front exit (both panels)
   // whose lights follow its two switches.
   { label: 'target', group: 'switches', span: 5, spin: false, build: buildTargetZap },
   { label: 'plate', group: 'switches', span: 4, spin: false, build: buildPlate },
   { label: 'locks-in-room', group: 'switches', span: 5.5, spin: false, build: buildLocks },
-  // Cut & Paste (Phase 3 step 10, D87): the wizard cuts the crate in front
+  // Cut & Paste (D87): the wizard cuts the crate in front
   // of him (a marquee snaps on, it streams into his hands as pixels), holds
   // it, and pastes it back (the pixels stream into a marquee, it grows in);
   // the aim marker before, the ghost while he holds it. The same with a
@@ -258,7 +257,7 @@ const ALL_ASSETS = [
   { label: 'cut-paste', group: 'cut-paste', span: 4.5, spin: false, build: () => buildCutPaste('crate') },
   { label: 'cut-paste-enemy', group: 'cut-paste', span: 4.5, spin: false, build: () => buildCutPaste('bug') },
   { label: 'clip-hud', group: 'cut-paste', span: 1, spin: false, build: buildClipHud },
-  // Backup shrine (Phase 3 step 14, D97): a glowing floor tile in the
+  // Backup shrine (D97): a glowing floor tile in the
   // wizard's magenta; he steps on and it flares.
   { label: 'shrine', spin: false, build: buildShrine },
 ];
