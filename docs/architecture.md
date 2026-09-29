@@ -128,7 +128,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/post.js` | pmndrs postprocessing composer (bloom) |
 | `render/quality.js` | Automatic quality fallback: steps MSAA, then render scale, down when frames run slow (D76; pure, tested) |
 | `render/rails.js` | Guide line along a platform's path, `RAILS` tuning (pure, tested) |
-| `render/renderer.js` | WebGLRenderer, 16:9 stage + HUD overlay, DPR cap, render scale, MSAA, resize, shader precompile |
+| `render/renderer.js` | WebGLRenderer, 16:9 stage + HUD overlay, DPR cap, render scale, MSAA, resize, shader precompile; draws the room's scene or another (the map's) |
+| `render/map-view.js` | The map screen's 3D scene (D112): floor grid, glass room blocks with neon edges, links, stubs, his marker; `mapLayout()` (pure, tested) and a camera fitted to the screen area |
 | `render/room-scene.js` | The current room's views, object views by kind (`OBJECT_VIEWS`); rebuilds only the objects on a respawn; `showShape()`: the empty room behind the title (D109) |
 | `render/room-view.js` | Static blocks (merged edges + instanced occluder faces), back walls, styled object views |
 | `render/secret.js` | Secret look (D100): a thick five-pointed star in the wizard's magenta, ghost |
@@ -153,7 +154,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `ui/error-screen.js` | Startup error screen listing every data problem |
 | `ui/fullscreen.js` | Fullscreen toggle and when to suggest it (below 1080 physical pixels; tested) |
 | `ui/menus.js` | Title screen and pause menu logic (D109): the stack of menus, selection, what an item does (pure, tested) |
-| `ui/map-screen.js` | The map screen (D112): the run's map in SVG, isometric like the game, fitted to the rooms shown |
+| `ui/map-screen.js` | The map screen (D112): overlay (heading, room labels with icons, legend) over the map scene |
 | `ui/menu-screen.js` | Title screen and pause menu on screen: logo (and its scramble after Start), heading, items with setting values, controls table; mouse hover, click and ◄ ► |
 | `ui/saves.js` | Access keys in the browser (D105): the URL hash, localStorage (the last save, for Continue), the clipboard with a fallback |
 | `ui/settings.js` | Player settings (D109): volumes and visual stubs, steps, localStorage (pure, tested) |

@@ -759,9 +759,18 @@ it yet; where along the wall an exit lies doesn't show. The rooms behind
 stay hidden. Each visited room
 is labelled with its name and, under it, a row of icons: a blinking dot
 where he is, a gold mark while a fragment he hasn't found lies there, a
-magenta ring for a backup shrine. Revealed rooms have no label. The map is drawn from the
-game's isometric angle, so east is down-right as in the rooms.
+magenta ring for a backup shrine. Revealed rooms have no label.
+The map is a 3D scene built from the game's own look and drawn through
+its renderer (camera angle, bloom) instead of the room while it is up, so
+east is down-right as in the rooms: the rooms stand on the gray floor grid
+that surrounds a room, each a frosted glass block (like a crate, D96) with
+neon edges in its biome color, 3 tiles square on a 5-tile cell, so the
+links cross 2 tiles of grid between them; a revealed room is a dashed
+outline and a magenta diamond floats over his room. The labels lie on the
+blocks in the room banner's font.
 **Why:** finding what is where is part of the game (D67), so the map only
 remembers what he has seen; shrines give a local chart as a reward for
 reaching them, and the stubs show the way on without giving away the
-rooms. Fragment marks save revisiting rooms to check what is left.
+rooms. Fragment marks save revisiting rooms to check what is left. A
+flat SVG chart looked schematic next to the game; reusing the floor grid,
+glass and neon lines makes it read as part of the Grid at little cost.

@@ -1600,8 +1600,10 @@ Settled:
   |dz|) as dim outlines, which stay for the run. Visited rooms show
   their biome color, connections and cyan stubs for exits to rooms not
   on the map yet, and a label: the room's name with a row of icons under
-  it (he is here, a fragment left, a backup shrine). It is drawn isometrically,
-  east down-right as in the rooms.
+  it (he is here, a fragment left, a backup shrine). It is a 3D scene in
+  the game's look, drawn by its renderer: glass room blocks with neon
+  edges on the gray floor grid, neon links, east down-right as in the
+  rooms.
 
 Open so far:
 - Wardens: size (a body wider than one cell needs multi-cell collision and

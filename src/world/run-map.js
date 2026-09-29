@@ -10,11 +10,11 @@ import { pickupBit } from './progress.js';
 /** A backup shrine reveals the rooms this many map cells away at most (|dx| + |dz|). */
 export const SHRINE_REACH = 2;
 
-/** A room's square on the map, in cells: a gap is left between neighbours. */
-export const ROOM_SIZE = 0.7;
+/** A room's square on the map, in cells: a gap is left between neighbours (3 floor tiles of 5, render/map-view.js). */
+export const ROOM_SIZE = 0.6;
 
-/** How far an exit's stub sticks out of its room, in cells. */
-export const STUB_LENGTH = 0.09;
+/** How far an exit's stub sticks out of its room, in cells: half the gap. */
+export const STUB_LENGTH = 0.2;
 
 export class RunMap {
   constructor() {

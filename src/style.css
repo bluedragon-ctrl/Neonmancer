@@ -1121,7 +1121,12 @@ body {
   line-height: 1.5;
 }
 
-/* The map screen (D112): the run's map in SVG over the standing game. */
+/* The map screen (D112): its 3D scene (render/map-view.js) is drawn
+   instead of the room; this is the overlay on it. The HUD hides. */
+.stage.map-open .hud {
+  visibility: hidden;
+}
+
 .map {
   position: absolute;
   inset: 0;
@@ -1129,8 +1134,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: calc(16 * var(--u));
-  background: rgba(3, 4, 10, 0.95);
+  gap: calc(14 * var(--u));
   font-family: var(--arcade);
   font-weight: 700;
   color: #fff;
@@ -1142,8 +1146,9 @@ body {
   display: none;
 }
 
+/* Like the menus' headings. */
 .map-heading {
-  font-size: calc(48 * var(--u));
+  font-size: calc(64 * var(--u));
   letter-spacing: 0.14em;
   text-shadow:
     0 0 calc(8 * var(--u)) var(--cyan),
@@ -1158,68 +1163,14 @@ body {
   color: #dfe6ff;
 }
 
+/* Where the map goes: the scene's camera is fitted to it. */
 .map-area {
-  position: relative;
   width: calc(1600 * var(--u));
-  height: calc(740 * var(--u));
+  height: calc(700 * var(--u));
 }
 
-.map-view {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-}
-
-.map-view * {
-  vector-effect: non-scaling-stroke;
-}
-
-.map-room-tile {
-  /* Opaque, so the center-to-center links only show between the rooms. */
-  fill: color-mix(in srgb, currentColor 16%, var(--void));
-  stroke: currentColor;
-  stroke-width: calc(2.5 * var(--u));
-  filter: drop-shadow(0 0 calc(5 * var(--u)) currentColor);
-}
-
-/* A room a shrine showed but he hasn't been in: an outline only. */
-.map-room-tile.dim {
-  fill: var(--void);
-  stroke-opacity: 0.4;
-  stroke-dasharray: calc(6 * var(--u)) calc(5 * var(--u));
-  filter: none;
-}
-
-.map-room-tile.current {
-  fill: color-mix(in srgb, currentColor 32%, var(--void));
-  stroke: #fff;
-}
-
-.map-link {
-  stroke: #dfe6ff;
-  stroke-width: calc(2.5 * var(--u));
-  stroke-opacity: 0.85;
-}
-
-/* A connection across the map (a shortcut, a loop). */
-.map-link.far {
-  stroke-dasharray: calc(8 * var(--u)) calc(7 * var(--u));
-}
-
-.map-link.dim {
-  stroke-opacity: 0.35;
-}
-
-.map-stub {
-  stroke: var(--cyan);
-  stroke-width: calc(4 * var(--u));
-  stroke-linecap: round;
-  filter: drop-shadow(0 0 calc(4 * var(--u)) var(--cyan));
-}
-
-/* Room labels over the tiles: the name, and a row of icons under it. */
+/* Room labels on the blocks, like the room banner: the name, and a row of
+   icons under it. --map-scale shrinks them with a zoomed-out map. */
 .map-labels {
   position: absolute;
   inset: 0;
@@ -1231,27 +1182,28 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: calc(5 * var(--u) * var(--map-scale));
+  gap: calc(6 * var(--u) * var(--map-scale));
   transform: translate(-50%, -50%);
-  max-width: calc(190 * var(--u) * var(--map-scale));
-  font-family: var(--terminal);
-  font-weight: normal;
-  font-size: calc(20 * var(--u) * var(--map-scale));
-  line-height: 1.1;
+  width: calc(200 * var(--u) * var(--map-scale));
+  font-size: calc(15 * var(--u) * var(--map-scale));
+  line-height: 1.15;
+  letter-spacing: 0.1em;
   text-align: center;
-  color: #eef3ff;
-  text-shadow:
-    0 0 calc(3 * var(--u)) #000,
-    0 0 calc(6 * var(--u)) #000;
-}
-
-.map-label.current {
+  text-transform: uppercase;
   color: #fff;
+  text-shadow:
+    0 0 calc(4 * var(--u)) #000,
+    0 0 calc(10 * var(--u)) var(--room);
 }
 
 .map-label-icons {
   display: flex;
-  gap: calc(7 * var(--u) * var(--map-scale));
+  gap: calc(8 * var(--u) * var(--map-scale));
+}
+
+.map-label .map-icon {
+  width: 1em;
+  height: 1em;
 }
 
 /* The map's icons, in the labels and the legend. */

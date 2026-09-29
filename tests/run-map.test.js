@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadGameData } from '../src/data/load.js';
 import { Game } from '../src/game.js';
-import { MAP_ASPECT, fitView, projectCell } from '../src/ui/map-screen.js';
+import { MAP_LOOK, mapLayout } from '../src/render/map-view.js';
 import { MenuFlow } from '../src/ui/menus.js';
 import { Progress, saveBit } from '../src/world/progress.js';
 import { ROOM_SIZE, RunMap, mapModel, roomsAround, sidePoint } from '../src/world/run-map.js';
@@ -102,21 +102,24 @@ test('a stub sits in the middle of its side of the room square; links run center
   ]);
 });
 
-test('the map is seen like the rooms: east is down-right, south down-left', () => {
-  const [ex, ey] = projectCell([1, 0]);
-  const [sx, sy] = projectCell([0, 1]);
-  assert.ok(ex > 0 && ey > 0);
-  assert.ok(sx < 0 && sy > 0);
-  // A lone room isn't blown up to fill the screen; a wide map fits.
-  const [, , w, h] = fitView([[0, 0]]);
-  assert.ok(w >= 8);
-  assert.ok(Math.abs(w / h - MAP_ASPECT) < 1e-9, "the view has the map area's shape");
-  const wide = fitView([
-    [0, 0],
-    [12, -12],
-  ]);
-  assert.ok(wide[2] > 20);
-  assert.ok(Math.abs(wide[2] / wide[3] - MAP_ASPECT) < 1e-9);
+test('the map scene: rooms sit on whole floor tiles; links show only between the blocks', () => {
+  const map = new RunMap();
+  map.visit('boot_sector');
+  map.visit('stack_yard');
+  const model = mapModel(world(), map, { current: 'boot_sector', progress: new Progress() });
+  const layout = mapLayout(model);
+  const { cell, margin } = MAP_LOOK;
+  const side = ROOM_SIZE * cell;
+  assert.ok(Number.isInteger(side), 'a block covers whole tiles');
+  for (const { min } of layout.rooms) assert.ok(min.every(Number.isInteger));
+  // boot_sector [0,0] and stack_yard [1,0]: one cell apart along x.
+  const boot = layout.rooms.find(({ room }) => room.id === 'boot_sector');
+  assert.deepEqual(boot.min, [margin, margin]);
+  assert.deepEqual(layout.size, [cell + side + 2 * margin, side + 2 * margin]);
+  const [link] = layout.links;
+  assert.deepEqual([link.from[0], link.to[0]].sort((a, b) => a - b), [margin + side, margin + cell]);
+  // Stubs reach half way across the gap.
+  for (const { from, to } of layout.stubs) assert.equal(Math.hypot(to[0] - from[0], to[1] - from[1]), ((cell - side) / cell / 2) * cell);
 });
 
 test('M opens the map over the game; M, Esc or Enter close it; the pause menu has Map too', () => {

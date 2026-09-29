@@ -36,8 +36,9 @@ bosses that drop loot, tooling) (D104, D105).
   saved room, reset, with the key's pickups, access level and backups,
   full integrity and energy.
 - Map screen (D112): M, or **Map** in the pause menu, shows the rooms
-  entered in this run in their biome colors, seen from the game's angle,
-  with their connections, a stub for each exit not explored yet, and
+  entered in this run as glass blocks with neon edges in their biome
+  colors on the game's floor grid, seen through the game's camera and
+  bloom, with their connections, a stub for each exit not explored yet, and
   each room's name with icons under it: where the wizard is, a fragment
   still to be found, a backup shrine. A backup shrine reveals the rooms within 2 map cells,
   dimmed until visited. The map is never saved: a new game or a load

@@ -58,6 +58,9 @@ export class Renderer {
     this.composer = composer;
     this.bloom = bloom;
     this.fade = 0;
+    /** The scene and camera the composer draws (render()). */
+    this.shown = this.scene;
+    this.shownCamera = this.camera;
 
     // The stage follows the window at once (cheap); the buffers, which are
     // reallocated, only once resizing pauses.
@@ -163,7 +166,21 @@ export class Renderer {
     for (const node of hidden) node.visible = false;
   }
 
-  render() {
+  /**
+   * Draw a frame of a scene: the room's, or another one shown instead (the
+   * map screen's) through the same effects.
+   * @param {Scene} [scene]
+   * @param {import('three').Camera} [camera]
+   */
+  render(scene = this.scene, camera = this.camera) {
+    if (scene !== this.shown) {
+      this.composer.setMainScene(scene);
+      this.shown = scene;
+    }
+    if (camera !== this.shownCamera) {
+      this.composer.setMainCamera(camera);
+      this.shownCamera = camera;
+    }
     this.composer.render();
   }
 }

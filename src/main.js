@@ -270,7 +270,7 @@ function boot() {
 
     const booting = boot === null ? null : bootState(boot);
     menuScreen.show(flow, booting?.logo ?? null);
-    mapScreen.show(flow, game);
+    mapScreen.show(flow, game, time);
     bootScreen.show(booting?.wipe ?? null);
     playerView.boot = booting;
     editor.frame();
@@ -280,7 +280,8 @@ function boot() {
     renderer.setFade(game.fadeLevel(alpha));
     syncHud(hud, game, renderer, dt);
     HOLO_TIME.value = time;
-    renderer.render();
+    if (mapScreen.open) renderer.render(mapScreen.view.scene, mapScreen.view.camera);
+    else renderer.render();
     readout.update(debug.active, { game, input, renderer, alpha, autoQuality });
   }
 
