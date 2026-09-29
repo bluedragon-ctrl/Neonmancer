@@ -7,6 +7,10 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Glass look prototype (showcase only, `?asset=glass`): see-through
+  crates with the data bits on a small core inside, glass hazard and
+  void blocks, and a room corner comparing them with today's crate while
+  the wizard walks behind. Not used in the game yet.
 - Upgrades (Phase 3 step 13, D95): permanent upgrade cards with their
   own save bits (the upgrade block, bits 32–47): an expansion card with
   contact fingers in the upgrade's color. Zap+ replaces Zap in the Tab cycle and
