@@ -1177,7 +1177,8 @@ body {
 }
 
 .map-room-tile {
-  fill: color-mix(in srgb, currentColor 16%, transparent);
+  /* Opaque, so the center-to-center links only show between the rooms. */
+  fill: color-mix(in srgb, currentColor 16%, var(--void));
   stroke: currentColor;
   stroke-width: calc(2.5 * var(--u));
   filter: drop-shadow(0 0 calc(5 * var(--u)) currentColor);
@@ -1185,14 +1186,14 @@ body {
 
 /* A room a shrine showed but he hasn't been in: an outline only. */
 .map-room-tile.dim {
-  fill: none;
+  fill: var(--void);
   stroke-opacity: 0.4;
   stroke-dasharray: calc(6 * var(--u)) calc(5 * var(--u));
   filter: none;
 }
 
 .map-room-tile.current {
-  fill: color-mix(in srgb, currentColor 32%, transparent);
+  fill: color-mix(in srgb, currentColor 32%, var(--void));
   stroke: #fff;
 }
 

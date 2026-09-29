@@ -753,8 +753,10 @@ empty. Using a backup shrine (stepping on it, or a crash reboot) reveals
 every room within 2 map cells of it (|dx| + |dz|), dimmed as a dashed
 outline until visited, and they stay on the map for the run. A visited
 room shows in its biome color with its exits: connections to rooms on the
-map (dashed when they run across the map), and a cyan stub for each exit
-to a room not on it yet; the rooms behind stay hidden. Each visited room
+map, center to center like a grid (dashed when they run across the map),
+and a cyan stub in the middle of each side with an exit to a room not on
+it yet; where along the wall an exit lies doesn't show. The rooms behind
+stay hidden. Each visited room
 is labelled with its name and, under it, a row of icons: a blinking dot
 where he is, a gold mark while a fragment he hasn't found lies there, a
 magenta ring for a backup shrine. Revealed rooms have no label. The map is drawn from the

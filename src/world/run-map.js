@@ -5,7 +5,6 @@
  * never saved (D68): a new game or a loaded save starts it empty. Plain
  * logic; ui/map-screen.js draws the model mapModel() makes.
  */
-import { sideAxes, withExitDefaults } from '../data/room-data.js';
 import { pickupBit } from './progress.js';
 
 /** A backup shrine reveals the rooms this many map cells away at most (|dx| + |dz|). */
@@ -57,27 +56,24 @@ export function roomsAround(positions, id, reach = SHRINE_REACH) {
 }
 
 /**
- * Where an exit sits on its room's square on the map, and the way out:
- * on the side it is in, at its middle along that side.
+ * Where an exit's stub sits on its room's square on the map: the middle of
+ * the side the exit is in (where along the wall it is doesn't matter on
+ * the map), and the way out.
  * @param {number[]} cell the room's [x, z]
- * @param {object} exit exit data (defaults applied)
- * @param {number[]} size the room's size
+ * @param {string} side the exit's side ('-x', '+x', '-z', '+z')
  * @returns {{ at: number[], out: number[] }} map point [x, z] and outward direction
  */
-export function exitPoint([x, z], exit, size) {
-  const { cross, along } = sideAxes(exit.side);
-  const sign = exit.side[0] === '+' ? 1 : -1;
-  const fraction = (exit.at + exit.width / 2) / size[along];
-  // Map x is the room's x axis, map z its z axis (index 2).
-  const point = { [cross]: sign * (ROOM_SIZE / 2), [along]: (fraction - 0.5) * ROOM_SIZE };
-  const out = { [cross]: sign, [along]: 0 };
-  return { at: [x + point[0], z + point[2]], out: [out[0], out[2]] };
+export function sidePoint([x, z], side) {
+  const sign = side[0] === '+' ? 1 : -1;
+  const out = side[1] === 'x' ? [sign, 0] : [0, sign];
+  return { at: [x + (out[0] * ROOM_SIZE) / 2, z + (out[1] * ROOM_SIZE) / 2], out };
 }
 
 /**
  * What the map screen draws: every room on the run's map with its cell and
- * look, and the connections between them. A visited room shows its exits
- * (a stub for each one that leads somewhere not on the map yet), a gold
+ * look, and the connections between them, center to center. A visited
+ * room shows a stub on each side with an exit that leads somewhere not on
+ * the map yet, a gold
  * mark while a fragment he hasn't found lies in it, and whether it has a
  * backup shrine; a revealed one only its outline.
  * @param {object} content loaded game data (data/load.js)
@@ -117,24 +113,27 @@ export function mapModel(content, map, { current, progress }) {
       shrine: visited && Boolean(data.shrine),
     });
     if (!visited) continue;
+    // One stub per side, however many exits lead off the map there.
+    const sides = new Set();
     for (const exit of data.exits ?? []) {
       const link = content.links.get(`${id}.${exit.id}`);
       if (link && shown(link.room)) continue;
-      stubs.push(exitPoint(positions[id], withExitDefaults(exit), data.size));
+      sides.add(exit.side);
     }
+    for (const side of sides) stubs.push(sidePoint(positions[id], side));
   }
+  // Center to center, like a grid; one line for two rooms however many exits join them.
   const links = [];
+  const pairs = new Set();
   for (const [a, b] of world.connections) {
-    const [ra, ea] = a.split('.');
-    const [rb, eb] = b.split('.');
-    if (!shown(ra) || !shown(rb)) continue;
-    const exitA = roomData.get(ra).exits?.find((exit) => exit.id === ea);
-    const exitB = roomData.get(rb).exits?.find((exit) => exit.id === eb);
-    if (!exitA || !exitB) continue;
+    const [ra, rb] = [a.split('.')[0], b.split('.')[0]];
+    const pair = [ra, rb].sort().join('|');
+    if (!shown(ra) || !shown(rb) || ra === rb || pairs.has(pair)) continue;
+    pairs.add(pair);
     const [pa, pb] = [positions[ra], positions[rb]];
     links.push({
-      from: exitPoint(pa, withExitDefaults(exitA), roomData.get(ra).size).at,
-      to: exitPoint(pb, withExitDefaults(exitB), roomData.get(rb).size).at,
+      from: pa,
+      to: pb,
       adjacent: Math.abs(pa[0] - pb[0]) + Math.abs(pa[1] - pb[1]) === 1,
       visited: map.visited.has(ra) && map.visited.has(rb),
     });

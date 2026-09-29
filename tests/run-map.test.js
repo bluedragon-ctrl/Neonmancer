@@ -5,7 +5,7 @@ import { Game } from '../src/game.js';
 import { MAP_ASPECT, fitView, projectCell } from '../src/ui/map-screen.js';
 import { MenuFlow } from '../src/ui/menus.js';
 import { Progress, saveBit } from '../src/world/progress.js';
-import { ROOM_SIZE, RunMap, exitPoint, mapModel, roomsAround } from '../src/world/run-map.js';
+import { ROOM_SIZE, RunMap, mapModel, roomsAround, sidePoint } from '../src/world/run-map.js';
 import { input, testWorld } from './helpers.js';
 
 /**
@@ -89,14 +89,17 @@ test('a shrine shows on the map in a visited room', () => {
   assert.equal(model.rooms[0].shrine, true);
 });
 
-test('an exit sits in the middle of its opening on its side of the room square', () => {
-  const size = [12, 4, 12];
-  // East (+x) at 5, width 2: middle 6 of 12, so halfway along z.
-  assert.deepEqual(exitPoint([0, 0], { side: '+x', at: 5, width: 2 }, size), { at: [ROOM_SIZE / 2, 0], out: [1, 0] });
-  const north = exitPoint([1, 2], { side: '-z', at: 0, width: 3 }, size);
-  assert.deepEqual(north.out, [0, -1]);
-  assert.ok(Math.abs(north.at[0] - (1 + (1.5 / 12 - 0.5) * ROOM_SIZE)) < 1e-9);
-  assert.equal(north.at[1], 2 - ROOM_SIZE / 2);
+test('a stub sits in the middle of its side of the room square; links run center to center', () => {
+  assert.deepEqual(sidePoint([0, 0], '+x'), { at: [ROOM_SIZE / 2, 0], out: [1, 0] });
+  assert.deepEqual(sidePoint([1, 2], '-z'), { at: [1, 2 - ROOM_SIZE / 2], out: [0, -1] });
+  const map = new RunMap();
+  map.visit('boot_sector');
+  map.visit('stack_yard');
+  const [link] = mapModel(world(), map, { current: 'boot_sector', progress: new Progress() }).links;
+  assert.deepEqual([link.from, link.to].sort(), [
+    [0, 0],
+    [1, 0],
+  ]);
 });
 
 test('the map is seen like the rooms: east is down-right, south down-left', () => {
