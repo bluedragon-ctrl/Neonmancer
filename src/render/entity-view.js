@@ -190,7 +190,7 @@ export class PlayerView {
     this.wizard = createWizard();
     /** Ghost of his parts hidden behind blocks (xray.js). */
     this.xray = addXray(this.wizard);
-    this.shadow = createDropShadow(PALETTE.cyan);
+    this.shadow = createDropShadow(PALETTE.magenta);
     this.pixels = createDerezPixels();
     this.flare = createCastFlare();
     /** The double jump's kick-off rings (D95). */

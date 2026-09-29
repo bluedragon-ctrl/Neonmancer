@@ -19,7 +19,7 @@ import DEFS_SCHEMA from '../schemas/defs.schema.json' with { type: 'json' };
 import { ENEMY_MODELS } from '../src/render/entity-view.js';
 import { DISCHARGE, arcSegments, burstSegments, chargeGlow, dischargeLook } from '../src/render/discharge.js';
 import { createObjectView, createRoomView } from '../src/render/room-view.js';
-import { GLASS, looseBitSegments } from '../src/render/glass.js';
+import { GLASS } from '../src/render/glass.js';
 import { resolveBlockTypes } from '../src/data/room-data.js';
 import { LOOK_DEFAULTS, roomLook } from '../src/render/neon.js';
 import { createWizard } from '../src/render/wizard.js';
@@ -294,19 +294,7 @@ test('spiked shape (D82): four pyramids on each side of a core, inside the cell,
   assert.equal(spikeSegments(cell).length, 6 * 4 * 4 + 12 * 2);
 });
 
-test('glass: loose bits of a destructible crate lie inside its cell, away from the glass', () => {
-  const segments = looseBitSegments([2, 1, 3]);
-  assert.equal(segments.length, GLASS.looseBits * 4);
-  for (const point of segments.flat()) {
-    point.forEach((v, i) => {
-      const inside = v - [2, 1, 3][i];
-      assert.ok(inside > GLASS.looseMargin - GLASS.looseBitSize && inside < 1 - GLASS.looseMargin + GLASS.looseBitSize);
-    });
-  }
-  assert.deepEqual(looseBitSegments([2, 1, 3]), segments, 'the same every time');
-});
-
-test('glass: crates are see-through, a whole one has a core, a destructible one loose bits', () => {
+test('glass: crates are see-through, a whole one has a core, a destructible one is empty thinner glass', () => {
   const style = { edges: 'solid', mark: 'bits', faces: 'glass', tint: 0.1, color: '#b6ff3c', at: [0, 0, 0] };
   const meshes = (view) => {
     const found = [];
@@ -318,5 +306,8 @@ test('glass: crates are see-through, a whole one has a core, a destructible one 
   assert.equal(glass.material.depthWrite, false, 'things behind show through');
   assert.equal(glass.material.clipping, true, 'cut at the floor when sinking into a hole');
   assert.equal(whole.length, 2, 'glass and the data core');
-  assert.equal(meshes(createObjectView({ ...style, integrity: 1 })).length, 1, 'no core, only loose bits');
+  const hollow = meshes(createObjectView({ ...style, integrity: 1 }));
+  assert.equal(hollow.length, 1, 'no core');
+  assert.equal(hollow[0].material.uniforms.uAlpha.value, GLASS.hollow.alpha, 'thinner glass');
+  assert.ok(GLASS.hollow.alpha < GLASS.alpha);
 });

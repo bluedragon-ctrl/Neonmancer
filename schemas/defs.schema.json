@@ -221,7 +221,7 @@
         },
         "look": {
           "enum": ["plain", "hazard", "void"],
-          "description": "Static blocks: plain (dark faces, neon edges), hazard (red pixels switching on and off, flares when it hurts) or void (grains sinking inside a black block). Looks are built into the engine (src/render/block-fx.js)."
+          "description": "Static blocks: plain (dark faces, neon edges), hazard (red pixels switching on and off, flares when it hurts) or void (black mist with gray wisps sinking inside it, D99). Looks are built into the engine (src/render/block-fx.js)."
         },
         "kind": {
           "enum": ["collapsing"],
@@ -229,7 +229,7 @@
         },
         "color": {
           "$ref": "common.schema.json#/$defs/color",
-          "description": "Edges (and lit pixels or grains). Plain blocks without a color take the room color. Required for a kind."
+          "description": "Edges (and lit pixels or grains). Without a color, plain and collapsing blocks take the room color (structure, D99)."
         },
         "damage": { "type": "integer", "minimum": 1, "description": "Static blocks: integrity the wizard loses when he touches it (stands on it or walks into it)." },
         "lethal": { "type": "boolean", "description": "Static blocks: landing on top kills the wizard and enemies instantly; touching a side is safe." },

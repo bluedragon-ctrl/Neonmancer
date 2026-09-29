@@ -17,7 +17,7 @@ export const EDITOR_LOOK = {
   grid: { color: 0x6a86a8, width: 1, brightness: 0.8 },
   border: { color: PALETTE.cyan, width: 2, brightness: 1 },
   /** Cursor colors by tool; erasing is red. */
-  cursor: { place: 0xffffff, erase: 0xff3b30, width: 2.5, brightness: 1.4 },
+  cursor: { place: 0xffffff, erase: PALETTE.danger, width: 2.5, brightness: 1.4 },
   spawn: { color: PALETTE.cyan, width: 2 },
   reset: { color: PALETTE.magenta, width: 2 },
   /**

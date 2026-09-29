@@ -4,11 +4,7 @@
  * - Hazard ("corrupt"): red pixels switching on and off at random over
  *   dark red faces, like corrupted data, inside steady red edges. A block
  *   that just hurt the wizard flares.
- * - Void ("static"): black faces that are windows into the block: layers
- *   of sparse grains behind each face (found along the view ray) slowly
- *   sink deeper, shrinking and fading, as if falling into the void;
- *   brighter through the top face (only landing on top kills); thin dim
- *   edges.
+ * - Void: black mist (mist.js, D99).
  *
  * Faces are one ShaderMaterial on the block type's instanced mesh; pixel
  * sizes are in world units and the patterns run in room coordinates, so a
@@ -21,6 +17,7 @@ import { BoxGeometry, Color, Group, InstancedMesh, Matrix4, ShaderMaterial } fro
 import { blockEdges } from './edges.js';
 import { GLASS, GLASS_BLEND } from './glass.js';
 import { HOLO_TIME } from './holo.js';
+import { createMistView } from './mist.js';
 import { lineMaterial, neonLines, shared } from './neon.js';
 
 /** Tuning; pixel counts per world unit, rates per second. */
@@ -37,23 +34,6 @@ export const BLOCK_FX = {
     edgeBrightness: 1.6,
     /** Seconds a block flares after hurting the wizard. */
     flareTime: 0.4,
-  },
-  void: {
-    /** Grain grid per unit on each layer. */
-    grains: 10,
-    /** Layers of grains inside the block, how deep they reach (units)... */
-    layers: 8,
-    depth: 0.9,
-    /** ...and seconds for a layer to sink from the surface to the bottom. */
-    sinkTime: 9,
-    /** Twinkle steps per second. */
-    twinkleRate: 2,
-    /** Brightness seen through the top face and through the sides. */
-    topStatic: 1.4,
-    sideStatic: 0.7,
-    /** Edge width (px at 1080p) and brightness: a thin, dim frame. */
-    edgeWidth: 1.4,
-    edgeBrightness: 0.9,
   },
 };
 
@@ -138,66 +118,6 @@ const hazardFragment = /* glsl */ `
   }
 `;
 
-const voidFragment = /* glsl */ `
-  uniform vec3 uColor;
-  uniform float uTime;
-  uniform float uGrains;
-  uniform float uTwinkleRate;
-  uniform float uTopStatic;
-  uniform float uSideStatic;
-  uniform float uLayers;
-  uniform float uDepth;
-  uniform float uSinkTime;
-  ${common}
-  // 2D coordinates of point p across a face with normal n.
-  vec2 coordsOn(vec3 p, vec3 n) {
-    n = abs(n);
-    if (n.y > 0.5) return p.xz;
-    if (n.x > 0.5) return p.zy;
-    return p.xy;
-  }
-  void main() {
-    bool top = vNormal.y > 0.5;
-    vec3 ray = normalize(vViewDir);
-    // How far along the view ray one unit of depth behind the face is.
-    float perDepth = 1.0 / max(dot(ray, -vNormal), 0.05);
-    vec3 cell = floor(vPos - vNormal * 0.01);
-    float twinkle = floor(uTime * uTwinkleRate);
-    vec3 color = vec3(0.0);
-    // Layers of sparse grains behind the face, each sinking deeper and
-    // fading out, then coming back near the surface with a new pattern.
-    for (int i = 0; i < 12; i++) {
-      if (float(i) >= uLayers) break;
-      float flow = float(i) / uLayers + uTime / uSinkTime;
-      float phase = fract(flow);
-      float seed = float(i) * 31.0 + floor(flow) * 7.0;
-      float depth = 0.03 + phase * uDepth;
-      vec3 p = vPos + ray * depth * perDepth;
-      // Only what lies inside this block (the view ray leaves it through a side).
-      vec3 inside = step(cell, p) * step(p, cell + 1.0);
-      if (inside.x * inside.y * inside.z < 0.5) continue;
-      vec2 uv = coordsOn(p, vNormal) * uGrains;
-      vec2 grain = floor(uv);
-      float on = step(top ? 0.9 : 0.95, hash(vec3(grain, seed)));
-      // Grains shrink with depth; each twinkles a little.
-      vec2 d = abs(fract(uv) - 0.5);
-      float size = 0.32 * (1.0 - 0.6 * phase);
-      on *= step(d.x, size) * step(d.y, size);
-      float light = smoothstep(0.0, 0.12, phase) * (1.0 - phase) * (1.0 - phase);
-      light *= 0.6 + 0.4 * hash(vec3(grain, seed + twinkle));
-      color += mix(vec3(0.7), uColor, 0.6) * on * light;
-    }
-    color *= top ? uTopStatic : uSideStatic;
-  #ifdef GLASS
-    // Glass (glass.js): dark violet glass, the grains inside it.
-    color += uColor * 0.05 * faceShade();
-    gl_FragColor = vec4(color, min(1.0, GLASS + dot(color, vec3(0.33))));
-  #else
-    gl_FragColor = vec4(color, 1.0);
-  #endif
-  }
-`;
-
 /**
  * Common material setup: instanced faces pushed back in depth. With
  * `glass` (the share of what's behind the faces hide, glass.js) they are
@@ -232,29 +152,9 @@ export function hazardFaceMaterial(color, { glass = false } = {}) {
 }
 
 /**
- * Faces of void blocks.
- * @param {number|string} color frame color, also tints the static and specks
- * @param {{ glass?: boolean }} [options] glass: dark see-through glass (glass.js)
- */
-export function voidFaceMaterial(color, { glass = false } = {}) {
-  const fx = BLOCK_FX.void;
-  return faceShader(voidFragment, {
-    uColor: { value: new Color(color) },
-    uGrains: { value: fx.grains },
-    uTwinkleRate: { value: fx.twinkleRate },
-    uTopStatic: { value: fx.topStatic },
-    uSideStatic: { value: fx.sideStatic },
-    uLayers: { value: fx.layers },
-    uDepth: { value: fx.depth },
-    uSinkTime: { value: fx.sinkTime },
-  }, glass ? GLASS.voidAlpha : null);
-}
-
-/**
- * Steady edges of a block look: solid red for hazards, a thin dim frame
- * for void.
+ * Steady edges of the hazard look: solid red.
  * @param {number[][]} cells [x, y, z] cells
- * @param {'hazard'|'void'} look a block type's look (defs.json "blocks", D60)
+ * @param {'hazard'} look a block type's look (defs.json "blocks", D60)
  * @param {number|string} color
  * @param {Set<string>} [claimed] unit edges drawn by a more dangerous type, left out (edges.js)
  */
@@ -284,10 +184,11 @@ const UNIT_BOX = shared(new BoxGeometry(1, 1, 1).translate(0.5, 0.5, 0.5));
  * @param {'hazard'|'void'} look a block type's look (defs.json "blocks", D60)
  * @param {number|string} color
  * @param {Set<string>} [claimed] unit edges drawn by a more dangerous type, left out (edges.js)
- * @param {{ glass?: boolean }} [options] glass: see-through faces (glass.js, prototype)
+ * @param {{ glass?: boolean }} [options] glass: see-through hazard faces (glass.js, prototype)
  */
 export function createActiveBlockView(cells, look, color, claimed = null, { glass = false } = {}) {
-  const faces = look === 'hazard' ? hazardFaceMaterial(color, { glass }) : voidFaceMaterial(color, { glass });
+  if (look === 'void') return createMistView(cells, color, claimed);
+  const faces = hazardFaceMaterial(color, { glass });
   const boxes = new InstancedMesh(UNIT_BOX, faces, cells.length);
   const matrix = new Matrix4();
   cells.forEach(([x, y, z], i) => boxes.setMatrixAt(i, matrix.makeTranslation(x, y, z)));

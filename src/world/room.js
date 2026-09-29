@@ -10,7 +10,7 @@ import { OBJECT_STYLE_DEFAULTS, blockCells, holeTiles, withEnemyDefaults, withEx
  * each cell of a type with a kind (collapsing) becomes a room object.
  * @returns {{ blocks: Record<string, number[][]>, objects: object[] }}
  */
-function blocksByType(data, blockTypes) {
+function blocksByType(data, blockTypes, roomColor) {
   const blocks = {};
   const objects = [];
   for (const block of data.blocks ?? []) {
@@ -20,9 +20,11 @@ function blocksByType(data, blockTypes) {
       (blocks[type.id] ??= []).push(...cells);
       continue;
     }
-    // Its look and tuning come from the type (color, edges, faces, regrow...).
+    // Its look and tuning come from the type (color, edges, faces, regrow...);
+    // without a color it is room structure and takes the room color (D99).
     const { id: _, static: __, extends: ___, ...values } = type;
-    for (const at of cells) objects.push({ id: `${type.id}@${at.join(',')}`, type: type.id, at, ...OBJECT_STYLE_DEFAULTS, ...values });
+    const look = { ...OBJECT_STYLE_DEFAULTS, color: roomColor, ...values };
+    for (const at of cells) objects.push({ id: `${type.id}@${at.join(',')}`, type: type.id, at, ...look });
   }
   return { blocks, objects };
 }
@@ -32,7 +34,7 @@ function blocksByType(data, blockTypes) {
  * @param {{ objectTypes: object, blockTypes: object, enemyTemplates?: object, pickupTypes?: object, biomes: object }} content loaded game data
  */
 export function buildRoom(data, { objectTypes, blockTypes, enemyTemplates = {}, pickupTypes = {}, biomes }) {
-  const fromBlocks = blocksByType(data, blockTypes);
+  const fromBlocks = blocksByType(data, blockTypes, biomes[data.biome].color);
   return {
     id: data.id,
     name: data.name,

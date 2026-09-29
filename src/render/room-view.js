@@ -17,7 +17,7 @@ import { BoxGeometry, BufferGeometry, Color, DoubleSide, Float32BufferAttribute,
 import { BLOCK_FX, createActiveBlockView, flareHazard, hazardFaceMaterial } from './block-fx.js';
 import { blockEdges, edgeUnitKeys, groupedBlockEdges } from './edges.js';
 import { BITS, markSegments } from './marks.js';
-import { GLASS, glassFaceMaterial, looseBitSegments, shrinkSegments } from './glass.js';
+import { GLASS, glassFaceMaterial, shrinkSegments } from './glass.js';
 import { spikeSegments, spikeTriangles } from './spikes.js';
 import { doorwayTunnels, wallLayout } from './walls.js';
 import {
@@ -183,7 +183,7 @@ const EDGE_WIDTH = { collapsing: 1.5 };
  * up, or its outline brightens; `userData.flare(since)` sets the flare
  * for `since` seconds after it hurt the wizard. Glass faces (D96,
  * glass.js) are see-through, with the mark on a small dark core inside;
- * a destructible glass object has no core, its data bits float loose.
+ * a destructible glass object is an empty shell of thinner glass (D99).
  * @param {{ at: number[], kind?: string, color: string, edges: string, mark: string, faces: string, shape?: string, tint: number, integrity?: number }} object
  */
 export function createObjectView({ at, kind, color, edges, mark, faces, shape = 'cube', tint, integrity }) {
@@ -202,7 +202,7 @@ export function createObjectView({ at, kind, color, edges, mark, faces, shape = 
     flares.push((since) => flareHazard(material, at, since));
   } else if (faces === 'glass' && !spiked) {
     // See-through (D96, glass.js): drawn after everything opaque.
-    const body = new Mesh(geometry, glassFaceMaterial(color));
+    const body = new Mesh(geometry, glassFaceMaterial(color, integrity !== undefined ? GLASS.hollow : {}));
     body.position.set(...at);
     group.add(body);
   } else {
@@ -237,12 +237,8 @@ export function createObjectView({ at, kind, color, edges, mark, faces, shape = 
       : { color, width: 1.5, brightness: 1 };
     if (faces === 'glass') {
       // Behind glass the mark sits on a small dark core inside it; a
-      // destructible object's bits float loose instead (D96).
-      if (drawn === 'bitsBroken') {
-        const loose = neonLines(looseBitSegments(at), lineMaterial(style));
-        loose.renderOrder = 2;
-        group.add(loose);
-      } else group.add(glassCore(drawn, at, style));
+      // destructible object is empty (D99).
+      if (drawn !== 'bitsBroken') group.add(glassCore(drawn, at, style));
       return group;
     }
     const marks = neonLines(markSegments(drawn, at), lineMaterial(style));

@@ -3,10 +3,10 @@
  * wizard (Phase 3 step 5), so a chase reads at a glance.
  */
 import { BoxGeometry, Group, Mesh, MeshBasicMaterial } from 'three';
-import { shared } from './neon.js';
+import { PALETTE, shared } from './neon.js';
 
 /** Sizes in units. */
-export const ALERT_MARK = { bar: [0.05, 0.16, 0.05], dot: 0.05, color: 0xff2a3a, glow: 2.5, bob: 0.05, rate: 6 };
+export const ALERT_MARK = { bar: [0.05, 0.16, 0.05], dot: 0.05, color: PALETTE.danger, glow: 2.5, bob: 0.05, rate: 6 };
 
 const BAR = shared(new BoxGeometry(...ALERT_MARK.bar));
 const DOT = shared(new BoxGeometry(ALERT_MARK.dot, ALERT_MARK.dot, ALERT_MARK.dot));

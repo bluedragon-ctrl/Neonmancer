@@ -117,7 +117,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/alert-mark.js` | The red "!" over an enemy that noticed the wizard |
 | `render/hash.js` | Fixed pseudo-random numbers for pixel bursts (pure) |
 | `render/rails.js` | Guide line along a platform's path, `RAILS` tuning (pure, tested) |
-| `render/block-fx.js` | Animated looks of hazard and void blocks (face shaders in room coordinates, steady edges, hazard flare), `BLOCK_FX` tuning |
+| `render/block-fx.js` | Animated looks of hazard and void blocks (hazard face shader in room coordinates, steady edges, hazard flare; void via mist.js), `BLOCK_FX` tuning |
+| `render/mist.js` | Void blocks as black mist (D99): opaque black cubes with sinking gray wisps, a patchy fog shell and a dim frame, `MIST` tuning |
 | `render/hit-fx.js` | Damage look: blinking while invulnerable, derez flicker and pixel burst, `HIT_FX` tuning (pure, tested) |
 | `render/interp.js` | Tick interpolation (positions, angles) and drop-shadow sizing (pure, tested) |
 | `render/room-scene.js` | The current room's views, object views by kind (`OBJECT_VIEWS`); rebuilds only the objects on a respawn |

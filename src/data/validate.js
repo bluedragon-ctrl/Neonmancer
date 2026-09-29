@@ -203,7 +203,6 @@ function validateBlockTypes(blocks, report) {
     if (type.look === undefined && type.kind === undefined) report('defs.json', path, 'needs a "look" (a static block) or a "kind" (runs as room objects)');
     else if (type.look !== undefined && type.kind !== undefined) report('defs.json', path, 'has both a "look" and a "kind"; a block type is one or the other');
     else if (type.kind !== undefined) {
-      if (type.color === undefined) report('defs.json', path, `a ${type.kind} block needs a "color"`);
       const wrong = STATIC_BLOCK_VALUES.filter((key) => key in own);
       if (wrong.length > 0) report('defs.json', path, `${wrong.join(', ')}: only for static blocks (with a "look"), not a ${type.kind} block`);
     } else {

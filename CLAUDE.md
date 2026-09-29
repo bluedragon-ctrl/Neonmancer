@@ -95,8 +95,8 @@ mobile/touch support, backend or accounts.
 - Blocks rendered with instanced or merged geometry for performance.
 
 ### Depth readability
-- Glowing drop shadow directly under the player (falling objects' shadow
-  is off for now, D50).
+- Glowing drop shadow directly under the player, in his magenta (falling
+  objects' shadow is off for now, D50).
 - Only back walls rendered; front walls omitted.
 - Neon edges are drawn over dark occluding faces, so hidden edges never show.
 - X-ray outline when the player is hidden behind blocks.
@@ -256,9 +256,13 @@ void, and pop if the ground goes from under them.
 Each room has a biome defining look and optional environmental effects,
 defined in data and combinable. Health pickups and safe rooms balance
 drain effects. Six biomes (D61): one core, four side sectors, one special.
-Room colors stay clear of the gameplay colors (lime crates, cyan
-platforms, pale white-blue collapsing, red hazard, violet void, green bugs;
-magenta is the wizard's color, D98).
+Color rules (D99), for objects and blocks: red hurts or is about to
+(hazards, spiked platforms, hostile eyes: one red, `#ff2a3a`); the room
+color is structure (plain and collapsing blocks); black is a pit (holes,
+void blocks as black mist); white is a mechanism (plates, targets, locks);
+cyan moves (platforms); magenta is the wizard (D98); lime is pushable
+(crates). Room colors stay clear of them (`tests/colors.test.js`).
+Monsters and spell effects are not bound by them yet.
 Behaviors below are ideas for Phase 5; for now biomes are look only.
 - **Home Lattice** (core) — amber (the default room color), clean square
   grid, warm rising motes; safe; holds the central core
@@ -270,7 +274,7 @@ Behaviors below are ideas for Phase 5; for now biomes are look only.
   drifting glitter, gentle sway; later: low gravity
 - **Firewall Citadel** — ember orange, brick floor, rising sparks, warm
   flicker; guardians
-- **Phantom Partition** (special: secrets, backtracking) — silver-white,
+- **Phantom Partition** (special: secrets, backtracking) — pale violet (D99),
   sparse dotted floor, still twinkling stars, edges slowly shimmering
   through the hues
 

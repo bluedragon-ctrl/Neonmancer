@@ -112,7 +112,7 @@ export const BLOCK_TYPES = {
   block: { look: 'plain' },
   hazard: { look: 'hazard', color: '#ff3b30', damage: 1 },
   void: { look: 'void', color: '#8a5cff', lethal: true },
-  collapsing: { kind: 'collapsing', color: '#dff4ff' },
+  collapsing: { kind: 'collapsing' },
   collapsing_regrow: { extends: 'collapsing', regrow: 3 },
 };
 
