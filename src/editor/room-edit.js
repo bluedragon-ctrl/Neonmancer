@@ -21,7 +21,7 @@ const ITEM_LISTS = [
   ['pickup', 'pickups'],
 ];
 
-const KEY_ORDER = ['$schema', 'schemaVersion', 'id', 'name', 'biome', 'size', 'spawn', 'reset', 'exits', 'blocks', 'holes', 'objects', 'enemies', 'pickups'];
+const KEY_ORDER = ['$schema', 'schemaVersion', 'id', 'name', 'authored', 'biome', 'size', 'spawn', 'reset', 'exits', 'blocks', 'holes', 'objects', 'enemies', 'pickups'];
 
 /** Undo steps kept per room. */
 const UNDO_LIMIT = 200;
@@ -314,6 +314,19 @@ export class RoomEdit {
     if (name === this.data.name) return false;
     return this.edit(() => {
       this.data.name = name;
+      return true;
+    });
+  }
+
+  /**
+   * Mark the room as the author's own (D90), or a test room again.
+   * @param {boolean} on
+   */
+  setAuthored(on) {
+    if (on === (this.data.authored === true)) return false;
+    return this.edit(() => {
+      if (on) this.data.authored = true;
+      else delete this.data.authored;
       return true;
     });
   }

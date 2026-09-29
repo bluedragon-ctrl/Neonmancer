@@ -229,6 +229,19 @@ test('RoomEdit undoes and redoes; a stroke is one step', () => {
   assert.equal(edit.redo(), false);
 });
 
+test('RoomEdit marks a room authored (D90) and back; a test room has no flag', () => {
+  const edit = new RoomEdit(sampleRoom());
+  assert.equal(edit.setAuthored(false), false);
+  assert.equal(edit.setAuthored(true), true);
+  assert.equal(edit.toData().authored, true);
+  assert.match(edit.text(), /"name": "lab",\n  "authored": true,\n  "biome"/);
+  assert.equal(edit.setAuthored(true), false);
+  assert.equal(edit.setAuthored(false), true);
+  assert.equal('authored' in edit.toData(), false);
+  edit.undo();
+  assert.equal(edit.toData().authored, true);
+});
+
 test('roomErrors checks the edited room with the rest of the data', () => {
   const files = dataFiles({ rooms: [sampleRoom()], objects: { crate: { kind: 'pushable', color: '#b6ff3c' } } });
   const edit = new RoomEdit(files['rooms/lab.json']);

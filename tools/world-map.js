@@ -4,7 +4,7 @@
  * map grid (`positions` in world.json); lines join connected exits, drawn
  * from the side each exit is on. Flags what room validation can't see:
  * rooms the start can't reach, and test rooms more than two rooms from the
- * start (D49).
+ * start (D49); authored rooms (D90) are marked and may lie further out.
  *
  * Tools (D77): Move drags a room to another free cell (click opens it in
  * the room editor); Add puts a new, empty room in a free cell; Connect
@@ -222,7 +222,7 @@ function draw() {
     svgEl.append(svg('line', { class: 'link-draft', x1, y1: z1, x2: state.drag.point[0], y2: state.drag.point[1] }));
   }
 
-  const { unreachable, far } = mapWarnings(edit.world, edit.rooms.keys());
+  const { unreachable, far } = mapWarnings(edit.world, edit.rooms.keys(), authoredRooms());
   const farBy = new Map(far.map(({ id, distance }) => [id, distance]));
   const unsaved = unsavedRooms();
   for (const id of edit.rooms.keys()) svgEl.append(roomNode(id, { unreachable: unreachable.includes(id), far: farBy.get(id), moved: unsaved.has(id) }));
@@ -239,6 +239,11 @@ function draw() {
   }
 
   mapEl.append(svgEl);
+}
+
+/** Ids of the author's real game rooms (D90). */
+function authoredRooms() {
+  return new Set([...edit.rooms].filter(([, room]) => room.authored).map(([id]) => id));
 }
 
 /** The id the Add tool gives the next room. */
@@ -272,8 +277,10 @@ function roomNode(id, { unreachable, far, moved }) {
   if (id === world.start) g.append(svg('text', { class: 'flag', x: 0, y: 50, fill: 'var(--lime)' }, 'START'));
   else if (unreachable) g.append(svg('text', { class: 'flag', x: 0, y: 50, fill: 'var(--magenta)' }, 'UNREACHABLE'));
   else if (far !== undefined) g.append(svg('text', { class: 'flag', x: 0, y: 50, fill: 'var(--amber)' }, `${far} ROOMS OUT`));
+  // Authored (D90): a real game room, left alone by development steps.
+  if (room.authored) g.append(svg('text', { class: 'flag', x: 0, y: -half + 14, fill: 'var(--cyan)' }, 'AUTHORED'));
   if (moved) g.append(svg('circle', { class: 'moved', cx: half - 10, cy: -half + 10, r: 5 }, undefined));
-  g.append(svg('title', {}, `${room.name} (${id})`));
+  g.append(svg('title', {}, `${room.name} (${id})${room.authored ? ', authored' : ''}`));
   return g;
 }
 
@@ -311,7 +318,7 @@ function drawPanel() {
 
   const errors = dataErrors();
   const distances = roomDistances(world.start, world.connections);
-  const { unreachable, far } = mapWarnings(world, edit.rooms.keys());
+  const { unreachable, far } = mapWarnings(world, edit.rooms.keys(), authoredRooms());
 
   panelEl.append(html('h2', '', 'CHECKS'));
   const list = html('ul');
@@ -320,7 +327,7 @@ function drawPanel() {
     list.append(roomItem(id, 'warn', `${id}: ${distance} rooms from ${world.start}; test rooms stay within ${TEST_ROOM_REACH} (D49)`));
   }
   for (const error of errors) list.append(html('li', 'error', error));
-  if (list.children.length === 0) list.append(html('li', 'fine', `All ${distances.size} rooms reachable, all within ${TEST_ROOM_REACH} of the start.`));
+  if (list.children.length === 0) list.append(html('li', 'fine', `All ${distances.size} rooms reachable, test rooms within ${TEST_ROOM_REACH} of the start.`));
   panelEl.append(list);
 
   panelEl.append(html('h2', '', 'HOW TO'));

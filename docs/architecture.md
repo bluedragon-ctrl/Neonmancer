@@ -72,7 +72,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `entities/warp.js` | Where Blink and Warp take the wizard (D86): `warpTarget()` sweeps his box along his aim through open space, stops at blocks, objects and the room's side, lands short of enemies, reports the enemies passed (pure, tested) |
 | `entities/clip.js` | Where Cut & Paste works (D87): `aimAxis()`, `frontCell()` (the cell in front of him), `cutTarget()` (a resting crate or frozen enemy there or one up, nothing on it), `pasteCell()` (free of blocks, bodies and pickups) (pure, tested); `Game.cutOrPaste()` moves things in and out of the room |
 | `entities/pickup.js` | A pickup in a room: its box, save bit, state (idle, ghost, taken) and pick-up ticks (pure, tested) |
-| `world/map.js` | The world map (D66): `nearestFreeCell()` for new rooms, `roomDistances()` from the start, `mapWarnings()` (unreachable rooms, test rooms too far out, D49) (pure, tested) |
+| `world/map.js` | The world map (D66): `nearestFreeCell()` for new rooms, `roomDistances()` from the start, `mapWarnings()` (unreachable rooms, test rooms too far out, D49; authored rooms exempt, D90) (pure, tested) |
 | `world/path.js` | Shared path format: legs from `at` through `points`, `advance()` / `positionOf()` on a small path state, swept cells |
 | `render/viewport.js` | Letterbox, buffer size and 1080p-relative sizing math (pure, tested) |
 | `render/renderer.js` | WebGLRenderer, 16:9 stage + HUD overlay, DPR cap, render scale, MSAA, resize, shader precompile |

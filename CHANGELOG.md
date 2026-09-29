@@ -7,6 +7,11 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Authored rooms (D90): a room's `"authored": true` flag, a checkbox in
+  the room editor, marks the author's real game rooms. The world map tool
+  shows them as AUTHORED and doesn't flag them for lying far from the
+  start. CLAUDE.md gets the rule that development steps never change
+  them or attach new rooms to them.
 - Pull joins the spell roster (D89, slot 10, planned for Phase 4): it
   pulls the closest crate or enemy in the facing direction one tile
   towards the wizard.

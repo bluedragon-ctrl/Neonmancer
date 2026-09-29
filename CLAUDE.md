@@ -304,7 +304,8 @@ The engine is generic; all content lives in data.
 - `data/biomes.json` — palette, floor pattern, effect settings,
   environmental effects
 - `data/rooms/*.json` — one file per room: biome, size [x, y, z], exits,
-  objects, enemies, bonus slots; only overrides of type defaults
+  objects, enemies, bonus slots; only overrides of type defaults;
+  `"authored": true` marks the author's real game rooms (D90, §10)
 - `data/world.json` — room connections, room positions on the world map,
   start room, fragment locations, number of fragments required, core
   location
@@ -393,6 +394,23 @@ not critical.
   push the branch and give the author a prefilled compare link
   (`https://github.com/bluedragon-ctrl/Neonmancer/compare/main...<branch>?expand=1`)
   plus the PR title and body, so they can create the PR manually.
+- Authored rooms (D90): a room with `"authored": true` is a real game
+  room made by the author, who sets and clears the flag in the room
+  editor (a test room may become the start of a real one). Development
+  steps never touch them:
+  - never edit, migrate, resize or move an authored room (its file or
+    its map position), and never add, remove or rename its exits or
+    connections;
+  - never attach a new room to an authored room; new test rooms connect
+    only to test rooms (Boot Sector, the shared start, stays a test
+    room; if a hub becomes authored, ask where test rooms go);
+  - tests never depend on authored rooms; they use the fixtures in
+    `tests/helpers.js` or test rooms;
+  - a change that could affect them (a schema change that needs a
+    migration, a new default in `defs.json`, a changed mechanic) lists
+    the affected authored rooms in the PR, and any change to their
+    files waits for the author's OK;
+  - running, playing and screenshotting them to check a mechanic is fine.
 - CLAUDE.md is versioned in the repo so every machine shares it; put
   working rules here, not in machine-local notes.
 - Conventional Commits (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`).

@@ -912,10 +912,17 @@ room.
   at floor level, holes). A raised exit (`y` > 0) needs something to stand
   on in front of it, usually a ledge.
 
+### Authored rooms
+
+The author's real game rooms carry `"authored": true` (D90), set with the
+*Authored* checkbox in the room editor. They share the world with the test
+rooms and start from Boot Sector too; development steps never change them
+or attach new rooms to them (CLAUDE.md §10). The world map tool marks them
+AUTHORED and lets them lie as far from the start as the world needs.
+
 ### Test rooms
 
-Test rooms stay in the world until content production (Phase 5) builds the
-real rooms and puzzles (D45). They are a test lab: each shows one mechanic
+Test rooms stay in the world alongside the authored rooms (D45, D90). They are a test lab: each shows one mechanic
 in isolation, and later spells and enemy behaviors get tested in them too.
 New mechanics add or extend one (D43). Boot Sector, the start, is the
 hub: every test room is at most two rooms away from it, so no test means
@@ -1237,7 +1244,7 @@ players never see it (D67).
   game takes `?room` and `?edit` in the dev server only.
 - **Checks:** the side panel lists the data errors, the rooms the start
   can't reach through exits, and test rooms more than two rooms from the
-  start (D49; every room counts as a test room until content production).
+  start (D49; authored rooms, D90, are marked and not flagged).
   Click a warning to highlight its room.
 - **New rooms** made in the room editor get the free cell nearest to the
   room they were made from (east, south, west, north first, then further
@@ -1278,7 +1285,8 @@ D43. **Done:** every step is merged and Phase 2 is released as v0.2.0.
 Every step also:
 - adds its new looks to the asset showcase (`tools/showcase.js`);
 - adds or extends a small test room that shows the mechanic, connected to
-  the world (`data/world.json`);
+  the world (`data/world.json`) through test rooms only, never an
+  authored room (D90);
 - adds unit tests for the logic (fixtures in `tests/helpers.js`);
 - updates `docs/design.md`, `docs/architecture.md` and CHANGELOG, and
   records new decisions.

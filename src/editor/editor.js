@@ -130,6 +130,7 @@ export class Editor {
         discard: () => this.discardRoom(),
         error: (error) => this.goTo(error),
         name: (name) => (name ? this.change(() => this.edit.setName(name)) : this.refresh()),
+        authored: (on) => this.change(() => this.edit.setAuthored(on)),
         biome: (biome) => this.change(() => this.edit.setBiome(biome)),
         size: (size) => this.resize(size),
         undo: () => this.change(() => this.edit.undo()),
