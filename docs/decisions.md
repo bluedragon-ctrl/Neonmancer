@@ -744,3 +744,21 @@ reboot again.
 **Why:** Continue saves pasting a key in the same browser, while the key
 and the link still carry a save anywhere else. Storing only on Save keeps
 "nothing saves on its own" (D105).
+
+### D112 — 2026-09-29 — The map screen
+M (or **Map** in the pause menu) opens the run's map over the standing
+game; M, Esc, P, Enter or Space close it. It records the rooms entered in
+this run and is never saved (D68): a new game or a loaded save starts it
+empty. Using a backup shrine (stepping on it, or a crash reboot) reveals
+every room within 2 map cells of it (|dx| + |dz|), dimmed as a dashed
+outline until visited, and they stay on the map for the run. A visited
+room shows in its biome color with its exits: connections to rooms on the
+map (dashed when they run across the map), and a cyan stub for each exit
+to a room not on it yet; the rooms behind stay hidden. A gold mark shows
+while a fragment he hasn't found lies in a visited room, a magenta ring
+a backup shrine, a blinking dot where he is. The map is drawn from the
+game's isometric angle, so east is down-right as in the rooms.
+**Why:** finding what is where is part of the game (D67), so the map only
+remembers what he has seen; shrines give a local chart as a reward for
+reaching them, and the stubs show the way on without giving away the
+rooms. Fragment marks save revisiting rooms to check what is left.

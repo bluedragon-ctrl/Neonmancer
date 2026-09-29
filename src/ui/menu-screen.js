@@ -13,7 +13,7 @@ import { SETTINGS } from './settings.js';
 import { formatText, scrambleText } from './text.js';
 
 /** The controls panel's rows: `controls.<id>` names the action, `controls.<id>Keys` its keys. */
-export const CONTROL_ROWS = ['move', 'jump', 'cast', 'spell', 'pause', 'movementMode', 'fullscreen'];
+export const CONTROL_ROWS = ['move', 'jump', 'cast', 'spell', 'pause', 'map', 'movementMode', 'fullscreen'];
 
 /** Menus with text under the heading: `menu.<id>Text`, the controls table, the key field, or the pause menu's key. */
 const BODIES = ['controls', 'quit', 'options', 'visuals', 'enterKey', 'pause'];
@@ -132,13 +132,14 @@ export class MenuScreen {
     this.key = flow.key;
     this.canContinue = flow.canContinue;
 
-    this.root.hidden = !top;
+    // The map screen draws itself (ui/map-screen.js).
+    this.root.hidden = !top || top.id === 'map';
     this.root.classList.remove('leaving');
     this.root.style.opacity = '';
     this.logoTitle.textContent = this.text('game.title');
     this.stage.classList.toggle('titled', flow.onTitle);
     if (top?.id !== 'enterKey') this.keyField.blur();
-    if (!top) return;
+    if (!top || top.id === 'map') return;
     this.root.classList.toggle('title', flow.onTitle);
     // The logo only on the title's own menu; its panels have a heading.
     this.logo.hidden = top.id !== 'title';

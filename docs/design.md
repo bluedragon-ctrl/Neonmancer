@@ -13,7 +13,7 @@ for the current phase. Locked decisions live in CLAUDE.md; their reasons in
 | Cast (the selected spell) | E / Numpad 0 |
 | Switch spell | Tab (next) / Q (previous) |
 | Pause menu (and back, in a menu) | Esc / P |
-| Map (Phase 4) | M |
+| Map (and back) | M |
 | Switch movement mode | G |
 | Debug mode | F3 |
 | Room editor | F2 (see Room editor) |
@@ -1572,7 +1572,7 @@ Saves, guardians and tooling, in two parts (D105), planned step by step.
 
 **Phase 4a — saves and UI:** access-key codec with tests (done, D106);
 title screen and pause menu (done, D109); saving and loading
-(done, D111); map screen.
+(done, D111); map screen (done, D112).
 
 **Phase 4b — spells, bosses, tooling:** the roster's new spells, one
 step each (D88, D89): Pull, Compile, Scan (needs hidden blocks, fake
@@ -1594,6 +1594,14 @@ Settled:
 
 - A key whose room cell holds no room (the room moved on the world map
   since) still loads what he has and starts him in the start room.
+- The map screen (D112): M, or Map in the pause menu, shows the rooms
+  entered in this run, never saved (a new game or a load starts it
+  empty). A backup shrine reveals the rooms within 2 map cells (|dx| +
+  |dz|) as dim outlines, which stay for the run. Visited rooms show
+  their biome color, connections, cyan stubs for exits to rooms not on
+  the map yet, a gold mark while an unfound fragment lies there, a
+  magenta ring for a shrine, and where he is. It is drawn isometrically,
+  east down-right as in the rooms.
 
 Open so far:
 - Wardens: size (a body wider than one cell needs multi-cell collision and
@@ -1602,12 +1610,6 @@ Open so far:
 - How deep the reachability checker searches pushables and spells; it
   works out which abilities each exit and pickup needs and checks that
   the world can be finished in some order (D67).
-- The map screen, given that finding what is where is part of the game.
-  The author's current plan: it records the rooms visited in this run
-  only and is cleared when a save is loaded (the access key carries no
-  map data); shrines show a map of the area around them. Still open: how
-  far that area reaches, whether it shows rooms not visited yet, and
-  whether they then stay on the run's map.
 - Proposal, to be discussed and confirmed: small rewards for secrets
   found, visual first. Each follows from the secret count, like the
   access level from fragments, so no new save bits and nothing more in

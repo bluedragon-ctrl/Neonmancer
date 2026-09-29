@@ -21,6 +21,7 @@ import { showErrorScreen } from './ui/error-screen.js';
 import { toggleFullscreen, wantsFullscreenHint } from './ui/fullscreen.js';
 import { BootScreen } from './ui/boot-screen.js';
 import { Hud } from './ui/hud.js';
+import { MapScreen } from './ui/map-screen.js';
 import { MenuScreen } from './ui/menu-screen.js';
 import { MenuFlow } from './ui/menus.js';
 import { copyText, hashKey, keyLink, storeKey, storedKey, writeHash } from './ui/saves.js';
@@ -143,6 +144,7 @@ function boot() {
     },
     onBack: () => flow.back(),
   });
+  const mapScreen = new MapScreen(renderer.stage, content.strings);
   const bootScreen = new BootScreen(renderer.stage, renderer.camera);
   /** Seconds into the boot sequence after Start (D110), or null when none runs. */
   let boot = null;
@@ -268,6 +270,7 @@ function boot() {
 
     const booting = boot === null ? null : bootState(boot);
     menuScreen.show(flow, booting?.logo ?? null);
+    mapScreen.show(flow, game);
     bootScreen.show(booting?.wipe ?? null);
     playerView.boot = booting;
     editor.frame();
