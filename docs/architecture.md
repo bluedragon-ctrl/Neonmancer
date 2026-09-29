@@ -309,7 +309,7 @@ a bounce, its own; `hit(damage, 'bolt')`), a block, an object (unharmed)
 or the room side; a bouncing one glances off blocks and objects first
 (`ricochet` events, passed to `RoomScene.sparks()` too). The wizard's
 Zap+ (D95) bounces off blocks and the room side only, stopping at objects
-as a Zap does. With the Mirror, a shot stopping at his Shield turns round
+as a Zap does. With Shield+, a shot stopping at his Shield turns round
 (`Bolt.reflect()`, a `reflect` event) and flies on as his own bolt. Every hit on an
 enemy, a spell's, a discharge's or a bolt's, goes through
 `hitEnemy()` (combat.js): it emits `hit` or `pop`, and alarms one left hostile

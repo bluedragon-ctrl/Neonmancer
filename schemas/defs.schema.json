@@ -200,10 +200,10 @@
             "additionalProperties": false,
             "properties": {
               "kind": true,
-              "upgrade": { "enum": ["zap_plus", "mirror", "double_jump"], "description": "What it does, built into the engine (D95): zap_plus, the Zap bolt bounces off blocks and walls; mirror, the Shield reflects bolts; double_jump, a second jump in mid-air. One pickup type per upgrade." },
-              "slot": { "$ref": "#/$defs/slot", "description": "Its bit in the save's upgrade block (D88), also the lit bit on its disk; unique among upgrades." },
+              "upgrade": { "enum": ["zap_plus", "shield_plus", "double_jump"], "description": "What it does, built into the engine (D95): zap_plus, the Zap bolt bounces off blocks and walls; shield_plus (Shield+), the Shield reflects bolts; double_jump, a second jump in mid-air. One pickup type per upgrade." },
+              "slot": { "$ref": "#/$defs/slot", "description": "Its bit in the save's upgrade block (D88), also the lit bit on its card; unique among upgrades." },
               "spell": { "$ref": "common.schema.json#/$defs/id", "description": "The spell it upgrades (defs.json spells): once found, the spell goes by the upgrade's name in the Tab cycle (ZAP+). None for the jump." },
-              "color": { "$ref": "common.schema.json#/$defs/color", "description": "Its disk's lit bit and badge, its install animation and banner; the Mirror's ring too." },
+              "color": { "$ref": "common.schema.json#/$defs/color", "description": "Its card's contact fingers and lit bit, its install animation and banner; the Shield+ ring too." },
               "bounces": { "type": "integer", "minimum": 1, "maximum": 8, "description": "zap_plus: how often the bolt bounces off blocks and the room's sides." }
             }
           }

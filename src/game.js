@@ -53,7 +53,7 @@ export const TRANSITION = {
  *   discharge (a burst, an arc or bolts fired); cut or pasted) or that
  *   hurt the wizard (hurt)
  * @property {Bolt} [bolt] the bolt that stopped (zap: the wizard's or an
- *   enemy's), where it is now, that bounced (ricochet) or that his Mirror
+ *   enemy's), where it is now, that bounced (ricochet) or that his Shield+
  *   sent back (reflect, D95)
  * @property {number[]} [pos] where a bolt bounced (ricochet)
  * @property {number[]} [dir] the way it came in (ricochet)
@@ -430,7 +430,7 @@ export class Game {
   }
 
   /**
-   * Give the wizard the upgrades found (D95): Zap+ and the Mirror change
+   * Give the wizard the upgrades found (D95): Zap+ and Shield+ change
    * how those spells work when cast (spells.js), the double jump gives him
    * a jump in mid-air.
    */

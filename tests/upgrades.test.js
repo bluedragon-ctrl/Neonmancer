@@ -49,8 +49,8 @@ test('upgrades have their own save bits, 32–47, by their slot (D88, D95)', () 
   assert.equal(upgradeBit('upgrade_zap_plus'), 32);
   assert.equal(upgradeBit('upgrade_double_jump'), 34);
   const found = new Progress([saveBit('upgrades', 1)]).upgrades(PICKUPS);
-  assert.deepEqual([...found.keys()], ['mirror']);
-  assert.equal(found.get('mirror').spell, 'shield');
+  assert.deepEqual([...found.keys()], ['shield_plus']);
+  assert.equal(found.get('shield_plus').spell, 'shield');
 });
 
 test('taking an upgrade disk installs it: the upgraded spell selected, ZAP shows as ZAP+ (D95)', () => {
@@ -90,11 +90,11 @@ test('Zap+ stops at a room object as a Zap does: it hits a crate, never glances 
   assert.equal(events.find((e) => e.type === 'zap')?.bolt.target, game.objects[0]);
 });
 
-test('the Mirror sends a bolt back: it hits its shooter, he stays whole (D95)', () => {
-  const game = gameWith({ enemies: [{ id: 's', template: 'shooter', at: [1, 0, 1] }], upgrades: ['upgrade_mirror'], pos: [5.5, 0, 1.5] });
+test('Shield+ sends a bolt back: it hits its shooter, he stays whole (D95)', () => {
+  const game = gameWith({ enemies: [{ id: 's', template: 'shooter', at: [1, 0, 1] }], upgrades: ['upgrade_shield_plus'], pos: [5.5, 0, 1.5] });
   game.update(press('spellNext'));
   game.update(press('cast'));
-  assert.equal(game.player.shield.mirror, true);
+  assert.equal(game.player.shield.reflects, true);
   const events = run(game, 100);
   const reflect = events.find((e) => e.type === 'reflect');
   assert.equal(reflect?.enemy, game.enemies[0]);
@@ -104,7 +104,7 @@ test('the Mirror sends a bolt back: it hits its shooter, he stays whole (D95)', 
   assert.equal(typeof game.player.shield.blockedAt, 'number', 'the ring flares');
 });
 
-test('without the Mirror the Shield only absorbs the bolt', () => {
+test('without Shield+ the Shield only absorbs the bolt', () => {
   const game = gameWith({ enemies: [{ id: 's', template: 'shooter', at: [1, 0, 1] }], pos: [5.5, 0, 1.5] });
   game.update(press('spellNext'));
   game.update(press('cast'));
@@ -183,20 +183,20 @@ test('upgrade card model: a white card, fingers and lit bit in its color, gray o
   assert.equal(fingers, CARD.fingers, 'the fingers, one left out for the key notch');
   const ghost = createCard({ color: '#cfe8ff', ghost: true });
   assert.notEqual(ghost.userData.bitColor, '#cfe8ff');
-  assert.equal(createPickupModel({}, PICKUPS.upgrade_mirror).userData.bitColor, '#cfe8ff');
+  assert.equal(createPickupModel({}, PICKUPS.upgrade_shield_plus).userData.bitColor, '#cfe8ff');
 });
 
 test('defs: upgrade slots and upgrades unique, each upgrading its own spell; Zap+ needs bounces (D95)', () => {
   const files = dataFiles({ rooms: [roomFile('alpha')] });
   const { pickups } = files['defs.json'];
-  pickups.upgrade_mirror.slot = 0;
-  pickups.upgrade_mirror.spell = 'zap';
+  pickups.upgrade_shield_plus.slot = 0;
+  pickups.upgrade_shield_plus.spell = 'zap';
   delete pickups.upgrade_zap_plus.bounces;
   pickups.upgrade_double_jump.spell = 'zap';
   pickups.upgrade_twice = { kind: 'upgrade', upgrade: 'double_jump', slot: 5, color: '#ffffff' };
   const errors = validateData(files).join('\n');
-  assert.match(errors, /pickups\.upgrade_mirror\.slot: upgrade slot 0 is taken by "upgrade_zap_plus"/);
-  assert.match(errors, /pickups\.upgrade_mirror\.spell: mirror upgrades "shield"/);
+  assert.match(errors, /pickups\.upgrade_shield_plus\.slot: upgrade slot 0 is taken by "upgrade_zap_plus"/);
+  assert.match(errors, /pickups\.upgrade_shield_plus\.spell: shield_plus upgrades "shield"/);
   assert.match(errors, /pickups\.upgrade_zap_plus: missing bounces/);
   assert.match(errors, /pickups\.upgrade_double_jump\.spell: double_jump upgrades no spell/);
   assert.match(errors, /pickups\.upgrade_twice\.upgrade: upgrade "double_jump" is "upgrade_double_jump" already/);

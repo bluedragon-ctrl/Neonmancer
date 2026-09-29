@@ -10,7 +10,7 @@ and the project uses [Semantic Versioning](https://semver.org/).
 - Upgrades (Phase 3 step 13, D95): permanent upgrade cards with their
   own save bits (the upgrade block, bits 32–47): an expansion card with
   contact fingers in the upgrade's color. Zap+ replaces Zap in the Tab cycle and
-  its bolt bounces twice off blocks and walls; the Mirror makes the
+  its bolt bounces three times off blocks and walls; Shield+ makes the
   Shield send enemy bolts back the way they came, hurting the first
   enemy they meet; the double jump gives the wizard one more jump in
   mid-air, with kick-off rings. `UPGRADE INSTALLED` banner, validation,

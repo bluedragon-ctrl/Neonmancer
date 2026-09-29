@@ -125,7 +125,7 @@ function validateTemplates(enemies, report) {
 }
 
 /** The spell each upgrade improves (D95); the jump improves none. */
-const UPGRADE_SPELLS = { zap_plus: 'zap', mirror: 'shield', double_jump: null };
+const UPGRADE_SPELLS = { zap_plus: 'zap', shield_plus: 'shield', double_jump: null };
 
 /**
  * Spell, buff and upgrade slots are unique (each is a save bit, D71), a

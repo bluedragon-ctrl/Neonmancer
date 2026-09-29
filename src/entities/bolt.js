@@ -15,7 +15,7 @@
  * axis it ran into; after its first bounce it can hit its own shooter too.
  * The wizard's Zap+ (D95) bounces off blocks and the room's sides only: it
  * stops at a room object as a Zap does, so it still breaks crates and
- * switches targets. The Mirror (D95) sends an enemy's shot back the way it
+ * switches targets. Shield+ (D95) sends an enemy's shot back the way it
  * came (reflect()): from then on it is the wizard's bolt.
  * The body it stops at (its `target`) takes the hit (updateBolts() in combat.js:
  * enemies and the wizard; room objects only mind the wizard's Zap). It
@@ -89,7 +89,7 @@ export class Bolt {
     this.bounces = bounces;
     this.bounceObjects = bounceObjects;
     this.bounced = false;
-    /** Sent back by the Mirror (D95): now the wizard's. */
+    /** Sent back by Shield+ (D95): now the wizard's. */
     this.reflected = false;
     /** Where it bounced this tick: { pos, dir } with the direction it came in (for sparks). */
     this.rebounds = [];
@@ -119,7 +119,7 @@ export class Bolt {
   }
 
   /**
-   * The Mirror sends an enemy's shot back the way it came (D95): it flies
+   * Shield+ sends an enemy's shot back the way it came (D95): it flies
    * on as the wizard's bolt, stopping at the first enemy (its shooter
    * included), object or wall, with its bounces left.
    */

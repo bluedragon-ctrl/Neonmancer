@@ -205,14 +205,14 @@ const ALL_ASSETS = [
   // Upgrades (Phase 3 step 13, D95): an upgrade is an expansion card, its
   // contact fingers in the upgrade's color and its slot lit in the bit grid;
   // a found one as a gray ghost; the three in a row beside the Zap disk.
-  // The Mirror is the Shield's ring in its color; the double jump kicks
+  // Shield+ is the Shield's ring in its color; the double jump kicks
   // off hexagonal rings in mid-air.
   { label: 'upgrade-zap-plus', group: 'upgrades', spin: false, build: () => buildCard(defs.pickups.upgrade_zap_plus) },
-  { label: 'upgrade-mirror', group: 'upgrades', spin: false, build: () => buildCard(defs.pickups.upgrade_mirror) },
+  { label: 'upgrade-shield-plus', group: 'upgrades', spin: false, build: () => buildCard(defs.pickups.upgrade_shield_plus) },
   { label: 'upgrade-jump', group: 'upgrades', spin: false, build: () => buildCard(defs.pickups.upgrade_double_jump) },
-  { label: 'upgrade-ghost', group: 'upgrades', spin: false, build: () => buildCard({ ...defs.pickups.upgrade_mirror, ghost: true }) },
+  { label: 'upgrade-ghost', group: 'upgrades', spin: false, build: () => buildCard({ ...defs.pickups.upgrade_shield_plus, ghost: true }) },
   { label: 'upgrades-row', group: 'upgrades', span: 4, spin: false, build: buildUpgradeRow },
-  { label: 'mirror', group: 'upgrades', spin: false, shadow: PALETTE.cyan, build: () => buildShield(defs.pickups.upgrade_mirror.color) },
+  { label: 'shield-plus', group: 'upgrades', spin: false, shadow: PALETTE.cyan, build: () => buildShield(defs.pickups.upgrade_shield_plus.color) },
   { label: 'double-jump', group: 'upgrades', span: 4, spin: false, build: buildDoubleJump },
   // Switches and locked exits (Phase 3 step 4, D75): a target zapped on
   // and off; a plate pressed by a crate dropping on it, then by the wizard;
@@ -576,7 +576,7 @@ function buildCard(options) {
 
 /** The three upgrade cards in a row along the screen's horizontal, the Zap disk first to compare. */
 function buildUpgradeRow() {
-  const upgrades = ['upgrade_zap_plus', 'upgrade_mirror', 'upgrade_double_jump'].map((id) => createCard(defs.pickups[id]));
+  const upgrades = ['upgrade_zap_plus', 'upgrade_shield_plus', 'upgrade_double_jump'].map((id) => createCard(defs.pickups[id]));
   const models = [createDisk(defs.spells.zap), ...upgrades];
   const asset = new Group();
   models.forEach((model, i) => {

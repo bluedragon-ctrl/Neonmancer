@@ -191,9 +191,9 @@ Planned for Phase 4 (the roster, D88); details settle in their steps:
 Upgrades have their own cards and save bits (the upgrades block, not
 spells, D88); a spell upgrade replaces its base spell in the Tab cycle
 (ZAP becomes ZAP+):
-- **Zap+** — the bolt bounces twice off blocks and walls, reaching
+- **Zap+** — the bolt bounces three times off blocks and walls, reaching
   targets round corners (D95)
-- **Mirror** (Shield upgrade) — reflects every bolt back the way it came;
+- **Shield+** (Shield upgrade) — reflects every bolt back the way it came;
   it hurts the first enemy it meets (D95)
 - **Double jump** (D92, D95) — one more jump in mid-air, once until he
   lands
@@ -204,7 +204,7 @@ Up to 16 spells and 16 upgrades; 11 spells and 3 upgrades are set, the
 rest stay spare for what content production needs (D88, D89). Intended order
 in the world: early Zap, Shield, Blink, Pause; middle Cut & Paste,
 Firewall, Fork, Scan and the double jump; late Compile, Warp, Zap+ and
-Mirror. Buff items make the wizard himself stronger: more integrity,
+Shield+. Buff items make the wizard himself stronger: more integrity,
 more energy, faster recharge (D93): 4× +1 integrity (8 → 12), 5× +10
 energy (50 → 100) and one recharge buff (a unit every 8 ticks instead
 of 12); taking one fills the stat it raises. Each is a chip with its
@@ -486,7 +486,7 @@ World map tool for the developer. Pickups and a progress model, data
 disks. Switches (pressure plates, bolt targets) unlocking exits. Viruses,
 Sentinels and Pop-ups. Shield, Firewall, Pause, Warp and Cut & Paste spells.
 A discussion step on further spells, spell upgrades and buff items; the
-first buff items; the upgrades Zap+, Mirror and the double jump (D91, D92, D95).
+first buff items; the upgrades Zap+, Shield+ and the double jump (D91, D92, D95).
 Backups (lives) and backup shrines (D92). Score, bonus bits and secrets. Fragments, access levels
 and the core. Step plan: docs/design.md (D65).
 

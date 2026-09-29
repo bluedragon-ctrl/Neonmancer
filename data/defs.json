@@ -154,9 +154,15 @@
       "slot": 0,
       "spell": "zap",
       "color": "#00f0ff",
-      "bounces": 2
+      "bounces": 3
     },
-    "upgrade_mirror": { "kind": "upgrade", "upgrade": "mirror", "slot": 1, "spell": "shield", "color": "#cfe8ff" },
+    "upgrade_shield_plus": {
+      "kind": "upgrade",
+      "upgrade": "shield_plus",
+      "slot": 1,
+      "spell": "shield",
+      "color": "#cfe8ff"
+    },
     "upgrade_double_jump": { "kind": "upgrade", "upgrade": "double_jump", "slot": 2, "color": "#ff2bd6" }
   },
   "blocks": {

@@ -233,8 +233,8 @@ export class PlayerView {
   ringView(spell) {
     let view = this.rings.get(spell);
     if (!view) {
-      // The Mirror (D95) is the Shield's ring in the upgrade's color.
-      const { color } = spell === 'mirror' ? this.game.player.upgrades.get('mirror') : this.game.content.spells[spell];
+      // Shield+ (D95) is the Shield's ring in the upgrade's color.
+      const { color } = spell === 'shield_plus' ? this.game.player.upgrades.get('shield_plus') : this.game.content.spells[spell];
       view = spell === 'firewall' ? createFirewall(color) : createShield(color);
       this.rings.set(spell, view);
       this.group.add(view);
@@ -274,7 +274,7 @@ export class PlayerView {
     for (const [item, view] of this.installs) view.visible = install?.item === item;
     if (install) placeInstall(this.installView(install.item), this.wizard, pos, install.tick + alpha, install.at.map((v, i) => v - pos[i]));
     placeJumpRings(this.jumpRings, player.airJumpFrom, player.airJumpTicks === null ? null : player.airJumpTicks + alpha);
-    const ring = shield?.mirror ? 'mirror' : shield?.spell;
+    const ring = shield?.reflects ? 'shield_plus' : shield?.spell;
     for (const [spell, view] of this.rings) view.visible = ring === spell;
     if (shield) {
       const place = shield.spell === 'firewall' ? placeFirewall : placeShield;

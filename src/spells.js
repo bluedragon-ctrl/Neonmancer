@@ -22,8 +22,8 @@ const SPELL_EFFECTS = {
     const bounces = game.player.upgrades.get('zap_plus')?.bounces ?? 0;
     game.bolts.push(Bolt.cast(game.player.pos, game.player.aim(), { ...spell, bounces }));
   },
-  /** A ring of electricity round him for a while that blocks ranged attacks (D73, D84); with the Mirror it reflects bolts (D95). */
-  shield: (game, spell) => game.player.raiseShield('shield', Math.round(spell.duration / DT), game.player.upgrades.has('mirror')),
+  /** A ring of electricity round him for a while that blocks ranged attacks (D73, D84); with Shield+ it reflects bolts (D95). */
+  shield: (game, spell) => game.player.raiseShield('shield', Math.round(spell.duration / DT), game.player.upgrades.has('shield_plus')),
   /** A ring like the Shield that also blocks touch and burns enemies touching it (D84). */
   firewall: (game, spell) => game.player.raiseShield('firewall', Math.round(spell.duration / DT)),
   /** A bolt the way he aims that freezes the first enemy it hits (D85). */

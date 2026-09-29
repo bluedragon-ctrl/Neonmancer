@@ -145,7 +145,7 @@ export class Player {
      * { spell, tick, ticks, blockedAt }, tick counting up to its duration
      * ticks, blockedAt the tick it last blocked an attack (for its flare) or
      * null. Firewall also keeps `burns`: ticks until it may burn each enemy again;
-     * a Shield with the Mirror upgrade (D95) has `mirror` set: it reflects bolts.
+     * a Shield with the Shield+ upgrade (D95) has `reflects` set: it reflects bolts.
      */
     this.shield = null;
     /**
@@ -210,10 +210,10 @@ export class Player {
    * over.
    * @param {'shield'|'firewall'} spell
    * @param {number} ticks
-   * @param {boolean} [mirror] the Shield reflects bolts (the Mirror upgrade, D95)
+   * @param {boolean} [reflects] the Shield reflects bolts (the Shield+ upgrade, D95)
    */
-  raiseShield(spell, ticks, mirror = false) {
-    this.shield = { spell, tick: 0, ticks, blockedAt: null, ...(spell === 'firewall' && { burns: new Map() }), ...(mirror && { mirror }) };
+  raiseShield(spell, ticks, reflects = false) {
+    this.shield = { spell, tick: 0, ticks, blockedAt: null, ...(spell === 'firewall' && { burns: new Map() }), ...(reflects && { reflects }) };
   }
 
   /**
