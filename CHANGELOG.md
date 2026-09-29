@@ -7,8 +7,8 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
-- Collapsing blocks are frosted white glass (pale white-blue, dashed
-  edges) instead of magenta, which is now the wizard's color (D98).
+- Collapsing blocks are pale white-blue (dashed edges, faces barely
+  tinted) instead of magenta, which is now the wizard's color (D98).
 
 ### Added
 - Backups (Phase 3 step 14, D97): the wizard has 8 backups, shown as
@@ -21,6 +21,12 @@ and the project uses [Semantic Versioning](https://semver.org/).
   (showcase `?asset=shrine`); a Shrine tool (9) in the
   room editor, validation, and shrines in Boot Sector, Scheduler and
   Upgrade Lab.
+- Glass crates (D96): every crate type is see-through frosted glass
+  tinted in its color, with the data bits on a small dark core inside; a
+  destructible crate has no core, its bits float loose inside. Hazard
+  and void blocks have a glass option shown in the asset showcase only
+  (`?asset=glass`, with a room corner comparing glass and the old
+  tinted crate).
 - Upgrades (Phase 3 step 13, D95): permanent upgrade cards with their
   own save bits (the upgrade block, bits 32–47): an expansion card with
   contact fingers in the upgrade's color. Zap+ replaces Zap in the Tab cycle and

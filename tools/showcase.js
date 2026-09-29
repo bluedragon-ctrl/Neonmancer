@@ -87,8 +87,9 @@ const SPIN = 0.6;
 const ALL_ASSETS = [
   { label: 'wizard', build: () => createWizard(), shadow: PALETTE.cyan },
   { label: 'wizard-hit', build: buildWizardHit, shadow: PALETTE.cyan },
-  // Every object type from defs.json, in its own style (destructible ones
-  // with data bits missing); switches have their own looks (below).
+  // Every object type from defs.json, in its own style (glass crates, D96:
+  // a data core, or loose bits in a destructible one); switches have their
+  // own looks (below).
   ...Object.entries(defs.objects).filter(([, props]) => !SWITCH_KINDS.includes(props.kind)).map(([type, props]) => ({
     label: type,
     build: () => {
@@ -102,6 +103,13 @@ const ALL_ASSETS = [
   { label: 'block-hazard', build: () => buildActiveBlock('hazard') },
   { label: 'block-void', build: () => buildActiveBlock('void') },
   { label: 'blocks-in-room', span: 5.5, build: buildBlocksInRoom },
+  // Glass (D96): every crate type is glass (above). Hazard and void
+  // blocks as glass are an option not used yet; then a room corner with
+  // glass crates stacked beside the old tinted crate, the wizard walking
+  // behind them.
+  { label: 'glass-hazard', group: 'glass', build: () => buildActiveBlock('hazard', { glass: true }) },
+  { label: 'glass-void', group: 'glass', build: () => buildActiveBlock('void', { glass: true }) },
+  { label: 'glass-in-room', group: 'glass', span: 5.5, build: buildGlassInRoom },
   { label: 'exits', span: 5.5, build: buildExits },
   { label: 'platforms', span: 5.5, build: buildPlatforms },
   // Spiked platforms (D82): a hopper bobbing up and down, a slider gliding
@@ -1463,9 +1471,13 @@ function buildWizardHit() {
   return asset;
 }
 
-/** One block of a damaging type in its animated look. */
-function buildActiveBlock(type) {
-  const view = createActiveBlockView([[0, 0, 0]], BLOCK_TYPES[type].look, BLOCK_TYPES[type].color);
+/**
+ * One block of a damaging type in its animated look.
+ * @param {'hazard'|'void'} type
+ * @param {{ glass?: boolean }} [options] glass: the see-through prototype (glass.js)
+ */
+function buildActiveBlock(type, options) {
+  const view = createActiveBlockView([[0, 0, 0]], BLOCK_TYPES[type].look, BLOCK_TYPES[type].color, null, options);
   view.position.set(-0.5, 0, -0.5);
   const asset = new Group().add(view);
   if (type === 'hazard') {
@@ -1475,6 +1487,41 @@ function buildActiveBlock(type) {
       flareHazard(view.userData.faces, [0, 0, 0], time);
     };
   }
+  return asset;
+}
+
+/**
+ * Glass in context: a 4×4 room corner with a stack of two glass crates
+ * and a glass crate on the floor beside the old tinted crate, a glass
+ * hazard strip and a glass void patch against plain blocks; the wizard
+ * walks back and forth behind the crates (with his x-ray ghost, which
+ * glass doesn't trigger).
+ */
+function buildGlassInRoom() {
+  const size = [4, 3, 4];
+  const room = new Group().add(
+    createRoomView({ size, blocks: { block: [[0, 0, 0], [0, 1, 0], [1, 0, 0]] }, blockTypes: BLOCK_TYPES, color: PALETTE.amber }),
+    createActiveBlockView([[0, 0, 2], [0, 0, 3]], 'hazard', BLOCK_TYPES.hazard.color, null, { glass: true }),
+    createActiveBlockView([[3, 0, 0], [3, 0, 1]], 'void', BLOCK_TYPES.void.color, null, { glass: true }),
+  );
+  const glass = { ...OBJECT_STYLE_DEFAULTS, ...defs.objects.crate };
+  for (const at of [[1, 0, 3], [1, 1, 3], [2, 0, 3]]) room.add(createObjectView({ ...glass, at }));
+  room.add(createObjectView({ ...glass, faces: 'tinted', at: [3, 0, 3] }));
+  const wizard = createWizard();
+  addXray(wizard);
+  room.add(wizard);
+  room.position.set(-2, 0, -2);
+  const asset = new Group().add(room);
+  const loop = 420;
+  let tick = 0;
+  asset.userData.update = (dt) => {
+    tick = (tick + dt * 60) % loop;
+    // Back and forth along x, behind the glass crates and the tinted one.
+    const t = tick / loop;
+    const leg = t < 0.5 ? t * 2 : (t - 0.5) * 2;
+    wizard.position.set(t < 0.5 ? 1.2 + leg * 2.4 : 3.6 - leg * 2.4, 0, 2.3);
+    wizard.rotation.y = t < 0.5 ? Math.PI / 2 : -Math.PI / 2;
+  };
   return asset;
 }
 

@@ -1769,6 +1769,36 @@ keeps the bit on the item. Replacing the spell keeps the Tab cycle
 short (D88). Reflecting at any enemy is simpler to read than a homing
 bolt and opens puzzles (bouncing a shot onto a target).
 
+### D96 — 2026-09-29 — Glass crates
+Every crate type (`crate`, `crate_plain`, `crate_cross`, `crate_dashed`)
+has a new face style, `"faces": "glass"` (render/glass.js): frosted
+see-through faces, milky and tinted in the crate's color, with a fine
+static frost grain and a soft glow towards the face borders; the neon
+edges stay as they were. What lies behind (the floor grid, blocks, the
+wizard) shows through dimmed and clouded, so the
+wizard is seen directly behind a crate and its x-ray ghost doesn't show
+there. A crate with a mark wears it on a small dark core (half a block)
+inside the glass: the plain `crate`'s data bits. A destructible crate has
+no core: 12 of its data bits float loose inside the glass, as if the core
+came apart (replacing D53's grid with holes for glass objects; other
+face styles still draw that grid). Still static, no animation (D53).
+Hazard and void blocks got a glass option too (the hazard pixels stay
+solid with see-through gaps; void is dark violet glass with its grains);
+it is shown in the asset showcase only, not used yet.
+**Why:** author's request, so crates read as blocks of material rather
+than items. The look was reviewed in the showcase first; for the
+destructible crate four candidates were shown (the core with bits
+missing, frosted glass, a hollow shell with the broken grid etched on the
+glass, loose bits) and the author chose loose bits. Clear glass with a
+diagonal sheen came first; the author found the sheen too sharp, as every
+crate is seen from the same angle and showed the same bright triangle,
+and asked for frosted glass. Faking glass with a
+transparent face shader costs a few triangles and one draw per crate;
+real refraction (a transmission material) was ruled out as it renders
+the scene twice. The see-through faces relax D5 for crates only: their
+own back edges show through, dimmed by the glass; readable at game
+distance with the handful of crates a room has.
+
 ### D97 — 2026-09-29 — Backups: 8, no rollback, reboot on the nearest shrine
 Phase 3 step 14's open questions, settled with the author:
 - **Backups:** the wizard has 8. A death uses one and he recompiles at
@@ -1809,10 +1839,10 @@ with the world map in view. A floor tile reads as a place to stand and
 can't block a puzzle. The wizard's color ties the shrine and the pips
 to him: that is where he is backed up.
 
-### D98 — 2026-09-29 — Magenta is the wizard's color; collapsing blocks turn to frosted glass
+### D98 — 2026-09-29 — Magenta is the wizard's color; collapsing blocks turn pale white-blue
 Magenta reads as the player's color: his body, the backup shrine and
 the backup pips (D97), and the double jump card. Collapsing blocks give
-it up: they become frosted white glass, pale white-blue (`#dff4ff`)
+it up: they become pale white-blue (`#dff4ff`)
 with dashed edges and faces barely tinted, the same shape as before (a
 cracks mark was tried and dropped: it looked like a real crack, not
 the game's neon). Refines the collapsing look of D47.

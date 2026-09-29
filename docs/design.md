@@ -107,7 +107,7 @@ the ones it gives:
 | `block` | plain (room color) | none |
 | `hazard` | hazard, red | `damage: 1` |
 | `void` | void, violet | `lethal: true` |
-| `collapsing` | kind `collapsing`, frosted white glass: pale white-blue, dashed edges, faces barely tinted (D98) | gives way (see Collapsing blocks) |
+| `collapsing` | kind `collapsing`, pale white-blue, dashed edges, faces barely tinted (D98) | gives way (see Collapsing blocks) |
 | `collapsing_regrow` | extends `collapsing` | `regrow: 3` |
 
 - **Static types** have a `look` (`plain`, `hazard`, `void`) and live in
@@ -915,13 +915,14 @@ usual, so half behind a wall he is half ghost (D55).
   1, and at 0 it breaks into pixels (like a collapsing block) and is gone
   until the room resets; whatever stood on it falls. `crate_cross` has
   integrity 1: one Zap. A hit that doesn't break it jolts it.
-- It always shows it, standing still: the plain `crate` carries a whole
-  4×4 grid of small pale squares (its data bits, the `bits` mark; both
-  crates have the same tinted faces)
-  on every face; a destructible object shows the same grid with 6 of the
-  16 bits missing, different on every face (in place of whatever its
-  `mark` is), so it reads as a data block with holes. No animation; only a
-  hit jolts it. Plain crates shrug a Zap off (sparks only).
+- It always shows it, standing still. Crates are glass (D96): the plain
+  `crate` holds a small dark core inside the glass carrying a whole 4×4
+  grid of small pale squares (its data bits, the `bits` mark) on every
+  face; a destructible crate has no core, 12 of its data bits float
+  loose inside the glass, as if the core came apart. (Objects with other
+  faces than glass show the grid with 6 of the 16 bits missing, D53.)
+  No animation; only a hit jolts it. Plain crates shrug a Zap off
+  (sparks only).
 - Room design: a destructible crate is cover that can be shot away, or a
   wall of crates to blast through; don't make one the only way up, since
   the wizard can break it by accident (the room comes back on re-entry,
@@ -1141,7 +1142,7 @@ Phase 5.
 | Phantom Partition (special) | silver-white `#e8eaff` | sparse dots | still stars, twinkling | edges shimmer slowly through the hues |
 
 Room colors keep clear of the gameplay colors (lime crates, cyan
-platforms, frosted white collapsing blocks, red hazards, violet void, green bugs),
+platforms, pale white-blue collapsing blocks, red hazards, violet void, green bugs),
 so those always stand out from the room. The two grays are far apart:
 graphite Abyssal Buffer is dark and moody, Phantom Partition bright
 silver-white on black.

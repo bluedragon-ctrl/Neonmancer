@@ -257,7 +257,7 @@ Each room has a biome defining look and optional environmental effects,
 defined in data and combinable. Health pickups and safe rooms balance
 drain effects. Six biomes (D61): one core, four side sectors, one special.
 Room colors stay clear of the gameplay colors (lime crates, cyan
-platforms, frosted white collapsing, red hazard, violet void, green bugs;
+platforms, pale white-blue collapsing, red hazard, violet void, green bugs;
 magenta is the wizard's color, D98).
 Behaviors below are ideas for Phase 5; for now biomes are look only.
 - **Home Lattice** (core) — amber (the default room color), clean square

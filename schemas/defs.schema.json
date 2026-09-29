@@ -343,9 +343,9 @@
           "description": "Pattern drawn on every face (on a cube-shaped object)."
         },
         "faces": {
-          "enum": ["dark", "tinted", "hazard"],
+          "enum": ["dark", "tinted", "hazard", "glass"],
           "default": "dark",
-          "description": "dark: like static blocks; tinted: faces shaded in the object color (top lighter, cube only); hazard: the hazard block look, pixels flickering in the object color (D82)."
+          "description": "dark: like static blocks; tinted: faces shaded in the object color (top lighter, cube only); hazard: the hazard block look, pixels flickering in the object color (D82); glass: see-through faces tinted in the object color, the mark on a small dark core inside (cube only, D96)."
         },
         "shape": {
           "enum": ["cube", "spiked"],

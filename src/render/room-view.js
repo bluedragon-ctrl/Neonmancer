@@ -17,6 +17,7 @@ import { BoxGeometry, BufferGeometry, Color, DoubleSide, Float32BufferAttribute,
 import { BLOCK_FX, createActiveBlockView, flareHazard, hazardFaceMaterial } from './block-fx.js';
 import { blockEdges, edgeUnitKeys, groupedBlockEdges } from './edges.js';
 import { BITS, markSegments } from './marks.js';
+import { GLASS, glassFaceMaterial, looseBitSegments, shrinkSegments } from './glass.js';
 import { spikeSegments, spikeTriangles } from './spikes.js';
 import { doorwayTunnels, wallLayout } from './walls.js';
 import {
@@ -150,6 +151,23 @@ const SPIKED_EDGE_WIDTH = 2;
 /** How much brighter a spiked shape's outline gets at the peak of its flare. */
 const SPIKED_FLARE = 1.5;
 
+/**
+ * The core of a glass object: a small dark cube in the middle of its cell
+ * wearing the object's mark, seen through the glass.
+ * @param {string} mark
+ * @param {number[]} at cell
+ * @param {Parameters<typeof lineMaterial>[0]} style mark line style
+ */
+function glassCore(mark, at, style) {
+  const size = GLASS.coreSize;
+  const core = new Mesh(UNIT_BOX, faceMaterial());
+  core.scale.setScalar(size);
+  core.position.set(...at.map((v) => v + (1 - size) / 2));
+  const marks = neonLines(shrinkSegments(markSegments(mark, at), at, size), lineMaterial(style));
+  marks.renderOrder = 2;
+  return new Group().add(core, marks);
+}
+
 /** Outline width by object kind, where it differs: collapsing blocks look fragile. */
 const EDGE_WIDTH = { collapsing: 1.5 };
 
@@ -163,7 +181,9 @@ const EDGE_WIDTH = { collapsing: 1.5 };
  * dark or hazard faces, its own outline and no mark. An object that hurts
  * (hazard faces or spiked) can flare like a hazard block: its faces light
  * up, or its outline brightens; `userData.flare(since)` sets the flare
- * for `since` seconds after it hurt the wizard.
+ * for `since` seconds after it hurt the wizard. Glass faces (D96,
+ * glass.js) are see-through, with the mark on a small dark core inside;
+ * a destructible glass object has no core, its data bits float loose.
  * @param {{ at: number[], kind?: string, color: string, edges: string, mark: string, faces: string, shape?: string, tint: number, integrity?: number }} object
  */
 export function createObjectView({ at, kind, color, edges, mark, faces, shape = 'cube', tint, integrity }) {
@@ -180,6 +200,11 @@ export function createObjectView({ at, kind, color, edges, mark, faces, shape = 
     body.setMatrixAt(0, new Matrix4().makeTranslation(...at));
     group.add(body);
     flares.push((since) => flareHazard(material, at, since));
+  } else if (faces === 'glass' && !spiked) {
+    // See-through (D96, glass.js): drawn after everything opaque.
+    const body = new Mesh(geometry, glassFaceMaterial(color));
+    body.position.set(...at);
+    group.add(body);
   } else {
     const materials = faces === 'tinted' && !spiked ? tintedFaceMaterials(color, tint) : faceMaterial();
     const body = new Mesh(geometry, materials);
@@ -210,6 +235,16 @@ export function createObjectView({ at, kind, color, edges, mark, faces, shape = 
     const style = bits
       ? { color: new Color(color).lerp(new Color(0xffffff), BITS.whiten), width: BITS.width, brightness: BITS.brightness }
       : { color, width: 1.5, brightness: 1 };
+    if (faces === 'glass') {
+      // Behind glass the mark sits on a small dark core inside it; a
+      // destructible object's bits float loose instead (D96).
+      if (drawn === 'bitsBroken') {
+        const loose = neonLines(looseBitSegments(at), lineMaterial(style));
+        loose.renderOrder = 2;
+        group.add(loose);
+      } else group.add(glassCore(drawn, at, style));
+      return group;
+    }
     const marks = neonLines(markSegments(drawn, at), lineMaterial(style));
     marks.renderOrder = 2;
     group.add(marks);
