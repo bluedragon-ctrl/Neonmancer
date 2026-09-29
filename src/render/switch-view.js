@@ -33,6 +33,7 @@ import {
 } from 'three';
 import { blockEdges } from './edges.js';
 import { PALETTE, faceMaterial, lineMaterial, neonLines, shadedFaces, shared } from './neon.js';
+import { switchesOn } from '../switches.js';
 
 /** Tuning (units, seconds). */
 export const SWITCH_FX = {
@@ -370,30 +371,8 @@ export function createLock(exit, size, { color, switches }) {
   // Lights: a small bull's-eye per switch in a row across the middle; the
   // inner square fills for each switch that is on. On a front exit they sit
   // between the middle bars.
-  const lights = [];
-  const s = SWITCH_FX.light;
-  const r = (s * (1 - 2 * SWITCH_FX.inner)) / (1 - 2 * SWITCH_FX.outer);
-  const lightH = (y0 + y1) / 2;
-  for (let i = 0; i < switches; i++) {
-    const a = mid + (i - (switches - 1) / 2) * SWITCH_FX.lightGap;
-    const box = (k) => [
-      [p(a - k, lightH - k), p(a + k, lightH - k)],
-      [p(a + k, lightH - k), p(a + k, lightH + k)],
-      [p(a + k, lightH + k), p(a - k, lightH + k)],
-      [p(a - k, lightH + k), p(a - k, lightH - k)],
-    ];
-    const mat = lineMaterial({ color: base, width: 1.6 });
-    const outline = neonLines([...box(s), ...box(r)], mat);
-    outline.renderOrder = 4;
-    const fillMat = glowMaterial(base);
-    const fill = new Mesh(new PlaneGeometry(2 * r, 2 * r), fillMat);
-    fill.position.set(...p(a, lightH));
-    if (along === 2) fill.rotation.y = Math.PI / 2;
-    fill.renderOrder = 4;
-    const light = new Group().add(outline, fill);
-    barrier.add(light);
-    lights.push({ light, mat, fillMat, on: new Ease() });
-  }
+  const lights = createLockLights(switches, { base, center: [mid, (y0 + y1) / 2], p, along });
+  for (const { light } of lights) barrier.add(light);
 
   const opening = new Ease();
   group.userData.set = ({ lit = 0, open = false } = {}) => {
@@ -425,6 +404,41 @@ export function createLock(exit, size, { color, switches }) {
   };
   group.userData.update(0);
   return group;
+}
+
+/**
+ * A lock's lights, a small bull's-eye per switch in a row centered on
+ * `center`, each with its own brightness ease (see createLock()).
+ * @param {number} count switches in the room
+ * @param {object} at
+ * @param {Color} at.base the lock's color
+ * @param {number[]} at.center [a, h]: along the side, and height
+ * @param {(a: number, h: number) => number[]} at.p a point on the lock's plane
+ * @param {0|2} at.along the axis along the side
+ */
+function createLockLights(count, { base, center: [mid, lightH], p, along }) {
+  const lights = [];
+  const s = SWITCH_FX.light;
+  const r = (s * (1 - 2 * SWITCH_FX.inner)) / (1 - 2 * SWITCH_FX.outer);
+  for (let i = 0; i < count; i++) {
+    const a = mid + (i - (count - 1) / 2) * SWITCH_FX.lightGap;
+    const box = (k) => [
+      [p(a - k, lightH - k), p(a + k, lightH - k)],
+      [p(a + k, lightH - k), p(a + k, lightH + k)],
+      [p(a + k, lightH + k), p(a - k, lightH + k)],
+      [p(a - k, lightH + k), p(a - k, lightH - k)],
+    ];
+    const mat = lineMaterial({ color: base, width: 1.6 });
+    const outline = neonLines([...box(s), ...box(r)], mat);
+    outline.renderOrder = 4;
+    const fillMat = glowMaterial(base);
+    const fill = new Mesh(new PlaneGeometry(2 * r, 2 * r), fillMat);
+    fill.position.set(...p(a, lightH));
+    if (along === 2) fill.rotation.y = Math.PI / 2;
+    fill.renderOrder = 4;
+    lights.push({ light: new Group().add(outline, fill), mat, fillMat, on: new Ease() });
+  }
+  return lights;
 }
 
 /** A target in the room (entities/switch.js): a bolt switching it makes it flash. */
@@ -498,7 +512,7 @@ export class LockView {
 
   /** @param {number} dt seconds since the last frame */
   sync(dt) {
-    this.group.userData.set({ lit: this.game.switchesOn(), open: this.lock.open });
+    this.group.userData.set({ lit: switchesOn(this.game), open: this.lock.open });
     this.group.userData.update(dt);
   }
 }
