@@ -7,6 +7,9 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- Locked front exits are the same dark door panel as locked doorways,
+  instead of four retracting bars, so every locked door looks alike and
+  its lights and access numeral read clearly (D101).
 - Color rules for objects and blocks (D99): red hurts, the room color is
   structure, black is a pit, white is a mechanism, cyan moves, magenta is
   the wizard, lime is pushable. Hazards and spiked platforms use the one
