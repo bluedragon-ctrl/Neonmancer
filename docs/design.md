@@ -1541,10 +1541,10 @@ Settled:
   and counts as defeated. Data checks refuse a Warden without such a drop,
   and a drop that is a refill. Shrines stay out of boss rooms.
 
+- A key whose room cell holds no room (the room moved on the world map
+  since) still loads what he has and starts him in the start room.
+
 Open so far:
-- A key whose room cell holds no room (the room moved on the map since):
-  probably load what he has and start in the start room. Settled with
-  the saving step.
 - Wardens: size (a body wider than one cell needs multi-cell collision and
   claims), phases or attack patterns, a boss integrity bar, weak points,
   how many.
