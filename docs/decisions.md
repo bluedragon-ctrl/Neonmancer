@@ -1655,3 +1655,30 @@ grow without a new key format. Upgrades and buffs are different kinds of
 pickup (one changes a spell, the other the wizard), so each gets its own
 step; bringing the upgrades forward makes the first two spells worth
 having late already in Phase 3.
+
+### D92 — 2026-09-29 — The jump becomes an upgrade; backups (lives) and backup shrines
+- **Jump upgrade:** the jump buff (D88) moves from the buffs to the
+  upgrades block. A double jump is weighed against a plain higher jump
+  (1 → 2 blocks) in the upgrades step (13, now `feat/upgrades`). The
+  buff draft keeps 4× +1 integrity, 5× +10 energy and one recharge buff.
+- **Backups:** the wizard gets a limited number of backups (lives). A
+  death uses one; he still recompiles at the room entrance, quick as
+  before. With none left the system crashes (`> SYSTEM CRASH`): the
+  game restores the state stored at the last backup shrine, and
+  pickups, score and places reached since are lost (the pickups lie in
+  their rooms again).
+- **Backup shrines** store that state and refill the backups. A load
+  always starts with full backups, so the save key holds no backups
+  field; the access keys (Phase 4) write the shrine's state as the key.
+- **When:** its own Phase 3 step, 14 `feat/backups`, after the
+  upgrades; score and bits become step 15, fragments and access 16,
+  the release 17.
+Refines the "quick and non-punishing" death (CLAUDE.md §4): a single
+death still is; a run of them costs the progress since the last shrine.
+**Why:** author's choices. Death cost nothing (every pickup is saved when
+taken), so there was no tension. Backups with a rollback to the last
+shrine are the usual gentle answer in the genre: nothing is lost for
+good, and the save key already carries exactly the state to roll back
+to. A double jump may give the jump upgrade more play than a higher
+jump; the step decides. The jump makes the wizard stronger like the
+spell upgrades do, so it belongs with them.
