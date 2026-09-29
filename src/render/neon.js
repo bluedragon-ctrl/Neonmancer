@@ -12,7 +12,11 @@ import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js
 import { flattenSegments } from './edges.js';
 import { scaleToHeight } from './viewport.js';
 
-/** Base palette (sRGB hex). */
+/**
+ * Base palette (sRGB hex). The color rules (D99): red hurts or is about to
+ * (danger), the room's own color is structure, black is a pit, white is a
+ * mechanism, cyan moves (platforms), magenta is the wizard, lime is pushable.
+ */
 export const PALETTE = {
   void: 0x05060d,
   face: 0x070916,
@@ -22,6 +26,8 @@ export const PALETTE = {
   magenta: 0xff2bd6,
   lime: 0xb6ff3c,
   amber: 0xffb020,
+  /** Everything that hurts or is about to: hazards, spikes, hostile eyes, the alert mark. */
+  danger: 0xff2a3a,
 };
 
 /**

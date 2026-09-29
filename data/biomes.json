@@ -25,7 +25,7 @@
     },
     "phantom_partition": {
       "name": "Phantom Partition",
-      "color": "#e8eaff",
+      "color": "#a98bff",
       "look": { "background": "#020204", "outerGrid": "#25252c", "outerFade": 1.5, "wallGrid": 0.15, "bloom": 1.2 }
     }
   }

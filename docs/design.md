@@ -105,9 +105,9 @@ the ones it gives:
 | Type | Look | Properties |
 |---|---|---|
 | `block` | plain (room color) | none |
-| `hazard` | hazard, red | `damage: 1` |
-| `void` | void, violet | `lethal: true` |
-| `collapsing` | kind `collapsing`, pale white-blue, dashed edges, faces barely tinted (D98) | gives way (see Collapsing blocks) |
+| `hazard` | hazard, danger red | `damage: 1` |
+| `void` | void, black mist with gray wisps (D99) | `lethal: true` |
+| `collapsing` | kind `collapsing`, room color, dashed edges, faces barely tinted (D98, D99) | gives way (see Collapsing blocks) |
 | `collapsing_regrow` | extends `collapsing` | `regrow: 3` |
 
 - **Static types** have a `look` (`plain`, `hazard`, `void`) and live in
@@ -147,12 +147,14 @@ strobes.
   switch on and off at random, each on its own timer (about 30% lit,
   1.5 re-rolls per second). The block that just hurt the wizard flares for
   0.4 s.
-- **Void look:** black faces in a thin, dim violet frame, working as
-  windows into the block. Layers of sparse grains lie behind each face
-  (found along the view ray, clipped to the block) and slowly sink deeper,
-  shrinking and fading, as if falling into the void (9 s per layer). Grains
-  show more strongly through the top face, since only landing on top
-  kills.
+- **Void look** (D99, `render/mist.js`): black mist, a pit in the
+  world like a floor hole. Opaque black cubes hide the grid behind them;
+  thin gray wisps (ridges of 3D noise, on four layers along the view
+  ray) sink slowly through them; a slightly larger shell of patchy dark
+  fog softens the outline, and a thin dim gray frame keeps the exact
+  extent readable. The noise runs in room coordinates, so a patch of void
+  blocks is one cloud. Cost: two instanced draws per room; the per-pixel
+  noise only runs where void blocks are.
 - **Hazard rules** (any type with `damage`): touching one hurts, standing on
   it or walking into any side of it (its `damage`, 1 for `hazard`). The body
   must overlap the block on two axes and lie against or in it (within 0.02),
@@ -1139,13 +1141,17 @@ Phase 5.
 | Frostbyte Wastes | ice blue `#9fd0ff` | hex crystal pattern | 0/1 flakes falling | soft, frosty bloom |
 | Abyssal Buffer | graphite `#7a8190` | wavy caustics | glitter drifting slowly | gentle sway |
 | Firewall Citadel | ember orange `#ff6a1f` | brick pattern | sparks rising | warm edge flicker |
-| Phantom Partition (special) | silver-white `#e8eaff` | sparse dots | still stars, twinkling | edges shimmer slowly through the hues |
+| Phantom Partition (special) | pale violet `#a98bff` (D99) | sparse dots | still stars, twinkling | edges shimmer slowly through the hues |
 
-Room colors keep clear of the gameplay colors (lime crates, cyan
-platforms, pale white-blue collapsing blocks, red hazards, violet void, green bugs),
-so those always stand out from the room. The two grays are far apart:
-graphite Abyssal Buffer is dark and moody, Phantom Partition bright
-silver-white on black.
+Room colors keep clear of the colors objects and blocks carry (the color
+rules, D99): danger red (hazards, spiked platforms), white (plates,
+targets, locks), cyan (platforms), magenta (the wizard), lime (crates);
+void blocks are black mist and collapsing blocks take the room color.
+`tests/colors.test.js` checks every biome against them: a hue gap of at
+least 20° between saturated colors, and no near-white room color.
+Phantom Partition moved from silver-white to pale violet so plates and
+targets stand out in it; violet became free when void blocks turned
+black.
 
 Surroundings (`look` in `biomes.json`, D62; every field optional, Home
 Lattice's values are the defaults):
@@ -1529,7 +1535,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 |---|---|
 | `data/rooms/<id>.json` | One room (id = file name) |
 | `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; `spiked_platform`: a platform that hurts on touch, hazard red (D82); switches `target` and `plate`, white, see Switches and locked exits); `enemies`: enemy templates (`bug`, `virus`, `sentinel`, see Enemies), each complete or `extend`ing another (D58, D79); `spells`: spell tuning and color (`zap`, see Zap and energy; `shield`, see Shield; `firewall`, see Firewall; `pause`, see Pause; `blink` and `warp`, see Blink and Warp); `pickups`: pickup types (see Pickups and progress; buff chips: Buff items); `blocks`: block types (D60): look or kind, color, properties (`damage`, `lethal`, `regrow`), `extends` for variants; see Block types |
-| `data/biomes.json` | Biome name and room color: `home_lattice` (core, amber), `glitchmire` (pink), `frostbyte_wastes` (ice blue), `abyssal_buffer` (graphite), `firewall_citadel` (ember orange), `phantom_partition` (special, silver-white); optional `look` for the surroundings (background, outer grid and its fade, wall grid, bloom); see Biomes (D61, D62) |
+| `data/biomes.json` | Biome name and room color: `home_lattice` (core, amber), `glitchmire` (pink), `frostbyte_wastes` (ice blue), `abyssal_buffer` (graphite), `firewall_citadel` (ember orange), `phantom_partition` (special, pale violet); optional `look` for the surroundings (background, outer grid and its fade, wall grid, bloom); see Biomes (D61, D62) |
 | `data/world.json` | Start room, exit connections and every room's cell on the world map (`positions`, D66) |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |
 

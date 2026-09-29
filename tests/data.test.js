@@ -473,7 +473,6 @@ test('block types: a look or a kind, and only the values that go with it', () =>
     );
   blockError({ color: '#ffffff' }, 'needs a "look"');
   blockError({ look: 'plain', kind: 'collapsing', color: '#ffffff' }, 'both a "look" and a "kind"');
-  blockError({ kind: 'collapsing' }, 'needs a "color"');
   blockError({ kind: 'collapsing', color: '#ffffff', damage: 1 }, 'damage: only for static blocks');
   blockError({ look: 'plain', regrow: 2 }, 'regrow: only for blocks with a "kind"');
   blockError({ extends: 'lava' }, 'unknown block type "lava"');
@@ -583,7 +582,7 @@ test('collapsing blocks: each cell of a box becomes a room object with its type\
     type: 'collapsing_regrow',
     at: [1, 0, 3],
     kind: 'collapsing',
-    color: '#dff4ff',
+    color: '#ffb020',
     edges: 'solid',
     mark: 'none',
     faces: 'dark',

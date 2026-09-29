@@ -17,7 +17,7 @@ const UNIT_EDGES = new EdgesGeometry(new BoxGeometry(1, 1, 1));
 const materials = {
   cell: new LineBasicMaterial({ color: PALETTE.cyan, transparent: true, opacity: 0.5 }),
   body: new LineBasicMaterial({ color: PALETTE.lime }),
-  enemy: new LineBasicMaterial({ color: 0xff3b30 }),
+  enemy: new LineBasicMaterial({ color: PALETTE.danger }),
 };
 
 /** A wireframe box sized and centered by place(). */

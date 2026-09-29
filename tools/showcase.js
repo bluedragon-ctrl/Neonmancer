@@ -85,10 +85,10 @@ const SPIN = 0.6;
  * the origin, standing on y = 0.
  */
 const ALL_ASSETS = [
-  { label: 'wizard', build: () => createWizard(), shadow: PALETTE.cyan },
-  { label: 'wizard-hit', build: buildWizardHit, shadow: PALETTE.cyan },
+  { label: 'wizard', build: () => createWizard(), shadow: PALETTE.magenta },
+  { label: 'wizard-hit', build: buildWizardHit, shadow: PALETTE.magenta },
   // Every object type from defs.json, in its own style (glass crates, D96:
-  // a data core, or loose bits in a destructible one); switches have their
+  // a data core, or empty thinner glass in a destructible one, D99); switches have their
   // own looks (below).
   ...Object.entries(defs.objects).filter(([, props]) => !SWITCH_KINDS.includes(props.kind)).map(([type, props]) => ({
     label: type,
@@ -103,12 +103,11 @@ const ALL_ASSETS = [
   { label: 'block-hazard', build: () => buildActiveBlock('hazard') },
   { label: 'block-void', build: () => buildActiveBlock('void') },
   { label: 'blocks-in-room', span: 5.5, build: buildBlocksInRoom },
-  // Glass (D96): every crate type is glass (above). Hazard and void
+  // Glass (D96): every crate type is glass (above). Hazard
   // blocks as glass are an option not used yet; then a room corner with
   // glass crates stacked beside the old tinted crate, the wizard walking
   // behind them.
   { label: 'glass-hazard', group: 'glass', build: () => buildActiveBlock('hazard', { glass: true }) },
-  { label: 'glass-void', group: 'glass', build: () => buildActiveBlock('void', { glass: true }) },
   { label: 'glass-in-room', group: 'glass', span: 5.5, build: buildGlassInRoom },
   { label: 'exits', span: 5.5, build: buildExits },
   { label: 'platforms', span: 5.5, build: buildPlatforms },
@@ -179,15 +178,15 @@ const ALL_ASSETS = [
   { label: 'disk-warp', group: 'disks', spin: false, build: () => buildDisk(defs.spells.warp) },
   { label: 'disk-cut-paste', group: 'disks', spin: false, build: () => buildDisk(defs.spells.cut_paste) },
   // Installing a spell (Phase 3 step 3, D73): Zap, then Shield, in a loop.
-  { label: 'install', spin: false, shadow: PALETTE.cyan, build: buildInstall },
+  { label: 'install', spin: false, shadow: PALETTE.magenta, build: buildInstall },
   // Shield (D73): up for its duration, blinking before it ends.
-  { label: 'shield', spin: false, shadow: PALETTE.cyan, build: buildShield },
+  { label: 'shield', spin: false, shadow: PALETTE.magenta, build: buildShield },
   // Shield blocking (Phase 3 step 7, D84): a shooter's bolt is absorbed at
   // the ring in sparks, and the ring flares.
   { label: 'shield-block', span: 6, spin: false, build: buildShieldBlock },
   // Firewall (D84): flames licking up from a low ring, up for its
   // duration, blinking before it ends.
-  { label: 'firewall', spin: false, shadow: PALETTE.cyan, build: buildFirewall },
+  { label: 'firewall', spin: false, shadow: PALETTE.magenta, build: buildFirewall },
   // Pause (Phase 3 step 8, D85): the wizard fires a Pause bolt at a
   // hopping bug, which freezes in its pose for the spell's duration,
   // tinted, in a cage of corner brackets, blinking before it thaws.
@@ -221,7 +220,7 @@ const ALL_ASSETS = [
   { label: 'upgrade-jump', group: 'upgrades', spin: false, build: () => buildCard(defs.pickups.upgrade_double_jump) },
   { label: 'upgrade-ghost', group: 'upgrades', spin: false, build: () => buildCard({ ...defs.pickups.upgrade_shield_plus, ghost: true }) },
   { label: 'upgrades-row', group: 'upgrades', span: 4, spin: false, build: buildUpgradeRow },
-  { label: 'shield-plus', group: 'upgrades', spin: false, shadow: PALETTE.cyan, build: () => buildShield(defs.pickups.upgrade_shield_plus.color) },
+  { label: 'shield-plus', group: 'upgrades', spin: false, shadow: PALETTE.magenta, build: () => buildShield(defs.pickups.upgrade_shield_plus.color) },
   { label: 'double-jump', group: 'upgrades', span: 4, spin: false, build: buildDoubleJump },
   // Switches and locked exits (Phase 3 step 4, D75): a target zapped on
   // and off; a plate pressed by a crate dropping on it, then by the wizard;
@@ -1493,7 +1492,7 @@ function buildActiveBlock(type, options) {
 /**
  * Glass in context: a 4×4 room corner with a stack of two glass crates
  * and a glass crate on the floor beside the old tinted crate, a glass
- * hazard strip and a glass void patch against plain blocks; the wizard
+ * hazard strip and a void (black mist) patch against plain blocks; the wizard
  * walks back and forth behind the crates (with his x-ray ghost, which
  * glass doesn't trigger).
  */
@@ -1502,7 +1501,7 @@ function buildGlassInRoom() {
   const room = new Group().add(
     createRoomView({ size, blocks: { block: [[0, 0, 0], [0, 1, 0], [1, 0, 0]] }, blockTypes: BLOCK_TYPES, color: PALETTE.amber }),
     createActiveBlockView([[0, 0, 2], [0, 0, 3]], 'hazard', BLOCK_TYPES.hazard.color, null, { glass: true }),
-    createActiveBlockView([[3, 0, 0], [3, 0, 1]], 'void', BLOCK_TYPES.void.color, null, { glass: true }),
+    createActiveBlockView([[3, 0, 0], [3, 0, 1]], 'void', BLOCK_TYPES.void.color),
   );
   const glass = { ...OBJECT_STYLE_DEFAULTS, ...defs.objects.crate };
   for (const at of [[1, 0, 3], [1, 1, 3], [2, 0, 3]]) room.add(createObjectView({ ...glass, at }));
@@ -1621,7 +1620,7 @@ function buildSpikedPlatforms() {
  * still, shaking, breaking into pixels, and after a while growing back.
  */
 function buildCollapsingCycle() {
-  const object = { ...OBJECT_STYLE_DEFAULTS, ...BLOCK_TYPES.collapsing };
+  const object = { ...OBJECT_STYLE_DEFAULTS, color: PALETTE.amber, ...BLOCK_TYPES.collapsing };
   const solidTicks = 40;
   const goneTicks = 60;
   const loop = solidTicks + COLLAPSING.shakeTicks + goneTicks;

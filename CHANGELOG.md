@@ -7,8 +7,21 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- Color rules for objects and blocks (D99): red hurts, the room color is
+  structure, black is a pit, white is a mechanism, cyan moves, magenta is
+  the wizard, lime is pushable. Hazards and spiked platforms use the one
+  danger red of hostile eyes and the alert mark (`#ff2a3a`); collapsing
+  blocks take the room color (dashed edges); void blocks are black mist
+  with slowly sinking gray wisps instead of violet; Phantom Partition is
+  pale violet instead of silver-white, so switches stand out in it; the
+  wizard's drop shadow is magenta. A test keeps biome colors clear of
+  object and block colors.
+- Destructible glass crates are empty shells of thinner, more
+  translucent glass (no loose bits inside), so they read as breakable
+  (D99).
 - Collapsing blocks are pale white-blue (dashed edges, faces barely
-  tinted) instead of magenta, which is now the wizard's color (D98).
+  tinted) instead of magenta, which is now the wizard's color (D98);
+  since D99 they take the room color.
 
 ### Added
 - Backups (Phase 3 step 14, D97): the wizard has 8 backups, shown as
@@ -24,7 +37,7 @@ and the project uses [Semantic Versioning](https://semver.org/).
 - Glass crates (D96): every crate type is see-through frosted glass
   tinted in its color, with the data bits on a small dark core inside; a
   destructible crate has no core, its bits float loose inside. Hazard
-  and void blocks have a glass option shown in the asset showcase only
+  blocks have a glass option shown in the asset showcase only
   (`?asset=glass`, with a room corner comparing glass and the old
   tinted crate).
 - Upgrades (Phase 3 step 13, D95): permanent upgrade cards with their

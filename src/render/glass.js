@@ -1,8 +1,8 @@
 /**
  * Glass look (D96): see-through faces, so a crate reads as a block of
  * material rather than an item. Every crate type is glass (`"faces":
- * "glass"` in defs.json); hazard and void blocks have a glass option that
- * is not used yet (showcase only). The glass is frosted: what lies behind
+ * "glass"` in defs.json); hazard blocks have a glass option that is not
+ * used yet (showcase only). The glass is frosted: what lies behind
  * shows through dimmed and milky; the faces glow a little towards their
  * borders and carry a fine static frost grain.
  *
@@ -17,7 +17,6 @@
  * honor clipping planes (a crate sinking into a hole is cut at the floor).
  */
 import { Color, ShaderMaterial } from 'three';
-import { hash } from './hash.js';
 
 /** Tuning; brightness values are raw colors (the bloom threshold is 0.12). */
 export const GLASS = {
@@ -36,16 +35,13 @@ export const GLASS = {
   /** The data core of a crate with a mark: size (units) inside the glass. */
   coreSize: 0.5,
   /**
-   * A destructible object has no core: its data bits float loose inside
-   * the glass, as if the core came apart: how many, their size (units) and
-   * how far they stay from the glass.
+   * A destructible object is an empty shell of thinner glass (D99): no
+   * core, less of what's behind hidden and a fainter tint, so it reads as
+   * fragile. Values replacing the ones above.
    */
-  looseBits: 12,
-  looseBitSize: 0.1,
-  looseMargin: 0.2,
-  /** Hazard and void blocks as glass: how much of what's behind they hide. */
+  hollow: { alpha: 0.35, tint: 0.08 },
+  /** Hazard blocks as glass: how much of what's behind they hide. */
   hazardAlpha: 0.5,
-  voidAlpha: 0.75,
 };
 
 // Local position in the unit cell (the geometry runs 0..1) and the face normal.
@@ -150,30 +146,3 @@ export function shrinkSegments(segments, cell, size) {
   return segments.map((segment) => segment.map((p) => p.map((v, i) => center[i] + (v - center[i]) * size)));
 }
 
-/**
- * The loose data bits of a destructible glass object (D96): small squares
- * at fixed places inside the cell, each facing along one axis. The same
- * for every object, so they never flicker between frames or rooms.
- * @param {number[]} [cell] [x, y, z]
- * @returns {number[][][]} segments
- */
-export function looseBitSegments(cell = [0, 0, 0]) {
-  const { looseBits, looseBitSize: size, looseMargin: margin } = GLASS;
-  const seed = [41.3, 17.9];
-  const segments = [];
-  for (let i = 0; i < looseBits; i++) {
-    const center = cell.map((c, k) => c + margin + (1 - 2 * margin) * hash(i, k, seed));
-    const axis = Math.floor(hash(i, 3, seed) * 3);
-    const u = (axis + 1) % 3;
-    const v = (axis + 2) % 3;
-    const corner = (du, dv) => {
-      const p = [...center];
-      p[u] += (du * size) / 2;
-      p[v] += (dv * size) / 2;
-      return p;
-    };
-    const [a, b, c, d] = [corner(-1, -1), corner(1, -1), corner(1, 1), corner(-1, 1)];
-    segments.push([a, b], [b, c], [c, d], [d, a]);
-  }
-  return segments;
-}

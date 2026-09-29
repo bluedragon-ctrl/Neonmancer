@@ -1850,3 +1850,35 @@ the game's neon). Refines the collapsing look of D47.
 blocks would say "these belong together". The dashed edges already
 tell "fragile"; the white is shared with plates and targets, which
 carry a bull's-eye instead.
+
+### D99 — 2026-09-29 — Color rules for objects and blocks; void as black mist
+Objects and blocks follow color rules, so a color says what a thing does:
+- **Red hurts, or is about to:** hazard blocks, spiked platforms, hostile
+  eyes and the "!" alert mark share one danger red (`#ff2a3a`,
+  `PALETTE.danger`); minor effects may add other colors.
+- **The room color is structure:** plain blocks, walls, floor, hole rims
+  and collapsing blocks (no color of their own in `defs.json`; the
+  dashed edges say "fragile"). Replaces D98's pale white-blue.
+- **Black is a pit:** holes, and void blocks, now black mist
+  (`render/mist.js`): opaque black cubes hiding the grid behind them,
+  thin gray wisps sinking slowly inside, a patchy fog shell softening the
+  outline and a dim gray frame keeping the exact extent. Replaces D44's
+  violet grains; the void glass option (D96) is gone.
+- **White is a mechanism:** plates, targets and exit locks.
+- **Cyan moves:** platforms and their rails (a spiked one is red: hurting
+  wins).
+- **Magenta is the wizard** (D98), now his drop shadow too.
+- **Lime is pushable:** crates. A destructible crate is an empty shell
+  of thinner glass (half the opacity, fainter tint), replacing D96's
+  loose bits, so it reads as breakable at a glance.
+Biome colors stay clear of them (`tests/colors.test.js`: at least 20° of
+hue between saturated colors, no near-white room color). Phantom
+Partition moves from silver-white to pale violet (`#a98bff`), free once
+void is black. Pickups keep the colors of the HUD bar they improve (D94),
+told apart from platforms and crates by shape. Monsters and spell effects
+are not bound by the rules yet; they get their own pass.
+**Why:** author's review of color use: with few distinct colors, the
+object colors must mean one thing each. Silver-white rooms hid plates
+and targets; violet void and a violet sector would clash. A red for
+hazards a little off the Citadel's ember orange keeps them apart there.
+Refines D44, D61 and D98.

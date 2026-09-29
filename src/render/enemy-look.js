@@ -10,10 +10,10 @@
  */
 import { SphereGeometry } from 'three';
 import { hash } from './hash.js';
-import { shared } from './neon.js';
+import { PALETTE, shared } from './neon.js';
 
 /** Eye color by mood: red hostile, amber calm until provoked, cyan peaceful. */
-export const MOODS = { hostile: 0xff2a3a, provoked: 0xffb020, peaceful: 0x00f0ff };
+export const MOODS = { hostile: PALETTE.danger, provoked: PALETTE.amber, peaceful: PALETTE.cyan };
 
 /** Unit sphere every enemy eye is scaled from (never disposed with a room). */
 export const EYE = shared(new SphereGeometry(1, 12, 8));
