@@ -671,3 +671,14 @@ plates are shades of its own color, so a room can recolor it. A model's
 `muzzle` is a reach along the line of fire (worm and crawler had points).
 **Why:** more silhouettes for content production; reviewed in the
 showcase first.
+
+### D108 — 2026-09-29 — Home Lattice keeps the default enemies; a roster per biome
+Home Lattice's own enemies are bug, virus, sentinel and cron (the
+`tower` template): the default cyberspace enemies, which may still show
+up anywhere. Each other biome gets a roster of its own, at least three
+enemies with a signature trick, proposed in docs/design.md (Phase 4
+outline) and reviewed in Phase 4b. Still six biomes (D61); their colors
+and setup may change so ideas such as a nature sector with insects or a
+heavy virtual one with pixelated enemies fit into them.
+**Why:** biomes should play differently, not only look different; the
+four basic enemies, one per attack, suit the core and teach the basics.

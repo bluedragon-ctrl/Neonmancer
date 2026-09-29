@@ -1290,6 +1290,12 @@ Phantom Partition moved from silver-white to pale violet so plates and
 targets stand out in it; violet became free when void blocks turned
 black.
 
+Enemies by biome (D108): Home Lattice's are the default cyberspace four,
+bug, virus, sentinel and cron (the `tower` template); they read as the
+Grid's plain enemies and may show up anywhere. Every other biome gets a
+roster of its own, at least three enemies, proposed in the Phase 4
+outline and settled in Phase 4b.
+
 Surroundings (`look` in `biomes.json`, D62; every field optional, Home
 Lattice's values are the defaults):
 
@@ -1570,7 +1576,8 @@ title screen and pause menu (the save UI needs both); saving and loading
 **Phase 4b — spells, bosses, tooling:** the roster's new spells, one
 step each (D88, D89): Pull, Compile, Scan (needs hidden blocks, fake
 walls and hidden pickups first), Fork (enemies target the decoy);
-Firewall Wardens; reachability checker; design skills and subagents.
+Firewall Wardens; reachability checker; design skills and subagents;
+biome enemy rosters (review the proposal below, D108).
 
 Settled:
 - Saving is a player action, any time, from the pause menu (D105); it
@@ -1616,6 +1623,54 @@ Open so far:
   the steps and looks (showcase first), what the special room holds and
   whether there is more than one, and whether a secret lock takes other
   counts so rooms can gate optional side rooms earlier.
+
+- Proposal, to be reviewed in Phase 4b: an enemy roster per biome
+  (D108), so each plays differently, not just in another color. Still
+  six biomes (D61); their colors and setup may change to fit. Home
+  Lattice is settled: bug, virus, sentinel, cron. Every other biome gets
+  at least three enemies of its own and one signature trick that twists
+  those four. Tags: (L) a D107 look or an existing template, (N) a new
+  look, (B) a new engine behavior.
+  - **Glitchmire**, you can't trust what you see; could also take the
+    heavy virtual idea (pixelated, abstract enemies): Artifact, flickers
+    and teleports a short hop every few beats (N, B); Z-Fighter, two
+    overlapping copies, only one real (N, B); Bitrot, a slime chaser
+    leaving corrupted tiles that hurt, then fade (N, B); Phish, a data
+    disk mimic (L); Ricochet (L); from the heavy virtual idea: Voxel
+    Swarm, splits into two smaller ones when hit (N, B), Primitive,
+    morphs cube to octahedron between patrol and burst (N, B), Null
+    Pointer, dashes straight until a wall, then turns (N, B).
+  - **Frostbyte Wastes**, slowing and freezing: Cold Boot, a golem that
+    walks a path slowly, solid, a moving ice wall (L); Flurry, a swarm of
+    tiny 0/1 flakes that pop in one hit (N); Freezer, a sentinel whose
+    bolt slows the wizard for a while (B); Icicle, hangs from the ceiling
+    and drops when he passes under it (N, B).
+  - **Abyssal Buffer**, deep sea, drifting; could become the nature
+    sector with insect enemies: Buffer Jelly, a jellyfish floating up
+    and down, bouncy (N, B); Anglerphish, a phish with a lure like a
+    pickup (L); Leviathan, a wyrm on long loops (L); Leak, a vent firing
+    slow bubbles that drift upward (B); from the nature idea: Web
+    Crawler, the crawler as a spider leaving webs that slow him (L, B),
+    Caterpillar, the worm in leaf colors (L), Hardware Beetle, a solid
+    shell carrying him along a path (N), Mantis, stationary, a very
+    short charge, strikes next to it (N), Spam, a gnat cloud that chases
+    (N, B), Pixie, the pixel butterfly (L).
+  - **Firewall Citadel**, armored guards: Firewall Warden, the boss
+    (D104); Overclock, a burning chip with a burst (L); Proxy, a
+    shield-bearing knight that blocks Zaps from the front, hit it from
+    behind with Blink or Warp (N, B); Brickling, a wall brick that wakes
+    up as a chaser (N); Turret, a cron in the battlements (L).
+  - **Phantom Partition**, ghosts and daemons that ignore the rules:
+    Daemon, a wisp drifting through blocks (L, B); Zombie Process, moves
+    only while the wizard faces away (N, B); Echo, a shadow wizard
+    mirroring his moves (N, B); Poltergeist, unseen, shoves crates (B);
+    Orphan, a peaceful ghost whose path leads to a secret (L).
+  Open: where the nature and heavy virtual ideas go (above: Abyssal
+  Buffer and Glitchmire) and the colors that needs (a nature green must
+  keep clear of lime crates and the mint bug, D99); which new behaviors
+  come first (several enemies share them: phasing, blink, a slowing
+  status, split on hit, mirroring, a directional shield); every new look
+  goes to the showcase for the author's OK first.
 
 ## Access keys
 

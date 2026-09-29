@@ -214,6 +214,9 @@ and some exits and pickups wait for a spell or buff found later
 - **Shooters** — stationary, fire slow bolts (the Pop-up idea, D84)
 - **Firewall Wardens** — bosses of combat rooms; each drops a permanent
   pickup and stays away once it is found (D104)
+- Home Lattice's own enemies are the default cyberspace four: bug,
+  virus, sentinel and cron (the tower) (D108); each other biome gets its
+  own roster, reviewed in Phase 4b
 - More looks for content (D107), no template yet: warden, daemon (wisp),
   golem (server rack), wyrm (packet dragon), phish (a data disk mimic),
   overclock (burning chip), pixie (pixel butterfly)
@@ -464,7 +467,9 @@ editor), Phase 3 (v0.3.0, spells and pickups); see CHANGELOG.md.
   loading (URL hash, localStorage), map screen.
 - 4b — The roster's new spells (D88, D89): Compile, Fork, Scan and Pull.
   Firewall Wardens (bosses, D104). Reachability checker. Design skills
-  and subagents.
+  and subagents. Biome enemy rosters: review the proposal (at least three
+  enemies of its own per biome, still six biomes; colors and setup may
+  change) and settle it before content production (D108).
 - Proposal, not yet confirmed: visual rewards for secrets found (a hat
   star, a star trail, a Phantom shimmer) and a special room behind a
   lock for all 16 (docs/design.md, Phase 4 outline).
