@@ -111,7 +111,7 @@ export class Player {
     this.maxEnergy = PLAYER.maxEnergy;
     /** Energy for spells, whole units 0..maxEnergy, recharging one at a time; it carries over between rooms. */
     this.energy = this.maxEnergy;
-    /** Ticks per unit of energy recharged (buffs may change it, like maxEnergy). */
+    /** Ticks per unit of energy recharged; buffs lower it (D93), as they raise the maxima (Game.applyBuffs()). */
     this.energyTicks = PLAYER.energyTicks;
     /** Ticks towards the next unit of energy. */
     this.charge = 0;
@@ -124,8 +124,9 @@ export class Player {
     /** The selected spell, cast by the cast action; null while he knows none. */
     this.spell = null;
     /**
-     * A spell being installed, for its animation (D73), or null: { spell,
-     * at, tick }; at is where the disk hung (its center); tick counts up to
+     * A spell or buff being installed, for its animation (D73, D93), or
+     * null: { item, at, tick }; item is the pickup type id (a data disk or a
+     * buff chip), at is where it hung (its center); tick counts up to
      * PLAYER.installTicks. It doesn't hold him up (D74).
      */
     this.install = null;
@@ -182,13 +183,14 @@ export class Player {
   }
 
   /**
-   * Start installing `spell` from a data disk at `at` (its center): its
-   * animation runs for PLAYER.installTicks while he plays on (D74).
-   * @param {string} spell
+   * Start installing `item`, a data disk or a buff chip (D93) taken at
+   * `at` (its center): its animation runs for PLAYER.installTicks while he
+   * plays on (D74).
+   * @param {string} item its pickup type id (defs.json pickups)
    * @param {number[]} at
    */
-  startInstall(spell, at) {
-    this.install = { spell, at: [...at], tick: 0 };
+  startInstall(item, at) {
+    this.install = { item, at: [...at], tick: 0 };
   }
 
   /**

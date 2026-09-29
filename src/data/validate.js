@@ -11,7 +11,8 @@
  *   rooms/cache_hall.json › blocks[3]: cell [12,0,4] is outside size [12,4,12]
  */
 import { DATA_SCHEMA_VERSION } from '../core/version.js';
-import { MAX_ROOM_FOOTPRINT, PLAYER_HITBOX } from '../core/rules.js';
+import { MAX_ROOM_FOOTPRINT, MAX_SAVED_INTEGRITY, PLAYER_HITBOX } from '../core/rules.js';
+import { PLAYER } from '../entities/player.js';
 import {
   CHARGED_ATTACKS,
   ENEMY_OPTIONS,
@@ -124,9 +125,11 @@ function validateTemplates(enemies, report) {
 }
 
 /**
- * Spell slots are unique (each is a save bit, D71), a data disk names a
- * known spell, and pickup type ids differ from object type ids (the room
- * editor lists both under its Object tool).
+ * Spell slots and buff slots are unique (each is a save bit, D71), a data
+ * disk names a known spell, and pickup type ids differ from object type ids
+ * (the room editor lists both under its Object tool). All buffs together
+ * keep the wizard within the save key's integrity field and recharging at
+ * least one unit a tick.
  */
 function validateSpellsAndPickups(spells, pickupTypes, objectTypes, report) {
   /** slot → spell id */
@@ -135,9 +138,23 @@ function validateSpellsAndPickups(spells, pickupTypes, objectTypes, report) {
     if (slots.has(spell.slot)) report('defs.json', `spells.${id}.slot`, `slot ${spell.slot} is taken by "${slots.get(spell.slot)}"`);
     else slots.set(spell.slot, id);
   }
+  /** buff slot → pickup type id */
+  const buffSlots = new Map();
+  /** All buffs of each stat together. */
+  const total = { integrity: 0, energy: 0, recharge: 0 };
   for (const [id, type] of Object.entries(pickupTypes)) {
     if (type.kind === 'disk' && !spells[type.spell]) report('defs.json', `pickups.${id}.spell`, `unknown spell "${type.spell}"`);
     if (objectTypes[id]) report('defs.json', `pickups.${id}`, `"${id}" is an object type too`);
+    if (type.kind !== 'buff') continue;
+    if (buffSlots.has(type.slot)) report('defs.json', `pickups.${id}.slot`, `buff slot ${type.slot} is taken by "${buffSlots.get(type.slot)}"`);
+    else buffSlots.set(type.slot, id);
+    total[type.stat] += type.amount;
+  }
+  if (PLAYER.maxIntegrity + total.integrity > MAX_SAVED_INTEGRITY) {
+    report('defs.json', 'pickups', `integrity buffs raise the maximum to ${PLAYER.maxIntegrity + total.integrity}; the save key holds at most ${MAX_SAVED_INTEGRITY}`);
+  }
+  if (PLAYER.energyTicks - total.recharge < 1) {
+    report('defs.json', 'pickups', `recharge buffs take away ${total.recharge} of ${PLAYER.energyTicks} ticks per energy unit; at least 1 must be left`);
   }
 }
 

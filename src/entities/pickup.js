@@ -1,7 +1,7 @@
 /**
  * A pickup in a room (D71): it hovers in its cell and the wizard takes it
  * by touching it. Permanent ones (data disks) have a save bit; one already
- * found shows as a ghost and can't be taken again. Temporary ones
+ * found shows as a ghost and can't be taken again (buff chips too, D93). Temporary ones
  * (refills) have none and come back when the room resets. Pure logic.
  */
 
@@ -11,6 +11,13 @@ export const PICKUP = {
   inset: 0.2,
   insetY: 0.1,
 };
+
+/**
+ * A buff's color by the stat it raises (D93): the HUD bars' colors for
+ * integrity and energy, amber for recharge. Its chip, install animation
+ * and banner use it.
+ */
+export const BUFF_COLORS = { integrity: '#00f0ff', energy: '#b6ff3c', recharge: '#ffb020' };
 
 export class Pickup {
   /**

@@ -137,7 +137,17 @@
     "disk_warp": { "kind": "disk", "spell": "warp" },
     "disk_cut_paste": { "kind": "disk", "spell": "cut_paste" },
     "refill_integrity": { "kind": "refill", "stat": "integrity", "amount": 3 },
-    "refill_energy": { "kind": "refill", "stat": "energy", "amount": 30 }
+    "refill_energy": { "kind": "refill", "stat": "energy", "amount": 30 },
+    "buff_integrity_1": { "kind": "buff", "slot": 0, "stat": "integrity", "amount": 1 },
+    "buff_integrity_2": { "kind": "buff", "slot": 1, "stat": "integrity", "amount": 1 },
+    "buff_integrity_3": { "kind": "buff", "slot": 2, "stat": "integrity", "amount": 1 },
+    "buff_integrity_4": { "kind": "buff", "slot": 3, "stat": "integrity", "amount": 1 },
+    "buff_energy_1": { "kind": "buff", "slot": 4, "stat": "energy", "amount": 10 },
+    "buff_energy_2": { "kind": "buff", "slot": 5, "stat": "energy", "amount": 10 },
+    "buff_energy_3": { "kind": "buff", "slot": 6, "stat": "energy", "amount": 10 },
+    "buff_energy_4": { "kind": "buff", "slot": 7, "stat": "energy", "amount": 10 },
+    "buff_energy_5": { "kind": "buff", "slot": 8, "stat": "energy", "amount": 10 },
+    "buff_recharge": { "kind": "buff", "slot": 9, "stat": "recharge", "amount": 4 }
   },
   "blocks": {
     "block": { "look": "plain" },
