@@ -16,6 +16,9 @@ export const CRATE = { kind: 'pushable', color: '#b6ff3c' };
 /** A moving platform type (its path is on the room object). */
 export const LIFT = { kind: 'platform', color: '#00f0ff' };
 
+/** The central core (D101), as in defs.json. */
+export const CORE = { kind: 'core', color: '#eef3ff', look: 'reactor' };
+
 /** A bug enemy template, as in defs.json (3 units per second: 20 ticks per cell). */
 export const BUG = {
   look: 'bug',
@@ -107,6 +110,10 @@ export const PICKUPS = {
   upgrade_double_jump: { kind: 'upgrade', upgrade: 'double_jump', slot: 2, color: '#ff2bd6' },
   secret_0: { kind: 'secret', slot: 0 },
   secret_1: { kind: 'secret', slot: 1 },
+  fragment_0: { kind: 'fragment', slot: 0 },
+  fragment_1: { kind: 'fragment', slot: 1 },
+  fragment_2: { kind: 'fragment', slot: 2 },
+  fragment_3: { kind: 'fragment', slot: 3 },
 };
 
 /** Score values (D100), as in defs.json. */
@@ -153,11 +160,12 @@ export function dataFiles({
   connections = [],
   start = rooms[0].id,
   positions = Object.fromEntries(rooms.map((room, i) => [room.id, [i, 0]])),
+  fragments,
 }) {
   return structuredClone({
     'defs.json': { schemaVersion: 1, score: SCORE, objects, enemies, spells: SPELLS, pickups, blocks },
     'biomes.json': { schemaVersion: 1, biomes: { home: { name: 'Home', color: '#ffb020' } } },
-    'world.json': { schemaVersion: 1, start, connections, positions },
+    'world.json': { schemaVersion: 1, start, ...(fragments && { fragments }), connections, positions },
     'strings.json': STRINGS,
     ...Object.fromEntries(rooms.map((room) => [`rooms/${room.id}.json`, room])),
   });

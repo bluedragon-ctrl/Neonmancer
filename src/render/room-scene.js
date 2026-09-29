@@ -14,6 +14,7 @@ import { createHoleView } from './hole-view.js';
 import { disposeTree } from './neon.js';
 import { PickupView } from './pickup-view.js';
 import { flareHazard } from './block-fx.js';
+import { CoreView } from './core-view.js';
 import { CLIP_FX, pasteGrow } from './clip-fx.js';
 import { clipBounds } from './clip-view.js';
 import { createRoomView } from './room-view.js';
@@ -31,6 +32,7 @@ export const OBJECT_VIEWS = {
   collapsing: CollapsingView,
   target: TargetView,
   plate: PlateView,
+  core: CoreView,
 };
 
 /**
@@ -221,6 +223,11 @@ export class RoomScene {
    */
   sparks(bolt, pos, dir) {
     this.zapView.spark(bolt, pos, dir);
+  }
+
+  /** The core took fragments (a level raised, the Grid rebooted, D101): make it flash. */
+  flashCore() {
+    for (const view of this.objectViews) if (view instanceof CoreView) view.flash();
   }
 
   /**

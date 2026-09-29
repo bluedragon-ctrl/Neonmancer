@@ -187,7 +187,7 @@ export class PlayerView {
   constructor(game) {
     this.game = game;
     this.group = new Group();
-    this.wizard = createWizard();
+    this.wizard = createWizard({ bands: game.fragmentRules.access.length });
     /** Ghost of his parts hidden behind blocks (xray.js). */
     this.xray = addXray(this.wizard);
     this.shadow = createDropShadow(PALETTE.magenta);
@@ -258,6 +258,7 @@ export class PlayerView {
     // Blinking after a hit; derezzing when he dies out of a hole.
     const look = wizardLook(player, PLAYER.deathTicks);
     this.wizard.visible = look.visible;
+    this.wizard.userData.setAccess(this.game.progress.accessLevel);
     this.wizard.scale.set(look.scale[0] / Math.sqrt(dash.stretch), look.scale[1] / Math.sqrt(dash.stretch), look.scale[2] * dash.stretch);
     // A hit's flash wins over the arrival flash of a Warp (D86).
     const hit = hitFlash(player);

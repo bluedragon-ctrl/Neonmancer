@@ -613,9 +613,10 @@ export class RoomEdit {
 
   /**
    * Change an exit's id, position along its side (`at`), width, height,
-   * floor level or whether it is locked (D75); its connection follows a new id.
+   * floor level, whether it is locked (D75) or the access level it asks for
+   * (D101, 0 for none); its connection follows a new id.
    * @param {string} id
-   * @param {{ id?: string, at?: number, width?: number, height?: number, y?: number, locked?: boolean }} fields
+   * @param {{ id?: string, at?: number, width?: number, height?: number, y?: number, locked?: boolean, access?: number }} fields
    * @returns {boolean} whether anything changed
    */
   updateExit(id, fields) {
@@ -693,12 +694,13 @@ function withFields(item, fields) {
 }
 
 /** An exit as written in a room file: the schema's key order, defaults left out. */
-export function exitFields({ id, side, at, width, y, height, locked }) {
+export function exitFields({ id, side, at, width, y, height, locked, access }) {
   const exit = { id, side, at };
   if (width !== EXIT_DEFAULTS.width) exit.width = width;
   if (y !== EXIT_DEFAULTS.y) exit.y = y;
   if (height !== EXIT_DEFAULTS.height) exit.height = height;
   if (locked) exit.locked = true;
+  if (access) exit.access = access;
   return exit;
 }
 

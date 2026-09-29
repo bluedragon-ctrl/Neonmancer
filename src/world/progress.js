@@ -1,8 +1,9 @@
 /**
  * What the wizard has for the whole game (D67, D71): the permanent pickups
  * he found, one save bit each. Room resets and death leave it alone; the
- * save key (Phase 4) holds exactly these bits. Spells he knows follow from
- * the data disks found, how much stronger he is from the buffs found.
+ * save key (Phase 4) holds exactly these bits, and his access level (D91,
+ * D101), which only the core raises. Spells he knows follow from the data
+ * disks found, how much stronger he is from the buffs found.
  * Plain logic, no browser.
  *
  * A bit identifies an item, not a placement: the same item may lie in
@@ -13,8 +14,8 @@
  * The save bits in blocks (D71): where each block starts and how many bits
  * it has. A block's index comes from what the item unlocks: a spell's
  * `slot` (defs.json spells) for its data disk; a buff's or an upgrade's
- * `slot` on its pickup type (D88, D95); later a fragment's number on the
- * placement; a secret's `slot` on its pickup type (D100).
+ * `slot` on its pickup type (D88, D95); a secret's or a fragment's `slot`
+ * on its pickup type (D100, D101).
  */
 export const SAVE_BLOCKS = {
   spells: { start: 0, size: 16 },
@@ -49,14 +50,23 @@ export function pickupBit(type, spells) {
   if (type.kind === 'buff') return saveBit('buffs', type.slot);
   if (type.kind === 'upgrade') return saveBit('upgrades', type.slot);
   if (type.kind === 'secret') return saveBit('secrets', type.slot);
+  if (type.kind === 'fragment') return saveBit('fragments', type.slot);
   return null;
 }
 
 export class Progress {
-  /** @param {Iterable<number>} [found] bits found so far (a loaded save) */
-  constructor(found = []) {
+  /**
+   * @param {Iterable<number>} [found] bits found so far (a loaded save)
+   * @param {number} [accessLevel] his access level (a loaded save)
+   */
+  constructor(found = [], accessLevel = 0) {
     /** @type {Set<number>} */
     this.found = new Set(found);
+    /**
+     * Access level (D91, D101), 0–15: stored on its own, not counted from
+     * the fragment bits, as the core raises it only when he touches it.
+     */
+    this.accessLevel = accessLevel;
   }
 
   /** @param {number} bit */
@@ -73,6 +83,16 @@ export class Progress {
     if (this.found.has(bit)) return false;
     this.found.add(bit);
     return true;
+  }
+
+  /**
+   * The access level his fragments earn at the core (D101): how many of
+   * the thresholds he has reached.
+   * @param {number[]} thresholds world.json fragments.access, rising
+   */
+  earnedAccess(thresholds) {
+    const found = this.count('fragments');
+    return thresholds.filter((needed) => found >= needed).length;
   }
 
   /**

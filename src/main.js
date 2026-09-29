@@ -84,12 +84,19 @@ function boot() {
       readout.countTick();
       return;
     }
+    // The end-of-game screen holds the game until it is closed (D101).
+    if (hud.winShown) {
+      if (input.pressed('confirm')) hud.hideWin();
+      readout.countTick();
+      return;
+    }
     if (input.pressed('movementMode')) game.toggleMovementMode();
     if (debug.active) {
       if (input.pressed('debugRoomNext') && game.debugJumpRoom(1)) showRoom();
       if (input.pressed('debugRoomPrev') && game.debugJumpRoom(-1)) showRoom();
       if (input.pressed('debugInvincible')) game.invincible = !game.invincible;
       if (input.pressed('debugDamage')) game.hurt(1);
+      if (input.pressed('debugFragments')) game.debugGrantFragments();
     }
     const events = game.update(input);
     if (events.some((event) => event.type === 'room')) showRoom();
@@ -135,6 +142,8 @@ function showEvents(events, { game, roomScene, hud, debug }) {
     if (event.type === 'ricochet') roomScene.sparks(event.bolt, event.pos, event.dir);
     if (event.type === 'deny') hud.denyEnergy();
     if (event.type === 'shrine') roomScene.useShrine();
+    if (event.type === 'access' || event.type === 'win') roomScene.flashCore();
+    if (event.type === 'win') hud.showWin(game.score, game.completion);
     if (event.type === 'cut' || event.type === 'paste') {
       roomScene.clip(event);
       debug.setRoom(game.room, game.objects, game.enemies);
@@ -158,6 +167,7 @@ function syncHud(hud, game, renderer, dt) {
   hud.setSpell(player.spell, player.spells.length, player.spell && game.spellNameKey(player.spell));
   hud.setClipboard(player.spell === 'cut_paste', player.clipboard);
   hud.setScore(game.score, game.completion);
+  hud.setFragments(game.progress.count('fragments'), game.fragmentRules.required, game.progress.accessLevel);
   hud.setMovementMode(game.movementMode);
   hud.setHintWanted(wantsFullscreenHint(renderer.stageHeight, window.devicePixelRatio, !!document.fullscreenElement));
   hud.update(dt);

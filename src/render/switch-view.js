@@ -33,6 +33,7 @@ import {
 } from 'three';
 import { blockEdges } from './edges.js';
 import { PALETTE, faceMaterial, lineMaterial, neonLines, shadedFaces, shared } from './neon.js';
+import { FRAGMENT_COLOR } from '../entities/pickup.js';
 import { switchesOn } from '../switches.js';
 
 /** Tuning (units, seconds). */
@@ -65,6 +66,11 @@ export const SWITCH_FX = {
   /** Lock lights: half size of the outer square, gap between lights. */
   light: 0.1,
   lightGap: 0.3,
+  /** Access lock (D101): height and width of a digit of the level, gap between digits, its brightness. */
+  digit: 0.5,
+  digitWidth: 0.26,
+  digitGap: 0.12,
+  digitBrightness: 2,
 };
 
 const FACE = new Color(PALETTE.face);
@@ -313,9 +319,10 @@ export function createPlate(color) {
  * `userData.openness` (0..1) tells how far it has opened.
  * @param {{ side: string, at: number, width: number, y: number, height: number }} exit defaults applied
  * @param {number[]} size room size
- * @param {{ color: number|string, switches: number }} options switches in the room (one light each)
+ * @param {{ color: number|string, switches: number, access?: number }} options switches in the room (one light
+ *   each; 0 for an access lock alone) and the access level it asks for (D101, shown as a gold digit)
  */
-export function createLock(exit, size, { color, switches }) {
+export function createLock(exit, size, { color, switches, access = 0 }) {
   const base = new Color(color);
   const group = new Group();
   const back = exit.side.startsWith('-');
@@ -371,8 +378,21 @@ export function createLock(exit, size, { color, switches }) {
   // Lights: a small bull's-eye per switch in a row across the middle; the
   // inner square fills for each switch that is on. On a front exit they sit
   // between the middle bars.
-  const lights = createLockLights(switches, { base, center: [mid, (y0 + y1) / 2], p, along });
+  // With both, the digit sits above the lights.
+  const lightH = access > 0 && switches > 0 ? y0 + (y1 - y0) * 0.3 : (y0 + y1) / 2;
+  const lights = createLockLights(switches, { base, center: [mid, lightH], p, along });
   for (const { light } of lights) barrier.add(light);
+  // The access level it asks for, a gold seven-segment number (D101).
+  let digits = null;
+  if (access > 0) {
+    const digitH = switches > 0 ? y0 + (y1 - y0) * 0.62 : (y0 + y1) / 2;
+    digits = neonLines(
+      digitSegments(access, [mid, digitH]).map((segment) => segment.map(([a, h]) => p(a, h))),
+      lineMaterial({ color: FRAGMENT_COLOR, width: 2.6, brightness: SWITCH_FX.digitBrightness }),
+    );
+    digits.renderOrder = 4;
+    barrier.add(digits);
+  }
 
   const opening = new Ease();
   group.userData.set = ({ lit = 0, open = false } = {}) => {
@@ -400,6 +420,7 @@ export function createLock(exit, size, { color, switches }) {
       fillMat.opacity = l;
       fillMat.color.copy(base).multiplyScalar(SWITCH_FX.fill);
     }
+    if (digits && !back) digits.visible = eased < 0.5;
     group.userData.openness = eased;
   };
   group.userData.update(0);
@@ -491,7 +512,39 @@ export class PlateView {
   }
 }
 
-/** A locked exit of the room (Game.locks): its barrier and one light per switch. */
+/** Segments of each seven-segment digit, by the digit (a b c d e f g: top, upper right, lower right, bottom, lower left, upper left, middle). */
+const SEVEN = ['abcdef', 'bc', 'abged', 'abgcd', 'fgbc', 'afgcd', 'afgedc', 'abc', 'abcdefg', 'abcdfg'];
+
+/**
+ * A number drawn in seven-segment lines (pure), centered on `center` in a
+ * lock's plane: [a, h] pairs, a along the side, h up.
+ * @param {number} value 0 or more
+ * @param {number[]} center [a, h]
+ * @returns {number[][][]}
+ */
+export function digitSegments(value, [a, h]) {
+  const { digit: height, digitWidth: w, digitGap: gap } = SWITCH_FX;
+  const text = String(value);
+  const width = text.length * w + (text.length - 1) * gap;
+  const segments = [];
+  [...text].forEach((char, i) => {
+    const x0 = a - width / 2 + i * (w + gap);
+    const [x1, top, mid, bottom] = [x0 + w, h + height / 2, h, h - height / 2];
+    const lines = {
+      a: [[x0, top], [x1, top]],
+      b: [[x1, top], [x1, mid]],
+      c: [[x1, mid], [x1, bottom]],
+      d: [[x0, bottom], [x1, bottom]],
+      e: [[x0, mid], [x0, bottom]],
+      f: [[x0, top], [x0, mid]],
+      g: [[x0, mid], [x1, mid]],
+    };
+    for (const s of SEVEN[Number(char)]) segments.push(lines[s]);
+  });
+  return segments;
+}
+
+/** A locked exit of the room (Game.locks): its barrier, one light per switch and the access level it asks for. */
 export class LockView {
   /**
    * @param {import('../game.js').Game} game
@@ -500,8 +553,9 @@ export class LockView {
   constructor(game, lock) {
     this.game = game;
     this.lock = lock;
-    const color = game.switches[0]?.object.color ?? 0xffffff;
-    this.group = createLock(lock.exit, game.room.size, { color, switches: game.switches.length });
+    const color = game.switches[0]?.object.color ?? game.content.objectTypes.target?.color ?? 0xffffff;
+    const { exit } = lock;
+    this.group = createLock(exit, game.room.size, { color, switches: exit.locked ? game.switches.length : 0, access: exit.access ?? 0 });
     this.sync(0);
   }
 

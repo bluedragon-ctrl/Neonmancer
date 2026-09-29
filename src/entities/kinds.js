@@ -11,6 +11,7 @@
  * collapsed block): the game then leaves it out of `solids` and `bodies`.
  */
 import { Collapsing } from './collapsing.js';
+import { Core } from './core.js';
 import { Platform } from './platform.js';
 import { Pushable } from './pushable.js';
 import { Plate, Target } from './switch.js';
@@ -21,6 +22,7 @@ export const OBJECT_KINDS = {
   collapsing: Collapsing,
   target: Target,
   plate: Plate,
+  core: Core,
 };
 
 /**

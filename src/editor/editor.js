@@ -423,6 +423,8 @@ export class Editor {
       this.change(() => this.edit.linkExit(exit.id, value));
     } else if (field === 'locked') {
       this.change(() => this.edit.updateExit(exit.id, { locked: value }));
+    } else if (field === 'access') {
+      this.change(() => this.edit.updateExit(exit.id, { access: Math.min(15, Math.max(0, Math.round(value))) }));
     } else if (field === 'id') {
       if (!ID_PATTERN.test(value)) this.status = 'Exit id: lowercase letters, digits and _, starting with a letter.';
       else if (this.edit.exits.some((e) => e.id === value && e !== exit)) this.status = `Exit id: "${value}" is taken.`;

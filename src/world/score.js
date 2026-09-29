@@ -21,10 +21,9 @@ export function bitPoints(bit, values) {
  * The score.
  * @param {import('./progress.js').Progress} progress
  * @param {{ bit: number, secret: number, accessLevel: number }} values defs.json "score"
- * @param {number} [accessLevel] his access level (Phase 3 step 16)
  */
-export function scoreOf(progress, values, accessLevel = 0) {
-  let score = accessLevel * values.accessLevel;
+export function scoreOf(progress, values) {
+  let score = progress.accessLevel * values.accessLevel;
   for (const bit of progress.found) score += bitPoints(bit, values);
   return score;
 }

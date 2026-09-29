@@ -93,6 +93,12 @@
           "type": "boolean",
           "default": false,
           "description": "Closed (solid) until every switch in the room (targets and plates) is on; it closes again when one goes off, but not while the wizard stands in it. Always open for the wizard when he came in through it (D75). The room needs at least one switch."
+        },
+        "access": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 15,
+          "description": "Closed (solid) until the wizard's access level is at least this (D101); the core raises it. With \"locked\" too, both must be met. Always open for the wizard when he came in through it."
         }
       }
     },

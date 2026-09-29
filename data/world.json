@@ -2,6 +2,7 @@
   "$schema": "../schemas/world.schema.json",
   "schemaVersion": 1,
   "start": "boot_sector",
+  "fragments": { "required": 64, "access": [16, 32, 48] },
   "connections": [
     ["crawl_space.south", "cache_hall.north"],
     ["boot_sector.east", "cache_hall.west"],
@@ -16,7 +17,8 @@
     ["quarantine.west", "scheduler.east"],
     ["fast_path.south", "room_1.north"],
     ["clipboard.east", "room_1.west"],
-    ["room_1.east", "upgrade_lab.west"]
+    ["room_1.east", "upgrade_lab.west"],
+    ["quarantine.south", "vault.north"]
   ],
   "positions": {
     "boot_sector": [-1, -1],
@@ -32,6 +34,7 @@
     "scheduler": [-3, -1],
     "fast_path": [-1, -3],
     "clipboard": [-2, -2],
-    "upgrade_lab": [0, -3]
+    "upgrade_lab": [0, -3],
+    "vault": [-3, 0]
   }
 }

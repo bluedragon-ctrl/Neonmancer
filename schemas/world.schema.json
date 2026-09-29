@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "world.schema.json",
   "title": "World (data/world.json)",
-  "description": "How rooms connect and where they sit on the world map. Fragments and the core join in Phase 3.",
+  "description": "How rooms connect, where they sit on the world map, and the key fragments (D101). The core is an object in a room (defs.json kind \"core\"); where fragments lie is the rooms' pickups.",
   "type": "object",
   "required": ["schemaVersion", "start", "connections", "positions"],
   "additionalProperties": false,
@@ -18,6 +18,21 @@
         "items": { "type": "string", "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$" },
         "minItems": 2,
         "maxItems": 2
+      }
+    },
+    "fragments": {
+      "description": "Key fragments (D101): how many end the game at the core, and the access levels they earn there.",
+      "type": "object",
+      "required": ["required", "access"],
+      "additionalProperties": false,
+      "properties": {
+        "required": { "type": "integer", "minimum": 1, "maximum": 64, "description": "Fragments the core needs to reboot the Grid (the end of the game)." },
+        "access": {
+          "description": "Fragments found for each access level, in rising order: [16, 32, 48] gives level 1 at 16, 2 at 32, 3 at 48. The core raises the level when he touches it.",
+          "type": "array",
+          "items": { "type": "integer", "minimum": 1, "maximum": 64 },
+          "maxItems": 15
+        }
       }
     },
     "positions": {
