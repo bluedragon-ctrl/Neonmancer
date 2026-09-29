@@ -52,7 +52,10 @@ export const VIRUS = {
   attackCooldown: 1.5,
 };
 
-/** A sentinel enemy template, as in defs.json: an arc (range 5, 42 ticks of charge). */
+/**
+ * A sentinel enemy template, as in defs.json but chasing at 3 units per second
+ * (20 ticks per cell): an arc (range 5, 42 ticks of charge).
+ */
 export const SENTINEL = {
   look: 'sentinel',
   movement: 'chase',
@@ -80,7 +83,10 @@ export const SPELLS = {
   cut_paste: { slot: 6, color: '#f4f6ff', cost: 20, pasteCost: 0, cooldown: 0.25 },
 };
 
-/** Pickup types (D71): the data disks, both refills and a buff of each stat (D93). */
+/**
+ * Pickup types (D71): the data disks, both refills and a buff of each stat (D93).
+ * The integrity refill gives 2 here (3 in defs.json); the tests read its amount from here.
+ */
 export const PICKUPS = {
   disk_zap: { kind: 'disk', spell: 'zap' },
   disk_shield: { kind: 'disk', spell: 'shield' },

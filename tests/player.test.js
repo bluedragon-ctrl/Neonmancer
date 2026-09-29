@@ -233,7 +233,7 @@ test('grazing a hole edge is safe, and jumping over one is too', () => {
   assert.ok(jumper.pos[0] > 6);
 });
 
-test('a jump crosses a 1-tile hole but never a 2-tile one on the same level (D34)', () => {
+test('a jump crosses a 1-tile hole but never a 2-tile one on the same level (D36)', () => {
   // Start as close to the edge as possible without dying (center on the last safe tile).
   const wide = grid({ holes: [[5, 4], [6, 4]] });
   const far = standing(wide, [4.99, 0, 4.5]);

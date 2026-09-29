@@ -277,22 +277,6 @@ test('zap look: a damaged enemy glitches for a few ticks in every round', () => 
   assert.equal(glitching.length, ticks);
 });
 
-test('Tab switches through the spells he knows; with only Zap nothing changes', () => {
-  const game = gameWith();
-  const tab = { down: (a) => a === 'spellNext', pressed: (a) => a === 'spellNext' };
-  assert.ok(!eventTypes(game.update(tab)).includes('spell'));
-  assert.equal(game.player.spell, 'zap');
-
-  // A second spell (Phase 3 data disks) to switch to, and back round.
-  game.player.spells.push('warp');
-  const events = game.update(tab);
-  assert.deepEqual(events.find((e) => e.type === 'spell'), { type: 'spell', spell: 'warp' });
-  assert.equal(game.player.selectSpell(-1), true);
-  assert.equal(game.player.spell, 'zap');
-  assert.equal(game.player.selectSpell(1) && game.player.selectSpell(1), true);
-  assert.equal(game.player.spell, 'zap', 'wraps round');
-});
-
 test('a cast reports the spell it was', () => {
   const game = gameWith();
   assert.deepEqual(game.update(cast).find((e) => e.type === 'cast'), { type: 'cast', spell: 'zap' });

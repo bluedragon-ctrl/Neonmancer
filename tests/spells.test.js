@@ -46,15 +46,19 @@ test('the install animation does not hold the wizard up: he walks, casts, switch
   assert.equal(player.install, null, 'over after installTicks');
 });
 
-test('with two disks Tab switches between Zap and Shield; installing selects the new spell', () => {
+test('Tab switches through the spells he knows, wrapping round; with only Zap nothing changes; installing selects the new spell', () => {
   const game = twoDisks();
   take(game, [4, 0, 4]);
   assert.equal(game.player.spell, 'zap');
+  assert.ok(!eventTypes(game.update(press('spellNext'))).includes('spell'), 'one spell: nothing to switch to');
+  assert.equal(game.player.spell, 'zap');
+
   take(game, [6, 0, 4]);
   assert.deepEqual(game.player.spells, ['zap', 'shield']);
   assert.equal(game.player.spell, 'shield', 'the spell just installed');
-  assert.deepEqual(game.update(press('spellNext')).find((e) => e.type === 'spell'), { type: 'spell', spell: 'zap' });
+  assert.deepEqual(game.update(press('spellNext')).find((e) => e.type === 'spell'), { type: 'spell', spell: 'zap' }, 'wraps round');
   assert.deepEqual(game.update(press('spellPrev')).find((e) => e.type === 'spell'), { type: 'spell', spell: 'shield' });
+  assert.deepEqual(game.update(press('spellPrev')).find((e) => e.type === 'spell'), { type: 'spell', spell: 'zap' }, 'wraps back round');
 });
 
 test('Shield costs its energy and stays up for its duration; casting again starts it over; death ends it', () => {

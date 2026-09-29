@@ -245,10 +245,12 @@ test('disk model: few draw calls; a ghost is solid-lined (D94)', () => {
     model.traverse((node) => (count += node.isMesh ? 1 : 0)); // LineSegments2 is a Mesh too
     return count;
   };
-  // Body, outline, all zero bits in one line, and a lit cube (faces + lines) on each side.
-  assert.equal(draws(createDisk({ slot: 5 })), 7);
+  // Today: body, outline, all zero bits in one line, and a lit cube (faces + lines) on
+  // each side. A budget, not an exact count, so the look can change without this test.
+  const budget = 7;
+  assert.ok(draws(createDisk({ slot: 5 })) <= budget, 'a disk stays within its draw calls');
   const ghost = createDisk({ slot: 5, ghost: true });
-  assert.equal(draws(ghost), 7);
+  assert.ok(draws(ghost) <= budget, 'so does a ghost');
   const zeros = ghost.userData.spin.children.find((node) => node.isLineSegments2 && node.geometry.attributes.instanceStart.count === 30 * 4);
   assert.ok(zeros, 'one line with the 4 sides of 15 zero bits on both faces');
   const dashed = [];

@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { takeMessages } from '../src/core/messages.js';
 import { PLAYER } from '../src/entities/player.js';
+import { withExitDefaults } from '../src/data/room-data.js';
 import { Game } from '../src/game.js';
 import { eventTypes, gameData, hold, idle, roomFile } from './helpers.js';
 
@@ -130,4 +131,36 @@ test('invulnerability counts down only while alive, and hurt() does nothing to a
   player.invulnerable = 0;
   player.die('damage');
   assert.equal(player.hurt(1), 0);
+});
+
+test('integrity drains on a fatal fall, comes back on respawn and carries over between rooms (D35)', () => {
+  const game = new Game(
+    gameData({
+      rooms: [
+        roomFile('alpha', { holes: [{ at: [4, 4] }], exits: [{ id: 'east', side: '+x', at: 3 }] }),
+        roomFile('beta', { exits: [{ id: 'west', side: '-x', at: 3 }] }),
+      ],
+      connections: [['alpha.east', 'beta.west']],
+    }),
+  );
+  const { player } = game;
+  assert.equal(player.integrity, PLAYER.maxIntegrity);
+  takeMessages();
+
+  player.place([4.5, 0, 4.5]); // on the hole
+  const events = [];
+  for (let i = 0; i < 3; i++) events.push(...eventTypes(game.update(idle)));
+  assert.ok(events.includes('die'), events.join());
+  assert.equal(player.integrity, 0);
+  assert.deepEqual(takeMessages().map((m) => m.key), ['msg.die']);
+
+  for (let i = 0; i < PLAYER.deathTicks && !events.includes('respawn'); i++) events.push(...eventTypes(game.update(idle)));
+  assert.ok(events.includes('respawn'));
+  assert.equal(player.integrity, player.maxIntegrity);
+
+  player.integrity = 3;
+  game.travel(withExitDefaults(game.room.exits[0]));
+  assert.equal(game.room.id, 'beta');
+  assert.equal(game.player, player); // one wizard for the whole game
+  assert.equal(player.integrity, 3);
 });
