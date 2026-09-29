@@ -367,7 +367,8 @@ not critical.
   a friendly message and starts normally.
 - UI: "Save", "Copy key" and "Copy link" in the pause menu; hint to
   bookmark after saving; "Enter key" on the title screen.
-- A save also goes to localStorage (wrapped in try/catch).
+- A save also goes to localStorage (wrapped in try/catch); the title's
+  "Continue" loads it (D111). Loading a key never stores it: only Save does.
 - Automated tests for encode/decode round-trips and corrupted-key
   rejection.
 

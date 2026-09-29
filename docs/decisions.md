@@ -724,3 +724,23 @@ a scan line sweeping down the screen, was dropped.) The title's tagline
 is "INTO THE GRID".
 **Why:** starting should feel like being loaded into the Grid; the pixel
 pop-in reuses the derez, so it needs no new asset.
+
+### D111 — 2026-09-29 — Saving and loading
+**Save** in the pause menu writes the key into the URL hash
+(`history.replaceState`) and localStorage (`neonmancer.save`), and the
+pause menu shows it from then on; **Copy key** and **Copy link** copy it
+(or a link to the page with it as the hash) and ask for a save first.
+A valid key in the hash at start loads directly (the boot sequence into
+the saved room); an invalid one opens the title with a message. The title
+has **Continue** (only with a save stored: the last save in this browser)
+and **Enter key** (a text field; a refused key says why). A loaded key
+goes into the hash but not into localStorage: only Save stores. A load
+starts over in the saved room, reset, with the key's pickups, access
+level and backups, full integrity and energy, and an empty clipboard; a
+map cell with no room any more loads in the start room (D106). A hash
+changed by hand (a pasted link on the same page) reloads the page. The
+Grid-rebooted flag is not saved: after a load the core may play the
+reboot again.
+**Why:** Continue saves pasting a key in the same browser, while the key
+and the link still carry a save anywhere else. Storing only on Save keeps
+"nothing saves on its own" (D105).

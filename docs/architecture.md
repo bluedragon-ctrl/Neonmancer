@@ -62,6 +62,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `world/pickup-report.js` | The world map tool's pickup report: every permanent item by save bit, the rooms it lies in, refills per type, unknown types (pure, tested) |
 | `world/progress.js` | What the wizard has for the whole game (D71): save bits in blocks (`SAVE_BLOCKS`, `saveBit()`, `pickupBit()`), `Progress` (bits found, known spells, a block's count); blocks: spells, buffs, upgrades, fragments, secrets (D100) (pure, tested) |
 | `world/room.js` | Runtime room built fresh from data on every entry (type defaults + overrides; static block cells by type; cells of block types with a kind become room objects) |
+| `world/save-game.js` | Saving and loading (D111): `saveGame()` writes a Game as an access key, `readSave()` reads one into `Game.reset()` options (pure, tested) |
 | `world/save-key.js` | Access keys (D106): `encodeKey()` writes what the wizard has (the room's map cell, access level, pickup bits, backups) as 44 scrambled hex digits with a CRC-16; `decodeKey()` reads a typed or pasted key and names why it refuses one (pure, tested) |
 | `world/score.js` | The score (D100): points from the save bits (`scoreOf()`), the permanent pickups placed in the world (`placedBits()`) and the share found (`completion()`) (pure, tested) |
 | `physics/collision.js` | Axis-separated AABB movement against the grid; surface below a body; box helpers (`restsOn()`, `touchesBox()`, `shoveClear()`) shared by all entities |
@@ -152,6 +153,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `ui/fullscreen.js` | Fullscreen toggle and when to suggest it (below 1080 physical pixels; tested) |
 | `ui/menus.js` | Title screen and pause menu logic (D109): the stack of menus, selection, what an item does (pure, tested) |
 | `ui/menu-screen.js` | Title screen and pause menu on screen: logo (and its scramble after Start), heading, items with setting values, controls table; mouse hover, click and ◄ ► |
+| `ui/saves.js` | Access keys in the browser (D105): the URL hash, localStorage (the last save, for Continue), the clipboard with a fallback |
 | `ui/settings.js` | Player settings (D109): volumes and visual stubs, steps, localStorage (pure, tested) |
 | `ui/boot-screen.js` | The room compiling after Start (D110): a canvas covering the room, cleared tile by tile along its grid, outlines flashing |
 | `ui/hud.js` | DOM overlay: integrity bar, backup pips, energy bar, spell tag and Cut & Paste clipboard slot, score, fragments and the boot key, room banner, terminal messages, end screen, fullscreen hint |

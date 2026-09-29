@@ -1572,7 +1572,7 @@ Saves, guardians and tooling, in two parts (D105), planned step by step.
 
 **Phase 4a — saves and UI:** access-key codec with tests (done, D106);
 title screen and pause menu (done, D109); saving and loading
-(URL hash, localStorage); map screen.
+(done, D111); map screen.
 
 **Phase 4b — spells, bosses, tooling:** the roster's new spells, one
 step each (D88, D89): Pull, Compile, Scan (needs hidden blocks, fake
@@ -1680,14 +1680,16 @@ Open so far:
 view), D109. The game opens on the title screen: the logo over the start
 room's empty shape (`RoomScene.showShape()`: floor grid and back walls in
 its biome's look, no blocks, holes, exits, objects or wizard), dimmed
-well down, with **Start**, **Options** and
-**Controls**. Esc or P in the game, or the window losing focus, opens the
-pause menu: **Resume**, **Save**, **Options**, **Controls**, **Quit to
-title**. Save is a stub for now: it says saving comes in the next update.
-Quitting asks first (*Keep playing* is selected), then starts a new game
-behind the title (the empty shape again); nothing is saved yet (D105). Menus stack: Options (and
-its Visuals), Controls and the quit question open over the menu, and Esc
-or P closes the top one (the pause menu itself: back to the game).
+well down, with **Continue** (only with a save stored), **Start**,
+**Enter key**, **Options** and **Controls**. Esc or P in the game, or the
+window losing focus, opens the pause menu: **Resume**, **Save**, **Copy
+key**, **Copy link**, **Options**, **Controls**, **Quit to title** (see
+Saving and loading). Quitting asks first (*Keep playing* is selected),
+then starts a new game behind the title (the empty shape again); what was
+found since the last save is lost (D105). Menus stack: Options (and its
+Visuals), Controls, Enter key and the quit question open over the menu,
+and Esc or P closes the top one (the pause menu itself: back to the
+game).
 
 **Options** (`src/ui/settings.js`, stubs): **Music** and **Sound** volume
 as a bar of ten cells (0–10, default 7), and **Visuals**: **Quality**
@@ -1709,9 +1711,41 @@ the rest.
 The tick that closes a menu does not run the game, so Enter or Space
 there never jumps. Behind a menu the game, its animations and the
 terminal stand still. Dev links from the world map tool (`?room`,
-`?edit`) start in the game, without the boot sequence. Coming with
-saving: Enter key on the title, a working Save, Copy key and Copy link in
-the pause menu.
+`?edit`) start in the game, without the boot sequence (and ignore a key
+in the hash).
+
+## Saving and loading
+
+D105, D106, D111. `src/world/save-game.js` turns a Game into an access key and
+a key into `Game.reset()` options (tested); `src/ui/saves.js` keeps keys
+in the browser; `src/main.js` wires them to the menus.
+
+- **Save** (pause menu) writes the key of the game as it is: his room's
+  map cell, access level, the permanent pickups found and the backups
+  left (D106). It goes into the URL hash
+  (`history.replaceState`: no reload, no history entry) and localStorage
+  (`neonmancer.save`, apart from the settings). The notice says to
+  bookmark the page or copy the key, and the pause menu shows the key
+  from then on, selectable by hand.
+- **Copy key** and **Copy link** copy that key, or the page's address
+  with it as the hash; before a save they say to save first. Where the
+  browser refuses the Clipboard API an old copy command is tried; if that
+  fails too, the notice says to select the key by hand.
+- **A link with a key** (`…/#E907D4-41B4A7-…`) loads it at start, straight
+  into the boot sequence in the saved room; an invalid one opens the
+  title with a message. A hash changed by hand while the page is open
+  reloads it.
+- **Continue** (title, only with a save stored in this browser) loads the
+  last save; **Enter key** opens a text field (typing or pasting; the
+  game's keys leave it alone; Enter loads, Esc goes back). A refused key
+  says why (`key.error.*` in `strings.json`: empty, length, character,
+  checksum, version).
+- **A load** starts the game over in the saved room, reset, with the
+  key's pickups, access level and backups, full integrity and energy and
+  an empty clipboard; the terminal greets him back. The key goes into the
+  hash, not into localStorage: only Save stores. A key whose map cell has
+  no room any more (moved or deleted) loads in the start room. The
+  Grid-rebooted flag is not saved, so the core may play the reboot again.
 
 ## Access keys
 
