@@ -588,7 +588,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: calc(34 * var(--u));
-  background: rgba(3, 4, 10, 0.72);
+  background: rgba(3, 4, 10, 0.85);
   font-family: var(--arcade);
   font-weight: 700;
   text-align: center;
@@ -598,7 +598,7 @@ body {
 }
 
 .menu.title {
-  background: radial-gradient(ellipse at center, rgba(3, 4, 10, 0.5), rgba(3, 4, 10, 0.9) 75%);
+  background: radial-gradient(ellipse at center, rgba(3, 4, 10, 0.75), rgba(3, 4, 10, 0.95) 75%);
 }
 
 .menu[hidden],
@@ -707,6 +707,57 @@ body {
   box-shadow:
     0 0 calc(12 * var(--u)) var(--cyan),
     inset 0 0 calc(10 * var(--u)) rgba(0, 240, 255, 0.35);
+}
+
+/* A setting: its label left, its value right between ◄ and ►. */
+.menu-items li.setting {
+  display: flex;
+  justify-content: space-between;
+  gap: calc(40 * var(--u));
+  width: calc(640 * var(--u));
+  box-sizing: border-box;
+}
+
+.menu-value {
+  display: flex;
+  align-items: center;
+  gap: calc(14 * var(--u));
+  font-family: var(--terminal);
+  font-weight: normal;
+  letter-spacing: 0.08em;
+  color: var(--lime);
+  text-shadow: 0 0 calc(8 * var(--u)) currentColor;
+}
+
+.menu-items li:not(.selected) .menu-value {
+  opacity: 0.55;
+}
+
+.menu-value b {
+  font-weight: normal;
+  font-size: 0.7em;
+  color: var(--cyan);
+  visibility: hidden;
+}
+
+.menu-items li.selected .menu-value b {
+  visibility: visible;
+}
+
+.menu-value-text {
+  min-width: calc(200 * var(--u));
+  text-align: center;
+}
+
+/* A short line under the items, e.g. that saving is still to come. */
+.menu-notice {
+  min-height: 1.2em;
+  margin-top: calc(-18 * var(--u));
+  font-family: var(--terminal);
+  font-weight: normal;
+  font-size: calc(22 * var(--u));
+  color: var(--lime);
+  text-shadow: 0 0 calc(8 * var(--u)) currentColor;
 }
 
 .menu-help {

@@ -21,6 +21,7 @@ import { toggleFullscreen, wantsFullscreenHint } from './ui/fullscreen.js';
 import { Hud } from './ui/hud.js';
 import { MenuScreen } from './ui/menu-screen.js';
 import { MenuFlow } from './ui/menus.js';
+import { Settings } from './ui/settings.js';
 
 const app = document.getElementById('app');
 
@@ -72,9 +73,12 @@ function boot() {
   if (DEV_SERVER && params.has('edit')) editor.open();
 
   // The title screen first; the world map tool's links go straight in.
-  const flow = new MenuFlow(devRoom || (DEV_SERVER && params.has('edit')) ? 'playing' : 'title');
-  /** A menu command (ui/menus.js): a new game from the title, or back to it. */
+  // Volumes and visual settings: stubs, stored but not applied yet (D109).
+  const settings = Settings.load();
+  const flow = new MenuFlow(devRoom || (DEV_SERVER && params.has('edit')) ? 'playing' : 'title', settings);
+  /** A menu command (ui/menus.js): a new game from the title, or back to it, or a setting changed. */
   function run(command) {
+    if (command === 'settings') settings.save();
     if (command === 'start') newGame();
     // The title shows the start room behind it again.
     if (command === 'quit') newGame({ quiet: true });
@@ -84,6 +88,10 @@ function boot() {
     onClick: (index) => {
       flow.select(index);
       run(flow.choose());
+    },
+    onStep: (index, step) => {
+      flow.select(index);
+      run(flow.adjust(step));
     },
   });
   /**
