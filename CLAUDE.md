@@ -323,7 +323,7 @@ The engine is generic; all content lives in data.
   objects, enemies, pickups, a backup shrine tile; only overrides of type defaults;
   `"authored": true` marks the author's real game rooms (D90, §10)
 - `data/world.json` — room connections, room positions on the world map,
-  start room, the fragments the core needs and the access thresholds
+  room numbers for the access key (never reused, D111), start room, the fragments the core needs and the access thresholds
   (D101); fragments lie in the rooms' pickups, the core is a room object
 - `data/strings.json` — all UI text
 - `data/audio.json` — named audio events mapped to files
@@ -367,7 +367,8 @@ not critical.
   a friendly message and starts normally.
 - UI: "Save", "Copy key" and "Copy link" in the pause menu; hint to
   bookmark after saving; "Enter key" on the title screen.
-- A save also goes to localStorage (wrapped in try/catch).
+- A save also goes to localStorage (wrapped in try/catch); the title's
+  "Continue" loads it (D111). Loading a key never stores it: only Save does.
 - Automated tests for encode/decode round-trips and corrupted-key
   rejection.
 

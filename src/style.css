@@ -655,6 +655,38 @@ body {
   color: #dfe6ff;
 }
 
+/* An access key (D106): the pause menu shows the last save's, to select
+   and copy by hand; Enter key has a field to type or paste one in. */
+.menu-key,
+.menu-key-field {
+  display: block;
+  margin: calc(12 * var(--u)) auto 0;
+  font-family: var(--terminal);
+  font-size: calc(26 * var(--u));
+  letter-spacing: 0.08em;
+  color: var(--lime);
+  text-shadow: 0 0 calc(8 * var(--u)) currentColor;
+  user-select: text;
+}
+
+.menu-key-field {
+  width: calc(900 * var(--u));
+  box-sizing: border-box;
+  padding: calc(10 * var(--u)) calc(16 * var(--u));
+  text-align: center;
+  text-transform: uppercase;
+  background: rgba(3, 4, 10, 0.9);
+  border: calc(2 * var(--u)) solid var(--cyan);
+  box-shadow: 0 0 calc(12 * var(--u)) rgba(0, 240, 255, 0.5);
+  outline: none;
+  caret-color: var(--magenta);
+}
+
+.menu-key-field::placeholder {
+  color: rgba(0, 240, 255, 0.35);
+  text-shadow: none;
+}
+
 /* Controls: action names right-aligned against their keys. */
 .menu-controls {
   display: grid;
@@ -749,7 +781,7 @@ body {
   text-align: center;
 }
 
-/* A short line under the items, e.g. that saving is still to come. */
+/* A short line under the items, e.g. a save done or a key refused. */
 .menu-notice {
   min-height: 1.2em;
   margin-top: calc(-18 * var(--u));

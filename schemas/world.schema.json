@@ -4,7 +4,7 @@
   "title": "World (data/world.json)",
   "description": "How rooms connect, where they sit on the world map, and the key fragments (D101). The core is an object in a room (defs.json kind \"core\"); where fragments lie is the rooms' pickups.",
   "type": "object",
-  "required": ["schemaVersion", "start", "connections", "positions"],
+  "required": ["schemaVersion", "start", "connections", "positions", "numbers"],
   "additionalProperties": false,
   "properties": {
     "$schema": { "type": "string" },
@@ -34,6 +34,12 @@
           "maxItems": 15
         }
       }
+    },
+    "numbers": {
+      "description": "Every room's number (D111), by room id: the access key names the saved room by it. A number stays with its room for good: a deleted room's entry stays, so no later room takes its number. The editors give new rooms the next number.",
+      "type": "object",
+      "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
+      "additionalProperties": { "type": "integer", "minimum": 0, "maximum": 255 }
     },
     "positions": {
       "description": "Every room's cell on the world map (D66) as [x, z], by room id: +x is east, +z is south, as in a room. One room per cell; neighbours on the map need not be connected.",

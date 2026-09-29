@@ -218,6 +218,18 @@ test('world: every room has its own cell on the map (D66)', () => {
   assertError(errorsAfter((f) => delete f['world.json'].positions), 'world.json', 'positions');
 });
 
+test('world: every room has its own number for the access key; a deleted room keeps its entry (D111)', () => {
+  assertError(errorsAfter((f) => delete f['world.json'].numbers.beta), 'world.json › numbers', 'room "beta" has no number');
+  assertError(errorsAfter((f) => (f['world.json'].numbers.beta = 0)), 'world.json › numbers.beta', 'number 0 is taken by "alpha"');
+  assertError(errorsAfter((f) => (f['world.json'].numbers.beta = 256)), 'world.json › numbers.beta');
+  assertError(errorsAfter((f) => delete f['world.json'].numbers), 'world.json', 'numbers');
+  assert.deepEqual(
+    errorsAfter((f) => (f['world.json'].numbers.gone = 7)),
+    [],
+    'a deleted room keeps its number',
+  );
+});
+
 test('a wrong schemaVersion is reported', () => {
   const files = validFiles();
   files['defs.json'].schemaVersion = 2;

@@ -78,6 +78,7 @@ export class Game {
    * @param {object} [options]
    * @param {string} [options.start] room to start in; world.json's start by default
    * @param {Progress} [options.progress] what he has found (a loaded save); nothing by default
+   * @param {number} [options.integrity] his integrity (a loaded save); full by default
    */
   constructor(content, options) {
     this.content = content;
@@ -93,12 +94,14 @@ export class Game {
   /**
    * Start the game over: a new wizard with what `progress` holds, in the
    * room `start`, reset. Quitting to the title does this (a new game), and
-   * so will loading a save. Views keep this Game, so it changes in place.
+   * so does loading a save (world/save-game.js). Views keep this Game, so
+   * it changes in place.
    * @param {object} [options] as for the constructor
    * @param {string} [options.start]
    * @param {Progress} [options.progress]
+   * @param {number} [options.integrity]
    */
-  reset({ start = this.content.world.start, progress = new Progress() } = {}) {
+  reset({ start = this.content.world.start, progress = new Progress(), integrity = Infinity } = {}) {
     /** Permanent pickups found, for the whole game (D71): room resets and death leave it alone. */
     this.progress = progress;
     // enterRoom() builds a different room even when it has the same id.
@@ -119,9 +122,9 @@ export class Game {
     this.won = false;
     this.learnSpells();
     this.applyUpgrades();
-    // A loaded save starts him buffed and full.
+    // A loaded save starts him buffed, with its integrity and full energy.
     this.applyBuffs();
-    this.player.integrity = this.player.maxIntegrity;
+    this.player.integrity = Math.max(1, Math.min(integrity, this.player.maxIntegrity));
     this.player.energy = this.player.maxEnergy;
     this.enterRoom(start, undefined, null);
     /**

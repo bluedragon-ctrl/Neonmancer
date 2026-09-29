@@ -1,6 +1,6 @@
 // Entry point: load and validate the game data, show the title screen over
-// the start room, run the loop. Any startup problem shows the error screen
-// instead.
+// the start room (or load the access key in the URL hash), run the loop.
+// Any startup problem shows the error screen instead.
 import { DT, FixedLoop } from './core/loop.js';
 import { Input } from './core/input.js';
 import { say } from './core/messages.js';
@@ -23,7 +23,9 @@ import { BootScreen } from './ui/boot-screen.js';
 import { Hud } from './ui/hud.js';
 import { MenuScreen } from './ui/menu-screen.js';
 import { MenuFlow } from './ui/menus.js';
+import { copyText, hashKey, keyLink, storeKey, storedKey, writeHash } from './ui/saves.js';
 import { Settings } from './ui/settings.js';
+import { readSave, saveGame } from './world/save-game.js';
 
 const app = document.getElementById('app');
 
@@ -74,16 +76,57 @@ function boot() {
   const editor = new Editor({ game, renderer, files: DATA_FILES, canSave: DEV_SERVER, onRoom: (options) => showRoom({ rebuild: true, ...options }) });
   if (DEV_SERVER && params.has('edit')) editor.open();
 
-  // The title screen first; the world map tool's links go straight in.
+  // The title screen first; the world map tool's links go straight in,
+  // and so does a link with an access key (#KEY, D105).
   // Volumes and visual settings: stubs, stored but not applied yet (D109).
   const settings = Settings.load();
-  const flow = new MenuFlow(devRoom || (DEV_SERVER && params.has('edit')) ? 'playing' : 'title', settings);
-  /** A menu command (ui/menus.js): a new game from the title, or back to it, or a setting changed. */
+  const devLink = Boolean(devRoom || (DEV_SERVER && params.has('edit')));
+  const linked = devLink ? null : hashKey(location.hash);
+  const linkedSave = linked && readSave(content, linked);
+  const flow = new MenuFlow(devLink || linkedSave?.ok ? 'playing' : 'title', settings);
+  flow.canContinue = readSave(content, storedKey() ?? '').ok;
+  if (linkedSave && !linkedSave.ok) flow.notice = 'key.error.link';
+  // A key pasted into the address bar of this page changes only the hash: load it afresh.
+  window.addEventListener('hashchange', () => location.reload());
+
+  /** A menu command (ui/menus.js): a new game, a save, a load, a copy, back to the title, or a setting changed. */
   function run(command) {
     if (command === 'settings') settings.save();
     if (command === 'start') newGame();
     // The title shows the start room behind it again.
     if (command === 'quit') newGame({ quiet: true });
+    if (command === 'save') {
+      const key = saveGame(game);
+      writeHash(key);
+      storeKey(key);
+      flow.saved(key);
+    }
+    if (command === 'continue') load(storedKey() ?? '');
+    if (command === 'loadKey') load(menuScreen.keyText());
+    if (command === 'copyKey' || command === 'copyLink') {
+      const link = command === 'copyLink';
+      copyText(link ? keyLink(flow.key) : flow.key).then((copied) => {
+        flow.notice = copied ? (link ? 'menu.copiedLink' : 'menu.copiedKey') : 'menu.copyFailed';
+      });
+    }
+  }
+
+  /**
+   * Load an access key (D105): the game starts over in the saved room,
+   * reset, with what the key holds, and the boot sequence plays. The key
+   * goes into the URL hash, so the page's address is this save's link.
+   * A refused key says why under the menu.
+   * @param {string} text
+   */
+  function load(text) {
+    const save = readSave(content, text);
+    if (!save.ok) {
+      flow.refused(save.error);
+      return;
+    }
+    writeHash(save.key);
+    flow.loaded(save.key);
+    newGame({ load: save.options });
   }
   const menuScreen = new MenuScreen(renderer.stage, content.strings, {
     onHover: (index) => flow.select(index),
@@ -95,19 +138,29 @@ function boot() {
       flow.select(index);
       run(flow.adjust(step));
     },
+    onSubmit: () => {
+      if (flow.top?.id === 'enterKey') run('loadKey');
+    },
+    onBack: () => flow.back(),
   });
   const bootScreen = new BootScreen(renderer.stage, renderer.camera);
   /** Seconds into the boot sequence after Start (D110), or null when none runs. */
   let boot = null;
 
+  /** Was the game running loaded from a key (a different greeting)? */
+  let restored = false;
+
   /**
-   * Start over in the start room with nothing found (nothing is saved yet,
-   * D105). Unless `quiet` (behind the title), the boot sequence plays: the
-   * room compiles and the wizard pops in (D110).
+   * Start over: in the start room with nothing found, or from a loaded
+   * save (`load`: Game.reset() options from readSave()). Unless `quiet`
+   * (behind the title), the boot sequence plays: the room compiles and
+   * the wizard pops in (D110).
+   * @param {{ quiet?: boolean, load?: object }} [options]
    */
-  function newGame({ quiet = false } = {}) {
+  function newGame({ quiet = false, load } = {}) {
     hud.clear();
-    game.reset({ start: devRoom });
+    game.reset(load ?? { start: devRoom });
+    restored = Boolean(load);
     // The room's banner waits until he is in (finishBoot()).
     hud.clear();
     if (quiet) {
@@ -127,7 +180,7 @@ function boot() {
     bootScreen.stop();
     game.announceRoom();
     say('msg.boot');
-    say('msg.welcome');
+    say(restored ? 'msg.restored' : 'msg.welcome');
   }
   /** Behind the title only the start room's empty shape, without him: the room loads after Start. */
   function showTitleShape() {
@@ -135,7 +188,11 @@ function boot() {
     debug.setRoom(game.room, [], []);
     playerView.group.visible = false;
   }
-  if (flow.playing) {
+  if (linkedSave?.ok) {
+    writeHash(linkedSave.key);
+    flow.loaded(linkedSave.key);
+    newGame({ load: linkedSave.options });
+  } else if (flow.playing) {
     say('msg.boot');
     say('msg.welcome');
   } else showTitleShape();

@@ -1572,7 +1572,7 @@ Saves, guardians and tooling, in two parts (D105), planned step by step.
 
 **Phase 4a — saves and UI:** access-key codec with tests (done, D106);
 title screen and pause menu (done, D109); saving and loading
-(URL hash, localStorage); map screen.
+(done, D111); map screen.
 
 **Phase 4b — spells, bosses, tooling:** the roster's new spells, one
 step each (D88, D89): Pull, Compile, Scan (needs hidden blocks, fake
@@ -1590,11 +1590,10 @@ Settled:
   while that pickup's bit is found, the Warden is left out of its room
   and counts as defeated. Data checks refuse a Warden without such a drop,
   and a drop that is a refill. Shrines stay out of boss rooms.
+- Room numbers for the key's room field (D111): `world.json` `numbers`,
+  never reused after a room is deleted (see Saving and loading).
 
 Open so far:
-- Rooms need stable numbers for the key's room field (8 bits): a table
-  in `world.json` whose numbers are never reused after a room is deleted.
-  Settled with the saving step.
 - Wardens: size (a body wider than one cell needs multi-cell collision and
   claims), phases or attack patterns, a boss integrity bar, weak points,
   how many.
@@ -1679,14 +1678,16 @@ Open so far:
 view), D109. The game opens on the title screen: the logo over the start
 room's empty shape (`RoomScene.showShape()`: floor grid and back walls in
 its biome's look, no blocks, holes, exits, objects or wizard), dimmed
-well down, with **Start**, **Options** and
-**Controls**. Esc or P in the game, or the window losing focus, opens the
-pause menu: **Resume**, **Save**, **Options**, **Controls**, **Quit to
-title**. Save is a stub for now: it says saving comes in the next update.
-Quitting asks first (*Keep playing* is selected), then starts a new game
-behind the title (the empty shape again); nothing is saved yet (D105). Menus stack: Options (and
-its Visuals), Controls and the quit question open over the menu, and Esc
-or P closes the top one (the pause menu itself: back to the game).
+well down, with **Continue** (only with a save stored), **Start**,
+**Enter key**, **Options** and **Controls**. Esc or P in the game, or the
+window losing focus, opens the pause menu: **Resume**, **Save**, **Copy
+key**, **Copy link**, **Options**, **Controls**, **Quit to title** (see
+Saving and loading). Quitting asks first (*Keep playing* is selected),
+then starts a new game behind the title (the empty shape again); what was
+found since the last save is lost (D105). Menus stack: Options (and its
+Visuals), Controls, Enter key and the quit question open over the menu,
+and Esc or P closes the top one (the pause menu itself: back to the
+game).
 
 **Options** (`src/ui/settings.js`, stubs): **Music** and **Sound** volume
 as a bar of ten cells (0–10, default 7), and **Visuals**: **Quality**
@@ -1708,9 +1709,47 @@ the rest.
 The tick that closes a menu does not run the game, so Enter or Space
 there never jumps. Behind a menu the game, its animations and the
 terminal stand still. Dev links from the world map tool (`?room`,
-`?edit`) start in the game, without the boot sequence. Coming with
-saving: Enter key on the title, a working Save, Copy key and Copy link in
-the pause menu.
+`?edit`) start in the game, without the boot sequence (and ignore a key
+in the hash).
+
+## Saving and loading
+
+D105, D111. `src/world/save-game.js` turns a Game into an access key and
+a key into `Game.reset()` options (tested); `src/ui/saves.js` keeps keys
+in the browser; `src/main.js` wires them to the menus.
+
+- **Save** (pause menu) writes the key of the game as it is: his room's
+  number, access level, the permanent pickups found and his integrity (a
+  derezzing wizard saves with 1). It goes into the URL hash
+  (`history.replaceState`: no reload, no history entry) and localStorage
+  (`neonmancer.save`, apart from the settings). The notice says to
+  bookmark the page or copy the key, and the pause menu shows the key
+  from then on, selectable by hand.
+- **Copy key** and **Copy link** copy that key, or the page's address
+  with it as the hash; before a save they say to save first. Where the
+  browser refuses the Clipboard API an old copy command is tried; if that
+  fails too, the notice says to select the key by hand.
+- **A link with a key** (`…/#E907D4-41B4A7-…`) loads it at start, straight
+  into the boot sequence in the saved room; an invalid one opens the
+  title with a message. A hash changed by hand while the page is open
+  reloads it.
+- **Continue** (title, only with a save stored in this browser) loads the
+  last save; **Enter key** opens a text field (typing or pasting; the
+  game's keys leave it alone; Enter loads, Esc goes back). A refused key
+  says why (`key.error.*` in `strings.json`: empty, length, character,
+  checksum, version).
+- **A load** starts the game over in the saved room, reset, with the
+  key's pickups, access level and integrity (at most his maximum), full
+  energy, full backups and an empty clipboard; the terminal greets him
+  back. The key goes into the hash, not into localStorage: only Save
+  stores. A key naming a room that is gone loads in the start room. The
+  Grid-rebooted flag is not saved, so the core may play the reboot again.
+- **Room numbers**: `world.json` `numbers` (room id → 0–255). A deleted
+  room's entry stays, so its number is never given again. The room editor
+  and the world map tool give a new room the next number after the
+  highest ever given; the dev server's save keeps the numbers on disk and
+  numbers any room without one. Data checks want a number for every room,
+  none taken twice.
 
 ## Access keys
 
@@ -1745,7 +1784,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 | `data/rooms/<id>.json` | One room (id = file name) |
 | `data/defs.json` | `objects`: object types and their defaults (crates, platforms, switches, the core); `enemies`: enemy templates, each complete or `extend`ing another (D58, D79); `spells`: tuning and color per spell; `pickups`: disks, buff chips, upgrade cards, fragments, secrets and refills; `blocks`: block types (D60); `score`: points per kind of pickup (D100). Each is described in its section above. |
 | `data/biomes.json` | Biome name and room color, optional `look` for the surroundings (see Biomes) |
-| `data/world.json` | Start room, exit connections, every room's cell on the world map (`positions`, D66) and the key fragments (`fragments`: how many the core needs, the access thresholds, D101) |
+| `data/world.json` | Start room, exit connections, every room's cell on the world map (`positions`, D66), every room's number for the access key (`numbers`, D111) and the key fragments (`fragments`: how many the core needs, the access thresholds, D101) |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |
 
 Example room:

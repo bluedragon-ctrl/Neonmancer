@@ -718,3 +718,30 @@ a scan line sweeping down the screen, was dropped.) The title's tagline
 is "INTO THE GRID".
 **Why:** starting should feel like being loaded into the Grid; the pixel
 pop-in reuses the derez, so it needs no new asset.
+
+### D111 — 2026-09-29 — Saving and loading
+Room numbers: `world.json` `numbers` gives every room a number (0–255)
+for the key's room field. A number stays with its room id for good: when
+a room is deleted its entry stays, so no later room takes its number, and
+an old key naming it loads in the start room. The editors give a new room
+the next number after the highest ever given; the dev server's save keeps
+the numbers on disk and numbers any room still without one.
+Saving: **Save** in the pause menu writes the key into the URL hash
+(`history.replaceState`) and localStorage (`neonmancer.save`), and the
+pause menu shows it from then on; **Copy key** and **Copy link** copy it
+(or a link to the page with it as the hash) and ask for a save first.
+Loading: a valid key in the hash at start loads directly (the boot
+sequence into the saved room); an invalid one opens the title with a
+message. The title has **Continue** (only with a save stored: the last
+save in this browser) and **Enter key** (a text field; a refused key says
+why). A loaded key goes into the hash but not into localStorage: only
+Save stores. The game starts over in the saved room, reset, with the
+key's pickups, access level and integrity (at most his maximum; a
+derezzing wizard saves with 1), full energy and backups, an empty
+clipboard. A hash changed by hand (a pasted link on the same page)
+reloads the page. The Grid-rebooted flag is not saved: after a load the
+core may play the reboot again.
+**Why:** the key's room field needs numbers that never move when rooms are
+added or deleted; Continue saves pasting a key in the same browser, while
+the key and the link still carry a save anywhere else. Storing only on
+Save keeps "nothing saves on its own" (D105).

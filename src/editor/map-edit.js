@@ -10,6 +10,7 @@
 import { OPPOSITE_SIDE, sideLength, withExitDefaults } from '../data/room-data.js';
 import { validateData } from '../data/validate.js';
 import { mapKey, nearestFreeCell } from '../world/map.js';
+import { numberRooms } from '../world/room-numbers.js';
 import { SIDE_NAMES, exitFields, exitsOverlap, newRoom, roomFileData, roomIdProblem } from './room-edit.js';
 
 /** Undo steps kept. */
@@ -76,6 +77,8 @@ export class MapEdit {
     for (const id of this.rooms.keys()) {
       if (!this.positions[id]) this.positions[id] = nearestFreeCell(this.positions, this.positions[this.world.start] ?? [0, 0]);
     }
+    // And a room number (D111).
+    this.world.numbers = numberRooms(this.world.numbers, this.rooms.keys());
   }
 
   /** @returns {Record<string, number[]>} room id → [x, z] */
@@ -116,7 +119,7 @@ export class MapEdit {
    * What changed since the last save, as the dev server takes it
    * (tools/room-save.js): whole room files of new and changed rooms, the
    * ids of removed ones, the cells of moved and new rooms, and world.json
-   * when its connections or start changed.
+   * when its connections, start or room numbers changed.
    * @returns {{ rooms: object[], remove: string[], positions: Record<string, number[]>, world?: object,
    *   counts: { moved: number, added: number, removed: number, changed: number, links: boolean } }}
    */
@@ -127,13 +130,14 @@ export class MapEdit {
     const remove = [...saved.rooms.keys()].filter((id) => !this.rooms.has(id));
     const placed = [...this.rooms.keys()].filter((id) => mapKey(this.positions[id]) !== mapKey(saved.world.positions?.[id] ?? [NaN, NaN]));
     const links = JSON.stringify(this.connections) !== JSON.stringify(saved.world.connections) || this.world.start !== saved.world.start;
+    const numbered = JSON.stringify(this.world.numbers) !== JSON.stringify(saved.world.numbers);
     const out = {
       rooms: [...added, ...changed].map((id) => structuredClone(this.rooms.get(id))),
       remove,
       positions: Object.fromEntries(placed.map((id) => [id, [...this.positions[id]]])),
       counts: { moved: placed.filter((id) => !added.includes(id)).length, added: added.length, removed: remove.length, changed: changed.length, links },
     };
-    if (links || remove.length > 0) out.world = structuredClone(this.world);
+    if (links || numbered || remove.length > 0) out.world = structuredClone(this.world);
     return out;
   }
 
@@ -208,6 +212,7 @@ export class MapEdit {
       for (const id of this.rooms.keys()) {
         if (!this.positions[id]) this.positions[id] = nearestFreeCell(this.positions, this.positions[this.world.start] ?? [0, 0]);
       }
+      this.world.numbers = numberRooms(this.world.numbers, this.rooms.keys());
       return JSON.stringify([this.world, [...this.rooms]]) !== before;
     });
   }
@@ -250,6 +255,7 @@ export class MapEdit {
     this.edit(() => {
       this.rooms.set(id, newRoom(id, biome));
       this.positions[id] = [...cell];
+      this.world.numbers = numberRooms(this.world.numbers, [id]);
       return true;
     });
     return null;
@@ -257,7 +263,7 @@ export class MapEdit {
 
   /**
    * Remove a room: its file (on save), its map cell, its connections and
-   * the exits of other rooms that led into it.
+   * the exits of other rooms that led into it. Its number stays taken (D111).
    * @returns {string|null} why it can't be removed, or null when it was
    */
   removeRoom(id) {

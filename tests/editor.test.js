@@ -282,7 +282,9 @@ test('saveEdits writes valid rooms and world.json together, and refuses invalid 
     assert.deepEqual(saved, { ok: true, errors: [], files: ['data/rooms/boot_sector.json', 'data/rooms/annex.json', 'data/world.json'] });
     assert.equal(readFileSync(file, 'utf8'), formatJson(exitFree));
     assert.equal(readFileSync(join(root, 'data/rooms/annex.json'), 'utf8'), formatJson(annex));
-    assert.equal(readFileSync(join(root, 'data/world.json'), 'utf8'), formatJson(world));
+    // The new room got the next number (D111).
+    const next = Math.max(...Object.values(world.numbers)) + 1;
+    assert.equal(readFileSync(join(root, 'data/world.json'), 'utf8'), formatJson({ ...world, numbers: { ...world.numbers, annex: next } }));
 
     // A template in defs.json and an enemy of it, saved together.
     const defs = JSON.parse(readFileSync(join(root, 'data/defs.json'), 'utf8'));

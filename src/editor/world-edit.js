@@ -2,11 +2,13 @@
  * world.json while the room editor changes its connections (D57): exits are
  * connected and disconnected from the room they are in, and each room's
  * undo steps take that room's connections along. A new room gets a free
- * cell on the world map next to the room it was made from (D66). Plain
+ * cell on the world map next to the room it was made from (D66) and the
+ * next room number (D111). Plain
  * logic, no browser.
  */
 import { OPPOSITE_SIDE, withExitDefaults } from '../data/room-data.js';
 import { nearestFreeCell } from '../world/map.js';
+import { numberRooms } from '../world/room-numbers.js';
 import { formatJson } from './format-json.js';
 
 /** Is "room.exit" an exit of `roomId`? */
@@ -19,6 +21,8 @@ export class WorldEdit {
   /** @param {object} data world.json contents */
   constructor(data) {
     this.data = structuredClone(data);
+    /** Rooms given a number by place(), not saved yet: unplace() takes it back. */
+    this.numbered = new Set();
     /** Text as last saved (or loaded), to tell unsaved changes. */
     this.savedText = this.text();
   }
@@ -81,11 +85,17 @@ export class WorldEdit {
   place(id, near) {
     const positions = (this.data.positions ??= {});
     positions[id] = nearestFreeCell(positions, positions[near] ?? [0, 0]);
+    // Its number for the access key (D111); a deleted room's id keeps its old one.
+    if (!Object.hasOwn(this.data.numbers ?? {}, id)) {
+      this.data.numbers = numberRooms(this.data.numbers, [id]);
+      this.numbered.add(id);
+    }
   }
 
-  /** Take a room off the world map (a new room thrown away). */
+  /** Take a room off the world map (a new room thrown away), with the number it was given. */
   unplace(id) {
     delete this.data.positions?.[id];
+    if (this.numbered.delete(id)) delete this.data.numbers[id];
   }
 
   /** An exit got a new id: its connection follows. */

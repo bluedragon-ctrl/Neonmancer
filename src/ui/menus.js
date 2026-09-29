@@ -15,10 +15,12 @@ import { SETTINGS, Settings } from './settings.js';
  * The menus by id: their items, in order. An item is an id; its label is
  * the string `menu.<id>`, its effect in MenuFlow.choose(). An item named
  * after a setting (ui/settings.js) shows and adjusts that setting.
+ * Continue is only there when a save is stored (MenuFlow.items()).
  */
 export const MENUS = {
-  title: ['start', 'options', 'controls'],
-  pause: ['resume', 'save', 'options', 'controls', 'quit'],
+  title: ['continue', 'start', 'enterKey', 'options', 'controls'],
+  pause: ['resume', 'save', 'copyKey', 'copyLink', 'options', 'controls', 'quit'],
+  enterKey: ['loadKey', 'back'],
   options: ['music', 'sound', 'visuals', 'back'],
   visuals: ['quality', 'renderScale', 'effects', 'back'],
   controls: ['back'],
@@ -26,13 +28,16 @@ export const MENUS = {
 };
 
 /** Items that open another menu. */
-const SUBMENUS = ['options', 'visuals', 'controls', 'quit'];
+const SUBMENUS = ['options', 'visuals', 'controls', 'quit', 'enterKey'];
 
 /**
  * Something main.js does for a chosen item: start a new game from the
- * title, quit to the title (the game starts over, D105: nothing saves on
- * its own), or store the settings after a change.
- * @typedef {'start' | 'quit' | 'settings'} MenuCommand
+ * title, load the stored save (continue) or the key typed in (loadKey),
+ * save the game, copy the save's key or a link with it, quit to the title
+ * (the game starts over, D105: nothing saves on its own), or store the
+ * settings after a change. main.js answers a save or a load with saved(),
+ * loaded() or refused().
+ * @typedef {'start' | 'continue' | 'loadKey' | 'save' | 'copyKey' | 'copyLink' | 'quit' | 'settings'} MenuCommand
  */
 
 /** @param {string} item @returns {boolean} whether it is a setting */
@@ -49,8 +54,12 @@ export class MenuFlow {
     this.settings = settings;
     /** @type {{ id: string, selected: number }[]} menus open, the top one last; none while playing */
     this.stack = [];
-    /** A short line under the items (a string key), e.g. why Save does nothing yet; cleared by the next move. */
+    /** A short line under the items (a string key), e.g. a key refused; cleared by the next move. */
     this.notice = null;
+    /** The key of this game's last save or load (D105), for Copy key and Copy link; null before one. */
+    this.key = null;
+    /** Is a save stored (localStorage)? The title offers Continue then. */
+    this.canContinue = false;
     if (screen === 'title') this.open('title');
   }
 
@@ -72,7 +81,16 @@ export class MenuFlow {
   /** The selected item's id, or null while playing. */
   get item() {
     const menu = this.top;
-    return menu ? MENUS[menu.id][menu.selected] : null;
+    return menu ? this.items(menu.id)[menu.selected] : null;
+  }
+
+  /**
+   * A menu's items as shown: the title's Continue only with a save stored.
+   * @param {string} id a MENUS key
+   * @returns {string[]}
+   */
+  items(id) {
+    return id === 'title' && !this.canContinue ? MENUS.title.filter((item) => item !== 'continue') : MENUS[id];
   }
 
   /** @param {string} id a MENUS key */
@@ -100,7 +118,7 @@ export class MenuFlow {
   move(step) {
     const menu = this.top;
     if (!menu) return;
-    const count = MENUS[menu.id].length;
+    const count = this.items(menu.id).length;
     menu.selected = (menu.selected + step + count) % count;
     this.notice = null;
   }
@@ -108,7 +126,7 @@ export class MenuFlow {
   /** @param {number} index an item of the top menu (a mouse hover) */
   select(index) {
     const menu = this.top;
-    if (!menu || index < 0 || index >= MENUS[menu.id].length || index === menu.selected) return;
+    if (!menu || index < 0 || index >= this.items(menu.id).length || index === menu.selected) return;
     menu.selected = index;
     this.notice = null;
   }
@@ -141,22 +159,58 @@ export class MenuFlow {
     switch (item) {
       case 'start':
         this.stack = [];
+        this.key = null;
         return 'start';
       case 'resume':
         this.stack = [];
         return null;
+      // main.js answers these with loaded() or refused(), saved().
+      case 'continue':
+      case 'loadKey':
       case 'save':
-        // A stub until saving comes (D105): the item is there, it only says so.
-        this.notice = 'menu.saveSoon';
+        return item;
+      case 'copyKey':
+      case 'copyLink':
+        if (this.key) return item;
+        this.notice = 'menu.saveFirst';
         return null;
       case 'quitYes':
         this.stack = [];
+        this.key = null;
         this.open('title');
         return 'quit';
       default: // back, quitNo
         this.back();
         return null;
     }
+  }
+
+  /**
+   * The game was saved: its key, for copying; a stored save to continue.
+   * @param {string} key
+   */
+  saved(key) {
+    this.key = key;
+    this.canContinue = true;
+    this.notice = 'menu.saved';
+  }
+
+  /**
+   * A key was loaded: into the game, with its key for copying.
+   * @param {string} key
+   */
+  loaded(key) {
+    this.key = key;
+    this.stack = [];
+    this.notice = null;
+  }
+
+  /**
+   * A key was refused: why, under the items.
+   * @param {string} error save-key.js's reason (empty, length, character, checksum, version)
+   */
+  refused(error) {
+    this.notice = `key.error.${error}`;
   }
 
   /**

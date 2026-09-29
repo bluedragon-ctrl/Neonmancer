@@ -36,6 +36,7 @@ import {
 import { SWITCH_KINDS } from '../entities/switch.js';
 import { mapKey } from '../world/map.js';
 import { legAxis, pathCells } from '../world/path.js';
+import { MAX_ROOM_NUMBER } from '../world/room-numbers.js';
 
 /** Files every game needs (paths relative to data/). */
 export const REQUIRED_FILES = ['defs.json', 'biomes.json', 'world.json', 'strings.json'];
@@ -712,6 +713,19 @@ function validateWorld(world, rooms, report) {
   }
   for (const id of rooms.keys()) {
     if (!positions[id]) report(file, 'positions', `room "${id}" has no position on the map`);
+  }
+
+  // A number per room for the access key (D111); a deleted room's entry stays.
+  const numbers = world.numbers ?? {};
+  /** number → room id */
+  const owners = new Map();
+  for (const [id, number] of Object.entries(numbers)) {
+    if (!Number.isInteger(number) || number < 0 || number > MAX_ROOM_NUMBER) report(file, `numbers.${id}`, `${number} is not a room number (0–${MAX_ROOM_NUMBER})`);
+    else if (owners.has(number)) report(file, `numbers.${id}`, `number ${number} is taken by "${owners.get(number)}"`);
+    else owners.set(number, id);
+  }
+  for (const id of rooms.keys()) {
+    if (!Object.hasOwn(numbers, id)) report(file, 'numbers', `room "${id}" has no number`);
   }
 }
 

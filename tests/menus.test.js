@@ -30,10 +30,11 @@ test('up and down move the selection, wrapping round; Space chooses too', () => 
   const flow = new MenuFlow();
   flow.update(press('down'));
   assert.equal(flow.top.selected, 1);
-  for (let i = 1; i < MENUS.title.length; i++) flow.update(press('down'));
+  const count = flow.items('title').length;
+  for (let i = 1; i < count; i++) flow.update(press('down'));
   assert.equal(flow.top.selected, 0);
   flow.update(press('up'));
-  assert.equal(flow.top.selected, MENUS.title.length - 1);
+  assert.equal(flow.top.selected, count - 1);
   flow.select(0);
   assert.equal(flow.update(press('jump')), 'start');
 });
@@ -102,7 +103,8 @@ test('every menu item, heading and controls row has its strings', () => {
   for (const [id, setting] of Object.entries(SETTINGS)) {
     for (const value of setting.values ?? []) assert.ok(`setting.${id}.${value}` in strings, `setting.${id}.${value}`);
   }
-  for (const key of ['menu.saveSoon', 'menu.optionsText', 'menu.visualsText', 'menu.quitText', 'menu.helpAdjust']) assert.ok(key in strings, key);
+  for (const error of ['empty', 'length', 'character', 'checksum', 'version', 'link']) assert.ok(`key.error.${error}` in strings, error);
+  for (const key of ['menu.saved', 'menu.saveFirst', 'menu.copiedKey', 'menu.copiedLink', 'menu.copyFailed', 'menu.enterKeyText', 'menu.keyPlaceholder', 'menu.pauseText', 'msg.restored', 'menu.optionsText', 'menu.visualsText', 'menu.quitText', 'menu.helpAdjust']) assert.ok(key in strings, key);
   for (const row of CONTROL_ROWS) {
     assert.ok(`controls.${row}` in strings, `controls.${row}`);
     assert.ok(`controls.${row}Keys` in strings, `controls.${row}Keys`);
@@ -199,21 +201,78 @@ test('options: left and right adjust the selected setting and ask for a save; ot
 
 test('the title menu has the options too', () => {
   const flow = new MenuFlow();
-  flow.select(MENUS.title.indexOf('options'));
+  flow.select(flow.items('title').indexOf('options'));
   flow.choose();
   assert.equal(flow.top.id, 'options');
   assert.equal(flow.onTitle, true);
 });
 
-test('Save is a stub for now: it says so and stays in the menu, the note goes with the next move', () => {
+test('Save asks main.js to save and stays in the menu; saved() keeps the key and says so', () => {
   const flow = new MenuFlow('playing');
   flow.pause();
   flow.select(MENUS.pause.indexOf('save'));
-  assert.equal(flow.choose(), null);
+  assert.equal(flow.choose(), 'save');
   assert.equal(flow.top.id, 'pause');
-  assert.equal(flow.notice, 'menu.saveSoon');
+  flow.saved('KEY');
+  assert.equal(flow.key, 'KEY');
+  assert.equal(flow.canContinue, true);
+  assert.equal(flow.notice, 'menu.saved');
   flow.move(1);
   assert.equal(flow.notice, null);
+});
+
+test('Copy key and Copy link need a save first', () => {
+  const flow = new MenuFlow('playing');
+  flow.pause();
+  for (const item of ['copyKey', 'copyLink']) {
+    flow.select(MENUS.pause.indexOf(item));
+    assert.equal(flow.choose(), null);
+    assert.equal(flow.notice, 'menu.saveFirst');
+  }
+  flow.saved('KEY');
+  for (const item of ['copyKey', 'copyLink']) {
+    flow.select(MENUS.pause.indexOf(item));
+    assert.equal(flow.choose(), item);
+  }
+});
+
+test('the title offers Continue only with a save stored, selected first', () => {
+  const flow = new MenuFlow();
+  assert.equal(flow.item, 'start');
+  assert.ok(!flow.items('title').includes('continue'));
+  const stored = new MenuFlow('title');
+  stored.canContinue = true;
+  assert.equal(stored.item, 'continue');
+  assert.equal(stored.choose(), 'continue');
+  assert.equal(stored.top.id, 'title', 'it stays until the load is done');
+  stored.loaded('KEY');
+  assert.equal(stored.playing, true);
+  assert.equal(stored.key, 'KEY');
+});
+
+test('Enter key: its panel over the title, a refused key says why, a good one plays', () => {
+  const flow = new MenuFlow();
+  flow.select(flow.items('title').indexOf('enterKey'));
+  flow.choose();
+  assert.equal(flow.top.id, 'enterKey');
+  assert.equal(flow.choose(), 'loadKey');
+  flow.refused('checksum');
+  assert.equal(flow.notice, 'key.error.checksum');
+  assert.equal(flow.top.id, 'enterKey');
+  flow.loaded('KEY');
+  assert.equal(flow.playing, true);
+});
+
+test('a new game or quitting forgets the key: nothing to copy until the next save', () => {
+  const flow = new MenuFlow('playing');
+  flow.saved('KEY');
+  flow.pause();
+  flow.select(MENUS.pause.indexOf('quit'));
+  flow.choose();
+  flow.select(MENUS.quit.indexOf('quitYes'));
+  assert.equal(flow.choose(), 'quit');
+  assert.equal(flow.key, null);
+  assert.equal(flow.canContinue, true, 'the stored save is still there');
 });
 
 test('setting values as shown: a bar of ten cells, a percentage, a choice by name', () => {

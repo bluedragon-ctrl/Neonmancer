@@ -3,18 +3,20 @@
  * MenuFlow (ui/menus.js). An overlay on the stage over the game and the
  * HUD; the title screen hides the HUD. Sizes use --u like the HUD. The
  * mouse works too: hovering an item selects it, a click chooses it, and a
- * click on a setting's ◄ or ► adjusts it.
+ * click on a setting's ◄ or ► adjusts it. Enter key has a text field for
+ * the key (the game's keys leave it alone, core/input.js); the pause menu
+ * shows the last save's key, to select and copy by hand.
  */
 import { GAME_VERSION } from '../core/version.js';
-import { MENUS, isSetting } from './menus.js';
+import { isSetting } from './menus.js';
 import { SETTINGS } from './settings.js';
 import { formatText, scrambleText } from './text.js';
 
 /** The controls panel's rows: `controls.<id>` names the action, `controls.<id>Keys` its keys. */
 export const CONTROL_ROWS = ['move', 'jump', 'cast', 'spell', 'pause', 'movementMode', 'fullscreen'];
 
-/** Menus with text under the heading: `menu.<id>Text`, or the controls table. */
-const BODIES = ['controls', 'quit', 'options', 'visuals'];
+/** Menus with text under the heading: `menu.<id>Text`, the controls table, the key field, or the pause menu's key. */
+const BODIES = ['controls', 'quit', 'options', 'visuals', 'enterKey', 'pause'];
 
 /**
  * A setting's value as shown: a range of 0–10 as a bar of ten cells
@@ -38,8 +40,10 @@ export class MenuScreen {
    * @param {(index: number) => void} handlers.onHover an item of the top menu is under the mouse
    * @param {(index: number) => void} handlers.onClick it was clicked
    * @param {(index: number, step: number) => void} handlers.onStep a setting's arrow was clicked (-1 or +1)
+   * @param {() => void} handlers.onSubmit Enter in the key field
+   * @param {() => void} handlers.onBack Esc in the key field
    */
-  constructor(stage, strings, { onHover, onClick, onStep }) {
+  constructor(stage, strings, { onHover, onClick, onStep, onSubmit, onBack }) {
     this.strings = strings;
     this.stage = stage;
     stage.insertAdjacentHTML(
@@ -77,6 +81,18 @@ export class MenuScreen {
       if (step) onStep(index, step);
       else onClick(index);
     });
+    /** The key field of Enter key; the game's keys don't reach the menus while it has the focus. */
+    this.keyField = document.createElement('input');
+    this.keyField.className = 'menu-key-field';
+    this.keyField.spellcheck = false;
+    this.keyField.autocomplete = 'off';
+    this.keyField.placeholder = this.text('menu.keyPlaceholder');
+    this.keyField.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') onSubmit();
+      else if (e.key === 'Escape') onBack();
+      else return;
+      e.preventDefault();
+    });
     /** What is shown (menus, selection, settings, notice), so the DOM is only written when it changes. */
     this.shown = null;
     /** The menu ids shown, to know when the items have to be made again. */
@@ -107,26 +123,34 @@ export class MenuScreen {
       return;
     }
     const menus = flow.stack.map((menu) => menu.id).join('/');
-    const state = top ? `${menus}:${top.selected}:${JSON.stringify(flow.settings.values)}:${flow.notice}` : '';
+    const state = top ? `${menus}:${top.selected}:${JSON.stringify(flow.settings.values)}:${flow.notice}:${flow.key}:${flow.canContinue}` : '';
     if (state === this.shown) return;
     this.shown = state;
-    const opened = menus !== this.menus;
+    const opened = menus !== this.menus || flow.key !== this.key || flow.canContinue !== this.canContinue;
+    const typing = opened && top?.id === 'enterKey' && !this.menus?.endsWith('enterKey');
     this.menus = menus;
+    this.key = flow.key;
+    this.canContinue = flow.canContinue;
 
     this.root.hidden = !top;
     this.root.classList.remove('leaving');
     this.root.style.opacity = '';
     this.logoTitle.textContent = this.text('game.title');
     this.stage.classList.toggle('titled', flow.onTitle);
+    if (top?.id !== 'enterKey') this.keyField.blur();
     if (!top) return;
     this.root.classList.toggle('title', flow.onTitle);
     // The logo only on the title's own menu; its panels have a heading.
     this.logo.hidden = top.id !== 'title';
     this.heading.hidden = top.id === 'title';
     this.heading.textContent = this.text(`menu.heading.${top.id}`);
-    if (opened) this.fillBody(top.id);
+    if (opened) this.fillBody(top.id, flow.key);
+    if (typing) {
+      this.keyField.value = '';
+      this.keyField.focus();
+    }
 
-    const ids = MENUS[top.id];
+    const ids = flow.items(top.id);
     if (opened) this.items.replaceChildren(...ids.map((id) => this.makeItem(id)));
     ids.forEach((id, i) => {
       const item = this.items.children[i];
@@ -170,10 +194,32 @@ export class MenuScreen {
     return item;
   }
 
-  /** The text under a menu's heading: the controls table, a note, or nothing. */
-  fillBody(id) {
+  /** What is typed in the key field. */
+  keyText() {
+    return this.keyField.value;
+  }
+
+  /**
+   * The text under a menu's heading: the controls table, a note, the key
+   * field, the last save's key, or nothing.
+   * @param {string} id
+   * @param {string | null} key the last save's key (the pause menu shows it)
+   */
+  fillBody(id, key) {
     this.body.replaceChildren();
-    this.body.hidden = !BODIES.includes(id);
+    this.body.hidden = !BODIES.includes(id) || (id === 'pause' && !key);
+    if (id === 'enterKey') {
+      this.body.append(this.text('menu.enterKeyText'), this.keyField);
+      return;
+    }
+    if (id === 'pause') {
+      if (!key) return;
+      const code = document.createElement('div');
+      code.className = 'menu-key';
+      code.textContent = key;
+      this.body.append(this.text('menu.pauseText'), code);
+      return;
+    }
     if (id !== 'controls') {
       if (!this.body.hidden) this.body.textContent = this.text(`menu.${id}Text`);
       return;
