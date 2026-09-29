@@ -169,14 +169,7 @@
     "block": { "look": "plain" },
     "hazard": { "look": "hazard", "color": "#ff3b30", "damage": 1 },
     "void": { "look": "void", "color": "#8a5cff", "lethal": true },
-    "collapsing": {
-      "kind": "collapsing",
-      "color": "#dff4ff",
-      "edges": "dashed",
-      "mark": "cracks",
-      "faces": "tinted",
-      "tint": 0.05
-    },
+    "collapsing": { "kind": "collapsing", "color": "#dff4ff", "edges": "dashed", "faces": "tinted", "tint": 0.05 },
     "collapsing_regrow": { "extends": "collapsing", "regrow": 3 }
   }
 }

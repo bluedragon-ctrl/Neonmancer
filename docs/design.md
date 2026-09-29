@@ -107,7 +107,7 @@ the ones it gives:
 | `block` | plain (room color) | none |
 | `hazard` | hazard, red | `damage: 1` |
 | `void` | void, violet | `lethal: true` |
-| `collapsing` | kind `collapsing`, frosted white glass: pale white-blue, dashed edges, cracks on the faces, faces barely tinted (D97) | gives way (see Collapsing blocks) |
+| `collapsing` | kind `collapsing`, frosted white glass: pale white-blue, dashed edges, faces barely tinted (D97) | gives way (see Collapsing blocks) |
 | `collapsing_regrow` | extends `collapsing` | `regrow: 3` |
 
 - **Static types** have a `look` (`plain`, `hazard`, `void`) and live in

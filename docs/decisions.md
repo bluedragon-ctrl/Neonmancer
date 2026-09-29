@@ -1813,10 +1813,10 @@ to him: that is where he is backed up.
 Magenta reads as the player's color: his body, the backup shrine and
 the backup pips (D96), and the double jump card. Collapsing blocks give
 it up: they become frosted white glass, pale white-blue (`#dff4ff`)
-with dashed edges, faces barely tinted and a new `cracks` face mark (a
-jagged crack with two branches, turned differently on each face).
-Refines the collapsing look of D47.
+with dashed edges and faces barely tinted, the same shape as before (a
+cracks mark was tried and dropped: it looked like a real crack, not
+the game's neon). Refines the collapsing look of D47.
 **Why:** author's choice. A magenta shrine next to magenta collapsing
-blocks would say "these belong together". Glass that cracks tells
-"fragile" by shape; its white is shared with plates and targets, which
+blocks would say "these belong together". The dashed edges already
+tell "fragile"; the white is shared with plates and targets, which
 carry a bull's-eye instead.

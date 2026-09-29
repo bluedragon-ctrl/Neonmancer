@@ -338,7 +338,7 @@
           "description": "Outline style."
         },
         "mark": {
-          "enum": ["none", "inset", "cross", "brackets", "bits", "cracks"],
+          "enum": ["none", "inset", "cross", "brackets", "bits"],
           "default": "none",
           "description": "Pattern drawn on every face (on a cube-shaped object)."
         },
