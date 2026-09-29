@@ -163,6 +163,10 @@ and the project uses [Semantic Versioning](https://semver.org/).
   or the world map (`map`) or the asset showcase (`showcase`).
 
 ### Changed
+- Shorter modules, no change in play: spells, combat and switches move
+  out of `game.js` into `spells.js`, `combat.js` and `switches.js`; the
+  room editor's enemy template actions into `editor/templates.js`; the
+  editor panel builds each control group in its own method.
 - The save block reserved for equipment (bits 32–47, never used) is now
   the upgrades block, for spell upgrades (D88); `SAVE_BLOCKS.upgrades`.
 - Phase 3 step 6 (Pop-ups) is closed: the bolt attack (D80, D81) and
