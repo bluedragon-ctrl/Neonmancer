@@ -10,11 +10,11 @@
  *   bull's-eye; pressed, the outline turns solid, brackets light up just
  *   outside its corners and a glow spills onto the floor round it, so it
  *   shows round a crate standing on it.
- * - Lock: the barrier across a locked exit. A back doorway gets a dark
- *   panel that sinks into the threshold; a front exit gets bars that
- *   retract into the frame (a panel there would hide the room behind it).
- *   Both carry one small bull's-eye light per switch in the room, lit when
- *   that many switches are on.
+ * - Lock: the barrier across a locked exit, on back doorways and front
+ *   exits alike: a dark panel that sinks into the threshold (front exits
+ *   had bars until D101: one door style, readable). It carries one small
+ *   bull's-eye light per switch in the room, lit when that many switches
+ *   are on; an access lock its level in gold Roman numerals (D101).
  *
  * Each view has `userData.set(...)` and `userData.update(dt)`; states ease
  * in over a few frames. Reviewed in the asset showcase (`?asset=switches`).
@@ -33,6 +33,7 @@ import {
 } from 'three';
 import { blockEdges } from './edges.js';
 import { PALETTE, faceMaterial, lineMaterial, neonLines, shadedFaces, shared } from './neon.js';
+import { FRAGMENT_COLOR } from '../entities/pickup.js';
 import { switchesOn } from '../switches.js';
 
 /** Tuning (units, seconds). */
@@ -57,8 +58,7 @@ export const SWITCH_FX = {
   spill: 0.35,
   spillBrightness: 0.45,
   bracket: 0.3,
-  /** Lock: bars across a front exit; seconds to open or close; brightness and flicker. */
-  bars: 4,
+  /** Lock: seconds to open or close; brightness and flicker. */
   open: 0.35,
   lockBrightness: 1.6,
   flicker: 0.08,
@@ -66,8 +66,8 @@ export const SWITCH_FX = {
   light: 0.1,
   lightGap: 0.3,
   /**
-   * Access lock (D101): the level as a Roman numeral in red, the author's
-   * choice (it reads as "not for you yet"): its height, stroke and bar
+   * Access lock (D101): the level as a Roman numeral in gold, like the
+   * access bands on the wizard's hat: its height, stroke and bar
    * thickness, a V's or an X's width, the gap between letters, brightness.
    */
   numeral: 0.8,
@@ -325,7 +325,7 @@ export function createPlate(color) {
  * @param {{ side: string, at: number, width: number, y: number, height: number }} exit defaults applied
  * @param {number[]} size room size
  * @param {{ color: number|string, switches: number, access?: number }} options switches in the room (one light
- *   each; 0 for an access lock alone) and the access level it asks for (D101, shown as a red Roman numeral)
+ *   each; 0 for an access lock alone) and the access level it asks for (D101, shown as a gold Roman numeral)
  */
 export function createLock(exit, size, { color, switches, access = 0 }) {
   const base = new Color(color);
@@ -344,50 +344,33 @@ export function createLock(exit, size, { color, switches, access = 0 }) {
   const [a0, a1, y0, y1] = [exit.at, exit.at + exit.width, exit.y, exit.y + exit.height];
   const mid = (a0 + a1) / 2;
   const lineMat = lineMaterial({ color: base, width: 2.2 });
-
-  // Back doorway: a dark panel with an outline, sinking into the threshold
-  // (scaled down from its foot, so its parts are relative to y0).
+  // A dark panel with an outline, sinking into the threshold (scaled down
+  // from its foot, so its parts are relative to y0).
   const barrier = new Group();
   barrier.position.y = y0;
   group.add(barrier);
   const p = (a, h) => point(a, h - y0);
-  const bars = [];
-  if (back) {
-    const quad = [p(a0, y0), p(a1, y0), p(a1, y1), p(a0, y1)];
-    const positions = [0, 1, 2, 0, 2, 3].flatMap((i) => quad[i]);
-    barrier.add(shadedFaces(positions, positions.map(() => 0.03)));
-    const m = 0.1;
-    const outline = [
-      [p(a0 + m, y0 + m), p(a1 - m, y0 + m)],
-      [p(a1 - m, y0 + m), p(a1 - m, y1 - m)],
-      [p(a1 - m, y1 - m), p(a0 + m, y1 - m)],
-      [p(a0 + m, y1 - m), p(a0 + m, y0 + m)],
-    ];
-    const lines = neonLines(outline, lineMat);
-    lines.renderOrder = 3;
-    barrier.add(lines);
-  } else {
-    // Front exit: bars, each two halves meeting in the middle that retract to the sides.
-    for (let i = 0; i < SWITCH_FX.bars; i++) {
-      const h = y0 + ((i + 0.5) / SWITCH_FX.bars) * (y1 - y0);
-      for (const from of [a0, a1]) {
-        const holder = new Group().add(neonLines([[point(0, 0), point(mid - from, 0)]], lineMat));
-        holder.position.setComponent(along, from);
-        holder.position.y = h;
-        group.add(holder);
-        bars.push(holder);
-      }
-    }
-  }
+  const quad = [p(a0, y0), p(a1, y0), p(a1, y1), p(a0, y1)];
+  const panel = [0, 1, 2, 0, 2, 3].flatMap((i) => quad[i]);
+  barrier.add(shadedFaces(panel, panel.map(() => 0.03)));
+  const m = 0.1;
+  const outline = [
+    [p(a0 + m, y0 + m), p(a1 - m, y0 + m)],
+    [p(a1 - m, y0 + m), p(a1 - m, y1 - m)],
+    [p(a1 - m, y1 - m), p(a0 + m, y1 - m)],
+    [p(a0 + m, y1 - m), p(a0 + m, y0 + m)],
+  ];
+  const frame = neonLines(outline, lineMat);
+  frame.renderOrder = 3;
+  barrier.add(frame);
 
   // Lights: a small bull's-eye per switch in a row across the middle; the
-  // inner square fills for each switch that is on. On a front exit they sit
-  // between the middle bars.
+  // inner square fills for each switch that is on.
   // With both, the numeral sits above the lights.
   const lightH = access > 0 && switches > 0 ? y0 + (y1 - y0) * 0.3 : (y0 + y1) / 2;
   const lights = createLockLights(switches, { base, center: [mid, lightH], p, along });
   for (const { light } of lights) barrier.add(light);
-  // The access level it asks for, a gold seven-segment number (D101).
+  // The access level it asks for, a gold Roman numeral (D101).
   let digits = null;
   if (access > 0) {
     const numeralH = switches > 0 ? y0 + (y1 - y0) * 0.62 : (y0 + y1) / 2;
@@ -401,7 +384,7 @@ export function createLock(exit, size, { color, switches, access = 0 }) {
     });
     const geometry = new BufferGeometry();
     geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
-    const fill = new MeshBasicMaterial({ color: new Color(PALETTE.danger).multiplyScalar(SWITCH_FX.numeralBrightness), side: DoubleSide });
+    const fill = new MeshBasicMaterial({ color: new Color(FRAGMENT_COLOR).multiplyScalar(SWITCH_FX.numeralBrightness), side: DoubleSide });
     digits = new Mesh(geometry, fill);
     digits.renderOrder = 4;
     barrier.add(digits);
@@ -419,21 +402,14 @@ export function createLock(exit, size, { color, switches, access = 0 }) {
     const eased = t * t * (3 - 2 * t);
     const flicker = 1 + SWITCH_FX.flicker * Math.sin(time * 37) * Math.sin(time * 11);
     lineMat.color.copy(base).multiplyScalar(SWITCH_FX.lockBrightness * flicker);
-    for (const holder of bars) {
-      holder.scale.setComponent(along, Math.max(0.001, 1 - eased));
-      holder.visible = eased < 0.99;
-    }
-    if (back) barrier.scale.y = Math.max(0.001, 1 - eased);
+    barrier.scale.y = Math.max(0.001, 1 - eased);
     barrier.visible = eased < 0.99;
     for (const { light, mat, fillMat, on } of lights) {
-      // On a front exit the lights just go out with the bars.
-      if (!back) light.visible = eased < 0.5;
       const l = on.step(dt);
       mat.color.copy(base).multiplyScalar(brightness(l));
       fillMat.opacity = l;
       fillMat.color.copy(base).multiplyScalar(SWITCH_FX.fill);
     }
-    if (digits && !back) digits.visible = eased < 0.5;
     group.userData.openness = eased;
   };
   group.userData.update(0);

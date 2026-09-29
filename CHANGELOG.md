@@ -32,7 +32,7 @@ and the project uses [Semantic Versioning](https://semver.org/).
   wizard's access level when he touches it: level 1 at 16 fragments, 2
   at 32, 3 at 48 (`world.json` `fragments`), 500 points each; a gold
   band round his hat per level. Exits can ask for an access level
-  (`"access": n`): a white lock with the level as a thick red Roman
+  (`"access": n`): a white panel with the level as a thick gold Roman
   numeral. All 64 at the core reboot the Grid: a placeholder end screen
   with the whole key and the final score. The core is a gold crystal in
   orbit rings, one per level; a Vault test room behind Quarantine's level-1 lock; the

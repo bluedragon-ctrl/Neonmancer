@@ -1945,10 +1945,11 @@ Settles the fragments and access step (Phase 3 step 16):
   hat bands); it stays an accent, as gold is too close to Home Lattice's
   amber for an object's color.
 - **Access locks** (`"access": n` on an exit): the switch lock's white
-  barrier with the level as a thick red Roman numeral (I–III) between
-  two bars, the author's choice after gold seven-segment digits whose 1
-  read poorly; red breaks the color rule that red hurts (D99) on purpose:
-  here it means "not for you yet"; the exit he came
+  barrier with the level as a thick gold Roman numeral (I–III) between
+  two bars, gold like the hat bands (the author's choice after
+  seven-segment digits whose 1 read poorly, and a red try). Every locked
+  exit, switch or access, front or back, is now the doorway's dark panel:
+  the front exits' bars are gone, for one readable door style; the exit he came
   in through stays open for him (D75). With `"locked"` too, both hold.
 - **The wizard shows his level:** a thin gold band round his hat per
   access level (the author's proposal of a gold ring, one per level).

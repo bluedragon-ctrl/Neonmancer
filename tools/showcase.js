@@ -234,8 +234,8 @@ const ALL_ASSETS = [
   // boot key with its own module lit (a dark one and a light one), beside a
   // disk and a found one as a gray ghost; the core (its reactor
   // look) stepping through the access levels and fragments found,
-  // flashing as a level is reached; an access lock asking for level 1 (panel) and 2
-  // (bars), opening as he reaches it; the wizard's hat with 0–3 gold bands.
+  // flashing as a level is reached; access locks asking for level 1 (a doorway)
+  // and 2 (a front exit), both panels, opening as he reaches them; the wizard's hat with 0–3 gold bands.
   { label: 'fragment', group: 'fragments', spin: false, build: () => buildFragment({}) },
   { label: 'fragment-ghost', group: 'fragments', spin: false, build: () => buildFragment({ ghost: true }) },
   { label: 'fragments-row', group: 'fragments', span: 4, spin: false, build: buildFragmentRow },
@@ -244,7 +244,7 @@ const ALL_ASSETS = [
   { label: 'wizard-access', group: 'fragments', span: 2.5, spin: false, shadow: PALETTE.magenta, build: buildWizardAccess },
   // Switches and locked exits (Phase 3 step 4, D75): a target zapped on
   // and off; a plate pressed by a crate dropping on it, then by the wizard;
-  // a room with a locked doorway (panel) and a locked front exit (bars)
+  // a room with a locked doorway and a locked front exit (both panels)
   // whose lights follow its two switches.
   { label: 'target', group: 'switches', span: 5, spin: false, build: buildTargetZap },
   { label: 'plate', group: 'switches', span: 4, spin: false, build: buildPlate },

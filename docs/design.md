@@ -898,11 +898,11 @@ Phase 3 step 16 (D101).
   the thresholds give). Solid until his level is n or more; with
   `"locked"` too, the switches must be on as well. The exit he came in
   through stays open for him (D75). The look is the switch lock's white
-  barrier with the level as a thick red Roman numeral (I–III, up to XV)
-  between a bar across its top and one across its bottom, as on a clock
-  face, so a lone I reads as a numeral (`romanBars()` in
-  `render/switch-view.js`; the author's choice over gold seven-segment
-  digits, whose 1 read poorly); it opens as soon as the
+  barrier with the level as a thick gold Roman numeral (I–III, up to XV),
+  gold like the hat bands, between a bar across its top and one across
+  its bottom, as on a clock face, so a lone I reads as a numeral
+  (`romanBars()` in `render/switch-view.js`; the author's choice over
+  seven-segment digits, whose 1 read poorly). It opens as soon as the
   core raises the level in the same room, with `> ACCESS GRANTED: EXIT
   UNLOCKED`. Room editor: `Access level` in the exit fields.
 - **Core look** (the reactor, chosen by the author over a server
@@ -1070,10 +1070,9 @@ room.
   plain crate's outline; a hit flashes and jolts it. A plate has a dashed
   tile outline; pressed, the outline turns solid, brackets light up just
   outside its corners and a glow spills onto the floor round it, so it
-  shows round a crate standing on it. A locked back doorway is a dark
-  panel that sinks into the threshold; a locked front exit is four bars
-  that retract into the frame (a panel there would hide the room behind
-  it). Both carry one small bull's-eye light per switch in the room, lit
+  shows round a crate standing on it. A locked exit is a dark panel
+  that sinks into the threshold, on back doorways and front exits alike
+  (front exits had four retracting bars until D101). It carries one small bull's-eye light per switch in the room, lit
   for each switch that is on. The exit's stream shows once it is open.
 - Events: `switch` (a switch went on or off), `unlock` and `lock` (a
   locked exit opened or closed).
