@@ -465,6 +465,9 @@ editor), Phase 3 (v0.3.0, spells and pickups); see CHANGELOG.md.
 - 4b — The roster's new spells (D88, D89): Compile, Fork, Scan and Pull.
   Firewall Wardens (bosses, D104). Reachability checker. Design skills
   and subagents.
+- Proposal, not yet confirmed: visual rewards for secrets found (a hat
+  star, a star trail, a Phantom shimmer) and a special room behind a
+  lock for all 16 (docs/design.md, Phase 4 outline).
 
 **Phase 5 (v0.5+) — Polish**
 Full post-processing, juice pass, music and SFX, audio-reactive visuals,

@@ -912,6 +912,8 @@ The score is what the wizard has, not what he did (D100).
   easing out), flashing while it rolls. No popups over pickups.
 - **Dropped:** bonus bits, their room slots, the "all bits collected"
   bonus and the local high score.
+- **Proposed:** visual rewards for secrets found and a special room for
+  all 16, not confirmed yet (Phase 4 outline).
 
 ## Fragments and access
 
@@ -1597,6 +1599,23 @@ Open so far:
   map data); shrines show a map of the area around them. Still open: how
   far that area reaches, whether it shows rooms not visited yet, and
   whether they then stay on the run's map.
+- Proposal, to be discussed and confirmed: small rewards for secrets
+  found, visual first. Each follows from the secret count, like the
+  access level from fragments, so no new save bits and nothing more in
+  the score (D100). A ladder, one step per 4 secrets:
+  - 4: a small magenta star lights up on the hat tip, beside the gold
+    access bands;
+  - 8: a star trail, faint magenta pixel sparkles drifting off the hat
+    while he moves;
+  - 12: a Phantom shimmer, his outline now and then shifting through the
+    Phantom Partition hues (mostly magenta still, D99);
+  - 16: a special room behind a secret lock (like the access lock, a
+    magenta star instead of a gold numeral), probably Phantom Partition;
+    the shimmer stays on.
+  Each step would reuse the install banner and a terminal line. Open:
+  the steps and looks (showcase first), what the special room holds and
+  whether there is more than one, and whether a secret lock takes other
+  counts so rooms can gate optional side rooms earlier.
 
 ## Access keys
 
