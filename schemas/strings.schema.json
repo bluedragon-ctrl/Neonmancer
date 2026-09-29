@@ -54,7 +54,15 @@
         "msg.refillEnergy",
         "msg.unlocked",
         "msg.movementGrid",
-        "msg.movementScreen"
+        "msg.movementScreen",
+        "title.tagline",
+        "menu.start",
+        "menu.resume",
+        "menu.quit",
+        "menu.heading.pause",
+        "menu.quitText",
+        "menu.help",
+        "menu.helpBack"
       ],
       "properties": {
         "game.title": { "type": "string", "description": "Game name in the HUD corner." },
@@ -96,7 +104,15 @@
         "msg.refillEnergy": { "type": "string", "description": "Terminal message when a refill restores energy." },
         "msg.unlocked": { "type": "string", "description": "Terminal message when every switch in the room is on and its locked exits open." },
         "msg.movementGrid": { "type": "string", "description": "Terminal message when movement switches to grid-aligned." },
-        "msg.movementScreen": { "type": "string", "description": "Terminal message when movement switches to screen-relative." }
+        "msg.movementScreen": { "type": "string", "description": "Terminal message when movement switches to screen-relative." },
+        "title.tagline": { "type": "string", "description": "Line under the game name on the title screen." },
+        "menu.start": { "type": "string", "description": "Title menu item that starts a new game. Every menu item is \"menu.<item>\" (src/ui/menus.js)." },
+        "menu.resume": { "type": "string", "description": "Pause menu item that goes back to the game." },
+        "menu.quit": { "type": "string", "description": "Pause menu item that asks whether to quit to the title screen." },
+        "menu.heading.pause": { "type": "string", "description": "Heading of the pause menu. Every menu but the title's has one, \"menu.heading.<menu>\"." },
+        "menu.quitText": { "type": "string", "description": "Warning under the quit question: what quitting loses." },
+        "menu.help": { "type": "string", "description": "Key hint at the bottom of the title menu." },
+        "menu.helpBack": { "type": "string", "description": "Key hint at the bottom of the other menus, with the key that goes back." }
       }
     }
   }

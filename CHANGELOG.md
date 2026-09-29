@@ -12,10 +12,23 @@ Phase 4 splits into 4a (saves and UI) and 4b (spells, Firewall Wardens as
 bosses that drop loot, tooling) (D104, D105).
 
 ### Added
+- Title screen and pause menu (D109): the game opens on the logo over
+  the start room's empty shape (Start, Options, Controls; the room loads
+  after Start); Esc or P, or leaving the
+  window, pauses it (Resume, Save, Options, Controls, Quit to title, which
+  asks first). Arrows or WASD, Enter or Space, and the mouse work in menus.
+  Save is a stub until saving comes.
+- Options (D109): music and sound volume on a 0–10 scale and a Visuals
+  submenu (quality, render scale, screen effects), kept in localStorage;
+  stubs that nothing applies yet.
+- A boot sequence after Start (D110): the logo glitches out, the room
+  compiles tile by tile from its back corner, and the wizard pops in out
+  of pixels; any
+  menu key skips it.
 - Access keys (D106): the save codec, 44 scrambled hex digits holding the
   room's map cell, access level, pickup bits and backups with a CRC-16; reading
   forgives spaces, dashes, lowercase and look-alike letters, and says why
-  it refuses a key. Not in the game yet: saving comes with the pause menu.
+  it refuses a key. Not in the game yet: saving comes in the next step.
 - World map tool: exits show as marks on the room edges (cyan connected,
   magenta loose), and Delete removes one by a click on its mark (D102): a
   connected exit goes with its partner, a loose one alone. Connect uses a
@@ -23,10 +36,19 @@ bosses that drop loot, tooling) (D104, D105).
 - World map tool: an Undo button, and **Undo last save** once there is
   nothing left to undo (D103): what the last save changed or deleted, even
   a deleted room after the reload, comes back as unsaved changes.
+- Seven more enemy looks (D107), for any template or room override:
+  warden (a knight of firewall), daemon (a wisp flame), golem (a server
+  rack), wyrm (a packet dragon whose plates are shades of its color),
+  phish (a data disk that springs on legs), overclock (a burning
+  processor) and pixie (a butterfly with pixel wings); in the asset
+  showcase (`?asset=concepts`) and the test room Menagerie, north of
+  Quarantine.
 
 ### Fixed
 - The map tool's tests use a small world of their own instead of the
   real rooms, so map redesigns no longer break them.
+- A worm's or crawler's arc discharge would start from nowhere: its
+  model's muzzle was a point, not the reach the view expects (D107).
 
 ## [0.3.0] - 2026-09-29
 

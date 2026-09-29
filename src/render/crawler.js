@@ -197,5 +197,5 @@ export const CRAWLER_MODEL = {
   pop: CRAWLER.pop,
   turnRate: CRAWLER.turnRate,
   markHeight: CRAWLER.markHeight,
-  muzzle: [0, CRAWLER.y, CRAWLER.head.z + CRAWLER.head.r],
+  muzzle: CRAWLER.head.z + CRAWLER.head.r,
 };

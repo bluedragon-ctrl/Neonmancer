@@ -39,8 +39,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 
 | Module | Responsibility |
 |---|---|
-| `main.js` | Bootstrap: load and validate data, build systems, route input, start the loop, error screen |
-| `game.js` | Owns game state; fixed-order `update()` returning typed events; room switching |
+| `main.js` | Bootstrap: load and validate data, build systems, route input (menus first), start the loop, error screen |
+| `game.js` | Owns game state; fixed-order `update()` returning typed events; room switching; `reset()` starts over in place (a new game) |
 | `spells.js` | What each spell does once cast (`SPELL_EFFECTS`): `castSpell(game)`, Blink and Warp, Cut & Paste |
 | `combat.js` | Bolts, enemies' charged attacks, bouncing off, touching and burning enemies; every hit on an enemy (`hitEnemy(game, …)`, `pauseEnemy(game, …)`) |
 | `switches.js` | Plates and the locked exits they open (D75): `updateSwitches(game)`, `exitOpen()`, `switchesOn()` |
@@ -83,6 +83,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `ai/sight.js` | Rays through the grid and bodies (`castRay()`), `lineOfSight()`, `reach()` from a point to a box (pure, tested) |
 | `render/alert-mark.js` | The red "!" over an enemy that noticed the wizard |
 | `render/block-fx.js` | Animated looks of hazard and void blocks (hazard face shader in room coordinates, steady edges, hazard flare; void via mist.js), `BLOCK_FX` tuning |
+| `render/boot-fx.js` | The boot sequence's timing (D110): logo, the room's reveal tiles and their order, the wizard's gathering pixels and landing (pure, tested) |
 | `render/break-fx.js` | Destructible object's jolt on a hit that doesn't break it, `BREAK_FX` tuning (pure, tested) |
 | `render/bug.js` | Bug model (ball, eyes colored by mood), hop pose, bounce squash, pop pixels, `BUG` tuning (pure parts tested); `BUG_MODEL` for `EnemyView` |
 | `render/camera.js` | Fixed isometric orthographic camera |
@@ -93,6 +94,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/core-view.js` | The core's reactor look (D101): crystal, pedestal, one orbit ring per access level, `CORE_FX` |
 | `render/crawler.js` | Crawler model (D83): six-legged spider, tripod gait (`crawlerFoot()`, `placeLimb()`), crouch and pawing, `CRAWLER` tuning; `CRAWLER_MODEL` |
 | `render/cron.js` | Cron model (D83), the tower's look: hex pedestal, bell, a dial holding the grid axes with four emitters where a cross's bolts leave, sweeping hand, slam, `CRON` tuning; `CRON_MODEL` |
+| `render/daemon.js` | Daemon model (D107): floating teardrop flame with embers, stretch and squeeze (`daemonStretch()`), `DAEMON` tuning; `DAEMON_MODEL` |
 | `render/discharge.js` | Discharge lightning (D78): charge timing and glow (`dischargeLook()`, `chargeGlow()`), burst and arc zigzags (pure, tested), the aim line, `DISCHARGE` tuning |
 | `render/disk.js`, `render/refill.js` | Pickup looks: the data disk (bit grid showing the spell's slot, ghost, pick-up and pixel burst; motion pure, tested) and the refills |
 | `render/edges.js` | Visible block edges from grid occupancy; several plain types as one mass, each edge to a type (`groupedBlockEdges()`, D64); merging unit segments into runs (pure, tested) |
@@ -104,6 +106,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/floor.js` | Infinite grid floor fading into darkness; hole tiles cut out via a mask texture |
 | `render/fragment.js` | Key fragment look (D101): a gold tile with the boot key dim and its own module lit, ghost |
 | `render/glass.js` | Glass faces (D96): a see-through face shader (transparent, no depth written, clipping) and the data core's shrunk mark; a destructible glass crate is an empty shell (D99) |
+| `render/golem.js` | Golem model (D107): stacked rack units with blinking LEDs (`ledOn()`) and scrolling slats, block fists, stomping legs, `GOLEM` tuning; `GOLEM_MODEL` |
 | `render/hash.js` | Fixed pseudo-random numbers for pixel bursts (pure) |
 | `render/hit-fx.js` | Damage look: blinking while invulnerable, derez flicker and pixel burst, `HIT_FX` tuning (pure, tested) |
 | `render/hole-view.js` | Hole pits: walls fading to black, rim, short fading corner lines; outline math (tested) |
@@ -114,14 +117,17 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/marks.js` | Face-mark line patterns for object styles, including the data bits, whole (`bits`) or with holes for destructible objects (`bitsBroken`, `bitLayout()`); pure, tested |
 | `render/mist.js` | Void blocks as black mist (D99): opaque black cubes with sinking gray wisps, a patchy fog shell and a dim frame, `MIST` tuning |
 | `render/neon.js` | Palette, line and face materials; line widths scaled by render height; `neonLines()`, `fadingLines()`, `shadedFaces()` builders; `disposeTree()` |
+| `render/overclock.js` | Overclock model (D107): burning CPU chip on its pins, flame crown (`overclockFire()`), sparks, glowing traces, `OVERCLOCK` tuning; `OVERCLOCK_MODEL` |
 | `render/pause-fx.js`, `render/pause-view.js` | A frozen enemy (Pause, D85): tint and blinking (pure, tested) and its cage of corner brackets, shown by `EnemyView` |
+| `render/phish.js` | Phish model (D107): a data disk (disk.js) that springs on legs with eye stalks and a toothed jaw, tell glitch (`phishGlitch()`), `PHISH` tuning; `PHISH_MODEL` |
 | `render/pickup-model.js` | A pickup's model by kind (disk, upgrade card, chip, fragment, secret or refill), for the room view and the install animation |
 | `render/pickup-view.js` | A room pickup's view: its look, idle motion, ghost, pick-up effect |
+| `render/pixie.js` | Pixie model (D107): butterfly with pixel wings (`wingPixels()`), shimmer, flapping (`pixieFlap()`), dust, `PIXIE` tuning; `PIXIE_MODEL` |
 | `render/post.js` | pmndrs postprocessing composer (bloom) |
 | `render/quality.js` | Automatic quality fallback: steps MSAA, then render scale, down when frames run slow (D76; pure, tested) |
 | `render/rails.js` | Guide line along a platform's path, `RAILS` tuning (pure, tested) |
 | `render/renderer.js` | WebGLRenderer, 16:9 stage + HUD overlay, DPR cap, render scale, MSAA, resize, shader precompile |
-| `render/room-scene.js` | The current room's views, object views by kind (`OBJECT_VIEWS`); rebuilds only the objects on a respawn |
+| `render/room-scene.js` | The current room's views, object views by kind (`OBJECT_VIEWS`); rebuilds only the objects on a respawn; `showShape()`: the empty room behind the title (D109) |
 | `render/room-view.js` | Static blocks (merged edges + instanced occluder faces), back walls, styled object views |
 | `render/secret.js` | Secret look (D100): a thick five-pointed star in the wizard's magenta, ghost |
 | `render/sentinel.js` | Sentinel model (D78): sharp octahedron, visor eye, shards gathering like a barrel, recoil, pop pixels, `SENTINEL` tuning; `SENTINEL_MODEL` |
@@ -132,9 +138,11 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/viewport.js` | Letterbox, buffer size and 1080p-relative sizing math (pure, tested) |
 | `render/virus.js` | Virus model (D78): sharp tipped cube, orbiting bits, glide, charge pose, pop pixels, `VIRUS` tuning; `VIRUS_MODEL` |
 | `render/walls.js` | Back walls with doorways and dark tunnels behind them, front edges with gaps, arrow shape for front exits (pure, tested) |
+| `render/warden.js` | Warden model (D107): kite shield with brick seams, T-slit helm, gauntlets, greatsword poses (`swordAngle()`), `WARDEN` tuning; `WARDEN_MODEL` |
 | `render/warp-fx.js`, `render/warp-view.js` | Blink's dash (drawn position and stretch, streaks, kicked-up pixels) and Warp's pixel stream and arrival flash (D86): the look (pure, tested) and its meshes, shown by `PlayerView` |
 | `render/wizard.js` | Wizard model: parts as data (pure, tested), built in the hologram look |
 | `render/worm.js` | Worm model (D83): head with antennae dragging a tail of balls, inching hump and wiggle (`wormSpine()`), rearing up, `WORM` tuning; `WORM_MODEL` |
+| `render/wyrm.js` | Wyrm model (D107): flying horned head trailing hex plates in shades of its color (`wyrmShades()`, `wyrmSpine()`), packets, jaw, `WYRM` tuning; `WYRM_MODEL` |
 | `render/xray.js` | X-ray ghost of the wizard's hidden parts (reversed depth test), render orders of the ghost and the characters, `XRAY` tuning |
 | `render/zap-fx.js` | Zap look: trail zigzags, bolt flicker, cast flare, sparks, enemy hit flash and damaged glitch, `ZAP_FX` tuning (pure, tested) |
 | `render/zap-view.js` | Zap meshes: bolt, cast flare, sparks, in the Zap's cyan or an enemy bolt's color; `ZapView` keeps a room's bolts and sparks (pooled by color) |
@@ -142,6 +150,10 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `ui/energy-bar.js` | Energy bar: one segment per cast filling as it recharges; flashes on a denied cast |
 | `ui/error-screen.js` | Startup error screen listing every data problem |
 | `ui/fullscreen.js` | Fullscreen toggle and when to suggest it (below 1080 physical pixels; tested) |
+| `ui/menus.js` | Title screen and pause menu logic (D109): the stack of menus, selection, what an item does (pure, tested) |
+| `ui/menu-screen.js` | Title screen and pause menu on screen: logo (and its scramble after Start), heading, items with setting values, controls table; mouse hover, click and ◄ ► |
+| `ui/settings.js` | Player settings (D109): volumes and visual stubs, steps, localStorage (pure, tested) |
+| `ui/boot-screen.js` | The room compiling after Start (D110): a canvas covering the room, cleared tile by tile along its grid, outlines flashing |
 | `ui/hud.js` | DOM overlay: integrity bar, backup pips, energy bar, spell tag and Cut & Paste clipboard slot, score, fragments and the boot key, room banner, terminal messages, end screen, fullscreen hint |
 | `ui/terminal.js` | Terminal message queue (typing, hold, fade) and banner timing (pure, tested) |
 | `ui/text.js` | String lookup with `{name}` values; scrambled "decoding" text for the banner (pure, tested) |

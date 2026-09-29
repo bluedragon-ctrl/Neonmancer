@@ -665,3 +665,62 @@ than a custom alphabet (Base32 without 0/O/1/I/L has only 31 symbols).
 The map cell already names a room uniquely, so no room-number table is
 needed; moving a room breaks old keys, which matters only in development.
 Saving backups keeps save and load from refilling lives for free.
+
+### D107 — 2026-09-29 — Seven more enemy looks
+Warden, daemon, golem, wyrm, phish, overclock and pixie join the enemy
+looks, each a fantasy creature crossed with a computer thing (a knight of
+firewall, a wisp daemon, a rack golem, a packet dragon, a phishing mimic,
+a burning processor, a pixel butterfly). They are looks only: no template
+uses them yet, rooms pick them with `look`, and templates come with the
+content that needs them (the warden with the Firewall Wardens). A wyrm's
+plates are shades of its own color, so a room can recolor it. A model's
+`muzzle` is a reach along the line of fire (worm and crawler had points).
+**Why:** more silhouettes for content production; reviewed in the
+showcase first.
+
+### D108 — 2026-09-29 — Home Lattice keeps the default enemies; a roster per biome
+Home Lattice's own enemies are bug, virus, sentinel and cron (the
+`tower` template): the default cyberspace enemies, which may still show
+up anywhere. Each other biome gets a roster of its own, at least three
+enemies with a signature trick, proposed in docs/design.md (Phase 4
+outline) and reviewed in Phase 4b. Still six biomes (D61); their colors
+and setup may change so ideas such as a nature sector with insects or a
+heavy virtual one with pixelated enemies fit into them.
+**Why:** biomes should play differently, not only look different; the
+four basic enemies, one per attack, suit the core and teach the basics.
+
+### D109 — 2026-09-29 — Title screen and pause menu
+The game opens on a title screen over the start room's empty shape (its
+floor grid and back walls in its biome's look, no blocks, objects or
+wizard; dimmed well down): Start, Options and Controls; the room itself
+loads after Start; Enter key joins it with
+loading. Esc or P pauses the game, and so does the window losing focus;
+the pause menu has Resume, Save (a stub that says saving comes next),
+Options, Controls and Quit to title (Copy key and Copy link join it with
+saving). Quitting asks first, as it starts a new game. Options: music
+and sound volume, 0–10, and a Visuals submenu (quality, render scale,
+screen effects); stored in localStorage apart from the key, not applied
+until audio and quality presets exist (Phase 5). Menus take
+arrows or WASD, Enter or Space, Esc or P to go back, and the mouse. Behind
+a menu the game and its animations stand still. The world map tool's dev
+links (`?room`, `?edit`) skip the title.
+**Why:** the save UI needs both screens; pausing on focus loss keeps a
+player who switched windows from coming back dead. Settings belong to the
+browser, not to the wizard, so they stay out of the access key.
+
+### D110 — 2026-09-29 — A boot sequence after Start
+Start plays a 2.6-second boot sequence: the logo scrambles into glyphs
+and glitches out, the room compiles tile by tile along its own grid
+(2×2-cell tiles, each a column up to the ceiling, in a shuffled wave from
+the back corner, each floor outline flashing cyan) while the terminal
+types `> LOADING SECTOR`, and the world round it fades in last; then the
+wizard pops in out of gathering pixels (the derez backwards), flashing
+white and landing with a squash. Then the room's banner and the boot
+messages; the game holds until he lands. Enter, Space, Esc or P skip it.
+The tiles are a 2D canvas over the game, not clipping in 3D, which would
+recompile every shader at its start and end; a cleared tile always
+shows, so at worst a block in front shows a moment early. (A first try,
+a scan line sweeping down the screen, was dropped.) The title's tagline
+is "INTO THE GRID".
+**Why:** starting should feel like being loaded into the Grid; the pixel
+pop-in reuses the derez, so it needs no new asset.

@@ -141,6 +141,44 @@ export class RoomScene {
   }
 
   /**
+   * Only the shape of the game's room, behind the title screen (D109): its
+   * floor grid and back walls in its biome's look, empty (no blocks,
+   * holes, exits or objects). The room itself loads after Start (show()).
+   * @param {import('../game.js').Game} game
+   */
+  showShape(game) {
+    const { room } = game;
+    const { renderer } = this;
+    const old = [this.objectGroup, this.staticGroup];
+    this.game = game;
+    this.leaving = [];
+    this.growing = null;
+    this.objectViews = [];
+    this.enemyViews = [];
+    this.pickupViews = [];
+    this.exitViews = [];
+    this.lockViews = new Map();
+    this.flares = new Map();
+    this.flare = null;
+    this.shrine = null;
+    this.zapView = new ZapView(game);
+    this.objectGroup = new Group().add(this.zapView.group);
+    const shape = { ...room, blocks: {}, holes: [], exits: [] };
+    this.staticGroup = new Group().add(createFloor(room.size, room.color, [], room.look), createRoomView(shape));
+    frameRoom(renderer.camera, room.size);
+    renderer.setLook(room.look);
+    // The next show() builds the room in full, even the same one.
+    this.roomId = null;
+    this.cutAbove = null;
+    renderer.scene.add(this.staticGroup, this.objectGroup);
+    renderer.compile();
+    for (const group of old) {
+      renderer.scene.remove(group);
+      disposeTree(group);
+    }
+  }
+
+  /**
    * Once per frame.
    * @param {number} alpha interpolation factor 0..1 between the last two ticks
    * @param {number} dt seconds since the last frame

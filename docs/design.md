@@ -12,13 +12,14 @@ for the current phase. Locked decisions live in CLAUDE.md; their reasons in
 | Jump | Space |
 | Cast (the selected spell) | E / Numpad 0 |
 | Switch spell | Tab (next) / Q (previous) |
-| Pause (Phase 4) | Esc / P |
+| Pause menu (and back, in a menu) | Esc / P |
 | Map (Phase 4) | M |
 | Switch movement mode | G |
 | Debug mode | F3 |
 | Room editor | F2 (see Room editor) |
 | Fullscreen | F |
 | Close the end-of-game screen | Enter |
+| Menus: choose, select | ↑ ↓ (or W S), Enter / Space; the mouse |
 
 Debug mode only, once toggled on with F3:
 
@@ -286,7 +287,7 @@ and burst; a virus can patrol).
 
 | Field | Values | Meaning |
 |---|---|---|
-| `look` | `bug`, `virus`, `sentinel`, `cron`, `worm`, `crawler` | its body (below). A template takes its base's. |
+| `look` | `bug`, `virus`, `sentinel`, `cron`, `worm`, `crawler`, `warden`, `daemon`, `golem`, `wyrm`, `phish`, `overclock`, `pixie` | its body (below). A template takes its base's. |
 | `movement` | `patrol`, `stationary`, `chase` | patrol walks the enemy's `path` (required); stationary stays in its cell (no path); chase goes after the wizard (below), walking its `path` while calm if it has one. |
 | `attack` | `touch`, `burst`, `arc`, `bolt`, `none` | touch: touching it hurts while it is hostile; burst, arc and bolt: charged attacks (below): lightning all round it, a lightning bolt aimed at the wizard, or a slow shot at him (D80); touching it doesn't hurt. |
 | `hostility` | `hostile`, `peaceful`, `provoked` | hostile attacks; peaceful never does; provoked is peaceful until a spell (Zap), a discharge or a bolt hits it, then hostile. |
@@ -449,6 +450,41 @@ and burst; a virus can patrol).
   round head with four eyes, thin jointed legs walking in a tripod gait
   (three feet down while the other three swing). After the wizard it
   crouches, walks faster and paws with its front legs.
+- **More looks (D107):** looks only so far: no `defs.json` template uses
+  them, a room picks one with `look` in `overrides` (the showcase colors
+  in brackets are suggestions). Each is taller or wider than its hitbox
+  in places, for show.
+  - **warden** (`#ff5a1f`): a Firewall Warden, a kite shield bricked like
+    the Citadel's floor, a helm with a T-slit visor for eyes, two floating
+    gauntlets and a greatsword planted point down. The seams breathe;
+    after the wizard the sword comes up to guard; charging, it rises
+    overhead while the seams light row by row; firing, it slams down.
+  - **daemon** (`#a45cff`): a floating teardrop flame, a will-o'-the-wisp,
+    shedding pixel embers off its flickering tip. After the wizard it
+    stretches tall; charging, it squeezes into a ball; firing, it flares.
+  - **golem** (`#38a8ff`): two stacked rack units with blinking LEDs and
+    vent slats, a visor head, block fists and stomping slab legs; meant
+    `solid`. After the wizard its LEDs turn to the eye color and the slats
+    scroll; charging, the LEDs fill up and the fists rise.
+  - **wyrm** (`#ffc83a`): a flying horned dragon mask trailing six hex
+    plates in shades of its color (the hue swinging a little either way,
+    darker to the tail), a glowing packet over each; a wave swims down it.
+    Charging, the packets light tail to head and the jaw opens; firing, it
+    snaps forward.
+  - **phish** (`#eef3ff`): a mimic. Calm it is a data disk with a red lit
+    bit, bobbing out of step with real disks and glitching now and then;
+    after the wizard it stands on four jointed legs, eye stalks pop from
+    its top corners and a red-toothed jaw chomps. Its eyes stay hidden
+    while it poses: the red bit is the warning.
+  - **overclock** (`#ff6a2a`): a burning CPU chip scuttling on its pins,
+    a die with two eyes, glowing traces, a crown of flame tongues round a
+    taller lighter one, sparks rising. After the wizard the fire roars;
+    charging, the tongues lean into one column; firing, they flare out.
+  - **pixie** (`#7a7dff`): a butterfly, a slim body with antennae and two
+    pairs of wings covered in pixels that shimmer in three phases; pixel
+    dust drifts down. It flutters along a figure eight; after the wizard
+    it flaps faster; charging, the wings fold over its back, all lit;
+    firing, they snap open.
 - **Spell hits:** a Zap takes `damage` (1) of its integrity and provokes
   it; the last point pops it into pixels. Any enemy can be hit, peaceful
   ones too (they stay peaceful). A hit flashes it white, then cyan, with a
@@ -464,11 +500,15 @@ and burst; a virus can patrol).
   `src/entities/bolt.js`, `PLAYER.bounceHeight`; the looks are `BUG` in
   `src/render/bug.js`, `VIRUS` in `src/render/virus.js`, `SENTINEL` in
   `src/render/sentinel.js`, `CRON`, `WORM` and `CRAWLER` in
-  `src/render/cron.js`, `worm.js` and `crawler.js` (what they share, mood colors, eyes and the
+  `src/render/cron.js`, `worm.js` and `crawler.js`, and the D107 looks in
+  `warden.js`, `daemon.js`, `golem.js`, `wyrm.js`, `phish.js`,
+  `overclock.js` and `pixie.js` (what they share, mood colors, eyes and the
   pop, in `src/render/enemy-look.js`), the lightning `DISCHARGE` in
   `src/render/discharge.js`; review in the asset showcase
   (`/tools/showcase.html?asset=bugs,viruses,sentinels,crons,worms,crawlers`;
-  the bolt: `bug-bolt`, `?asset=bolts` for the tower and the ricochet).
+  the bolt: `bug-bolt`, `?asset=bolts` for the tower and the ricochet;
+  the D107 looks: `?asset=concepts`, their pops `concept-pops`, wyrms in
+  four colors `wyrm-colors`).
 
 ## Pickups and progress
 
@@ -873,6 +913,8 @@ The score is what the wizard has, not what he did (D100).
   easing out), flashing while it rolls. No popups over pickups.
 - **Dropped:** bonus bits, their room slots, the "all bits collected"
   bonus and the local high score.
+- **Proposed:** visual rewards for secrets found and a special room for
+  all 16, not confirmed yet (Phase 4 outline).
 
 ## Fragments and access
 
@@ -1145,6 +1187,7 @@ the world map tool shows the connections and flags any room further out.
 | `transit_bus` | 12×12, 5 high | platforms: a ferry, a lift, a loop with a crate, a press, a pusher |
 | `volatile_memory` | 12×12, 5 high | collapsing bridges (one regrowing) and one-shot steps |
 | `crawl_space` | 12×12 | bugs of every kind (solid, bouncy, provoked, peaceful); a secret |
+| `menagerie` | Home Lattice, 12×12, north of Quarantine | the D107 looks: a warden (burst), a daemon (arc, provoked), a solid golem to ride, a wyrm (bolt, provoked), a phish, an overclock (burst, provoked), a pixie (peaceful) |
 | `quarantine` | Glitchmire, 10×10 | a virus, a sentinel, a bursting bug; the Pause disk; the level-1 access lock |
 | `scheduler` | Abyssal Buffer, 10×10 | a tower, a worm, a crawler; the Firewall disk; a shrine |
 | `room_1` | 12×12 | an empty hub for the Phase 3 spell rooms |
@@ -1247,6 +1290,12 @@ least 20° between saturated colors, and no near-white room color.
 Phantom Partition moved from silver-white to pale violet so plates and
 targets stand out in it; violet became free when void blocks turned
 black.
+
+Enemies by biome (D108): Home Lattice's are the default cyberspace four,
+bug, virus, sentinel and cron (the `tower` template); they read as the
+Grid's plain enemies and may show up anywhere. Every other biome gets a
+roster of its own, at least three enemies, proposed in the Phase 4
+outline and settled in Phase 4b.
 
 Surroundings (`look` in `biomes.json`, D62; every field optional, Home
 Lattice's values are the defaults):
@@ -1522,13 +1571,14 @@ author, recorded as decisions before the code lands. Every step also
 Saves, guardians and tooling, in two parts (D105), planned step by step.
 
 **Phase 4a — saves and UI:** access-key codec with tests (done, D106);
-title screen and pause menu (the save UI needs both); saving and loading
+title screen and pause menu (done, D109); saving and loading
 (URL hash, localStorage); map screen.
 
 **Phase 4b — spells, bosses, tooling:** the roster's new spells, one
 step each (D88, D89): Pull, Compile, Scan (needs hidden blocks, fake
 walls and hidden pickups first), Fork (enemies target the decoy);
-Firewall Wardens; reachability checker; design skills and subagents.
+Firewall Wardens; reachability checker; design skills and subagents;
+biome enemy rosters (review the proposal below, D108).
 
 Settled:
 - Saving is a player action, any time, from the pause menu (D105); it
@@ -1558,6 +1608,110 @@ Open so far:
   map data); shrines show a map of the area around them. Still open: how
   far that area reaches, whether it shows rooms not visited yet, and
   whether they then stay on the run's map.
+- Proposal, to be discussed and confirmed: small rewards for secrets
+  found, visual first. Each follows from the secret count, like the
+  access level from fragments, so no new save bits and nothing more in
+  the score (D100). A ladder, one step per 4 secrets:
+  - 4: a small magenta star lights up on the hat tip, beside the gold
+    access bands;
+  - 8: a star trail, faint magenta pixel sparkles drifting off the hat
+    while he moves;
+  - 12: a Phantom shimmer, his outline now and then shifting through the
+    Phantom Partition hues (mostly magenta still, D99);
+  - 16: a special room behind a secret lock (like the access lock, a
+    magenta star instead of a gold numeral), probably Phantom Partition;
+    the shimmer stays on.
+  Each step would reuse the install banner and a terminal line. Open:
+  the steps and looks (showcase first), what the special room holds and
+  whether there is more than one, and whether a secret lock takes other
+  counts so rooms can gate optional side rooms earlier.
+
+- Proposal, to be reviewed in Phase 4b: an enemy roster per biome
+  (D108), so each plays differently, not just in another color. Still
+  six biomes (D61); their colors and setup may change to fit. Home
+  Lattice is settled: bug, virus, sentinel, cron. Every other biome gets
+  at least three enemies of its own and one signature trick that twists
+  those four. Tags: (L) a D107 look or an existing template, (N) a new
+  look, (B) a new engine behavior.
+  - **Glitchmire**, you can't trust what you see; could also take the
+    heavy virtual idea (pixelated, abstract enemies): Artifact, flickers
+    and teleports a short hop every few beats (N, B); Z-Fighter, two
+    overlapping copies, only one real (N, B); Bitrot, a slime chaser
+    leaving corrupted tiles that hurt, then fade (N, B); Phish, a data
+    disk mimic (L); Ricochet (L); from the heavy virtual idea: Voxel
+    Swarm, splits into two smaller ones when hit (N, B), Primitive,
+    morphs cube to octahedron between patrol and burst (N, B), Null
+    Pointer, dashes straight until a wall, then turns (N, B).
+  - **Frostbyte Wastes**, slowing and freezing: Cold Boot, a golem that
+    walks a path slowly, solid, a moving ice wall (L); Flurry, a swarm of
+    tiny 0/1 flakes that pop in one hit (N); Freezer, a sentinel whose
+    bolt slows the wizard for a while (B); Icicle, hangs from the ceiling
+    and drops when he passes under it (N, B).
+  - **Abyssal Buffer**, deep sea, drifting; could become the nature
+    sector with insect enemies: Buffer Jelly, a jellyfish floating up
+    and down, bouncy (N, B); Anglerphish, a phish with a lure like a
+    pickup (L); Leviathan, a wyrm on long loops (L); Leak, a vent firing
+    slow bubbles that drift upward (B); from the nature idea: Web
+    Crawler, the crawler as a spider leaving webs that slow him (L, B),
+    Caterpillar, the worm in leaf colors (L), Hardware Beetle, a solid
+    shell carrying him along a path (N), Mantis, stationary, a very
+    short charge, strikes next to it (N), Spam, a gnat cloud that chases
+    (N, B), Pixie, the pixel butterfly (L).
+  - **Firewall Citadel**, armored guards: Firewall Warden, the boss
+    (D104); Overclock, a burning chip with a burst (L); Proxy, a
+    shield-bearing knight that blocks Zaps from the front, hit it from
+    behind with Blink or Warp (N, B); Brickling, a wall brick that wakes
+    up as a chaser (N); Turret, a cron in the battlements (L).
+  - **Phantom Partition**, ghosts and daemons that ignore the rules:
+    Daemon, a wisp drifting through blocks (L, B); Zombie Process, moves
+    only while the wizard faces away (N, B); Echo, a shadow wizard
+    mirroring his moves (N, B); Poltergeist, unseen, shoves crates (B);
+    Orphan, a peaceful ghost whose path leads to a secret (L).
+  Open: where the nature and heavy virtual ideas go (above: Abyssal
+  Buffer and Glitchmire) and the colors that needs (a nature green must
+  keep clear of lime crates and the mint bug, D99); which new behaviors
+  come first (several enemies share them: phasing, blink, a slowing
+  status, split on hit, mirroring, a directional shield); every new look
+  goes to the showcase for the author's OK first.
+
+## Title screen and pause menu
+
+`src/ui/menus.js` (the logic, tested) and `src/ui/menu-screen.js` (the
+view), D109. The game opens on the title screen: the logo over the start
+room's empty shape (`RoomScene.showShape()`: floor grid and back walls in
+its biome's look, no blocks, holes, exits, objects or wizard), dimmed
+well down, with **Start**, **Options** and
+**Controls**. Esc or P in the game, or the window losing focus, opens the
+pause menu: **Resume**, **Save**, **Options**, **Controls**, **Quit to
+title**. Save is a stub for now: it says saving comes in the next update.
+Quitting asks first (*Keep playing* is selected), then starts a new game
+behind the title (the empty shape again); nothing is saved yet (D105). Menus stack: Options (and
+its Visuals), Controls and the quit question open over the menu, and Esc
+or P closes the top one (the pause menu itself: back to the game).
+
+**Options** (`src/ui/settings.js`, stubs): **Music** and **Sound** volume
+as a bar of ten cells (0–10, default 7), and **Visuals**: **Quality**
+(Auto, Low, Medium, High), **Render scale** (50–100 %), **Screen effects**
+(On, Off). ◄ ► (or A D, or a click on the arrows) adjust the selected
+one, Enter steps it on and round. They are kept in localStorage
+(`neonmancer.settings`, apart from the access key) and read by nothing
+yet: the audio and quality presets of Phase 5 will.
+
+**Start** plays the boot sequence (D110, `src/render/boot-fx.js`, 2.6 s):
+the logo scrambles and glitches out; the room compiles tile by tile along
+its own grid, 2×2-cell tiles clearing in a shuffled wave from the back
+corner forward, each floor outline flashing cyan, while the terminal
+types `> LOADING SECTOR` (`src/ui/boot-screen.js`, a canvas over the
+game); the world round the room fades in last; the wizard pops in out of gathering pixels (the derez backwards),
+flashing white and landing with a squash; then the room's banner and the
+boot messages. The game holds until he lands; Enter, Space, Esc or P skip
+the rest.
+The tick that closes a menu does not run the game, so Enter or Space
+there never jumps. Behind a menu the game, its animations and the
+terminal stand still. Dev links from the world map tool (`?room`,
+`?edit`) start in the game, without the boot sequence. Coming with
+saving: Enter key on the title, a working Save, Copy key and Copy link in
+the pause menu.
 
 ## Access keys
 

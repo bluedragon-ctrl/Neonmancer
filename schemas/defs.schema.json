@@ -293,8 +293,8 @@
           "description": "The template it builds on (D58, D79): it takes that one's values (and so on down the chain), its own replace them. No loops."
         },
         "look": {
-          "enum": ["bug", "virus", "sentinel", "cron", "worm", "crawler"],
-          "description": "Its body (src/render/entity-view.js ENEMY_MODELS). Any look combines with any movement and attack (D78). bug: a hopping ball; virus: a gliding sharp cube with orbiting bits; sentinel: a tall sharp octahedron with one eye; cron: a hex pedestal with a clock dial whose four emitters hold the grid axes (a tower's cross, D83); worm: a head dragging a tail of balls, inching along; crawler: a six-legged spider."
+          "enum": ["bug", "virus", "sentinel", "cron", "worm", "crawler", "warden", "daemon", "golem", "wyrm", "phish", "overclock", "pixie"],
+          "description": "Its body (src/render/entity-view.js ENEMY_MODELS). Any look combines with any movement and attack (D78). bug: a hopping ball; virus: a gliding sharp cube with orbiting bits; sentinel: a tall sharp octahedron with one eye; cron: a hex pedestal with a clock dial whose four emitters hold the grid axes (a tower's cross, D83); worm: a head dragging a tail of balls, inching along; crawler: a six-legged spider; warden: a knight of firewall, a kite shield with a helm and a greatsword (D107); daemon: a floating flame, a will-o'-the-wisp; golem: two stacked rack units on slab legs with block fists; wyrm: a flying horned dragon trailing hex plates in shades of its color; phish: a fake data disk that springs on four legs; overclock: a burning CPU chip on its pins; pixie: a butterfly with pixel wings."
         },
         "movement": {
           "enum": ["patrol", "stationary", "chase"],
