@@ -201,8 +201,10 @@ rest stay spare for what content production needs (D88, D89). Intended order
 in the world: early Zap, Shield, Blink, Pause; middle Cut & Paste,
 Firewall, Fork, Scan and the jump upgrade; late Compile, Warp, Zap+ and
 Mirror. Buff items make the wizard himself stronger: more integrity,
-more energy, faster recharge (draft: 4× +1 integrity, 5× +10 energy,
-one recharge buff; settled in the buff step). Stronger spells, upgrades
+more energy, faster recharge (D93): 4× +1 integrity (8 → 12), 5× +10
+energy (50 → 100) and one recharge buff (a unit every 8 ticks instead
+of 12); taking one fills the stat it raises. Each is a chip with its
+own save bit (buff slots 0–9). Stronger spells, upgrades
 and buffs all let him skip easier rooms and reach areas he couldn't
 before.
 

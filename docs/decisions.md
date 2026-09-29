@@ -1682,3 +1682,22 @@ good, and the save key already carries exactly the state to roll back
 to. A double jump may give the jump upgrade more play than a higher
 jump; the step decides. The jump makes the wizard stronger like the
 spell upgrades do, so it belongs with them.
+
+### D93 — 2026-09-29 — Buff items: amounts, taking one, the chip look
+The roster's draft (D88, without the jump, D92) is settled: 4× +1
+integrity (8 → 12), 5× +10 energy (50 → 100) and one recharge buff,
+from a unit of energy every 12 ticks to every 8 (5 → 7.5 per second).
+Each buff is its own pickup type with a slot in the save's buff block
+(slots 0–9; 10–15 spare). Taking an integrity or energy buff raises the
+maximum and fills that stat to it; the install animation plays with the
+buff's chip, and the banner reads e.g. `INTEGRITY +1 / BUFF INSTALLED`.
+The wizard's maxima and recharge rate follow from the buffs found, so a
+loaded save starts him buffed. Look: a hovering chip in the stat's color
+(cyan integrity, lime energy, amber recharge) with pins, the stat's icon
+on the front and the save bit lit on the back, bigger than a refill.
+Validation keeps all integrity buffs within the key's 4-bit health field.
+**Why:** author's choices. Filling the stat makes a buff feel like a
+reward at once; a faster recharge by a third is felt without making
+energy free. A chip reads as hardware for the wizard, apart from the
+disks that teach spells, and showing its bit like a disk keeps the save
+model visible.

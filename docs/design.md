@@ -513,6 +513,47 @@ enemies).
   puts it in the room's `pickups`, and picking, erasing, Delete and
   resizing treat it like an object.
 
+## Buff items
+
+Permanent pickups that make the wizard himself stronger (D93, from the
+roster's draft, D88).
+
+| Buff | Types | Slots | Each | All found |
+|---|---|---|---|---|
+| Integrity | `buff_integrity_1`–`4` | 0–3 | +1 maximum integrity | 8 → 12 |
+| Energy | `buff_energy_1`–`5` | 4–8 | +10 maximum energy (one bar segment) | 50 → 100 |
+| Recharge | `buff_recharge` | 9 | 4 ticks fewer per unit of energy | 12 → 8 ticks (5 → 7.5 per second) |
+
+- **Data:** a pickup type `{ "kind": "buff", "slot", "stat", "amount" }`
+  in `defs.json` (`stat`: `integrity`, `energy` or `recharge`). Its
+  save bit is the slot in the buff block (bits 16–31); slots 10–15 stay
+  spare. Each buff is its own type, as each is its own bit.
+- **Effect:** `Progress.buffs()` adds up the buffs found;
+  `Game.applyBuffs()` sets the wizard's maxima and recharge rate from
+  it, at the start (a loaded save starts him buffed and full) and when he
+  takes one. Taking an integrity or energy buff fills that stat to the
+  new maximum. Buffs survive death and room resets like every permanent
+  pickup; the HUD bars grow with the maxima (a cell or a segment more).
+- **Taking one** plays the install animation (D73) with the chip in
+  place of the disk, in the buff's color; the banner shows e.g.
+  `INTEGRITY +1 / BUFF INSTALLED` (`RECHARGE BOOST` without an amount)
+  and the terminal `> BUFF INSTALLED: INTEGRITY +1`.
+- **Look:** a square chip, thicker than a disk, in the stat's color
+  (`BUFF_COLORS`: cyan integrity, lime energy, amber recharge), hovering,
+  bobbing and spinning like a disk, one corner clipped, three pins on
+  its left and right sides. The front carries the stat's icon (a plus,
+  a crystal, a lightning bolt), the back the 4×4 bit grid with the buff's
+  slot lit. A found chip is a gray, dashed ghost. Tuning: `CHIP` in
+  `src/render/chip.js`; showcase `?asset=chips`.
+- **Validation:** buff slots unique; all integrity buffs together keep
+  the maximum within the key's health field (at most 15,
+  `MAX_SAVED_INTEGRITY`); all recharge buffs together leave at least 1
+  tick per unit.
+- **Test rooms:** `buff_integrity_1` on the Fault Line lookout,
+  `buff_energy_1` on the stairs in Cache Hall's back corner,
+  `buff_recharge` beside the energy refill past the Warp pit in Fast
+  Path.
+
 ## Zap and energy
 
 - **Energy** (mana, D72): whole units; the wizard holds 50 and gets one
@@ -749,10 +790,10 @@ production shows a need for.
   early Zap, Shield, Blink, Pause; middle Cut & Paste, Firewall, Fork,
   Scan and the jump upgrade; late Compile, Warp, Zap+ and Mirror. Pull's
   place settles in its step.
-- **Buff items** (draft, settled in step 12): 4× +1 integrity (8 → 12,
-  within the key's 4-bit health field), 5× +10 energy (one bar segment
-  each, 50 → 100), one faster recharge: 10 of the 16 buff bits. The
-  jump moved to the upgrades (D92).
+- **Buff items** (settled in step 12, D93; see Buff items): 4× +1
+  integrity (8 → 12, within the key's 4-bit health field), 5× +10 energy
+  (one bar segment each, 50 → 100), one faster recharge (12 → 8 ticks
+  per unit): 10 of the 16 buff bits. The jump moved to the upgrades (D92).
 - **Turned down for now:** Patch (an enemy turns
   peaceful), Overclock (a speed burst), Decrypt (dissolves an encrypted
   wall type), Rollback (back to where he was 3 s ago); upgrades Halt
@@ -933,15 +974,15 @@ The world map tool flags any room further out.
 | Room | Size | Exits | Shows |
 |---|---|---|---|
 | `boot_sector` (start, hub) | 12×12 | north doorway → Cache Hall; raised east exit on a ledge → Stack Yard; west doorway → Quarantine; south (front) → Transit Bus | blocks, holes, two crates, a 2-high wall near the front to walk behind (X-ray outline); the Zap data disk two steps from the spawn (Phase 3) |
-| `cache_hall` | 16×8 | south (front) → Boot Sector; east (front) → Relay Station | a 3-wide pit across the room: push a crate in, then jump the rest; the Shield data disk behind it (Phase 3 step 3) |
+| `cache_hall` | 16×8 | south (front) → Boot Sector; east (front) → Relay Station | a 3-wide pit across the room: push a crate in, then jump the rest; the Shield data disk behind it (Phase 3 step 3); an energy buff on the stairs in the back corner (step 12) |
 | `relay_station` (Phase 3) | 12×12 | west doorway → Cache Hall; south (front, locked) → Stack Yard | switches (step 4): a Zap target by the back wall, a crate to push onto a plate, and a peaceful bug resting 2 s on a plate near the locked exit, so the exit opens while the bug is on it (the wizard can press that plate himself, but the exit closes as he steps off) |
 | `stack_yard` | 8×8, Glitchmire color | raised west doorway → Boot Sector; east (front) → Fault Line; north doorway (locked) → Relay Station | stacked crates, a 2-high block to climb via a crate; a plate in front of the locked doorway and a crate to push onto it (Phase 3 step 4) |
-| `fault_line` (Phase 2) | 12×12 | west doorway → Stack Yard; raised east exit on the lookout → Transit Bus | a corridor between hazard walls with an integrity refill at its end (Phase 3), guarded by two gates of spiked hoppers going up and down out of step, with a one-cell pocket between them to wait in (D82), hazard blocks between two plain ones to walk across, a zigzag path of plain blocks through a field of void blocks up to a lookout |
+| `fault_line` (Phase 2) | 12×12 | west doorway → Stack Yard; raised east exit on the lookout → Transit Bus | a corridor between hazard walls with an integrity refill at its end (Phase 3), guarded by two gates of spiked hoppers going up and down out of step, with a one-cell pocket between them to wait in (D82), hazard blocks between two plain ones to walk across, a zigzag path of plain blocks through a field of void blocks up to a lookout, with an integrity buff on it (Phase 3 step 12) |
 | `transit_bus` (Phase 2) | 12×12, 5 high | west doorway → Fault Line; north doorway → Boot Sector; raised east exit on the high ledge → Volatile Memory | a ferry across a pit between two ledges, a lift up to a high ledge, a loop carrying a crate, a press coming down (with a crate to jam it) and a pusher squeezing the wizard against the room's edge |
 | `volatile_memory` (Phase 2) | 12×12, 5 high | west doorway → Transit Bus; raised east exit on the high ledge → Crawl Space | a pit across the room with two collapsing bridges: one regrowing after 3 s (the way back), one that stays gone, with a crate on a plain ledge in front of it to push onto the bridge from solid ground (it doesn't trigger the blocks, so it is a safe spot to hop onto); two one-shot collapsing steps up to a high ledge |
 | `crawl_space` (Phase 2) | 12×12 | west doorway → Volatile Memory; east (front) → Boot Sector | bugs: a sentry crossing the entrance lane, one walking off a ledge and patrolling the floor below, a solid one shoving along a lane with a crate to push in its way, a provoked one circling a pillar, a peaceful stationary one to bounce up to a 2-high ledge, a solid peaceful one along the front edge to ride; Zap targets: the provoked one turns hostile when hit, and an amber stationary one with 4 integrity; an energy refill near the entrance (Phase 3) |
 | `quarantine` (Phase 3) | 10×10, Glitchmire | east doorway → Boot Sector; west doorway → Scheduler | chasers (step 5, D78): a virus at the back that chases and bursts, a sentinel in the far corner that keeps its distance and fires arcs, a stationary bug with a burst guarding an integrity refill; a 2-high pillar to hide behind, a trench of holes the chasers won't cross, a crate for cover and a 1-high ledge; the Pause data disk on the pillar (step 8, D85), reached by pushing the crate against it |
-| `fast_path` (Phase 3) | 12×12, Frostbyte Wastes | south (front) → Room 1 | Blink and Warp (step 9, D86): the Blink disk by the entrance, a 2-wide pit across the room to blink over, a bug patrolling the lane beyond (blink through it) past a 2-high pillar to blink into, the Warp disk at the lane's end, and a 6-wide pit only Warp crosses to an energy refill against the side wall |
+| `fast_path` (Phase 3) | 12×12, Frostbyte Wastes | south (front) → Room 1 | Blink and Warp (step 9, D86): the Blink disk by the entrance, a 2-wide pit across the room to blink over, a bug patrolling the lane beyond (blink through it) past a 2-high pillar to blink into, the Warp disk at the lane's end, and a 6-wide pit only Warp crosses to an energy refill and the recharge buff (step 12) against the side wall |
 | `clipboard` (Phase 3) | 12×12, Abyssal Buffer | east doorway → Room 1 | Cut & Paste (step 10, D87): the disk by the entrance; a crate on a 2-long 1-high ledge, cut standing on the ledge and pasted on the floor as a step up a 2-high pillar with an energy refill on top; a crate walled into a nook, only cut out; a 2-wide pit to fill with both crates, an integrity refill beyond; a patrolling bug to freeze and move |
 | `scheduler` (Phase 3) | 10×10, Abyssal Buffer | east doorway → Quarantine | the cron, worm and crawler looks (D83): a tower in the middle firing four ways, placed off the entrance's axes; a worm patrolling the back row across the tower's line of fire (its bolts can pop it); a crawler chasing from the far corner; pillars, a low wall and a crate to hide behind, an integrity refill in the far corner, and the Firewall data disk on the low wall (step 7, D84) |
 
@@ -1352,10 +1393,7 @@ Open questions, settled at the start of their step:
 - **9 Warp:** settled (D86).
 - **10 Cut & Paste:** settled (D87).
 - **11 Roster:** settled (D88); see Spell roster.
-- **12 Buff items:** the draft from the roster (D88): 4× +1 integrity
-  (8 → 12), 5× +10 energy (50 → 100), one faster-recharge buff; confirm
-  how much each raises; the access-key health field (4 bits) must hold
-  the highest maximum.
+- **12 Buff items:** settled (D93).
 - **13 Upgrades:** each upgrade's slot in the block, color and
   energy cost; how an upgrade disk looks next to a spell disk; Zap+: how
   many bounces; Mirror: does it reflect every bolt or only some, and does
@@ -1413,7 +1451,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 | File | Contents |
 |---|---|
 | `data/rooms/<id>.json` | One room (id = file name) |
-| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; `spiked_platform`: a platform that hurts on touch, hazard red (D82); switches `target` and `plate`, white, see Switches and locked exits); `enemies`: enemy templates (`bug`, `virus`, `sentinel`, see Enemies), each complete or `extend`ing another (D58, D79); `spells`: spell tuning and color (`zap`, see Zap and energy; `shield`, see Shield; `firewall`, see Firewall; `pause`, see Pause; `blink` and `warp`, see Blink and Warp); `pickups`: pickup types (see Pickups and progress); `blocks`: block types (D60): look or kind, color, properties (`damage`, `lethal`, `regrow`), `extends` for variants; see Block types |
+| `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; `spiked_platform`: a platform that hurts on touch, hazard red (D82); switches `target` and `plate`, white, see Switches and locked exits); `enemies`: enemy templates (`bug`, `virus`, `sentinel`, see Enemies), each complete or `extend`ing another (D58, D79); `spells`: spell tuning and color (`zap`, see Zap and energy; `shield`, see Shield; `firewall`, see Firewall; `pause`, see Pause; `blink` and `warp`, see Blink and Warp); `pickups`: pickup types (see Pickups and progress; buff chips: Buff items); `blocks`: block types (D60): look or kind, color, properties (`damage`, `lethal`, `regrow`), `extends` for variants; see Block types |
 | `data/biomes.json` | Biome name and room color: `home_lattice` (core, amber), `glitchmire` (pink), `frostbyte_wastes` (ice blue), `abyssal_buffer` (graphite), `firewall_citadel` (ember orange), `phantom_partition` (special, silver-white); optional `look` for the surroundings (background, outer grid and its fade, wall grid, bloom); see Biomes (D61, D62) |
 | `data/world.json` | Start room, exit connections and every room's cell on the world map (`positions`, D66) |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |
