@@ -7,6 +7,15 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Upgrades (Phase 3 step 13, D95): permanent upgrade cards with their
+  own save bits (the upgrade block, bits 32–47): an expansion card with
+  contact fingers in the upgrade's color. Zap+ replaces Zap in the Tab cycle and
+  its bolt bounces three times off blocks and walls; Shield+ makes the
+  Shield send enemy bolts back the way they came, hurting the first
+  enemy they meet; the double jump gives the wizard one more jump in
+  mid-air, with kick-off rings. `UPGRADE INSTALLED` banner, validation,
+  showcase entries (`?asset=upgrades`), the pickup report lists them,
+  and the new test room Upgrade Lab off Room 1.
 - World map tool: a pickup report on F3 lists every permanent item
   (spell disks, buff chips) by save bit with the rooms it lies in, and
   flags items not placed yet or placed more than once; refills by type.

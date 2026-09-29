@@ -1719,3 +1719,52 @@ Refines D74 (dashed ghosts) and D93 (amber recharge).
 also the Home Lattice room color and the banner color, and no HUD bar
 is amber, so it said nothing about the stat. Solid gray reads cleaner
 than dashes on small spinning items.
+
+### D95 — 2026-09-29 — Upgrades: Zap+, Shield+ and the double jump
+Phase 3 step 13's open questions, settled with the author:
+- **Data:** an upgrade is a pickup type `{ "kind": "upgrade", "upgrade",
+  "slot", "spell"?, "color", "bounces"? }` in `defs.json`, like a buff:
+  its save bit is its slot in the upgrade block (bits 32–47). The
+  engine knows three upgrades by `upgrade`: `zap_plus` (slot 0, Zap's
+  cyan), `shield_plus` (slot 1, a silvery ice blue) and `double_jump`
+  (slot 2, the wizard's magenta). One pickup type per upgrade.
+- **Replacing the spell:** found, a spell upgrade replaces its spell in
+  the Tab cycle: the spell keeps its id and place, the HUD tag shows the
+  upgrade's name (ZAP+), and the plain spell can't be cast any more.
+  Taking it selects the spell. Costs and cooldowns stay the spell's
+  (Zap+ 10 energy, Shield+ 20). An upgrade found before its spell
+  does nothing until the spell is known.
+- **Zap+:** the bolt bounces three times (`bounces`; 2 at first,
+  raised to 3 by the author) off blocks and the room's sides, turning
+  back along the axis it ran into, so a diagonal shot banks round a
+  corner. It stops at room objects as a Zap does
+  (crates break, targets switch). It never hurts the wizard.
+- **Shield+:** every enemy bolt reaching the Shield's ring flies back the
+  way it came as the wizard's bolt: it hurts the first enemy it meets
+  (its shooter or another), switches targets and breaks crates like a
+  Zap. The ring flares; arcs and bursts are still only blocked. The ring
+  shows in Shield+'s color.
+- **Double jump**, not a higher jump: one more jump in mid-air, as
+  strong as from the ground, after a jump, walking off a ledge or a
+  bounce; back on landing. From the top of a jump it reaches 2.4, so it
+  clears a 2-high wall and crosses wider gaps. Rooms keep relying on
+  the base rules (1 block up, a 1-tile gap); a 2-high wall or a wider
+  gap becomes a gate the upgrade opens. Its kick-off shows as hexagonal
+  rings in magenta where he jumped.
+- **Look:** an upgrade is an expansion card, a shape of its own so it
+  never reads as a spell disk: a white landscape card as thin as a disk,
+  hovering and spinning like one, with a connector of contact fingers
+  along its bottom edge in the upgrade's color (a key notch in it), a
+  mounting bracket up its left side and the 4×4 bit grid with its slot
+  lit on both faces. A found one is a gray ghost. (A disk with a "+"
+  badge on its edge was tried first; the author turned it down.)
+- **Test room:** Upgrade Lab, off Room 1's new east exit.
+- **Names:** the Shield upgrade is Shield+ (D88 called it Mirror), like
+  Zap+, so the player sees SHIELD become SHIELD+ in the Tab cycle rather
+  than a spell vanishing.
+**Why:** author's choices. A double jump gives the upgrade more play
+than a higher jump (D92) and leaves the base jump rules intact. Keeping
+upgrades as pickup types like buffs needs no new top-level data and
+keeps the bit on the item. Replacing the spell keeps the Tab cycle
+short (D88). Reflecting at any enemy is simpler to read than a homing
+bolt and opens puzzles (bouncing a shot onto a target).

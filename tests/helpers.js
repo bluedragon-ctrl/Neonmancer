@@ -84,7 +84,8 @@ export const SPELLS = {
 };
 
 /**
- * Pickup types (D71): the data disks, both refills and a buff of each stat (D93).
+ * Pickup types (D71): the data disks, both refills, a buff of each stat
+ * (D93) and the three upgrades (D95), as in defs.json.
  * The integrity refill gives 2 here (3 in defs.json); the tests read its amount from here.
  */
 export const PICKUPS = {
@@ -101,6 +102,9 @@ export const PICKUPS = {
   buff_integrity_2: { kind: 'buff', slot: 1, stat: 'integrity', amount: 1 },
   buff_energy_1: { kind: 'buff', slot: 4, stat: 'energy', amount: 10 },
   buff_recharge: { kind: 'buff', slot: 9, stat: 'recharge', amount: 4 },
+  upgrade_zap_plus: { kind: 'upgrade', upgrade: 'zap_plus', slot: 0, spell: 'zap', color: '#00f0ff', bounces: 3 },
+  upgrade_shield_plus: { kind: 'upgrade', upgrade: 'shield_plus', slot: 1, spell: 'shield', color: '#cfe8ff' },
+  upgrade_double_jump: { kind: 'upgrade', upgrade: 'double_jump', slot: 2, color: '#ff2bd6' },
 };
 
 /** Block types, as in defs.json (D60): plain, hazard, void, collapsing and a variant that grows back after 3 s. */

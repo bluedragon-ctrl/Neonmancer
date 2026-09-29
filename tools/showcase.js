@@ -15,7 +15,7 @@ import defs from '../data/defs.json';
 import strings from '../data/strings.json';
 import { OBJECT_STYLE_DEFAULTS, resolveBlockTypes, resolveEnemyTemplates, withEnemyDefaults, withExitDefaults } from '../src/data/room-data.js';
 import { VIEW_HEIGHT, frameRoom } from '../src/render/camera.js';
-import { PLAYER } from '../src/entities/player.js';
+import { JUMP_SPEED, PLAYER } from '../src/entities/player.js';
 import { PLAYER_HITBOX } from '../src/core/rules.js';
 import { COLLAPSING } from '../src/entities/collapsing.js';
 import {
@@ -51,6 +51,7 @@ import { BOLT } from '../src/entities/bolt.js';
 import { ZAP_FX, damagedGlitch, enemyHitLook } from '../src/render/zap-fx.js';
 import { createBolt, createCastFlare, createSparks, placeBolt, placeCastFlare, placeSparks } from '../src/render/zap-view.js';
 import { EnergyBar } from '../src/ui/energy-bar.js';
+import { createCard } from '../src/render/card.js';
 import { createChip } from '../src/render/chip.js';
 import { DISK, createDisk, diskMotion, diskPixels, poseDisk } from '../src/render/disk.js';
 import { createRefill, refillMotion } from '../src/render/refill.js';
@@ -68,6 +69,7 @@ import { SWITCH_KINDS } from '../src/entities/switch.js';
 import { CLIP_FX, clipPixels, marqueeLook, pasteGrow } from '../src/render/clip-fx.js';
 import { createMarquee, placeMarquee } from '../src/render/clip-view.js';
 import { clipIcon } from '../src/ui/clip-icon.js';
+import { createJumpRings, placeJumpRings } from '../src/render/jump-view.js';
 
 /** Block types with variants filled in (D60). */
 const BLOCK_TYPES = resolveBlockTypes(defs.blocks);
@@ -200,6 +202,18 @@ const ALL_ASSETS = [
   { label: 'chip-recharge', group: 'chips', spin: false, build: () => buildChip({ stat: 'recharge', slot: 9 }) },
   { label: 'chip-ghost', group: 'chips', spin: false, build: () => buildChip({ stat: 'energy', slot: 4, ghost: true }) },
   { label: 'chips-row', group: 'chips', span: 4, spin: false, build: buildChipRow },
+  // Upgrades (Phase 3 step 13, D95): an upgrade is an expansion card, its
+  // contact fingers in the upgrade's color and its slot lit in the bit grid;
+  // a found one as a gray ghost; the three in a row beside the Zap disk.
+  // Shield+ is the Shield's ring in its color; the double jump kicks
+  // off hexagonal rings in mid-air.
+  { label: 'upgrade-zap-plus', group: 'upgrades', spin: false, build: () => buildCard(defs.pickups.upgrade_zap_plus) },
+  { label: 'upgrade-shield-plus', group: 'upgrades', spin: false, build: () => buildCard(defs.pickups.upgrade_shield_plus) },
+  { label: 'upgrade-jump', group: 'upgrades', spin: false, build: () => buildCard(defs.pickups.upgrade_double_jump) },
+  { label: 'upgrade-ghost', group: 'upgrades', spin: false, build: () => buildCard({ ...defs.pickups.upgrade_shield_plus, ghost: true }) },
+  { label: 'upgrades-row', group: 'upgrades', span: 4, spin: false, build: buildUpgradeRow },
+  { label: 'shield-plus', group: 'upgrades', spin: false, shadow: PALETTE.cyan, build: () => buildShield(defs.pickups.upgrade_shield_plus.color) },
+  { label: 'double-jump', group: 'upgrades', span: 4, spin: false, build: buildDoubleJump },
   // Switches and locked exits (Phase 3 step 4, D75): a target zapped on
   // and off; a plate pressed by a crate dropping on it, then by the wizard;
   // a room with a locked doorway (panel) and a locked front exit (bars)
@@ -349,10 +363,10 @@ function buildInstall() {
 }
 
 /** The wizard casting Shield: up for its duration, then down for a moment. */
-function buildShield() {
+function buildShield(color = defs.spells.shield.color) {
   const wizard = createWizard();
   wizard.rotation.y = Math.PI / 4;
-  const shield = createShield(defs.spells.shield.color);
+  const shield = createShield(color);
   const asset = new Group().add(wizard, shield);
   const ticks = Math.round(defs.spells.shield.duration * 60);
   const loop = ticks + 50;
@@ -549,6 +563,54 @@ function buildChipRow() {
     asset.add(model);
   });
   asset.userData.update = (dt, time) => models.forEach((model, i) => poseDisk(model, diskMotion({ time: time + i * 0.7 })));
+  return asset;
+}
+
+/** An upgrade card idling. */
+function buildCard(options) {
+  const card = createCard(options);
+  const asset = new Group().add(card);
+  asset.userData.update = (dt, time) => poseDisk(card, diskMotion({ time, ghost: options.ghost }));
+  return asset;
+}
+
+/** The three upgrade cards in a row along the screen's horizontal, the Zap disk first to compare. */
+function buildUpgradeRow() {
+  const upgrades = ['upgrade_zap_plus', 'upgrade_shield_plus', 'upgrade_double_jump'].map((id) => createCard(defs.pickups[id]));
+  const models = [createDisk(defs.spells.zap), ...upgrades];
+  const asset = new Group();
+  models.forEach((model, i) => {
+    const along = (i - 1.5) * 0.9;
+    model.position.set(along, 0, -along);
+    asset.add(model);
+  });
+  asset.userData.update = (dt, time) => models.forEach((model, i) => poseDisk(model, diskMotion({ time: time + i * 0.7 })));
+  return asset;
+}
+
+/**
+ * The wizard double jumping on the spot (D95): a jump, a second one at its
+ * top (the kick-off rings stay where he was), down again, a pause.
+ */
+function buildDoubleJump() {
+  const wizard = createWizard();
+  wizard.rotation.y = Math.PI / 4;
+  const rings = createJumpRings();
+  const asset = new Group().add(wizard, rings);
+  const g = PLAYER.gravity / 3600;
+  const v = JUMP_SPEED / 60;
+  // Second jump at the top of the first; each is v per tick, less g per tick.
+  const top = v / g;
+  const height = (t) => (t <= top ? v * t - (g * t * t) / 2 : Math.max(0, PLAYER.jumpHeight + v * (t - top) - (g * (t - top) ** 2) / 2));
+  const land = top + (v + Math.sqrt(v * v + 2 * g * PLAYER.jumpHeight)) / g;
+  const loop = land + 40;
+  let tick = 0;
+  asset.userData.update = (dt) => {
+    tick = (tick + dt * 60) % loop;
+    wizard.position.y = height(tick);
+    const since = tick - top;
+    placeJumpRings(rings, [0, PLAYER.jumpHeight, 0], since >= 0 && since <= PLAYER.airJumpTicks ? since : null);
+  };
   return asset;
 }
 

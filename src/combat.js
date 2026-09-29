@@ -21,7 +21,8 @@ const BOUNCE_REACH = 0.05;
  * Bolts fly on. A bounce is reported ('ricochet', with where and the way
  * it came in, for sparks). One that stops is reported ('zap', for its
  * sparks) and gone. If it stopped at the wizard (an enemy's shot), he is
- * hurt, unless his ring absorbed it ('block', D84); at an enemy, that takes its damage (hitEnemy()),
+ * hurt, unless his ring absorbed it ('block', D84) or, with Shield+, sent
+ * it back ('reflect', D95); at an enemy, that takes its damage (hitEnemy()),
  * or a Pause bolt freezes it (pauseEnemy()). A room object only minds
  * the wizard's Zap: a destructible one 'hit' or 'break', a target
  * 'switch' (others shrug it off).
@@ -33,8 +34,12 @@ export function updateBolts(game) {
     const stopped = bolt.update(game);
     for (const { pos, dir } of bolt.rebounds) game.emit('ricochet', { bolt, pos, dir });
     if (!stopped) continue;
-    game.emit('zap', { bolt });
     const { target, owner } = bolt;
+    if (target === player && player.shield?.reflects) {
+      reflect(game, bolt);
+      continue;
+    }
+    game.emit('zap', { bolt });
     if (target === player) {
       if (player.shield) block(game, { enemy: owner, bolt });
       else game.hurt(bolt.damage, { enemy: owner });
@@ -185,6 +190,22 @@ function strike(game, body, enemy) {
     return game.hurt(damage, { enemy });
   }
   hitEnemy(game, body, damage, 'discharge');
+}
+
+/**
+ * Shield+ sends a shot back (D95): the ring flares as when it blocks,
+ * sparks fly where it glanced off ('ricochet') and the bolt flies back
+ * as his ('reflect').
+ * @param {import('./game.js').Game} game
+ * @param {Bolt} bolt
+ */
+function reflect(game, bolt) {
+  const { shield } = game.player;
+  const enemy = bolt.owner;
+  shield.blockedAt = shield.tick;
+  game.emit('ricochet', { bolt, pos: [...bolt.pos], dir: [...bolt.dir] });
+  bolt.reflect();
+  game.emit('reflect', { bolt, enemy });
 }
 
 /**

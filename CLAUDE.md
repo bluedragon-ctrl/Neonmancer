@@ -73,9 +73,9 @@ mobile/touch support, backend or accounts.
 - Coordinates: y is up; room size is [x, y, z] = [width, height, depth];
   the floor is at y = 0; back walls are the x = 0 and z = 0 planes.
 - 1 block = 1 unit (1x1x1). Player jump height: 1 unit (clears exactly one
-  block, never two). A jump upgrade (a double jump or a higher jump,
-  D92) raises it later, to skip easier rooms or reach areas closed
-  before (D68).
+  block, never two). The double jump upgrade (D92, D95) adds a second
+  jump in mid-air (2 blocks up, wider gaps), to skip easier rooms or
+  reach areas closed before (D68).
 - Player hitbox 0.6 x 1.5 x 0.6 (the hat is visual only), so the wizard
   needs 2 blocks of headroom.
 - Blocks snap to the grid; player and enemies move freely (sub-grid).
@@ -188,24 +188,28 @@ Planned for Phase 4 (the roster, D88); details settle in their steps:
 - **Pull** — pulls the closest movable object (a crate) or enemy in the
   facing direction one tile towards the wizard (D89)
 
-Upgrades have their own disks and save bits (the upgrades block, not
+Upgrades have their own cards and save bits (the upgrades block, not
 spells, D88); a spell upgrade replaces its base spell in the Tab cycle
 (ZAP becomes ZAP+):
-- **Zap+** — the bolt bounces off walls, reaching targets round corners
-- **Mirror** (Shield upgrade) — reflects bolts back at the shooter
-- **Jump upgrade** (D92) — the wizard's own jump: a double jump or a
-  higher jump (to 2 blocks), settled in the upgrades step
+- **Zap+** — the bolt bounces three times off blocks and walls, reaching
+  targets round corners (D95)
+- **Shield+** (Shield upgrade) — reflects every bolt back the way it came;
+  it hurts the first enemy it meets (D95)
+- **Double jump** (D92, D95) — one more jump in mid-air, once until he
+  lands
+
+An upgrade is an expansion card with contact fingers in its color (D95).
 
 Up to 16 spells and 16 upgrades; 11 spells and 3 upgrades are set, the
 rest stay spare for what content production needs (D88, D89). Intended order
 in the world: early Zap, Shield, Blink, Pause; middle Cut & Paste,
-Firewall, Fork, Scan and the jump upgrade; late Compile, Warp, Zap+ and
-Mirror. Buff items make the wizard himself stronger: more integrity,
+Firewall, Fork, Scan and the double jump; late Compile, Warp, Zap+ and
+Shield+. Buff items make the wizard himself stronger: more integrity,
 more energy, faster recharge (D93): 4× +1 integrity (8 → 12), 5× +10
 energy (50 → 100) and one recharge buff (a unit every 8 ticks instead
 of 12); taking one fills the stat it raises. Each is a chip with its
 own save bit (buff slots 0–9). For the player, a pickup's shape tells
-what it is (white disk: spell, chip: buff, small voxel: refill) and its
+what it is (white disk: spell, card: upgrade, chip: buff, small voxel: refill) and its
 color the HUD bar it improves (light blue integrity, yellow-green energy
 and recharge); found ones are solid gray (D94). Stronger spells, upgrades
 and buffs all let him skip easier rooms and reach areas he couldn't
@@ -482,7 +486,7 @@ World map tool for the developer. Pickups and a progress model, data
 disks. Switches (pressure plates, bolt targets) unlocking exits. Viruses,
 Sentinels and Pop-ups. Shield, Firewall, Pause, Warp and Cut & Paste spells.
 A discussion step on further spells, spell upgrades and buff items; the
-first buff items; the upgrades Zap+, Mirror and the jump (D91, D92).
+first buff items; the upgrades Zap+, Shield+ and the double jump (D91, D92, D95).
 Backups (lives) and backup shrines (D92). Score, bonus bits and secrets. Fragments, access levels
 and the core. Step plan: docs/design.md (D65).
 

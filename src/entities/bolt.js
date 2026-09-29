@@ -13,6 +13,10 @@
  * A bouncing bolt (an enemy's `boltBounces`, D81) glances off blocks, the
  * room's sides and room objects that many times, turning back along the
  * axis it ran into; after its first bounce it can hit its own shooter too.
+ * The wizard's Zap+ (D95) bounces off blocks and the room's sides only: it
+ * stops at a room object as a Zap does, so it still breaks crates and
+ * switches targets. Shield+ (D95) sends an enemy's shot back the way it
+ * came (reflect()): from then on it is the wizard's bolt.
  * The body it stops at (its `target`) takes the hit (updateBolts() in combat.js:
  * enemies and the wizard; room objects only mind the wizard's Zap). It
  * never goes through a thing: it moves in short sub-steps; it gives up
@@ -67,13 +71,14 @@ export class Bolt {
   /**
    * @param {number[]} pos its middle [x, y, z] where it starts
    * @param {number[]} dir flight direction [dx, dy, dz], normalized
-   * @param {{ speed: number, damage?: number, color?: number|string, owner?: object, bounces?: number, freeze?: number }} options
+   * @param {{ speed: number, damage?: number, color?: number|string, owner?: object, bounces?: number, bounceObjects?: boolean, freeze?: number }} options
    *   `owner`: the enemy that fired it (none: the wizard's spell); `color`
    *   its color (the Zap's cyan by default); `bounces`: how often it
-   *   glances off walls and objects before they stop it; `freeze`: ticks a
+   *   glances off walls (and room objects, unless `bounceObjects` is false)
+   *   before they stop it; `freeze`: ticks a
    *   Pause bolt freezes an enemy for (0: not a Pause bolt)
    */
-  constructor(pos, dir, { speed, damage = 0, color = null, owner = null, bounces = 0, freeze = 0 }) {
+  constructor(pos, dir, { speed, damage = 0, color = null, owner = null, bounces = 0, bounceObjects = true, freeze = 0 }) {
     this.dir = [...dir];
     this.speed = speed;
     this.damage = damage;
@@ -82,7 +87,10 @@ export class Bolt {
     this.owner = owner;
     /** Bounces left, and whether it has bounced at all (then its owner is fair game). */
     this.bounces = bounces;
+    this.bounceObjects = bounceObjects;
     this.bounced = false;
+    /** Sent back by Shield+ (D95): now the wizard's. */
+    this.reflected = false;
     /** Where it bounced this tick: { pos, dir } with the direction it came in (for sparks). */
     this.rebounds = [];
     /** Its middle [x, y, z]. */
@@ -101,12 +109,27 @@ export class Bolt {
    * The wizard's Zap or Pause, from his hands.
    * @param {number[]} feet the wizard's feet center
    * @param {number[]} aim [dx, dz], normalized
-   * @param {{ speed: number, damage?: number, color: string, freeze?: number }} spell the spell's
-   *   tuning (defs.json spells.zap), or Pause's with the ticks it freezes for
+   * @param {{ speed: number, damage?: number, color: string, freeze?: number, bounces?: number }} spell the spell's
+   *   tuning (defs.json spells.zap), or Pause's with the ticks it freezes for;
+   *   Zap+'s bounces (D95), off blocks and the room's sides only
    */
   static cast(feet, [dx, dz], spell) {
     const pos = [feet[0] + dx * BOLT.reach, feet[1] + BOLT.height, feet[2] + dz * BOLT.reach];
-    return new Bolt(pos, [dx, 0, dz], spell);
+    return new Bolt(pos, [dx, 0, dz], { ...spell, bounceObjects: false });
+  }
+
+  /**
+   * Shield+ sends an enemy's shot back the way it came (D95): it flies
+   * on as the wizard's bolt, stopping at the first enemy (its shooter
+   * included), object or wall, with its bounces left.
+   */
+  reflect() {
+    for (let k = 0; k < 3; k++) this.dir[k] = -this.dir[k];
+    this.owner = null;
+    this.reflected = true;
+    this.stopped = false;
+    this.target = null;
+    this.traveled = 0;
   }
 
   /**
@@ -169,7 +192,7 @@ export class Bolt {
   /** Would a wall stop it where it is: a block, the room's side (a closed exit too) or a room object? */
   walled({ grid, objects }) {
     const box = this.box();
-    return overlapsSolid(box, grid) || objects.some((object) => object.solid !== false && overlapsBox(box, object.box()));
+    return overlapsSolid(box, grid) || (this.bounceObjects && objects.some((object) => object.solid !== false && overlapsBox(box, object.box())));
   }
 
   /**

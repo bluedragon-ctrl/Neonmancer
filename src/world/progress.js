@@ -12,9 +12,9 @@
 /**
  * The save bits in blocks (D71): where each block starts and how many bits
  * it has. A block's index comes from what the item unlocks: a spell's
- * `slot` (defs.json spells) for its data disk; a buff's `slot` on its
- * pickup type; later a spell upgrade's slot on its pickup type (D88), and a
- * fragment's number on the placement.
+ * `slot` (defs.json spells) for its data disk; a buff's or an upgrade's
+ * `slot` on its pickup type (D88, D95); later a fragment's number on the
+ * placement.
  */
 export const SAVE_BLOCKS = {
   spells: { start: 0, size: 16 },
@@ -46,6 +46,7 @@ export function saveBit(block, index) {
 export function pickupBit(type, spells) {
   if (type.kind === 'disk') return saveBit('spells', spells[type.spell].slot);
   if (type.kind === 'buff') return saveBit('buffs', type.slot);
+  if (type.kind === 'upgrade') return saveBit('upgrades', type.slot);
   return null;
 }
 
@@ -96,5 +97,19 @@ export class Progress {
       if (type.kind === 'buff' && this.has(saveBit('buffs', type.slot))) total[type.stat] += type.amount;
     }
     return total;
+  }
+
+  /**
+   * The upgrades found (D95), by what they do: `upgrade` → its pickup type
+   * (its spell and tuning, e.g. Zap+'s bounces).
+   * @param {Record<string, object>} pickups defs.json "pickups"
+   * @returns {Map<string, object>}
+   */
+  upgrades(pickups) {
+    const found = new Map();
+    for (const type of Object.values(pickups)) {
+      if (type.kind === 'upgrade' && this.has(saveBit('upgrades', type.slot))) found.set(type.upgrade, type);
+    }
+    return found;
   }
 }

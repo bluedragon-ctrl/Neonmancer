@@ -17,10 +17,13 @@ import { warpTarget } from './entities/warp.js';
  * fizzled: the energy goes back (castSpell()).
  */
 const SPELL_EFFECTS = {
-  /** A bolt from his hands the way he aims (entities/bolt.js). */
-  zap: (game, spell) => game.bolts.push(Bolt.cast(game.player.pos, game.player.aim(), spell)),
-  /** A ring of electricity round him for a while that blocks ranged attacks (D73, D84). */
-  shield: (game, spell) => game.player.raiseShield('shield', Math.round(spell.duration / DT)),
+  /** A bolt from his hands the way he aims (entities/bolt.js); with Zap+ it bounces off walls (D95). */
+  zap: (game, spell) => {
+    const bounces = game.player.upgrades.get('zap_plus')?.bounces ?? 0;
+    game.bolts.push(Bolt.cast(game.player.pos, game.player.aim(), { ...spell, bounces }));
+  },
+  /** A ring of electricity round him for a while that blocks ranged attacks (D73, D84); with Shield+ it reflects bolts (D95). */
+  shield: (game, spell) => game.player.raiseShield('shield', Math.round(spell.duration / DT), game.player.upgrades.has('shield_plus')),
   /** A ring like the Shield that also blocks touch and burns enemies touching it (D84). */
   firewall: (game, spell) => game.player.raiseShield('firewall', Math.round(spell.duration / DT)),
   /** A bolt the way he aims that freezes the first enemy it hits (D85). */

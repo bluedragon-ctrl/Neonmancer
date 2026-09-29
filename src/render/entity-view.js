@@ -49,6 +49,7 @@ import { createPauseCage, placePauseCage } from './pause-view.js';
 import { warpFlash } from './warp-fx.js';
 import { createWarpTrail, dashPose, placeWarpTrail } from './warp-view.js';
 import { ClipView } from './clip-view.js';
+import { createJumpRings, placeJumpRings } from './jump-view.js';
 
 /**
  * Which bodies get a drop shadow besides the wizard (who always has one).
@@ -192,7 +193,9 @@ export class PlayerView {
     this.shadow = createDropShadow(PALETTE.cyan);
     this.pixels = createDerezPixels();
     this.flare = createCastFlare();
-    this.group.add(this.wizard, this.shadow, this.pixels, this.flare);
+    /** The double jump's kick-off rings (D95). */
+    this.jumpRings = createJumpRings();
+    this.group.add(this.wizard, this.shadow, this.pixels, this.flare, this.jumpRings);
     /** Install animations by spell id, made when first needed (D73). */
     this.installs = new Map();
     /** The Shield and Firewall rings by spell id, made when first cast. */
@@ -230,7 +233,8 @@ export class PlayerView {
   ringView(spell) {
     let view = this.rings.get(spell);
     if (!view) {
-      const { color } = this.game.content.spells[spell];
+      // Shield+ (D95) is the Shield's ring in the upgrade's color.
+      const { color } = spell === 'shield_plus' ? this.game.player.upgrades.get('shield_plus') : this.game.content.spells[spell];
       view = spell === 'firewall' ? createFirewall(color) : createShield(color);
       this.rings.set(spell, view);
       this.group.add(view);
@@ -269,11 +273,13 @@ export class PlayerView {
     const { install, shield } = player;
     for (const [item, view] of this.installs) view.visible = install?.item === item;
     if (install) placeInstall(this.installView(install.item), this.wizard, pos, install.tick + alpha, install.at.map((v, i) => v - pos[i]));
-    for (const [spell, view] of this.rings) view.visible = shield?.spell === spell;
+    placeJumpRings(this.jumpRings, player.airJumpFrom, player.airJumpTicks === null ? null : player.airJumpTicks + alpha);
+    const ring = shield?.reflects ? 'shield_plus' : shield?.spell;
+    for (const [spell, view] of this.rings) view.visible = ring === spell;
     if (shield) {
       const place = shield.spell === 'firewall' ? placeFirewall : placeShield;
       const sinceBlock = shield.blockedAt === null ? null : shield.tick - shield.blockedAt + alpha;
-      place(this.ringView(shield.spell), pos, shield.tick + alpha, shield.ticks, sinceBlock);
+      place(this.ringView(ring), pos, shield.tick + alpha, shield.ticks, sinceBlock);
     }
     // Cut & Paste: its effect wherever he goes, and its aim marker (D87).
     const clipSpell = this.game.content.spells.cut_paste;

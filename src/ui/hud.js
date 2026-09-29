@@ -118,17 +118,20 @@ export class Hud {
    * The selected spell, under the energy bar; the switch key shows only
    * when he knows more than one. A new selection flashes. Hidden while he
    * knows no spell (before the first data disk).
-   * @param {string|null} spell spell id (its name is the string "spell.<id>")
+   * @param {string|null} spell spell id
    * @param {number} known how many spells he knows
+   * @param {string} [nameKey] its name's string: "spell.<id>", or its
+   *   upgrade's (ZAP+, D95; Game.spellNameKey()); a new name flashes too
    */
-  setSpell(spell, known) {
+  setSpell(spell, known, nameKey = `spell.${spell}`) {
     this.spellKey.hidden = known < 2;
     this.spellBox.hidden = spell === null;
-    if (spell === this.spell) return;
+    const shown = spell === null ? null : nameKey;
+    if (shown === this.spell) return;
     const first = this.spell === null;
-    this.spell = spell;
+    this.spell = shown;
     if (spell === null) return;
-    this.spellName.textContent = this.text(`spell.${spell}`);
+    this.spellName.textContent = this.text(nameKey);
     if (first) return;
     this.spellBox.classList.remove('switched');
     void this.spellBox.offsetWidth; // restart the animation
