@@ -489,8 +489,14 @@ enemies).
   its disk's lit bit, its
   install animation and its banner.
 - **Found before:** a permanent pickup whose bit is set shows as a ghost
-  (gray, dashed, spinning without the bob, D74) and can't be taken again
-  (D67).
+  (gray, solid-lined, spinning without the bob, D74, D94) and can't be
+  taken again (D67).
+- **Pickup rules for the player** (D94): the shape tells what a pickup
+  is, the color what it touches. A white disk teaches a spell (its lit
+  bit in the spell's color); a chip is a permanent buff; a small voxel
+  shape is a temporary refill. Chips and refills take the color of the
+  HUD bar they improve: light blue (cyan) integrity, yellow-green (lime)
+  energy, recharge included. Gray means found already.
 - **Temporary: refills.** `refill_integrity` (+3) and `refill_energy`
   (+30), up to the wizard's maximum; a refill is left lying while that stat
   is full. No save bit: it comes back when the room resets (entering it,
@@ -543,12 +549,13 @@ roster's draft, D88).
   place of the disk, in the buff's color; the banner shows e.g.
   `INTEGRITY +1 / BUFF INSTALLED` (`RECHARGE BOOST` without an amount)
   and the terminal `> BUFF INSTALLED: INTEGRITY +1`.
-- **Look:** a square chip, thicker than a disk, in the stat's color
-  (`BUFF_COLORS`: cyan integrity, lime energy, amber recharge), hovering,
+- **Look:** a square chip, thicker than a disk, in the color of the HUD
+  bar it improves (`BUFF_COLORS`, D94: cyan integrity, lime energy and
+  recharge; the icon tells recharge from energy), hovering,
   bobbing and spinning like a disk, one corner clipped, three pins on
   its left and right sides. The front carries the stat's icon (a plus,
   a crystal, a lightning bolt), the back the 4×4 bit grid with the buff's
-  slot lit. A found chip is a gray, dashed ghost. Tuning: `CHIP` in
+  slot lit. A found chip is a gray ghost, solid-lined like a found disk. Tuning: `CHIP` in
   `src/render/chip.js`; showcase `?asset=chips`.
 - **Validation:** buff slots unique; all integrity buffs together keep
   the maximum within the key's health field (at most 15,

@@ -204,7 +204,10 @@ Mirror. Buff items make the wizard himself stronger: more integrity,
 more energy, faster recharge (D93): 4× +1 integrity (8 → 12), 5× +10
 energy (50 → 100) and one recharge buff (a unit every 8 ticks instead
 of 12); taking one fills the stat it raises. Each is a chip with its
-own save bit (buff slots 0–9). Stronger spells, upgrades
+own save bit (buff slots 0–9). For the player, a pickup's shape tells
+what it is (white disk: spell, chip: buff, small voxel: refill) and its
+color the HUD bar it improves (light blue integrity, yellow-green energy
+and recharge); found ones are solid gray (D94). Stronger spells, upgrades
 and buffs all let him skip easier rooms and reach areas he couldn't
 before.
 

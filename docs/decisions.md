@@ -1696,7 +1696,7 @@ fragments) plays this same install animation as a spell, with its own
 model and color, then a banner and a terminal line.
 The wizard's maxima and recharge rate follow from the buffs found, so a
 loaded save starts him buffed. Look: a hovering chip in the stat's color
-(cyan integrity, lime energy, amber recharge) with pins, the stat's icon
+(cyan integrity, lime energy; recharge amber at first, lime since D94) with pins, the stat's icon
 on the front and the save bit lit on the back, bigger than a refill.
 Validation keeps all integrity buffs within the key's 4-bit health field.
 **Why:** author's choices. Filling the stat makes a buff feel like a
@@ -1705,3 +1705,17 @@ makes each one read as the wizard getting stronger for good; a faster recharge b
 energy free. A chip reads as hardware for the wizard, apart from the
 disks that teach spells, and showing its bit like a disk keeps the save
 model visible.
+
+### D94 — 2026-09-29 — Pickup colors the player can read; found pickups solid gray
+Pickups follow two rules: the shape tells what one is (a white data
+disk teaches a spell, a chip is a permanent buff, a small voxel shape a
+temporary refill), and the color tells which stat it touches, the color
+of its HUD bar: light blue (cyan) integrity, yellow-green (lime) energy.
+The recharge buff turns from amber to lime, as it improves energy; its
+lightning icon tells it from the energy chip. A found disk or chip
+stays a gray ghost but is drawn with solid lines instead of dashed.
+Refines D74 (dashed ghosts) and D93 (amber recharge).
+**Why:** author's request, for a clean visual distinction. Amber is
+also the Home Lattice room color and the banner color, and no HUD bar
+is amber, so it said nothing about the stat. Solid gray reads cleaner
+than dashes on small spinning items.

@@ -15,7 +15,8 @@ and the project uses [Semantic Versioning](https://semver.org/).
   speed up his energy recharge (one, 12 → 8 ticks per unit). Each has a
   save bit in the buff block; taking one fills the stat it raises, plays
   the install animation and shows `BUFF INSTALLED`. The HUD bars grow
-  with the maxima. Chip look in the showcase (`?asset=chips`); one of
+  with the maxima; chips and refills take the color of the bar they
+  improve, and found disks and chips are solid gray (D94). Chip look in the showcase (`?asset=chips`); one of
   each in the test rooms Fault Line, Cache Hall and Fast Path;
   validation of buff slots and the key's integrity limit.
 - The save key's layout gets an 8-bit access-level field (D91, 4 bits
