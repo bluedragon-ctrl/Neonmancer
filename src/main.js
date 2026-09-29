@@ -167,7 +167,7 @@ function syncHud(hud, game, renderer, dt) {
   hud.setSpell(player.spell, player.spells.length, player.spell && game.spellNameKey(player.spell));
   hud.setClipboard(player.spell === 'cut_paste', player.clipboard);
   hud.setScore(game.score, game.completion);
-  hud.setFragments(game.progress.count('fragments'), game.fragmentRules.required, game.progress.accessLevel);
+  hud.setFragments(game.fragmentSlots(), game.fragmentRules.required, game.progress.accessLevel);
   hud.setMovementMode(game.movementMode);
   hud.setHintWanted(wantsFullscreenHint(renderer.stageHeight, window.devicePixelRatio, !!document.fullscreenElement));
   hud.update(dt);

@@ -82,9 +82,6 @@ export function validateData(files) {
     if (type.damage !== undefined && type.kind !== 'platform') {
       report('defs.json', `objects.${id}.damage`, `only platforms can hurt, not a ${type.kind}`);
     }
-    if (type.look !== undefined && type.kind !== 'core') {
-      report('defs.json', `objects.${id}.look`, `only the core has a look, not a ${type.kind}`);
-    }
   }
 
   const enemies = files['defs.json'].enemies ?? {};

@@ -318,6 +318,14 @@ export class Game {
     }
   }
 
+  /** The fragments found, by slot (D101): which modules of the boot key he has. */
+  fragmentSlots() {
+    const { start, size } = SAVE_BLOCKS.fragments;
+    const slots = [];
+    for (let slot = 0; slot < size; slot++) if (this.progress.has(start + slot)) slots.push(slot);
+    return slots;
+  }
+
   /**
    * Debug mode: find the next `count` fragments not found yet (by slot),
    * placed or not, to try access levels without walking the world.

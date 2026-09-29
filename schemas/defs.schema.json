@@ -398,11 +398,6 @@
           "maximum": 15,
           "description": "Pushable objects only: makes it destructible, taking this much spell damage (Zap: 1 per hit) before it breaks into pixels. It is drawn with its data bits with some missing (a grid of small squares, holes in it) instead of its mark, so it reads as breakable next to a crate with the whole grid. Without it the object is indestructible."
         },
-        "look": {
-          "enum": ["reactor", "monolith", "heart"],
-          "default": "reactor",
-          "description": "The core only (D101): reactor, a crystal over a pedestal in orbit rings; monolith, a server tower with a band of light per access level; heart, a beating wireframe sphere in a cage."
-        },
         "damage": {
           "type": "integer",
           "minimum": 1,

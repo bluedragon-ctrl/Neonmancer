@@ -286,7 +286,9 @@ level to what his fragments earn (16 → 1, 32 → 2, 48 → 3, the last), which
 opens access-locked exits; with all 64 the Grid reboots, the end of the
 game (a placeholder screen for now), and he plays on (D101). The core is a
 placeable object, at most one in the world; a gold band round his hat per
-level shows his access.
+level shows his access. The fragments are the 64 modules of one 8×8
+QR-like code, the boot key, which the HUD shows filling in; an access lock
+shows its level as a red Roman numeral.
 
 ### Arcade layer
 The score is what the wizard has, not what he did (D100): 50 points per

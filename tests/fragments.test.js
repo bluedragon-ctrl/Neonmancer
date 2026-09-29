@@ -1,15 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import DEFS_SCHEMA from '../schemas/defs.schema.json' with { type: 'json' };
 import DEFS from '../data/defs.json' with { type: 'json' };
 import { takeAnnouncements, takeMessages } from '../src/core/messages.js';
 import { loadGameData } from '../src/data/load.js';
 import { validateData } from '../src/data/validate.js';
 import { exitFields } from '../src/editor/room-edit.js';
 import { Game } from '../src/game.js';
-import { CORE_LOOKS, coreFlash, levelMarks } from '../src/render/core-view.js';
-import { shardCorners } from '../src/render/fragment.js';
-import { digitSegments } from '../src/render/switch-view.js';
+import { coreFlash, levelMarks } from '../src/render/core-view.js';
+import { FRAGMENT, moduleSquare } from '../src/render/fragment.js';
+import { romanBars, romanNumeral } from '../src/render/switch-view.js';
+import { BOOT_KEY, keyModule } from '../src/world/boot-key.js';
 import { hatBands } from '../src/render/wizard.js';
 import { exitOpen } from '../src/switches.js';
 import { pickupReport } from '../src/world/pickup-report.js';
@@ -175,7 +175,6 @@ test('validation: fragment slots, rising access thresholds, reachable exit level
   assert.ok(errors({}, twoCores).some((e) => e.includes('2 cores')));
   const onTop = [{ id: 'core', type: 'core', at: [4, 0, 4] }, { id: 'c', type: 'crate', at: [4, 1, 4] }];
   assert.ok(errors({ objects: onTop }).some((e) => e.includes('already filled')), 'the cell above the core is its own');
-  assert.ok(errors({}, (data) => (data['defs.json'].objects.crate.look = 'heart')).some((e) => e.includes('only the core has a look')));
 });
 
 test('the pickup report lists fragments by their save bit', () => {
@@ -189,19 +188,31 @@ test('the room editor keeps an exit\'s access level', () => {
   assert.deepEqual(exitFields({ id: 'e', side: '+x', at: 3, width: 2, y: 0, height: 2, access: 0 }), { id: 'e', side: '+x', at: 3 });
 });
 
-test('looks: the core looks match the schema; level marks, the flash, digits, hat bands, the shard', () => {
-  assert.deepEqual(CORE_LOOKS, DEFS_SCHEMA.$defs.objectType.properties.look.enum);
+test('the boot key: 64 fragments are the modules of an 8×8 code with three finder squares', () => {
+  assert.equal(BOOT_KEY.length * BOOT_KEY[0].length, SAVE_BLOCKS.fragments.size);
+  assert.ok(BOOT_KEY.every((row) => /^[#.]{8}$/.test(row)));
+  assert.deepEqual(keyModule(0), { col: 0, row: 0, dark: true });
+  assert.deepEqual(keyModule(9), { col: 1, row: 1, dark: false }, 'the middle of the top left finder');
+  assert.deepEqual(keyModule(63), { col: 7, row: 7, dark: true });
+  const finder = (col, row) => [0, 1, 2].map((r) => BOOT_KEY[row + r].slice(col, col + 3));
+  for (const [col, row] of [[0, 0], [5, 0], [0, 5]]) assert.deepEqual(finder(col, row), ['###', '#.#', '###']);
+  // On the tile, module squares run left to right and top to bottom, inside it.
+  const [a, b] = [moduleSquare(0, 0), moduleSquare(1, 1)];
+  assert.ok(b[0] > a[0] && b[1] < a[1]);
+  assert.ok(moduleSquare(7, 7)[2] < FRAGMENT.size / 2);
+});
+
+test('looks: the core\'s level marks and flash, Roman numerals, hat bands', () => {
   assert.deepEqual(levelMarks(2, 3), [1, 1, 0]);
   assert.equal(coreFlash(0), 1);
   assert.equal(coreFlash(Infinity), 0);
   assert.ok(coreFlash(0.5) > 0 && coreFlash(0.5) < 1);
-  assert.equal(digitSegments(1, [0, 0]).length, 2, 'a 1 is two segments');
-  assert.equal(digitSegments(8, [0, 0]).length, 7);
-  assert.equal(digitSegments(12, [0, 0]).length, 2 + 5, 'two digits');
+  assert.deepEqual([1, 2, 3, 4, 9, 12, 15].map(romanNumeral), ['I', 'II', 'III', 'IV', 'IX', 'XII', 'XV']);
+  assert.equal(romanBars(1, [0, 0]).length, 1 + 2, 'an I between a bar on top and one below');
+  assert.equal(romanBars(3, [0, 0]).length, 3 + 2);
+  assert.equal(romanBars(4, [0, 0]).length, 1 + 2 + 2, 'IV');
+  assert.ok(romanBars(3, [0, 0]).every((quad) => quad.length === 4));
   const bands = hatBands(3);
   assert.equal(bands.length, 3);
   assert.ok(bands[0].y < bands[1].y && bands[1].r < bands[0].r, 'rising up the narrowing hat');
-  const { middle, top, tip } = shardCorners();
-  assert.equal(middle.length, 5);
-  assert.ok(top.every(([, y]) => y > 0) && tip[1] < 0);
 });

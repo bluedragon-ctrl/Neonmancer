@@ -33,7 +33,6 @@ import {
 } from 'three';
 import { blockEdges } from './edges.js';
 import { PALETTE, faceMaterial, lineMaterial, neonLines, shadedFaces, shared } from './neon.js';
-import { FRAGMENT_COLOR } from '../entities/pickup.js';
 import { switchesOn } from '../switches.js';
 
 /** Tuning (units, seconds). */
@@ -66,11 +65,17 @@ export const SWITCH_FX = {
   /** Lock lights: half size of the outer square, gap between lights. */
   light: 0.1,
   lightGap: 0.3,
-  /** Access lock (D101): height and width of a digit of the level, gap between digits, its brightness. */
-  digit: 0.5,
-  digitWidth: 0.26,
-  digitGap: 0.12,
-  digitBrightness: 2,
+  /**
+   * Access lock (D101): the level as a Roman numeral in red, the author's
+   * choice (it reads as "not for you yet"): its height, stroke and bar
+   * thickness, a V's or an X's width, the gap between letters, brightness.
+   */
+  numeral: 0.8,
+  stroke: 0.11,
+  serif: 0.075,
+  letter: 0.36,
+  letterGap: 0.08,
+  numeralBrightness: 2.2,
 };
 
 const FACE = new Color(PALETTE.face);
@@ -320,7 +325,7 @@ export function createPlate(color) {
  * @param {{ side: string, at: number, width: number, y: number, height: number }} exit defaults applied
  * @param {number[]} size room size
  * @param {{ color: number|string, switches: number, access?: number }} options switches in the room (one light
- *   each; 0 for an access lock alone) and the access level it asks for (D101, shown as a gold digit)
+ *   each; 0 for an access lock alone) and the access level it asks for (D101, shown as a red Roman numeral)
  */
 export function createLock(exit, size, { color, switches, access = 0 }) {
   const base = new Color(color);
@@ -378,18 +383,26 @@ export function createLock(exit, size, { color, switches, access = 0 }) {
   // Lights: a small bull's-eye per switch in a row across the middle; the
   // inner square fills for each switch that is on. On a front exit they sit
   // between the middle bars.
-  // With both, the digit sits above the lights.
+  // With both, the numeral sits above the lights.
   const lightH = access > 0 && switches > 0 ? y0 + (y1 - y0) * 0.3 : (y0 + y1) / 2;
   const lights = createLockLights(switches, { base, center: [mid, lightH], p, along });
   for (const { light } of lights) barrier.add(light);
   // The access level it asks for, a gold seven-segment number (D101).
   let digits = null;
   if (access > 0) {
-    const digitH = switches > 0 ? y0 + (y1 - y0) * 0.62 : (y0 + y1) / 2;
-    digits = neonLines(
-      digitSegments(access, [mid, digitH]).map((segment) => segment.map(([a, h]) => p(a, h))),
-      lineMaterial({ color: FRAGMENT_COLOR, width: 2.6, brightness: SWITCH_FX.digitBrightness }),
-    );
+    const numeralH = switches > 0 ? y0 + (y1 - y0) * 0.62 : (y0 + y1) / 2;
+    // Filled glowing bars, a hair in front of the barrier's plane.
+    const quads = romanBars(access, [mid, numeralH]).map((quad) => quad.map(([a, h]) => p(a, h)));
+    const lift = back ? 0.004 : -0.004;
+    const positions = quads.flatMap((q) => [q[0], q[1], q[2], q[0], q[2], q[3]]).flatMap((pt) => {
+      const out = [...pt];
+      out[cross] += lift;
+      return out;
+    });
+    const geometry = new BufferGeometry();
+    geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
+    const fill = new MeshBasicMaterial({ color: new Color(PALETTE.danger).multiplyScalar(SWITCH_FX.numeralBrightness), side: DoubleSide });
+    digits = new Mesh(geometry, fill);
     digits.renderOrder = 4;
     barrier.add(digits);
   }
@@ -512,36 +525,50 @@ export class PlateView {
   }
 }
 
-/** Segments of each seven-segment digit, by the digit (a b c d e f g: top, upper right, lower right, bottom, lower left, upper left, middle). */
-const SEVEN = ['abcdef', 'bc', 'abged', 'abgcd', 'fgbc', 'afgcd', 'afgedc', 'abc', 'abcdefg', 'abcdfg'];
+/**
+ * A number in Roman numerals (1–15: I … XV).
+ * @param {number} value
+ */
+export function romanNumeral(value) {
+  const tens = 'X'.repeat(Math.floor(value / 10));
+  const ones = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'][value % 10];
+  return tens + ones;
+}
 
 /**
- * A number drawn in seven-segment lines (pure), centered on `center` in a
- * lock's plane: [a, h] pairs, a along the side, h up.
- * @param {number} value 0 or more
+ * The access level as a thick Roman numeral (pure), centered on `center`
+ * in a lock's plane: filled bars as quads of [a, h] corners (a along the
+ * side, h up). The letters stand between a bar across the top and one
+ * across the bottom, as on a clock face, so a lone I reads as a numeral.
+ * @param {number} value 1–15
  * @param {number[]} center [a, h]
- * @returns {number[][][]}
+ * @returns {number[][][]} quads, 4 corners each
  */
-export function digitSegments(value, [a, h]) {
-  const { digit: height, digitWidth: w, digitGap: gap } = SWITCH_FX;
-  const text = String(value);
-  const width = text.length * w + (text.length - 1) * gap;
-  const segments = [];
-  [...text].forEach((char, i) => {
-    const x0 = a - width / 2 + i * (w + gap);
-    const [x1, top, mid, bottom] = [x0 + w, h + height / 2, h, h - height / 2];
-    const lines = {
-      a: [[x0, top], [x1, top]],
-      b: [[x1, top], [x1, mid]],
-      c: [[x1, mid], [x1, bottom]],
-      d: [[x0, bottom], [x1, bottom]],
-      e: [[x0, mid], [x0, bottom]],
-      f: [[x0, top], [x0, mid]],
-      g: [[x0, mid], [x1, mid]],
-    };
-    for (const s of SEVEN[Number(char)]) segments.push(lines[s]);
+export function romanBars(value, [a, h]) {
+  const { numeral: height, stroke: t, letter: w, letterGap: gap, serif } = SWITCH_FX;
+  const letters = [...romanNumeral(value)];
+  const widths = letters.map((letter) => (letter === 'I' ? t : w));
+  const total = widths.reduce((sum, x) => sum + x, 0) + gap * (letters.length - 1);
+  const [top, bottom] = [h + height / 2, h - height / 2];
+  // A bar from (a0, h0) to (a1, h1), `t` thick across its length.
+  const bar = ([a0, h0], [a1, h1], thick = t) => {
+    const len = Math.hypot(a1 - a0, h1 - h0);
+    const [na, nh] = [(-(h1 - h0) / len) * (thick / 2), ((a1 - a0) / len) * (thick / 2)];
+    return [[a0 + na, h0 + nh], [a1 + na, h1 + nh], [a1 - na, h1 - nh], [a0 - na, h0 - nh]];
+  };
+  const quads = [];
+  let x = a - total / 2;
+  letters.forEach((letter, i) => {
+    const [x0, x1] = [x, x + widths[i]];
+    const inner = [top - serif, bottom + serif];
+    if (letter === 'I') quads.push(bar([(x0 + x1) / 2, inner[1]], [(x0 + x1) / 2, inner[0]]));
+    if (letter === 'V') quads.push(bar([x0 + t / 2, inner[0]], [(x0 + x1) / 2, inner[1]]), bar([(x0 + x1) / 2, inner[1]], [x1 - t / 2, inner[0]]));
+    if (letter === 'X') quads.push(bar([x0 + t / 2, inner[0]], [x1 - t / 2, inner[1]]), bar([x0 + t / 2, inner[1]], [x1 - t / 2, inner[0]]));
+    x = x1 + gap;
   });
-  return segments;
+  const ends = [a - total / 2 - serif, a + total / 2 + serif];
+  quads.push(bar([ends[0], top - serif / 2], [ends[1], top - serif / 2], serif), bar([ends[0], bottom + serif / 2], [ends[1], bottom + serif / 2], serif));
+  return quads;
 }
 
 /** A locked exit of the room (Game.locks): its barrier, one light per switch and the access level it asks for. */

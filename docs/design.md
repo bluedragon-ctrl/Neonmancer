@@ -861,10 +861,18 @@ Phase 3 step 15 (D100). The score is what the wizard has, not what he did.
 Phase 3 step 16 (D101).
 - **Fragments:** `{ "kind": "fragment", "slot" }`, a bit in the fragments
   block (48–111; slots unique); `defs.json` defines all 64
-  (`fragment_0`–`fragment_63`), so the room editor offers each one. A
-  gold crystal shard, broken off at the top (`render/fragment.js`,
-  `FRAGMENT_COLOR` = the score's gold `#ffe23d`), a gray ghost once
-  found. Taking one plays the install animation with the banner
+  (`fragment_0`–`fragment_63`), so the room editor offers each one.
+- **The boot key:** the 64 fragments are the modules of one 8×8 code,
+  QR-like, with finder squares in three corners (`BOOT_KEY` in
+  `world/boot-key.js`); slot n is row n / 8, column n % 8, a dark or a
+  light module. A fragment is a thin gold tile carrying the whole key dim,
+  its own module lit (filled if dark, a bright outline if light), as a
+  disk lights its bit (`render/fragment.js`, `FRAGMENT_COLOR` = the
+  score's gold `#ffe23d`), a gray ghost once found. The HUD shows the key
+  under the fragment count, each found module in place, so the code fills
+  in as he collects them; the end screen shows it whole. (A first draft,
+  a gold crystal shard, didn't say that the fragments make up a whole.)
+  Taking one plays the install animation with the banner
   `FRAGMENT n/N / KEY FRAGMENT GET` and `> FRAGMENT n/N GET!` (N: the
   fragments the core needs). There is nothing to carry: found is found.
 - **World data:** `world.json` `"fragments": { "required": 64, "access":
@@ -890,20 +898,19 @@ Phase 3 step 16 (D101).
   the thresholds give). Solid until his level is n or more; with
   `"locked"` too, the switches must be on as well. The exit he came in
   through stays open for him (D75). The look is the switch lock's white
-  barrier with the level as a gold seven-segment number
-  (`digitSegments()` in `render/switch-view.js`); it opens as soon as the
+  barrier with the level as a thick red Roman numeral (I–III, up to XV)
+  between a bar across its top and one across its bottom, as on a clock
+  face, so a lone I reads as a numeral (`romanBars()` in
+  `render/switch-view.js`; the author's choice over gold seven-segment
+  digits, whose 1 read poorly); it opens as soon as the
   core raises the level in the same room, with `> ACCESS GRANTED: EXIT
   UNLOCKED`. Room editor: `Access level` in the exit fields.
-- **Core looks** (`look` on the core's type; showcase `?asset=cores-row`,
-  `core-reactor`, `core-monolith`, `core-heart`), each on a white
-  pedestal, flashing when it raises the level: *reactor*, a gold crystal
-  floating in orbit rings, one per level, turning gold when reached;
-  *monolith*, a server tower with a band of light per level, gold data
-  rising up its faces and a beam from the top growing with the fragments
-  found; *heart*, a beating wireframe sphere in a white cage whose facets
-  light up with the fragments found, level pips on the pedestal. The
-  author picks one; `reactor` for now. Tuning: `CORE_FX` in
-  `render/core-view.js`.
+- **Core look** (the reactor, chosen by the author over a server
+  monolith and a beating wireframe heart; showcase `?asset=core`): a gold
+  crystal floating and spinning over a white pedestal, inside orbit rings,
+  one per access level, each turning gold once reached; the crystal glows
+  brighter with the fragments found, and the core flashes when it raises
+  the level. Tuning: `CORE_FX` in `render/core-view.js`.
 - **The end:** with every fragment the core needs, touching it reboots
   the Grid, once (`Game.won`, `'win'` event): a placeholder screen
   `GRID REBOOTED` with the final score and completion; Enter closes it
@@ -1266,8 +1273,8 @@ A DOM overlay on the stage, sized in 1080p pixels (`--u`), all text from
 |---|---|
 | Top left | Integrity: label over a row of slanted cyan cells, one per point. A lost cell flashes white and empties; at 2 or less the bar turns magenta and blinks. |
 | Top center | Banner: a title decoding from glyphs (0.45 s), holding (1.8 s) and fading (0.7 s), with an optional smaller line below, in its own color. On entering a room (not on respawn) it shows the room name and the biome name in the biome color; later pickups (e.g. a spell installed) use it too. A new banner replaces the one showing. |
-| Top right | Game name and version; the score and completion (D100) and, once he has a fragment or a level, `FRAGMENTS 03/64 ACCESS 1` in gold (D101); the debug readout (F3) shows below it. |
-| Whole stage | The end-of-game screen (D101): `GRID REBOOTED`, the final score and completion; the game stands still until Enter. |
+| Top right | Game name and version; the score and completion (D100) and, once he has a fragment or a level, `FRAGMENTS 03/64 ACCESS 1` in gold over the boot key, the 8×8 code filling in as fragments are found (D101); the debug readout (F3) shows below it. |
+| Whole stage | The end-of-game screen (D101): `GRID REBOOTED`, the whole boot key, the final score and completion; the game stands still until Enter. |
 | Bottom left | Terminal: lime lines typed at 40 characters/s with a block cursor, kept 4 s, then faded; at most 4 lines. Printed on start, death (one line per cause), respawn and when a crate plugs a hole. |
 | Bottom center | Fullscreen hint while the stage has fewer than 1080 physical pixels of height and the page is not fullscreen; shown for 8 s each time it becomes needed. F toggles fullscreen. |
 | Bottom right | Movement mode tag (see below), always shown; G switches modes. |

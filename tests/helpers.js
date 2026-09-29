@@ -17,7 +17,7 @@ export const CRATE = { kind: 'pushable', color: '#b6ff3c' };
 export const LIFT = { kind: 'platform', color: '#00f0ff' };
 
 /** The central core (D101), as in defs.json. */
-export const CORE = { kind: 'core', color: '#eef3ff', look: 'reactor' };
+export const CORE = { kind: 'core', color: '#eef3ff' };
 
 /** A bug enemy template, as in defs.json (3 units per second: 20 ticks per cell). */
 export const BUG = {

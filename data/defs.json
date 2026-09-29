@@ -8,7 +8,7 @@
     "crate_cross": { "kind": "pushable", "color": "#b6ff3c", "faces": "glass", "integrity": 1 },
     "crate_dashed": { "kind": "pushable", "color": "#b6ff3c", "edges": "dashed", "faces": "glass" },
     "target": { "kind": "target", "color": "#eef3ff" },
-    "core": { "kind": "core", "color": "#eef3ff", "look": "reactor" },
+    "core": { "kind": "core", "color": "#eef3ff" },
     "plate": { "kind": "plate", "color": "#eef3ff", "edges": "dashed" },
     "platform": { "kind": "platform", "color": "#00f0ff", "mark": "brackets", "faces": "tinted" },
     "spiked_platform": { "kind": "platform", "color": "#ff2a3a", "shape": "spiked", "damage": 1 }

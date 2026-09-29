@@ -54,7 +54,7 @@ import { EnergyBar } from '../src/ui/energy-bar.js';
 import { createCard } from '../src/render/card.js';
 import { createChip } from '../src/render/chip.js';
 import { createSecret } from '../src/render/secret.js';
-import { CORE_LOOKS, createCore } from '../src/render/core-view.js';
+import { createCore } from '../src/render/core-view.js';
 import { createFragment } from '../src/render/fragment.js';
 import { DISK, createDisk, diskMotion, diskPixels, poseDisk } from '../src/render/disk.js';
 import { createRefill, refillMotion } from '../src/render/refill.js';
@@ -230,17 +230,16 @@ const ALL_ASSETS = [
   { label: 'secret', group: 'secrets', spin: false, build: () => buildSecret({}) },
   { label: 'secret-ghost', group: 'secrets', spin: false, build: () => buildSecret({ ghost: true }) },
   { label: 'secrets-row', group: 'secrets', span: 4, spin: false, build: buildSecretRow },
-  // Fragments and access (Phase 3 step 16, D101): a gold shard, a found one
-  // as a gray ghost, beside a secret and a disk; the core's three looks to
-  // choose from (defs.json objects.core.look), each stepping through the
-  // access levels and fragments found, flashing as a level is reached; the
-  // three side by side; an access lock asking for level 1 (panel) and 2
+  // Fragments and access (Phase 3 step 16, D101): a gold tile carrying the
+  // boot key with its own module lit (a dark one and a light one), beside a
+  // disk and a found one as a gray ghost; the core (its reactor
+  // look) stepping through the access levels and fragments found,
+  // flashing as a level is reached; an access lock asking for level 1 (panel) and 2
   // (bars), opening as he reaches it; the wizard's hat with 0–3 gold bands.
   { label: 'fragment', group: 'fragments', spin: false, build: () => buildFragment({}) },
   { label: 'fragment-ghost', group: 'fragments', spin: false, build: () => buildFragment({ ghost: true }) },
   { label: 'fragments-row', group: 'fragments', span: 4, spin: false, build: buildFragmentRow },
-  ...CORE_LOOKS.map((look) => ({ label: `core-${look}`, group: 'fragments', span: 2.5, spin: false, build: () => buildCore(look) })),
-  { label: 'cores-row', group: 'fragments', span: 5.5, spin: false, build: buildCoreRow },
+  { label: 'core', group: 'fragments', span: 2.5, spin: false, build: buildCore },
   { label: 'access-locks', group: 'fragments', span: 5.5, spin: false, build: buildAccessLocks },
   { label: 'wizard-access', group: 'fragments', span: 2.5, spin: false, shadow: PALETTE.magenta, build: buildWizardAccess },
   // Switches and locked exits (Phase 3 step 4, D75): a target zapped on
@@ -623,9 +622,9 @@ function buildFragment(options) {
   return asset;
 }
 
-/** The fragment beside a secret and a data disk to compare. */
+/** Two fragments (a dark module, a light one: slots 0 and 11) beside a data disk and a found fragment. */
 function buildFragmentRow() {
-  const models = [createFragment(), createSecret(), createDisk(), createFragment({ ghost: true })];
+  const models = [createFragment({ slot: 0 }), createFragment({ slot: 11 }), createDisk(), createFragment({ slot: 36, ghost: true })];
   const asset = new Group();
   models.forEach((model, i) => {
     const along = (i - 1.5) * 0.9;
@@ -646,9 +645,9 @@ function coreStage(time) {
   return { level: Math.min(3, Math.floor(found / 16)), share: found / 64 };
 }
 
-/** A core in one look, stepping through the levels. */
-function buildCore(look) {
-  const core = createCore({ look, color: defs.objects.core.color });
+/** The core, stepping through the levels. */
+function buildCore() {
+  const core = createCore({ color: defs.objects.core.color });
   core.position.set(-0.5, 0, -0.5);
   const asset = new Group().add(core);
   let level = -1;
@@ -659,19 +658,6 @@ function buildCore(look) {
     core.userData.set(stage);
     core.userData.update(dt);
   };
-  return asset;
-}
-
-/** The three core looks side by side, in step. */
-function buildCoreRow() {
-  const cores = CORE_LOOKS.map((look) => buildCore(look));
-  const asset = new Group();
-  cores.forEach((core, i) => {
-    const along = (i - 1) * 1.8;
-    core.position.set(along, 0, -along);
-    asset.add(core);
-  });
-  asset.userData.update = (dt, time) => cores.forEach((core) => core.userData.update(dt, time));
   return asset;
 }
 

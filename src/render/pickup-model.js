@@ -22,6 +22,6 @@ export function createPickupModel(content, data, ghost = false) {
   if (data.kind === 'buff') return createChip({ stat: data.stat, slot: data.slot, ghost });
   if (data.kind === 'upgrade') return createCard({ color: data.color, slot: data.slot, ghost });
   if (data.kind === 'secret') return createSecret({ ghost });
-  if (data.kind === 'fragment') return createFragment({ ghost });
+  if (data.kind === 'fragment') return createFragment({ slot: data.slot, ghost });
   return createDisk({ ...content.spells[data.spell], ghost });
 }

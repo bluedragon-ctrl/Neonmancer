@@ -16,6 +16,7 @@ import { EnergyBar } from './energy-bar.js';
 import { HINT_SECONDS } from './fullscreen.js';
 import { Terminal, bannerState } from './terminal.js';
 import { formatText, scrambleText } from './text.js';
+import { BOOT_KEY_SIZE, keyModule } from '../world/boot-key.js';
 
 /** Integrity at or below this blinks as a warning. */
 const LOW_INTEGRITY = 2;
@@ -35,6 +36,34 @@ export function rollScore(from, to, t) {
   return Math.round(from + (to - from) * (1 - (1 - k) ** 3));
 }
 
+/**
+ * The boot key's 64 cells in `box`, row by row.
+ * @param {HTMLElement} box
+ * @returns {HTMLElement[]}
+ */
+function keyCells(box) {
+  const cells = [];
+  for (let i = 0; i < BOOT_KEY_SIZE * BOOT_KEY_SIZE; i++) {
+    const cell = document.createElement('i');
+    box.append(cell);
+    cells.push(cell);
+  }
+  return cells;
+}
+
+/**
+ * Show the boot key with the fragments `found`: a found dark module
+ * filled, a found light one outlined, one not found yet a faint dot.
+ * @param {HTMLElement[]} cells from keyCells()
+ * @param {Set<number>} found slots
+ */
+function showKey(cells, found) {
+  cells.forEach((cell, slot) => {
+    const state = found.has(slot) ? (keyModule(slot).dark ? 'dark' : 'light') : '';
+    if (cell.className !== state) cell.className = state;
+  });
+}
+
 export class Hud {
   /**
    * @param {HTMLElement} root the renderer's HUD overlay
@@ -48,8 +77,8 @@ export class Hud {
       <div class="hud-backups"><span class="hud-backups-label"></span><span class="hud-pips"></span></div>
       <div class="brand"><span class="brand-title"></span> <span class="brand-version"></span></div>
       <div class="hud-score"><span class="hud-score-label"></span><span class="hud-score-value"></span><span class="hud-score-done"></span></div>
-      <div class="hud-fragments" hidden><span class="hud-fragments-label"></span><span class="hud-fragments-value"></span><span class="hud-access"></span></div>
-      <div class="hud-win" hidden><div class="hud-win-title"></div><div class="hud-win-text"></div><div class="hud-win-score"></div><div class="hud-win-continue"></div></div>
+      <div class="hud-fragments" hidden><div class="hud-fragments-line"><span class="hud-fragments-label"></span><span class="hud-fragments-value"></span><span class="hud-access"></span></div><div class="hud-key"></div></div>
+      <div class="hud-win" hidden><div class="hud-win-title"></div><div class="hud-key hud-win-key"></div><div class="hud-win-text"></div><div class="hud-win-score"></div><div class="hud-win-continue"></div></div>
       <div class="hud-banner"><div class="hud-banner-title"></div><div class="hud-banner-sub"></div></div>
       <div class="hud-terminal"></div>
       <div class="hud-hint"></div>
@@ -87,6 +116,9 @@ export class Hud {
     this.fragmentsShown = null;
     this.winBox = find('.hud-win');
     this.winScore = find('.hud-win-score');
+    /** The boot key's cells (D101), in the corner and on the end screen, by fragment slot. */
+    this.keyCells = keyCells(find('.hud-fragments .hud-key'));
+    this.winKeyCells = keyCells(find('.hud-win-key'));
     /** The score to show, the one shown, and the roll towards it: { from, time } or null. */
     this.score = null;
     this.shownScore = 0;
@@ -250,15 +282,19 @@ export class Hud {
 
   /**
    * Key fragments found and his access level (D101), under the score:
-   * `FRAGMENTS 03/64 ACCESS 1`. Hidden until he has a fragment or a level.
-   * @param {number} found
+   * `FRAGMENTS 03/64 ACCESS 1` over the boot key, the 8×8 code the
+   * fragments make up, each found one showing its module. Hidden until he
+   * has a fragment or a level.
+   * @param {number[]} slots the fragments found, by slot
    * @param {number} total fragments the core needs
    * @param {number} level
    */
-  setFragments(found, total, level) {
-    const shown = `${found}/${total}/${level}`;
+  setFragments(slots, total, level) {
+    const found = slots.length;
+    const shown = `${slots.join(',')}/${total}/${level}`;
     if (shown === this.fragmentsShown) return;
     this.fragmentsShown = shown;
+    showKey(this.keyCells, new Set(slots));
     this.fragmentBox.hidden = found === 0 && level === 0;
     this.fragmentValue.textContent = `${String(found).padStart(String(total).length, '0')}/${total}`;
     this.accessTag.textContent = level > 0 ? `${this.text('hud.access')} ${level}` : '';
@@ -277,6 +313,7 @@ export class Hud {
    * @param {number} percent 0-100
    */
   showWin(score, percent) {
+    showKey(this.winKeyCells, new Set(this.winKeyCells.keys()));
     this.winScore.textContent = `${this.text('win.score')} ${String(score).padStart(6, '0')}  ${percent}% ${this.text('win.done')}`;
     this.winBox.hidden = false;
   }
