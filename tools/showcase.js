@@ -53,8 +53,7 @@ import { createBolt, createCastFlare, createSparks, placeBolt, placeCastFlare, p
 import { EnergyBar } from '../src/ui/energy-bar.js';
 import { createCard } from '../src/render/card.js';
 import { createChip } from '../src/render/chip.js';
-import { SECRET_VARIANTS, createSecret } from '../src/render/secret.js';
-import { SCORE_COLOR } from '../src/entities/pickup.js';
+import { createSecret } from '../src/render/secret.js';
 import { DISK, createDisk, diskMotion, diskPixels, poseDisk } from '../src/render/disk.js';
 import { createRefill, refillMotion } from '../src/render/refill.js';
 import { INSTALL_FX } from '../src/render/install-fx.js';
@@ -224,13 +223,11 @@ const ALL_ASSETS = [
   { label: 'upgrades-row', group: 'upgrades', span: 4, spin: false, build: buildUpgradeRow },
   { label: 'shield-plus', group: 'upgrades', spin: false, shadow: PALETTE.magenta, build: () => buildShield(defs.pickups.upgrade_shield_plus.color) },
   { label: 'double-jump', group: 'upgrades', span: 4, spin: false, build: buildDoubleJump },
-  // Secrets (Phase 3 step 15, D100), in the HUD score's gold, three
-  // variants up for review: an Easter egg, a pixel "?", a star; a found
-  // one as a gray ghost; the three beside a disk, a chip and the energy
-  // refill they must not be taken for.
-  ...SECRET_VARIANTS.map((variant) => ({ label: `secret-${variant}`, group: 'secrets', spin: false, build: () => buildSecret({ variant }) })),
+  // Secrets (Phase 3 step 15, D100): a star in the wizard's magenta; a
+  // found one as a gray ghost; beside a disk, a chip and the energy refill.
+  { label: 'secret', group: 'secrets', spin: false, build: () => buildSecret({}) },
   { label: 'secret-ghost', group: 'secrets', spin: false, build: () => buildSecret({ ghost: true }) },
-  { label: 'secrets-row', group: 'secrets', span: 5, spin: false, build: buildSecretRow },
+  { label: 'secrets-row', group: 'secrets', span: 4, spin: false, build: buildSecretRow },
   // Switches and locked exits (Phase 3 step 4, D75): a target zapped on
   // and off; a plate pressed by a crate dropping on it, then by the wizard;
   // a room with a locked doorway (panel) and a locked front exit (bars)
@@ -603,12 +600,12 @@ function buildSecret(options) {
   return asset;
 }
 
-/** The three secret variants, then a disk, a chip and the energy refill to compare. */
+/** The secret beside a disk, a chip and the energy refill to compare. */
 function buildSecretRow() {
-  const models = [...SECRET_VARIANTS.map((variant) => createSecret({ variant })), createDisk(), createChip({ stat: 'energy', slot: 4 }), createRefill('energy')];
+  const models = [createSecret(), createDisk(), createChip({ stat: 'energy', slot: 4 }), createRefill('energy')];
   const asset = new Group();
   models.forEach((model, i) => {
-    const along = (i - 2.5) * 0.8;
+    const along = (i - 1.5) * 0.9;
     model.position.set(along, 0, -along);
     asset.add(model);
   });

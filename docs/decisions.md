@@ -1897,9 +1897,10 @@ Settles the score step (Phase 3 step 15):
 - **Secrets:** a permanent pickup of kind `secret`, hidden in
   hard-to-reach places, with its own save block of 16 bits after the
   fragments (bits 112–127; the pickups grow from 112 to 128 bits, and
-  fragments keep all 64). Its look, in the gold of the HUD score it raises
-  (D94), is a gold Easter egg, a pixel "?" or a gold star (`render/secret.js`, three variants up for review; the egg until one is chosen); a found one is a gray ghost. A first draft, an
-  octahedron gem, read as the energy refill. Taking one plays the install animation with
+  fragments keep all 64). Its look is a thick five-pointed star in the wizard's
+  magenta (`render/secret.js`, `SECRET_COLOR`), chosen by the author
+  over an Easter egg and a pixel "?"; a found one is a gray ghost. A
+  first draft, a gold octahedron gem, read as the energy refill. Taking one plays the install animation with
   `> SECRET FOUND n/N` (N: the secrets placed in the world).
 - **No bonus bits:** the per-room collectibles, their slots and the "all
   bits collected" room bonus are dropped, and so is the local high score:

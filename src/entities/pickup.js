@@ -20,11 +20,14 @@ export const PICKUP = {
  */
 export const BUFF_COLORS = { integrity: '#00f0ff', energy: '#b6ff3c', recharge: '#b6ff3c' };
 
-/**
- * The score's gold (D100): the HUD score, and the secrets that raise it
- * most (their gem, install animation, banner and score popup).
- */
+/** The score's gold in the HUD (D100); the CSS has it as --gold. */
 export const SCORE_COLOR = '#ffe23d';
+
+/**
+ * A secret's color (D100): the wizard's magenta (D98), for its star,
+ * install animation and banner.
+ */
+export const SECRET_COLOR = '#ff2bd6';
 
 export class Pickup {
   /**

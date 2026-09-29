@@ -2,9 +2,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { takeAnnouncements, takeMessages } from '../src/core/messages.js';
 import { validateData } from '../src/data/validate.js';
-import { SCORE_COLOR } from '../src/entities/pickup.js';
+import { SECRET_COLOR } from '../src/entities/pickup.js';
 import { Game } from '../src/game.js';
-import { SECRET_VARIANTS, createSecret } from '../src/render/secret.js';
+import { createSecret } from '../src/render/secret.js';
 import { SCORE_ROLL, rollScore } from '../src/ui/hud.js';
 import { Progress, saveBit } from '../src/world/progress.js';
 import { completion, placedBits, scoreOf } from '../src/world/score.js';
@@ -83,11 +83,9 @@ test('defs: secret slots are unique (D100)', () => {
   assert.match(validateData(files).join('\n'), /pickups\.secret_1\.slot: secret slot 0 is taken by "secret_0"/);
 });
 
-test('secret model: every variant gold, gray once found', () => {
-  for (const variant of SECRET_VARIANTS) {
-    assert.equal(createSecret({ variant }).userData.color, SCORE_COLOR);
-    assert.notEqual(createSecret({ variant, ghost: true }).userData.color, SCORE_COLOR);
-  }
+test('secret model: a star in the magenta of the wizard, gray once found', () => {
+  assert.equal(createSecret().userData.color, SECRET_COLOR);
+  assert.notEqual(createSecret({ ghost: true }).userData.color, SECRET_COLOR);
 });
 
 test('HUD score rolls up to a new value: fast at first, then settling on it', () => {

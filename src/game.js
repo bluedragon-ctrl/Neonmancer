@@ -8,7 +8,7 @@ import { bounceOffEnemies, burnEnemies, touchEnemies, updateAttacks, updateBolts
 import { isBackSide, sideAxes, withExitDefaults } from './data/room-data.js';
 import { Enemy } from './entities/enemy.js';
 import { createObject } from './entities/kinds.js';
-import { BUFF_COLORS, Pickup, SCORE_COLOR } from './entities/pickup.js';
+import { BUFF_COLORS, Pickup, SECRET_COLOR } from './entities/pickup.js';
 import { PLAYER, Player } from './entities/player.js';
 import { SWITCH_KINDS } from './entities/switch.js';
 import { groundBelow, overlapsBox, surfaceBelow, touchedCell, touchesBox } from './physics/collision.js';
@@ -466,7 +466,7 @@ export class Game {
     if (data.kind === 'secret') {
       const values = { found: this.progress.count('secrets'), total: this.secretsPlaced() };
       return {
-        banner: { key: 'banner.secret', values, options: { sub: 'banner.secretSub', subValues: values, color: SCORE_COLOR } },
+        banner: { key: 'banner.secret', values, options: { sub: 'banner.secretSub', subValues: values, color: SECRET_COLOR } },
         message: { key: 'msg.secretFound', values },
       };
     }
