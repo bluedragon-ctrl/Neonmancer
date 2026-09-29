@@ -754,9 +754,10 @@ every room within 2 map cells of it (|dx| + |dz|), dimmed as a dashed
 outline until visited, and they stay on the map for the run. A visited
 room shows in its biome color with its exits: connections to rooms on the
 map (dashed when they run across the map), and a cyan stub for each exit
-to a room not on it yet; the rooms behind stay hidden. A gold mark shows
-while a fragment he hasn't found lies in a visited room, a magenta ring
-a backup shrine, a blinking dot where he is. The map is drawn from the
+to a room not on it yet; the rooms behind stay hidden. Each visited room
+is labelled with its name and, under it, a row of icons: a blinking dot
+where he is, a gold mark while a fragment he hasn't found lies there, a
+magenta ring for a backup shrine. Revealed rooms have no label. The map is drawn from the
 game's isometric angle, so east is down-right as in the rooms.
 **Why:** finding what is where is part of the game (D67), so the map only
 remembers what he has seen; shrines give a local chart as a reward for

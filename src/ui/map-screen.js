@@ -3,10 +3,12 @@
  * the standing game, seen from the same isometric angle as the rooms, so
  * east on the map is down-right on screen as in the game. Visited rooms in
  * their biome color, rooms a shrine showed as dim outlines, connections
- * (dashed across the map), stubs for exits not explored yet, a gold mark
- * where a fragment still lies, a magenta ring for a backup shrine and a
- * blinking dot for the wizard. Sizes use --u like the HUD; the map is
- * fitted to the rooms shown, never bigger than MIN_VIEW allows.
+ * (dashed across the map) and stubs for exits not explored yet. Each
+ * visited room has a label: its name, and under it a row of icons, the
+ * wizard's blinking dot, a gold mark where a fragment still lies, a
+ * magenta ring for a backup shrine. Sizes use --u like the HUD; the map is
+ * fitted to the rooms shown, never bigger than MIN_VIEW allows, and the
+ * labels shrink with it (down to LABEL_SCALE_MIN).
  */
 import { ROOM_SIZE, STUB_LENGTH, mapModel } from '../world/run-map.js';
 import { formatText } from './text.js';
@@ -18,14 +20,21 @@ export function projectCell([x, z]) {
   return [(x - z) * Math.cos(Math.PI / 6), (x + z) * Math.sin(Math.PI / 6)];
 }
 
-/** The smallest part of the map shown (projected units), so a few rooms don't fill the screen. */
-const MIN_VIEW = [8, 4.5];
+/** Width / height of the map's area on screen (its CSS size, 1600 × 740 --u). */
+export const MAP_ASPECT = 1600 / 740;
+
+/** The smallest part of the map shown (projected units, MAP_ASPECT wide), so a few rooms don't fill the screen. */
+const MIN_VIEW = [8, 8 / MAP_ASPECT];
+
+/** The labels shrink with the map, but not below this. */
+const LABEL_SCALE_MIN = 0.6;
 
 /** Space round the rooms shown, in projected units. */
 const MARGIN = 0.8;
 
 /**
- * The SVG viewBox that fits the rooms, centered on them.
+ * The SVG viewBox that fits the rooms, centered on them, in the map area's
+ * shape (MAP_ASPECT), so a point's place on screen is a plain percentage.
  * @param {number[][]} cells the rooms' [x, z]
  * @returns {number[]} [x, y, width, height]
  */
@@ -35,16 +44,17 @@ export function fitView(cells) {
   const xs = points.map((p) => p[0]);
   const ys = points.map((p) => p[1]);
   const [left, right, top, bottom] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
-  const width = Math.max(right - left + 2 * MARGIN, MIN_VIEW[0]);
-  const height = Math.max(bottom - top + 2 * MARGIN, MIN_VIEW[1]);
+  const width = Math.max(right - left + 2 * MARGIN, (bottom - top + 2 * MARGIN) * MAP_ASPECT, MIN_VIEW[0]);
+  const height = width / MAP_ASPECT;
   return [(left + right - width) / 2, (top + bottom - height) / 2, width, height];
 }
 
 /**
- * A square round a map point, [x, z] corners: a room's (half side
- * ROOM_SIZE / 2) or a mark's; the projection turns it into a diamond.
+ * A room's square on the map round its cell, [x, z] corners (half side
+ * ROOM_SIZE / 2); the projection turns it into a diamond.
  */
-function square([x, z], r = ROOM_SIZE / 2) {
+function square([x, z]) {
+  const r = ROOM_SIZE / 2;
   return [
     [x - r, z - r],
     [x + r, z - r],
@@ -75,7 +85,10 @@ export class MapScreen {
       `<div class="map" hidden>
         <div class="map-heading"></div>
         <div class="map-room"></div>
-        <svg class="map-view" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="map-area">
+          <svg class="map-view" preserveAspectRatio="xMidYMid meet"></svg>
+          <div class="map-labels"></div>
+        </div>
         <div class="map-legend"></div>
         <div class="map-help"></div>
       </div>`,
@@ -83,7 +96,9 @@ export class MapScreen {
     this.root = stage.querySelector('.map');
     this.heading = this.root.querySelector('.map-heading');
     this.room = this.root.querySelector('.map-room');
+    this.area = this.root.querySelector('.map-area');
     this.view = this.root.querySelector('.map-view');
+    this.labels = this.root.querySelector('.map-labels');
     this.heading.textContent = this.text('menu.heading.map');
     this.root.querySelector('.map-help').textContent = this.text('map.help');
     this.root.querySelector('.map-legend').innerHTML = [
@@ -92,7 +107,7 @@ export class MapScreen {
       ['shrine', 'map.legend.shrine'],
       ['stub', 'map.legend.stub'],
     ]
-      .map(([mark, key]) => `<span class="map-key-${mark}"><i></i>${this.text(key)}</span>`)
+      .map(([mark, key]) => `<span><i class="map-icon ${mark}"></i>${this.text(key)}</span>`)
       .join('');
     /** Is the map up? It is drawn when it opens; nothing changes while it is. */
     this.open = false;
@@ -121,7 +136,10 @@ export class MapScreen {
     const model = mapModel(content, game.map, { current: game.room.id, progress: game.progress });
     const data = content.rooms.get(game.room.id);
     this.room.textContent = this.text('map.room', { room: data.name, biome: content.biomes[data.biome]?.name ?? '' });
-    this.view.setAttribute('viewBox', fitView(model.rooms.map((room) => room.cell)).join(' '));
+    const view = fitView(model.rooms.map((room) => room.cell));
+    this.view.setAttribute('viewBox', view.join(' '));
+    this.area.style.setProperty('--map-scale', String(Math.max(Math.min(MIN_VIEW[0] / view[2], 1), LABEL_SCALE_MIN)));
+    this.labels.replaceChildren(...model.rooms.filter((room) => room.visited).map((room) => this.label(room, view)));
 
     const links = svg('g', { class: 'map-links' });
     for (const link of model.links) {
@@ -135,25 +153,36 @@ export class MapScreen {
       stubs.append(svg('line', { class: 'map-stub', x1: from[0], y1: from[1], x2: to[0], y2: to[1] }));
     }
     const rooms = svg('g', { class: 'map-rooms' });
-    const marks = svg('g', { class: 'map-marks' });
     for (const room of model.rooms) {
       const classes = ['map-room-tile', room.visited ? '' : 'dim', room.current ? 'current' : ''].filter(Boolean).join(' ');
-      const tile = svg('polygon', { class: classes, points: points(square(room.cell)), style: `color: ${room.color}` });
-      // A visited room's name under the mouse.
-      if (room.visited) tile.append(Object.assign(svg('title'), { textContent: room.name }));
-      rooms.append(tile);
-      const [x, z] = room.cell;
-      const q = ROOM_SIZE / 4;
-      if (room.fragment) marks.append(svg('polygon', { class: 'map-fragment', points: points(square([x - q, z - q], 0.08)) }));
-      if (room.shrine) {
-        const [cx, cy] = projectCell([x + q, z + q]);
-        marks.append(svg('circle', { class: 'map-shrine', cx, cy, r: 0.07 }));
-      }
-      if (room.current) {
-        const [cx, cy] = projectCell(room.cell);
-        marks.append(svg('circle', { class: 'map-you', cx, cy, r: 0.07 }));
-      }
+      rooms.append(svg('polygon', { class: classes, points: points(square(room.cell)), style: `color: ${room.color}` }));
     }
-    this.view.replaceChildren(links, rooms, stubs, marks);
+    this.view.replaceChildren(links, rooms, stubs);
+  }
+
+  /**
+   * A visited room's label, centered on its tile: its name, and under it
+   * the icons that apply (he is here, a fragment left, a backup shrine).
+   * @param {object} room a mapModel() room
+   * @param {number[]} view the viewBox
+   */
+  label(room, [vx, vy, vw, vh]) {
+    const [x, y] = projectCell(room.cell);
+    const label = document.createElement('div');
+    label.className = room.current ? 'map-label current' : 'map-label';
+    label.style.left = `${((x - vx) / vw) * 100}%`;
+    label.style.top = `${((y - vy) / vh) * 100}%`;
+    const name = document.createElement('div');
+    name.className = 'map-label-name';
+    name.textContent = room.name;
+    label.append(name);
+    const icons = ['you', 'fragment', 'shrine'].filter((icon) => (icon === 'you' ? room.current : room[icon]));
+    if (icons.length > 0) {
+      const row = document.createElement('div');
+      row.className = 'map-label-icons';
+      row.innerHTML = icons.map((icon) => `<i class="map-icon ${icon}"></i>`).join('');
+      label.append(row);
+    }
+    return label;
   }
 }

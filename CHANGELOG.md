@@ -37,9 +37,9 @@ bosses that drop loot, tooling) (D104, D105).
   full integrity and energy.
 - Map screen (D112): M, or **Map** in the pause menu, shows the rooms
   entered in this run in their biome colors, seen from the game's angle,
-  with their connections, a stub for each exit not explored yet, a gold
-  mark where a fragment is still to be found, backup shrines and where
-  the wizard is. A backup shrine reveals the rooms within 2 map cells,
+  with their connections, a stub for each exit not explored yet, and
+  each room's name with icons under it: where the wizard is, a fragment
+  still to be found, a backup shrine. A backup shrine reveals the rooms within 2 map cells,
   dimmed until visited. The map is never saved: a new game or a load
   starts it empty.
 - World map tool: exits show as marks on the room edges (cyan connected,

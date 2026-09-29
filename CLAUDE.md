@@ -276,8 +276,8 @@ hidden where it takes an extra move. No bonus bits, no high score.
 
 ### Map
 Map screen (M, D112): the rooms entered in this run, their connections,
-stubs for exits not explored yet and a gold mark where a fragment he
-hasn't found lies. Never saved: a new game or a load starts it empty. A
+stubs for exits not explored yet, and each room's name with icons under
+it (he is here, a fragment he hasn't found, a backup shrine). Never saved: a new game or a load starts it empty. A
 backup shrine reveals the rooms within 2 map cells, dimmed until visited;
 they stay for the run.
 

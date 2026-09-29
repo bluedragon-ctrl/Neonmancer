@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadGameData } from '../src/data/load.js';
 import { Game } from '../src/game.js';
-import { fitView, projectCell } from '../src/ui/map-screen.js';
+import { MAP_ASPECT, fitView, projectCell } from '../src/ui/map-screen.js';
 import { MenuFlow } from '../src/ui/menus.js';
 import { Progress, saveBit } from '../src/world/progress.js';
 import { ROOM_SIZE, RunMap, exitPoint, mapModel, roomsAround } from '../src/world/run-map.js';
@@ -106,12 +106,14 @@ test('the map is seen like the rooms: east is down-right, south down-left', () =
   assert.ok(sx < 0 && sy > 0);
   // A lone room isn't blown up to fill the screen; a wide map fits.
   const [, , w, h] = fitView([[0, 0]]);
-  assert.ok(w >= 8 && h >= 4.5);
+  assert.ok(w >= 8);
+  assert.ok(Math.abs(w / h - MAP_ASPECT) < 1e-9, "the view has the map area's shape");
   const wide = fitView([
     [0, 0],
     [12, -12],
   ]);
   assert.ok(wide[2] > 20);
+  assert.ok(Math.abs(wide[2] / wide[3] - MAP_ASPECT) < 1e-9);
 });
 
 test('M opens the map over the game; M, Esc or Enter close it; the pause menu has Map too', () => {

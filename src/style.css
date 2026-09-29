@@ -1158,9 +1158,17 @@ body {
   color: #dfe6ff;
 }
 
-.map-view {
+.map-area {
+  position: relative;
   width: calc(1600 * var(--u));
   height: calc(740 * var(--u));
+}
+
+.map-view {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   overflow: visible;
 }
 
@@ -1210,24 +1218,75 @@ body {
   filter: drop-shadow(0 0 calc(4 * var(--u)) var(--cyan));
 }
 
-.map-fragment {
-  fill: var(--gold);
-  filter: drop-shadow(0 0 calc(5 * var(--u)) var(--gold));
+/* Room labels over the tiles: the name, and a row of icons under it. */
+.map-labels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
 }
 
-.map-shrine {
-  fill: none;
-  stroke: var(--magenta);
-  stroke-width: calc(2.5 * var(--u));
-  filter: drop-shadow(0 0 calc(4 * var(--u)) var(--magenta));
+.map-label {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(5 * var(--u) * var(--map-scale));
+  transform: translate(-50%, -50%);
+  max-width: calc(190 * var(--u) * var(--map-scale));
+  font-family: var(--terminal);
+  font-weight: normal;
+  font-size: calc(20 * var(--u) * var(--map-scale));
+  line-height: 1.1;
+  text-align: center;
+  color: #eef3ff;
+  text-shadow:
+    0 0 calc(3 * var(--u)) #000,
+    0 0 calc(6 * var(--u)) #000;
 }
 
-.map-you {
-  fill: var(--magenta);
-  stroke: #fff;
-  stroke-width: calc(2 * var(--u));
-  filter: drop-shadow(0 0 calc(6 * var(--u)) var(--magenta));
+.map-label.current {
+  color: #fff;
+}
+
+.map-label-icons {
+  display: flex;
+  gap: calc(7 * var(--u) * var(--map-scale));
+}
+
+/* The map's icons, in the labels and the legend. */
+.map-icon {
+  display: inline-block;
+  width: 0.75em;
+  height: 0.75em;
+  box-sizing: border-box;
+}
+
+.map-icon.you {
+  border-radius: 50%;
+  background: var(--magenta);
+  border: calc(2 * var(--u)) solid #fff;
+  box-shadow: 0 0 calc(6 * var(--u)) var(--magenta);
   animation: map-you-blink 1s steps(1) infinite;
+}
+
+.map-icon.fragment {
+  background: var(--gold);
+  transform: rotate(45deg) scale(0.8);
+  box-shadow: 0 0 calc(6 * var(--u)) var(--gold);
+}
+
+.map-icon.shrine {
+  border-radius: 50%;
+  border: calc(2 * var(--u)) solid var(--magenta);
+  box-shadow: 0 0 calc(5 * var(--u)) var(--magenta);
+}
+
+.map-icon.stub {
+  width: 1.1em;
+  height: 0.28em;
+  border-radius: calc(2 * var(--u));
+  background: var(--cyan);
+  box-shadow: 0 0 calc(5 * var(--u)) var(--cyan);
 }
 
 @keyframes map-you-blink {
@@ -1250,36 +1309,6 @@ body {
   display: flex;
   align-items: center;
   gap: calc(10 * var(--u));
-}
-
-.map-legend i {
-  display: inline-block;
-  width: calc(12 * var(--u));
-  height: calc(12 * var(--u));
-  box-sizing: border-box;
-}
-
-.map-key-you i {
-  border-radius: 50%;
-  background: var(--magenta);
-  border: calc(2 * var(--u)) solid #fff;
-}
-
-.map-key-fragment i {
-  background: var(--gold);
-  transform: rotate(45deg) scale(0.8);
-}
-
-.map-key-shrine i {
-  border-radius: 50%;
-  border: calc(2 * var(--u)) solid var(--magenta);
-}
-
-.map-key-stub i {
-  height: calc(4 * var(--u));
-  width: calc(16 * var(--u));
-  border-radius: calc(2 * var(--u));
-  background: var(--cyan);
 }
 
 .map-help {

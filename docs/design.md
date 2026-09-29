@@ -1598,9 +1598,9 @@ Settled:
   entered in this run, never saved (a new game or a load starts it
   empty). A backup shrine reveals the rooms within 2 map cells (|dx| +
   |dz|) as dim outlines, which stay for the run. Visited rooms show
-  their biome color, connections, cyan stubs for exits to rooms not on
-  the map yet, a gold mark while an unfound fragment lies there, a
-  magenta ring for a shrine, and where he is. It is drawn isometrically,
+  their biome color, connections and cyan stubs for exits to rooms not
+  on the map yet, and a label: the room's name with a row of icons under
+  it (he is here, a fragment left, a backup shrine). It is drawn isometrically,
   east down-right as in the rooms.
 
 Open so far:
