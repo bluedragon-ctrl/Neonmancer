@@ -643,22 +643,28 @@ Shrines stay out of boss rooms.
 ### D105 — 2026-09-29 — Saving is a player action; Phase 4 splits in two
 The player saves when he chooses, from the pause menu; a save writes the
 key to the URL hash and to localStorage. Nothing saves on its own. A load
-starts in the saved room with the room reset, full backups and an empty
-clipboard; integrity comes from the key. Phase 4a: access keys, title
+starts in the saved room with the room reset, full integrity and energy
+and an empty clipboard; the backups left come from the key (D106,
+replacing "a load starts with full backups" of D92). Phase 4a: access keys, title
 screen and pause menu, saving and loading, the map screen. Phase 4b: the
 spells Compile, Fork, Scan and Pull, Firewall Wardens, the reachability
 checker, design skills and subagents.
 **Why:** loading resets the room anyway, so a save anywhere gives nothing
 away; 4a gives players saves sooner.
 
-### D106 — 2026-09-29 — Access keys in hex
-The key is 168 bits (format version 4, room 8, access level 8, pickups
-128, integrity 4, CRC-16 16), 42 hex digits in groups of 6. The payload
-is XORed with a stream seeded by the checksum, then every bit moves by a
-fixed shuffle. Input forgives spaces, dashes, lowercase, O for 0, I and L
-for 1. Replaces Base32 in CLAUDE.md §8.
+### D106 — 2026-09-29 — Access keys in hex; the room as its map cell
+The key is 176 bits (format version 4, room cell x 8 and z 8, access
+level 8, pickups 128, backups 4, CRC-16 16), 44 hex digits in groups of
+4. Backups are saved, integrity is not (a load starts full). The room is its cell in `world.json` `positions` (one room per cell),
+each coordinate a signed byte. The payload is XORed with a stream seeded
+by the checksum, then every bit moves by a fixed shuffle. Input forgives
+spaces, dashes, lowercase, O for 0, I and L for 1. Replaces Base32 and
+the 8-bit room number in CLAUDE.md §8.
 **Why:** the key is copied, not typed; hex is simpler to read and debug
 than a custom alphabet (Base32 without 0/O/1/I/L has only 31 symbols).
+The map cell already names a room uniquely, so no room-number table is
+needed; moving a room breaks old keys, which matters only in development.
+Saving backups keeps save and load from refilling lives for free.
 
 ### D107 — 2026-09-29 — Seven more enemy looks
 Warden, daemon, golem, wyrm, phish, overclock and pixie join the enemy

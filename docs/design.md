@@ -73,8 +73,8 @@ drifting up and a thin neon outline. Proportions are `WIZARD` in
 
 ### Damage
 
-Integrity (health) is 8, 12 with every buff (at most 15, the save key's
-4 bits); it carries over between rooms and is full again after a respawn
+Integrity (health) is 8, 12 with every buff (not saved: a load starts
+full, D106); it carries over between rooms and is full again after a respawn
 (D35). Every damage source calls `Game.hurt(amount)` (D43): enemies,
 hazard blocks, spiked and squeezing platforms, Blink into a wall, the
 debug `H` key.
@@ -1584,17 +1584,18 @@ Settled:
 - Saving is a player action, any time, from the pause menu (D105); it
   writes the key to the URL hash and to localStorage, and nothing saves on
   its own. A load starts in the saved room with the room reset, full
-  backups and an empty clipboard; integrity comes from the key.
+  integrity and energy and an empty clipboard; the backups come from the
+  key (D106).
 - Firewall Wardens (D104) are the bosses of combat rooms. Each drops one
   permanent pickup (a pickup naming the Warden, shown once it falls);
   while that pickup's bit is found, the Warden is left out of its room
   and counts as defeated. Data checks refuse a Warden without such a drop,
   and a drop that is a refill. Shrines stay out of boss rooms.
 
+- A key whose room cell holds no room (the room moved on the world map
+  since) still loads what he has and starts him in the start room.
+
 Open so far:
-- Rooms need stable numbers for the key's room field (8 bits): a table
-  in `world.json` whose numbers are never reused after a room is deleted.
-  Settled with the saving step.
 - Wardens: size (a body wider than one cell needs multi-cell collision and
   claims), phases or attack patterns, a boss integrity bar, weak points,
   how many.
@@ -1717,19 +1718,22 @@ the pause menu.
 `src/world/save-key.js` (D106). A key holds what the wizard has, never the
 state of a room or the map (D68):
 
-| Field | Bits | |
+| Bits | Field | |
 |---|---|---|
-| Format version | 4 | `SAVE_KEY_VERSION` in `src/core/version.js`; a key of another version is refused |
-| Room | 8 | The saved room's number |
-| Access level | 8 | 0–15 used (D91) |
-| Pickups | 128 | One bit per permanent item, in blocks (D71) |
-| Integrity | 4 | 1–15 |
-| Checksum | 16 | CRC-16/CCITT-FALSE of the 152 bits above |
+| 0–3 | Format version | `SAVE_KEY_VERSION` in `src/core/version.js`; a key of another version is refused |
+| 4–11 | Room cell x | The saved room's cell in `world.json` `positions`, signed (−128–127) |
+| 12–19 | Room cell z | Likewise |
+| 20–27 | Access level | 0–15 used (D91) |
+| 28–155 | Pickups | Save bit n at 28 + n (D71): spells 28–43, buffs 44–59, upgrades 60–75, fragments 76–139, secrets 140–155 |
+| 156–159 | Backups | Backups left (D97), 0–15 |
+| 160–175 | Checksum | CRC-16/CCITT-FALSE of bits 0–159 |
 
-The payload is XORed with a stream seeded by the checksum, then all 168
+Bits 0–159 are XORed with a stream seeded by the checksum, then all 176
 bits move by a fixed shuffle (seeded, never changed: old keys depend on
-it); so one more pickup changes most of the key. The key is 42 hex digits
-in groups of 6 (`E907D4-41B4A7-...`). Reading forgives spaces, dashes,
+it), so no field sits at a fixed digit and one more pickup changes most
+of the key. The key is 44 hex digits in groups of 4
+(`2DE0-279E-AE79-...`). The room is its map cell, so moving a room on the
+world map breaks keys saved in it. Reading forgives spaces, dashes,
 lowercase, a leading `#`, O for 0 and I or L for 1, and names why it
 refuses a key: `empty`, `length`, `character`, `checksum` or `version`.
 Tests cover round trips, every single wrong digit and every swap of two

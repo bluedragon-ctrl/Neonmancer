@@ -25,8 +25,8 @@ bosses that drop loot, tooling) (D104, D105).
   compiles tile by tile from its back corner, and the wizard pops in out
   of pixels; any
   menu key skips it.
-- Access keys (D106): the save codec, 42 scrambled hex digits holding the
-  room, access level, pickup bits and integrity with a CRC-16; reading
+- Access keys (D106): the save codec, 44 scrambled hex digits holding the
+  room's map cell, access level, pickup bits and backups with a CRC-16; reading
   forgives spaces, dashes, lowercase and look-alike letters, and says why
   it refuses a key. Not in the game yet: saving comes in the next step.
 - World map tool: exits show as marks on the room edges (cyan connected,
