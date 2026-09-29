@@ -92,17 +92,7 @@ function boot() {
     }
     const events = game.update(input);
     if (events.some((event) => event.type === 'room')) showRoom();
-    for (const event of events) {
-      if (event.type === 'hurt' && event.cell) roomScene.flareHazard(event.cell);
-      if (event.type === 'hurt' && event.object) roomScene.flareObject(event.object);
-      if (event.type === 'zap') roomScene.sparks(event.bolt);
-      if (event.type === 'ricochet') roomScene.sparks(event.bolt, event.pos, event.dir);
-      if (event.type === 'deny') hud.denyEnergy();
-      if (event.type === 'cut' || event.type === 'paste') {
-        roomScene.clip(event);
-        debug.setRoom(game.room, game.objects, game.enemies);
-      }
-    }
+    showEvents(events, { game, roomScene, hud, debug });
     readout.countTick();
   }
 
@@ -122,18 +112,49 @@ function boot() {
     roomScene.update(alpha, dt);
     debug.sync(game, alpha);
     renderer.setFade(game.fadeLevel(alpha));
-    hud.setIntegrity(game.player.integrity, game.player.maxIntegrity);
-    // No energy bar before he knows a spell.
-    hud.setEnergy(game.player.energy, game.player.maxEnergy, game.player.spell !== null);
-    hud.setSpell(game.player.spell, game.player.spells.length);
-    hud.setClipboard(game.player.spell === 'cut_paste', game.player.clipboard);
-    hud.setMovementMode(game.movementMode);
-    hud.setHintWanted(wantsFullscreenHint(renderer.stageHeight, window.devicePixelRatio, !!document.fullscreenElement));
-    hud.update(dt);
+    syncHud(hud, game, renderer, dt);
     HOLO_TIME.value = time;
     renderer.render();
     readout.update(debug.active, { game, input, renderer, alpha, autoQuality });
   }
 
   new FixedLoop({ update, render }).start();
+}
+
+/**
+ * One-off effects of a tick's game events in the views: flares, sparks,
+ * the energy bar's denial, a cut or paste.
+ * @param {import('./game.js').GameEvent[]} events
+ */
+function showEvents(events, { game, roomScene, hud, debug }) {
+  for (const event of events) {
+    if (event.type === 'hurt' && event.cell) roomScene.flareHazard(event.cell);
+    if (event.type === 'hurt' && event.object) roomScene.flareObject(event.object);
+    if (event.type === 'zap') roomScene.sparks(event.bolt);
+    if (event.type === 'ricochet') roomScene.sparks(event.bolt, event.pos, event.dir);
+    if (event.type === 'deny') hud.denyEnergy();
+    if (event.type === 'cut' || event.type === 'paste') {
+      roomScene.clip(event);
+      debug.setRoom(game.room, game.objects, game.enemies);
+    }
+  }
+}
+
+/**
+ * Show the wizard's state in the HUD, once a frame.
+ * @param {Hud} hud
+ * @param {Game} game
+ * @param {Renderer} renderer
+ * @param {number} dt seconds since the last frame
+ */
+function syncHud(hud, game, renderer, dt) {
+  const { player } = game;
+  hud.setIntegrity(player.integrity, player.maxIntegrity);
+  // No energy bar before he knows a spell.
+  hud.setEnergy(player.energy, player.maxEnergy, player.spell !== null);
+  hud.setSpell(player.spell, player.spells.length);
+  hud.setClipboard(player.spell === 'cut_paste', player.clipboard);
+  hud.setMovementMode(game.movementMode);
+  hud.setHintWanted(wantsFullscreenHint(renderer.stageHeight, window.devicePixelRatio, !!document.fullscreenElement));
+  hud.update(dt);
 }

@@ -3,53 +3,24 @@
  * the state, they never change it.
  */
 import { DT } from './core/loop.js';
-import { boxCenter, castRay, cellsAlong, direction, lineOfSight, reach } from './ai/sight.js';
 import { announce, say } from './core/messages.js';
-import { exitCells, isBackSide, sideAxes, withExitDefaults } from './data/room-data.js';
-import { Bolt, boltDirections } from './entities/bolt.js';
+import { bounceOffEnemies, burnEnemies, touchEnemies, updateAttacks, updateBolts, updateFrozen } from './combat.js';
+import { isBackSide, sideAxes, withExitDefaults } from './data/room-data.js';
 import { Enemy } from './entities/enemy.js';
 import { createObject } from './entities/kinds.js';
 import { Pickup } from './entities/pickup.js';
 import { PLAYER, Player } from './entities/player.js';
 import { SWITCH_KINDS } from './entities/switch.js';
-import { cellBox, groundBelow, overlaps, overlapsBox, surfaceBelow, touchedCell, touchesBox } from './physics/collision.js';
+import { groundBelow, overlapsBox, surfaceBelow, touchedCell, touchesBox } from './physics/collision.js';
+import { castSpell } from './spells.js';
+import { createLocks, updateSwitches } from './switches.js';
 import { arrival, exitAt } from './world/exits.js';
 import { Grid } from './world/grid.js';
-import { warpTarget } from './entities/warp.js';
-import { cutTarget, pasteCell } from './entities/clip.js';
 import { Progress, pickupBit } from './world/progress.js';
 import { buildRoom } from './world/room.js';
 
-/**
- * What each spell does once cast (Player.cast() spent the energy), by
- * spell id; `spell` is its tuning from defs.json. An effect returning false
- * fizzled: the energy goes back (castSpell()).
- */
-const SPELL_EFFECTS = {
-  /** A bolt from his hands the way he aims (entities/bolt.js). */
-  zap: (game, spell) => game.bolts.push(Bolt.cast(game.player.pos, game.player.aim(), spell)),
-  /** A ring of electricity round him for a while that blocks ranged attacks (D73, D84). */
-  shield: (game, spell) => game.player.raiseShield('shield', Math.round(spell.duration / DT)),
-  /** A ring like the Shield that also blocks touch and burns enemies touching it (D84). */
-  firewall: (game, spell) => game.player.raiseShield('firewall', Math.round(spell.duration / DT)),
-  /** A bolt the way he aims that freezes the first enemy it hits (D85). */
-  pause: (game, spell) => game.bolts.push(Bolt.cast(game.player.pos, game.player.aim(), { ...spell, freeze: Math.round(spell.duration / DT) })),
-  /** A short teleport the way he aims, hitting the enemies it passes; cut short by a wall, it hurts him (D86). */
-  blink: (game, spell) => game.teleport('blink', spell),
-  /** A teleport the way he aims, as far as the first wall or object, harmless (D86). */
-  warp: (game, spell) => game.teleport('warp', spell),
-  /** Cut the crate or frozen enemy in front of him into his clipboard, or paste what it holds (D87). */
-  cut_paste: (game) => game.cutOrPaste(),
-};
-
 /** Terminal message for each way to die (Player.deathCause). */
 const DEATH_MESSAGES = { hole: 'msg.die', void: 'msg.void', damage: 'msg.derez' };
-
-/**
- * How far below a bouncy enemy's top his feet may have been last tick and
- * still bounce (it may have hopped up a little into him).
- */
-const BOUNCE_REACH = 0.05;
 
 /** Room transition timing in ticks (60 per second). */
 export const TRANSITION = {
@@ -152,8 +123,7 @@ export class Game {
     /** The exit he came in through: it stays open for him while he is in the room (D75). */
     this.entryExit = entry;
     /** Locked exits (D75), open while every switch is on; closed ones are solid (Grid.setOpening()). */
-    this.locks = this.room.exits.filter((exit) => exit.locked).map((exit) => ({ exit, open: false }));
-    for (const lock of this.locks) this.setLock(lock, this.lockWanted(lock));
+    this.locks = createLocks(this);
     /** The room's enemies (entities/enemy.js), dead ones included until the room resets. */
     this.enemies = this.room.enemies.map((enemy) => new Enemy(enemy));
     /** Bolts in flight, the wizard's Zaps and enemies' shots (entities/bolt.js); a room starts without any. */
@@ -227,283 +197,6 @@ export class Game {
     const cause = this.player.deathCause;
     say(DEATH_MESSAGES[cause]);
     this.emit('die', { cause });
-  }
-
-  /**
-   * The wizard casts his selected spell (the cast action), if he has the
-   * energy ('cast'); without it the cast fails ('deny'). Nothing while he
-   * cools down from the last cast.
-   */
-  castSpell() {
-    const id = this.player.spell;
-    if (!id) return;
-    const spell = this.content.spells[id];
-    // Pasting costs its own (D87): nothing by default.
-    const cost = this.player.clipboard && spell.pasteCost !== undefined ? spell.pasteCost : spell.cost;
-    const result = this.player.cast(cost, Math.round(spell.cooldown / DT));
-    if (result === 'cast' && SPELL_EFFECTS[id](this, spell) === false) {
-      this.player.refund(cost);
-      this.emit('fizzle', { spell: id });
-      return;
-    }
-    if (result) this.emit(result, { spell: id });
-  }
-
-  /**
-   * Blink or Warp (D86): the wizard teleports the way he aims, level,
-   * through open space (entities/warp.js), at most the spell's `range`
-   * units (Warp: no limit). Nowhere to go (right against a wall), the
-   * spell fizzles. Blink hits every enemy it passes through for its
-   * `hitDamage`, and when a wall, an object or the room's side cuts it
-   * short he takes its `damage` after landing.
-   * @param {'blink'|'warp'} id
-   * @param {object} spell its tuning from defs.json
-   * @returns {boolean} false if it fizzled
-   */
-  teleport(id, { range = Infinity, damage = 0, hitDamage = 0 }) {
-    const { player } = this;
-    const objects = this.solids.filter((body) => !(body instanceof Enemy));
-    const target = warpTarget(player.pos, player.size, player.aim(), range, this.grid, objects, this.liveEnemies);
-    if (!target) return false;
-    player.teleport(id, target.to);
-    this.emit('warp', { spell: id, from: player.warp.from, to: target.to });
-    if (hitDamage > 0) for (const enemy of target.passed) this.hitEnemy(enemy, hitDamage, 'blink');
-    if (target.cut && damage > 0) this.hurt(damage);
-    return true;
-  }
-
-  /**
-   * Cut & Paste (D87): with an empty clipboard, cut the crate or frozen
-   * enemy in front of him (entities/clip.js) out of the room into it
-   * ('cut'); holding something, paste it into the free cell in front of
-   * him ('paste'), in this room or another. A pasted crate keeps its
-   * integrity; a pasted enemy its integrity, provocation, facing and what
-   * was left of its freeze (paused while held), and its patrol path moves
-   * with it. Nothing to cut, or no room to paste: it fizzles.
-   * @returns {boolean} false if it fizzled
-   */
-  cutOrPaste() {
-    const { player } = this;
-    if (player.clipboard) return this.paste();
-    const target = cutTarget(this);
-    if (!target) return false;
-    const { object, enemy, cell } = target;
-    if (object) {
-      this.objects.splice(this.objects.indexOf(object), 1);
-      this.updateOrder.splice(this.updateOrder.indexOf(object), 1);
-      player.clipboard = { kind: 'object', data: object.object, integrity: object.integrity };
-    } else {
-      this.enemies.splice(this.enemies.indexOf(enemy), 1);
-      const { data, integrity, provoked, frozen, facing } = enemy;
-      player.clipboard = { kind: 'enemy', data, integrity, provoked, frozen: { ...frozen }, facing };
-    }
-    player.clip = { mode: 'cut', target: object ?? enemy, tick: 0 };
-    this.refreshBodies();
-    this.emit('cut', { ...(object ? { object } : { enemy }), cell });
-    return true;
-  }
-
-  /**
-   * Paste what the wizard holds into the free cell in front of him (D87),
-   * as a new object or enemy of this room; it falls from there. See
-   * cutOrPaste().
-   * @returns {boolean} false if there is no room (it fizzled)
-   */
-  paste() {
-    const { player } = this;
-    const cell = pasteCell(this);
-    if (!cell) return false;
-    const held = player.clipboard;
-    player.clipboard = null;
-    const id = `${held.data.id.split('~')[0]}~${++this.pastes}`;
-    let target;
-    if (held.kind === 'object') {
-      target = createObject({ ...held.data, id, at: cell });
-      target.integrity = held.integrity;
-      this.objects.push(target);
-      this.updateOrder.push(target);
-      this.emit('paste', { object: target, cell });
-    } else {
-      const { path } = held.data;
-      const offset = cell.map((v, i) => v - held.data.at[i]);
-      const moved = path && { ...path, points: path.points.map((point) => point.map((v, i) => v + offset[i])) };
-      target = new Enemy({ ...held.data, id, at: cell, ...(moved && { path: moved }) });
-      Object.assign(target, { integrity: held.integrity, provoked: held.provoked, frozen: { ...held.frozen }, facing: held.facing });
-      this.enemies.push(target);
-      this.emit('paste', { enemy: target, cell });
-    }
-    player.clip = { mode: 'paste', target, tick: 0 };
-    this.refreshBodies();
-    return true;
-  }
-
-  /**
-   * Bolts fly on. A bounce is reported ('ricochet', with where and the way
-   * it came in, for sparks). One that stops is reported ('zap', for its
-   * sparks) and gone. If it stopped at the wizard (an enemy's shot), he is
-   * hurt, unless his ring absorbed it ('block', D84); at an enemy, that takes its damage (hitEnemy()),
-   * or a Pause bolt freezes it (pauseEnemy()). A room object only minds
-   * the wizard's Zap: a destructible one 'hit' or 'break', a target
-   * 'switch' (others shrug it off).
-   */
-  updateBolts() {
-    for (const bolt of this.bolts) {
-      const stopped = bolt.update(this);
-      for (const { pos, dir } of bolt.rebounds) this.emit('ricochet', { bolt, pos, dir });
-      if (!stopped) continue;
-      this.emit('zap', { bolt });
-      const { target, owner } = bolt;
-      if (target === this.player) {
-        if (this.player.shield) this.block({ enemy: owner, bolt });
-        else this.hurt(bolt.damage, { enemy: owner });
-        continue;
-      }
-      if (target instanceof Enemy) {
-        if (bolt.freeze) this.pauseEnemy(target, bolt.freeze);
-        else this.hitEnemy(target, bolt.damage, owner ? 'bolt' : 'zap');
-        continue;
-      }
-      if (owner || bolt.freeze) continue;
-      const event = target?.hit?.(bolt.damage, 'zap');
-      if (!event) continue;
-      this.emit(event, { object: target });
-      // Whatever stood on a broken crate falls from the next tick.
-      if (event === 'break') this.refreshBodies();
-    }
-    if (this.bolts.some((bolt) => bolt.stopped)) this.bolts = this.bolts.filter((bolt) => !bolt.stopped);
-  }
-
-  /**
-   * An enemy takes a hit, from the wizard's spell or another enemy's
-   * discharge or bolt: 'hit' or, with its last integrity, 'pop' (then
-   * refreshBodies()). Any hit that leaves it hostile alarms it (D80, D81):
-   * the wizard gets the blame, so it turns to him ('alert').
-   * @param {Enemy} enemy
-   * @param {number} damage
-   * @param {'zap'|'discharge'|'bolt'|'firewall'|'blink'} cause
-   */
-  hitEnemy(enemy, damage, cause) {
-    const event = enemy.hit(damage, cause);
-    if (!event) return;
-    this.emit(event, { enemy });
-    if (event === 'pop') this.refreshBodies();
-    else if (enemy.alarm(this.player)) this.emit('alert', { enemy });
-  }
-
-  /**
-   * A Pause bolt hits an enemy (D85): it freezes ('freeze') and turns
-   * solid, but not for the wizard while he is inside it (Enemy.passable,
-   * updateFrozen()). One that can't be paused shrugs it off; that still
-   * counts as a hit, so it is alarmed (D81) like any enemy left unfrozen.
-   * @param {Enemy} enemy
-   * @param {number} ticks
-   */
-  pauseEnemy(enemy, ticks) {
-    const event = enemy.freeze(ticks);
-    if (!event) {
-      if (enemy.alarm(this.player)) this.emit('alert', { enemy });
-      return;
-    }
-    enemy.passable = !this.player.dead && overlapsBox(this.player.box(), enemy.box());
-    this.emit(event, { enemy });
-    this.refreshBodies();
-  }
-
-  /**
-   * A frozen enemy the wizard was inside turns solid for him once he has
-   * stepped out of it (D85).
-   */
-  updateFrozen() {
-    const box = this.player.box();
-    for (const enemy of this.liveEnemies) {
-      if (!enemy.passable || (!this.player.dead && overlapsBox(box, enemy.box()))) continue;
-      enemy.passable = false;
-      this.refreshBodies();
-    }
-  }
-
-  /**
-   * Enemies' charged attacks (D78, D80): one starting to charge ('charge')
-   * takes aim (an arc), one charged fires (discharge()).
-   */
-  updateAttacks() {
-    for (const enemy of this.enemies) {
-      const event = enemy.updateAttack(this);
-      if (!event) continue;
-      if (event === 'charge') this.aimDischarge(enemy);
-      this.emit(event, { enemy });
-      if (event === 'discharge') this.discharge(enemy);
-    }
-  }
-
-  /**
-   * An arc takes aim as it starts charging: at the wizard's middle, as far
-   * as its range or the first block or object in the way (the aim line).
-   * @param {Enemy} enemy
-   */
-  aimDischarge(enemy) {
-    if (enemy.data.attack !== 'arc') return;
-    const from = enemy.middle();
-    const dir = direction(from, boxCenter(this.player.box()));
-    const { point } = castRay(from, dir, enemy.data.attackRange, this.grid, this.sightBlockers);
-    enemy.aim = { dir, end: point };
-  }
-
-  /**
-   * A charged attack fires (D78, D80, D81). Bolts fly off at the wizard's
-   * middle as he is now, or four ways (boltDirections(); updateBolts()
-   * resolves them). A burst hits every body within its range that it
-   * could see: the wizard and other enemies. An arc flies along its aim
-   * until a block or an object stops it (unharmed) or its range runs out,
-   * and hits every body in the squares it passes through: the wizard and
-   * other enemies.
-   * @param {Enemy} enemy
-   */
-  discharge(enemy) {
-    const { attack, attackRange } = enemy.data;
-    const from = enemy.middle();
-    if (attack === 'bolt') {
-      for (const dir of boltDirections(enemy.data, from, boxCenter(this.player.box()), enemy.facing)) this.bolts.push(Bolt.shoot(enemy, dir));
-      return;
-    }
-    let hits;
-    if (attack === 'arc') {
-      const { dir } = enemy.aim;
-      const { point, distance } = castRay(from, dir, attackRange, this.grid, this.sightBlockers);
-      enemy.boltEnd = point;
-      const path = cellsAlong(from, dir, distance).map(cellBox);
-      hits = (box) => path.some((cell) => overlapsBox(box, cell));
-    } else {
-      hits = (box) => reach(from, box) <= attackRange && lineOfSight(from, boxCenter(box), this.grid, this.sightBlockers);
-    }
-    const targets = [...(this.player.dead ? [] : [this.player]), ...this.liveEnemies.filter((other) => other !== enemy)];
-    for (const body of targets) if (hits(body.box())) this.strike(body, enemy);
-  }
-
-  /**
-   * A discharge from `enemy` hits the wizard (hurt; his Shield or Firewall
-   * blocks it: 'block', D84) or another enemy (hitEnemy()).
-   * @param {Player|Enemy} body
-   * @param {Enemy} enemy
-   */
-  strike(body, enemy) {
-    const { damage } = enemy.data;
-    if (body === this.player) {
-      if (this.player.shield) return this.block({ enemy });
-      return this.hurt(damage, { enemy });
-    }
-    this.hitEnemy(body, damage, 'discharge');
-  }
-
-  /**
-   * His Shield or Firewall blocked an attack (D84): it flares (its
-   * `blockedAt` tick, for the view) and 'block' is reported.
-   * @param {{ enemy: Enemy, bolt?: Bolt }} details the attacker, and the bolt it absorbed
-   */
-  block(details) {
-    const { shield } = this.player;
-    shield.blockedAt = shield.tick;
-    this.emit('block', details);
   }
 
   /**
@@ -595,7 +288,7 @@ export class Game {
     for (const [action, step] of [['spellNext', 1], ['spellPrev', -1]]) {
       if (input.pressed(action) && player.selectSpell(step)) this.emit('spell', { spell: player.spell });
     }
-    if (!player.dead && input.pressed('cast')) this.castSpell();
+    if (!player.dead && input.pressed('cast')) castSpell(this);
 
     // (Not an object he has just cut away.)
     const intent = player.pushIntent;
@@ -620,75 +313,15 @@ export class Game {
       if (event === 'pop' || event === 'thaw') this.refreshBodies();
     }
     // Bolts after enemies, so they hit enemies where those are now.
-    this.updateBolts();
-    this.updateFrozen();
-    this.updateAttacks();
-    const bounced = this.bounceOffEnemies();
-    this.touchEnemies(bounced);
-    this.burnEnemies();
+    updateBolts(this);
+    updateFrozen(this);
+    updateAttacks(this);
+    const bounced = bounceOffEnemies(this);
+    touchEnemies(this, bounced);
+    burnEnemies(this);
     this.takePickups();
-    this.updateSwitches();
+    updateSwitches(this);
     return this.takeEvents();
-  }
-
-  /**
-   * Plates follow what stands on them (a crate, an enemy, the wizard);
-   * targets were switched by bolts already. Then the locked exits follow
-   * the switches: open while every one is on (reported as 'unlock', with a
-   * terminal line), closed again ('lock') once one goes off, but never on
-   * the wizard: while he stands in the opening it waits (D75).
-   */
-  updateSwitches() {
-    if (this.switches.length === 0) return;
-    const boxes = [
-      ...this.objects.filter((object) => object.kind === 'pushable' && object.solid).map((object) => object.box()),
-      ...this.liveEnemies.map((enemy) => enemy.box()),
-      ...(this.player.dead ? [] : [this.player.box()]),
-    ];
-    for (const plate of this.switches) {
-      if (plate.kind !== 'plate') continue;
-      if (plate.press(plate.pressedBy(boxes))) this.emit('switch', { object: plate });
-    }
-    let unlocked = false;
-    for (const lock of this.locks) {
-      const open = this.lockWanted(lock);
-      if (open === lock.open || (!open && this.inOpening(lock.exit))) continue;
-      this.setLock(lock, open);
-      this.emit(open ? 'unlock' : 'lock', { exit: lock.exit });
-      unlocked ||= open;
-    }
-    if (unlocked) say('msg.unlocked');
-  }
-
-  /** Should a locked exit be open: every switch on, or the wizard came in through it? */
-  lockWanted({ exit }) {
-    return exit.id === this.entryExit || this.switches.every((object) => object.on);
-  }
-
-  /** Open or close a locked exit (its opening in the grid). */
-  setLock(lock, open) {
-    lock.open = open;
-    this.grid.setOpening(lock.exit, open);
-  }
-
-  /** Is the wizard in the opening of `exit` (its row of cells beyond the side)? */
-  inOpening(exit) {
-    const box = this.player.box();
-    return exitCells(exit, this.room.size).outside.some((cell) => overlapsBox(box, cellBox(cell)));
-  }
-
-  /**
-   * Is the exit open? Every exit is, except a locked one while its switches
-   * are not all on (D75).
-   * @param {object} exit exit of the current room
-   */
-  exitOpen(exit) {
-    return this.locks.find((lock) => lock.exit === exit)?.open ?? true;
-  }
-
-  /** How many of the room's switches are on (the lights on its locked exits). */
-  switchesOn() {
-    return this.switches.filter((object) => object.on).length;
   }
 
   /**
@@ -746,71 +379,6 @@ export class Game {
     player.spells = this.progress.knownSpells(this.content.spells);
     if (select) player.spell = select;
     else if (!player.spells.includes(player.spell)) player.spell = player.spells[0] ?? null;
-  }
-
-  /**
-   * Falling onto the top of a bouncy enemy (not a frozen one, D85) bounces the wizard up (D48),
-   * harmlessly: his feet were above its top last tick and are at or below
-   * it now (on it, if it is solid), over its footprint.
-   * @returns {Enemy|null} the enemy he bounced off
-   */
-  bounceOffEnemies() {
-    const { player } = this;
-    if (player.dead || player.pos[1] >= player.prev[1]) return null;
-    const [px, , pz] = player.box();
-    for (const enemy of this.liveEnemies) {
-      if (!enemy.bouncy) continue;
-      const [bx, by, bz] = enemy.box();
-      const top = by[1];
-      if (player.prev[1] >= top - BOUNCE_REACH && player.pos[1] <= top + 1e-6 && overlaps(px, bx) && overlaps(pz, bz)) {
-        player.bounce(top);
-        enemy.bounced = 0;
-        this.emit('bounce', { enemy });
-        return enemy;
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Touching a hostile enemy with a touch attack hurts the wizard (D43):
-   * overlapping it, or leaning on or standing on a solid one (the hazard
-   * rule, D44). Not the enemy he just bounced off, and nothing while his
-   * Firewall is up (D84).
-   * @param {Enemy|null} bounced
-   */
-  touchEnemies(bounced) {
-    const { player } = this;
-    if (player.dead || player.shield?.spell === 'firewall') return;
-    const box = player.box();
-    for (const enemy of this.liveEnemies) {
-      if (!enemy.hurtsOnContact || enemy === bounced) continue;
-      if (touchesBox(box, enemy.box())) {
-        this.hurt(enemy.data.damage, { enemy });
-        return;
-      }
-    }
-  }
-
-  /**
-   * Firewall burns every live enemy touching its ring (D84): a hit of its
-   * damage ('firewall'), then again every burnInterval while it stays.
-   */
-  burnEnemies() {
-    const { player } = this;
-    const { shield } = player;
-    if (player.dead || shield?.spell !== 'firewall') return;
-    const { damage, burnInterval } = this.content.spells.firewall;
-    const box = player.shieldBox();
-    for (const [enemy, ticks] of shield.burns) {
-      if (ticks > 1) shield.burns.set(enemy, ticks - 1);
-      else shield.burns.delete(enemy);
-    }
-    for (const enemy of this.liveEnemies) {
-      if (shield.burns.has(enemy) || !touchesBox(box, enemy.box())) continue;
-      shield.burns.set(enemy, Math.round(burnInterval / DT));
-      this.hitEnemy(enemy, damage, 'firewall');
-    }
   }
 
   /**

@@ -552,7 +552,7 @@ export class EnemyView {
   /**
    * Its discharge: a burst from its eyes (Enemy.middle()); an arc along
    * its aim while charging, and to where it stopped once fired. The arc is
-   * drawn on the very line it hits along (from its eyes, Game.discharge()),
+   * drawn on the very line it hits along (from its eyes, discharge() in combat.js),
    * starting its muzzle's reach out in front of it.
    * @param {number[]} feet
    * @param {number|null} attack ticks since the attack started

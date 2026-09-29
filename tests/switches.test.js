@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { loadGameData } from '../src/data/load.js';
 import { validateData } from '../src/data/validate.js';
 import { Game } from '../src/game.js';
+import { exitOpen, switchesOn } from '../src/switches.js';
 import { SWITCH_FX, plateMarks, targetMarks } from '../src/render/switch-view.js';
 import { Progress, saveBit } from '../src/world/progress.js';
 import { CRATE, dataFiles, eventTypes, hold, idle, roomFile } from './helpers.js';
@@ -95,16 +96,16 @@ test('a plate is on while a crate, an enemy or the wizard stands on it, not whil
 test('a locked exit is solid until every switch is on, and closes again when one goes off', () => {
   const game = gameWith({ objects: [{ id: 'p', type: 'plate', at: [2, 0, 2] }, { id: 'q', type: 'plate', at: [5, 0, 5] }, { id: 'c', type: 'crate', at: [5, 0, 5] }] });
   assert.equal(game.grid.isSolid(8, 0, 3), true);
-  assert.equal(game.exitOpen(game.room.exits[0]), false);
+  assert.equal(exitOpen(game, game.room.exits[0]), false);
   game.update(idle);
-  assert.equal(game.switchesOn(), 1);
+  assert.equal(switchesOn(game), 1);
   assert.equal(lockOf(game).open, false);
 
   game.player.place([2.5, 0, 2.5]);
   const events = game.update(idle);
   assert.ok(events.some((e) => e.type === 'unlock' && e.exit.id === 'east'));
   assert.equal(game.grid.isSolid(8, 0, 3), false);
-  assert.equal(game.exitOpen(game.room.exits[0]), true);
+  assert.equal(exitOpen(game, game.room.exits[0]), true);
 
   game.player.place([4.5, 0, 2.5]);
   assert.ok(eventTypes(game.update(idle)).includes('lock'));

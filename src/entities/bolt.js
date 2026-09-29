@@ -13,7 +13,7 @@
  * A bouncing bolt (an enemy's `boltBounces`, D81) glances off blocks, the
  * room's sides and room objects that many times, turning back along the
  * axis it ran into; after its first bounce it can hit its own shooter too.
- * The body it stops at (its `target`) takes the hit (Game.updateBolts():
+ * The body it stops at (its `target`) takes the hit (updateBolts() in combat.js:
  * enemies and the wizard; room objects only mind the wizard's Zap). It
  * never goes through a thing: it moves in short sub-steps; it gives up
  * after BOLT.range (a shot fired up out of the room).

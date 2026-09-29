@@ -42,6 +42,9 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 |---|---|
 | `main.js` | Bootstrap: load and validate data, build systems, route input, start the loop, error screen |
 | `game.js` | Owns game state; fixed-order `update()` returning typed events; room switching |
+| `spells.js` | What each spell does once cast (`SPELL_EFFECTS`): `castSpell(game)`, Blink and Warp, Cut & Paste |
+| `combat.js` | Bolts, enemies' charged attacks, bouncing off, touching and burning enemies; every hit on an enemy (`hitEnemy(game, …)`, `pauseEnemy(game, …)`) |
+| `switches.js` | Plates and the locked exits they open (D75): `updateSwitches(game)`, `exitOpen()`, `switchesOn()` |
 | `core/version.js` | Game and data-schema version numbers (the game's patch number comes from `tools/game-version.js`, D42) |
 | `core/loop.js` | Fixed 60 Hz timestep, step clamp, interpolation alpha |
 | `core/input.js` | Raw keys → action states once per tick |
@@ -70,7 +73,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `ai/sight.js` | Rays through the grid and bodies (`castRay()`), `lineOfSight()`, `reach()` from a point to a box (pure, tested) |
 | `world/progress.js` | What the wizard has for the whole game (D71): save bits in blocks (`SAVE_BLOCKS`, `saveBit()`, `pickupBit()`), `Progress` (bits found, known spells) (pure, tested) |
 | `entities/warp.js` | Where Blink and Warp take the wizard (D86): `warpTarget()` sweeps his box along his aim through open space, stops at blocks, objects and the room's side, lands short of enemies, reports the enemies passed (pure, tested) |
-| `entities/clip.js` | Where Cut & Paste works (D87): `aimAxis()`, `frontCell()` (the cell in front of him), `cutTarget()` (a resting crate or frozen enemy there or one up, nothing on it), `pasteCell()` (free of blocks, bodies and pickups) (pure, tested); `Game.cutOrPaste()` moves things in and out of the room |
+| `entities/clip.js` | Where Cut & Paste works (D87): `aimAxis()`, `frontCell()` (the cell in front of him), `cutTarget()` (a resting crate or frozen enemy there or one up, nothing on it), `pasteCell()` (free of blocks, bodies and pickups) (pure, tested); `cutOrPaste()` (spells.js) moves things in and out of the room |
 | `entities/pickup.js` | A pickup in a room: its box, save bit, state (idle, ghost, taken) and pick-up ticks (pure, tested) |
 | `world/map.js` | The world map (D66): `nearestFreeCell()` for new rooms, `roomDistances()` from the start, `mapWarnings()` (unreachable rooms, test rooms too far out, D49; authored rooms exempt, D90) (pure, tested) |
 | `world/path.js` | Shared path format: legs from `at` through `points`, `advance()` / `positionOf()` on a small path state, swept cells |
@@ -139,6 +142,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `editor/room-edit.js` | One room being edited: place/erase edits, enemies, paths, exits and their connections, spawn/reset, name, biome, size (with a report), undo/redo (with the step's template changes), dirty state, cell descriptions; `roomErrors()`, `newRoom()` (pure, tested) |
 | `editor/map-edit.js` | The world as the world map tool edits it (D77): `MapEdit` moves, adds and removes rooms, connects rooms with an exit in the middle of each facing wall (`addExit()`), removes connections with both exits (`disconnectExit()`), undo, and what a save sends (`changes()`) (pure, tested) |
 | `editor/world-edit.js` | `world.json` being edited: connecting, disconnecting and renaming exits, a room's connections for its undo steps, a new room's map cell (`place()`, `unplace()`); `linkChoices()` (pure, tested) |
+| `editor/templates.js` | The editor's enemy template actions (D58, D79): save the enemy settings as a new template, move them into their template, rename, delete; hands the edited templates to the game and the panel |
 | `editor/defs-edit.js` | `defs.json` being edited: enemy templates (any of them, D79) added, updated, renamed and deleted; a step's template changes applied again for undo/redo (pure, tested) |
 | `editor/errors.js` | The error list: errors grouped by file, and the room, tool and thing each one points at (pure, tested) |
 | `editor/boxes.js` | `blocks`/`holes` entries edited cell by cell: untouched entries kept, loose cells merged greedily into boxes (pure, tested) |
@@ -274,11 +278,11 @@ axes), skipping the one he just bounced off.
 
 Spells: `Player.spells` lists the ones he knows and `Player.spell` is the
 selected one; `spellNext` / `spellPrev` call `Player.selectSpell()` (a
-`spell` event when it changed). On the cast action `Game.castSpell()`
+`spell` event when it changed). On the cast action `castSpell()` (spells.js)
 asks `Player.cast(cost, cooldown)` with the selected spell's tuning: while
 dead or cooling down nothing happens; without the energy it reports
 `deny`; else it spends the energy and runs the spell's effect
-(`SPELL_EFFECTS` in game.js). Zap's puts a `Bolt` at his hands in
+(`SPELL_EFFECTS` in spells.js). Zap's puts a `Bolt` at his hands in
 `Game.bolts` (`Bolt.cast()`), aimed along `Player.aim()` (his
 `targetFacing`). Bolts update after the enemies (`updateBolts()`), in
 sub-steps of at most 0.1, and stop at the first live enemy, solid cell,
@@ -293,14 +297,14 @@ takes `hit(damage)` if it has one: a pushable with `integrity` reports
 `hit` or, at 0, `break` (state `broken`, `solid` false, so
 `refreshBodies()` drops it and what stood on it falls next tick);
 indestructible ones return null. An enemy's `bolt` attack (D80) puts
-`Bolt.shoot()`s in the same list when `Game.discharge()` fires it (one,
+`Bolt.shoot()`s in the same list when `discharge()` (combat.js) fires it (one,
 or four for a `cross`, D81), with the enemy as their `owner`: a bolt
 stops at the wizard (`hurt()` with the enemy), another enemy (or, after
 a bounce, its own; `hit(damage, 'bolt')`), a block, an object (unharmed)
 or the room side; a bouncing one glances off blocks and objects first
 (`ricochet` events, passed to `RoomScene.sparks()` too). Every hit on an
 enemy, a spell's, a discharge's or a bolt's, goes through
-`Game.hitEnemy()`: it emits `hit` or `pop`, and alarms one left hostile
+`hitEnemy()` (combat.js): it emits `hit` or `pop`, and alarms one left hostile
 (`Enemy.alarm()`, D81). Bolts belong to the room: `enterRoom()` clears
 them.
 Energy recharges in `Player.update()` and lives on the `Player`, so it

@@ -150,6 +150,7 @@ export class EditorPanel {
   constructor(root, { blockTypes, objectTypes, enemyTemplates, biomes, canSave, on }) {
     this.canSave = canSave;
     this.on = on;
+    this.hints = {};
     this.element = el('div', 'editor-panel');
     this.element.hidden = true;
     // Keep clicks and the wheel on the panel from reaching the game canvas.
@@ -157,8 +158,36 @@ export class EditorPanel {
 
     const title = el('div', 'editor-title', 'ROOM EDITOR');
     this.roomLabel = el('div', 'editor-room');
+    /** What is in the cell under the mouse. */
+    this.hoverLine = el('div', 'editor-hover');
+    this.status = el('div', 'editor-status');
+    this.errors = el('ul', 'editor-errors');
+    const help = el('div', 'editor-help');
+    for (const line of HELP) help.append(el('div', '', line));
 
-    // --- The room: which one, a new one, its name, biome and size
+    this.element.append(
+      title,
+      this.roomLabel,
+      this.roomGroup(biomes),
+      this.layerRow(),
+      this.hoverLine,
+      this.toolRow(),
+      ...this.typeGroups(blockTypes, objectTypes),
+      this.enemyGroup(enemyTemplates),
+      this.pathGroup(),
+      this.exitGroup(),
+      this.actionRow(canSave),
+      this.status,
+      this.errors,
+      help,
+    );
+    root.append(this.element);
+    this.releaseKeyboard();
+  }
+
+  /** The room: which one, a new one, its name, biome and size. */
+  roomGroup(biomes) {
+    const { on } = this;
     this.roomSelect = el('select');
     this.roomSelect.addEventListener('change', () => on.room(this.roomSelect.value));
     this.newRoomInput = Object.assign(el('input'), { type: 'text', placeholder: 'new_room_id' });
@@ -195,9 +224,14 @@ export class EditorPanel {
     // A new room that was never saved can be thrown away.
     this.discardButton = el('button', 'editor-action', 'Discard new room');
     this.discardButton.addEventListener('click', () => on.discard());
-    const room = el('div', 'editor-group');
-    room.append(this.row('Room', this.roomSelect), newRoomRow, this.row('Name', this.nameInput), this.row('Authored', authored), this.row('Biome', this.biomeSelect), sizeRow, this.discardButton);
+    const group = el('div', 'editor-group');
+    group.append(this.row('Room', this.roomSelect), newRoomRow, this.row('Name', this.nameInput), this.row('Authored', authored), this.row('Biome', this.biomeSelect), sizeRow, this.discardButton);
+    return group;
+  }
 
+  /** The height layer being edited, and hiding what is above it. */
+  layerRow() {
+    const { on } = this;
     this.layerLabel = el('span', 'editor-value');
     const down = el('button', 'editor-small', '−');
     const up = el('button', 'editor-small', '+');
@@ -209,9 +243,12 @@ export class EditorPanel {
     cut.append(this.cutInput, ' hide above');
     const layer = el('div', 'editor-row editor-layer');
     layer.append(el('span', 'editor-label', 'Layer'), down, this.layerLabel, up, cut);
-    /** What is in the cell under the mouse. */
-    this.hoverLine = el('div', 'editor-hover');
+    return layer;
+  }
 
+  /** A button per tool. */
+  toolRow() {
+    const { on } = this;
     this.toolButtons = new Map();
     const tools = el('div', 'editor-tools');
     for (const tool of TOOLS) {
@@ -221,8 +258,12 @@ export class EditorPanel {
       this.toolButtons.set(tool.id, button);
       tools.append(button);
     }
+    return tools;
+  }
 
-    // --- Fields of the current tool, shown only while it is picked
+  /** Fields of the Block and Object tools, shown only while picked. */
+  typeGroups(blockTypes, objectTypes) {
+    const { on } = this;
     this.blockSelect = select(Object.entries(blockTypes).map(([id, type]) => [id, `${id} (${blockTypeText(type)})`]));
     this.blockSelect.addEventListener('change', () => on.blockType(this.blockSelect.value));
     this.blockRows = el('div', 'editor-group');
@@ -231,8 +272,12 @@ export class EditorPanel {
     this.objectSelect.addEventListener('change', () => on.objectType(this.objectSelect.value));
     this.objectRows = el('div', 'editor-group');
     this.objectRows.append(this.row('Object', this.objectSelect));
+    return [this.blockRows, this.objectRows];
+  }
 
-    this.hints = {};
+  /** Fields of the Enemy tool: its template, overrides, and the templates themselves. */
+  enemyGroup(enemyTemplates) {
+    const { on } = this;
     this.enemyTemplate = el('select');
     this.enemyTemplate.addEventListener('change', () => on.enemy('template', this.enemyTemplate.value));
     this.enemySelects = {};
@@ -280,7 +325,12 @@ export class EditorPanel {
     this.deleteTemplate.addEventListener('click', () => on.deleteTemplate());
     this.enemyRows.append(nameRow, this.updateTemplate, this.deleteTemplate);
     this.setEnemyTemplates(enemyTemplates, {});
+    return this.enemyRows;
+  }
 
+  /** Fields of the Path tool. */
+  pathGroup() {
+    const { on } = this;
     this.pathMode = select([['pingpong', 'there and back'], ['loop', 'loop']]);
     this.pathMode.addEventListener('change', () => on.path('mode', this.pathMode.value === PATH_DEFAULTS.mode ? undefined : this.pathMode.value));
     this.pathSpeed = numberInput({ min: 0.1, step: 0.5 });
@@ -291,7 +341,12 @@ export class EditorPanel {
     this.clearPath.addEventListener('click', () => on.clearPath());
     this.pathRows = this.group('path');
     this.pathRows.append(this.row('Mode', this.pathMode), this.row('Speed', this.pathSpeed), this.row('Pause (s)', this.pathPause), this.clearPath);
+    return this.pathRows;
+  }
 
+  /** Fields of the Exit tool. */
+  exitGroup() {
+    const { on } = this;
     this.exitId = Object.assign(el('input'), { type: 'text' });
     this.exitId.addEventListener('change', () => this.exitId.value.trim() && on.exit('id', this.exitId.value.trim()));
     this.exitWidth = numberInput({ min: 1, step: 1 });
@@ -315,7 +370,12 @@ export class EditorPanel {
     this.exitLockedRow = this.row('Locked', this.exitLocked);
     this.exitRows = this.group('exit');
     this.exitRows.append(this.exitIdRow, this.exitAtRow, this.exitYRow, this.row('Width', this.exitWidth), this.row('Height', this.exitHeight), this.exitLinkRow, this.exitLockedRow);
+    return this.exitRows;
+  }
 
+  /** Undo, redo, save (or export) and revert. */
+  actionRow(canSave) {
+    const { on } = this;
     const actions = el('div', 'editor-actions');
     this.buttons = {};
     for (const [id, label] of [['undo', 'Undo'], ['redo', 'Redo'], ['save', canSave ? 'Save' : 'Export'], ['revert', 'Revert']]) {
@@ -323,17 +383,14 @@ export class EditorPanel {
       this.buttons[id].addEventListener('click', () => on[id]());
       actions.append(this.buttons[id]);
     }
+    return actions;
+  }
 
-    this.status = el('div', 'editor-status');
-    this.errors = el('ul', 'editor-errors');
-    const help = el('div', 'editor-help');
-    for (const line of HELP) help.append(el('div', '', line));
-
-    this.element.append(title, this.roomLabel, room, layer, this.hoverLine, tools, this.blockRows, this.objectRows, this.enemyRows, this.pathRows, this.exitRows, actions, this.status, this.errors, help);
-    root.append(this.element);
-
-    // Controls let go of the keyboard once used, so the editor's keys (the
-    // digits pick a tool) don't end up typed into a list or a field.
+  /**
+   * Controls let go of the keyboard once used, so the editor's keys (the
+   * digits pick a tool) don't end up typed into a list or a field.
+   */
+  releaseKeyboard() {
     this.element.addEventListener('change', (e) => e.target.blur());
     this.element.addEventListener('click', (e) => {
       if (e.target.closest('button')) e.target.closest('button').blur();

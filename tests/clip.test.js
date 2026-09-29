@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { pauseEnemy } from '../src/combat.js';
 import { Game } from '../src/game.js';
 import { PLAYER } from '../src/entities/player.js';
 import { PLAYER_HITBOX } from '../src/core/rules.js';
@@ -129,7 +130,7 @@ test('only a frozen enemy can be cut; it pastes still frozen for what was left, 
   const [bug] = game.enemies;
   assert.deepEqual(eventTypes(cast(game)), ['fizzle'], 'not while it is awake');
 
-  game.pauseEnemy(bug, 300);
+  pauseEnemy(game, bug, 300);
   for (let i = 0; i < 40; i++) game.update(idle);
   bug.integrity = 1;
   const events = game.update(press('cast'));
@@ -152,7 +153,7 @@ test('only a frozen enemy can be cut; it pastes still frozen for what was left, 
 
 test('a pasted enemy takes its patrol path along', () => {
   const game = gameWith({ enemies: [{ id: 'bug', template: 'bug', at: [2, 0, 3], path: { points: [[5, 0, 3]] } }] });
-  game.pauseEnemy(game.enemies[0], 30);
+  pauseEnemy(game, game.enemies[0], 30);
   cast(game);
   aim(game, [1.5, 0, 3.5], 0);
   const pasted = cast(game).find((e) => e.type === 'paste').enemy;

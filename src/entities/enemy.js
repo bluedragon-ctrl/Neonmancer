@@ -25,7 +25,7 @@
  * over it then, when a provoked one turns hostile, and when anything hits
  * it (it turns to the wizard and looks for him there, alarm(), D80, D81).
  * Charged attack (burst, arc or bolt): seeing him within its attack range
- * at rest, it stops, charges, fires (Game.discharge()), then cools down.
+ * at rest, it stops, charges, fires (discharge() in combat.js), then cools down.
  * Frozen by Pause (D85), it stops where it is, even mid-step, sees nothing,
  * attacks nothing and hurts nothing, and is solid (a platform, the D51
  * rules) until it thaws; it still falls, rides platforms and takes hits.
@@ -116,9 +116,9 @@ export class Enemy {
     this.cooldown = 0;
     this.chargeTicks = Math.max(1, Math.round(enemy.attackCharge / DT));
     this.cooldownTicks = Math.round(enemy.attackCooldown / DT);
-    /** An arc's aim, fixed when it starts charging: { dir, end } (Game.aimDischarge()). */
+    /** An arc's aim, fixed when it starts charging: { dir, end } (aimDischarge() in combat.js). */
     this.aim = null;
-    /** Where the last arc stopped (Game.discharge()). */
+    /** Where the last arc stopped (discharge() in combat.js). */
     this.boltEnd = null;
     /** Integrity left; a hit takes some (hit()), at 0 it pops. */
     this.integrity = enemy.integrity;
@@ -134,7 +134,7 @@ export class Enemy {
     this.frozen = null;
     /**
      * Frozen round the wizard (he was inside it): not solid for him until he
-     * has stepped out of it, so freezing never traps him (Game.updateFrozen()).
+     * has stepped out of it, so freezing never traps him (updateFrozen() in combat.js).
      */
     this.passable = false;
     /** How it died: 'hole' | 'void' | 'zap' | 'discharge' | 'bolt' | 'firewall' | 'blink'; null while alive. */
@@ -277,7 +277,7 @@ export class Enemy {
   /**
    * The charged attack, once a tick after update(): start charging when
    * it sees him within range, stands still and is ready ('charge'), fire
-   * when charged ('discharge', resolved by Game.discharge()), then cool
+   * when charged ('discharge', resolved by discharge() in combat.js), then cool
    * down. Falling or dying cuts it off.
    * @param {import('../game.js').Game} game
    * @returns {'charge'|'discharge'|null}

@@ -15,7 +15,7 @@
 import { Plane, Raycaster, Vector2, Vector3 } from 'three';
 import { isTextField } from '../core/input.js';
 import { linkMap } from '../data/load.js';
-import { resolveEnemyTemplates, sideLength, withExitDefaults } from '../data/room-data.js';
+import { sideLength, withExitDefaults } from '../data/room-data.js';
 import { validateData } from '../data/validate.js';
 import { DefsEdit } from './defs-edit.js';
 import { errorTarget, groupErrors } from './errors.js';
@@ -24,6 +24,7 @@ import { EditorOverlay } from './overlay.js';
 import { EditorPanel, TOOLS } from './panel.js';
 import { ID_PATTERN, RoomEdit, newRoom, resizeText, roomIdProblem, sizeProblem } from './room-edit.js';
 import { downloadFile, saveFiles } from './save.js';
+import { applyEnemyTemplates, deleteTemplate, renameTemplate, saveTemplate, updateTemplate } from './templates.js';
 import { WorldEdit, linkChoices } from './world-edit.js';
 
 /** Tools a mouse drag paints with; the others act on the cell clicked only. */
@@ -118,10 +119,10 @@ export class Editor {
           this.refresh();
         },
         enemy: (field, value) => this.setEnemy(field, value),
-        saveTemplate: (name) => this.saveTemplate(name),
-        updateTemplate: () => this.updateTemplate(),
-        renameTemplate: (name) => this.renameTemplate(name),
-        deleteTemplate: () => this.deleteTemplate(),
+        saveTemplate: (name) => saveTemplate(this, name),
+        updateTemplate: () => updateTemplate(this),
+        renameTemplate: (name) => renameTemplate(this, name),
+        deleteTemplate: () => deleteTemplate(this),
         path: (field, value) => this.pathItem && this.change(() => this.edit.setPathOptions(this.pathItem.id, { [field]: value })),
         clearPath: () => this.pathItem && this.change(() => this.edit.updateItem(this.pathItem.id, { path: undefined })),
         exit: (field, value) => this.setExit(field, value),
@@ -140,10 +141,11 @@ export class Editor {
       },
     });
 
-    this.applyEnemyTemplates();
+    applyEnemyTemplates(this);
 
     this.raycaster = new Raycaster();
-    this.listen(renderer.webgl.domElement);
+    this.listenPointer(renderer.webgl.domElement);
+    this.listenKeys();
   }
 
   /** F2: open the editor on the current room, or close it and play. */
@@ -280,7 +282,7 @@ export class Editor {
     const data = this.edit.toData();
     this.errors = validateData(this.editedFiles());
     // Undo and redo may have changed the templates.
-    if (this.defs.text() !== this.defsApplied) this.applyEnemyTemplates();
+    if (this.defs.text() !== this.defsApplied) applyEnemyTemplates(this);
     this.game.content.rooms.set(data.id, data);
     this.game.content.links = linkMap(this.world.connections);
     try {
@@ -403,133 +405,6 @@ export class Editor {
   get enemySettings() {
     const enemy = this.selectedEnemy;
     return enemy ? { id: enemy.id, template: enemy.template, overrides: enemy.overrides ?? {} } : this.enemy;
-  }
-
-  /**
-   * Save the enemy settings as a new template in defs.json, built on the
-   * template they are of (D58, D79); the picked enemy becomes one of it,
-   * and so do new ones. One undo step of the room.
-   * @param {string} name the template's id
-   */
-  saveTemplate(name) {
-    const { template, overrides } = this.enemySettings;
-    let problem = null;
-    this.templateChange(() => {
-      problem = this.defs.addTemplate(name, template, overrides);
-      return !problem && this.useTemplate(name);
-    });
-    this.status = problem ?? `Template ${name} (built on ${template}) added to defs.json; Save writes it.`;
-    if (!problem) this.panel.templateInput.value = '';
-    this.refresh();
-  }
-
-  /**
-   * Move the enemy's own settings into its template: every enemy of it
-   * changes, in every room, and so do the templates built on it.
-   */
-  updateTemplate() {
-    const { template, overrides } = this.enemySettings;
-    let done = false;
-    this.templateChange(() => (done = this.defs.updateTemplate(template, overrides) && this.useTemplate(template)));
-    if (done) this.status = `Template ${template} updated; this changes ${this.reach(template)}. Save writes defs.json.`;
-    this.refresh();
-  }
-
-  /** What a change of `template` reaches: the rooms with enemies of it, and the templates built on it. */
-  reach(template) {
-    const rooms = this.roomsUsing(template);
-    const children = this.defs.builtOn(template);
-    return [
-      `every ${template}${rooms.length > 0 ? ` (${rooms.join(', ')})` : ''}`,
-      children.length > 0 && `the templates built on it (${children.join(', ')})`,
-    ].filter(Boolean).join(' and ');
-  }
-
-  /** Give the template of the enemy settings another id; the room's enemies of it follow, and templates built on it. */
-  renameTemplate(name) {
-    const { template } = this.enemySettings;
-    const elsewhere = this.roomsUsing(template).filter((room) => room !== this.edit.id);
-    if (elsewhere.length > 0) {
-      this.status = `${template} is used in ${elsewhere.join(', ')}: only a template no other room uses can be renamed.`;
-      return this.refresh();
-    }
-    let problem = null;
-    this.templateChange(() => {
-      problem = this.defs.renameTemplate(template, name);
-      if (problem) return false;
-      this.applyEnemyTemplates();
-      for (const enemy of (this.edit.data.enemies ?? []).filter((e) => e.template === template)) {
-        const settings = { template: name, overrides: enemy.overrides ?? {} };
-        const id = this.edit.setEnemy(enemy.id, settings, this.walksPath(settings));
-        if (id && this.selected?.id === enemy.id) this.selected = { kind: 'item', id };
-      }
-      if (this.enemy.template === template) this.enemy.template = name;
-      return true;
-    });
-    this.status = problem ?? `Template ${template} renamed ${name}. Save writes defs.json.`;
-    if (!problem) this.panel.templateInput.value = '';
-    this.refresh();
-  }
-
-  /** Remove the template of the enemy settings from defs.json, if no enemy is of it and no template built on it. */
-  deleteTemplate() {
-    const { template } = this.enemySettings;
-    const rooms = this.roomsUsing(template);
-    if (rooms.length > 0) {
-      this.status = `${template} is used in ${rooms.join(', ')}: change or remove those enemies first.`;
-      return this.refresh();
-    }
-    const parent = this.defs.enemies[template]?.extends;
-    let problem = null;
-    this.templateChange(() => {
-      if ((problem = this.defs.deleteTemplate(template))) return false;
-      this.enemy = { template: parent ?? Object.keys(this.defs.enemies)[0], overrides: {} };
-      this.applyEnemyTemplates();
-      return true;
-    });
-    this.status = problem ?? `Template ${template} deleted. Save writes defs.json.`;
-    this.refresh();
-  }
-
-  /**
-   * A change of the enemy templates, one undo step of the room (with what
-   * it does to the room's enemies).
-   * @param {() => boolean} change
-   */
-  templateChange(change) {
-    this.change(() => this.edit.edit(change));
-  }
-
-  /** Rooms with enemies of `template`. */
-  roomsUsing(template) {
-    return this.roomIds().filter((id) => (this.roomData(id).enemies ?? []).some((enemy) => enemy.template === template));
-  }
-
-  /**
-   * The templates changed: the picked enemy (and new ones) take template
-   * `template` with no overrides of their own.
-   * @returns {true}
-   */
-  useTemplate(template) {
-    this.applyEnemyTemplates();
-    this.enemy = { template, overrides: {} };
-    const enemy = this.selectedEnemy;
-    if (enemy) {
-      const id = this.edit.setEnemy(enemy.id, this.enemy, this.walksPath(this.enemy));
-      if (id) this.selected = { kind: 'item', id };
-    }
-    return true;
-  }
-
-  /** Hand the edited templates (filled in) to the game and the panel. */
-  applyEnemyTemplates() {
-    const templates = this.defs.enemies;
-    this.enemyTemplates = resolveEnemyTemplates(templates);
-    this.game.content.enemyTemplates = this.enemyTemplates;
-    this.panel.setEnemyTemplates(this.enemyTemplates, templates);
-    this.defsApplied = this.defs.text();
-    // New enemies of a template that is gone (undo, delete) are of the first one.
-    if (!this.enemyTemplates[this.enemy.template]) this.enemy = { template: Object.keys(this.enemyTemplates)[0], overrides: {} };
   }
 
   /** An exit field changed in the panel: for the picked exit, or new ones. */
@@ -846,8 +721,8 @@ export class Editor {
     else this.refresh();
   }
 
-  /** Mouse on the game canvas, keys on the window, a warning before closing with unsaved edits. */
-  listen(canvas) {
+  /** Mouse on the game canvas: painting, erasing, picking, and the wheel for the layer. */
+  listenPointer(canvas) {
     canvas.addEventListener('pointerdown', (e) => {
       if (!this.active || (e.button !== 0 && e.button !== 2)) return;
       // Back from the panel: its fields let go of the keyboard.
@@ -898,7 +773,10 @@ export class Editor {
       },
       { passive: false },
     );
+  }
 
+  /** The editor's own keys, and a warning before leaving with unsaved edits. */
+  listenKeys() {
     window.addEventListener('keydown', (e) => {
       if (!this.active) return;
       if (isTextField(e.target)) {
