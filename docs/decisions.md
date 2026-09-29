@@ -1808,3 +1808,15 @@ The map distance needs no pathfinding and the author places shrines
 with the world map in view. A floor tile reads as a place to stand and
 can't block a puzzle. The wizard's color ties the shrine and the pips
 to him: that is where he is backed up.
+
+### D97 — 2026-09-29 — Magenta is the wizard's color; collapsing blocks turn to frosted glass
+Magenta reads as the player's color: his body, the backup shrine and
+the backup pips (D96), and the double jump card. Collapsing blocks give
+it up: they become frosted white glass, pale white-blue (`#dff4ff`)
+with dashed edges, faces barely tinted and a new `cracks` face mark (a
+jagged crack with two branches, turned differently on each face).
+Refines the collapsing look of D47.
+**Why:** author's choice. A magenta shrine next to magenta collapsing
+blocks would say "these belong together". Glass that cracks tells
+"fragile" by shape; its white is shared with plates and targets, which
+carry a bull's-eye instead.

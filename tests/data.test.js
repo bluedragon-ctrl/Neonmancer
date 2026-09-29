@@ -583,7 +583,7 @@ test('collapsing blocks: each cell of a box becomes a room object with its type\
     type: 'collapsing_regrow',
     at: [1, 0, 3],
     kind: 'collapsing',
-    color: '#ff2bd6',
+    color: '#dff4ff',
     edges: 'solid',
     mark: 'none',
     faces: 'dark',

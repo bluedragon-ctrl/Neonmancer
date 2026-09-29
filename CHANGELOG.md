@@ -6,6 +6,11 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- Collapsing blocks are frosted white glass with cracks on their faces
+  instead of magenta, which is now the wizard's color (D97); a new
+  `cracks` face mark for object and block types.
+
 ### Added
 - Backups (Phase 3 step 14, D96): the wizard has 8 backups, shown as
   pips under the integrity bar; each death uses one. Dying with none
@@ -263,6 +268,11 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 Phase 2 — Hazards, combat, editor.
 
+### Changed
+- Collapsing blocks are frosted white glass with cracks on their faces
+  instead of magenta, which is now the wizard's color (D97); a new
+  `cracks` face mark for object and block types.
+
 ### Added
 - Damage (Phase 2 step 1): every source goes through `Game.hurt()`; after
   a hit his hologram flashes white, then magenta, and he is invulnerable
@@ -445,6 +455,11 @@ Phase 2 — Hazards, combat, editor.
 ## [0.1.0] - 2026-09-26
 
 Phase 1 — Foundations.
+
+### Changed
+- Collapsing blocks are frosted white glass with cracks on their faces
+  instead of magenta, which is now the wizard's color (D97); a new
+  `cracks` face mark for object and block types.
 
 ### Added
 - Project scaffolding: Vite, placeholder title screen, unit tests with

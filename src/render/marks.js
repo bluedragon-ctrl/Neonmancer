@@ -28,10 +28,34 @@ const PATTERNS = {
   ]),
   // Data bits: a full grid of small squares.
   bits: () => bitSquares(null),
+  // Cracks, like fragile glass (collapsing blocks, D97): a jagged line
+  // across the face with two short branches, turned differently per face.
+  cracks: (face) => crackLines(face),
   // Destructible objects (not a style: drawn for any object with integrity,
   // in place of its mark): the grid with bits missing, per face.
   bitsBroken: (face) => bitSquares(face),
 };
+
+/** The crack polyline and its branches, in face coordinates. */
+const CRACK = [
+  [[0.08, 0.3], [0.3, 0.42], [0.44, 0.36], [0.62, 0.58], [0.92, 0.66]],
+  [[0.44, 0.36], [0.52, 0.12]],
+  [[0.62, 0.58], [0.55, 0.86]],
+];
+
+/**
+ * The cracks of one face (0..5, see markSegments()): the same crack
+ * mirrored or turned, so neighbouring faces don't repeat it.
+ */
+function crackLines(face) {
+  const flip = face % 2 === 1;
+  const turn = Math.floor(face / 2) % 2 === 1;
+  const place = ([u, v]) => {
+    const p = [flip ? 1 - u : u, v];
+    return turn ? [p[1], p[0]] : p;
+  };
+  return CRACK.flatMap((line) => line.slice(1).map((point, i) => [place(line[i]), place(point)]));
+}
 
 function square(margin) {
   const a = margin;
@@ -87,7 +111,7 @@ function bitSquares(face) {
 }
 
 /** Names of the marks an object type can choose (its `mark` style); `bitsBroken` is not one. */
-export const MARKS = ['none', 'inset', 'cross', 'brackets', 'bits'];
+export const MARKS = ['none', 'inset', 'cross', 'brackets', 'bits', 'cracks'];
 
 /**
  * Mark segments on all six faces of the unit cube at `cell`.

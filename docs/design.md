@@ -107,7 +107,7 @@ the ones it gives:
 | `block` | plain (room color) | none |
 | `hazard` | hazard, red | `damage: 1` |
 | `void` | void, violet | `lethal: true` |
-| `collapsing` | kind `collapsing`, magenta, dashed edges, tinted faces | gives way (see Collapsing blocks) |
+| `collapsing` | kind `collapsing`, frosted white glass: pale white-blue, dashed edges, cracks on the faces, faces barely tinted (D97) | gives way (see Collapsing blocks) |
 | `collapsing_regrow` | extends `collapsing` | `regrow: 3` |
 
 - **Static types** have a `look` (`plain`, `hazard`, `void`) and live in
@@ -1141,7 +1141,7 @@ Phase 5.
 | Phantom Partition (special) | silver-white `#e8eaff` | sparse dots | still stars, twinkling | edges shimmer slowly through the hues |
 
 Room colors keep clear of the gameplay colors (lime crates, cyan
-platforms, magenta collapsing blocks, red hazards, violet void, green bugs),
+platforms, frosted white collapsing blocks, red hazards, violet void, green bugs),
 so those always stand out from the room. The two grays are far apart:
 graphite Abyssal Buffer is dark and moody, Phantom Partition bright
 silver-white on black.
