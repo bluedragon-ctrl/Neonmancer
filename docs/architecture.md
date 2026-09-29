@@ -91,6 +91,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/walls.js` | Back walls with doorways and dark tunnels behind them, front edges with gaps, arrow shape for front exits (pure, tested) |
 | `render/spikes.js` | The spiked object shape (D82): pyramids on a core cube inside the cell, as face triangles and outline segments, `SPIKES` tuning; pure, tested |
 | `render/marks.js` | Face-mark line patterns for object styles, including the data bits, whole (`bits`) or with holes for destructible objects (`bitsBroken`, `bitLayout()`); pure, tested |
+| `render/glass.js` | Glass faces (D96): a see-through face shader (transparent, no depth written, clipping), the data core's shrunk mark and the loose bits of a destructible glass crate (`looseBitSegments()`, tested) |
 | `render/break-fx.js` | Destructible object's jolt on a hit that doesn't break it, `BREAK_FX` tuning (pure, tested) |
 | `render/hole-view.js` | Hole pits: walls fading to black, rim, short fading corner lines; outline math (tested) |
 | `render/room-view.js` | Static blocks (merged edges + instanced occluder faces), back walls, styled object views |

@@ -1,7 +1,8 @@
 /**
- * Glass look (prototype, showcase only for now): see-through faces for
- * objects and blocks, so a crate reads as a block of material rather than
- * an item. What lies behind shows through dimmed and tinted; the faces
+ * Glass look (D96): see-through faces, so a crate reads as a block of
+ * material rather than an item. Every crate type is glass (`"faces":
+ * "glass"` in defs.json); hazard and void blocks have a glass option that
+ * is not used yet (showcase only). What lies behind shows through dimmed and tinted; the faces
  * glow a little towards their borders and carry a fixed diagonal glint.
  *
  * The faces are one small transparent ShaderMaterial with premultiplied
@@ -11,9 +12,11 @@
  * and anything behind it (the wizard, other blocks) show through; the
  * edges lying on the front faces still win (polygonOffset, like
  * faceMaterial()). Only front faces draw, so each point behind is tinted
- * once. No extra render pass: a few triangles per object.
+ * once. No extra render pass: a few triangles per object. The faces
+ * honor clipping planes (a crate sinking into a hole is cut at the floor).
  */
 import { Color, ShaderMaterial } from 'three';
+import { hash } from './hash.js';
 
 /** Tuning; brightness values are raw colors (the bloom threshold is 0.12). */
 export const GLASS = {
@@ -31,6 +34,14 @@ export const GLASS = {
   glintTint: 0.4,
   /** The data core of a crate with a mark: size (units) inside the glass. */
   coreSize: 0.5,
+  /**
+   * A destructible object has no core: its data bits float loose inside
+   * the glass, as if the core came apart: how many, their size (units) and
+   * how far they stay from the glass.
+   */
+  looseBits: 12,
+  looseBitSize: 0.1,
+  looseMargin: 0.2,
   /** Hazard and void blocks as glass: how much of what's behind they hide. */
   hazardAlpha: 0.5,
   voidAlpha: 0.75,
@@ -38,12 +49,15 @@ export const GLASS = {
 
 // Local position in the unit cell (the geometry runs 0..1) and the face normal.
 const vertexShader = /* glsl */ `
+  #include <clipping_planes_pars_vertex>
   varying vec3 vLocal;
   varying vec3 vNormal;
   void main() {
     vLocal = position;
     vNormal = normal;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+    gl_Position = projectionMatrix * mvPosition;
+    #include <clipping_planes_vertex>
   }
 `;
 
@@ -58,7 +72,9 @@ const fragmentShader = /* glsl */ `
   uniform float uGlintTint;
   varying vec3 vLocal;
   varying vec3 vNormal;
+  #include <clipping_planes_pars_fragment>
   void main() {
+    #include <clipping_planes_fragment>
     vec3 n = abs(vNormal);
     vec2 uv = n.y > 0.5 ? vLocal.xz : n.x > 0.5 ? vLocal.zy : vLocal.xy;
     uv = clamp(uv, 0.0, 1.0);
@@ -84,21 +100,25 @@ const fragmentShader = /* glsl */ `
  * See-through glass faces in an object's color, for a unit-cell geometry
  * running 0..1 (room-view.js UNIT_BOX).
  * @param {number|string|Color} color
+ * @param {Partial<Pick<typeof GLASS, 'alpha'|'tint'|'rim'|'glint'>>} [tuning]
+ *   other values than GLASS's (e.g. frosted glass)
  */
-export function glassFaceMaterial(color) {
+export function glassFaceMaterial(color, tuning = {}) {
+  const { alpha, tint, rim, rimWidth, glint, glintAt, glintTint } = { ...GLASS, ...tuning };
   return new ShaderMaterial({
     uniforms: {
       uColor: { value: new Color(color) },
-      uAlpha: { value: GLASS.alpha },
-      uTint: { value: GLASS.tint },
-      uRim: { value: GLASS.rim },
-      uRimWidth: { value: GLASS.rimWidth },
-      uGlint: { value: GLASS.glint },
-      uGlintAt: { value: GLASS.glintAt },
-      uGlintTint: { value: GLASS.glintTint },
+      uAlpha: { value: alpha },
+      uTint: { value: tint },
+      uRim: { value: rim },
+      uRimWidth: { value: rimWidth },
+      uGlint: { value: glint },
+      uGlintAt: { value: glintAt },
+      uGlintTint: { value: glintTint },
     },
     vertexShader,
     fragmentShader,
+    clipping: true,
     ...GLASS_BLEND,
   });
 }
@@ -126,4 +146,32 @@ export const GLASS_BLEND = {
 export function shrinkSegments(segments, cell, size) {
   const center = cell.map((c) => c + 0.5);
   return segments.map((segment) => segment.map((p) => p.map((v, i) => center[i] + (v - center[i]) * size)));
+}
+
+/**
+ * The loose data bits of a destructible glass object (D96): small squares
+ * at fixed places inside the cell, each facing along one axis. The same
+ * for every object, so they never flicker between frames or rooms.
+ * @param {number[]} [cell] [x, y, z]
+ * @returns {number[][][]} segments
+ */
+export function looseBitSegments(cell = [0, 0, 0]) {
+  const { looseBits, looseBitSize: size, looseMargin: margin } = GLASS;
+  const seed = [41.3, 17.9];
+  const segments = [];
+  for (let i = 0; i < looseBits; i++) {
+    const center = cell.map((c, k) => c + margin + (1 - 2 * margin) * hash(i, k, seed));
+    const axis = Math.floor(hash(i, 3, seed) * 3);
+    const u = (axis + 1) % 3;
+    const v = (axis + 2) % 3;
+    const corner = (du, dv) => {
+      const p = [...center];
+      p[u] += (du * size) / 2;
+      p[v] += (dv * size) / 2;
+      return p;
+    };
+    const [a, b, c, d] = [corner(-1, -1), corner(1, -1), corner(1, 1), corner(-1, 1)];
+    segments.push([a, b], [b, c], [c, d], [d, a]);
+  }
+  return segments;
 }

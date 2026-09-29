@@ -86,8 +86,9 @@ const SPIN = 0.6;
 const ALL_ASSETS = [
   { label: 'wizard', build: () => createWizard(), shadow: PALETTE.cyan },
   { label: 'wizard-hit', build: buildWizardHit, shadow: PALETTE.cyan },
-  // Every object type from defs.json, in its own style (destructible ones
-  // with data bits missing); switches have their own looks (below).
+  // Every object type from defs.json, in its own style (glass crates, D96:
+  // a data core, or loose bits in a destructible one); switches have their
+  // own looks (below).
   ...Object.entries(defs.objects).filter(([, props]) => !SWITCH_KINDS.includes(props.kind)).map(([type, props]) => ({
     label: type,
     build: () => {
@@ -101,11 +102,10 @@ const ALL_ASSETS = [
   { label: 'block-hazard', build: () => buildActiveBlock('hazard') },
   { label: 'block-void', build: () => buildActiveBlock('void') },
   { label: 'blocks-in-room', span: 5.5, build: buildBlocksInRoom },
-  // Glass look (prototype, glass.js): see-through crates (the data bits on
-  // a small core inside), hazard and void blocks; then in a room corner,
-  // stacked next to today's crate with the wizard walking behind them.
-  { label: 'glass-crate', group: 'glass', build: () => buildGlassObject('crate') },
-  { label: 'glass-crate-plain', group: 'glass', build: () => buildGlassObject('crate_plain') },
+  // Glass (D96): every crate type is glass (above). Hazard and void
+  // blocks as glass are an option not used yet; then a room corner with
+  // glass crates stacked beside the old tinted crate, the wizard walking
+  // behind them.
   { label: 'glass-hazard', group: 'glass', build: () => buildActiveBlock('hazard', { glass: true }) },
   { label: 'glass-void', group: 'glass', build: () => buildActiveBlock('void', { glass: true }) },
   { label: 'glass-in-room', group: 'glass', span: 5.5, build: buildGlassInRoom },
@@ -1464,19 +1464,12 @@ function buildActiveBlock(type, options) {
   return asset;
 }
 
-/** An object type from defs.json with glass faces (prototype, glass.js). */
-function buildGlassObject(type) {
-  const view = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...defs.objects[type], faces: 'glass', at: [0, 0, 0] });
-  view.position.set(-0.5, 0, -0.5);
-  return new Group().add(view);
-}
-
 /**
  * Glass in context: a 4×4 room corner with a stack of two glass crates
- * and a glass crate on the floor beside today's tinted crate, a glass
+ * and a glass crate on the floor beside the old tinted crate, a glass
  * hazard strip and a glass void patch against plain blocks; the wizard
  * walks back and forth behind the crates (with his x-ray ghost, which
- * glass no longer triggers).
+ * glass doesn't trigger).
  */
 function buildGlassInRoom() {
   const size = [4, 3, 4];
@@ -1485,9 +1478,9 @@ function buildGlassInRoom() {
     createActiveBlockView([[0, 0, 2], [0, 0, 3]], 'hazard', BLOCK_TYPES.hazard.color, null, { glass: true }),
     createActiveBlockView([[3, 0, 0], [3, 0, 1]], 'void', BLOCK_TYPES.void.color, null, { glass: true }),
   );
-  const glass = { ...OBJECT_STYLE_DEFAULTS, ...defs.objects.crate, faces: 'glass' };
+  const glass = { ...OBJECT_STYLE_DEFAULTS, ...defs.objects.crate };
   for (const at of [[1, 0, 3], [1, 1, 3], [2, 0, 3]]) room.add(createObjectView({ ...glass, at }));
-  room.add(createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...defs.objects.crate, at: [3, 0, 3] }));
+  room.add(createObjectView({ ...glass, faces: 'tinted', at: [3, 0, 3] }));
   const wizard = createWizard();
   addXray(wizard);
   room.add(wizard);
@@ -1497,7 +1490,7 @@ function buildGlassInRoom() {
   let tick = 0;
   asset.userData.update = (dt) => {
     tick = (tick + dt * 60) % loop;
-    // Back and forth along x, behind the glass crates and today's crate.
+    // Back and forth along x, behind the glass crates and the tinted one.
     const t = tick / loop;
     const leg = t < 0.5 ? t * 2 : (t - 0.5) * 2;
     wizard.position.set(t < 0.5 ? 1.2 + leg * 2.4 : 3.6 - leg * 2.4, 0, 2.3);

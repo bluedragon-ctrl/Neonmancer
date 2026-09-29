@@ -17,7 +17,7 @@ import { BoxGeometry, BufferGeometry, Color, DoubleSide, Float32BufferAttribute,
 import { BLOCK_FX, createActiveBlockView, flareHazard, hazardFaceMaterial } from './block-fx.js';
 import { blockEdges, edgeUnitKeys, groupedBlockEdges } from './edges.js';
 import { BITS, markSegments } from './marks.js';
-import { GLASS, glassFaceMaterial, shrinkSegments } from './glass.js';
+import { GLASS, glassFaceMaterial, looseBitSegments, shrinkSegments } from './glass.js';
 import { spikeSegments, spikeTriangles } from './spikes.js';
 import { doorwayTunnels, wallLayout } from './walls.js';
 import {
@@ -181,8 +181,9 @@ const EDGE_WIDTH = { collapsing: 1.5 };
  * dark or hazard faces, its own outline and no mark. An object that hurts
  * (hazard faces or spiked) can flare like a hazard block: its faces light
  * up, or its outline brightens; `userData.flare(since)` sets the flare
- * for `since` seconds after it hurt the wizard. Glass faces (prototype,
- * glass.js) are see-through, with the mark on a small core inside.
+ * for `since` seconds after it hurt the wizard. Glass faces (D96,
+ * glass.js) are see-through, with the mark on a small dark core inside;
+ * a destructible glass object has no core, its data bits float loose.
  * @param {{ at: number[], kind?: string, color: string, edges: string, mark: string, faces: string, shape?: string, tint: number, integrity?: number }} object
  */
 export function createObjectView({ at, kind, color, edges, mark, faces, shape = 'cube', tint, integrity }) {
@@ -200,7 +201,7 @@ export function createObjectView({ at, kind, color, edges, mark, faces, shape = 
     group.add(body);
     flares.push((since) => flareHazard(material, at, since));
   } else if (faces === 'glass' && !spiked) {
-    // See-through (glass.js, prototype): drawn after everything opaque.
+    // See-through (D96, glass.js): drawn after everything opaque.
     const body = new Mesh(geometry, glassFaceMaterial(color));
     body.position.set(...at);
     group.add(body);
@@ -235,8 +236,13 @@ export function createObjectView({ at, kind, color, edges, mark, faces, shape = 
       ? { color: new Color(color).lerp(new Color(0xffffff), BITS.whiten), width: BITS.width, brightness: BITS.brightness }
       : { color, width: 1.5, brightness: 1 };
     if (faces === 'glass') {
-      // Behind glass the mark sits on a small dark core inside it.
-      group.add(glassCore(drawn, at, style));
+      // Behind glass the mark sits on a small dark core inside it; a
+      // destructible object's bits float loose instead (D96).
+      if (drawn === 'bitsBroken') {
+        const loose = neonLines(looseBitSegments(at), lineMaterial(style));
+        loose.renderOrder = 2;
+        group.add(loose);
+      } else group.add(glassCore(drawn, at, style));
       return group;
     }
     const marks = neonLines(markSegments(drawn, at), lineMaterial(style));
