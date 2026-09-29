@@ -1771,10 +1771,11 @@ bolt and opens puzzles (bouncing a shot onto a target).
 
 ### D96 — 2026-09-29 — Glass crates
 Every crate type (`crate`, `crate_plain`, `crate_cross`, `crate_dashed`)
-has a new face style, `"faces": "glass"` (render/glass.js): see-through
-faces tinted in the crate's color, a soft glow towards the face borders
-and a faint diagonal sheen; the neon edges stay as they were. What lies
-behind (the floor grid, blocks, the wizard) shows through dimmed, so the
+has a new face style, `"faces": "glass"` (render/glass.js): frosted
+see-through faces, milky and tinted in the crate's color, with a fine
+static frost grain and a soft glow towards the face borders; the neon
+edges stay as they were. What lies behind (the floor grid, blocks, the
+wizard) shows through dimmed and clouded, so the
 wizard is seen directly behind a crate and its x-ray ghost doesn't show
 there. A crate with a mark wears it on a small dark core (half a block)
 inside the glass: the plain `crate`'s data bits. A destructible crate has
@@ -1788,7 +1789,10 @@ it is shown in the asset showcase only, not used yet.
 than items. The look was reviewed in the showcase first; for the
 destructible crate four candidates were shown (the core with bits
 missing, frosted glass, a hollow shell with the broken grid etched on the
-glass, loose bits) and the author chose loose bits. Faking glass with a
+glass, loose bits) and the author chose loose bits. Clear glass with a
+diagonal sheen came first; the author found the sheen too sharp, as every
+crate is seen from the same angle and showed the same bright triangle,
+and asked for frosted glass. Faking glass with a
 transparent face shader costs a few triangles and one draw per crate;
 real refraction (a transmission material) was ruled out as it renders
 the scene twice. The see-through faces relax D5 for crates only: their

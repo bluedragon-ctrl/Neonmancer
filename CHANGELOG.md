@@ -7,8 +7,8 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
-- Glass crates (D96): every crate type is see-through glass tinted in
-  its color, with the data bits on a small dark core inside; a
+- Glass crates (D96): every crate type is see-through frosted glass
+  tinted in its color, with the data bits on a small dark core inside; a
   destructible crate has no core, its bits float loose inside. Hazard
   and void blocks have a glass option shown in the asset showcase only
   (`?asset=glass`, with a room corner comparing glass and the old

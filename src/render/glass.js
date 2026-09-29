@@ -2,8 +2,9 @@
  * Glass look (D96): see-through faces, so a crate reads as a block of
  * material rather than an item. Every crate type is glass (`"faces":
  * "glass"` in defs.json); hazard and void blocks have a glass option that
- * is not used yet (showcase only). What lies behind shows through dimmed and tinted; the faces
- * glow a little towards their borders and carry a fixed diagonal glint.
+ * is not used yet (showcase only). The glass is frosted: what lies behind
+ * shows through dimmed and milky; the faces glow a little towards their
+ * borders and carry a fine static frost grain.
  *
  * The faces are one small transparent ShaderMaterial with premultiplied
  * alpha: `gl_FragColor.rgb` is the light the glass adds, `a` how much of
@@ -21,17 +22,17 @@ import { hash } from './hash.js';
 /** Tuning; brightness values are raw colors (the bloom threshold is 0.12). */
 export const GLASS = {
   /** Share of what's behind that the glass hides (0 = clear, 1 = opaque). */
-  alpha: 0.58,
-  /** Body color, as a share of the object color. */
-  tint: 0.1,
+  alpha: 0.7,
+  /** Body color, as a share of the object color... */
+  tint: 0.15,
+  /** ...mixed this much towards white: frosted glass looks milky. */
+  milk: 0.25,
   /** Glow towards the face borders: brightness and how far in (share of a face). */
-  rim: 0.22,
-  rimWidth: 0.22,
-  /** The diagonal glint: brightness (white) and where it crosses a face. */
-  glint: 0.3,
-  glintAt: 0.62,
-  /** Share of the object color the glint takes (0 = white). */
-  glintTint: 0.4,
+  rim: 0.14,
+  rimWidth: 0.25,
+  /** Frost grain: cells per unit along a face and how much they vary the body. */
+  frostGrain: 24,
+  frost: 0.35,
   /** The data core of a crate with a mark: size (units) inside the glass. */
   coreSize: 0.5,
   /**
@@ -67,9 +68,9 @@ const fragmentShader = /* glsl */ `
   uniform float uTint;
   uniform float uRim;
   uniform float uRimWidth;
-  uniform float uGlint;
-  uniform float uGlintAt;
-  uniform float uGlintTint;
+  uniform float uMilk;
+  uniform float uFrostGrain;
+  uniform float uFrost;
   varying vec3 vLocal;
   varying vec3 vNormal;
   #include <clipping_planes_pars_fragment>
@@ -84,14 +85,15 @@ const fragmentShader = /* glsl */ `
     float d = min(min(uv.x, 1.0 - uv.x), min(uv.y, 1.0 - uv.y));
     float rim = 1.0 - smoothstep(0.0, uRimWidth, d);
     rim *= rim;
-    // A soft diagonal glint band; the top also gets a thin bright line
-    // beside it (on the sides thin lines read as cracks).
-    float g = (uv.x + uv.y) * 0.5;
-    float glint = (1.0 - smoothstep(0.0, 0.1, abs(g - uGlintAt))) * 0.5;
-    if (vNormal.y > 0.5) glint += 1.0 - smoothstep(0.0, 0.015, abs(g - uGlintAt - 0.14));
-    vec3 glintColor = mix(vec3(1.0), uColor, uGlintTint);
-    vec3 light = uColor * (uTint + rim * uRim) * shade + glintColor * glint * uGlint * shade;
-    float alpha = uAlpha * (0.8 + 0.2 * shade) + rim * 0.2;
+    // Frost: a fine static grain, different on every face, that makes the
+    // body a little lighter or darker cell by cell. No glint: every crate
+    // is seen from the same angle, so one would repeat on all of them.
+    vec2 cell = floor(uv * uFrostGrain);
+    float face = dot(vNormal, vec3(3.0, 5.0, 7.0));
+    float grain = fract(sin(dot(vec3(cell, face), vec3(12.9898, 78.233, 37.719))) * 43758.5453) - 0.5;
+    vec3 body = mix(uColor, vec3(1.0), uMilk);
+    vec3 light = body * (uTint * (1.0 + grain * uFrost) + rim * uRim) * shade;
+    float alpha = uAlpha * (0.85 + 0.15 * shade) + rim * 0.15;
     gl_FragColor = vec4(light, clamp(alpha, 0.0, 1.0));
   }
 `;
@@ -100,11 +102,11 @@ const fragmentShader = /* glsl */ `
  * See-through glass faces in an object's color, for a unit-cell geometry
  * running 0..1 (room-view.js UNIT_BOX).
  * @param {number|string|Color} color
- * @param {Partial<Pick<typeof GLASS, 'alpha'|'tint'|'rim'|'glint'>>} [tuning]
- *   other values than GLASS's (e.g. frosted glass)
+ * @param {Partial<Pick<typeof GLASS, 'alpha'|'tint'|'milk'|'rim'|'frost'>>} [tuning]
+ *   other values than GLASS's
  */
 export function glassFaceMaterial(color, tuning = {}) {
-  const { alpha, tint, rim, rimWidth, glint, glintAt, glintTint } = { ...GLASS, ...tuning };
+  const { alpha, tint, milk, rim, rimWidth, frostGrain, frost } = { ...GLASS, ...tuning };
   return new ShaderMaterial({
     uniforms: {
       uColor: { value: new Color(color) },
@@ -112,9 +114,9 @@ export function glassFaceMaterial(color, tuning = {}) {
       uTint: { value: tint },
       uRim: { value: rim },
       uRimWidth: { value: rimWidth },
-      uGlint: { value: glint },
-      uGlintAt: { value: glintAt },
-      uGlintTint: { value: glintTint },
+      uMilk: { value: milk },
+      uFrostGrain: { value: frostGrain },
+      uFrost: { value: frost },
     },
     vertexShader,
     fragmentShader,
