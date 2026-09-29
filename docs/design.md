@@ -739,8 +739,8 @@ production shows a need for.
 
 | Upgrade | Of | What it does | Built |
 |---|---|---|---|
-| Zap+ | Zap | The bolt bounces off walls: targets round corners | Phase 4 |
-| Mirror | Shield | Reflects bolts back at the shooter | Phase 4 |
+| Zap+ | Zap | The bolt bounces off walls: targets round corners | Phase 3 (D91) |
+| Mirror | Shield | Reflects bolts back at the shooter | Phase 3 (D91) |
 
 - **Upgrades** have their own disks. Found, an upgrade replaces its base
   spell in the Tab cycle (ZAP becomes ZAP+), so the cycle stays short.
@@ -1326,7 +1326,7 @@ the author; the answers are recorded as decisions before the code lands.
 | 1 | `feat/world-map-tool` | A developer overview of the whole world on its own page, `tools/world-map.html`, served by the dev server only (D66). Every room is a node in its biome color on a simple map grid, one room per cell, at its position in `world.json`; lines show the connections between exits, and the start room is marked. Rooms are dragged to another free cell and saved through the dev server; connections are shown, and edited in the room editor. A new room from the room editor gets the nearest free cell next to the room it was created from, to be moved afterwards. Validation: every room has a position, no two share one. The tool flags what room validation can't see: rooms not reachable from the start through exits, and test rooms more than two rooms from Boot Sector (D49). Clicking a room opens it in the room editor. |
 | 2 | `feat/pickups-and-progress` | Pickup types in `defs.json` and room data, and a `Progress` model (save bits found, known spells) that survives room resets and death: permanent pickups have a save bit in blocks (D71) and stay as grayed-out ghosts once found; temporary pickups (integrity and energy refills) have none and come back with the room (D67). The first data disk: Zap is no longer known from the start, its disk lies in Boot Sector (`> SPELL INSTALLED: ZAP` banner). Pickup burst; editor and validation support. |
 | 3 | `feat/data-disks` | More disks (D73): an install animation on the wizard, and a second spell to switch to (Tab / Q): Shield, a crackling ring round him; it blocks projectiles once there are any (step 6). Its disk lies in Cache Hall. |
-| 4 | `feat/switches` | Switches that unlock exits: a pressure plate held down by a crate, and a target that a Zap bolt hits. An exit in room data can be locked until its switches are on; a locked exit looks closed and is solid. Switch state resets with the room. The locked exit is the same mechanism access levels use later (step 14). Editor, validation (switches point at exits that exist), showcase, a test room. |
+| 4 | `feat/switches` | Switches that unlock exits: a pressure plate held down by a crate, and a target that a Zap bolt hits. An exit in room data can be locked until its switches are on; a locked exit looks closed and is solid. Switch state resets with the room. The locked exit is the same mechanism access levels use later (step 15). Editor, validation (switches point at exits that exist), showcase, a test room. |
 | 5 | `feat/viruses` | Universal enemies (a `look` field, D78); every enemy type an enemy template (D79); a `chase` movement behavior: a hostile enemy follows the wizard while it sees him within `aggroRange`, searches, then goes home; charged discharge attacks (`burst`, `arc`; `contact` renamed `touch`); the Virus and the Sentinel; the "!" mark; enemies keep out of holes. Test room Quarantine. |
 | 6 | ~~`feat/popups`~~ | Closed without a branch (D84): the projectile came with the enemy review (the `bolt` attack and the `shooter` template, D80, D81), and the looks with D83. More enemies go on as side work, discussed and playtested outside the step plan. |
 | 7 | `feat/firewall-spell` | The Shield blocks bolts, arcs and bursts (absorbing bolts at its ring, which flares); Firewall: a ring of flames that also blocks touch and burns enemies touching it (D84). Its disk lies in Scheduler. |
@@ -1335,9 +1335,10 @@ the author; the answers are recorded as decisions before the code lands.
 | 10 | `feat/cut-paste-spell` | Cut & Paste (D87): cut a crate or a frozen enemy into a one-slot clipboard that goes from room to room, paste it into the free cell in front of the wizard; the disk lies in the new test room Clipboard. |
 | 11 | `docs/spell-roster` | Discussion step, docs only: the roster towards 16 spells (D68) — new spells, some letting the wizard skip easier rooms, and upgrades of the basic ones — and the buff items, now that the first five spells can be played; stronger ones should let the wizard speedrun simple rooms or solve them differently (D67). Accepted spells get their own steps (in this phase or later) and CLAUDE.md §5 is updated; the result is a decision. |
 | 12 | `feat/buff-items` | The first buff items from the roster: pickups that raise the wizard's maximum integrity or energy, or his jump height, kept in `Progress`; HUD bars grow with them. |
-| 13 | `feat/score-and-bits` | Starts with a short discussion (below). Then: bonus bits (up to 4 slots per room), secrets, score for bits, enemies, secrets and pickups, floating score popups, HUD score, the "all bits collected" room bonus, local high score. |
-| 14 | `feat/fragments-and-access` | Fragment pickups, the fragment count and locations in `world.json`, the central core that takes them, `> FRAGMENT n/N GET!`, found fragments grayed out on revisits (D67), access levels that lock areas until the wizard's level is high enough (locked exits from step 4), and the end of the game. |
-| 15 | `chore/release-0.3.0` | Docs pass, CHANGELOG, `v0.3.0` tag and GitHub Release (CLAUDE.md §10) |
+| 13 | `feat/spell-upgrades` | Upgrades in the upgrades save block (bits 32–47, D88, D91): an upgrade disk that, once found, replaces its base spell in the Tab cycle (ZAP becomes ZAP+). Zap+: the bolt bounces off walls (the bolt bounces of D81), reaching targets round corners. Mirror: the Shield reflects bolts back at the shooter. Showcase, editor, validation, a test room. |
+| 14 | `feat/score-and-bits` | Starts with a short discussion (below). Then: bonus bits (up to 4 slots per room), secrets, score for bits, enemies, secrets and pickups, floating score popups, HUD score, the "all bits collected" room bonus, local high score. |
+| 15 | `feat/fragments-and-access` | Fragment pickups, the fragment count and locations in `world.json`, the central core that takes them, `> FRAGMENT n/N GET!`, found fragments grayed out on revisits (D67), access levels that lock areas until the wizard's level is high enough (locked exits from step 4), the wizard's access level kept in `Progress` (its own 8-bit field in the save key, D91), and the end of the game. |
+| 16 | `chore/release-0.3.0` | Docs pass, CHANGELOG, `v0.3.0` tag and GitHub Release (CLAUDE.md §10) |
 
 Open questions, settled at the start of their step:
 - **2 Pickups** and **3 Data disks:** settled (D71, D73).
@@ -1355,13 +1356,19 @@ Open questions, settled at the start of their step:
   the jump buff (it opens areas and skips rooms, D68): how high, and does
   it stack; the access-key health field (4 bits) must hold the highest
   maximum.
-- **13 Score and bits:** the world targets are set (D68); what is left is
+- **13 Spell upgrades:** each upgrade's slot in the block, color and
+  energy cost; how an upgrade disk looks next to a spell disk; Zap+: how
+  many bounces; Mirror: does it reflect every bolt or only some, and does
+  a reflected bolt hurt any enemy it hits or only the shooter; can the
+  wizard still cast the plain spell once upgraded.
+- **14 Score and bits:** the world targets are set (D68); what is left is
   how many bits a room typically has, score values, and what counts as a
   secret. Bonus bits are not saved (D68): are they back after a load, and
   if so, how does saved score avoid counting them twice?
-- **14 Fragments and access:** fragment count (in the world and the test
-  world); how access levels link to fragments (the level is the number of
-  fragments delivered, or collected, or its own reward); what a locked
+- **15 Fragments and access:** fragment count (in the world and the test
+  world); the access level is stored on its own (D91), not counted from
+  fragment bits: what raises it (delivering fragments to the core, or
+  another reward) and by how much; what a locked
   exit looks like; a placeholder win screen or a real ending (final score,
   credits).
 - **Test world:** each step adds a test room (D45), so the world grows to
@@ -1372,7 +1379,8 @@ Open questions, settled at the start of their step:
 
 Guardians, saves and tooling (D65); planned in detail when Phase 3 is
 released. Firewall Wardens; the roster's new spells and upgrades, one
-step each (D88, D89): Compile, Fork, Scan, Pull, Zap+ and Mirror; title screen and pause menu (the save UI needs
+step each (D88, D89): Compile, Fork, Scan and Pull (the upgrades Zap+
+and Mirror moved to Phase 3, D91); title screen and pause menu (the save UI needs
 both); access-key codec with tests; URL saves and localStorage autosave;
 map screen; reachability checker; design skills and subagents. Open so
 far: what writes a save (save shrines, room entry, or both); how deep

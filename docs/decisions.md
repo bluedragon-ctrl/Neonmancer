@@ -1638,3 +1638,20 @@ Refines D45: test rooms and real rooms live side by side from now on.
 changed by development steps or grow test-room exits. A flag rather
 than a separate folder lets a test room be promoted in place; a written
 rule is enough without a permission block.
+
+### D91 — 2026-09-29 — Access level in the save key; upgrades move to Phase 3
+- **Access level:** the save key gets its own access-level field, 8 bits
+  wide: 4 are used (levels 0–15) and 4 stay spare. The key layout
+  (CLAUDE.md §8) becomes format version 4, room 8, access level 8,
+  pickups 112, health 4, score 20, checksum 16: 172 bits. The level is
+  stored, not counted from fragment bits; what raises it settles in the
+  fragments and access step.
+- **Upgrades in Phase 3:** Zap+ and Mirror (D88) get their own step,
+  13 `feat/spell-upgrades`, right after the buff items (step 12) and
+  apart from them. Score and bits become step 14, fragments and access
+  15, the release 16. Compile, Fork, Scan and Pull stay in Phase 4.
+**Why:** author's choices. A whole byte leaves the access level room to
+grow without a new key format. Upgrades and buffs are different kinds of
+pickup (one changes a spell, the other the wizard), so each gets its own
+step; bringing the upgrades forward makes the first two spells worth
+having late already in Phase 3.

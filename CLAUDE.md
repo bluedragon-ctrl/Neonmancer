@@ -333,7 +333,8 @@ not critical.
 
 - Bit layout (one versioned module, spare bits reserved), sized for the
   world targets (D68) and finalized with the access-key step:
-  format version 4, room 8, pickups 112 (one bit per permanent item, in
+  format version 4, room 8, access level 8 (4 bits used, levels 0–15,
+  4 spare, D91), pickups 112 (one bit per permanent item, in
   blocks, D71: spells 16, buffs 16, upgrades 16 (D88), fragments 64;
   known spells, upgrades and buffs follow from them), health 4, score 20, checksum 16.
   No per-room data (bonus slots, map).
@@ -461,12 +462,12 @@ World map tool for the developer. Pickups and a progress model, data
 disks. Switches (pressure plates, bolt targets) unlocking exits. Viruses,
 Sentinels and Pop-ups. Shield, Firewall, Pause, Warp and Cut & Paste spells.
 A discussion step on further spells, spell upgrades and buff items; the
-first buff items. Score, bonus bits and secrets. Fragments, access levels
+first buff items; the upgrades Zap+ and Mirror (D91). Score, bonus bits and secrets. Fragments, access levels
 and the core. Step plan: docs/design.md (D65).
 
 **Phase 4 (v0.4) — Guardians, saves, tooling**
-Firewall Wardens. The roster's new spells and upgrades (D88, D89):
-Compile, Fork, Scan, Pull, Zap+ and Mirror. Title screen and pause menu. Access keys,
+Firewall Wardens. The roster's new spells (D88, D89): Compile, Fork,
+Scan and Pull. Title screen and pause menu. Access keys,
 URL saves, localStorage autosave, tests. Map screen. Reachability
 checker. Design skills and subagents.
 
