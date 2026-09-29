@@ -344,7 +344,7 @@ test('spiked platforms (D82): only platforms can hurt', () => {
 
 test('object styles: the schema rejects unknown values in defs.json', () => {
   assertError(
-    errorsAfter((f) => (f['defs.json'].objects.crate.faces = 'glass')),
+    errorsAfter((f) => (f['defs.json'].objects.crate.faces = 'marble')),
     'defs.json › objects.crate.faces',
     'must be one of',
   );

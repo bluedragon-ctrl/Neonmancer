@@ -19,6 +19,7 @@
  */
 import { BoxGeometry, Color, Group, InstancedMesh, Matrix4, ShaderMaterial } from 'three';
 import { blockEdges } from './edges.js';
+import { GLASS, GLASS_BLEND } from './glass.js';
 import { HOLO_TIME } from './holo.js';
 import { lineMaterial, neonLines, shared } from './neon.js';
 
@@ -127,7 +128,13 @@ const hazardFragment = /* glsl */ `
     // Flare of the block that just hurt the wizard.
     vec3 inside = step(uFlareCell - 0.001, vPos) * step(vPos, uFlareCell + 1.001);
     glow += uFlare * inside.x * inside.y * inside.z * 0.8;
+  #ifdef GLASS
+    // Glass (glass.js): the lit pixels stay solid, the dark between them is see-through.
+    float solid = max(lit * square, uFlare * inside.x * inside.y * inside.z);
+    gl_FragColor = vec4(uColor * glow * faceShade(), mix(GLASS, 1.0, solid));
+  #else
     gl_FragColor = vec4(uColor * glow * faceShade(), 1.0);
+  #endif
   }
 `;
 
@@ -180,19 +187,29 @@ const voidFragment = /* glsl */ `
       light *= 0.6 + 0.4 * hash(vec3(grain, seed + twinkle));
       color += mix(vec3(0.7), uColor, 0.6) * on * light;
     }
-    gl_FragColor = vec4(color * (top ? uTopStatic : uSideStatic), 1.0);
+    color *= top ? uTopStatic : uSideStatic;
+  #ifdef GLASS
+    // Glass (glass.js): dark violet glass, the grains inside it.
+    color += uColor * 0.05 * faceShade();
+    gl_FragColor = vec4(color, min(1.0, GLASS + dot(color, vec3(0.33))));
+  #else
+    gl_FragColor = vec4(color, 1.0);
+  #endif
   }
 `;
 
-/** Common material setup: instanced faces pushed back in depth. */
-function faceShader(fragmentShader, uniforms) {
+/**
+ * Common material setup: instanced faces pushed back in depth. With
+ * `glass` (the share of what's behind the faces hide, glass.js) they are
+ * see-through instead of solid.
+ */
+function faceShader(fragmentShader, uniforms, glass = null) {
+  const settings = { polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 };
   return new ShaderMaterial({
     uniforms: { uTime: HOLO_TIME, ...uniforms },
     vertexShader,
     fragmentShader,
-    polygonOffset: true,
-    polygonOffsetFactor: 1,
-    polygonOffsetUnits: 1,
+    ...(glass === null ? settings : { ...GLASS_BLEND, defines: { GLASS: glass.toFixed(3) } }),
   });
 }
 
@@ -200,8 +217,9 @@ function faceShader(fragmentShader, uniforms) {
  * Faces of hazard blocks. `uniforms.uFlareCell` / `uFlare` (0..1) make one
  * block flare (see flareHazard()).
  * @param {number|string} color
+ * @param {{ glass?: boolean }} [options] glass: see-through between the pixels (glass.js)
  */
-export function hazardFaceMaterial(color) {
+export function hazardFaceMaterial(color, { glass = false } = {}) {
   const fx = BLOCK_FX.hazard;
   return faceShader(hazardFragment, {
     uColor: { value: new Color(color) },
@@ -210,14 +228,15 @@ export function hazardFaceMaterial(color) {
     uDensity: { value: fx.density },
     uFlareCell: { value: [0, -10, 0] },
     uFlare: { value: 0 },
-  });
+  }, glass ? GLASS.hazardAlpha : null);
 }
 
 /**
  * Faces of void blocks.
  * @param {number|string} color frame color, also tints the static and specks
+ * @param {{ glass?: boolean }} [options] glass: dark see-through glass (glass.js)
  */
-export function voidFaceMaterial(color) {
+export function voidFaceMaterial(color, { glass = false } = {}) {
   const fx = BLOCK_FX.void;
   return faceShader(voidFragment, {
     uColor: { value: new Color(color) },
@@ -228,7 +247,7 @@ export function voidFaceMaterial(color) {
     uLayers: { value: fx.layers },
     uDepth: { value: fx.depth },
     uSinkTime: { value: fx.sinkTime },
-  });
+  }, glass ? GLASS.voidAlpha : null);
 }
 
 /**
@@ -265,9 +284,10 @@ const UNIT_BOX = shared(new BoxGeometry(1, 1, 1).translate(0.5, 0.5, 0.5));
  * @param {'hazard'|'void'} look a block type's look (defs.json "blocks", D60)
  * @param {number|string} color
  * @param {Set<string>} [claimed] unit edges drawn by a more dangerous type, left out (edges.js)
+ * @param {{ glass?: boolean }} [options] glass: see-through faces (glass.js, prototype)
  */
-export function createActiveBlockView(cells, look, color, claimed = null) {
-  const faces = look === 'hazard' ? hazardFaceMaterial(color) : voidFaceMaterial(color);
+export function createActiveBlockView(cells, look, color, claimed = null, { glass = false } = {}) {
+  const faces = look === 'hazard' ? hazardFaceMaterial(color, { glass }) : voidFaceMaterial(color, { glass });
   const boxes = new InstancedMesh(UNIT_BOX, faces, cells.length);
   const matrix = new Matrix4();
   cells.forEach(([x, y, z], i) => boxes.setMatrixAt(i, matrix.makeTranslation(x, y, z)));
