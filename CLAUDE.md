@@ -212,7 +212,8 @@ and some exits and pickups wait for a spell or buff found later
 - **Worms** and **Crawlers** — a patroller and a chaser that bite on
   touch; **towers** (the cron look) fire bolts four ways (D83)
 - **Shooters** — stationary, fire slow bolts (the Pop-up idea, D84)
-- **Firewall Wardens** — tougher guardians blocking key rooms
+- **Firewall Wardens** — bosses of combat rooms; each drops a permanent
+  pickup and stays away once it is found (D104)
 
 Each has a distinct color, silhouette and animation. Enemies are
 universal and data-driven (D48, D78, D80): a template in `defs.json` is a
@@ -348,17 +349,19 @@ not critical.
   secrets 16 (D100); known spells, upgrades and buffs follow from them),
   health 4, checksum 16. No score field: the score follows from the
   pickups and the access level (D100). No per-room data (map).
-- Encoding: Base32 without ambiguous characters (no 0/O, 1/I/L), shown
-  in groups (e.g. `KX7M-Q4RP-...`). Input tolerates spaces, dashes and
-  lowercase.
+- Encoding: 42 hex digits in groups of 6 (e.g. `E907D4-41B4A7-...`,
+  D106). Input tolerates spaces, dashes, lowercase, O for 0, I/L for 1.
 - Scramble with bit shuffle + XOR so keys are not trivially editable.
-- URL saves: at each checkpoint write the key into the URL hash (`#KEY`)
+- Saving is a player action, any time, from the pause menu (D105); nothing
+  saves on its own. A load starts in the saved room, reset, with full
+  backups and an empty clipboard.
+- URL saves: a save writes the key into the URL hash (`#KEY`)
   with `history.replaceState` (no reload, no history spam). On load, a
   valid key in the hash loads that state directly; an invalid key shows
   a friendly message and starts normally.
-- UI: "Copy key" and "Copy link" buttons at save shrines and in the pause
-  menu; hint to bookmark after saving; "Enter key" on the title screen.
-- Also autosave to localStorage (wrapped in try/catch).
+- UI: "Save", "Copy key" and "Copy link" in the pause menu; hint to
+  bookmark after saving; "Enter key" on the title screen.
+- A save also goes to localStorage (wrapped in try/catch).
 - Automated tests for encode/decode round-trips and corrupted-key
   rejection.
 
@@ -453,11 +456,12 @@ not critical.
 Done: Phase 1 (v0.1.0, foundations), Phase 2 (v0.2.0, hazards, combat,
 editor), Phase 3 (v0.3.0, spells and pickups); see CHANGELOG.md.
 
-**Phase 4 (v0.4) — Guardians, saves, tooling**
-Firewall Wardens. The roster's new spells (D88, D89): Compile, Fork,
-Scan and Pull. Title screen and pause menu. Access keys,
-URL saves, localStorage autosave, tests. Map screen. Reachability
-checker. Design skills and subagents.
+**Phase 4 (v0.4) — Saves, guardians, tooling**, in two parts (D105):
+- 4a — Access keys and tests, title screen and pause menu, saving and
+  loading (URL hash, localStorage), map screen.
+- 4b — The roster's new spells (D88, D89): Compile, Fork, Scan and Pull.
+  Firewall Wardens (bosses, D104). Reachability checker. Design skills
+  and subagents.
 
 **Phase 5 (v0.5+) — Polish**
 Full post-processing, juice pass, music and SFX, audio-reactive visuals,

@@ -8,7 +8,14 @@ docs/decisions.md).
 
 ## [Unreleased]
 
+Phase 4 splits into 4a (saves and UI) and 4b (spells, Firewall Wardens as
+bosses that drop loot, tooling) (D104, D105).
+
 ### Added
+- Access keys (D106): the save codec, 42 scrambled hex digits holding the
+  room, access level, pickup bits and integrity with a CRC-16; reading
+  forgives spaces, dashes, lowercase and look-alike letters, and says why
+  it refuses a key. Not in the game yet: saving comes with the pause menu.
 - World map tool: exits show as marks on the room edges (cyan connected,
   magenta loose), and Delete removes one by a click on its mark (D102): a
   connected exit goes with its partner, a loose one alone. Connect uses a

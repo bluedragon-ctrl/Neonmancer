@@ -630,3 +630,32 @@ tool's tests use a small world of their own.
 **Why:** a room deleted by accident was gone once saved; restoring it as
 unsaved changes keeps one way to write data and lets the rollback be
 undone.
+
+### D104 — 2026-09-29 — Firewall Wardens are bosses that always drop loot
+Wardens are the bosses of combat rooms. Every Warden drops one permanent
+pickup (fragment, buff, upgrade, spell or secret; never a refill), shown
+once it falls. While that pickup's save bit is found, the Warden is left
+out of its room and counts as defeated, so exits it locks stay open. An
+item that also lies elsewhere skips the boss when found there first.
+Shrines stay out of boss rooms.
+**Why:** a beaten boss stays beaten without saving any room state (D68).
+
+### D105 — 2026-09-29 — Saving is a player action; Phase 4 splits in two
+The player saves when he chooses, from the pause menu; a save writes the
+key to the URL hash and to localStorage. Nothing saves on its own. A load
+starts in the saved room with the room reset, full backups and an empty
+clipboard; integrity comes from the key. Phase 4a: access keys, title
+screen and pause menu, saving and loading, the map screen. Phase 4b: the
+spells Compile, Fork, Scan and Pull, Firewall Wardens, the reachability
+checker, design skills and subagents.
+**Why:** loading resets the room anyway, so a save anywhere gives nothing
+away; 4a gives players saves sooner.
+
+### D106 — 2026-09-29 — Access keys in hex
+The key is 168 bits (format version 4, room 8, access level 8, pickups
+128, integrity 4, CRC-16 16), 42 hex digits in groups of 6. The payload
+is XORed with a stream seeded by the checksum, then every bit moves by a
+fixed shuffle. Input forgives spaces, dashes, lowercase, O for 0, I and L
+for 1. Replaces Base32 in CLAUDE.md §8.
+**Why:** the key is copied, not typed; hex is simpler to read and debug
+than a custom alphabet (Base32 without 0/O/1/I/L has only 31 symbols).
