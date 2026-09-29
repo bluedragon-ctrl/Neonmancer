@@ -1,5 +1,6 @@
 /**
- * The HUD: a DOM overlay on the stage with the integrity bar, the energy
+ * The HUD: a DOM overlay on the stage with the integrity bar and the
+ * backups beside its label, the energy
  * bar with the selected spell under it (and the Cut & Paste clipboard), the room name banner, terminal messages and the fullscreen hint. It only shows state;
  * main.js feeds it every frame. Sizes use --u (one pixel at 1080p), so it
  * scales with the stage. All text comes from data/strings.json; terminal
@@ -26,7 +27,7 @@ export class Hud {
     this.strings = strings;
     root.insertAdjacentHTML(
       'beforeend',
-      `<div class="hud-integrity"><div class="hud-label"></div><div class="hud-cells"></div></div>
+      `<div class="hud-integrity"><div class="hud-label"><span class="hud-label-text"></span><span class="hud-backups"><span class="hud-backups-label"></span><span class="hud-pips"></span></span></div><div class="hud-cells"></div></div>
       <div class="brand"><span class="brand-title"></span> <span class="brand-version"></span></div>
       <div class="hud-banner"><div class="hud-banner-title"></div><div class="hud-banner-sub"></div></div>
       <div class="hud-terminal"></div>
@@ -34,12 +35,16 @@ export class Hud {
       <div class="hud-movement"></div>`,
     );
     const find = (selector) => root.querySelector(selector);
-    find('.hud-label').textContent = this.text('hud.integrity');
+    find('.hud-label-text').textContent = this.text('hud.integrity');
+    find('.hud-backups-label').textContent = this.text('hud.backups');
     find('.brand-title').textContent = this.text('game.title');
     find('.brand-version').textContent = this.text('game.version', { version: GAME_VERSION });
     find('.hud-hint').textContent = this.text('hint.fullscreen');
     this.integrityBox = find('.hud-integrity');
     this.cellBox = find('.hud-cells');
+    this.pipBox = find('.hud-pips');
+    this.pips = [];
+    this.backups = null;
     this.banner = find('.hud-banner');
     this.bannerTitle = find('.hud-banner-title');
     this.bannerSub = find('.hud-banner-sub');
@@ -100,6 +105,33 @@ export class Hud {
     });
     this.integrityBox.classList.toggle('low', value > 0 && value <= LOW_INTEGRITY);
     this.integrity = value;
+  }
+
+  /**
+   * Show the backups (D96) as a row of pips beside the integrity label; a
+   * lost one flashes as it empties.
+   * @param {number} value backups left
+   * @param {number} max
+   */
+  setBackups(value, max) {
+    if (value === this.backups && this.pips.length === max) return;
+    while (this.pips.length < max) {
+      const pip = document.createElement('i');
+      this.pipBox.append(pip);
+      this.pips.push(pip);
+    }
+    this.pips.forEach((pip, i) => {
+      const full = i < value;
+      if (!full && this.backups !== null && i < this.backups) {
+        pip.classList.remove('lost');
+        void pip.offsetWidth;
+        pip.classList.add('lost');
+      }
+      if (full) pip.classList.remove('lost');
+      pip.classList.toggle('full', full);
+    });
+    this.pipBox.parentElement.classList.toggle('none', value === 0);
+    this.backups = value;
   }
 
   /**

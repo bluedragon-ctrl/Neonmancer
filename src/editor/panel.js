@@ -21,6 +21,7 @@ export const TOOLS = [
   { id: 'exit', label: 'Exit', key: '6' },
   { id: 'spawn', label: 'Spawn', key: '7' },
   { id: 'reset', label: 'Reset', key: '8' },
+  { id: 'shrine', label: 'Shrine', key: '9' },
 ];
 
 /**

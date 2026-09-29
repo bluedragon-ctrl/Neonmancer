@@ -1768,3 +1768,42 @@ upgrades as pickup types like buffs needs no new top-level data and
 keeps the bit on the item. Replacing the spell keeps the Tab cycle
 short (D88). Reflecting at any enemy is simpler to read than a homing
 bolt and opens puzzles (bouncing a shot onto a target).
+
+### D96 — 2026-09-29 — Backups: 8, no rollback, reboot on the nearest shrine
+Phase 3 step 14's open questions, settled with the author:
+- **Backups:** the wizard has 8. A death uses one and he recompiles at
+  the room's reset point as before (`> RECOMPILING WIZARD... OK. BACKUPS
+  LEFT: 7`). The HUD shows them as a row of pips beside the integrity
+  label; with none left they blink magenta.
+- **Crash:** dying with no backups left crashes the system (`> NO
+  BACKUPS LEFT`, then the `SYSTEM CRASH` banner). Nothing is rolled
+  back: every pickup found, spell, upgrade and buff stays. He reboots
+  standing on the backup shrine nearest to the room he died in, measured
+  on the world map grid (|dx| + |dz| map cells, his own room first); a
+  tie goes to the shrine he used last, then to room order. With no
+  shrine in the world he reboots at the start. The screen fades in.
+  The Cut & Paste clipboard is lost, as with any death; the room resets.
+- **Shrine:** a floor tile in room data (`"shrine": [x, z]`, one per
+  room at most), flush like a hole or a plate, not solid. Stepping onto
+  it (standing on the floor tile, not jumping over it) fills integrity,
+  energy and backups, `> BACKUP SAVED`, and it flares. Staying on it
+  does nothing more; stepping off and on again uses it again. Rebooting
+  on one counts as using it.
+- **Look:** three prototypes for the author to choose from — white
+  light, gold, a rainbow shimmer (`?asset=shrines` in the showcase,
+  `?shrine=white|gold|rainbow` in the game; white by default). Each is
+  a square outline with a rune (a diamond round a small square), a
+  pulsing glow, light rising from the corners, pixel motes and a faint
+  ring floating up; a use flares it and sweeps rings up.
+- **Test rooms:** shrines in Boot Sector, Scheduler and Upgrade Lab.
+- **Later:** no other way to get backups back yet (a rare pickup or
+  score thresholds may come with step 15); the access keys (Phase 4)
+  still write the save at shrines.
+Replaces D92's rollback: no snapshot is kept, and a crash loses nothing
+found.
+**Why:** author's choices. Losing found items again felt harsher than
+the game's light tone; walking back from the nearest shrine, with the
+room reset and the clipboard gone, is enough cost for a run of deaths.
+The map distance needs no pathfinding and the author places shrines
+with the world map in view. A floor tile reads as a place to stand and
+can't block a puzzle.

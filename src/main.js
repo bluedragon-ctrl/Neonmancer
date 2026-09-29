@@ -9,11 +9,13 @@ import { DebugOverlay } from './debug/overlay.js';
 import { DebugReadout } from './debug/readout.js';
 import { Editor } from './editor/editor.js';
 import { Game } from './game.js';
+import { PLAYER } from './entities/player.js';
 import { PlayerView } from './render/entity-view.js';
 import { HOLO_TIME } from './render/holo.js';
 import { AutoQuality } from './render/quality.js';
 import { Renderer } from './render/renderer.js';
 import { RoomScene } from './render/room-scene.js';
+import { SHRINE_FX } from './render/shrine-view.js';
 import { showErrorScreen } from './ui/error-screen.js';
 import { toggleFullscreen, wantsFullscreenHint } from './ui/fullscreen.js';
 import { Hud } from './ui/hud.js';
@@ -36,6 +38,8 @@ function boot() {
   // room and ?edit opens the room editor on it (the world map tool's links).
   const devRoom = DEV_SERVER && content.rooms.has(params.get('room')) ? params.get('room') : undefined;
   const game = new Game(content, { start: devRoom });
+  // The backup shrine look (D96) while the author picks one: ?shrine=white|gold|rainbow.
+  if (SHRINE_FX.looks[params.get('shrine')]) SHRINE_FX.look = params.get('shrine');
 
   // Quality steps down by itself when frames run slow (D76). ?scale=0.5
   // and ?msaa=0 set it by hand instead, until there is a settings menu
@@ -133,6 +137,7 @@ function showEvents(events, { game, roomScene, hud, debug }) {
     if (event.type === 'zap') roomScene.sparks(event.bolt);
     if (event.type === 'ricochet') roomScene.sparks(event.bolt, event.pos, event.dir);
     if (event.type === 'deny') hud.denyEnergy();
+    if (event.type === 'shrine') roomScene.useShrine();
     if (event.type === 'cut' || event.type === 'paste') {
       roomScene.clip(event);
       debug.setRoom(game.room, game.objects, game.enemies);
@@ -150,6 +155,7 @@ function showEvents(events, { game, roomScene, hud, debug }) {
 function syncHud(hud, game, renderer, dt) {
   const { player } = game;
   hud.setIntegrity(player.integrity, player.maxIntegrity);
+  hud.setBackups(player.backups, PLAYER.backups);
   // No energy bar before he knows a spell.
   hud.setEnergy(player.energy, player.maxEnergy, player.spell !== null);
   hud.setSpell(player.spell, player.spells.length, player.spell && game.spellNameKey(player.spell));

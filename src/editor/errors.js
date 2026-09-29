@@ -12,7 +12,7 @@ const ERROR_FORMAT = /^(\S+\.json)(?: › (\S+))?: ([\s\S]*)$/;
 const EXIT_REF = /"([a-z][a-z0-9_]*)\.([a-z][a-z0-9_]*)"/;
 
 /** Tools that edit a room field, by the field an error path starts with. */
-const FIELD_TOOLS = { spawn: 'spawn', reset: 'reset', blocks: 'block', holes: 'hole' };
+const FIELD_TOOLS = { spawn: 'spawn', reset: 'reset', blocks: 'block', holes: 'hole', shrine: 'shrine' };
 
 /**
  * @param {string} error

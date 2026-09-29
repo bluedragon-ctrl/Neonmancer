@@ -257,6 +257,7 @@ function validateRoom(file, room, { objectTypes, pickupTypes, blockTypes, enemyT
   validateBlocks(checks, blockTypes);
   validateObjects(checks, objectTypes);
   validateHoles(checks);
+  validateShrine(checks);
   validateEnemies(checks, enemyTemplates);
   validatePickups(checks, pickupTypes);
   validateExitPassage(checks, exits, exitFits);
@@ -576,6 +577,17 @@ function validateHoles({ room, report, filled, holes, pathCells, collapsing, pla
       holes.set(key, path);
     }
   });
+}
+
+/** The backup shrine (D96): a floor tile inside the room, on no hole, plate, block or object. */
+function validateShrine({ room, report, filled, holes, plates }) {
+  if (!room.shrine) return;
+  const [x, z] = room.shrine;
+  const tile = cellText([x, z]);
+  const key = cellKey([x, z]);
+  const under = filled.get(cellKey([x, 0, z])) ?? holes.get(key) ?? plates.get(key);
+  if (x >= room.size[0] || z >= room.size[2]) report('shrine', `tile ${tile} is outside size ${cellText(room.size)}`);
+  else if (under) report('shrine', `tile ${tile} is under ${under}`);
 }
 
 /**

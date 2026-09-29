@@ -70,6 +70,7 @@ import { CLIP_FX, clipPixels, marqueeLook, pasteGrow } from '../src/render/clip-
 import { createMarquee, placeMarquee } from '../src/render/clip-view.js';
 import { clipIcon } from '../src/ui/clip-icon.js';
 import { createJumpRings, placeJumpRings } from '../src/render/jump-view.js';
+import { SHRINE_FX, createShrine } from '../src/render/shrine-view.js';
 
 /** Block types with variants filled in (D60). */
 const BLOCK_TYPES = resolveBlockTypes(defs.blocks);
@@ -230,7 +231,32 @@ const ALL_ASSETS = [
   { label: 'cut-paste', group: 'cut-paste', span: 4.5, spin: false, build: () => buildCutPaste('crate') },
   { label: 'cut-paste-enemy', group: 'cut-paste', span: 4.5, spin: false, build: () => buildCutPaste('bug') },
   { label: 'clip-hud', group: 'cut-paste', span: 1, spin: false, build: buildClipHud },
+  // Backup shrines (Phase 3 step 14, D96): a glowing floor tile; the wizard
+  // steps on and it flares. Three looks for the author to choose from.
+  ...Object.keys(SHRINE_FX.looks).map((look) => ({ label: `shrine-${look}`, group: 'shrines', spin: false, build: () => buildShrine(look) })),
 ];
+
+/** A backup shrine in the given look; the wizard walks onto it every few seconds and it flares. */
+function buildShrine(look) {
+  const shrine = createShrine(look);
+  shrine.position.set(-0.5, 0, -0.5);
+  const wizard = createWizard();
+  wizard.rotation.y = Math.PI / 2;
+  const asset = new Group().add(shrine, wizard);
+  const loop = 5;
+  let time = 0;
+  asset.userData.update = (dt) => {
+    time += dt;
+    const t = time % loop;
+    // 0–1 s: he walks in from −x; 1–3 s he stands on it; 3–4 s he walks on; then gone for a second.
+    const x = t < 1 ? -1.5 + t * 1.5 : t < 3 ? 0 : (t - 3) * 1.5;
+    wizard.visible = t < 4;
+    wizard.position.set(x, 0, 0);
+    if (t - dt < 1 && t >= 1) shrine.userData.use();
+    shrine.userData.update(dt);
+  };
+  return asset;
+}
 
 /** Switch color, from defs.json. */
 const SWITCH_COLOR = defs.objects.target.color;

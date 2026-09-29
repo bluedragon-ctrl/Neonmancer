@@ -7,6 +7,16 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Backups (Phase 3 step 14, D96): the wizard has 8 backups, shown as
+  pips beside the integrity label; each death uses one. Dying with none
+  left crashes the system (`SYSTEM CRASH` banner) and he reboots on the
+  backup shrine nearest on the world map, keeping everything found.
+  Backup shrines are floor tiles (`"shrine": [x, z]` in room data):
+  stepping onto one refills integrity, energy and backups (`> BACKUP
+  SAVED`) and it flares. Three looks to choose from in the showcase
+  (`?asset=shrines`, `?shrine=` in the game), a Shrine tool (9) in the
+  room editor, validation, and shrines in Boot Sector, Scheduler and
+  Upgrade Lab.
 - Upgrades (Phase 3 step 13, D95): permanent upgrade cards with their
   own save bits (the upgrade block, bits 32–47): an expansion card with
   contact fingers in the upgrade's color. Zap+ replaces Zap in the Tab cycle and

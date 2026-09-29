@@ -77,6 +77,46 @@ body {
   text-shadow: 0 0 calc(8 * var(--u)) currentColor;
 }
 
+/* Backups (D96): pips beside the integrity label, in their own light color. */
+.hud-backups {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(10 * var(--u));
+  margin-left: calc(26 * var(--u));
+  font-size: calc(14 * var(--u));
+  color: #e6f2ff;
+}
+
+.hud-pips {
+  display: flex;
+  gap: calc(6 * var(--u));
+}
+
+.hud-pips i {
+  width: calc(9 * var(--u));
+  height: calc(9 * var(--u));
+  transform: rotate(45deg);
+  box-sizing: border-box;
+  border: calc(1.5 * var(--u)) solid currentColor;
+  opacity: 0.3;
+}
+
+.hud-pips i.full {
+  background: currentColor;
+  opacity: 1;
+  box-shadow: 0 0 calc(8 * var(--u)) currentColor;
+}
+
+.hud-pips i.lost {
+  animation: cell-lost 0.5s ease-out;
+}
+
+/* None left: the next death crashes the system. */
+.hud-backups.none {
+  color: var(--magenta);
+  animation: integrity-low 0.8s steps(2, jump-none) infinite;
+}
+
 .hud-cells {
   display: flex;
   gap: calc(7 * var(--u));
@@ -247,6 +287,11 @@ body {
 
 .hud-integrity.low {
   color: var(--magenta);
+}
+
+/* (Not the backups beside the label: they blink on their own.) */
+.hud-integrity.low .hud-label-text,
+.hud-integrity.low .hud-cells {
   animation: integrity-low 0.8s steps(2, jump-none) infinite;
 }
 

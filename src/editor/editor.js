@@ -29,6 +29,8 @@ import { WorldEdit, linkChoices } from './world-edit.js';
 
 /** Tools a mouse drag paints with; the others act on the cell clicked only. */
 const PAINT_TOOLS = new Set(['block', 'hole', 'object']);
+/** Tools that work on floor tiles (y 0) whatever the layer. */
+const FLOOR_TOOLS = new Set(['hole', 'shrine']);
 
 /** Hint after placing something that can't do without a path yet. */
 const NEEDS_PATH = (id) => `${id} needs a path: pick the Path tool (${TOOLS.find((tool) => tool.id === 'path').key}) and click cells.`;
@@ -591,7 +593,7 @@ export class Editor {
 
   /**
    * The cell of the current layer under the mouse (floor tile for the Hole
-   * tool: y 0), or null outside the room. Keeps where the ray met the layer
+   * and Shrine tools: y 0), or null outside the room. Keeps where the ray met the layer
    * in `this.hit`.
    * @param {PointerEvent|WheelEvent} event
    * @returns {number[]|null} [x, y, z]
@@ -600,7 +602,7 @@ export class Editor {
     const rect = this.renderer.webgl.domElement.getBoundingClientRect();
     const ndc = new Vector2(((event.clientX - rect.left) / rect.width) * 2 - 1, -((event.clientY - rect.top) / rect.height) * 2 + 1);
     this.raycaster.setFromCamera(ndc, this.renderer.camera);
-    const y = this.tool === 'hole' ? 0 : this.layer;
+    const y = FLOOR_TOOLS.has(this.tool) ? 0 : this.layer;
     if (!this.raycaster.ray.intersectPlane(new Plane(new Vector3(0, 1, 0), -y), this.hit)) return null;
     const [w, , d] = this.edit.size;
     const x = Math.floor(this.hit.x);
@@ -621,10 +623,11 @@ export class Editor {
   }
 
   updateCursor() {
-    // The layer or the tool (holes are on the floor) may have changed under a still mouse.
+    // The layer or the tool (holes and the shrine are on the floor) may have changed under a still mouse.
     if (this.pointer && !this.stroke) this.hover = this.pick(this.pointer);
-    this.overlay.setCursor(this.hover, { flat: this.tool === 'hole', erase: this.stroke === 'erase' });
-    this.panel.setHover(this.hover && this.edit.describe(this.hover, { tile: this.tool === 'hole' }));
+    const flat = FLOOR_TOOLS.has(this.tool);
+    this.overlay.setCursor(this.hover, { flat, erase: this.stroke === 'erase' });
+    this.panel.setHover(this.hover && this.edit.describe(this.hover, { tile: flat }));
   }
 
   /**
@@ -645,6 +648,7 @@ export class Editor {
     else if (tool === 'exit') this.useExit(cell, place);
     else if (tool === 'spawn') this.change(() => place && edit.setPoint('spawn', point));
     else if (tool === 'reset') this.change(() => edit.setPoint('reset', place ? point : null));
+    else if (tool === 'shrine') this.change(() => edit.setShrine(place ? [x, z] : null));
   }
 
   useObject(cell, place) {

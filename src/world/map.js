@@ -87,3 +87,30 @@ export function mapWarnings(world, roomIds, authored = new Set()) {
   }
   return { unreachable, far };
 }
+
+/**
+ * The room with a backup shrine nearest to `from` on the world map (D96):
+ * fewest map cells apart counted along the grid (|dx| + |dz|), the room
+ * itself first. Ties go to `preferred` (the shrine used last), then to room
+ * order.
+ * @param {Map<string, object>} rooms room data by id, in load order
+ * @param {Record<string, number[]>} positions room id → [x, z]
+ * @param {string} from the room he crashed in
+ * @param {string|null} [preferred] the room of the shrine used last
+ * @returns {string|null} room id, or null when no room has a shrine
+ */
+export function nearestShrine(rooms, positions, from, preferred = null) {
+  const [fx, fz] = positions[from] ?? [0, 0];
+  let best = null;
+  let bestDistance = Infinity;
+  for (const [id, room] of rooms) {
+    if (!room.shrine || !positions[id]) continue;
+    const [x, z] = positions[id];
+    const distance = Math.abs(x - fx) + Math.abs(z - fz);
+    if (distance < bestDistance || (distance === bestDistance && id === preferred)) {
+      best = id;
+      bestDistance = distance;
+    }
+  }
+  return best;
+}

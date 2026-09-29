@@ -21,7 +21,7 @@ const ITEM_LISTS = [
   ['pickup', 'pickups'],
 ];
 
-const KEY_ORDER = ['$schema', 'schemaVersion', 'id', 'name', 'authored', 'biome', 'size', 'spawn', 'reset', 'exits', 'blocks', 'holes', 'objects', 'enemies', 'pickups'];
+const KEY_ORDER = ['$schema', 'schemaVersion', 'id', 'name', 'authored', 'biome', 'size', 'spawn', 'reset', 'exits', 'blocks', 'holes', 'shrine', 'objects', 'enemies', 'pickups'];
 
 /** Undo steps kept per room. */
 const UNDO_LIMIT = 200;
@@ -192,13 +192,17 @@ export class RoomEdit {
 
   /**
    * What is in a cell, in words, for the panel: `3, 1, 4: crate_1 (crate)`;
-   * `tile 3, 4: hole` for a floor tile. An exit there is named too.
+   * `tile 3, 4: hole` for a floor tile (`floor, shrine` for the backup
+   * shrine's). An exit there is named too.
    * @param {number[]} cell [x, y, z]
    * @param {{ tile?: boolean }} [options] describe the floor tile [x, z]
    */
   describe(cell, { tile = false } = {}) {
     const [x, y, z] = cell;
-    if (tile) return `tile ${x}, ${z}: ${this.isHole([x, z]) ? 'hole' : 'floor'}`;
+    if (tile) {
+      const shrine = this.data.shrine?.[0] === x && this.data.shrine[1] === z ? ', shrine' : '';
+      return `tile ${x}, ${z}: ${this.isHole([x, z]) ? 'hole' : 'floor'}${shrine}`;
+    }
     const here = this.at(cell);
     const what = [];
     if (here?.kind === 'block') what.push(here.type === 'block' ? 'block' : `${here.type} block`);
@@ -294,6 +298,21 @@ export class RoomEdit {
   }
 
   /**
+   * Move the backup shrine (D96) to a floor tile, or remove it (`null`);
+   * a room has one at most.
+   * @param {number[]|null} tile [x, z]
+   */
+  setShrine(tile) {
+    const now = this.data.shrine;
+    if (tile === null ? !now : now && now[0] === tile[0] && now[1] === tile[1]) return false;
+    return this.edit(() => {
+      if (tile === null) delete this.data.shrine;
+      else this.data.shrine = [...tile];
+      return true;
+    });
+  }
+
+  /**
    * Move the start point (spawn) or the respawn point (reset); `null` for
    * reset removes it, so it falls back to spawn.
    * @param {'spawn'|'reset'} key
@@ -360,6 +379,11 @@ export class RoomEdit {
       this.holes.clip([size[0], size[2]]);
       const lost = { block: blocks - count(this.blocks), hole: holes - count(this.holes) };
       for (const [what, n] of Object.entries(lost)) if (n > 0) dropped.push(`${n} ${what}${n > 1 ? 's' : ''}`);
+      const shrine = this.data.shrine;
+      if (shrine && (shrine[0] >= size[0] || shrine[1] >= size[2])) {
+        delete this.data.shrine;
+        dropped.push('the shrine');
+      }
       for (const [, key] of ITEM_LISTS) {
         if (!this.data[key]) continue;
         dropped.push(...this.data[key].filter((item) => !this.inside(item.at)).map((item) => item.id));

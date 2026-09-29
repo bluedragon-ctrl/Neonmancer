@@ -20,6 +20,7 @@
     { "at": [7, 0], "to": [8, 6] },
     { "at": [9, 5], "to": [11, 6] }
   ],
+  "shrine": [3, 7],
   "objects": [
     { "id": "crate_2", "type": "crate", "at": [3, 0, 9] },
     { "id": "crate_3", "type": "crate", "at": [9, 0, 9] },
