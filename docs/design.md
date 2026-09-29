@@ -1538,7 +1538,7 @@ production (Phase 5 since D65). Biomes stay look-only (name, color, surroundings
 
 Spells and pickups (D65). Each step is one branch and one PR against
 `main` (no stacked PRs); the game runs after every step, CI is green before
-a PR is called ready. Every step also does what the Phase 2 steps did:
+a PR is called ready. **Done:** every step is merged and Phase 3 is released as v0.3.0. Every step also does what the Phase 2 steps did:
 showcase entries for new looks, a test room (or an extended one) connected
 to the world, unit tests, the editor palette for any new type, docs,
 CHANGELOG and decisions.

@@ -6,25 +6,9 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-### Changed
-- Locked front exits are the same dark door panel as locked doorways,
-  instead of four retracting bars, so every locked door looks alike and
-  its lights and access numeral read clearly (D101).
-- Color rules for objects and blocks (D99): red hurts, the room color is
-  structure, black is a pit, white is a mechanism, cyan moves, magenta is
-  the wizard, lime is pushable. Hazards and spiked platforms use the one
-  danger red of hostile eyes and the alert mark (`#ff2a3a`); collapsing
-  blocks take the room color (dashed edges); void blocks are black mist
-  with slowly sinking gray wisps instead of violet; Phantom Partition is
-  pale violet instead of silver-white, so switches stand out in it; the
-  wizard's drop shadow is magenta. A test keeps biome colors clear of
-  object and block colors.
-- Destructible glass crates are empty shells of thinner, more
-  translucent glass (no loose bits inside), so they read as breakable
-  (D99).
-- Collapsing blocks are pale white-blue (dashed edges, faces barely
-  tinted) instead of magenta, which is now the wizard's color (D98);
-  since D99 they take the room color.
+## [0.3.0] - 2026-09-29
+
+Phase 3 — Spells and pickups.
 
 ### Added
 - Fragments and access (Phase 3 step 16, D101): 64 key fragments with
@@ -250,6 +234,25 @@ and the project uses [Semantic Versioning](https://semver.org/).
   or the world map (`map`) or the asset showcase (`showcase`).
 
 ### Changed
+- Locked front exits are the same dark door panel as locked doorways,
+  instead of four retracting bars, so every locked door looks alike and
+  its lights and access numeral read clearly (D101).
+- Color rules for objects and blocks (D99): red hurts, the room color is
+  structure, black is a pit, white is a mechanism, cyan moves, magenta is
+  the wizard, lime is pushable. Hazards and spiked platforms use the one
+  danger red of hostile eyes and the alert mark (`#ff2a3a`); collapsing
+  blocks take the room color (dashed edges); void blocks are black mist
+  with slowly sinking gray wisps instead of violet; Phantom Partition is
+  pale violet instead of silver-white, so switches stand out in it; the
+  wizard's drop shadow is magenta. A test keeps biome colors clear of
+  object and block colors.
+- Destructible glass crates are empty shells of thinner, more
+  translucent glass (no loose bits inside), so they read as breakable
+  (D99).
+- Collapsing blocks are pale white-blue (dashed edges, faces barely
+  tinted) instead of magenta, which is now the wizard's color (D98);
+  since D99 they take the room color.
+
 - Shorter modules, no change in play: spells, combat and switches move
   out of `game.js` into `spells.js`, `combat.js` and `switches.js`; the
   room editor's enemy template actions into `editor/templates.js`; the
@@ -583,6 +586,7 @@ Phase 1 — Foundations.
 ### Removed
 - The four box-look crates in Boot Sector (the asset showcase shows them).
 
-[Unreleased]: https://github.com/bluedragon-ctrl/Neonmancer/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/bluedragon-ctrl/Neonmancer/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/bluedragon-ctrl/Neonmancer/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/bluedragon-ctrl/Neonmancer/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/bluedragon-ctrl/Neonmancer/releases/tag/v0.1.0
