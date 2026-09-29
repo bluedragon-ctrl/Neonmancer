@@ -72,8 +72,8 @@ drifting up and a thin neon outline. Proportions are `WIZARD` in
 
 ### Damage
 
-Integrity (health) is 8, 12 with every buff (at most 15, the save key's
-4 bits); it carries over between rooms and is full again after a respawn
+Integrity (health) is 8, 12 with every buff (not saved: a load starts
+full, D106); it carries over between rooms and is full again after a respawn
 (D35). Every damage source calls `Game.hurt(amount)` (D43): enemies,
 hazard blocks, spiked and squeezing platforms, Blink into a wall, the
 debug `H` key.
@@ -1534,7 +1534,8 @@ Settled:
 - Saving is a player action, any time, from the pause menu (D105); it
   writes the key to the URL hash and to localStorage, and nothing saves on
   its own. A load starts in the saved room with the room reset, full
-  backups and an empty clipboard; integrity comes from the key.
+  integrity and energy and an empty clipboard; the backups come from the
+  key (D106).
 - Firewall Wardens (D104) are the bosses of combat rooms. Each drops one
   permanent pickup (a pickup naming the Warden, shown once it falls);
   while that pickup's bit is found, the Warden is left out of its room
@@ -1570,7 +1571,7 @@ state of a room or the map (D68):
 | 12–19 | Room cell z | Likewise |
 | 20–27 | Access level | 0–15 used (D91) |
 | 28–155 | Pickups | Save bit n at 28 + n (D71): spells 28–43, buffs 44–59, upgrades 60–75, fragments 76–139, secrets 140–155 |
-| 156–159 | Integrity | 1–15 |
+| 156–159 | Backups | Backups left (D97), 0–15 |
 | 160–175 | Checksum | CRC-16/CCITT-FALSE of bits 0–159 |
 
 Bits 0–159 are XORed with a stream seeded by the checksum, then all 176

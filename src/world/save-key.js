@@ -4,7 +4,7 @@
  *
  * Bit layout, 160 payload bits then a 16-bit checksum:
  *   format version 4 | room cell x 8 | room cell z 8 | access level 8 |
- *   pickups 128 | integrity 4
+ *   pickups 128 | backups 4
  * 176 bits, 44 hex digits shown in groups of 4. The room is its cell on
  * the world map (world.json `positions`, one room per cell), each
  * coordinate a signed byte. The payload is XORed with a stream seeded by
@@ -90,7 +90,7 @@ function signed(byte) {
  * @property {[number, number]} cell the room's cell on the world map, [x, z], each −128–127
  * @property {number} access access level (0–15, D91)
  * @property {Iterable<number>} found permanent pickup bits found (0–127)
- * @property {number} integrity his integrity (1–15)
+ * @property {number} backups backups (lives, D97) left, 0–15; a load starts with full integrity
  */
 
 /**
@@ -98,13 +98,12 @@ function signed(byte) {
  * @param {SaveState} save
  * @returns {string}
  */
-export function encodeKey({ cell, access, found, integrity }) {
+export function encodeKey({ cell, access, found, backups }) {
   const [x, z] = cell;
   checkField('room cell x', x, 8, -128);
   checkField('room cell z', z, 8, -128);
   checkField('access level', access, 4); // 8 bits kept, 4 used (D91)
-  checkField('integrity', integrity, 4);
-  if (integrity < 1) throw new RangeError('save key integrity must be at least 1');
+  checkField('backups', backups, 4);
   const pickups = new Array(PICKUP_BITS).fill(0);
   for (const bit of found) {
     checkField('pickup bit', bit, 7);
@@ -117,7 +116,7 @@ export function encodeKey({ cell, access, found, integrity }) {
   pushNumber(payload, z & 0xff, 8);
   pushNumber(payload, access, 8);
   payload.push(...pickups);
-  pushNumber(payload, integrity, 4);
+  pushNumber(payload, backups, 4);
 
   const check = crc16(payload);
   const xor = mask(check);
@@ -147,7 +146,7 @@ export function normalizeKey(text) {
 /**
  * Read an access key.
  * @param {string} text what the player typed or pasted (URL hash included, `#` first is fine)
- * @returns {{ ok: true, save: { cell: [number, number], access: number, found: number[], integrity: number } }
+ * @returns {{ ok: true, save: { cell: [number, number], access: number, found: number[], backups: number } }
  *   | { ok: false, error: 'empty' | 'length' | 'character' | 'checksum' | 'version' }}
  *   an error names why the key was refused (strings.json has a message for each)
  */
@@ -174,8 +173,8 @@ export function decodeKey(text) {
   const access = readNumber(payload, 20, 8);
   const found = [];
   for (let bit = 0; bit < PICKUP_BITS; bit++) if (payload[28 + bit]) found.push(bit);
-  const integrity = readNumber(payload, 28 + PICKUP_BITS, 4);
+  const backups = readNumber(payload, 28 + PICKUP_BITS, 4);
   // A checksum that matches by chance still has to make sense.
-  if (access > 15 || integrity < 1) return { ok: false, error: 'checksum' };
-  return { ok: true, save: { cell, access, found, integrity } };
+  if (access > 15) return { ok: false, error: 'checksum' };
+  return { ok: true, save: { cell, access, found, backups } };
 }

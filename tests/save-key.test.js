@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { encodeKey, decodeKey, normalizeKey, KEY_ALPHABET, KEY_LENGTH } from '../src/world/save-key.js';
 import { PICKUP_BITS } from '../src/world/progress.js';
 
-const SAVE = { cell: [-3, 5], access: 2, found: [0, 3, 16, 33, 48, 49, 50, 111, 112, 127], integrity: 11 };
+const SAVE = { cell: [-3, 5], access: 2, found: [0, 3, 16, 33, 48, 49, 50, 111, 112, 127], backups: 5 };
 
 test('alphabet is hex', () => {
   assert.equal(KEY_ALPHABET, '0123456789ABCDEF');
@@ -19,15 +19,15 @@ test('round trip keeps every field', () => {
 });
 
 test('round trip at the edges: nothing found and everything found', () => {
-  const empty = { cell: [0, 0], access: 0, found: [], integrity: 1 };
+  const empty = { cell: [0, 0], access: 0, found: [], backups: 0 };
   assert.deepEqual(decodeKey(encodeKey(empty)).save, empty);
-  const full = { cell: [127, -128], access: 15, found: Array.from({ length: PICKUP_BITS }, (_, i) => i), integrity: 15 };
+  const full = { cell: [127, -128], access: 15, found: Array.from({ length: PICKUP_BITS }, (_, i) => i), backups: 15 };
   assert.deepEqual(decodeKey(encodeKey(full)).save, full);
 });
 
 test('every single pickup bit comes back on its own', () => {
   for (let bit = 0; bit < PICKUP_BITS; bit++) {
-    const save = { cell: [bit - 64, 63 - bit], access: bit % 16, found: [bit], integrity: 1 + (bit % 15) };
+    const save = { cell: [bit - 64, 63 - bit], access: bit % 16, found: [bit], backups: bit % 16 };
     assert.deepEqual(decodeKey(encodeKey(save)).save, save);
   }
 });
@@ -82,8 +82,8 @@ test('encoding refuses values the key cannot hold', () => {
   assert.throws(() => encodeKey({ ...SAVE, cell: [128, 0] }), RangeError);
   assert.throws(() => encodeKey({ ...SAVE, cell: [0, -129] }), RangeError);
   assert.throws(() => encodeKey({ ...SAVE, access: 16 }), RangeError);
-  assert.throws(() => encodeKey({ ...SAVE, integrity: 0 }), RangeError);
-  assert.throws(() => encodeKey({ ...SAVE, integrity: 16 }), RangeError);
+  assert.throws(() => encodeKey({ ...SAVE, backups: -1 }), RangeError);
+  assert.throws(() => encodeKey({ ...SAVE, backups: 16 }), RangeError);
   assert.throws(() => encodeKey({ ...SAVE, found: [128] }), RangeError);
   assert.throws(() => encodeKey({ ...SAVE, cell: [1.5, 0] }), RangeError);
 });
