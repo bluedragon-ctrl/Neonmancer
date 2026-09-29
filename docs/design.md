@@ -718,8 +718,8 @@ The seventh spell (D87), from a data disk by the entrance of Clipboard
 
 ## Spell roster
 
-Settled in Phase 3 step 11 (D88). Up to 16 spells and 16 upgrades, each
-its own save bit (an upgrade in the upgrades block, not spells). Ten
+Settled in Phase 3 step 11 (D88); Pull added later (D89). Up to 16 spells and 16 upgrades, each
+its own save bit (an upgrade in the upgrades block, not spells). Eleven
 spells and two upgrades are set; the rest stay spare for what content
 production shows a need for.
 
@@ -735,6 +735,7 @@ production shows a need for.
 | Compile | 7 | Temporary block in the cell in front: a step or a bridge tile | Phase 4 |
 | Fork | 8 | Hologram decoy for a while: holds plates, draws enemies | Phase 4 |
 | Scan | 9 | Reveals hidden blocks, fake walls and secret pickups for a while | Phase 4 |
+| Pull | 10 | Pulls the closest crate or enemy in the facing direction one tile towards the wizard | Phase 4 |
 
 | Upgrade | Of | What it does | Built |
 |---|---|---|---|
@@ -745,18 +746,19 @@ production shows a need for.
   spell in the Tab cycle (ZAP becomes ZAP+), so the cycle stays short.
 - **Order in the world** (intended; rooms place the disks later):
   early Zap, Shield, Blink, Pause; middle Cut & Paste, Firewall, Fork,
-  Scan and the jump buff; late Compile, Warp, Zap+ and Mirror.
+  Scan and the jump buff; late Compile, Warp, Zap+ and Mirror. Pull's
+  place settles in its step.
 - **Buff items** (draft, settled in step 12): 4× +1 integrity (8 → 12,
   within the key's 4-bit health field), 5× +10 energy (one bar segment
   each, 50 → 100), one jump buff (1 → 2 blocks), one faster recharge:
   11 of the 16 buff bits.
-- **Turned down for now:** Pull (fetch a crate), Patch (an enemy turns
+- **Turned down for now:** Patch (an enemy turns
   peaceful), Overclock (a speed burst), Decrypt (dissolves an encrypted
   wall type), Rollback (back to where he was 3 s ago); upgrades Halt
   (Pause freezing the whole room), Lift (Warp landing on top of what
   stops it), Firewall+ (hazard immunity) and Cut & Paste+ (a level up or
   down). They remain candidates for the spare bits.
-- Slots 7–9 and the upgrade slots are provisional until each spell's
+- Slots 7–10 and the upgrade slots are provisional until each spell's
   step; colors and costs are settled there.
 
 ## X-ray outline
@@ -910,10 +912,17 @@ room.
   at floor level, holes). A raised exit (`y` > 0) needs something to stand
   on in front of it, usually a ledge.
 
+### Authored rooms
+
+The author's real game rooms carry `"authored": true` (D90), set with the
+*Authored* checkbox in the room editor. They share the world with the test
+rooms and start from Boot Sector too; development steps never change them
+or attach new rooms to them (CLAUDE.md §10). The world map tool marks them
+AUTHORED and lets them lie as far from the start as the world needs.
+
 ### Test rooms
 
-Test rooms stay in the world until content production (Phase 5) builds the
-real rooms and puzzles (D45). They are a test lab: each shows one mechanic
+Test rooms stay in the world alongside the authored rooms (D45, D90). They are a test lab: each shows one mechanic
 in isolation, and later spells and enemy behaviors get tested in them too.
 New mechanics add or extend one (D43). Boot Sector, the start, is the
 hub: every test room is at most two rooms away from it, so no test means
@@ -1235,7 +1244,7 @@ players never see it (D67).
   game takes `?room` and `?edit` in the dev server only.
 - **Checks:** the side panel lists the data errors, the rooms the start
   can't reach through exits, and test rooms more than two rooms from the
-  start (D49; every room counts as a test room until content production).
+  start (D49; authored rooms, D90, are marked and not flagged).
   Click a warning to highlight its room.
 - **New rooms** made in the room editor get the free cell nearest to the
   room they were made from (east, south, west, north first, then further
@@ -1276,7 +1285,8 @@ D43. **Done:** every step is merged and Phase 2 is released as v0.2.0.
 Every step also:
 - adds its new looks to the asset showcase (`tools/showcase.js`);
 - adds or extends a small test room that shows the mechanic, connected to
-  the world (`data/world.json`);
+  the world (`data/world.json`) through test rooms only, never an
+  authored room (D90);
 - adds unit tests for the logic (fixtures in `tests/helpers.js`);
 - updates `docs/design.md`, `docs/architecture.md` and CHANGELOG, and
   records new decisions.
@@ -1362,7 +1372,7 @@ Open questions, settled at the start of their step:
 
 Guardians, saves and tooling (D65); planned in detail when Phase 3 is
 released. Firewall Wardens; the roster's new spells and upgrades, one
-step each (D88): Compile, Fork, Scan, Zap+ and Mirror; title screen and pause menu (the save UI needs
+step each (D88, D89): Compile, Fork, Scan, Pull, Zap+ and Mirror; title screen and pause menu (the save UI needs
 both); access-key codec with tests; URL saves and localStorage autosave;
 map screen; reachability checker; design skills and subagents. Open so
 far: what writes a save (save shrines, room entry, or both); how deep

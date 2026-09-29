@@ -145,7 +145,7 @@ export class EditorPanel {
    * @param {Record<string, Function>} options.on callbacks: room(id), newRoom(id), tool(id), blockType(id), objectType(id),
    *   enemy(field, value), saveTemplate(name), updateTemplate(), renameTemplate(name), deleteTemplate(),
    *   path(field, value), clearPath(), exit(field, value), layer(step), cut(on), discard(), error(text), name(text),
-   *   biome(id), size([x, y, z]), undo(), redo(), save(), revert()
+   *   authored(on), biome(id), size([x, y, z]), undo(), redo(), save(), revert()
    */
   constructor(root, { blockTypes, objectTypes, enemyTemplates, biomes, canSave, on }) {
     this.canSave = canSave;
@@ -174,6 +174,11 @@ export class EditorPanel {
 
     this.nameInput = Object.assign(el('input'), { type: 'text' });
     this.nameInput.addEventListener('change', () => on.name(this.nameInput.value.trim()));
+    // A real game room (D90): development steps leave it alone.
+    this.authoredInput = Object.assign(el('input'), { type: 'checkbox', title: 'A real game room: development steps never change it or attach rooms to it (D90)' });
+    this.authoredInput.addEventListener('change', () => on.authored(this.authoredInput.checked));
+    const authored = el('label', 'editor-check');
+    authored.append(this.authoredInput, ' real game room');
     this.biomeSelect = select(Object.entries(biomes).map(([id, biome]) => [id, biome.name]));
     this.biomeSelect.addEventListener('change', () => on.biome(this.biomeSelect.value));
     // A size takes effect as soon as a field is committed (Enter, or leaving it).
@@ -191,7 +196,7 @@ export class EditorPanel {
     this.discardButton = el('button', 'editor-action', 'Discard new room');
     this.discardButton.addEventListener('click', () => on.discard());
     const room = el('div', 'editor-group');
-    room.append(this.row('Room', this.roomSelect), newRoomRow, this.row('Name', this.nameInput), this.row('Biome', this.biomeSelect), sizeRow, this.discardButton);
+    room.append(this.row('Room', this.roomSelect), newRoomRow, this.row('Name', this.nameInput), this.row('Authored', authored), this.row('Biome', this.biomeSelect), sizeRow, this.discardButton);
 
     this.layerLabel = el('span', 'editor-value');
     const down = el('button', 'editor-small', '−');
@@ -459,6 +464,7 @@ export class EditorPanel {
     this.discardButton.hidden = !edit.fresh;
     // Don't overwrite a field while it is being typed in.
     if (document.activeElement !== this.nameInput) this.nameInput.value = data.name;
+    this.authoredInput.checked = data.authored === true;
     this.biomeSelect.value = data.biome;
     this.sizeInputs.forEach((input, axis) => {
       if (document.activeElement !== input) input.value = String(data.size[axis]);

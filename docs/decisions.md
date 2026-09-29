@@ -1604,3 +1604,37 @@ first two spells worth having late. Replacing the base keeps the Tab
 cycle short. A block of their own keeps upgrades apart from spells in
 the save and the code; equipment was never defined. Keeping bits spare
 leaves the roster open to what the rooms turn out to need.
+
+### D89 — 2026-09-29 — Pull joins the spell roster
+Pull, turned down in D88, becomes a planned spell (slot 10,
+provisional): it pulls the closest movable object (a crate) or enemy in
+the wizard's facing direction one tile towards him. The target is the
+first one along the facing grid axis; cost, color, range and what stops
+the pull (a stack, a wall behind, the wizard's own cell) settle in its
+Phase 4 step, as does its place in the world's order. The roster is now
+11 spells and 2 upgrades.
+**Why:** author's choice. Pushing can only move a crate away from the
+wizard, so a crate against a wall or across a gap is stuck; Pull gives
+it the other direction, and dragging an enemy one tile opens new ways
+to set up plates and fights.
+
+### D90 — 2026-09-29 — Authored rooms: the author's real game rooms
+The author starts building the real game rooms and puzzles while the
+test rooms stay. A room file gets an optional `"authored": true` flag,
+set and cleared with a checkbox in the room editor, so a test room can
+become the start of a real one. Development steps never change an
+authored room (file, exits, connections, map position) and never attach
+a new room to one; new test rooms connect only to test rooms. Tests
+never depend on authored rooms. A change that could affect them lists
+them in the PR, and any change to their files waits for the author.
+Claude may run and screenshot them. Boot Sector stays the start for both
+the real and the test rooms; later the test rooms get access-level doors
+so testers can play them during development. The world map tool marks
+authored rooms and doesn't flag them for being more than two rooms from
+the start (that limit, D49, is for test rooms). The rule is written in
+CLAUDE.md §10; no hard block on file edits.
+Refines D45: test rooms and real rooms live side by side from now on.
+**Why:** author's request: the rooms and puzzles they design must not be
+changed by development steps or grow test-room exits. A flag rather
+than a separate folder lets a test room be promoted in place; a written
+rule is enough without a permission block.

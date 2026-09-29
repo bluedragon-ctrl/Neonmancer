@@ -20,3 +20,8 @@ test('mapWarnings flags rooms the start cannot reach and test rooms more than tw
   const world = { start: 'a', connections: [['a.e', 'b.w'], ['b.e', 'c.w'], ['c.e', 'd.w']] };
   assert.deepEqual(mapWarnings(world, ['a', 'b', 'c', 'd', 'lost']), { unreachable: ['lost'], far: [{ id: 'd', distance: 3 }] });
 });
+
+test('mapWarnings leaves authored rooms far from the start alone (D90)', () => {
+  const world = { start: 'a', connections: [['a.e', 'b.w'], ['b.e', 'c.w'], ['c.e', 'd.w']] };
+  assert.deepEqual(mapWarnings(world, ['a', 'b', 'c', 'd', 'lost'], new Set(['d', 'lost'])), { unreachable: ['lost'], far: [] });
+});

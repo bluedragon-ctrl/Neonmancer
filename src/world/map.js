@@ -69,20 +69,21 @@ export function roomDistances(start, connections) {
 
 /**
  * What room validation can't see (D66): rooms the start can't reach through
- * exits, and test rooms too far from the start (D49). Every room is a test
- * room until content production (D45).
+ * exits, and test rooms too far from the start (D49). Authored rooms (D90)
+ * are real game rooms and may lie as far out as the world needs.
  * @param {{ start: string, connections: string[][] }} world
  * @param {Iterable<string>} roomIds every room
+ * @param {Set<string>} [authored] ids of the authored rooms
  * @returns {{ unreachable: string[], far: { id: string, distance: number }[] }}
  */
-export function mapWarnings(world, roomIds) {
+export function mapWarnings(world, roomIds, authored = new Set()) {
   const distances = roomDistances(world.start, world.connections);
   const unreachable = [];
   const far = [];
   for (const id of roomIds) {
     const distance = distances.get(id);
     if (distance === undefined) unreachable.push(id);
-    else if (distance > TEST_ROOM_REACH) far.push({ id, distance });
+    else if (distance > TEST_ROOM_REACH && !authored.has(id)) far.push({ id, distance });
   }
   return { unreachable, far };
 }

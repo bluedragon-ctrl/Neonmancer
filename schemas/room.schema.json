@@ -14,6 +14,10 @@
       "description": "Must match the file name."
     },
     "name": { "type": "string", "minLength": 1, "description": "Shown when entering the room." },
+    "authored": {
+      "type": "boolean",
+      "description": "A real game room made by the author (D90): development steps never change it or attach new rooms to it. Omitted for test rooms."
+    },
     "biome": { "$ref": "common.schema.json#/$defs/id", "description": "Id from biomes.json." },
     "size": {
       "description": "[width x, height y, depth z] in blocks; width + depth <= 32.",

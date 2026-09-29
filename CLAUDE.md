@@ -178,6 +178,8 @@ Planned for Phase 4 (the roster, D88); details settle in their steps:
   holds floor plates down and draws enemies
 - **Scan** — reveals hidden blocks, fake walls and secret pickups for a
   while
+- **Pull** — pulls the closest movable object (a crate) or enemy in the
+  facing direction one tile towards the wizard (D89)
 
 Spell upgrades have their own disks and save bits (the upgrades block,
 not spells, D88); an upgrade replaces its base spell in the Tab cycle
@@ -185,8 +187,8 @@ not spells, D88); an upgrade replaces its base spell in the Tab cycle
 - **Zap+** — the bolt bounces off walls, reaching targets round corners
 - **Mirror** (Shield upgrade) — reflects bolts back at the shooter
 
-Up to 16 spells and 16 upgrades; 10 spells and 2 upgrades are set, the
-rest stay spare for what content production needs (D88). Intended order
+Up to 16 spells and 16 upgrades; 11 spells and 2 upgrades are set, the
+rest stay spare for what content production needs (D88, D89). Intended order
 in the world: early Zap, Shield, Blink, Pause; middle Cut & Paste,
 Firewall, Fork, Scan and the jump buff; late Compile, Warp, Zap+ and
 Mirror. Buff items make the wizard himself stronger: more integrity,
@@ -302,7 +304,8 @@ The engine is generic; all content lives in data.
 - `data/biomes.json` — palette, floor pattern, effect settings,
   environmental effects
 - `data/rooms/*.json` — one file per room: biome, size [x, y, z], exits,
-  objects, enemies, bonus slots; only overrides of type defaults
+  objects, enemies, bonus slots; only overrides of type defaults;
+  `"authored": true` marks the author's real game rooms (D90, §10)
 - `data/world.json` — room connections, room positions on the world map,
   start room, fragment locations, number of fragments required, core
   location
@@ -391,6 +394,23 @@ not critical.
   push the branch and give the author a prefilled compare link
   (`https://github.com/bluedragon-ctrl/Neonmancer/compare/main...<branch>?expand=1`)
   plus the PR title and body, so they can create the PR manually.
+- Authored rooms (D90): a room with `"authored": true` is a real game
+  room made by the author, who sets and clears the flag in the room
+  editor (a test room may become the start of a real one). Development
+  steps never touch them:
+  - never edit, migrate, resize or move an authored room (its file or
+    its map position), and never add, remove or rename its exits or
+    connections;
+  - never attach a new room to an authored room; new test rooms connect
+    only to test rooms (Boot Sector, the shared start, stays a test
+    room; if a hub becomes authored, ask where test rooms go);
+  - tests never depend on authored rooms; they use the fixtures in
+    `tests/helpers.js` or test rooms;
+  - a change that could affect them (a schema change that needs a
+    migration, a new default in `defs.json`, a changed mechanic) lists
+    the affected authored rooms in the PR, and any change to their
+    files waits for the author's OK;
+  - running, playing and screenshotting them to check a mechanic is fine.
 - CLAUDE.md is versioned in the repo so every machine shares it; put
   working rules here, not in machine-local notes.
 - Conventional Commits (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`).
@@ -445,8 +465,8 @@ first buff items. Score, bonus bits and secrets. Fragments, access levels
 and the core. Step plan: docs/design.md (D65).
 
 **Phase 4 (v0.4) — Guardians, saves, tooling**
-Firewall Wardens. The roster's new spells and upgrades (D88): Compile,
-Fork, Scan, Zap+ and Mirror. Title screen and pause menu. Access keys,
+Firewall Wardens. The roster's new spells and upgrades (D88, D89):
+Compile, Fork, Scan, Pull, Zap+ and Mirror. Title screen and pause menu. Access keys,
 URL saves, localStorage autosave, tests. Map screen. Reachability
 checker. Design skills and subagents.
 
