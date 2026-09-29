@@ -7,6 +7,9 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- World map tool: a pickup report on F3 lists every permanent item
+  (spell disks, buff chips) by save bit with the rooms it lies in, and
+  flags items not placed yet or placed more than once; refills by type.
 - Buff items (Phase 3 step 12, D93): chips that raise the wizard's
   maximum integrity (4× +1, 8 → 12) or energy (5× +10, 50 → 100), or
   speed up his energy recharge (one, 12 → 8 ticks per unit). Each has a

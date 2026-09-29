@@ -382,7 +382,9 @@ not critical.
   as a node on a simple map grid (positions in `world.json`), with its
   connections; drag rooms and save; adds and removes rooms and
   connections (exits in the middle of the facing walls, D77); flags rooms
-  not reachable from the start; opens a room in the room editor. Dev
+  not reachable from the start; opens a room in the room editor; F3
+  shows the pickup report (every permanent item by save bit, where it
+  lies, not placed or placed twice). Dev
   server only, never shown to players: exploring is part of the game
   (D67).
 - **Reachability checker** (Phase 4): script that searches the grid with

@@ -1293,6 +1293,16 @@ players never see it (D67).
   can't reach through exits, and test rooms more than two rooms from the
   start (D49; authored rooms, D90, are marked and not flagged).
   Click a warning to highlight its room.
+- **Pickup report** (F3 or the panel's button; F3 or Esc closes it):
+  over the map, every permanent item defined in `defs.json` by its save
+  bit, in the save blocks (spells, buffs, upgrades, fragments, with how
+  many of each block's bits are defined), with the rooms and cells it
+  lies in. An item not placed yet or placed more than once is flagged
+  amber: a duplicate is allowed (a bit is the item, not the place, D71)
+  but worth a look. Refills are listed by type with their places, and
+  pickups of an unknown type as errors. It reads the rooms as edited
+  (`pickupReport()`, `src/world/pickup-report.js`); clicking a place
+  closes the report and highlights that room.
 - **New rooms** made in the room editor get the free cell nearest to the
   room they were made from (east, south, west, north first, then further
   out), to be moved on the map afterwards. The room editor never moves
