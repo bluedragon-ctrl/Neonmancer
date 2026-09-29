@@ -785,6 +785,64 @@ body {
   display: none;
 }
 
+/* The boot sequence after Start (D110): the title leaves with only its
+   logo, scrambling and jittering sideways as it fades. */
+.menu.leaving > :not(.menu-logo) {
+  visibility: hidden;
+}
+
+.menu.leaving .menu-logo {
+  animation: logo-glitch 0.35s steps(1) forwards;
+}
+
+@keyframes logo-glitch {
+  0% {
+    transform: none;
+  }
+  20% {
+    transform: translateX(calc(-18 * var(--u))) skewX(-8deg);
+  }
+  40% {
+    transform: translateX(calc(24 * var(--u)));
+    filter: hue-rotate(90deg);
+  }
+  60% {
+    transform: translateX(calc(-8 * var(--u))) scaleY(0.6);
+  }
+  80% {
+    transform: scaleY(0.15);
+  }
+}
+
+/* The room compiling: the void covers the game below the scan line, which
+   glows cyan as it sweeps down (--scan, set from JS). Under the HUD. */
+.boot-cover {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--void);
+  --scan: 0%;
+  -webkit-mask-image: linear-gradient(to bottom, transparent var(--scan), #000 calc(var(--scan) + 4%));
+  mask-image: linear-gradient(to bottom, transparent var(--scan), #000 calc(var(--scan) + 4%));
+}
+
+.boot-cover[hidden],
+.boot-scan[hidden] {
+  display: none;
+}
+
+.boot-scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: calc(3 * var(--u));
+  pointer-events: none;
+  background: #eaffff;
+  box-shadow:
+    0 0 calc(10 * var(--u)) var(--cyan),
+    0 0 calc(30 * var(--u)) var(--cyan);
+}
+
 /* Debug mode readout (F3), under the score: hidden until debug mode is on. */
 .readout {
   position: absolute;

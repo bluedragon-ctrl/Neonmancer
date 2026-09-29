@@ -8,7 +8,7 @@
 import { GAME_VERSION } from '../core/version.js';
 import { MENUS, isSetting } from './menus.js';
 import { SETTINGS } from './settings.js';
-import { formatText } from './text.js';
+import { formatText, scrambleText } from './text.js';
 
 /** The controls panel's rows: `controls.<id>` names the action, `controls.<id>Keys` its keys. */
 export const CONTROL_ROWS = ['move', 'jump', 'cast', 'spell', 'pause', 'movementMode', 'fullscreen'];
@@ -57,7 +57,8 @@ export class MenuScreen {
     this.root = stage.querySelector('.menu');
     const find = (selector) => this.root.querySelector(selector);
     this.logo = find('.menu-logo');
-    find('.menu-logo-title').textContent = this.text('game.title');
+    this.logoTitle = find('.menu-logo-title');
+    this.logoTitle.textContent = this.text('game.title');
     find('.menu-logo-tag').textContent = this.text('title.tagline');
     find('.menu-version').textContent = this.text('game.version', { version: GAME_VERSION });
     this.heading = find('.menu-heading');
@@ -96,9 +97,15 @@ export class MenuScreen {
   /**
    * Show the flow's state; call once a frame.
    * @param {import('./menus.js').MenuFlow} flow
+   * @param {number | null} [leaving] after Start (D110): how far the title
+   *   has gone, 0..1 (bootState().logo); null otherwise
    */
-  show(flow) {
+  show(flow, leaving = null) {
     const top = flow.top;
+    if (!top && leaving !== null && leaving < 1) {
+      this.showLeaving(leaving);
+      return;
+    }
     const menus = flow.stack.map((menu) => menu.id).join('/');
     const state = top ? `${menus}:${top.selected}:${JSON.stringify(flow.settings.values)}:${flow.notice}` : '';
     if (state === this.shown) return;
@@ -107,6 +114,9 @@ export class MenuScreen {
     this.menus = menus;
 
     this.root.hidden = !top;
+    this.root.classList.remove('leaving');
+    this.root.style.opacity = '';
+    this.logoTitle.textContent = this.text('game.title');
     this.stage.classList.toggle('titled', flow.onTitle);
     if (!top) return;
     this.root.classList.toggle('title', flow.onTitle);
@@ -126,6 +136,22 @@ export class MenuScreen {
     this.notice.textContent = flow.notice ? this.text(flow.notice) : '';
     const settings = ids.some(isSetting);
     this.help.textContent = this.text(settings ? 'menu.helpAdjust' : flow.stack.length > 1 || top.id === 'pause' ? 'menu.helpBack' : 'menu.help');
+  }
+
+  /**
+   * The title going away after Start: the menu gone at once, the logo
+   * scrambling into glyphs and fading, the HUD back.
+   * @param {number} leaving 0..1
+   */
+  showLeaving(leaving) {
+    this.shown = 'leaving';
+    this.menus = null;
+    this.root.hidden = false;
+    this.root.classList.add('title', 'leaving');
+    this.stage.classList.remove('titled');
+    this.root.style.opacity = String(1 - leaving);
+    const title = this.text('game.title');
+    this.logoTitle.textContent = scrambleText(title, Math.round((1 - leaving) * title.length), Math.floor(leaving * 40));
   }
 
   /** An item: its label, and for a setting its value between ◄ and ►. @param {string} id */

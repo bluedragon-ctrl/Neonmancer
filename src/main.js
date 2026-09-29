@@ -1,7 +1,7 @@
 // Entry point: load and validate the game data, show the title screen over
 // the start room, run the loop. Any startup problem shows the error screen
 // instead.
-import { FixedLoop } from './core/loop.js';
+import { DT, FixedLoop } from './core/loop.js';
 import { Input } from './core/input.js';
 import { say } from './core/messages.js';
 import { DATA_FILES, DEV_SERVER, SCHEMA_ERRORS } from './data/bundle.js';
@@ -13,11 +13,13 @@ import { Game } from './game.js';
 import { PLAYER } from './entities/player.js';
 import { PlayerView } from './render/entity-view.js';
 import { HOLO_TIME } from './render/holo.js';
+import { bootState } from './render/boot-fx.js';
 import { AutoQuality } from './render/quality.js';
 import { Renderer } from './render/renderer.js';
 import { RoomScene } from './render/room-scene.js';
 import { showErrorScreen } from './ui/error-screen.js';
 import { toggleFullscreen, wantsFullscreenHint } from './ui/fullscreen.js';
+import { BootScreen } from './ui/boot-screen.js';
 import { Hud } from './ui/hud.js';
 import { MenuScreen } from './ui/menu-screen.js';
 import { MenuFlow } from './ui/menus.js';
@@ -94,18 +96,30 @@ function boot() {
       run(flow.adjust(step));
     },
   });
+  const bootScreen = new BootScreen(renderer.stage);
+  /** Seconds into the boot sequence after Start (D110), or null when none runs. */
+  let boot = null;
+
   /**
    * Start over in the start room with nothing found (nothing is saved yet,
-   * D105); `quiet` (behind the title) without the boot messages and banner.
+   * D105). Unless `quiet` (behind the title), the boot sequence plays: the
+   * room compiles and the wizard pops in (D110).
    */
   function newGame({ quiet = false } = {}) {
     hud.clear();
     game.reset({ start: devRoom });
     showRoom();
-    if (quiet) {
-      hud.clear();
-      return;
-    }
+    // The room's banner waits until he is in (finishBoot()).
+    hud.clear();
+    if (quiet) return;
+    say('msg.loading', { room: content.rooms.get(game.room.id).name.toUpperCase() });
+    boot = 0;
+  }
+
+  /** The boot sequence is over (or skipped): the banner, the greeting, and he is yours. */
+  function finishBoot() {
+    boot = null;
+    game.announceRoom();
     say('msg.boot');
     say('msg.welcome');
   }
@@ -128,6 +142,14 @@ function boot() {
     // The game stands still while the room is being edited.
     if (editor.active) {
       blurred = false;
+      readout.countTick();
+      return;
+    }
+    // The boot sequence holds the game too; a menu key skips it.
+    if (boot !== null) {
+      boot += DT;
+      blurred = false;
+      if (bootState(boot).done || ['confirm', 'jump', 'pause'].some((action) => input.pressed(action))) finishBoot();
       readout.countTick();
       return;
     }
@@ -170,11 +192,15 @@ function boot() {
       console.info(`Frames run slow: quality now MSAA ${renderer.multisampling}, render scale ${renderer.renderScale}`);
     }
     // Behind a menu the game stands still: no animation, no interpolation.
+    // While booting nothing moves either, but the room animates.
     const dt = flow.playing ? Math.min(time - lastFrame, 0.1) : 0;
     lastFrame = time;
-    if (!flow.playing) alpha = 1;
+    if (!flow.playing || boot !== null) alpha = 1;
 
-    menuScreen.show(flow);
+    const booting = boot === null ? null : bootState(boot);
+    menuScreen.show(flow, booting?.logo ?? null);
+    bootScreen.show(booting?.wipe ?? null);
+    playerView.boot = booting;
     editor.frame();
     playerView.sync(alpha, dt);
     roomScene.update(alpha, dt);

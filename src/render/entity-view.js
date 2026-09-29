@@ -57,6 +57,7 @@ import { warpFlash } from './warp-fx.js';
 import { createWarpTrail, dashPose, placeWarpTrail } from './warp-view.js';
 import { ClipView } from './clip-view.js';
 import { createJumpRings, placeJumpRings } from './jump-view.js';
+import { arrivalLook, gatherPixels } from './boot-fx.js';
 
 /**
  * Which bodies get a drop shadow besides the wizard (who always has one).
@@ -211,6 +212,8 @@ export class PlayerView {
     this.trails = new Map();
     /** Cut & Paste (D87): its effect and aim marker, made when he first knows the spell. */
     this.clip = null;
+    /** The boot sequence after Start (D110): bootState() while he pops in, or null. */
+    this.boot = null;
   }
 
   /** The afterimage of a Blink or Warp `spell`, made on first use. */
@@ -306,6 +309,22 @@ export class PlayerView {
 
     const ground = player.dead ? null : this.game.shadowHeight(pos, player.size);
     placeShadow(this.shadow, pos[0], pos[2], pos[1], ground, player.size[0] * 1.5);
+    if (this.boot) this.showArrival(pos);
+  }
+
+  /**
+   * Booting in after Start (D110): hidden while the room compiles, then
+   * his pixels gather and he appears, flashing white, with a squash.
+   * @param {number[]} pos
+   */
+  showArrival(pos) {
+    const look = arrivalLook(this.boot);
+    this.wizard.visible = look.visible;
+    for (const ghost of this.xray) ghost.visible = look.visible;
+    this.shadow.visible &&= look.visible;
+    this.wizard.scale.set(...look.scale);
+    showHitFlash(this.wizard, { amount: look.flash, color: 'white' });
+    placePixels(this.pixels, gatherPixels(this.boot.pop), pos);
   }
 }
 

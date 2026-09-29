@@ -43,6 +43,7 @@
     "buff.integrity": "INTEGRITY",
     "buff.energy": "ENERGY",
     "buff.recharge": "RECHARGE BOOST",
+    "msg.loading": "> LOADING SECTOR: {room} [■■■■■■■■] OK",
     "msg.boot": "> GRID LINK ESTABLISHED",
     "msg.welcome": "> WELCOME, WIZARD. MIND THE GAPS.",
     "msg.die": "> FATAL: WIZARD FELL OUT OF BOUNDS",

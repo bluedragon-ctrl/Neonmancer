@@ -1677,17 +1677,36 @@ Open so far:
 
 `src/ui/menus.js` (the logic, tested) and `src/ui/menu-screen.js` (the
 view), D109. The game opens on the title screen: the logo over the start
-room, dimmed and standing still, with **Start** and **Controls**. Esc or P
-in the game, or the window losing focus, opens the pause menu: **Resume**,
-**Controls**, **Quit to title**. Quitting asks first (*Keep playing* is
-selected), then starts a new game behind the title; nothing is saved yet
-(D105). Menus stack: Controls and the quit question open over the menu,
-and Esc or P closes the top one (the pause menu itself: back to the game).
+room, dimmed well down and standing still, with **Start**, **Options** and
+**Controls**. Esc or P in the game, or the window losing focus, opens the
+pause menu: **Resume**, **Save**, **Options**, **Controls**, **Quit to
+title**. Save is a stub for now: it says saving comes in the next update.
+Quitting asks first (*Keep playing* is selected), then starts a new game
+behind the title; nothing is saved yet (D105). Menus stack: Options (and
+its Visuals), Controls and the quit question open over the menu, and Esc
+or P closes the top one (the pause menu itself: back to the game).
+
+**Options** (`src/ui/settings.js`, stubs): **Music** and **Sound** volume
+as a bar of ten cells (0–10, default 7), and **Visuals**: **Quality**
+(Auto, Low, Medium, High), **Render scale** (50–100 %), **Screen effects**
+(On, Off). ◄ ► (or A D, or a click on the arrows) adjust the selected
+one, Enter steps it on and round. They are kept in localStorage
+(`neonmancer.settings`, apart from the access key) and read by nothing
+yet: the audio and quality presets of Phase 5 will.
+
+**Start** plays the boot sequence (D110, `src/render/boot-fx.js`, 2.2 s):
+the logo scrambles and glitches out; the room compiles behind a cyan scan
+line sweeping down the screen while the terminal types `> LOADING
+SECTOR`; the wizard pops in out of gathering pixels (the derez backwards),
+flashing white and landing with a squash; then the room's banner and the
+boot messages. The game holds until he lands; Enter, Space, Esc or P skip
+the rest.
 The tick that closes a menu does not run the game, so Enter or Space
 there never jumps. Behind a menu the game, its animations and the
 terminal stand still. Dev links from the world map tool (`?room`,
-`?edit`) start in the game. Coming with saving: Enter key on the title,
-Save, Copy key and Copy link in the pause menu.
+`?edit`) start in the game, without the boot sequence. Coming with
+saving: Enter key on the title, a working Save, Copy key and Copy link in
+the pause menu.
 
 ## Access keys
 

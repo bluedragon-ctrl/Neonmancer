@@ -143,11 +143,7 @@ export class Game {
    */
   enterRoom(id, pos, entry = id === this.room?.id ? this.entryExit : null) {
     // Announce the room when it is a different one (not on a respawn).
-    if (id !== this.room?.id) {
-      const data = this.content.rooms.get(id);
-      const biome = this.content.biomes[data.biome];
-      announce('banner.room', { room: data.name }, { sub: 'banner.biome', subValues: { biome: biome.name }, color: biome.color });
-    }
+    if (id !== this.room?.id) this.announceRoom(id);
     this.room = buildRoom(this.content.rooms.get(id), this.content);
     this.grid = new Grid(this.room);
     /** The room's objects (pushables, platforms, collapsing blocks), by kind (entities/kinds.js). */
@@ -179,6 +175,16 @@ export class Game {
     /** Is he on the backup shrine? Stepping onto it uses it (touchShrine()). */
     this.onShrine = false;
     this.refreshBodies();
+  }
+
+  /**
+   * The room's banner: its name, its biome under it, in the biome's color.
+   * @param {string} [id] the room; the one he is in by default
+   */
+  announceRoom(id = this.room.id) {
+    const data = this.content.rooms.get(id);
+    const biome = this.content.biomes[data.biome];
+    announce('banner.room', { room: data.name }, { sub: 'banner.biome', subValues: { biome: biome.name }, color: biome.color });
   }
 
   /**
