@@ -35,7 +35,7 @@ test('pickup report: every permanent item by its bit, where it lies, not placed 
     ['gamma', {}],
   ]);
   const { items, refills, unknown } = pickupReport(PICKUPS, SPELLS, rooms);
-  assert.deepEqual(items.map((item) => item.bit), [0, 1, 2, 3, 4, 5, 6, 16, 17, 20, 25, 32, 33, 34, 112, 113], 'every defined item, in bit order');
+  assert.deepEqual(items.map((item) => item.bit), [0, 1, 2, 3, 4, 5, 6, 16, 17, 20, 25, 32, 33, 34, 48, 49, 50, 51, 112, 113], 'every defined item, in bit order');
   assert.deepEqual(bitBlock(items.at(-1).bit), { block: 'secrets', slot: 1 }, 'the second secret');
   const zap = items[0];
   assert.deepEqual(zap.types, ['disk_zap']);

@@ -105,6 +105,7 @@ export function validateData(files) {
     rooms.set(roomIdFromFile(file), room);
   }
   guarded('world.json', report, () => validateWorld(files['world.json'], rooms, report));
+  guarded('world.json', report, () => validateFragments(files['world.json'], rooms, context.objectTypes, report));
   return errors;
 }
 
@@ -128,7 +129,7 @@ function validateTemplates(enemies, report) {
 const UPGRADE_SPELLS = { zap_plus: 'zap', shield_plus: 'shield', double_jump: null };
 
 /**
- * Spell, buff, upgrade and secret slots are unique (each is a save bit, D71), a
+ * Spell, buff, upgrade, secret and fragment slots are unique (each is a save bit, D71), a
  * data disk or a spell upgrade names a known spell, each upgrade has one
  * pickup type (D95), and pickup type ids differ from object type ids
  * (the room editor lists both under its Object tool). All buffs together
@@ -151,6 +152,8 @@ function validateSpellsAndPickups(spells, pickupTypes, objectTypes, report) {
   const upgrades = new Map();
   /** secret slot → pickup type id */
   const secretSlots = new Map();
+  /** fragment slot → pickup type id */
+  const fragmentSlots = new Map();
   for (const [id, type] of Object.entries(pickupTypes)) {
     if ((type.kind === 'disk' || type.kind === 'upgrade') && type.spell !== undefined && !spells[type.spell]) {
       report('defs.json', `pickups.${id}.spell`, `unknown spell "${type.spell}"`);
@@ -170,6 +173,10 @@ function validateSpellsAndPickups(spells, pickupTypes, objectTypes, report) {
     if (type.kind === 'secret') {
       if (secretSlots.has(type.slot)) report('defs.json', `pickups.${id}.slot`, `secret slot ${type.slot} is taken by "${secretSlots.get(type.slot)}"`);
       else secretSlots.set(type.slot, id);
+    }
+    if (type.kind === 'fragment') {
+      if (fragmentSlots.has(type.slot)) report('defs.json', `pickups.${id}.slot`, `fragment slot ${type.slot} is taken by "${fragmentSlots.get(type.slot)}"`);
+      else fragmentSlots.set(type.slot, id);
     }
     if (type.kind !== 'buff') continue;
     if (buffSlots.has(type.slot)) report('defs.json', `pickups.${id}.slot`, `buff slot ${type.slot} is taken by "${buffSlots.get(type.slot)}"`);
@@ -358,6 +365,8 @@ function validateObjects(checks, objectTypes) {
     // A plate is a floor tile, no body (D75): things may stand on it.
     if (type?.kind === 'plate') return validatePlate(checks, path, object.at);
     const inside = fillCell(checks, object.at, path);
+    // The core stands 2 high (D101): the cell above is its too.
+    if (type?.kind === 'core') fillCell(checks, [object.at[0], object.at[1] + 1, object.at[2]], path);
 
     // Platforms follow a path (D46); nothing else does yet.
     if (type?.kind === 'platform' && !object.path) report(path, 'a platform needs a "path"');
@@ -704,4 +713,28 @@ function validateWorld(world, rooms, report) {
   for (const id of rooms.keys()) {
     if (!positions[id]) report(file, 'positions', `room "${id}" has no position on the map`);
   }
+}
+
+/**
+ * Key fragments and access (D101): the access thresholds rise and stay
+ * within the fragments the core needs; an exit asks for a level the
+ * thresholds can give; there is at most one core in the world.
+ */
+function validateFragments(world, rooms, objectTypes, report) {
+  const file = 'world.json';
+  const { required = 64, access = [] } = world.fragments ?? {};
+  access.forEach((needed, i) => {
+    if (i > 0 && needed <= access[i - 1]) report(file, `fragments.access[${i}]`, `${needed} must be more than level ${i}'s ${access[i - 1]}`);
+    if (needed > required) report(file, `fragments.access[${i}]`, `${needed} is more than the ${required} fragments the core needs`);
+  });
+  const cores = [];
+  for (const [id, room] of rooms) {
+    (room?.exits ?? []).forEach((exit, i) => {
+      if (exit.access > access.length) {
+        report(`rooms/${id}.json`, `exits[${i}].access`, `level ${exit.access} can't be reached: world.json gives ${access.length} access level${access.length === 1 ? '' : 's'}`);
+      }
+    });
+    for (const object of room?.objects ?? []) if (objectTypes[object.type]?.kind === 'core') cores.push(`${id}.${object.id}`);
+  }
+  if (cores.length > 1) report(file, 'fragments', `the world has ${cores.length} cores (${cores.join(', ')}); it needs one at most`);
 }

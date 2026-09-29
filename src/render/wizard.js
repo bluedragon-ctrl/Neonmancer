@@ -1,7 +1,9 @@
 /**
  * The wizard model in the hologram look (D22): a cone body, a ball head,
  * two small floating ball hands and a pointy hat (cone + brim) tilted back,
- * so the isometric camera sees the face under the brim. Glowing eyes.
+ * so the isometric camera sees the face under the brim. Glowing eyes. Gold
+ * bands round the hat show his access level (D101), one per level, from the
+ * brim up.
  *
  * The model stands on y = 0 around the y axis and looks along +z. It is
  * about 1.9 units tall; only the lower 1.5 is the hitbox (the hat is visual
@@ -9,7 +11,8 @@
  */
 import { ConeGeometry, CylinderGeometry, Group, Mesh, SphereGeometry } from 'three';
 import { createFlash, eyeMaterial, holoPart } from './holo.js';
-import { PALETTE } from './neon.js';
+import { FRAGMENT_COLOR } from '../entities/pickup.js';
+import { PALETTE, lineMaterial, neonLines } from './neon.js';
 
 /** Proportions in world units. */
 export const WIZARD = {
@@ -21,6 +24,8 @@ export const WIZARD = {
   /** Backward tilt of the whole hat around the brim center, in radians. */
   hatTilt: 0.3,
   eyes: { x: 0.07, dy: 0.03, size: [0.028, 0.045, 0.02] },
+  /** Access bands (D101): the first's height above the brim, the gap between them, how far out from the hat. */
+  bands: { y: 0.09, gap: 0.085, out: 0.012 },
 };
 
 /** Round parts use this many segments, so outlines stay smooth. */
@@ -45,6 +50,22 @@ export function wizardParts() {
       { shape: 'cone', r0: hat.r, r1: 0, height: hat.tipY - hat.y0, center: [0, (hat.tipY + hat.y0) / 2 - brim.y, 0], role: 'hat' },
     ],
   };
+}
+
+/**
+ * The access bands' rings (pure), relative to the brim center like the hat
+ * parts: `count` circles round the hat cone, from the brim up.
+ * @param {number} count
+ * @returns {{ y: number, r: number }[]}
+ */
+export function hatBands(count) {
+  const { brim, hat, bands } = WIZARD;
+  const base = hat.y0 - brim.y;
+  const height = hat.tipY - hat.y0;
+  return Array.from({ length: count }, (_, i) => {
+    const y = base + bands.y + i * bands.gap;
+    return { y, r: hat.r * (1 - (y - base) / height) + bands.out };
+  });
 }
 
 function geometryOf(part) {
@@ -75,8 +96,10 @@ function createEyes() {
  * @param {number|string} [colors.body] body cone
  * @param {number|string} [colors.head] head and hands
  * @param {number|string} [colors.hat]
+ * @param {number} [colors.bands] access bands the hat has room for (D101);
+ *   `userData.setAccess(level)` shows that many
  */
-export function createWizard({ body = PALETTE.magenta, head = PALETTE.cyan, hat = PALETTE.magenta } = {}) {
+export function createWizard({ body = PALETTE.magenta, head = PALETTE.cyan, hat = PALETTE.magenta, bands = 3 } = {}) {
   const colors = { body, head, hat };
   const flash = createFlash();
   const build = (part) => {
@@ -95,5 +118,16 @@ export function createWizard({ body = PALETTE.magenta, head = PALETTE.cyan, hat 
   hatGroup.rotation.x = -WIZARD.hatTilt; // tip back (−z), brim front up
   hatGroup.add(...parts.hat.map(build));
   group.add(hatGroup);
+
+  const bandMaterial = lineMaterial({ color: FRAGMENT_COLOR, width: 2.2, brightness: 1.8 });
+  const rings = hatBands(bands).map(({ y, r }) => {
+    const n = 28;
+    const point = (i) => [Math.cos((i / n) * 2 * Math.PI) * r, y, Math.sin((i / n) * 2 * Math.PI) * r];
+    const ring = neonLines(Array.from({ length: n }, (_, i) => [point(i), point(i + 1)]), bandMaterial);
+    ring.visible = false;
+    hatGroup.add(ring);
+    return ring;
+  });
+  group.userData.setAccess = (level) => rings.forEach((ring, i) => (ring.visible = i < level));
   return group;
 }

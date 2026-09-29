@@ -137,7 +137,7 @@
     },
     "pickups": {
       "type": "object",
-      "description": "Pickup types (D71), by id. Permanent ones (data disks, buffs, upgrades, secrets) set a save bit and stay found; temporary ones (refills) come back with the room.",
+      "description": "Pickup types (D71), by id. Permanent ones (data disks, buffs, upgrades, secrets, fragments) set a save bit and stay found; temporary ones (refills) come back with the room.",
       "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
       "additionalProperties": { "$ref": "#/$defs/pickupType" }
     },
@@ -165,7 +165,7 @@
       "type": "object",
       "required": ["kind"],
       "properties": {
-        "kind": { "enum": ["disk", "refill", "buff", "upgrade", "secret"], "description": "disk: teaches a spell (permanent); refill: restores integrity or energy (temporary); buff: makes the wizard stronger for good (permanent); upgrade: improves a spell or his jump for good (permanent, D95); secret: a hidden gem worth extra score (permanent, D100)." }
+        "kind": { "enum": ["disk", "refill", "buff", "upgrade", "secret", "fragment"], "description": "disk: teaches a spell (permanent); refill: restores integrity or energy (temporary); buff: makes the wizard stronger for good (permanent); upgrade: improves a spell or his jump for good (permanent, D95); secret: a hidden gem worth extra score (permanent, D100); fragment: a key fragment, counted by the core for access levels and the end of the game (permanent, D101)." }
       },
       "allOf": [
         {
@@ -227,6 +227,17 @@
             "properties": {
               "kind": true,
               "slot": { "$ref": "#/$defs/slot", "description": "Its bit in the save's secrets block (D100); unique among secrets." }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "fragment" } } },
+          "then": {
+            "required": ["slot"],
+            "additionalProperties": false,
+            "properties": {
+              "kind": true,
+              "slot": { "type": "integer", "minimum": 0, "maximum": 63, "description": "Its bit in the save's fragments block (D101); unique among fragments." }
             }
           }
         }
@@ -350,8 +361,8 @@
       "additionalProperties": false,
       "properties": {
         "kind": {
-          "enum": ["pushable", "platform", "target", "plate"],
-          "description": "Which engine behavior the object uses. pushable: the wizard pushes it; platform: follows its path (room data \"path\") carrying the wizard and pushables (with \"damage\" it hurts him instead, a spiked platform, D82); target: a fixed block a Zap switches on and off; plate: a floor tile (y 0) that is on while a crate, an enemy or the wizard stands on it. Targets and plates are switches: the room's locked exits open while all of them are on (D75); their look is fixed (render/switch-view.js), only the color comes from here. Collapsing blocks are block types (\"blocks\", D60)."
+          "enum": ["pushable", "platform", "target", "plate", "core"],
+          "description": "Which engine behavior the object uses. pushable: the wizard pushes it; platform: follows its path (room data \"path\") carrying the wizard and pushables (with \"damage\" it hurts him instead, a spiked platform, D82); target: a fixed block a Zap switches on and off; plate: a floor tile (y 0) that is on while a crate, an enemy or the wizard stands on it. Targets and plates are switches: the room's locked exits open while all of them are on (D75); their look is fixed (render/switch-view.js), only the color comes from here. core: the central core (D101), a fixed block that takes the key fragments: touching it raises the wizard's access level to what his fragments earn (world.json \"fragments\"), and with all of them the Grid reboots; at most one in the world. Collapsing blocks are block types (\"blocks\", D60)."
         },
         "color": { "$ref": "common.schema.json#/$defs/color" },
         "edges": {

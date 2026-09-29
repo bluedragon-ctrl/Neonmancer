@@ -29,6 +29,14 @@ export const SCORE_COLOR = '#ffe23d';
  */
 export const SECRET_COLOR = '#ff2bd6';
 
+/**
+ * Key fragments and access levels (D101) in the score's gold: a fragment's
+ * shard, its banner, the core's crystal, the digit on an access lock and
+ * the bands on the wizard's hat. Only accents: the core itself is white (a
+ * mechanism, D99), as gold is too close to Home Lattice's amber for an object.
+ */
+export const FRAGMENT_COLOR = SCORE_COLOR;
+
 export class Pickup {
   /**
    * @param {object} data built by buildRoom(): kind, spell or stat and amount, id, type, at

@@ -8,7 +8,7 @@ import { bounceOffEnemies, burnEnemies, touchEnemies, updateAttacks, updateBolts
 import { isBackSide, sideAxes, withExitDefaults } from './data/room-data.js';
 import { Enemy } from './entities/enemy.js';
 import { createObject } from './entities/kinds.js';
-import { BUFF_COLORS, Pickup, SECRET_COLOR } from './entities/pickup.js';
+import { BUFF_COLORS, FRAGMENT_COLOR, Pickup, SECRET_COLOR } from './entities/pickup.js';
 import { PLAYER, Player } from './entities/player.js';
 import { SWITCH_KINDS } from './entities/switch.js';
 import { groundBelow, overlapsBox, surfaceBelow, touchedCell, touchesBox } from './physics/collision.js';
@@ -17,7 +17,7 @@ import { createLocks, updateSwitches } from './switches.js';
 import { arrival, exitAt } from './world/exits.js';
 import { Grid } from './world/grid.js';
 import { nearestShrine } from './world/map.js';
-import { Progress, pickupBit } from './world/progress.js';
+import { Progress, SAVE_BLOCKS, pickupBit, saveBit } from './world/progress.js';
 import { buildRoom } from './world/room.js';
 import { completion, placedBits, scoreOf } from './world/score.js';
 
@@ -39,7 +39,7 @@ export const TRANSITION = {
  * Something that happened, for views, the HUD and (later) sound. Returned
  * by Game.update() for the tick it happened in.
  * @typedef {object} GameEvent
- * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'|'warp'|'fizzle'|'cut'|'paste'|'airjump'|'reflect'|'shrine'|'crash'} type
+ * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'|'warp'|'fizzle'|'cut'|'paste'|'airjump'|'reflect'|'shrine'|'crash'|'access'|'win'} type
  * @property {string} [spell] the spell cast, failed, fizzled (nowhere to
  *   go, energy kept) or selected (cast, deny, fizzle, spell); the teleport (warp)
  * @property {number[]} [from] where a Blink or Warp started (warp)
@@ -69,6 +69,7 @@ export const TRANSITION = {
  *   reboots on the nearest backup shrine (D97)
  * @property {object} [exit] the exit walked out through (exit); a locked
  *   exit opening (unlock) or closing again (lock)
+ * @property {number} [level] his new access level (access, D101)
  */
 
 export class Game {
@@ -98,6 +99,10 @@ export class Game {
     this.lastShrine = null;
     /** He died with no backups left: when he recompiles, the system crashes (D97). */
     this.crashing = false;
+    /** Key fragments (world.json, D101): how many reboot the Grid, and the access levels they earn. */
+    this.fragmentRules = content.world.fragments ?? { required: SAVE_BLOCKS.fragments.size, access: [] };
+    /** The core took every fragment it needs: the Grid rebooted (D101); he plays on. */
+    this.won = false;
     this.learnSpells();
     this.applyUpgrades();
     // A loaded save starts him buffed and full.
@@ -139,6 +144,10 @@ export class Game {
     this.switches = this.objects.filter((object) => SWITCH_KINDS.includes(object.kind));
     /** Objects that hurt the wizard on touch: spiked platforms (D82). */
     this.spiked = this.objects.filter((object) => object.damage > 0);
+    /** The central core, if it is in this room (D101). */
+    this.core = this.objects.find((object) => object.kind === 'core') ?? null;
+    /** Is he touching the core? Touching it again only counts after he stepped away (touchCore()). */
+    this.onCore = false;
     /** The exit he came in through: it stays open for him while he is in the room (D75). */
     this.entryExit = entry;
     /** Locked exits (D75), open while every switch is on; closed ones are solid (Grid.setOpening()). */
@@ -270,6 +279,63 @@ export class Game {
       say('msg.backupSaved');
     }
     this.onShrine = on;
+  }
+
+  /**
+   * Touching the central core (D101), alive: it counts his fragments. When
+   * they earn a higher access level it raises his (the room's access locks
+   * follow at once, updateSwitches()); with every fragment it needs, the
+   * Grid reboots (the end of the game, once). Otherwise it tells him how
+   * many more he needs. Staying against it doesn't count again.
+   */
+  touchCore() {
+    const { player, core } = this;
+    const on = !!core && !player.dead && touchesBox(player.box(), core.box());
+    if (on && !this.onCore) this.deliver();
+    this.onCore = on;
+  }
+
+  /** The core takes his fragments: a higher access level, the reboot, or how many more it needs. */
+  deliver() {
+    const { progress, fragmentRules } = this;
+    const found = progress.count('fragments');
+    const earned = progress.earnedAccess(fragmentRules.access);
+    const raised = earned > progress.accessLevel;
+    if (raised) {
+      progress.accessLevel = earned;
+      say('msg.access', { level: earned });
+      announce('banner.access', { level: earned }, { sub: 'banner.accessSub', color: FRAGMENT_COLOR });
+      this.emit('access', { level: earned });
+    }
+    if (found >= fragmentRules.required && !this.won) {
+      this.won = true;
+      say('msg.reboot');
+      this.emit('win');
+    } else if (!raised) {
+      const needed = fragmentRules.access.find((n) => n > found);
+      if (needed !== undefined) say('msg.coreAccess', { found, needed, level: earned + 1 });
+      else if (found < fragmentRules.required) say('msg.coreReboot', { found, needed: fragmentRules.required });
+    }
+  }
+
+  /** The fragments found, by slot (D101): which modules of the boot key he has. */
+  fragmentSlots() {
+    const { start, size } = SAVE_BLOCKS.fragments;
+    const slots = [];
+    for (let slot = 0; slot < size; slot++) if (this.progress.has(start + slot)) slots.push(slot);
+    return slots;
+  }
+
+  /**
+   * Debug mode: find the next `count` fragments not found yet (by slot),
+   * placed or not, to try access levels without walking the world.
+   * @param {number} [count]
+   */
+  debugGrantFragments(count = 8) {
+    for (let slot = 0, left = count; slot < SAVE_BLOCKS.fragments.size && left > 0; slot++) {
+      if (this.progress.collect(saveBit('fragments', slot))) left--;
+    }
+    say('msg.debugFragments', { found: this.progress.count('fragments') });
   }
 
   /** Use the room's backup shrine: refill him, and remember it for a tie (crash()). */
@@ -405,6 +471,7 @@ export class Game {
     burnEnemies(this);
     this.takePickups();
     this.touchShrine();
+    this.touchCore();
     updateSwitches(this);
     return this.takeEvents();
   }
@@ -458,11 +525,18 @@ export class Game {
 
   /**
    * What a permanent pickup gives him, and how it is announced.
-   * @param {object} data the pickup (buildRoom()): a data disk, a buff chip, an upgrade card or a secret
+   * @param {object} data the pickup (buildRoom()): a data disk, a buff chip, an upgrade card, a secret or a fragment
    * @returns {{ banner: { key: string, values: object, options: object }, message: { key: string, values: object } }}
    */
   gain(data) {
     const { player } = this;
+    if (data.kind === 'fragment') {
+      const values = { found: this.progress.count('fragments'), total: this.fragmentRules.required };
+      return {
+        banner: { key: 'banner.fragment', values, options: { sub: 'banner.fragmentSub', color: FRAGMENT_COLOR } },
+        message: { key: 'msg.fragmentFound', values },
+      };
+    }
     if (data.kind === 'secret') {
       const values = { found: this.progress.count('secrets'), total: this.secretsPlaced() };
       return {

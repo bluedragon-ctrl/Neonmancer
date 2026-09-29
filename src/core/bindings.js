@@ -24,8 +24,10 @@ export const ACTIONS = [
   'debugRoomPrev',
   'debugInvincible',
   'debugDamage',
+  'debugFragments',
   'fullscreen',
   'editor',
+  'confirm',
 ];
 
 /** @type {Record<string, string[]>} */
@@ -47,7 +49,10 @@ export const DEFAULT_BINDINGS = {
   debugRoomPrev: ['BracketLeft'],
   debugInvincible: ['KeyI'],
   debugDamage: ['KeyH'],
+  debugFragments: ['KeyK'],
   fullscreen: ['KeyF'],
   // The room editor (src/editor/); its own keys are in src/editor/editor.js.
   editor: ['F2'],
+  // Closes the end-of-game screen (D101); later menus.
+  confirm: ['Enter', 'NumpadEnter'],
 };

@@ -7,6 +7,9 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- Locked front exits are the same dark door panel as locked doorways,
+  instead of four retracting bars, so every locked door looks alike and
+  its lights and access numeral read clearly (D101).
 - Color rules for objects and blocks (D99): red hurts, the room color is
   structure, black is a pit, white is a mechanism, cyan moves, magenta is
   the wizard, lime is pushable. Hazards and spiked platforms use the one
@@ -24,6 +27,20 @@ and the project uses [Semantic Versioning](https://semver.org/).
   since D99 they take the room color.
 
 ### Added
+- Fragments and access (Phase 3 step 16, D101): 64 key fragments with
+  their own save bits (`> FRAGMENT n/N GET!`), the modules of one 8×8
+  QR-like boot key: each is a gold tile with its module lit, and the HUD
+  shows the key filling in as they are found. The
+  central core, a placeable object now in Boot Sector, raises the
+  wizard's access level when he touches it: level 1 at 16 fragments, 2
+  at 32, 3 at 48 (`world.json` `fragments`), 500 points each; a gold
+  band round his hat per level. Exits can ask for an access level
+  (`"access": n`): a white panel with the level as a thick gold Roman
+  numeral. All 64 at the core reboot the Grid: a placeholder end screen
+  with the whole key and the final score. The core is a gold crystal in
+  orbit rings, one per level; a Vault test room behind Quarantine's level-1 lock; the
+  room editor sets an exit's access level; debug key K finds 8
+  fragments; the HUD shows `FRAGMENTS n/64 ACCESS n`.
 - Score and secrets (Phase 3 step 15, D100): the score is what the
   wizard has found, 50 per permanent pickup, 200 per secret (500 per
   access level to come), shown in gold under the title with the share

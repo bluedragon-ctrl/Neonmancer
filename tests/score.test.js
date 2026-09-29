@@ -22,9 +22,9 @@ function stepOnto(game, [x, y, z]) {
 }
 
 test('score: 50 a permanent pickup, 200 a secret, 500 an access level; nothing else (D100)', () => {
-  const progress = new Progress([saveBit('spells', 0), saveBit('buffs', 3), saveBit('upgrades', 1), saveBit('secrets', 0)]);
-  assert.equal(scoreOf(progress, SCORE), 3 * 50 + 200);
-  assert.equal(scoreOf(progress, SCORE, 2), 3 * 50 + 200 + 2 * 500);
+  const bits = [saveBit('spells', 0), saveBit('buffs', 3), saveBit('upgrades', 1), saveBit('secrets', 0), saveBit('fragments', 5)];
+  assert.equal(scoreOf(new Progress(bits), SCORE), 4 * 50 + 200, 'a fragment is a permanent pickup like a disk');
+  assert.equal(scoreOf(new Progress(bits, 2), SCORE), 4 * 50 + 200 + 2 * 500, 'the access level counts as stored');
   assert.equal(scoreOf(new Progress(), SCORE), 0);
 });
 

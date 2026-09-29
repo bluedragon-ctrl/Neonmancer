@@ -54,6 +54,8 @@ import { EnergyBar } from '../src/ui/energy-bar.js';
 import { createCard } from '../src/render/card.js';
 import { createChip } from '../src/render/chip.js';
 import { createSecret } from '../src/render/secret.js';
+import { createCore } from '../src/render/core-view.js';
+import { createFragment } from '../src/render/fragment.js';
 import { DISK, createDisk, diskMotion, diskPixels, poseDisk } from '../src/render/disk.js';
 import { createRefill, refillMotion } from '../src/render/refill.js';
 import { INSTALL_FX } from '../src/render/install-fx.js';
@@ -90,8 +92,8 @@ const ALL_ASSETS = [
   { label: 'wizard-hit', build: buildWizardHit, shadow: PALETTE.magenta },
   // Every object type from defs.json, in its own style (glass crates, D96:
   // a data core, or empty thinner glass in a destructible one, D99); switches have their
-  // own looks (below).
-  ...Object.entries(defs.objects).filter(([, props]) => !SWITCH_KINDS.includes(props.kind)).map(([type, props]) => ({
+  // own looks (below), and so has the core (D101).
+  ...Object.entries(defs.objects).filter(([, props]) => !SWITCH_KINDS.includes(props.kind) && props.kind !== 'core').map(([type, props]) => ({
     label: type,
     build: () => {
       const view = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...props, at: [0, 0, 0] });
@@ -228,9 +230,21 @@ const ALL_ASSETS = [
   { label: 'secret', group: 'secrets', spin: false, build: () => buildSecret({}) },
   { label: 'secret-ghost', group: 'secrets', spin: false, build: () => buildSecret({ ghost: true }) },
   { label: 'secrets-row', group: 'secrets', span: 4, spin: false, build: buildSecretRow },
+  // Fragments and access (Phase 3 step 16, D101): a gold tile carrying the
+  // boot key with its own module lit (a dark one and a light one), beside a
+  // disk and a found one as a gray ghost; the core (its reactor
+  // look) stepping through the access levels and fragments found,
+  // flashing as a level is reached; access locks asking for level 1 (a doorway)
+  // and 2 (a front exit), both panels, opening as he reaches them; the wizard's hat with 0–3 gold bands.
+  { label: 'fragment', group: 'fragments', spin: false, build: () => buildFragment({}) },
+  { label: 'fragment-ghost', group: 'fragments', spin: false, build: () => buildFragment({ ghost: true }) },
+  { label: 'fragments-row', group: 'fragments', span: 4, spin: false, build: buildFragmentRow },
+  { label: 'core', group: 'fragments', span: 2.5, spin: false, build: buildCore },
+  { label: 'access-locks', group: 'fragments', span: 5.5, spin: false, build: buildAccessLocks },
+  { label: 'wizard-access', group: 'fragments', span: 2.5, spin: false, shadow: PALETTE.magenta, build: buildWizardAccess },
   // Switches and locked exits (Phase 3 step 4, D75): a target zapped on
   // and off; a plate pressed by a crate dropping on it, then by the wizard;
-  // a room with a locked doorway (panel) and a locked front exit (bars)
+  // a room with a locked doorway and a locked front exit (both panels)
   // whose lights follow its two switches.
   { label: 'target', group: 'switches', span: 5, spin: false, build: buildTargetZap },
   { label: 'plate', group: 'switches', span: 4, spin: false, build: buildPlate },
@@ -597,6 +611,87 @@ function buildSecret(options) {
   const secret = createSecret(options);
   const asset = new Group().add(secret);
   asset.userData.update = (dt, time) => poseDisk(secret, diskMotion({ time, ghost: options.ghost }));
+  return asset;
+}
+
+/** A fragment idling. */
+function buildFragment(options) {
+  const fragment = createFragment(options);
+  const asset = new Group().add(fragment);
+  asset.userData.update = (dt, time) => poseDisk(fragment, diskMotion({ time, ghost: options.ghost }));
+  return asset;
+}
+
+/** Two fragments (a dark module, a light one: slots 0 and 11) beside a data disk and a found fragment. */
+function buildFragmentRow() {
+  const models = [createFragment({ slot: 0 }), createFragment({ slot: 11 }), createDisk(), createFragment({ slot: 36, ghost: true })];
+  const asset = new Group();
+  models.forEach((model, i) => {
+    const along = (i - 1.5) * 0.9;
+    model.position.set(along, 0, -along);
+    asset.add(model);
+  });
+  asset.userData.update = (dt, time) => models.forEach((model, i) => poseDisk(model, diskMotion({ time: time + i * 0.7, ghost: i === 3 })));
+  return asset;
+}
+
+/**
+ * A core stepping through the game (pure timing): every 2.5 s a quarter
+ * more of the fragments; a level at 16, 32 and 48 of 64 (world.json).
+ * @param {number} time seconds
+ */
+function coreStage(time) {
+  const found = Math.floor((time % 12.5) / 2.5) * 16;
+  return { level: Math.min(3, Math.floor(found / 16)), share: found / 64 };
+}
+
+/** The core, stepping through the levels. */
+function buildCore() {
+  const core = createCore({ color: defs.objects.core.color });
+  core.position.set(-0.5, 0, -0.5);
+  const asset = new Group().add(core);
+  let level = -1;
+  asset.userData.update = (dt, time) => {
+    const stage = coreStage(time);
+    if (stage.level > level && level >= 0) core.userData.flash();
+    level = stage.level;
+    core.userData.set(stage);
+    core.userData.update(dt);
+  };
+  return asset;
+}
+
+/** A room with a doorway asking for access level 1 and a front exit asking for 2; he reaches 1, then 2. */
+function buildAccessLocks() {
+  const size = [4, 3, 4];
+  const exits = [withExitDefaults({ id: 'back', side: '-z', at: 1, access: 1 }), withExitDefaults({ id: 'front', side: '+x', at: 1, access: 2 })];
+  const flows = [new ExitView(exits[0], size, PALETTE.magenta), new ExitView(exits[1], size, PALETTE.cyan)];
+  const locks = exits.map((exit) => createLock(exit, size, { color: SWITCH_COLOR, switches: 0, access: exit.access }));
+  const room = new Group().add(createRoomView({ size, blocks: {}, blockTypes: BLOCK_TYPES, exits, color: PALETTE.amber }), ...flows.map((v) => v.group), ...locks);
+  room.position.set(-2, 0, -2);
+  const asset = new Group().add(room);
+  let time = 0;
+  asset.userData.update = (dt) => {
+    time = (time + dt) % 7;
+    const level = time > 4.5 ? 2 : time > 2 ? 1 : 0;
+    for (const [i, lock] of locks.entries()) {
+      lock.userData.set({ open: level >= exits[i].access });
+      lock.userData.update(dt);
+      flows[i].group.visible = lock.userData.openness > 0.5;
+      flows[i].update(dt);
+    }
+  };
+  return asset;
+}
+
+/** The wizard with his access bands: none, then one, two and three. */
+function buildWizardAccess() {
+  const wizard = createWizard();
+  const asset = new Group().add(wizard);
+  asset.userData.update = (dt, time) => {
+    wizard.rotation.y = time * SPIN;
+    wizard.userData.setAccess(Math.floor(time / 1.5) % 4);
+  };
   return asset;
 }
 
