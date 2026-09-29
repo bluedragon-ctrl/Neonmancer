@@ -2,8 +2,7 @@
 
 How the code fits together. The vision and locked decisions are in
 [CLAUDE.md](../CLAUDE.md); reasons for decisions are in
-[decisions.md](decisions.md). Sections marked *(planned)* describe code that
-does not exist yet.
+[decisions.md](decisions.md).
 
 ## Overview
 
@@ -45,133 +44,137 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `spells.js` | What each spell does once cast (`SPELL_EFFECTS`): `castSpell(game)`, Blink and Warp, Cut & Paste |
 | `combat.js` | Bolts, enemies' charged attacks, bouncing off, touching and burning enemies; every hit on an enemy (`hitEnemy(game, …)`, `pauseEnemy(game, …)`) |
 | `switches.js` | Plates and the locked exits they open (D75): `updateSwitches(game)`, `exitOpen()`, `switchesOn()` |
-| `core/version.js` | Game and data-schema version numbers (the game's patch number comes from `tools/game-version.js`, D42) |
-| `core/loop.js` | Fixed 60 Hz timestep, step clamp, interpolation alpha |
-| `core/input.js` | Raw keys → action states once per tick |
 | `core/bindings.js` | Default key → action map (the only place raw key codes appear) |
+| `core/input.js` | Raw keys → action states once per tick |
+| `core/loop.js` | Fixed 60 Hz timestep, step clamp, interpolation alpha |
 | `core/messages.js` | `say(key, values)` terminal messages and `announce(key, values, options)` banners from any module, queued until the HUD takes them |
 | `core/rules.js` | Shared rule constants (player hitbox, max room footprint) |
+| `core/version.js` | Game and data-schema version numbers (the game's patch number comes from `tools/game-version.js`, D42) |
 | `data/bundle.js` | The only Vite-specific module: bundles `data/**/*.json`, imports dev schema errors, `DEV_SERVER` flag |
+| `data/load.js` | Validate the data files and build the content tables; throws `DataError` |
 | `data/room-data.js` | Shared reading of room data: block boxes → cells, block types with variants filled in (`resolveBlockTypes()`, D60), exit defaults, sides, exit cells |
 | `data/validate.js` | Semantic checks and readable error messages (Ajv schema pass is dev/CI) |
-| `data/load.js` | Validate the data files and build the content tables; throws `DataError` |
-| `world/grid.js` | 3D occupancy grid: a block type code per cell (`typeAt()` gives its properties), room sides with exit openings (a locked exit's opening closes with `setOpening()`), hole tiles |
-| `world/room.js` | Runtime room built fresh from data on every entry (type defaults + overrides; static block cells by type; cells of block types with a kind become room objects) |
+| `world/boot-key.js` | The boot key (D101): the 8×8 code whose modules are the 64 fragments (`BOOT_KEY`) |
 | `world/exits.js` | Which exit the wizard left through; where he arrives in the connected room |
-| `physics/collision.js` | Axis-separated AABB movement against the grid; surface below a body; box helpers (`restsOn()`, `touchesBox()`, `shoveClear()`) shared by all entities |
-| `entities/player.js` | Movement, jump, gravity, turning, pushing, integrity, invulnerability after a hit, death (hole or damage), respawn; one wizard for the whole game |
-| `entities/kinds.js` | Object kind → logic class (`OBJECT_KINDS`); the room's objects are built from it |
-| `entities/pushable.js` | Rest → slide → fall → land / plug-a-hole state machine; destructible ones break (`hit()` → `broken`) |
-| `entities/platform.js` | Moving platform: follows its path, carries riders, waits when blocked, shoves or squeezes the wizard (D46); a spiked one hurts on touch (D82) |
-| `entities/collapsing.js` | Collapsing block: solid → shake (the wizard stood on it) → gone → optional regrow once its cell is clear (D47) |
-| `entities/enemy.js` | Enemy body: steps cell by cell where its movement behavior leads (never into a hole or onto void, never into a cell another enemy is walking into), turns back when blocked, falls (mid-step too), rides platforms, pops in holes and on void; hostility, provoke, bounce state (D48); seeing the wizard, the "!", the charged attack's charge and cooldown (D78); `alarm()` when anything hits it (D81) and `route()`, a shortest walk to a column (D80); `freeze()` by Pause (D85): still, harmless and solid until it thaws |
-| `entities/switch.js` | Switches (D75): `Target` (a fixed body a bolt switches over) and `Plate` (a floor tile, no body, on while something stands on it); `SWITCH_KINDS` (pure, tested) |
-| `entities/bolt.js` | A bolt: the wizard's Zap or Pause (`Bolt.cast()`, level; a Pause bolt carries `freeze` ticks, D85) or an enemy's shot (`Bolt.shoot()`, D80; `boltDirections()`: aimed, or four ways, D81); flies in sub-steps one axis at a time, bounces off walls and objects if it has bounces left (D81), stops at the first body it may hit, block, object or room side (`BOLT` tuning) |
-| `ai/behaviors.js` | Movement behaviors by name (`BEHAVIORS`: `patrol`, `stationary`, `chase`), as enemy templates refer to them |
-| `ai/patrol.js` | Patrol: next step towards the next waypoint column, pauses at the ends, turns back; off its path it takes the enemy's route back (pure, tested) |
-| `ai/chase.js` | Chase (D78, D80): calm → chase → search → return, greedy steps towards the wizard, routes (round walls) to where it last saw him and home, searches when his Zap hits it, patrols while calm if it has a path (pure, tested) |
-| `ai/sight.js` | Rays through the grid and bodies (`castRay()`), `lineOfSight()`, `reach()` from a point to a box (pure, tested) |
-| `world/progress.js` | What the wizard has for the whole game (D71): save bits in blocks (`SAVE_BLOCKS`, `saveBit()`, `pickupBit()`), `Progress` (bits found, known spells, a block's count); blocks: spells, buffs, upgrades, fragments, secrets (D100) (pure, tested) |
-| `world/score.js` | The score (D100): points from the save bits (`scoreOf()`), the permanent pickups placed in the world (`placedBits()`) and the share found (`completion()`) (pure, tested) |
-| `entities/warp.js` | Where Blink and Warp take the wizard (D86): `warpTarget()` sweeps his box along his aim through open space, stops at blocks, objects and the room's side, lands short of enemies, reports the enemies passed (pure, tested) |
-| `entities/clip.js` | Where Cut & Paste works (D87): `aimAxis()`, `frontCell()` (the cell in front of him), `cutTarget()` (a resting crate or frozen enemy there or one up, nothing on it), `pasteCell()` (free of blocks, bodies and pickups) (pure, tested); `cutOrPaste()` (spells.js) moves things in and out of the room |
-| `entities/pickup.js` | A pickup in a room: its box, save bit, state (idle, ghost, taken) and pick-up ticks (pure, tested) |
-| `world/pickup-report.js` | The world map tool's pickup report: every permanent item by save bit, the rooms it lies in, refills per type, unknown types (pure, tested) |
+| `world/grid.js` | 3D occupancy grid: a block type code per cell (`typeAt()` gives its properties), room sides with exit openings (a locked exit's opening closes with `setOpening()`), hole tiles |
 | `world/map.js` | The world map (D66): `nearestFreeCell()` for new rooms, `roomDistances()` from the start, `mapWarnings()` (unreachable rooms, test rooms too far out, D49; authored rooms exempt, D90) (pure, tested) |
 | `world/path.js` | Shared path format: legs from `at` through `points`, `advance()` / `positionOf()` on a small path state, swept cells |
-| `render/viewport.js` | Letterbox, buffer size and 1080p-relative sizing math (pure, tested) |
-| `render/renderer.js` | WebGLRenderer, 16:9 stage + HUD overlay, DPR cap, render scale, MSAA, resize, shader precompile |
-| `render/quality.js` | Automatic quality fallback: steps MSAA, then render scale, down when frames run slow (D76; pure, tested) |
-| `render/camera.js` | Fixed isometric orthographic camera |
-| `render/neon.js` | Palette, line and face materials; line widths scaled by render height; `neonLines()`, `fadingLines()`, `shadedFaces()` builders; `disposeTree()` |
-| `render/post.js` | pmndrs postprocessing composer (bloom) |
-| `render/floor.js` | Infinite grid floor fading into darkness; hole tiles cut out via a mask texture |
-| `render/edges.js` | Visible block edges from grid occupancy; several plain types as one mass, each edge to a type (`groupedBlockEdges()`, D64); merging unit segments into runs (pure, tested) |
-| `render/exit-view.js` | Exit effect in the destination color: dashed stream into doorway tunnels, arrows gliding out of front exits |
-| `render/exit-layout.js` | Exit effect layout and timing, `EXIT_FX` tuning (pure, tested) |
-| `render/walls.js` | Back walls with doorways and dark tunnels behind them, front edges with gaps, arrow shape for front exits (pure, tested) |
-| `render/spikes.js` | The spiked object shape (D82): pyramids on a core cube inside the cell, as face triangles and outline segments, `SPIKES` tuning; pure, tested |
-| `render/marks.js` | Face-mark line patterns for object styles, including the data bits, whole (`bits`) or with holes for destructible objects (`bitsBroken`, `bitLayout()`); pure, tested |
-| `render/glass.js` | Glass faces (D96): a see-through face shader (transparent, no depth written, clipping), the data core's shrunk mark and the loose bits of a destructible glass crate (`looseBitSegments()`, tested) |
+| `world/pickup-report.js` | The world map tool's pickup report: every permanent item by save bit, the rooms it lies in, refills per type, unknown types (pure, tested) |
+| `world/progress.js` | What the wizard has for the whole game (D71): save bits in blocks (`SAVE_BLOCKS`, `saveBit()`, `pickupBit()`), `Progress` (bits found, known spells, a block's count); blocks: spells, buffs, upgrades, fragments, secrets (D100) (pure, tested) |
+| `world/room.js` | Runtime room built fresh from data on every entry (type defaults + overrides; static block cells by type; cells of block types with a kind become room objects) |
+| `world/score.js` | The score (D100): points from the save bits (`scoreOf()`), the permanent pickups placed in the world (`placedBits()`) and the share found (`completion()`) (pure, tested) |
+| `physics/collision.js` | Axis-separated AABB movement against the grid; surface below a body; box helpers (`restsOn()`, `touchesBox()`, `shoveClear()`) shared by all entities |
+| `entities/bolt.js` | A bolt: the wizard's Zap or Pause (`Bolt.cast()`, level; a Pause bolt carries `freeze` ticks, D85) or an enemy's shot (`Bolt.shoot()`, D80; `boltDirections()`: aimed, or four ways, D81); flies in sub-steps one axis at a time, bounces off walls and objects if it has bounces left (D81), stops at the first body it may hit, block, object or room side (`BOLT` tuning) |
+| `entities/clip.js` | Where Cut & Paste works (D87): `aimAxis()`, `frontCell()` (the cell in front of him), `cutTarget()` (a resting crate or frozen enemy there or one up, nothing on it), `pasteCell()` (free of blocks, bodies and pickups) (pure, tested); `cutOrPaste()` (spells.js) moves things in and out of the room |
+| `entities/collapsing.js` | Collapsing block: solid → shake (the wizard stood on it) → gone → optional regrow once its cell is clear (D47) |
+| `entities/core.js` | The central core (D101): a fixed 1×2×1 body that takes the fragments; touching it is `Game.touchCore()` (pure) |
+| `entities/enemy.js` | Enemy body: steps cell by cell where its movement behavior leads (never into a hole or onto void, never into a cell another enemy is walking into), turns back when blocked, falls (mid-step too), rides platforms, pops in holes and on void; hostility, provoke, bounce state (D48); seeing the wizard, the "!", the charged attack's charge and cooldown (D78); `alarm()` when anything hits it (D81) and `route()`, a shortest walk to a column (D80); `freeze()` by Pause (D85): still, harmless and solid until it thaws |
+| `entities/kinds.js` | Object kind → logic class (`OBJECT_KINDS`); the room's objects are built from it |
+| `entities/pickup.js` | A pickup in a room: its box, save bit, state (idle, ghost, taken) and pick-up ticks (pure, tested) |
+| `entities/platform.js` | Moving platform: follows its path, carries riders, waits when blocked, shoves or squeezes the wizard (D46); a spiked one hurts on touch (D82) |
+| `entities/player.js` | Movement, jump, gravity, turning, pushing, integrity, invulnerability after a hit, death (hole or damage), respawn; one wizard for the whole game |
+| `entities/pushable.js` | Rest → slide → fall → land / plug-a-hole state machine; destructible ones break (`hit()` → `broken`) |
+| `entities/switch.js` | Switches (D75): `Target` (a fixed body a bolt switches over) and `Plate` (a floor tile, no body, on while something stands on it); `SWITCH_KINDS` (pure, tested) |
+| `entities/warp.js` | Where Blink and Warp take the wizard (D86): `warpTarget()` sweeps his box along his aim through open space, stops at blocks, objects and the room's side, lands short of enemies, reports the enemies passed (pure, tested) |
+| `ai/behaviors.js` | Movement behaviors by name (`BEHAVIORS`: `patrol`, `stationary`, `chase`), as enemy templates refer to them |
+| `ai/chase.js` | Chase (D78, D80): calm → chase → search → return, greedy steps towards the wizard, routes (round walls) to where it last saw him and home, searches when his Zap hits it, patrols while calm if it has a path (pure, tested) |
+| `ai/patrol.js` | Patrol: next step towards the next waypoint column, pauses at the ends, turns back; off its path it takes the enemy's route back (pure, tested) |
+| `ai/sight.js` | Rays through the grid and bodies (`castRay()`), `lineOfSight()`, `reach()` from a point to a box (pure, tested) |
+| `render/alert-mark.js` | The red "!" over an enemy that noticed the wizard |
+| `render/block-fx.js` | Animated looks of hazard and void blocks (hazard face shader in room coordinates, steady edges, hazard flare; void via mist.js), `BLOCK_FX` tuning |
 | `render/break-fx.js` | Destructible object's jolt on a hit that doesn't break it, `BREAK_FX` tuning (pure, tested) |
-| `render/hole-view.js` | Hole pits: walls fading to black, rim, short fading corner lines; outline math (tested) |
-| `render/room-view.js` | Static blocks (merged edges + instanced occluder faces), back walls, styled object views |
+| `render/bug.js` | Bug model (ball, eyes colored by mood), hop pose, bounce squash, pop pixels, `BUG` tuning (pure parts tested); `BUG_MODEL` for `EnemyView` |
+| `render/camera.js` | Fixed isometric orthographic camera |
+| `render/card.js` | Upgrade card look (D95): a white expansion card, contact fingers in the upgrade's color with a key notch, a bracket, the upgrade's bit on both faces, ghost |
+| `render/chip.js` | Buff chip look (D93): chip in the stat's color, icon on the front, the buff's bit on the back, ghost |
+| `render/clip-fx.js`, `render/clip-view.js` | Cut & Paste (D87): the marquee, pixel stream and grow-in (pure, tested) and its meshes with the aim marker and paste ghost (`ClipView`, shown by `PlayerView`); `RoomScene.clip()` keeps a cut thing's view until the marquee has snapped on and adds a pasted one's |
+| `render/collapse-fx.js` | Collapsing-block look: shake, pixels breaking off, regrow, `COLLAPSE_FX` tuning (pure, tested) |
+| `render/core-view.js` | The core's reactor look (D101): crystal, pedestal, one orbit ring per access level, `CORE_FX` |
+| `render/crawler.js` | Crawler model (D83): six-legged spider, tripod gait (`crawlerFoot()`, `placeLimb()`), crouch and pawing, `CRAWLER` tuning; `CRAWLER_MODEL` |
+| `render/cron.js` | Cron model (D83), the tower's look: hex pedestal, bell, a dial holding the grid axes with four emitters where a cross's bolts leave, sweeping hand, slam, `CRON` tuning; `CRON_MODEL` |
+| `render/discharge.js` | Discharge lightning (D78): charge timing and glow (`dischargeLook()`, `chargeGlow()`), burst and arc zigzags (pure, tested), the aim line, `DISCHARGE` tuning |
+| `render/disk.js`, `render/refill.js` | Pickup looks: the data disk (bit grid showing the spell's slot, ghost, pick-up and pixel burst; motion pure, tested) and the refills |
+| `render/edges.js` | Visible block edges from grid occupancy; several plain types as one mass, each edge to a type (`groupedBlockEdges()`, D64); merging unit segments into runs (pure, tested) |
+| `render/enemy-look.js` | What every enemy model shares (D80): mood colors (`MOODS`, `eyeMood()`, `setMood()`), the eye geometry and glow, the pop burst (`popBurst()`) (pure parts tested) |
 | `render/entity-view.js` | Player (with the cast flare), pushable, platform, collapsing-block and enemy views (enemy bodies by `look`: `ENEMY_MODELS`; spell-hit flash and glitch, charge glow, "!" and discharge), glowing drop shadows, pixel bursts (derez, collapse), platform guide lines |
+| `render/exit-layout.js` | Exit effect layout and timing, `EXIT_FX` tuning (pure, tested) |
+| `render/exit-view.js` | Exit effect in the destination color: dashed stream into doorway tunnels, arrows gliding out of front exits |
+| `render/firewall-fx.js`, `render/firewall-view.js` | Firewall's ring of flames (D84): the segments (pure, tested; timing is the Shield's) and its meshes, shown by `PlayerView` |
+| `render/floor.js` | Infinite grid floor fading into darkness; hole tiles cut out via a mask texture |
+| `render/fragment.js` | Key fragment look (D101): a gold tile with the boot key dim and its own module lit, ghost |
+| `render/glass.js` | Glass faces (D96): a see-through face shader (transparent, no depth written, clipping) and the data core's shrunk mark; a destructible glass crate is an empty shell (D99) |
+| `render/hash.js` | Fixed pseudo-random numbers for pixel bursts (pure) |
+| `render/hit-fx.js` | Damage look: blinking while invulnerable, derez flicker and pixel burst, `HIT_FX` tuning (pure, tested) |
+| `render/hole-view.js` | Hole pits: walls fading to black, rim, short fading corner lines; outline math (tested) |
+| `render/holo.js` | Hologram look for characters: rim-glow material, inverted-hull outline, eyes, shared clock; sharp parts with hard edges (`sharpPart()`) |
+| `render/install-fx.js`, `render/install-view.js` | Installing a spell from a data disk (D73): the look (pure, tested) and its meshes, shown by `PlayerView` |
+| `render/interp.js` | Tick interpolation (positions, angles) and drop-shadow sizing (pure, tested) |
+| `render/jump-fx.js`, `render/jump-view.js` | The double jump's kick-off (D95): hexagonal rings in his magenta where he jumped in mid-air, the look (pure, tested) and its meshes, shown by `PlayerView` |
+| `render/marks.js` | Face-mark line patterns for object styles, including the data bits, whole (`bits`) or with holes for destructible objects (`bitsBroken`, `bitLayout()`); pure, tested |
+| `render/mist.js` | Void blocks as black mist (D99): opaque black cubes with sinking gray wisps, a patchy fog shell and a dim frame, `MIST` tuning |
+| `render/neon.js` | Palette, line and face materials; line widths scaled by render height; `neonLines()`, `fadingLines()`, `shadedFaces()` builders; `disposeTree()` |
+| `render/pause-fx.js`, `render/pause-view.js` | A frozen enemy (Pause, D85): tint and blinking (pure, tested) and its cage of corner brackets, shown by `EnemyView` |
+| `render/pickup-model.js` | A pickup's model by kind (disk, upgrade card, chip, fragment, secret or refill), for the room view and the install animation |
+| `render/pickup-view.js` | A room pickup's view: its look, idle motion, ghost, pick-up effect |
+| `render/post.js` | pmndrs postprocessing composer (bloom) |
+| `render/quality.js` | Automatic quality fallback: steps MSAA, then render scale, down when frames run slow (D76; pure, tested) |
+| `render/rails.js` | Guide line along a platform's path, `RAILS` tuning (pure, tested) |
+| `render/renderer.js` | WebGLRenderer, 16:9 stage + HUD overlay, DPR cap, render scale, MSAA, resize, shader precompile |
+| `render/room-scene.js` | The current room's views, object views by kind (`OBJECT_VIEWS`); rebuilds only the objects on a respawn |
+| `render/room-view.js` | Static blocks (merged edges + instanced occluder faces), back walls, styled object views |
+| `render/secret.js` | Secret look (D100): a thick five-pointed star in the wizard's magenta, ghost |
+| `render/sentinel.js` | Sentinel model (D78): sharp octahedron, visor eye, shards gathering like a barrel, recoil, pop pixels, `SENTINEL` tuning; `SENTINEL_MODEL` |
+| `render/shield-fx.js`, `render/shield-view.js` | The Shield's lightning ring (D73): the look (pure, tested; its flare when it blocks, D84) and its meshes, shown by `PlayerView` |
+| `render/shrine-view.js` | Backup shrine look (D97): floor tile, rune, glow, motes and rings, flare on use, `SHRINE_FX` (layout and timing pure, tested) |
+| `render/spikes.js` | The spiked object shape (D82): pyramids on a core cube inside the cell, as face triangles and outline segments, `SPIKES` tuning; pure, tested |
+| `render/switch-view.js` | Switch and locked-exit looks (`SWITCH_FX`): target and plate with their square bull's-eye, the lock's panel with one light per switch and an access lock's Roman numeral (D101); `TargetView`, `PlateView`, `LockView` (marks pure, tested) |
+| `render/viewport.js` | Letterbox, buffer size and 1080p-relative sizing math (pure, tested) |
+| `render/virus.js` | Virus model (D78): sharp tipped cube, orbiting bits, glide, charge pose, pop pixels, `VIRUS` tuning; `VIRUS_MODEL` |
+| `render/walls.js` | Back walls with doorways and dark tunnels behind them, front edges with gaps, arrow shape for front exits (pure, tested) |
+| `render/warp-fx.js`, `render/warp-view.js` | Blink's dash (drawn position and stretch, streaks, kicked-up pixels) and Warp's pixel stream and arrival flash (D86): the look (pure, tested) and its meshes, shown by `PlayerView` |
+| `render/wizard.js` | Wizard model: parts as data (pure, tested), built in the hologram look |
+| `render/worm.js` | Worm model (D83): head with antennae dragging a tail of balls, inching hump and wiggle (`wormSpine()`), rearing up, `WORM` tuning; `WORM_MODEL` |
+| `render/xray.js` | X-ray ghost of the wizard's hidden parts (reversed depth test), render orders of the ghost and the characters, `XRAY` tuning |
 | `render/zap-fx.js` | Zap look: trail zigzags, bolt flicker, cast flare, sparks, enemy hit flash and damaged glitch, `ZAP_FX` tuning (pure, tested) |
 | `render/zap-view.js` | Zap meshes: bolt, cast flare, sparks, in the Zap's cyan or an enemy bolt's color; `ZapView` keeps a room's bolts and sparks (pooled by color) |
-| `render/install-fx.js`, `render/install-view.js` | Installing a spell from a data disk (D73): the look (pure, tested) and its meshes, shown by `PlayerView` |
-| `render/shield-fx.js`, `render/shield-view.js` | The Shield's lightning ring (D73): the look (pure, tested; its flare when it blocks, D84) and its meshes, shown by `PlayerView` |
-| `render/firewall-fx.js`, `render/firewall-view.js` | Firewall's ring of flames (D84): the segments (pure, tested; timing is the Shield's) and its meshes, shown by `PlayerView` |
-| `render/warp-fx.js`, `render/warp-view.js` | Blink's dash (drawn position and stretch, streaks, kicked-up pixels) and Warp's pixel stream and arrival flash (D86): the look (pure, tested) and its meshes, shown by `PlayerView` |
-| `render/jump-fx.js`, `render/jump-view.js` | The double jump's kick-off (D95): hexagonal rings in his magenta where he jumped in mid-air, the look (pure, tested) and its meshes, shown by `PlayerView` |
-| `render/clip-fx.js`, `render/clip-view.js` | Cut & Paste (D87): the marquee, pixel stream and grow-in (pure, tested) and its meshes with the aim marker and paste ghost (`ClipView`, shown by `PlayerView`); `RoomScene.clip()` keeps a cut thing's view until the marquee has snapped on and adds a pasted one's |
-| `render/pause-fx.js`, `render/pause-view.js` | A frozen enemy (Pause, D85): tint and blinking (pure, tested) and its cage of corner brackets, shown by `EnemyView` |
-| `render/collapse-fx.js` | Collapsing-block look: shake, pixels breaking off, regrow, `COLLAPSE_FX` tuning (pure, tested) |
-| `render/enemy-look.js` | What every enemy model shares (D80): mood colors (`MOODS`, `eyeMood()`, `setMood()`), the eye geometry and glow, the pop burst (`popBurst()`) (pure parts tested) |
-| `render/bug.js` | Bug model (ball, eyes colored by mood), hop pose, bounce squash, pop pixels, `BUG` tuning (pure parts tested); `BUG_MODEL` for `EnemyView` |
-| `render/virus.js` | Virus model (D78): sharp tipped cube, orbiting bits, glide, charge pose, pop pixels, `VIRUS` tuning; `VIRUS_MODEL` |
-| `render/sentinel.js` | Sentinel model (D78): sharp octahedron, visor eye, shards gathering like a barrel, recoil, pop pixels, `SENTINEL` tuning; `SENTINEL_MODEL` |
-| `render/cron.js` | Cron model (D83), the tower's look: hex pedestal, bell, a dial holding the grid axes with four emitters where a cross's bolts leave, sweeping hand, slam, `CRON` tuning; `CRON_MODEL` |
-| `render/worm.js` | Worm model (D83): head with antennae dragging a tail of balls, inching hump and wiggle (`wormSpine()`), rearing up, `WORM` tuning; `WORM_MODEL` |
-| `render/crawler.js` | Crawler model (D83): six-legged spider, tripod gait (`crawlerFoot()`, `placeLimb()`), crouch and pawing, `CRAWLER` tuning; `CRAWLER_MODEL` |
-| `render/discharge.js` | Discharge lightning (D78): charge timing and glow (`dischargeLook()`, `chargeGlow()`), burst and arc zigzags (pure, tested), the aim line, `DISCHARGE` tuning |
-| `render/alert-mark.js` | The red "!" over an enemy that noticed the wizard |
-| `render/hash.js` | Fixed pseudo-random numbers for pixel bursts (pure) |
-| `render/rails.js` | Guide line along a platform's path, `RAILS` tuning (pure, tested) |
-| `render/block-fx.js` | Animated looks of hazard and void blocks (hazard face shader in room coordinates, steady edges, hazard flare; void via mist.js), `BLOCK_FX` tuning |
-| `render/mist.js` | Void blocks as black mist (D99): opaque black cubes with sinking gray wisps, a patchy fog shell and a dim frame, `MIST` tuning |
-| `render/hit-fx.js` | Damage look: blinking while invulnerable, derez flicker and pixel burst, `HIT_FX` tuning (pure, tested) |
-| `render/interp.js` | Tick interpolation (positions, angles) and drop-shadow sizing (pure, tested) |
-| `render/room-scene.js` | The current room's views, object views by kind (`OBJECT_VIEWS`); rebuilds only the objects on a respawn |
-| `render/wizard.js` | Wizard model: parts as data (pure, tested), built in the hologram look |
-| `render/holo.js` | Hologram look for characters: rim-glow material, inverted-hull outline, eyes, shared clock; sharp parts with hard edges (`sharpPart()`) |
-| `render/xray.js` | X-ray ghost of the wizard's hidden parts (reversed depth test), render orders of the ghost and the characters, `XRAY` tuning |
-| `ui/hud.js` | DOM overlay: integrity bar, energy bar, spell tag and Cut & Paste clipboard slot, room banner, terminal messages, fullscreen hint |
 | `ui/clip-icon.js` | SVG icons of what the clipboard holds (D87): a crate's cube, an enemy, caged while frozen (pure, tested) |
 | `ui/energy-bar.js` | Energy bar: one segment per cast filling as it recharges; flashes on a denied cast |
+| `ui/error-screen.js` | Startup error screen listing every data problem |
+| `ui/fullscreen.js` | Fullscreen toggle and when to suggest it (below 1080 physical pixels; tested) |
+| `ui/hud.js` | DOM overlay: integrity bar, backup pips, energy bar, spell tag and Cut & Paste clipboard slot, score, fragments and the boot key, room banner, terminal messages, end screen, fullscreen hint |
 | `ui/terminal.js` | Terminal message queue (typing, hold, fade) and banner timing (pure, tested) |
 | `ui/text.js` | String lookup with `{name}` values; scrambled "decoding" text for the banner (pure, tested) |
-| `ui/fullscreen.js` | Fullscreen toggle and when to suggest it (below 1080 physical pixels; tested) |
-| `ui/error-screen.js` | Startup error screen listing every data problem |
-| `tools/check-data.js` | Dev only: Ajv schema check + semantic checks over `data/` |
-| `tools/vite-plugin-data.js` | Dev only: runs the check in the dev server and fails the build on errors |
-| `tools/validate-data.js` | Dev only: `npm run validate:data` for CI |
-| `tools/run-tests.js` | `npm test`: runs `node --test` on an explicit list of `tests/*.test.js` (works on Node 20 and 22+, Windows and Linux) |
-| `tools/game-version.js` | Dev only: the game version for builds, PATCH counted from git merges since the phase tag (D42) |
-| `render/disk.js`, `render/refill.js` | Pickup looks: the data disk (bit grid showing the spell's slot, ghost, pick-up and pixel burst; motion pure, tested) and the refills |
-| `render/card.js` | Upgrade card look (D95): a white expansion card, contact fingers in the upgrade's color with a key notch, a bracket, the upgrade's bit on both faces, ghost |
-| `render/switch-view.js` | Switch and locked-exit looks (`SWITCH_FX`): target and plate with their square bull's-eye, the lock's panel or bars with one light per switch; `TargetView`, `PlateView`, `LockView` (marks pure, tested) |
-| `render/chip.js` | Buff chip look (D93): chip in the stat's color, icon on the front, the buff's bit on the back, ghost |
-| `render/secret.js` | Secret look (D100): a thick five-pointed star in the wizard's magenta, ghost |
-| `render/pickup-model.js` | A pickup's model by kind (disk, upgrade card, chip or refill), for the room view and the install animation |
-| `render/pickup-view.js` | A room pickup's view: its look, idle motion, ghost, pick-up effect |
-| `tools/showcase.html`, `tools/showcase.js` | Asset showcase page: every look on a turntable with the real renderer (also deployed) |
-| `tools/world-map.html`, `tools/world-map.js`, `tools/world-map.css` | World map tool (D66, D70, D77): every room on the map grid with its connections and checks; move, add and delete rooms, connect rooms and delete connections, then save; click to open a room in the editor; F3 opens the pickup report. Dev server only, not built |
-| `editor/editor.js` | Room editor (F2, D56, D57): opens on the current room, switches rooms and makes new ones, mouse picking on a height layer, tools, picking things, keys, rebuilding the room from the edited data, save or export |
-| `editor/room-edit.js` | One room being edited: place/erase edits, enemies, paths, exits and their connections, spawn/reset, name, biome, size (with a report), undo/redo (with the step's template changes), dirty state, cell descriptions; `roomErrors()`, `newRoom()` (pure, tested) |
-| `editor/map-edit.js` | The world as the world map tool edits it (D77): `MapEdit` moves, adds and removes rooms, connects rooms with an exit in the middle of each facing wall (`addExit()`), removes connections with both exits (`disconnectExit()`), undo, and what a save sends (`changes()`) (pure, tested) |
-| `editor/world-edit.js` | `world.json` being edited: connecting, disconnecting and renaming exits, a room's connections for its undo steps, a new room's map cell (`place()`, `unplace()`); `linkChoices()` (pure, tested) |
-| `editor/templates.js` | The editor's enemy template actions (D58, D79): save the enemy settings as a new template, move them into their template, rename, delete; hands the edited templates to the game and the panel |
-| `editor/defs-edit.js` | `defs.json` being edited: enemy templates (any of them, D79) added, updated, renamed and deleted; a step's template changes applied again for undo/redo (pure, tested) |
-| `editor/errors.js` | The error list: errors grouped by file, and the room, tool and thing each one points at (pure, tested) |
 | `editor/boxes.js` | `blocks`/`holes` entries edited cell by cell: untouched entries kept, loose cells merged greedily into boxes (pure, tested) |
+| `editor/defs-edit.js` | `defs.json` being edited: enemy templates (any of them, D79) added, updated, renamed and deleted; a step's template changes applied again for undo/redo (pure, tested) |
+| `editor/editor.js` | Room editor (F2, D56, D57): opens on the current room, switches rooms and makes new ones, mouse picking on a height layer, tools, picking things, keys, rebuilding the room from the edited data, save or export |
+| `editor/errors.js` | The error list: errors grouped by file, and the room, tool and thing each one points at (pure, tested) |
 | `editor/format-json.js` | JSON in the data files' hand-written style (pure, tested against every data file) |
+| `editor/map-edit.js` | The world as the world map tool edits it (D77): `MapEdit` moves, adds and removes rooms, connects rooms with an exit in the middle of each facing wall (`addExit()`), removes connections with both exits (`disconnectExit()`), undo, and what a save sends (`changes()`) (pure, tested) |
 | `editor/overlay.js` | Editor gizmos: layer grid, cursor, spawn and reset markers, paths, the picked thing's box, `EDITOR_LOOK` |
 | `editor/panel.js` | Editor side panel (DOM): room list, tools and their fields, layer, room settings, actions, errors |
+| `editor/room-edit.js` | One room being edited: place/erase edits, enemies, paths, exits and their connections, spawn/reset, name, biome, size (with a report), undo/redo (with the step's template changes), dirty state, cell descriptions; `roomErrors()`, `newRoom()` (pure, tested) |
 | `editor/save.js` | Posting edited files to the dev server; downloading them in a build |
-| `tools/room-save.js` | Dev only: checks edited rooms, `world.json` and `defs.json` with the rest of `data/` and writes them; deletes rooms the world map removed |
-| `tools/map-pr.bat` | Windows: opens one PR with only `data/rooms/`, `data/world.json` and `data/defs.json` changes, rooms and map together (validates first) |
-| `tools/dev.bat` | Windows: installs packages if needed and starts the dev server, opening the game (or `dev.bat map`: the world map tool, `dev.bat showcase`: the asset showcase) |
-| `tools/world-map.bat` | Windows: double-click to start the dev server on the world map tool (`dev.bat map`) |
+| `editor/templates.js` | The editor's enemy template actions (D58, D79): save the enemy settings as a new template, move them into their template, rename, delete; hands the edited templates to the game and the panel |
+| `editor/world-edit.js` | `world.json` being edited: connecting, disconnecting and renaming exits, a room's connections for its undo steps, a new room's map cell (`place()`, `unplace()`); `linkChoices()` (pure, tested) |
 | `debug/overlay.js` | Debug mode's wireframe collision boxes |
 | `debug/readout.js` | Debug mode's stats readout (rates, buffer and quality, GPU resources, actions, position) |
+| `tools/check-data.js` | Dev only: Ajv schema check + semantic checks over `data/` |
+| `tools/dev.bat` | Windows: installs packages if needed and starts the dev server, opening the game (or `dev.bat map`: the world map tool, `dev.bat showcase`: the asset showcase) |
+| `tools/game-version.js` | Dev only: the game version for builds, PATCH counted from git merges since the phase tag (D42) |
+| `tools/map-pr.bat` | Windows: opens one PR with only `data/rooms/`, `data/world.json` and `data/defs.json` changes, rooms and map together (validates first) |
+| `tools/room-save.js` | Dev only: checks edited rooms, `world.json` and `defs.json` with the rest of `data/` and writes them; deletes rooms the world map removed |
+| `tools/run-tests.js` | `npm test`: runs `node --test` on an explicit list of `tests/*.test.js` (works on Node 20 and 22+, Windows and Linux) |
+| `tools/showcase.html`, `tools/showcase.js` | Asset showcase page: every look on a turntable with the real renderer (also deployed) |
+| `tools/validate-data.js` | Dev only: `npm run validate:data` for CI |
+| `tools/vite-plugin-data.js` | Dev only: runs the check in the dev server and fails the build on errors |
+| `tools/world-map.bat` | Windows: double-click to start the dev server on the world map tool (`dev.bat map`) |
+| `tools/world-map.html`, `tools/world-map.js`, `tools/world-map.css` | World map tool (D66, D70, D77): every room on the map grid with its connections and checks; move, add and delete rooms, connect rooms and delete connections, then save; click to open a room in the editor; F3 opens the pickup report. Dev server only, not built |
 
 ## Input
 
 Key events only update a raw key set (keyed by `KeyboardEvent.code`, the
 physical key position, so WASD works on QWERTZ/AZERTY too). Once per tick
-`input.sample()` turns it into actions (`up`, `down`, `left`, `right`, `jump`,
-`cast`, `spellNext`, `spellPrev`, `pause`, `map`, `debug`, `fullscreen`); game code asks
+`input.sample()` turns it into actions (`ACTIONS` in `core/bindings.js`); game code asks
 `input.down(action)`, `input.pressed(action)` or `input.released(action)`.
 
 - A key pressed and released between two ticks still counts as down and
@@ -327,15 +330,13 @@ carries over between rooms.
 `Game.update()` returns what happened during the tick as `GameEvent`
 objects (typedef in `game.js`): `{ type, ...details }`, e.g.
 `{ type: 'push', object }`, `{ type: 'exit', exit }`, `{ type: 'hurt', amount }`.
-Types so far: `jump`, `land`, `die`, `respawn`, `push`, `plug`, `shake`,
-`collapse`, `regrow`, `pop`, `bounce`, `hurt`, `cast`, `deny`, `spell`, `zap`, `hit`,
-`break`, `exit`, `room`; enemy events (and a hurt by an enemy) carry the
+The `GameEvent` typedef lists every type; enemy events (and a hurt by an enemy) carry the
 `enemy`, object events (`hit` and `break` of a crate too) the `object`,
 `zap` the stopped `bolt`. `main.js` passes `zap` to `RoomScene.sparks()`
 and `deny` to the HUD's energy bar. Game code records them with `emit()`; events raised
 outside a tick (`hurt()` from the debug key) come out with the next tick's.
-`main.js` rebuilds the room's views on `room`; later, sound, screen shake
-and score popups read the same list (D41).
+`main.js` rebuilds the room's views on `room`; later, sound and screen
+shake read the same list (D41).
 
 ## Room reset
 
@@ -415,6 +416,7 @@ any module: say(key, values) ──► queue (core/messages.js)   e.g. game.js o
 frame: hud.setIntegrity(player.integrity, player.maxIntegrity)   cells rebuilt only on change
        hud.setEnergy(player.energy, player.maxEnergy, selected spell's cost)   segments written only on change
        hud.setSpell(player.spell, player.spells.length)   tag under the energy bar
+       hud.setBackups / setClipboard / setScore / setFragments   likewise, only on change
        hud.setHintWanted(wantsFullscreenHint(stage height, DPR, fullscreen?))
        hud.update(dt)   takeMessages() → Terminal.push(); takeAnnouncements() → last one shown;
                         Terminal.update / lines(), bannerState(t), scrambleText()

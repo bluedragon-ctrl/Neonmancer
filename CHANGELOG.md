@@ -234,6 +234,11 @@ Phase 3 — Spells and pickups.
   or the world map (`map`) or the asset showcase (`showcase`).
 
 ### Changed
+- Docs pass for the release: finished phase plans dropped from
+  docs/design.md (CHANGELOG keeps them), stale descriptions fixed (test
+  rooms, crates, collapsing blocks, HUD, data formats), a Backups section
+  added; CLAUDE.md trimmed where docs/design.md holds the detail;
+  docs/architecture.md lists every module, grouped by folder.
 - Locked front exits are the same dark door panel as locked doorways,
   instead of four retracting bars, so every locked door looks alike and
   its lights and access numeral read clearly (D101).
