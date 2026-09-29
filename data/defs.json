@@ -1,6 +1,7 @@
 {
   "$schema": "../schemas/defs.schema.json",
   "schemaVersion": 1,
+  "score": { "bit": 50, "secret": 200, "accessLevel": 500 },
   "objects": {
     "crate": { "kind": "pushable", "color": "#b6ff3c", "mark": "bits", "faces": "glass" },
     "crate_plain": { "kind": "pushable", "color": "#b6ff3c", "faces": "glass" },
@@ -163,7 +164,23 @@
       "spell": "shield",
       "color": "#cfe8ff"
     },
-    "upgrade_double_jump": { "kind": "upgrade", "upgrade": "double_jump", "slot": 2, "color": "#ff2bd6" }
+    "upgrade_double_jump": { "kind": "upgrade", "upgrade": "double_jump", "slot": 2, "color": "#ff2bd6" },
+    "secret_0": { "kind": "secret", "slot": 0 },
+    "secret_1": { "kind": "secret", "slot": 1 },
+    "secret_2": { "kind": "secret", "slot": 2 },
+    "secret_3": { "kind": "secret", "slot": 3 },
+    "secret_4": { "kind": "secret", "slot": 4 },
+    "secret_5": { "kind": "secret", "slot": 5 },
+    "secret_6": { "kind": "secret", "slot": 6 },
+    "secret_7": { "kind": "secret", "slot": 7 },
+    "secret_8": { "kind": "secret", "slot": 8 },
+    "secret_9": { "kind": "secret", "slot": 9 },
+    "secret_10": { "kind": "secret", "slot": 10 },
+    "secret_11": { "kind": "secret", "slot": 11 },
+    "secret_12": { "kind": "secret", "slot": 12 },
+    "secret_13": { "kind": "secret", "slot": 13 },
+    "secret_14": { "kind": "secret", "slot": 14 },
+    "secret_15": { "kind": "secret", "slot": 15 }
   },
   "blocks": {
     "block": { "look": "plain" },

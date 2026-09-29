@@ -85,7 +85,7 @@ export const SPELLS = {
 
 /**
  * Pickup types (D71): the data disks, both refills, a buff of each stat
- * (D93) and the three upgrades (D95), as in defs.json.
+ * (D93), the three upgrades (D95) and two secrets (D100), as in defs.json.
  * The integrity refill gives 2 here (3 in defs.json); the tests read its amount from here.
  */
 export const PICKUPS = {
@@ -105,7 +105,12 @@ export const PICKUPS = {
   upgrade_zap_plus: { kind: 'upgrade', upgrade: 'zap_plus', slot: 0, spell: 'zap', color: '#00f0ff', bounces: 3 },
   upgrade_shield_plus: { kind: 'upgrade', upgrade: 'shield_plus', slot: 1, spell: 'shield', color: '#cfe8ff' },
   upgrade_double_jump: { kind: 'upgrade', upgrade: 'double_jump', slot: 2, color: '#ff2bd6' },
+  secret_0: { kind: 'secret', slot: 0 },
+  secret_1: { kind: 'secret', slot: 1 },
 };
+
+/** Score values (D100), as in defs.json. */
+export const SCORE = { bit: 50, secret: 200, accessLevel: 500 };
 
 /** Block types, as in defs.json (D60): plain, hazard, void, collapsing and a variant that grows back after 3 s. */
 export const BLOCK_TYPES = {
@@ -150,7 +155,7 @@ export function dataFiles({
   positions = Object.fromEntries(rooms.map((room, i) => [room.id, [i, 0]])),
 }) {
   return structuredClone({
-    'defs.json': { schemaVersion: 1, objects, enemies, spells: SPELLS, pickups, blocks },
+    'defs.json': { schemaVersion: 1, score: SCORE, objects, enemies, spells: SPELLS, pickups, blocks },
     'biomes.json': { schemaVersion: 1, biomes: { home: { name: 'Home', color: '#ffb020' } } },
     'world.json': { schemaVersion: 1, start, connections, positions },
     'strings.json': STRINGS,

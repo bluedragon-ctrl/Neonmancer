@@ -157,6 +157,7 @@ function syncHud(hud, game, renderer, dt) {
   hud.setEnergy(player.energy, player.maxEnergy, player.spell !== null);
   hud.setSpell(player.spell, player.spells.length, player.spell && game.spellNameKey(player.spell));
   hud.setClipboard(player.spell === 'cut_paste', player.clipboard);
+  hud.setScore(game.score, game.completion);
   hud.setMovementMode(game.movementMode);
   hud.setHintWanted(wantsFullscreenHint(renderer.stageHeight, window.devicePixelRatio, !!document.fullscreenElement));
   hud.update(dt);

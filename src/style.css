@@ -13,6 +13,8 @@
   --cyan: #00f0ff;
   --magenta: #ff2bd6;
   --lime: #b6ff3c;
+  /* The score's gold (SCORE_COLOR in entities/pickup.js, D100). */
+  --gold: #ffe23d;
 }
 
 html,
@@ -319,6 +321,46 @@ body {
   text-shadow: 0 0 calc(6 * var(--u)) var(--magenta);
 }
 
+/* Score (D100): under the title, top right, in gold, with the share of
+   the world's permanent pickups found. A new score rolls up, flashing. */
+.hud-score {
+  position: absolute;
+  top: calc(84 * var(--u));
+  right: calc(44 * var(--u));
+  display: flex;
+  align-items: baseline;
+  gap: calc(12 * var(--u));
+  font-weight: 700;
+  color: var(--gold);
+  text-shadow: 0 0 calc(8 * var(--u)) currentColor;
+}
+
+.hud-score-label,
+.hud-score-done {
+  font-size: calc(14 * var(--u));
+  letter-spacing: 0.15em;
+}
+
+.hud-score-value {
+  font-size: calc(26 * var(--u));
+  letter-spacing: 0.08em;
+}
+
+.hud-score-done {
+  opacity: 0.75;
+}
+
+.hud-score.rolling .hud-score-value {
+  animation: score-flash 0.15s steps(1) infinite;
+}
+
+@keyframes score-flash {
+  50% {
+    color: #fff;
+    text-shadow: 0 0 calc(16 * var(--u)) var(--gold);
+  }
+}
+
 /* Banner (room names, later pickups): top center, decodes in, then fades.
    --banner is its color, set from JS (the biome color for rooms). */
 .hud-banner {
@@ -413,10 +455,10 @@ body {
   opacity: 0.7;
 }
 
-/* Debug mode readout (F3), under the brand: hidden until debug mode is on. */
+/* Debug mode readout (F3), under the score: hidden until debug mode is on. */
 .readout {
   position: absolute;
-  top: calc(84 * var(--u));
+  top: calc(126 * var(--u));
   right: calc(44 * var(--u));
   margin: 0;
   font-family: var(--terminal);

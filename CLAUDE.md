@@ -139,11 +139,11 @@ mobile/touch support, backend or accounts.
 
 ### Persistence
 - Rooms fully reset on re-entry (enemies, blocks, moving platforms).
-- Collected things stay collected: fragments, spells, scrolls, secrets,
-  and bonus bits.
+- Collected things stay collected: fragments, spells, upgrades, buffs and
+  secrets.
 - The save holds what the wizard has (fragments, spells, items), not the
-  state of rooms: no per-room data such as bonus slots or the map (D68).
-  Each room has up to 4 bonus slots.
+  state of rooms: no per-room data such as the map (D68). There are no
+  bonus bits (D100).
 - Every permanent pickup (fragments, data disks, buff items, secrets) is
   one bit in the save, found or not; there are only a limited number of
   them. A bit is the item, not a place: the same item may lie in several
@@ -210,9 +210,9 @@ more energy, faster recharge (D93): 4× +1 integrity (8 → 12), 5× +10
 energy (50 → 100) and one recharge buff (a unit every 8 ticks instead
 of 12); taking one fills the stat it raises. Each is a chip with its
 own save bit (buff slots 0–9). For the player, a pickup's shape tells
-what it is (white disk: spell, card: upgrade, chip: buff, small voxel: refill) and its
-color the HUD bar it improves (light blue integrity, yellow-green energy
-and recharge); found ones are solid gray (D94). Stronger spells, upgrades
+what it is (white disk: spell, card: upgrade, chip: buff, magenta star: secret,
+small voxel: refill) and its color the HUD bar it improves (light blue
+integrity, yellow-green energy and recharge; a secret is magenta, D100); found ones are solid gray (D94). Stronger spells, upgrades
 and buffs all let him skip easier rooms and reach areas he couldn't
 before.
 
@@ -283,8 +283,14 @@ Collect all key fragments (count defined in world data) and deliver them
 to the central core. No time limit.
 
 ### Arcade layer
-Score for enemies, pickups and secrets; floating score popups; bonus bits
-in rooms; "all bits collected" room bonus. High score stored locally.
+The score is what the wizard has, not what he did (D100): 50 points per
+permanent pickup found, 200 per secret, 500 per access level (values in
+`defs.json` `score`); nothing for enemies, refills or rooms. It is
+worked out from the save bits, never saved itself. The HUD shows it in
+gold under the title with the share of the world's permanent pickups
+found (`42%`); a new score rolls up to its value, flashing. Secrets are
+permanent pickups (a star in the wizard's magenta) hidden where it takes an extra move, with
+their own save block. No bonus bits, no high score.
 
 ### Map
 Map screen showing visited rooms, connections and fragment markers.
@@ -332,7 +338,7 @@ The engine is generic; all content lives in data.
 - `data/biomes.json` — palette, floor pattern, effect settings,
   environmental effects
 - `data/rooms/*.json` — one file per room: biome, size [x, y, z], exits,
-  objects, enemies, bonus slots, a backup shrine tile; only overrides of type defaults;
+  objects, enemies, pickups, a backup shrine tile; only overrides of type defaults;
   `"authored": true` marks the author's real game rooms (D90, §10)
 - `data/world.json` — room connections, room positions on the world map,
   start room, fragment locations, number of fragments required, core
@@ -344,7 +350,7 @@ The engine is generic; all content lives in data.
   documentation and for validation
 
 Rules:
-- Stable IDs for rooms, items, fragments, spells and bonus slots.
+- Stable IDs for rooms, items, fragments, spells and secrets.
 - Validate all data at load time with clear error messages.
 - Keep modules small and focused: renderer, input, loop, collision,
   entities, ai, spells, biomes, effects, audio, save, room loader, ui,
@@ -362,10 +368,11 @@ not critical.
 - Bit layout (one versioned module, spare bits reserved), sized for the
   world targets (D68) and finalized with the access-key step:
   format version 4, room 8, access level 8 (4 bits used, levels 0–15,
-  4 spare, D91), pickups 112 (one bit per permanent item, in
-  blocks, D71: spells 16, buffs 16, upgrades 16 (D88), fragments 64;
-  known spells, upgrades and buffs follow from them), health 4, score 20, checksum 16.
-  No per-room data (bonus slots, map).
+  4 spare, D91), pickups 128 (one bit per permanent item, in
+  blocks, D71: spells 16, buffs 16, upgrades 16 (D88), fragments 64,
+  secrets 16 (D100); known spells, upgrades and buffs follow from them),
+  health 4, checksum 16. No score field: the score follows from the
+  pickups and the access level (D100). No per-room data (map).
 - Encoding: Base32 without ambiguous characters (no 0/O, 1/I/L), shown
   in groups (e.g. `KX7M-Q4RP-...`). Input tolerates spaces, dashes and
   lowercase.
@@ -493,7 +500,7 @@ disks. Switches (pressure plates, bolt targets) unlocking exits. Viruses,
 Sentinels and Pop-ups. Shield, Firewall, Pause, Warp and Cut & Paste spells.
 A discussion step on further spells, spell upgrades and buff items; the
 first buff items; the upgrades Zap+, Shield+ and the double jump (D91, D92, D95).
-Backups (lives) and backup shrines (D92). Score, bonus bits and secrets. Fragments, access levels
+Backups (lives) and backup shrines (D92). Score and secrets (D100). Fragments, access levels
 and the core. Step plan: docs/design.md (D65).
 
 **Phase 4 (v0.4) — Guardians, saves, tooling**

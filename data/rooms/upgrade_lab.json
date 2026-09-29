@@ -22,6 +22,7 @@
     { "id": "upgrade_double_jump", "type": "upgrade_double_jump", "at": [3, 0, 9] },
     { "id": "integrity", "type": "refill_integrity", "at": [1, 0, 10] },
     { "id": "upgrade_zap_plus", "type": "upgrade_zap_plus", "at": [6, 0, 11] },
-    { "id": "upgrade_shield_plus", "type": "upgrade_shield_plus", "at": [7, 0, 11] }
+    { "id": "upgrade_shield_plus", "type": "upgrade_shield_plus", "at": [7, 0, 11] },
+    { "id": "secret_1", "type": "secret_1", "at": [5, 2, 0] }
   ]
 }

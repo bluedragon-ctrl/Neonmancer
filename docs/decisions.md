@@ -1882,3 +1882,37 @@ object colors must mean one thing each. Silver-white rooms hid plates
 and targets; violet void and a violet sector would clash. A red for
 hazards a little off the Citadel's ember orange keeps them apart there.
 Refines D44, D61 and D98.
+
+### D100 — 2026-09-29 — Score counts what the wizard has; secrets; no bonus bits
+Settles the score step (Phase 3 step 15):
+- **The score is what he has, not what he did:** 50 points per permanent
+  pickup found (a data disk, a buff chip, an upgrade card, later a
+  fragment), 200 per secret and 500 per access level (step 16). Values
+  live in `defs.json` (`score`). Nothing else scores: no points for
+  enemies, refills or clearing a room. The score is worked out from the
+  save bits (`world/score.js`) whenever it is shown, so it can never
+  disagree with them and a load can't count anything twice.
+- **The save key drops its 20-bit score field:** the score follows from
+  the pickup bits and the access level.
+- **Secrets:** a permanent pickup of kind `secret`, hidden in
+  hard-to-reach places, with its own save block of 16 bits after the
+  fragments (bits 112–127; the pickups grow from 112 to 128 bits, and
+  fragments keep all 64). Its look is a thick five-pointed star in the wizard's
+  magenta (`render/secret.js`, `SECRET_COLOR`), chosen by the author
+  over an Easter egg and a pixel "?"; a found one is a gray ghost. A
+  first draft, a gold octahedron gem, read as the energy refill. Taking one plays the install animation with
+  `> SECRET FOUND n/N` (N: the secrets placed in the world).
+- **No bonus bits:** the per-room collectibles, their slots and the "all
+  bits collected" room bonus are dropped, and so is the local high score:
+  with a fixed maximum it would only mean "found everything".
+- **HUD:** the score top right under the title, in gold, with the share
+  of the world's permanent pickups found (`42%`; items placed in no room
+  don't count). A new score rolls up to its value, flashing while it
+  rolls; there are no points popups over pickups (tried and dropped).
+**Why:** author's direction: the score should reward progress through
+the Grid (spells, upgrades, fragments, access), not room-by-room play or
+farming respawning enemies; an access level is an achievement, so it is
+worth most. Secrets keep their own bits because fragments still need all
+64. A derived score costs no save bits and needs no rule against
+counting twice. Supersedes the arcade layer of CLAUDE.md §5 and the
+bonus slots of D68.

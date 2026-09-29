@@ -1,7 +1,8 @@
 /**
  * The HUD: a DOM overlay on the stage with the integrity bar, the backups
  * under it, the energy
- * bar with the selected spell under it (and the Cut & Paste clipboard), the room name banner, terminal messages and the fullscreen hint. It only shows state;
+ * bar with the selected spell under it (and the Cut & Paste clipboard), the score
+ * and completion under the title (D100), the room name banner, terminal messages and the fullscreen hint. It only shows state;
  * main.js feeds it every frame. Sizes use --u (one pixel at 1080p), so it
  * scales with the stage. All text comes from data/strings.json; terminal
  * messages and banners arrive through say() and announce()
@@ -18,6 +19,21 @@ import { formatText, scrambleText } from './text.js';
 /** Integrity at or below this blinks as a warning. */
 const LOW_INTEGRITY = 2;
 
+/** The score rolling up to a new value (D100): seconds it takes. */
+export const SCORE_ROLL = 0.9;
+
+/**
+ * The score shown `t` seconds into a roll from `from` to `to`: fast at
+ * first, settling on the new value (ease out), whole points only.
+ * @param {number} from
+ * @param {number} to
+ * @param {number} t
+ */
+export function rollScore(from, to, t) {
+  const k = Math.min(1, Math.max(0, t / SCORE_ROLL));
+  return Math.round(from + (to - from) * (1 - (1 - k) ** 3));
+}
+
 export class Hud {
   /**
    * @param {HTMLElement} root the renderer's HUD overlay
@@ -30,6 +46,7 @@ export class Hud {
       `<div class="hud-integrity"><div class="hud-label"></div><div class="hud-cells"></div></div>
       <div class="hud-backups"><span class="hud-backups-label"></span><span class="hud-pips"></span></div>
       <div class="brand"><span class="brand-title"></span> <span class="brand-version"></span></div>
+      <div class="hud-score"><span class="hud-score-label"></span><span class="hud-score-value"></span><span class="hud-score-done"></span></div>
       <div class="hud-banner"><div class="hud-banner-title"></div><div class="hud-banner-sub"></div></div>
       <div class="hud-terminal"></div>
       <div class="hud-hint"></div>
@@ -38,6 +55,7 @@ export class Hud {
     const find = (selector) => root.querySelector(selector);
     find('.hud-label').textContent = this.text('hud.integrity');
     find('.hud-backups-label').textContent = this.text('hud.backups');
+    find('.hud-score-label').textContent = this.text('hud.score');
     find('.brand-title').textContent = this.text('game.title');
     find('.brand-version').textContent = this.text('game.version', { version: GAME_VERSION });
     find('.hud-hint').textContent = this.text('hint.fullscreen');
@@ -52,6 +70,14 @@ export class Hud {
     this.terminalBox = find('.hud-terminal');
     this.hint = find('.hud-hint');
     this.movementTag = find('.hud-movement');
+    this.scoreBox = find('.hud-score');
+    this.scoreValue = find('.hud-score-value');
+    this.scoreDone = find('.hud-score-done');
+    /** The score to show, the one shown, and the roll towards it: { from, time } or null. */
+    this.score = null;
+    this.shownScore = 0;
+    this.roll = null;
+    this.done = null;
     this.movementMode = null;
     this.energy = new EnergyBar(root, this.text('hud.energy'));
     root.insertAdjacentHTML('beforeend', '<div class="hud-spell"><span class="hud-spell-name"></span><span class="hud-clip" hidden></span><span class="hud-spell-key"></span></div>');
@@ -185,6 +211,35 @@ export class Hud {
     this.clipBox.innerHTML = icon ?? '';
   }
 
+  /**
+   * The score and how much of the world's permanent pickups he has found
+   * (D100). A new score rolls up to its value and flashes while it rolls
+   * (update()); the first one shows at once.
+   * @param {number} score
+   * @param {number} percent 0-100
+   */
+  setScore(score, percent) {
+    if (percent !== this.done) {
+      this.done = percent;
+      this.scoreDone.textContent = `${percent}%`;
+    }
+    if (score === this.score) return;
+    const first = this.score === null;
+    this.score = score;
+    if (first) {
+      this.showScore(score);
+      return;
+    }
+    this.roll = { from: this.shownScore, time: 0 };
+    this.scoreBox.classList.add('rolling');
+  }
+
+  /** @param {number} value */
+  showScore(value) {
+    this.shownScore = value;
+    this.scoreValue.textContent = String(value).padStart(6, '0');
+  }
+
   /** A cast failed for lack of energy: flash the energy bar. */
   denyEnergy() {
     this.energy.deny();
@@ -225,6 +280,16 @@ export class Hud {
   /** @param {number} dt seconds since the last frame */
   update(dt) {
     this.frame++;
+
+    if (this.roll) {
+      this.roll.time += dt;
+      const value = rollScore(this.roll.from, this.score, this.roll.time);
+      if (value !== this.shownScore) this.showScore(value);
+      if (this.roll.time >= SCORE_ROLL) {
+        this.roll = null;
+        this.scoreBox.classList.remove('rolling');
+      }
+    }
 
     for (const { key, values } of takeMessages()) this.terminal.push(this.text(key, values));
     this.terminal.update(dt);

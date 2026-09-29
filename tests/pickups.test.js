@@ -24,9 +24,9 @@ function stepOnto(game, [x, y, z]) {
   return eventTypes(game.update(idle));
 }
 
-test('save bits come in blocks: spells, buffs, upgrades, fragments; 112 in all (D71, D88)', () => {
-  assert.deepEqual(Object.keys(SAVE_BLOCKS), ['spells', 'buffs', 'upgrades', 'fragments']);
-  assert.equal(PICKUP_BITS, 112);
+test('save bits come in blocks: spells, buffs, upgrades, fragments, secrets; 128 in all (D71, D88, D100)', () => {
+  assert.deepEqual(Object.keys(SAVE_BLOCKS), ['spells', 'buffs', 'upgrades', 'fragments', 'secrets']);
+  assert.equal(PICKUP_BITS, 128);
   assert.equal(saveBit('spells', 0), 0);
   assert.equal(saveBit('buffs', 0), 16);
   assert.equal(saveBit('upgrades', 15), 47);
@@ -35,6 +35,7 @@ test('save bits come in blocks: spells, buffs, upgrades, fragments; 112 in all (
   assert.equal(pickupBit(PICKUPS.disk_zap, SPELLS), 0);
   assert.equal(pickupBit(PICKUPS.refill_energy, SPELLS), null, 'refills have no bit');
   assert.equal(pickupBit(PICKUPS.buff_recharge, SPELLS), 25, 'a buff: its slot in the buff block');
+  assert.equal(pickupBit(PICKUPS.secret_1, SPELLS), 113, 'a secret: its slot in the secrets block, after the fragments');
 });
 
 test('Progress remembers bits found; known spells follow from the disks, in slot order', () => {

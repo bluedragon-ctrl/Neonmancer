@@ -462,9 +462,10 @@ enemies).
   the energy bar and the spell tag in the HUD (both hidden until then:
   energy is only for spells; see Zap and energy).
 - **Save bits in blocks:** spells 0–15, buffs 16–31, upgrades 32–47
-  (spell upgrades, D88), fragments 48–111; 112 in all. The index comes
+  (spell upgrades, D88), fragments 48–111, secrets 112–127 (D100); 128 in
+  all. The index comes
   from what the item unlocks: a spell's `slot` in `defs.json` for its
-  disk (Zap: 0); later a buff's or an upgrade's slot on its pickup type, and a
+  disk (Zap: 0); a buff's, an upgrade's or a secret's slot on its pickup type, and a
   fragment's number on the placement. A bit is the item, not the place:
   the same disk may lie in several rooms, and finding one grays out all.
 - **Progress** (`src/world/progress.js`) holds the bits found for the
@@ -825,6 +826,33 @@ bit in the upgrade block (bits 32–47); the engine knows three.
   Zap+ upgrades Zap and has `bounces`, Shield+ upgrades the Shield,
   the double jump no spell.
 - **Test room:** Upgrade Lab (see Test rooms).
+
+## Score and secrets
+
+Phase 3 step 15 (D100). The score is what the wizard has, not what he did.
+- **Points** (`defs.json` `score`): 50 per permanent pickup found (a
+  disk, a buff chip, an upgrade card, later a fragment), 200 per secret,
+  500 per access level (step 16). Enemies, refills and rooms score
+  nothing. `world/score.js` works it out from `Progress` whenever it is
+  shown (`Game.score`), so it is never saved: the save key has no score
+  field, and a loaded save scores exactly what it holds.
+- **Completion:** the share of the permanent pickups placed in the world
+  that he found, rounded down (`Game.completion`); items defined but
+  placed in no room don't count.
+- **Secrets:** `{ "kind": "secret", "slot" }`, a bit in the secrets block
+  (slots unique, checked by validation); `defs.json` defines all 16
+  (`secret_0`–`secret_15`), so the room editor offers each one. The look is a thick five-pointed star
+  in the wizard's magenta (`render/secret.js`, `SECRET_COLOR` `#ff2bd6`),
+  a gray ghost once found. Taking one plays the install animation with the
+  banner `SECRET FOUND / n / N` and `> SECRET FOUND n/N` (N: the secrets
+  placed in the world). They lie where it takes an extra move: on the
+  Crawl Space tower (the peaceful bouncy bug lifts the wizard there) and
+  on the Upgrade Lab wall (the double jump).
+- **HUD:** `SCORE 000250 33%` in gold under the title, top right; a new
+  score rolls up to its value in 0.9 s (`rollScore()` in `ui/hud.js`,
+  easing out), flashing while it rolls. No popups over pickups.
+- **Dropped:** bonus bits, their room slots, the "all bits collected"
+  bonus and the local high score.
 
 ## Spell roster
 
@@ -1468,7 +1496,7 @@ the author; the answers are recorded as decisions before the code lands.
 | 12 | `feat/buff-items` | The first buff items from the roster: pickups that raise the wizard's maximum integrity or energy, or his recharge rate, kept in `Progress`; HUD bars grow with them. The jump is an upgrade now (step 13, D92). |
 | 13 | `feat/upgrades` | Upgrades in the upgrades save block (bits 32–47, D88, D91, D92): an upgrade card that, once found, replaces its base spell in the Tab cycle (ZAP becomes ZAP+). Zap+: the bolt bounces off walls (the bolt bounces of D81), reaching targets round corners. Shield+: the Shield reflects bolts back at the shooter. The jump upgrade: a double jump or a higher jump (D92). Showcase, editor, validation, a test room. |
 | 14 | `feat/backups` | Backups, the wizard's lives (D92, D97): 8 on the Player, shown as pips under the integrity bar; each death uses one; with none left, `> SYSTEM CRASH` reboots him on the backup shrine nearest on the world map, keeping everything found (no rollback). A backup shrine is a floor tile in room data (`shrine`): stepping onto it refills integrity, energy and backups (`> BACKUP SAVED`). Shrine and pips in the wizard's magenta; showcase, editor tool, validation, shrines in three test rooms. |
-| 15 | `feat/score-and-bits` | Starts with a short discussion (below). Then: bonus bits (up to 4 slots per room), secrets, score for bits, enemies, secrets and pickups, floating score popups, HUD score, the "all bits collected" room bonus, local high score. |
+| 15 | `feat/score-and-secrets` | Score from what the wizard has (D100): 50 per permanent pickup, 200 per secret, 500 per access level; secrets (a magenta star, their own 16-bit save block); HUD score rolling up, and completion. No bonus bits, no high score. |
 | 16 | `feat/fragments-and-access` | Fragment pickups, the fragment count and locations in `world.json`, the central core that takes them, `> FRAGMENT n/N GET!`, found fragments grayed out on revisits (D67), access levels that lock areas until the wizard's level is high enough (locked exits from step 4), the wizard's access level kept in `Progress` (its own 8-bit field in the save key, D91), and the end of the game. |
 | 17 | `chore/release-0.3.0` | Docs pass, CHANGELOG, `v0.3.0` tag and GitHub Release (CLAUDE.md §10) |
 
@@ -1491,10 +1519,9 @@ Open questions, settled at the start of their step:
   clipboard (Cut & Paste) or drop it; where the wizard stands after a
   restore; the Boot Sector start as a shrine or not; the test rooms'
   shrines.
-- **15 Score and bits:** the world targets are set (D68); what is left is
-  how many bits a room typically has, score values, and what counts as a
-  secret. Bonus bits are not saved (D68): are they back after a load, and
-  if so, how does saved score avoid counting them twice?
+- **15 Score and secrets:** settled (D100). Superseded questions: how
+  many bonus bits a room has; whether they come back after a load and how
+  a saved score avoids counting them twice.
 - **16 Fragments and access:** fragment count (in the world and the test
   world); the access level is stored on its own (D91), not counted from
   fragment bits: what raises it (delivering fragments to the core, or

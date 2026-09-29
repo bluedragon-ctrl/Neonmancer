@@ -4,11 +4,22 @@
   "title": "Type definitions (data/defs.json)",
   "description": "Object types with their defaults, enemy templates, spells, and the look and rules of the special static block types.",
   "type": "object",
-  "required": ["schemaVersion", "objects", "spells", "blocks"],
+  "required": ["schemaVersion", "score", "objects", "spells", "blocks"],
   "additionalProperties": false,
   "properties": {
     "$schema": { "type": "string" },
     "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+    "score": {
+      "type": "object",
+      "description": "Points (D100): the score is what the wizard has, worked out from his save bits, never saved itself.",
+      "required": ["bit", "secret", "accessLevel"],
+      "additionalProperties": false,
+      "properties": {
+        "bit": { "type": "integer", "minimum": 0, "description": "Each permanent pickup found (data disk, buff, upgrade, fragment)." },
+        "secret": { "type": "integer", "minimum": 0, "description": "Each secret found (instead of bit)." },
+        "accessLevel": { "type": "integer", "minimum": 0, "description": "Each access level reached." }
+      }
+    },
     "objects": {
       "type": "object",
       "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
@@ -126,7 +137,7 @@
     },
     "pickups": {
       "type": "object",
-      "description": "Pickup types (D71), by id. Permanent ones (data disks, buffs, upgrades) set a save bit and stay found; temporary ones (refills) come back with the room.",
+      "description": "Pickup types (D71), by id. Permanent ones (data disks, buffs, upgrades, secrets) set a save bit and stay found; temporary ones (refills) come back with the room.",
       "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
       "additionalProperties": { "$ref": "#/$defs/pickupType" }
     },
@@ -154,7 +165,7 @@
       "type": "object",
       "required": ["kind"],
       "properties": {
-        "kind": { "enum": ["disk", "refill", "buff", "upgrade"], "description": "disk: teaches a spell (permanent); refill: restores integrity or energy (temporary); buff: makes the wizard stronger for good (permanent); upgrade: improves a spell or his jump for good (permanent, D95)." }
+        "kind": { "enum": ["disk", "refill", "buff", "upgrade", "secret"], "description": "disk: teaches a spell (permanent); refill: restores integrity or energy (temporary); buff: makes the wizard stronger for good (permanent); upgrade: improves a spell or his jump for good (permanent, D95); secret: a hidden gem worth extra score (permanent, D100)." }
       },
       "allOf": [
         {
@@ -205,6 +216,17 @@
               "spell": { "$ref": "common.schema.json#/$defs/id", "description": "The spell it upgrades (defs.json spells): once found, the spell goes by the upgrade's name in the Tab cycle (ZAP+). None for the jump." },
               "color": { "$ref": "common.schema.json#/$defs/color", "description": "Its card's contact fingers and lit bit, its install animation and banner; the Shield+ ring too." },
               "bounces": { "type": "integer", "minimum": 1, "maximum": 8, "description": "zap_plus: how often the bolt bounces off blocks and the room's sides." }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "secret" } } },
+          "then": {
+            "required": ["slot"],
+            "additionalProperties": false,
+            "properties": {
+              "kind": true,
+              "slot": { "$ref": "#/$defs/slot", "description": "Its bit in the save's secrets block (D100); unique among secrets." }
             }
           }
         }

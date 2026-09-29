@@ -14,13 +14,14 @@
  * it has. A block's index comes from what the item unlocks: a spell's
  * `slot` (defs.json spells) for its data disk; a buff's or an upgrade's
  * `slot` on its pickup type (D88, D95); later a fragment's number on the
- * placement.
+ * placement; a secret's `slot` on its pickup type (D100).
  */
 export const SAVE_BLOCKS = {
   spells: { start: 0, size: 16 },
   buffs: { start: 16, size: 16 },
   upgrades: { start: 32, size: 16 },
   fragments: { start: 48, size: 64 },
+  secrets: { start: 112, size: 16 },
 };
 
 /** Bits for permanent pickups in all. */
@@ -47,6 +48,7 @@ export function pickupBit(type, spells) {
   if (type.kind === 'disk') return saveBit('spells', spells[type.spell].slot);
   if (type.kind === 'buff') return saveBit('buffs', type.slot);
   if (type.kind === 'upgrade') return saveBit('upgrades', type.slot);
+  if (type.kind === 'secret') return saveBit('secrets', type.slot);
   return null;
 }
 
@@ -71,6 +73,17 @@ export class Progress {
     if (this.found.has(bit)) return false;
     this.found.add(bit);
     return true;
+  }
+
+  /**
+   * How many of the bits in a block he has found.
+   * @param {keyof SAVE_BLOCKS} block
+   */
+  count(block) {
+    const { start, size } = SAVE_BLOCKS[block];
+    let n = 0;
+    for (const bit of this.found) if (bit >= start && bit < start + size) n++;
+    return n;
   }
 
   /**
