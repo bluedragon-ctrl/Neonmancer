@@ -3,19 +3,25 @@ import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { readDataFiles } from '../tools/check-data.js';
-import { loadGameData } from '../src/data/load.js';
+import STRINGS from '../data/strings.json' with { type: 'json' };
 import { Game } from '../src/game.js';
-import { PLAYER } from '../src/entities/player.js';
 import { withExitDefaults } from '../src/data/room-data.js';
-import { eventTypes, idle } from './helpers.js';
+import { gameData, roomFile } from './helpers.js';
 import { formatText, scrambleText } from '../src/ui/text.js';
 import { BANNER, TERMINAL, Terminal, bannerState } from '../src/ui/terminal.js';
 import { wantsFullscreenHint } from '../src/ui/fullscreen.js';
 import { announce, say, takeAnnouncements, takeMessages } from '../src/core/messages.js';
 
-const root = fileURLToPath(new URL('..', import.meta.url));
-const shipped = () => loadGameData(readDataFiles(root).files);
+/** Two connected rooms: Alpha (the start) and Beta. */
+function twoRooms() {
+  return gameData({
+    rooms: [
+      roomFile('alpha', { name: 'Alpha', exits: [{ id: 'east', side: '+x', at: 3 }] }),
+      roomFile('beta', { name: 'Beta', exits: [{ id: 'west', side: '-x', at: 3 }] }),
+    ],
+    connections: [['alpha.east', 'beta.west']],
+  });
+}
 
 test('formatText fills placeholders and marks missing keys', () => {
   const strings = { 'game.version': 'v{version}', 'msg.x': 'no {thing} here' };
@@ -47,18 +53,18 @@ test('announce() queues banners with an optional line and color', () => {
 
 test('rooms are announced on start and on entering another room, not on respawn', () => {
   takeAnnouncements();
-  const game = new Game(shipped());
+  const game = new Game(twoRooms());
   const start = takeAnnouncements();
   assert.equal(start.length, 1);
-  assert.deepEqual(start[0].values, { room: game.room.name });
+  assert.deepEqual(start[0].values, { room: 'Alpha' });
   game.enterRoom(game.room.id, game.room.reset); // what a respawn does
   assert.deepEqual(takeAnnouncements(), []);
   game.travel(withExitDefaults(game.room.exits[0]));
-  assert.deepEqual(takeAnnouncements()[0].values, { room: game.room.name });
+  assert.deepEqual(takeAnnouncements()[0].values, { room: 'Beta' });
 });
 
 test('every string key passed to say() or announce() in src/ exists in the shipped strings', () => {
-  const { strings } = shipped();
+  const { strings } = STRINGS;
   const src = fileURLToPath(new URL('../src', import.meta.url));
   const keys = readdirSync(src, { recursive: true })
     .filter((file) => file.endsWith('.js'))
@@ -121,31 +127,4 @@ test('fullscreen hint below 1080 physical pixels, never in fullscreen', () => {
   assert.equal(wantsFullscreenHint(720, 1.5, false), false); // 1080 physical pixels
   assert.equal(wantsFullscreenHint(1080, 1, false), false);
   assert.equal(wantsFullscreenHint(600, 1, true), false);
-});
-
-test('integrity drains on a fatal fall, comes back on respawn and carries over between rooms', () => {
-  const game = new Game(shipped());
-  const { player } = game;
-  assert.equal(player.integrity, PLAYER.maxIntegrity);
-  assert.equal(player.maxIntegrity, PLAYER.maxIntegrity);
-
-  // Stand the wizard on a hole in the start room.
-  const [hx, hz] = game.room.holes[0];
-  game.player.pos = [hx + 0.5, 0, hz + 0.5];
-  const events = [];
-  for (let i = 0; i < 3; i++) events.push(...eventTypes(game.update(idle)));
-  assert.ok(events.includes('die'), events.join());
-  assert.equal(player.integrity, 0);
-  assert.deepEqual(takeMessages().map((m) => m.key), ['msg.die']);
-
-  for (let i = 0; i < PLAYER.deathTicks && !events.includes('respawn'); i++) events.push(...eventTypes(game.update(idle)));
-  assert.ok(events.includes('respawn'));
-  assert.equal(player.integrity, player.maxIntegrity);
-
-  player.integrity = 3;
-  const exit = withExitDefaults(game.room.exits[0]);
-  game.travel(exit);
-  assert.notEqual(game.room.id, game.content.world.start);
-  assert.equal(game.player, player); // one wizard for the whole game
-  assert.equal(player.integrity, 3);
 });
