@@ -126,7 +126,7 @@
     },
     "pickups": {
       "type": "object",
-      "description": "Pickup types (D71), by id. Permanent ones (data disks) set a save bit and stay found; temporary ones (refills) come back with the room.",
+      "description": "Pickup types (D71), by id. Permanent ones (data disks, buffs, upgrades) set a save bit and stay found; temporary ones (refills) come back with the room.",
       "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
       "additionalProperties": { "$ref": "#/$defs/pickupType" }
     },
@@ -154,7 +154,7 @@
       "type": "object",
       "required": ["kind"],
       "properties": {
-        "kind": { "enum": ["disk", "refill", "buff"], "description": "disk: teaches a spell (permanent); refill: restores integrity or energy (temporary); buff: makes the wizard stronger for good (permanent)." }
+        "kind": { "enum": ["disk", "refill", "buff", "upgrade"], "description": "disk: teaches a spell (permanent); refill: restores integrity or energy (temporary); buff: makes the wizard stronger for good (permanent); upgrade: improves a spell or his jump for good (permanent, D95)." }
       },
       "allOf": [
         {
@@ -190,6 +190,21 @@
               "slot": { "$ref": "#/$defs/slot", "description": "Its bit in the save's buff block (D71), also the lit bit on its chip; unique among buffs." },
               "stat": { "enum": ["integrity", "energy", "recharge"], "description": "What it raises: maximum integrity, maximum energy, or the recharge rate (its look and color follow)." },
               "amount": { "type": "integer", "minimum": 1, "maximum": 99, "description": "How much: integrity or energy added to the maximum; for recharge, ticks fewer per unit of energy recharged." }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "upgrade" } } },
+          "then": {
+            "required": ["upgrade", "slot", "color"],
+            "additionalProperties": false,
+            "properties": {
+              "kind": true,
+              "upgrade": { "enum": ["zap_plus", "mirror", "double_jump"], "description": "What it does, built into the engine (D95): zap_plus, the Zap bolt bounces off blocks and walls; mirror, the Shield reflects bolts; double_jump, a second jump in mid-air. One pickup type per upgrade." },
+              "slot": { "$ref": "#/$defs/slot", "description": "Its bit in the save's upgrade block (D88), also the lit bit on its disk; unique among upgrades." },
+              "spell": { "$ref": "common.schema.json#/$defs/id", "description": "The spell it upgrades (defs.json spells): once found, the spell goes by the upgrade's name in the Tab cycle (ZAP+). None for the jump." },
+              "color": { "$ref": "common.schema.json#/$defs/color", "description": "Its disk's lit bit and badge, its install animation and banner; the Mirror's ring too." },
+              "bounces": { "type": "integer", "minimum": 1, "maximum": 8, "description": "zap_plus: how often the bolt bounces off blocks and the room's sides." }
             }
           }
         }

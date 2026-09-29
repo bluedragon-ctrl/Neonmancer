@@ -406,12 +406,13 @@ function toggleReport(open = !state.report) {
   drawReport();
 }
 
-/** An item's name and color: a spell's (strings.json, defs.json) or a buff's. */
+/** An item's name and color: a spell's (strings.json, defs.json), a buff's or an upgrade's. */
 function itemLook(type) {
   const defs = DATA_FILES['defs.json'];
   const strings = DATA_FILES['strings.json']?.strings ?? {};
   const data = defs.pickups[type];
   if (data.kind === 'disk') return { name: strings[`spell.${data.spell}`] ?? data.spell, color: defs.spells[data.spell].color };
+  if (data.kind === 'upgrade') return { name: strings[`upgrade.${data.upgrade}`] ?? data.upgrade, color: data.color };
   if (data.kind === 'buff') {
     const stat = strings[`buff.${data.stat}`] ?? data.stat;
     return { name: data.stat === 'recharge' ? stat : `${stat} +${data.amount}`, color: BUFF_COLORS[data.stat] };

@@ -124,9 +124,13 @@ function validateTemplates(enemies, report) {
   }
 }
 
+/** The spell each upgrade improves (D95); the jump improves none. */
+const UPGRADE_SPELLS = { zap_plus: 'zap', mirror: 'shield', double_jump: null };
+
 /**
- * Spell slots and buff slots are unique (each is a save bit, D71), a data
- * disk names a known spell, and pickup type ids differ from object type ids
+ * Spell, buff and upgrade slots are unique (each is a save bit, D71), a
+ * data disk or a spell upgrade names a known spell, each upgrade has one
+ * pickup type (D95), and pickup type ids differ from object type ids
  * (the room editor lists both under its Object tool). All buffs together
  * keep the wizard within the save key's integrity field and recharging at
  * least one unit a tick.
@@ -142,9 +146,25 @@ function validateSpellsAndPickups(spells, pickupTypes, objectTypes, report) {
   const buffSlots = new Map();
   /** All buffs of each stat together. */
   const total = { integrity: 0, energy: 0, recharge: 0 };
+  /** upgrade slot → pickup type id, and upgrade → pickup type id */
+  const upgradeSlots = new Map();
+  const upgrades = new Map();
   for (const [id, type] of Object.entries(pickupTypes)) {
-    if (type.kind === 'disk' && !spells[type.spell]) report('defs.json', `pickups.${id}.spell`, `unknown spell "${type.spell}"`);
+    if ((type.kind === 'disk' || type.kind === 'upgrade') && type.spell !== undefined && !spells[type.spell]) {
+      report('defs.json', `pickups.${id}.spell`, `unknown spell "${type.spell}"`);
+    }
     if (objectTypes[id]) report('defs.json', `pickups.${id}`, `"${id}" is an object type too`);
+    if (type.kind === 'upgrade') {
+      if (upgradeSlots.has(type.slot)) report('defs.json', `pickups.${id}.slot`, `upgrade slot ${type.slot} is taken by "${upgradeSlots.get(type.slot)}"`);
+      else upgradeSlots.set(type.slot, id);
+      if (upgrades.has(type.upgrade)) report('defs.json', `pickups.${id}.upgrade`, `upgrade "${type.upgrade}" is "${upgrades.get(type.upgrade)}" already`);
+      else upgrades.set(type.upgrade, id);
+      const needsSpell = UPGRADE_SPELLS[type.upgrade];
+      if (needsSpell && type.spell !== needsSpell) report('defs.json', `pickups.${id}.spell`, `${type.upgrade} upgrades "${needsSpell}"`);
+      if (!needsSpell && type.spell !== undefined) report('defs.json', `pickups.${id}.spell`, `${type.upgrade} upgrades no spell`);
+      if (type.bounces !== undefined && type.upgrade !== 'zap_plus') report('defs.json', `pickups.${id}.bounces`, 'only zap_plus bounces');
+      if (type.upgrade === 'zap_plus' && type.bounces === undefined) report('defs.json', `pickups.${id}`, 'missing bounces');
+    }
     if (type.kind !== 'buff') continue;
     if (buffSlots.has(type.slot)) report('defs.json', `pickups.${id}.slot`, `buff slot ${type.slot} is taken by "${buffSlots.get(type.slot)}"`);
     else buffSlots.set(type.slot, id);

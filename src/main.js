@@ -152,7 +152,7 @@ function syncHud(hud, game, renderer, dt) {
   hud.setIntegrity(player.integrity, player.maxIntegrity);
   // No energy bar before he knows a spell.
   hud.setEnergy(player.energy, player.maxEnergy, player.spell !== null);
-  hud.setSpell(player.spell, player.spells.length);
+  hud.setSpell(player.spell, player.spells.length, player.spell && game.spellNameKey(player.spell));
   hud.setClipboard(player.spell === 'cut_paste', player.clipboard);
   hud.setMovementMode(game.movementMode);
   hud.setHintWanted(wantsFullscreenHint(renderer.stageHeight, window.devicePixelRatio, !!document.fullscreenElement));

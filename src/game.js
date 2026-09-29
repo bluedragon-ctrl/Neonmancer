@@ -34,7 +34,7 @@ export const TRANSITION = {
  * Something that happened, for views, the HUD and (later) sound. Returned
  * by Game.update() for the tick it happened in.
  * @typedef {object} GameEvent
- * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'|'warp'|'fizzle'|'cut'|'paste'} type
+ * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'|'warp'|'fizzle'|'cut'|'paste'|'airjump'|'reflect'} type
  * @property {string} [spell] the spell cast, failed, fizzled (nowhere to
  *   go, energy kept) or selected (cast, deny, fizzle, spell); the teleport (warp)
  * @property {number[]} [from] where a Blink or Warp started (warp)
@@ -53,7 +53,8 @@ export const TRANSITION = {
  *   discharge (a burst, an arc or bolts fired); cut or pasted) or that
  *   hurt the wizard (hurt)
  * @property {Bolt} [bolt] the bolt that stopped (zap: the wizard's or an
- *   enemy's), where it is now, or that bounced (ricochet)
+ *   enemy's), where it is now, that bounced (ricochet) or that his Mirror
+ *   sent back (reflect, D95)
  * @property {number[]} [pos] where a bolt bounced (ricochet)
  * @property {number[]} [dir] the way it came in (ricochet)
  * @property {number} [amount] integrity lost (hurt)
@@ -85,6 +86,7 @@ export class Game {
     /** Things pasted so far, for their ids. */
     this.pastes = 0;
     this.learnSpells();
+    this.applyUpgrades();
     // A loaded save starts him buffed and full.
     this.applyBuffs();
     this.player.integrity = this.player.maxIntegrity;
@@ -331,7 +333,8 @@ export class Game {
   /**
    * The wizard takes the pickups he touches (D71), if they are any use: a
    * data disk installs its spell for good (with an install animation
-   * on him, D73); a buff chip makes him stronger for good (D93); a refill restores integrity or
+   * on him, D73); a buff chip makes him stronger for good (D93), an
+   * upgrade card improves a spell or his jump (D95); a refill restores integrity or
    * energy, and is left lying while that is full. Reported as 'pickup'.
    */
   takePickups() {
@@ -376,7 +379,7 @@ export class Game {
 
   /**
    * What a permanent pickup gives him, and how it is announced.
-   * @param {object} data the pickup (buildRoom()): a data disk or a buff chip
+   * @param {object} data the pickup (buildRoom()): a data disk, a buff chip or an upgrade card
    * @returns {{ banner: { key: string, values: object, options: object }, message: { key: string, values: object } }}
    */
   gain(data) {
@@ -391,6 +394,16 @@ export class Game {
       return {
         banner: { key: 'banner.buff', values, options: { sub: 'banner.buffSub', color: BUFF_COLORS[data.stat] } },
         message: { key: 'msg.buffInstalled', values },
+      };
+    }
+    if (data.kind === 'upgrade') {
+      this.applyUpgrades();
+      // A spell upgrade selects the spell it improves, if he knows it.
+      if (data.spell && player.spells.includes(data.spell)) player.spell = data.spell;
+      const values = { upgrade: this.content.strings[`upgrade.${data.upgrade}`] ?? data.upgrade.toUpperCase() };
+      return {
+        banner: { key: 'banner.upgrade', values, options: { sub: 'banner.upgradeSub', color: data.color } },
+        message: { key: 'msg.upgradeInstalled', values },
       };
     }
     this.learnSpells(data.spell);
@@ -414,6 +427,27 @@ export class Game {
     player.energyTicks = Math.max(1, PLAYER.energyTicks - buffs.recharge);
     player.integrity = Math.min(player.integrity, player.maxIntegrity);
     player.energy = Math.min(player.energy, player.maxEnergy);
+  }
+
+  /**
+   * Give the wizard the upgrades found (D95): Zap+ and the Mirror change
+   * how those spells work when cast (spells.js), the double jump gives him
+   * a jump in mid-air.
+   */
+  applyUpgrades() {
+    const { player } = this;
+    player.upgrades = this.progress.upgrades(this.content.pickupTypes);
+    player.airJumps = player.upgrades.has('double_jump') ? 1 : 0;
+  }
+
+  /**
+   * The HUD name of a spell (a strings.json key): an upgrade found for it
+   * replaces it in the Tab cycle (D88, D95), so ZAP shows as ZAP+.
+   * @param {string} spell
+   */
+  spellNameKey(spell) {
+    for (const [upgrade, type] of this.player.upgrades) if (type.spell === spell) return `upgrade.${upgrade}`;
+    return `spell.${spell}`;
   }
 
   /**

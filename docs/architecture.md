@@ -101,6 +101,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/shield-fx.js`, `render/shield-view.js` | The Shield's lightning ring (D73): the look (pure, tested; its flare when it blocks, D84) and its meshes, shown by `PlayerView` |
 | `render/firewall-fx.js`, `render/firewall-view.js` | Firewall's ring of flames (D84): the segments (pure, tested; timing is the Shield's) and its meshes, shown by `PlayerView` |
 | `render/warp-fx.js`, `render/warp-view.js` | Blink's dash (drawn position and stretch, streaks, kicked-up pixels) and Warp's pixel stream and arrival flash (D86): the look (pure, tested) and its meshes, shown by `PlayerView` |
+| `render/jump-fx.js`, `render/jump-view.js` | The double jump's kick-off (D95): hexagonal rings in his magenta where he jumped in mid-air, the look (pure, tested) and its meshes, shown by `PlayerView` |
 | `render/clip-fx.js`, `render/clip-view.js` | Cut & Paste (D87): the marquee, pixel stream and grow-in (pure, tested) and its meshes with the aim marker and paste ghost (`ClipView`, shown by `PlayerView`); `RoomScene.clip()` keeps a cut thing's view until the marquee has snapped on and adds a pasted one's |
 | `render/pause-fx.js`, `render/pause-view.js` | A frozen enemy (Pause, D85): tint and blinking (pure, tested) and its cage of corner brackets, shown by `EnemyView` |
 | `render/collapse-fx.js` | Collapsing-block look: shake, pixels breaking off, regrow, `COLLAPSE_FX` tuning (pure, tested) |
@@ -135,9 +136,10 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `tools/run-tests.js` | `npm test`: runs `node --test` on an explicit list of `tests/*.test.js` (works on Node 20 and 22+, Windows and Linux) |
 | `tools/game-version.js` | Dev only: the game version for builds, PATCH counted from git merges since the phase tag (D42) |
 | `render/disk.js`, `render/refill.js` | Pickup looks: the data disk (bit grid showing the spell's slot, ghost, pick-up and pixel burst; motion pure, tested) and the refills |
+| `render/card.js` | Upgrade card look (D95): a white expansion card, contact fingers in the upgrade's color with a key notch, a bracket, the upgrade's bit on both faces, ghost |
 | `render/switch-view.js` | Switch and locked-exit looks (`SWITCH_FX`): target and plate with their square bull's-eye, the lock's panel or bars with one light per switch; `TargetView`, `PlateView`, `LockView` (marks pure, tested) |
 | `render/chip.js` | Buff chip look (D93): chip in the stat's color, icon on the front, the buff's bit on the back, ghost |
-| `render/pickup-model.js` | A pickup's model by kind (disk, chip or refill), for the room view and the install animation |
+| `render/pickup-model.js` | A pickup's model by kind (disk, upgrade card, chip or refill), for the room view and the install animation |
 | `render/pickup-view.js` | A room pickup's view: its look, idle motion, ghost, pick-up effect |
 | `tools/showcase.html`, `tools/showcase.js` | Asset showcase page: every look on a turntable with the real renderer (also deployed) |
 | `tools/world-map.html`, `tools/world-map.js`, `tools/world-map.css` | World map tool (D66, D70, D77): every room on the map grid with its connections and checks; move, add and delete rooms, connect rooms and delete connections, then save; click to open a room in the editor; F3 opens the pickup report. Dev server only, not built |
@@ -305,7 +307,10 @@ or four for a `cross`, D81), with the enemy as their `owner`: a bolt
 stops at the wizard (`hurt()` with the enemy), another enemy (or, after
 a bounce, its own; `hit(damage, 'bolt')`), a block, an object (unharmed)
 or the room side; a bouncing one glances off blocks and objects first
-(`ricochet` events, passed to `RoomScene.sparks()` too). Every hit on an
+(`ricochet` events, passed to `RoomScene.sparks()` too). The wizard's
+Zap+ (D95) bounces off blocks and the room side only, stopping at objects
+as a Zap does. With the Mirror, a shot stopping at his Shield turns round
+(`Bolt.reflect()`, a `reflect` event) and flies on as his own bolt. Every hit on an
 enemy, a spell's, a discharge's or a bolt's, goes through
 `hitEnemy()` (combat.js): it emits `hit` or `pop`, and alarms one left hostile
 (`Enemy.alarm()`, D81). Bolts belong to the room: `enterRoom()` clears

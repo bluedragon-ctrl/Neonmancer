@@ -147,7 +147,17 @@
     "buff_energy_3": { "kind": "buff", "slot": 6, "stat": "energy", "amount": 10 },
     "buff_energy_4": { "kind": "buff", "slot": 7, "stat": "energy", "amount": 10 },
     "buff_energy_5": { "kind": "buff", "slot": 8, "stat": "energy", "amount": 10 },
-    "buff_recharge": { "kind": "buff", "slot": 9, "stat": "recharge", "amount": 4 }
+    "buff_recharge": { "kind": "buff", "slot": 9, "stat": "recharge", "amount": 4 },
+    "upgrade_zap_plus": {
+      "kind": "upgrade",
+      "upgrade": "zap_plus",
+      "slot": 0,
+      "spell": "zap",
+      "color": "#00f0ff",
+      "bounces": 2
+    },
+    "upgrade_mirror": { "kind": "upgrade", "upgrade": "mirror", "slot": 1, "spell": "shield", "color": "#cfe8ff" },
+    "upgrade_double_jump": { "kind": "upgrade", "upgrade": "double_jump", "slot": 2, "color": "#ff2bd6" }
   },
   "blocks": {
     "block": { "look": "plain" },

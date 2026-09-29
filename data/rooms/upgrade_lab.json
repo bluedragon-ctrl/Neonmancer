@@ -1,0 +1,26 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "upgrade_lab",
+  "name": "Upgrade Lab",
+  "biome": "abyssal_buffer",
+  "size": [12, 4, 12],
+  "spawn": [1.5, 0, 6],
+  "exits": [{ "id": "west", "side": "-x", "at": 5 }],
+  "blocks": [
+    { "at": [5, 0, 0], "to": [5, 1, 11] },
+    { "at": [6, 0, 3], "to": [9, 0, 3] }
+  ],
+  "enemies": [
+    { "id": "hidden_bug", "template": "bug", "at": [6, 0, 1], "path": { "points": [[9, 0, 1]], "pause": 0.4 } },
+    { "id": "shooter", "template": "shooter", "at": [11, 0, 7] }
+  ],
+  "pickups": [
+    { "id": "disk_zap", "type": "disk_zap", "at": [1, 0, 1] },
+    { "id": "disk_shield", "type": "disk_shield", "at": [2, 0, 1] },
+    { "id": "upgrade_double_jump", "type": "upgrade_double_jump", "at": [3, 0, 9] },
+    { "id": "integrity", "type": "refill_integrity", "at": [1, 0, 10] },
+    { "id": "upgrade_zap_plus", "type": "upgrade_zap_plus", "at": [6, 0, 11] },
+    { "id": "upgrade_mirror", "type": "upgrade_mirror", "at": [7, 0, 11] }
+  ]
+}

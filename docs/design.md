@@ -769,6 +769,61 @@ The seventh spell (D87), from a data disk by the entrance of Clipboard
   `src/render/clip-view.js`, the icons `src/ui/clip-icon.js`; showcase
   `?asset=cut-paste,disk-cut-paste`.
 
+## Upgrades
+
+Phase 3 step 13 (D95). An upgrade is a permanent pickup with its own
+bit in the upgrade block (bits 32–47); the engine knows three.
+
+| Upgrade | Type | Slot | Of | Color | What it does |
+|---|---|---|---|---|---|
+| Zap+ | `upgrade_zap_plus` | 0 | Zap | cyan | The bolt bounces twice off blocks and the room's sides |
+| Mirror | `upgrade_mirror` | 1 | Shield | ice blue `#cfe8ff` | The ring sends enemy bolts back the way they came |
+| Double jump | `upgrade_double_jump` | 2 | the wizard | magenta | One more jump in mid-air |
+
+- **Data:** a pickup type `{ "kind": "upgrade", "upgrade", "slot",
+  "spell", "color" }`, Zap+ with `bounces`. `Progress.upgrades()` maps
+  what was found by `upgrade`; `Game.applyUpgrades()` gives them to the
+  wizard (`player.upgrades`, `player.airJumps`) at the start and when he
+  takes one.
+- **Replacing the spell:** the spell keeps its id, slot and place in the
+  Tab cycle; the HUD tag shows the upgrade's name (`Game.spellNameKey()`,
+  strings `upgrade.<id>`), and casting it casts the upgraded version at
+  the spell's cost. Taking the disk selects the spell. An upgrade whose
+  spell isn't known yet waits for it.
+- **Zap+:** `bounces` (2) off blocks and the room's sides (a closed
+  exit too), turning back along the axis it ran into: a diagonal shot
+  banks off a wall round a corner. It stops at room objects like a Zap
+  (`Bolt` `bounceObjects: false`), so it breaks crates and switches
+  targets. His own bolt never hurts him, bounced or not.
+- **Mirror:** casting the Shield raises a ring with `mirror` set. An
+  enemy bolt stopping at it turns round (`Bolt.reflect()`): it flies back
+  the way it came as his bolt, with its own damage and color, stopping at
+  the first enemy (its shooter included), object or wall; sparks fly
+  where it turned (`ricochet`), the ring flares and `reflect` is
+  reported. Arcs and bursts are only blocked, as by the Shield. Firewall
+  doesn't mirror. The ring is the Shield's in the Mirror's color.
+- **Double jump:** a jump pressed in mid-air (after a jump, after
+  walking off a ledge once the coyote time is over, after a bounce)
+  kicks him up again at the jump's speed, once until he lands
+  (`airJumpsLeft`); `airjump` is reported. From a jump's top he
+  reaches 2.4: over a 2-high wall, and across wider gaps. Hexagonal
+  rings in his magenta burst flat from where he kicked off and fade
+  (`JUMP_FX` in `src/render/jump-fx.js`, `PLAYER.airJumpTicks`).
+- **Look:** an expansion card (`createCard()` in `src/render/card.js`,
+  tuning `CARD`): a white landscape card as thin as a disk, hovering and
+  spinning like one; contact fingers along its bottom edge in the
+  upgrade's color with a key notch; a mounting bracket up its left side;
+  the 4×4 bit grid with the upgrade's slot lit on both faces. A found one
+  is a gray ghost like any disk. Taking one
+  plays the install animation in its color, the banner reads e.g.
+  `ZAP+ / UPGRADE INSTALLED`, the terminal `> UPGRADE INSTALLED: ZAP+`.
+  Showcase `?asset=upgrades` (the cards, the row beside the Zap disk,
+  `mirror`, `double-jump`).
+- **Validation:** upgrade slots unique; one pickup type per upgrade;
+  Zap+ upgrades Zap and has `bounces`, the Mirror upgrades the Shield,
+  the double jump no spell.
+- **Test room:** Upgrade Lab (see Test rooms).
+
 ## Spell roster
 
 Settled in Phase 3 step 11 (D88); Pull added later (D89). Up to 16 spells and 16 upgrades, each
@@ -794,7 +849,7 @@ production shows a need for.
 |---|---|---|---|
 | Zap+ | Zap | The bolt bounces off walls: targets round corners | Phase 3 (D91) |
 | Mirror | Shield | Reflects bolts back at the shooter | Phase 3 (D91) |
-| Jump | the wizard | A double jump or a higher jump (to 2 blocks), settled in step 13 | Phase 3 (D92) |
+| Double jump | the wizard | One more jump in mid-air (D95) | Phase 3 (D92) |
 
 - **Upgrades** have their own disks. Found, an upgrade replaces its base
   spell in the Tab cycle (ZAP becomes ZAP+), so the cycle stays short.
@@ -805,7 +860,8 @@ production shows a need for.
 - **Buff items** (settled in step 12, D93; see Buff items): 4× +1
   integrity (8 → 12, within the key's 4-bit health field), 5× +10 energy
   (one bar segment each, 50 → 100), one faster recharge (12 → 8 ticks
-  per unit): 10 of the 16 buff bits. The jump moved to the upgrades (D92).
+  per unit): 10 of the 16 buff bits. The jump moved to the upgrades (D92),
+  as a double jump (D95; see Upgrades).
 - **Turned down for now:** Patch (an enemy turns
   peaceful), Overclock (a speed burst), Decrypt (dissolves an encrypted
   wall type), Rollback (back to where he was 3 s ago); upgrades Halt
@@ -996,6 +1052,7 @@ The world map tool flags any room further out.
 | `quarantine` (Phase 3) | 10×10, Glitchmire | east doorway → Boot Sector; west doorway → Scheduler | chasers (step 5, D78): a virus at the back that chases and bursts, a sentinel in the far corner that keeps its distance and fires arcs, a stationary bug with a burst guarding an integrity refill; a 2-high pillar to hide behind, a trench of holes the chasers won't cross, a crate for cover and a 1-high ledge; the Pause data disk on the pillar (step 8, D85), reached by pushing the crate against it |
 | `fast_path` (Phase 3) | 12×12, Frostbyte Wastes | south (front) → Room 1 | Blink and Warp (step 9, D86): the Blink disk by the entrance, a 2-wide pit across the room to blink over, a bug patrolling the lane beyond (blink through it) past a 2-high pillar to blink into, the Warp disk at the lane's end, and a 6-wide pit only Warp crosses to an energy refill and the recharge buff (step 12) against the side wall |
 | `clipboard` (Phase 3) | 12×12, Abyssal Buffer | east doorway → Room 1 | Cut & Paste (step 10, D87): the disk by the entrance; a crate on a 2-long 1-high ledge, cut standing on the ledge and pasted on the floor as a step up a 2-high pillar with an energy refill on top; a crate walled into a nook, only cut out; a 2-wide pit to fill with both crates, an integrity refill beyond; a patrolling bug to freeze and move |
+| `upgrade_lab` (Phase 3) | 12×12, Abyssal Buffer | west doorway → Room 1 (its new east exit) | Upgrades (step 13, D95): the Zap and Shield disks and the double jump disk by the entrance, a 2-high wall across the room to double-jump over; beyond it the Zap+ and Mirror disks, a bug patrolling behind a 1-high wall that only a Zap+ shot banked off the east side reaches (stand south-west of the wall's open end and aim diagonally), and a shooter by the east side to reflect bolts at; an integrity refill by the entrance |
 | `scheduler` (Phase 3) | 10×10, Abyssal Buffer | east doorway → Quarantine | the cron, worm and crawler looks (D83): a tower in the middle firing four ways, placed off the entrance's axes; a worm patrolling the back row across the tower's line of fire (its bolts can pop it); a crawler chasing from the far corner; pillars, a low wall and a crate to hide behind, an integrity refill in the far corner, and the Firewall data disk on the low wall (step 7, D84) |
 
 ### Room design checklist
@@ -1399,7 +1456,7 @@ the author; the answers are recorded as decisions before the code lands.
 | 10 | `feat/cut-paste-spell` | Cut & Paste (D87): cut a crate or a frozen enemy into a one-slot clipboard that goes from room to room, paste it into the free cell in front of the wizard; the disk lies in the new test room Clipboard. |
 | 11 | `docs/spell-roster` | Discussion step, docs only: the roster towards 16 spells (D68) — new spells, some letting the wizard skip easier rooms, and upgrades of the basic ones — and the buff items, now that the first five spells can be played; stronger ones should let the wizard speedrun simple rooms or solve them differently (D67). Accepted spells get their own steps (in this phase or later) and CLAUDE.md §5 is updated; the result is a decision. |
 | 12 | `feat/buff-items` | The first buff items from the roster: pickups that raise the wizard's maximum integrity or energy, or his recharge rate, kept in `Progress`; HUD bars grow with them. The jump is an upgrade now (step 13, D92). |
-| 13 | `feat/upgrades` | Upgrades in the upgrades save block (bits 32–47, D88, D91, D92): an upgrade disk that, once found, replaces its base spell in the Tab cycle (ZAP becomes ZAP+). Zap+: the bolt bounces off walls (the bolt bounces of D81), reaching targets round corners. Mirror: the Shield reflects bolts back at the shooter. The jump upgrade: a double jump or a higher jump (D92). Showcase, editor, validation, a test room. |
+| 13 | `feat/upgrades` | Upgrades in the upgrades save block (bits 32–47, D88, D91, D92): an upgrade card that, once found, replaces its base spell in the Tab cycle (ZAP becomes ZAP+). Zap+: the bolt bounces off walls (the bolt bounces of D81), reaching targets round corners. Mirror: the Shield reflects bolts back at the shooter. The jump upgrade: a double jump or a higher jump (D92). Showcase, editor, validation, a test room. |
 | 14 | `feat/backups` | Backups, the wizard's lives (D92): a backups count on the Player with a HUD counter; each death uses one; at none, `> SYSTEM CRASH` restores the last backup shrine's snapshot (the `Progress` bits, access level, integrity and energy maximums, score once there is one, and the shrine's room), losing everything since. A backup shrine object in room data: touching it stores the snapshot and refills the backups (`> BACKUP SAVED`). Before any shrine, the game's start is the snapshot. The snapshot stays in memory until the access keys (Phase 4) write it as the key. Showcase, editor, validation, a test room. |
 | 15 | `feat/score-and-bits` | Starts with a short discussion (below). Then: bonus bits (up to 4 slots per room), secrets, score for bits, enemies, secrets and pickups, floating score popups, HUD score, the "all bits collected" room bonus, local high score. |
 | 16 | `feat/fragments-and-access` | Fragment pickups, the fragment count and locations in `world.json`, the central core that takes them, `> FRAGMENT n/N GET!`, found fragments grayed out on revisits (D67), access levels that lock areas until the wizard's level is high enough (locked exits from step 4), the wizard's access level kept in `Progress` (its own 8-bit field in the save key, D91), and the end of the game. |
@@ -1416,13 +1473,7 @@ Open questions, settled at the start of their step:
 - **10 Cut & Paste:** settled (D87).
 - **11 Roster:** settled (D88); see Spell roster.
 - **12 Buff items:** settled (D93).
-- **13 Upgrades:** each upgrade's slot in the block, color and
-  energy cost; how an upgrade disk looks next to a spell disk; Zap+: how
-  many bounces; Mirror: does it reflect every bolt or only some, and does
-  a reflected bolt hurt any enemy it hits or only the shooter; can the
-  wizard still cast the plain spell once upgraded. The jump (it opens
-  areas and skips rooms, D68): a double jump or a higher jump; how it
-  changes the gap widths rooms rely on.
+- **13 Upgrades:** settled (D95); see Upgrades.
 - **14 Backups:** how many (3?); does a shrine also refill integrity and
   energy; what the shrine looks like and whether it is touched or used
   with a key; what else brings a backup back (a rare temporary pickup,
