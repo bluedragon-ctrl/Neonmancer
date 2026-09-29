@@ -213,6 +213,9 @@ and some exits and pickups wait for a spell or buff found later
   touch; **towers** (the cron look) fire bolts four ways (D83)
 - **Shooters** — stationary, fire slow bolts (the Pop-up idea, D84)
 - **Firewall Wardens** — tougher guardians blocking key rooms
+- More looks for content (D104), no template yet: warden, daemon (wisp),
+  golem (server rack), wyrm (packet dragon), phish (a data disk mimic),
+  overclock (burning chip), pixie (pixel butterfly)
 
 Each has a distinct color, silhouette and animation. Enemies are
 universal and data-driven (D48, D78, D80): a template in `defs.json` is a

@@ -630,3 +630,15 @@ tool's tests use a small world of their own.
 **Why:** a room deleted by accident was gone once saved; restoring it as
 unsaved changes keeps one way to write data and lets the rollback be
 undone.
+
+### D104 — 2026-09-29 — Seven more enemy looks
+Warden, daemon, golem, wyrm, phish, overclock and pixie join the enemy
+looks, each a fantasy creature crossed with a computer thing (a knight of
+firewall, a wisp daemon, a rack golem, a packet dragon, a phishing mimic,
+a burning processor, a pixel butterfly). They are looks only: no template
+uses them yet, rooms pick them with `look`, and templates come with the
+content that needs them (the warden with the Firewall Wardens). A wyrm's
+plates are shades of its own color, so a room can recolor it. A model's
+`muzzle` is a reach along the line of fire (worm and crawler had points).
+**Why:** more silhouettes for content production; reviewed in the
+showcase first.

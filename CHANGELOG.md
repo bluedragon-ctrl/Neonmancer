@@ -16,10 +16,19 @@ docs/decisions.md).
 - World map tool: an Undo button, and **Undo last save** once there is
   nothing left to undo (D103): what the last save changed or deleted, even
   a deleted room after the reload, comes back as unsaved changes.
+- Seven more enemy looks (D104), for any template or room override:
+  warden (a knight of firewall), daemon (a wisp flame), golem (a server
+  rack), wyrm (a packet dragon whose plates are shades of its color),
+  phish (a data disk that springs on legs), overclock (a burning
+  processor) and pixie (a butterfly with pixel wings); in the asset
+  showcase (`?asset=concepts`) and the test room Menagerie, north of
+  Quarantine.
 
 ### Fixed
 - The map tool's tests use a small world of their own instead of the
   real rooms, so map redesigns no longer break them.
+- A worm's or crawler's arc discharge would start from nowhere: its
+  model's muzzle was a point, not the reach the view expects (D104).
 
 ## [0.3.0] - 2026-09-29
 

@@ -9,6 +9,9 @@ import { BUG as BUG_LOOK, popPixels } from '../src/render/bug.js';
 import { CRAWLER, animateCrawler, crawlerFoot, crawlerPopPixels, createCrawler } from '../src/render/crawler.js';
 import { CRON, animateCron, createCron, cronHand, cronPopPixels } from '../src/render/cron.js';
 import { MOODS, eyeMood, popBurst } from '../src/render/enemy-look.js';
+import { ENEMY_MODELS } from '../src/render/entity-view.js';
+import { PHISH, animatePhish, createPhish } from '../src/render/phish.js';
+import { WYRM, wyrmShades } from '../src/render/wyrm.js';
 import { SENTINEL, sentinelPopPixels } from '../src/render/sentinel.js';
 import { VIRUS as VIRUS_LOOK, virusPopPixels } from '../src/render/virus.js';
 import { WORM, wormPopPixels, wormSpine } from '../src/render/worm.js';
@@ -376,6 +379,46 @@ test('look: every enemy shares the mood colors, and every pop is over after its 
   }
   const burst = popBurst({ pixels: 3, ticks: 10, spread: 0, rise: 0 }, { seed: 1, middle: 0.5, start: 0 });
   assert.deepEqual(burst(5).map(({ offset }) => offset[1]), [0.5, 0.5, 0.5], 'no rise nor scatter: level');
+});
+
+test('look (D104): every model builds, poses in every state without NaN, arcs from a reach and pops', () => {
+  for (const [look, model] of Object.entries(ENEMY_MODELS)) {
+    const enemy = model.create('#7a7dff');
+    assert.equal(typeof model.muzzle, 'number', `${look}: muzzle is a reach along the line of fire`);
+    for (const pose of [
+      { state: 'rest', time: 0.3 },
+      { state: 'walk', walked: 0.4, time: 1.1, alert: 1 },
+      { state: 'fall', time: 2 },
+      { time: 2.5, alert: 1, attack: 20, charge: 36 },
+      { time: 2.9, alert: 1, attack: 40, charge: 36, squash: 0.2, shift: 0.05 },
+    ]) {
+      model.animate(enemy, pose);
+      model.setMood(enemy, 'provoked');
+      enemy.updateMatrixWorld(true);
+      enemy.traverse((node) => assert.ok(node.matrixWorld.elements.every(Number.isFinite), `${look}: finite pose`));
+    }
+    assert.equal(model.popPixels(0).length, model.pop.pixels, look);
+    assert.deepEqual(model.popPixels(model.pop.ticks), [], look);
+  }
+});
+
+test('look (wyrm): its plates are shades of its body color, neighbors apart, darker towards the tail', () => {
+  const shades = wyrmShades('#3dff9a');
+  assert.equal(shades.length, WYRM.plates.length);
+  const hsl = shades.map((c) => c.getHSL({}));
+  hsl.slice(1).forEach((h, i) => {
+    assert.ok(h.l < hsl[i].l, 'darker plate by plate');
+    assert.notEqual(h.h, hsl[i].h, 'neighbors apart');
+  });
+});
+
+test('look (phish): calm it is a bare disk; after the wizard its legs, jaw and eyes come out', () => {
+  const phish = createPhish('#eef3ff');
+  animatePhish(phish, { time: 1 });
+  assert.ok(phish.userData.legs.every(({ thigh }) => !thigh.visible), 'disguised');
+  animatePhish(phish, { time: 1.2, alert: 1 });
+  assert.ok(phish.userData.legs.every(({ thigh }) => thigh.visible), 'sprung');
+  assert.equal(phish.userData.disk.userData.spin.position.y, PHISH.stand);
 });
 
 test('look (cron, D83): its four emitters hold the grid axes at bolt height whichever way it faces', () => {

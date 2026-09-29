@@ -74,6 +74,13 @@ import { createMarquee, placeMarquee } from '../src/render/clip-view.js';
 import { clipIcon } from '../src/ui/clip-icon.js';
 import { createJumpRings, placeJumpRings } from '../src/render/jump-view.js';
 import { createShrine } from '../src/render/shrine-view.js';
+import { WARDEN_MODEL } from '../src/render/warden.js';
+import { DAEMON_MODEL } from '../src/render/daemon.js';
+import { GOLEM_MODEL } from '../src/render/golem.js';
+import { WYRM_MODEL } from '../src/render/wyrm.js';
+import { PHISH_MODEL } from '../src/render/phish.js';
+import { OVERCLOCK_MODEL } from '../src/render/overclock.js';
+import { PIXIE_MODEL } from '../src/render/pixie.js';
 
 /** Block types with variants filled in (D60). */
 const BLOCK_TYPES = resolveBlockTypes(defs.blocks);
@@ -82,6 +89,20 @@ const BLOCK_TYPES = resolveBlockTypes(defs.blocks);
 const SPACING = 3;
 /** Turning speed in radians per second. */
 const SPIN = 0.6;
+
+/** The D104 enemy looks (see ALL_ASSETS): model, suggested color, and how the showcase runs them. */
+const CONCEPTS = [
+  { label: 'warden', model: WARDEN_MODEL, color: '#ff5a1f', attack: 'burst', speed: 0.8 },
+  { label: 'daemon', model: DAEMON_MODEL, color: '#a45cff', attack: 'arc', speed: 1.5, chaseSpeed: 2.5 },
+  { label: 'golem', model: GOLEM_MODEL, color: '#38a8ff', attack: null, speed: 1 },
+  { label: 'wyrm', model: WYRM_MODEL, color: '#ffc83a', attack: 'bolt', speed: 2 },
+  { label: 'phish', model: PHISH_MODEL, color: '#eef3ff', attack: null, speed: 0, chaseSpeed: 3.5 },
+  { label: 'overclock', model: OVERCLOCK_MODEL, color: '#ff6a2a', attack: 'burst', speed: 1.5, chaseSpeed: 3 },
+  { label: 'pixie', model: PIXIE_MODEL, color: '#7a7dff', attack: 'bolt', speed: 1.5, chaseSpeed: 2.5 },
+];
+
+/** Wyrms in other colors: the plates are shades of any body color. */
+const WYRM_COLORS = ['#ffc83a', '#3dff9a', '#4f7dff', '#c05cff'];
 
 /**
  * Showcased assets: a label and a function building the model centered on
@@ -156,6 +177,18 @@ const ALL_ASSETS = [
   { label: 'worm-pop', group: 'worms', build: () => buildEnemyPop('worm') },
   { label: 'crawler', group: 'crawlers', build: () => buildWalker('crawler') },
   { label: 'crawler-pop', group: 'crawlers', build: () => buildEnemyPop('crawler') },
+  // The D104 looks (no defs.json template uses them yet): a Firewall
+  // Warden (a knight of firewall) with a burst, a daemon (a wisp) with an
+  // arc, a golem (a server rack, meant solid), a wyrm (a dragon of data
+  // packets) with a bolt, a phish (a fake data disk that springs on legs),
+  // an overclock (a burning processor) with a burst, a pixie (a butterfly
+  // with pixel wings) with a bolt; calm, then after the
+  // wizard and attacking, in a loop; their pops; wyrms in other colors.
+  ...CONCEPTS.flatMap(({ label, model, color, ...options }) => [
+    { label, group: 'concepts', build: () => buildConcept(model, color, options) },
+    { label: `${label}-pop`, group: 'concept-pops', build: () => buildConceptPop(model, color) },
+  ]),
+  { label: 'wyrm-colors', span: 6, build: buildWyrmColors },
   // Zap: the bolt close up, two hits on a bug (the second pops
   // it), and rapid fire at a crate until the energy bar runs dry.
   { label: 'zap-bolt', group: 'zap', build: buildZapBolt },
@@ -1421,6 +1454,68 @@ function buildWalker(type) {
     walked += dt * (speed + (chaseSpeed - speed) * alert);
     model.animate(walker, { state: 'walk', walked, time, alert });
     mark(alert, time);
+  };
+  return asset;
+}
+
+/**
+ * A concept enemy look (CONCEPTS) walking in place, calm, then after the
+ * wizard (at its chase speed); with an attack it charges and fires from
+ * 3.5 s into the 6 s loop (a burst shows its lightning).
+ * @param {typeof WARDEN_MODEL} model
+ * @param {string} color
+ * @param {{ attack: string|null, speed: number, chaseSpeed?: number }} options
+ */
+function buildConcept(model, color, { attack: shape, speed, chaseSpeed = speed }) {
+  const enemy = model.create(color);
+  const asset = new Group().add(enemy);
+  const mark = addMark(asset, model.markHeight);
+  const charge = 36;
+  const discharge = shape === 'burst' ? createDischarge({ color, shape, range: 1.2 }) : null;
+  if (discharge) asset.add(discharge);
+  let walked = 0;
+  asset.userData.update = (dt, time) => {
+    const alert = alertAt(time);
+    const pace = speed + (chaseSpeed - speed) * alert;
+    walked += dt * pace;
+    const tick = ((time % 6) - 3.5) * 60;
+    const attack = shape && tick >= 0 && tick < charge + ENEMY.dischargeTicks ? tick : null;
+    model.animate(enemy, { state: pace > 0 ? 'walk' : 'rest', walked, time, alert, attack, charge });
+    showGlow(enemy, attack, charge);
+    mark(alert, time);
+    if (discharge) placeDischarge(discharge, attack === null ? null : Math.floor(attack), charge, [0, ENEMY.eyeHeight, 0]);
+  };
+  return asset;
+}
+
+/** Wyrms in each of WYRM_COLORS side by side, swimming calm. */
+function buildWyrmColors() {
+  const asset = new Group();
+  const wyrms = WYRM_COLORS.map((color, i) => {
+    const wyrm = WYRM_MODEL.create(color);
+    // Along the row (+x −z on screen), 1.2 apart.
+    const along = (i - (WYRM_COLORS.length - 1) / 2) * 1.2;
+    wyrm.position.set(along * Math.SQRT1_2, 0, -along * Math.SQRT1_2);
+    asset.add(wyrm);
+    return wyrm;
+  });
+  asset.userData.update = (dt, time) => {
+    wyrms.forEach((wyrm, i) => WYRM_MODEL.animate(wyrm, { time: time + i * 0.4 }));
+  };
+  return asset;
+}
+
+/** A concept enemy look (CONCEPTS) popping into pixels, in a loop. */
+function buildConceptPop(model, color) {
+  const enemy = model.create(color);
+  const pixels = createPixelBurst(model.pop.pixels, model.pop.pixelSize, [color, 0xffffff]);
+  const asset = new Group().add(enemy, pixels);
+  let tick = 0;
+  asset.userData.update = (dt, time) => {
+    tick = (tick + dt * 60) % 90;
+    enemy.visible = tick < 40;
+    model.animate(enemy, { time, alert: 1 });
+    placePixels(pixels, tick >= 40 ? model.popPixels(tick - 40) : [], [0, 0, 0]);
   };
   return asset;
 }
