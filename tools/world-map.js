@@ -13,6 +13,10 @@
  * (with both its exits). Save sends it all to the dev server, which checks
  * it and writes the room files and world.json (MapEdit, editor/map-edit.js).
  *
+ * F3 opens the pickup report: every permanent item (data disks, buff
+ * chips) by its save bit and the rooms it lies in, flagging items not
+ * placed yet and items placed more than once (pickup-report.js).
+ *
  * Open /tools/world-map.html in the dev server; it is not part of the
  * build, so players never see it (D67).
  */
@@ -22,7 +26,10 @@ import { sideLength, withExitDefaults } from '../src/data/room-data.js';
 import { validateData } from '../src/data/validate.js';
 import { MapEdit } from '../src/editor/map-edit.js';
 import { DATA_SAVED_EVENT, saveFiles } from '../src/editor/save.js';
+import { BUFF_COLORS } from '../src/entities/pickup.js';
 import { TEST_ROOM_REACH, mapKey, mapWarnings, roomDistances } from '../src/world/map.js';
+import { pickupReport } from '../src/world/pickup-report.js';
+import { SAVE_BLOCKS } from '../src/world/progress.js';
 
 /** Map units per grid cell, and a room node's size in them. */
 const CELL = 180;
@@ -102,6 +109,8 @@ const state = {
   quietUntil: 0,
   /** Data on disk changed (another page saved) while there are unsaved changes. */
   stale: false,
+  /** The pickup report (F3) is open. */
+  report: false,
 };
 
 /** Validation errors of the data as edited. */
@@ -330,10 +339,14 @@ function drawPanel() {
   if (list.children.length === 0) list.append(html('li', 'fine', `All ${distances.size} rooms reachable, test rooms within ${TEST_ROOM_REACH} of the start.`));
   panelEl.append(list);
 
+  const reportButton = html('button', '', 'F3 Pickup report');
+  reportButton.addEventListener('click', () => toggleReport());
+  panelEl.append(reportButton);
+
   panelEl.append(html('h2', '', 'HOW TO'));
   const help = html('ul', 'help');
   for (const line of [
-    'Keys 1–4 pick a tool. Ctrl+Z undoes, Ctrl+S saves.',
+    'Keys 1–4 pick a tool. Ctrl+Z undoes, Ctrl+S saves. F3: the pickup report.',
     'Move: click a room to open it in the room editor (F2 there to play).',
     'Exits made here sit in the middle of the wall; fine-tune them in the room editor.',
     'Solid line: neighbours on the map that way round. Dashed: connected across the map.',
@@ -378,6 +391,103 @@ function roomItem(id, className, text) {
 function render() {
   draw();
   drawPanel();
+  drawReport();
+}
+
+// --- Pickup report (F3) ------------------------------------------------------
+
+const reportEl = html('section', 'report');
+reportEl.hidden = true;
+// Over the map, outside it: its pointer handlers never see clicks in the report.
+document.body.append(reportEl);
+
+function toggleReport(open = !state.report) {
+  state.report = open;
+  drawReport();
+}
+
+/** An item's name and color: a spell's (strings.json, defs.json) or a buff's. */
+function itemLook(type) {
+  const defs = DATA_FILES['defs.json'];
+  const strings = DATA_FILES['strings.json']?.strings ?? {};
+  const data = defs.pickups[type];
+  if (data.kind === 'disk') return { name: strings[`spell.${data.spell}`] ?? data.spell, color: defs.spells[data.spell].color };
+  if (data.kind === 'buff') {
+    const stat = strings[`buff.${data.stat}`] ?? data.stat;
+    return { name: data.stat === 'recharge' ? stat : `${stat} +${data.amount}`, color: BUFF_COLORS[data.stat] };
+  }
+  return { name: type, color: 'var(--dim)' };
+}
+
+/** A pickup's place: its room's name and cell; a click shows the room on the map. */
+function placeLink({ room, at }) {
+  const link = html('button', 'place', `${edit.rooms.get(room)?.name ?? room} [${at.join(',')}]`);
+  link.addEventListener('click', () => {
+    state.picked = room;
+    toggleReport(false);
+    draw();
+  });
+  return link;
+}
+
+/** One report row: count or bit, item, where it lies, status. */
+function reportRow(first, item, places, status, flagged = false) {
+  const row = html('tr', flagged ? 'flagged' : '');
+  const where = html('td', 'where');
+  for (const place of places) where.append(placeLink(place));
+  row.append(html('td', 'bit', first), item, where, html('td', `status ${status[0]}`, status[1]));
+  return row;
+}
+
+function drawReport() {
+  reportEl.hidden = !state.report || !edit;
+  if (reportEl.hidden) return;
+  reportEl.replaceChildren();
+  const defs = DATA_FILES['defs.json'];
+  const { items, refills, unknown } = pickupReport(defs.pickups ?? {}, defs.spells ?? {}, edit.rooms);
+  const missing = items.filter((item) => item.places.length === 0).length;
+  const doubled = items.filter((item) => item.places.length > 1).length;
+
+  const head = html('div', 'report-head');
+  const close = html('button', '', 'F3 Close');
+  close.addEventListener('click', () => toggleReport(false));
+  head.append(html('h1', '', 'PICKUP REPORT'), close);
+  const summary = html('p', 'counts', `${items.length} permanent items · ${items.length - missing} placed · `);
+  summary.append(html('span', missing ? 'warn' : 'fine', `${missing} not placed`), ' · ');
+  summary.append(html('span', doubled ? 'warn' : 'fine', `${doubled} placed more than once`));
+  reportEl.append(head, summary);
+
+  for (const [block, { size }] of Object.entries(SAVE_BLOCKS)) {
+    const rows = items.filter((item) => item.block === block);
+    reportEl.append(html('h2', '', `${block.toUpperCase()} · ${rows.length}/${size} bits defined`));
+    if (rows.length === 0) {
+      reportEl.append(html('p', 'none', 'None defined yet.'));
+      continue;
+    }
+    const table = html('table');
+    for (const { bit, types, places } of rows) {
+      const { name, color } = itemLook(types[0]);
+      const cell = html('td', 'item');
+      const swatch = html('i', 'swatch');
+      swatch.style.background = color;
+      cell.append(swatch, html('span', '', name), html('small', '', types.join(', ')));
+      const status = places.length === 0 ? ['warn', 'not placed'] : places.length > 1 ? ['warn', `×${places.length}`] : ['fine', 'ok'];
+      table.append(reportRow(`${bit}`, cell, places, status, places.length !== 1));
+    }
+    reportEl.append(table);
+  }
+
+  reportEl.append(html('h2', '', 'REFILLS · temporary, back with the room'));
+  const table = html('table');
+  for (const { type, places } of refills) table.append(reportRow(`${places.length}×`, html('td', 'item', type), places, ['', '']));
+  reportEl.append(table);
+
+  if (unknown.length > 0) {
+    reportEl.append(html('h2', '', 'UNKNOWN TYPES'));
+    const list = html('ul');
+    for (const { room, id, type } of unknown) list.append(html('li', 'error', `${room} › ${id}: unknown pickup type "${type}"`));
+    reportEl.append(list);
+  }
 }
 
 // --- Tools -------------------------------------------------------------------
@@ -509,6 +619,15 @@ function openInEditor(id) {
 
 window.addEventListener('keydown', (event) => {
   if (!edit) return;
+  if (event.key === 'F3') {
+    event.preventDefault();
+    toggleReport();
+    return;
+  }
+  if (event.key === 'Escape' && state.report) {
+    toggleReport(false);
+    return;
+  }
   const typing = event.target.closest?.('input, select, textarea');
   if (event.key === 'Escape' && state.linkFrom) {
     state.linkFrom = null;
