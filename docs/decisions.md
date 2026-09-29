@@ -1691,13 +1691,17 @@ Each buff is its own pickup type with a slot in the save's buff block
 (slots 0–9; 10–15 spare). Taking an integrity or energy buff raises the
 maximum and fills that stat to it; the install animation plays with the
 buff's chip, and the banner reads e.g. `INTEGRITY +1 / BUFF INSTALLED`.
+Every permanent pickup (spell disks, buffs, later upgrades and
+fragments) plays this same install animation as a spell, with its own
+model and color, then a banner and a terminal line.
 The wizard's maxima and recharge rate follow from the buffs found, so a
 loaded save starts him buffed. Look: a hovering chip in the stat's color
 (cyan integrity, lime energy, amber recharge) with pins, the stat's icon
 on the front and the save bit lit on the back, bigger than a refill.
 Validation keeps all integrity buffs within the key's 4-bit health field.
 **Why:** author's choices. Filling the stat makes a buff feel like a
-reward at once; a faster recharge by a third is felt without making
+reward at once; one install animation for every permanent improvement
+makes each one read as the wizard getting stronger for good; a faster recharge by a third is felt without making
 energy free. A chip reads as hardware for the wizard, apart from the
 disks that teach spells, and showing its bit like a disk keeps the save
 model visible.

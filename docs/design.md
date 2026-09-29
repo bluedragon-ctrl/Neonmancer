@@ -469,7 +469,12 @@ enemies).
   whole game; room resets and death leave it alone. Known spells follow
   from it (in slot order). The save key (Phase 4) will hold these bits.
 - **Installing** (D73): taking a disk plays a 1 s animation on the
-  wizard (`PLAYER.installTicks`, 60 ticks). It doesn't hold him up: he
+  wizard (`PLAYER.installTicks`, 60 ticks). Every permanent pickup
+  plays this same animation with its own model and color (D93): buff
+  chips now, upgrades and fragments later. `Game.use()` saves the bit,
+  starts it and announces it for all of them; `Game.gain()` holds what
+  each kind gives and its banner; the model comes from
+  `createPickupModel()` (`src/render/pickup-model.js`). It doesn't hold him up: he
   walks, casts (the new spell at once) and can be hurt meanwhile (D74).
   The disk shrinks where it hung and its bits spiral into him, wherever
   he goes, three

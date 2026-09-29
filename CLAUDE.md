@@ -208,7 +208,11 @@ own save bit (buff slots 0–9). Stronger spells, upgrades
 and buffs all let him skip easier rooms and reach areas he couldn't
 before.
 
-Mana recharges slowly. Installing a spell plays a short animation.
+Mana recharges slowly. Every permanent pickup (a spell disk, a buff,
+later upgrades and fragments) plays the same install animation as a
+spell: the item shrinks, its bits spiral into the wizard, rings in its
+color sweep up him and he flashes white; then a banner and a terminal
+line (D93). A new permanent pickup gets it too, with its own model.
 Later spells and upgrades are stronger: they let the wizard speedrun
 simple rooms or solve them differently. The world is a maze, not a line:
 a room need not be fully solvable on first arrival, and some of its exits
