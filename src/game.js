@@ -355,27 +355,15 @@ export class Game {
    */
   use(data, bit) {
     const { player } = this;
-    const [x, y, z] = data.at;
-    if (data.kind === 'buff') {
+    // Every permanent pickup installs into the wizard the same way (D93):
+    // saved, the install animation, a banner and a terminal line.
+    if (bit !== null) {
       this.progress.collect(bit);
-      this.applyBuffs();
-      // Taking one fills what it raised (D93).
-      if (data.stat === 'integrity') player.integrity = player.maxIntegrity;
-      if (data.stat === 'energy') player.energy = player.maxEnergy;
+      const [x, y, z] = data.at;
       player.startInstall(data.type, [x + 0.5, y + 0.5, z + 0.5]);
-      const stat = this.content.strings[`buff.${data.stat}`] ?? data.stat.toUpperCase();
-      const amount = data.stat === 'recharge' ? '' : ` +${data.amount}`;
-      announce('banner.buff', { stat, amount }, { sub: 'banner.buffSub', color: BUFF_COLORS[data.stat] });
-      say('msg.buffInstalled', { stat, amount });
-      return true;
-    }
-    if (data.kind === 'disk') {
-      this.progress.collect(bit);
-      this.learnSpells(data.spell);
-      player.startInstall(data.type, [x + 0.5, y + 0.5, z + 0.5]);
-      const name = this.content.strings[`spell.${data.spell}`] ?? data.spell.toUpperCase();
-      announce('banner.spell', { spell: name }, { sub: 'banner.spellSub', color: this.content.spells[data.spell].color });
-      say('msg.spellInstalled', { spell: name });
+      const { banner, message } = this.gain(data);
+      announce(banner.key, banner.values, banner.options);
+      say(message.key, message.values);
       return true;
     }
     // A refill: integrity or energy, up to his maximum.
@@ -384,6 +372,33 @@ export class Game {
     player[data.stat] = Math.min(max, player[data.stat] + data.amount);
     say(data.stat === 'integrity' ? 'msg.refillIntegrity' : 'msg.refillEnergy');
     return true;
+  }
+
+  /**
+   * What a permanent pickup gives him, and how it is announced.
+   * @param {object} data the pickup (buildRoom()): a data disk or a buff chip
+   * @returns {{ banner: { key: string, values: object, options: object }, message: { key: string, values: object } }}
+   */
+  gain(data) {
+    const { player } = this;
+    if (data.kind === 'buff') {
+      this.applyBuffs();
+      // Taking one fills what it raised (D93).
+      if (data.stat === 'integrity') player.integrity = player.maxIntegrity;
+      if (data.stat === 'energy') player.energy = player.maxEnergy;
+      const stat = this.content.strings[`buff.${data.stat}`] ?? data.stat.toUpperCase();
+      const values = { stat, amount: data.stat === 'recharge' ? '' : ` +${data.amount}` };
+      return {
+        banner: { key: 'banner.buff', values, options: { sub: 'banner.buffSub', color: BUFF_COLORS[data.stat] } },
+        message: { key: 'msg.buffInstalled', values },
+      };
+    }
+    this.learnSpells(data.spell);
+    const spell = this.content.strings[`spell.${data.spell}`] ?? data.spell.toUpperCase();
+    return {
+      banner: { key: 'banner.spell', values: { spell }, options: { sub: 'banner.spellSub', color: this.content.spells[data.spell].color } },
+      message: { key: 'msg.spellInstalled', values: { spell } },
+    };
   }
 
   /**
