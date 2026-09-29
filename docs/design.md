@@ -1677,12 +1677,14 @@ Open so far:
 
 `src/ui/menus.js` (the logic, tested) and `src/ui/menu-screen.js` (the
 view), D109. The game opens on the title screen: the logo over the start
-room, dimmed well down and standing still, with **Start**, **Options** and
+room's empty shape (`RoomScene.showShape()`: floor grid and back walls in
+its biome's look, no blocks, holes, exits, objects or wizard), dimmed
+well down, with **Start**, **Options** and
 **Controls**. Esc or P in the game, or the window losing focus, opens the
 pause menu: **Resume**, **Save**, **Options**, **Controls**, **Quit to
 title**. Save is a stub for now: it says saving comes in the next update.
 Quitting asks first (*Keep playing* is selected), then starts a new game
-behind the title; nothing is saved yet (D105). Menus stack: Options (and
+behind the title (the empty shape again); nothing is saved yet (D105). Menus stack: Options (and
 its Visuals), Controls and the quit question open over the menu, and Esc
 or P closes the top one (the pause menu itself: back to the game).
 

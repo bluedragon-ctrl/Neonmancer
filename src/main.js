@@ -108,10 +108,14 @@ function boot() {
   function newGame({ quiet = false } = {}) {
     hud.clear();
     game.reset({ start: devRoom });
-    showRoom();
     // The room's banner waits until he is in (finishBoot()).
     hud.clear();
-    if (quiet) return;
+    if (quiet) {
+      showTitleShape();
+      return;
+    }
+    showRoom();
+    playerView.group.visible = true;
     say('msg.loading', { room: content.rooms.get(game.room.id).name.toUpperCase() });
     bootScreen.start(game.room.size);
     boot = 0;
@@ -125,10 +129,16 @@ function boot() {
     say('msg.boot');
     say('msg.welcome');
   }
+  /** Behind the title only the start room's empty shape, without him: the room loads after Start. */
+  function showTitleShape() {
+    roomScene.showShape(game);
+    debug.setRoom(game.room, [], []);
+    playerView.group.visible = false;
+  }
   if (flow.playing) {
     say('msg.boot');
     say('msg.welcome');
-  }
+  } else showTitleShape();
 
   const input = new Input();
   input.attach(window);

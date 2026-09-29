@@ -127,7 +127,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/quality.js` | Automatic quality fallback: steps MSAA, then render scale, down when frames run slow (D76; pure, tested) |
 | `render/rails.js` | Guide line along a platform's path, `RAILS` tuning (pure, tested) |
 | `render/renderer.js` | WebGLRenderer, 16:9 stage + HUD overlay, DPR cap, render scale, MSAA, resize, shader precompile |
-| `render/room-scene.js` | The current room's views, object views by kind (`OBJECT_VIEWS`); rebuilds only the objects on a respawn |
+| `render/room-scene.js` | The current room's views, object views by kind (`OBJECT_VIEWS`); rebuilds only the objects on a respawn; `showShape()`: the empty room behind the title (D109) |
 | `render/room-view.js` | Static blocks (merged edges + instanced occluder faces), back walls, styled object views |
 | `render/secret.js` | Secret look (D100): a thick five-pointed star in the wizard's magenta, ghost |
 | `render/sentinel.js` | Sentinel model (D78): sharp octahedron, visor eye, shards gathering like a barrel, recoil, pop pixels, `SENTINEL` tuning; `SENTINEL_MODEL` |

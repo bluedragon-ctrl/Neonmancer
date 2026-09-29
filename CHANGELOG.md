@@ -13,7 +13,8 @@ bosses that drop loot, tooling) (D104, D105).
 
 ### Added
 - Title screen and pause menu (D109): the game opens on the logo over
-  the start room (Start, Options, Controls); Esc or P, or leaving the
+  the start room's empty shape (Start, Options, Controls; the room loads
+  after Start); Esc or P, or leaving the
   window, pauses it (Resume, Save, Options, Controls, Quit to title, which
   asks first). Arrows or WASD, Enter or Space, and the mouse work in menus.
   Save is a stub until saving comes.

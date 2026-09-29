@@ -684,8 +684,10 @@ heavy virtual one with pixelated enemies fit into them.
 four basic enemies, one per attack, suit the core and teach the basics.
 
 ### D109 — 2026-09-29 — Title screen and pause menu
-The game opens on a title screen over the start room (dimmed well down,
-standing still): Start, Options and Controls; Enter key joins it with
+The game opens on a title screen over the start room's empty shape (its
+floor grid and back walls in its biome's look, no blocks, objects or
+wizard; dimmed well down): Start, Options and Controls; the room itself
+loads after Start; Enter key joins it with
 loading. Esc or P pauses the game, and so does the window losing focus;
 the pause menu has Resume, Save (a stub that says saving comes next),
 Options, Controls and Quit to title (Copy key and Copy link join it with
