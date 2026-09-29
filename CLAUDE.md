@@ -110,7 +110,8 @@ mobile/touch support, backend or accounts.
 - Switches unlock exits: a floor plate held down by a crate, an enemy or
   the wizard, or a target a bolt switches on and off. A locked exit opens
   while every switch in its room is on, never closes on the wizard, and
-  stays open for him if he came in through it (D69, D75).
+  stays open for him if he came in through it (D69, D75). An access lock
+  opens once his access level is high enough (D101).
 - Holes: floor tiles (at y = 0) drawn as black pits. The player dies falling
   in (a trap, no way back out); a block pushed into a hole drops in and fills
   it, turning it into walkable floor. Holes never lead to another room.
@@ -279,8 +280,13 @@ Behaviors below are ideas for Phase 5; for now biomes are look only.
   through the hues
 
 ### Goal
-Collect all key fragments (count defined in world data) and deliver them
-to the central core. No time limit.
+Collect all key fragments (64, count in world data) and bring them to the
+central core. No time limit. Touching the core raises the wizard's access
+level to what his fragments earn (16 → 1, 32 → 2, 48 → 3, the last), which
+opens access-locked exits; with all 64 the Grid reboots, the end of the
+game (a placeholder screen for now), and he plays on (D101). The core is a
+placeable object, at most one in the world; a gold band round his hat per
+level shows his access.
 
 ### Arcade layer
 The score is what the wizard has, not what he did (D100): 50 points per
@@ -341,8 +347,8 @@ The engine is generic; all content lives in data.
   objects, enemies, pickups, a backup shrine tile; only overrides of type defaults;
   `"authored": true` marks the author's real game rooms (D90, §10)
 - `data/world.json` — room connections, room positions on the world map,
-  start room, fragment locations, number of fragments required, core
-  location
+  start room, the fragments the core needs and the access thresholds
+  (D101); fragments lie in the rooms' pickups, the core is a room object
 - `data/strings.json` — all UI text
 - `data/audio.json` — named audio events mapped to files
   (e.g. "jump", "pickup", "music:glitchmire")
@@ -392,7 +398,7 @@ not critical.
 ## 9. Tooling
 
 - **Debug mode** (toggle key): collision boxes, FPS, room jump,
-  invincibility.
+  invincibility, test damage, finding fragments (K).
 - **Asset showcase** (`tools/showcase.html`, also deployed): every character
   and object look on a turntable with the real renderer. Add every new
   visual asset (monsters, pickups) to it.

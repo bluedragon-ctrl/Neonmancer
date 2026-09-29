@@ -1916,3 +1916,37 @@ worth most. Secrets keep their own bits because fragments still need all
 64. A derived score costs no save bits and needs no rule against
 counting twice. Supersedes the arcade layer of CLAUDE.md §5 and the
 bonus slots of D68.
+
+### D101 — 2026-09-29 — Fragments, the core and access levels; the end of the game
+Settles the fragments and access step (Phase 3 step 16):
+- **64 key fragments** in the world, each a permanent pickup of kind
+  `fragment` with its own save bit (the 64-bit fragments block, `slot`
+  0–63 on its pickup type, all 64 defined in `defs.json`). Nothing is
+  carried: a found fragment counts at once.
+- **The core raises the access level:** 0 to start; touching the core
+  with 16 fragments found gives level 1, 32 level 2, 48 level 3, the
+  last (`world.json` `fragments.access`). The level is stored on its own
+  (D91) and only the core raises it, so fragments found since the last
+  visit count at the next one. Each level is worth 500 points (D100).
+- **The end:** all 64 at the core reboot the Grid: a placeholder screen
+  (`GRID REBOOTED`, final score and completion) that Enter closes, and he
+  plays on. A real ending comes later.
+- **The core is a placeable object** (kind `core`, white as a mechanism,
+  D99; at most one in the world), 1×2×1 so he walks up to it; for now in
+  Boot Sector. Three looks for the author to choose from (reactor,
+  monolith, heart), in the showcase; `reactor` until then. Gold, the
+  score's color, marks what the fragments give (the shard, the core's
+  crystal, the access digit, the hat bands); it stays an accent, as gold
+  is too close to Home Lattice's amber for an object's color.
+- **Access locks** (`"access": n` on an exit): the switch lock's white
+  barrier with the level in gold seven-segment digits; the exit he came
+  in through stays open for him (D75). With `"locked"` too, both hold.
+- **The wizard shows his level:** a thin gold band round his hat per
+  access level (the author's proposal of a gold ring, one per level).
+- **Test world:** a Vault behind Quarantine's new south exit (access
+  level 1) with two fragments; one fragment in Boot Sector. The debug key
+  K finds the next 8 fragments, to reach the levels without 64 placed.
+**Why:** author's choices. Tying the level to the core, not to pickups,
+makes the core the hub the wizard returns to; three levels spaced 16
+apart leave the last 16 fragments for the ending. Keeping the core an
+object keeps its place a design choice made in the room editor.

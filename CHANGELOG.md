@@ -24,6 +24,18 @@ and the project uses [Semantic Versioning](https://semver.org/).
   since D99 they take the room color.
 
 ### Added
+- Fragments and access (Phase 3 step 16, D101): 64 key fragments, gold
+  crystal shards with their own save bits (`> FRAGMENT n/N GET!`). The
+  central core, a placeable object now in Boot Sector, raises the
+  wizard's access level when he touches it: level 1 at 16 fragments, 2
+  at 32, 3 at 48 (`world.json` `fragments`), 500 points each; a gold
+  band round his hat per level. Exits can ask for an access level
+  (`"access": n`): a white lock with the level in gold digits. All 64 at
+  the core reboot the Grid: a placeholder end screen with the final
+  score. Three core looks (reactor, monolith, heart) to choose from in
+  the showcase; a Vault test room behind Quarantine's level-1 lock; the
+  room editor sets an exit's access level; debug key K finds 8
+  fragments; the HUD shows `FRAGMENTS n/64 ACCESS n`.
 - Score and secrets (Phase 3 step 15, D100): the score is what the
   wizard has found, 50 per permanent pickup, 200 per secret (500 per
   access level to come), shown in gold under the title with the share

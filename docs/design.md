@@ -18,6 +18,7 @@ for the current phase. Locked decisions live in CLAUDE.md; their reasons in
 | Debug mode | F3 |
 | Room editor | F2 (see Room editor) |
 | Fullscreen | F |
+| Close the end-of-game screen | Enter |
 
 Debug mode only, once toggled on with F3:
 
@@ -26,6 +27,7 @@ Debug mode only, once toggled on with F3:
 | Jump to the next/previous room | ] / [ |
 | Toggle invincibility | I |
 | Test damage (−1 integrity) | H |
+| Find the next 8 fragments | K |
 
 Keys are physical positions (`KeyboardEvent.code`), so the layout is the
 same on QWERTY, QWERTZ and AZERTY keyboards.
@@ -466,7 +468,7 @@ enemies).
   all. The index comes
   from what the item unlocks: a spell's `slot` in `defs.json` for its
   disk (Zap: 0); a buff's, an upgrade's or a secret's slot on its pickup type, and a
-  fragment's number on the placement. A bit is the item, not the place:
+  fragment's `slot` on its pickup type (D101). A bit is the item, not the place:
   the same disk may lie in several rooms, and finding one grays out all.
 - **Progress** (`src/world/progress.js`) holds the bits found for the
   whole game; room resets and death leave it alone. Known spells follow
@@ -831,8 +833,8 @@ bit in the upgrade block (bits 32–47); the engine knows three.
 
 Phase 3 step 15 (D100). The score is what the wizard has, not what he did.
 - **Points** (`defs.json` `score`): 50 per permanent pickup found (a
-  disk, a buff chip, an upgrade card, later a fragment), 200 per secret,
-  500 per access level (step 16). Enemies, refills and rooms score
+  disk, a buff chip, an upgrade card, a fragment), 200 per secret,
+  500 per access level (D101). Enemies, refills and rooms score
   nothing. `world/score.js` works it out from `Progress` whenever it is
   shown (`Game.score`), so it is never saved: the save key has no score
   field, and a loaded save scores exactly what it holds.
@@ -853,6 +855,59 @@ Phase 3 step 15 (D100). The score is what the wizard has, not what he did.
   easing out), flashing while it rolls. No popups over pickups.
 - **Dropped:** bonus bits, their room slots, the "all bits collected"
   bonus and the local high score.
+
+## Fragments and access
+
+Phase 3 step 16 (D101).
+- **Fragments:** `{ "kind": "fragment", "slot" }`, a bit in the fragments
+  block (48–111; slots unique); `defs.json` defines all 64
+  (`fragment_0`–`fragment_63`), so the room editor offers each one. A
+  gold crystal shard, broken off at the top (`render/fragment.js`,
+  `FRAGMENT_COLOR` = the score's gold `#ffe23d`), a gray ghost once
+  found. Taking one plays the install animation with the banner
+  `FRAGMENT n/N / KEY FRAGMENT GET` and `> FRAGMENT n/N GET!` (N: the
+  fragments the core needs). There is nothing to carry: found is found.
+- **World data:** `world.json` `"fragments": { "required": 64, "access":
+  [16, 32, 48] }`: 64 fragments reboot the Grid; 16, 32 and 48 found earn
+  access levels 1, 2 and 3 (the last). Validation: the thresholds rise and
+  stay within `required`; a world without the field needs 64 and has no
+  levels.
+- **The core** (`defs.json` `core`, kind `core`, white: a mechanism,
+  D99): a room object placed with the room editor, at most one in the
+  world (validation); now in Boot Sector. A fixed body 1×2×1, too high to
+  jump onto with one jump, so he walks up to it (both cells must be
+  free). Touching it (`Game.touchCore()`, once until he steps away): the
+  level rises to what his fragments earn (`Progress.earnedAccess()`),
+  with the banner `ACCESS LEVEL n / GRANTED BY THE CORE` and `> CORE:
+  ACCESS LEVEL n GRANTED`; otherwise it says how many more are needed
+  (`> CORE: 12/16 FRAGMENTS FOR ACCESS LEVEL 1`, later `... TO REBOOT
+  THE GRID`).
+- **Access level:** `Progress.accessLevel`, stored on its own (the save
+  key's 8-bit field, D91), raised only by the core, never counted from
+  the bits; 500 points each. His hat shows it: a thin gold band per level
+  round the cone, from the brim up (`hatBands()` in `render/wizard.js`).
+- **Access locks:** `"access": n` on an exit (1–15; validation: a level
+  the thresholds give). Solid until his level is n or more; with
+  `"locked"` too, the switches must be on as well. The exit he came in
+  through stays open for him (D75). The look is the switch lock's white
+  barrier with the level as a gold seven-segment number
+  (`digitSegments()` in `render/switch-view.js`); it opens as soon as the
+  core raises the level in the same room, with `> ACCESS GRANTED: EXIT
+  UNLOCKED`. Room editor: `Access level` in the exit fields.
+- **Core looks** (`look` on the core's type; showcase `?asset=cores-row`,
+  `core-reactor`, `core-monolith`, `core-heart`), each on a white
+  pedestal, flashing when it raises the level: *reactor*, a gold crystal
+  floating in orbit rings, one per level, turning gold when reached;
+  *monolith*, a server tower with a band of light per level, gold data
+  rising up its faces and a beam from the top growing with the fragments
+  found; *heart*, a beating wireframe sphere in a white cage whose facets
+  light up with the fragments found, level pips on the pedestal. The
+  author picks one; `reactor` for now. Tuning: `CORE_FX` in
+  `render/core-view.js`.
+- **The end:** with every fragment the core needs, touching it reboots
+  the Grid, once (`Game.won`, `'win'` event): a placeholder screen
+  `GRID REBOOTED` with the final score and completion; Enter closes it
+  and he plays on. A real ending comes with content production.
 
 ## Spell roster
 
@@ -1020,8 +1075,8 @@ room.
 - Room design: a plate the wizard can reach next to the locked exit is
   no puzzle, since the exit closes as soon as he steps off; give him
   something that stays (a crate) or something that comes and goes (a
-  patrolling enemy resting on it, a timing puzzle). Access levels
-  (fragments step) will reuse the locked exit.
+  patrolling enemy resting on it, a timing puzzle). Access locks (D101,
+  see Fragments and access) reuse the locked exit.
 - Tuning: the look is `SWITCH_FX` in `src/render/switch-view.js`;
   showcase `?asset=switches`.
 
@@ -1072,7 +1127,7 @@ The world map tool flags any room further out.
 
 | Room | Size | Exits | Shows |
 |---|---|---|---|
-| `boot_sector` (start, hub) | 12×12 | north doorway → Cache Hall; raised east exit on a ledge → Stack Yard; west doorway → Quarantine; south (front) → Transit Bus | blocks, holes, two crates, a 2-high wall near the front to walk behind (X-ray outline); the Zap data disk two steps from the spawn (Phase 3) |
+| `boot_sector` (start, hub) | 12×12 | north doorway → Cache Hall; raised east exit on a ledge → Stack Yard; west doorway → Quarantine; south (front) → Transit Bus | blocks, holes, two crates, a 2-high wall near the front to walk behind (X-ray outline); the Zap data disk two steps from the spawn (Phase 3); the central core against the back wall and a fragment by the front (step 16, D101) |
 | `cache_hall` | 16×8 | south (front) → Boot Sector; east (front) → Relay Station | a 3-wide pit across the room: push a crate in, then jump the rest; the Shield data disk behind it (Phase 3 step 3); an energy buff on the stairs in the back corner (step 12) |
 | `relay_station` (Phase 3) | 12×12 | west doorway → Cache Hall; south (front, locked) → Stack Yard | switches (step 4): a Zap target by the back wall, a crate to push onto a plate, and a peaceful bug resting 2 s on a plate near the locked exit, so the exit opens while the bug is on it (the wizard can press that plate himself, but the exit closes as he steps off) |
 | `stack_yard` | 8×8, Glitchmire color | raised west doorway → Boot Sector; east (front) → Fault Line; north doorway (locked) → Relay Station | stacked crates, a 2-high block to climb via a crate; a plate in front of the locked doorway and a crate to push onto it (Phase 3 step 4) |
@@ -1080,10 +1135,11 @@ The world map tool flags any room further out.
 | `transit_bus` (Phase 2) | 12×12, 5 high | west doorway → Fault Line; north doorway → Boot Sector; raised east exit on the high ledge → Volatile Memory | a ferry across a pit between two ledges, a lift up to a high ledge, a loop carrying a crate, a press coming down (with a crate to jam it) and a pusher squeezing the wizard against the room's edge |
 | `volatile_memory` (Phase 2) | 12×12, 5 high | west doorway → Transit Bus; raised east exit on the high ledge → Crawl Space | a pit across the room with two collapsing bridges: one regrowing after 3 s (the way back), one that stays gone, with a crate on a plain ledge in front of it to push onto the bridge from solid ground (it doesn't trigger the blocks, so it is a safe spot to hop onto); two one-shot collapsing steps up to a high ledge |
 | `crawl_space` (Phase 2) | 12×12 | west doorway → Volatile Memory; east (front) → Boot Sector | bugs: a sentry crossing the entrance lane, one walking off a ledge and patrolling the floor below, a solid one shoving along a lane with a crate to push in its way, a provoked one circling a pillar, a peaceful stationary one to bounce up to a 2-high ledge, a solid peaceful one along the front edge to ride; Zap targets: the provoked one turns hostile when hit, and an amber stationary one with 4 integrity; an energy refill near the entrance (Phase 3) |
-| `quarantine` (Phase 3) | 10×10, Glitchmire | east doorway → Boot Sector; west doorway → Scheduler | chasers (step 5, D78): a virus at the back that chases and bursts, a sentinel in the far corner that keeps its distance and fires arcs, a stationary bug with a burst guarding an integrity refill; a 2-high pillar to hide behind, a trench of holes the chasers won't cross, a crate for cover and a 1-high ledge; the Pause data disk on the pillar (step 8, D85), reached by pushing the crate against it |
+| `quarantine` (Phase 3) | 10×10, Glitchmire | east doorway → Boot Sector; west doorway → Scheduler; south (front, access level 1) → Vault | chasers (step 5, D78): a virus at the back that chases and bursts, a sentinel in the far corner that keeps its distance and fires arcs, a stationary bug with a burst guarding an integrity refill; a 2-high pillar to hide behind, a trench of holes the chasers won't cross, a crate for cover and a 1-high ledge; the Pause data disk on the pillar (step 8, D85), reached by pushing the crate against it |
 | `fast_path` (Phase 3) | 12×12, Frostbyte Wastes | south (front) → Room 1 | Blink and Warp (step 9, D86): the Blink disk by the entrance, a 2-wide pit across the room to blink over, a bug patrolling the lane beyond (blink through it) past a 2-high pillar to blink into, the Warp disk at the lane's end, and a 6-wide pit only Warp crosses to an energy refill and the recharge buff (step 12) against the side wall |
 | `clipboard` (Phase 3) | 12×12, Abyssal Buffer | east doorway → Room 1 | Cut & Paste (step 10, D87): the disk by the entrance; a crate on a 2-long 1-high ledge, cut standing on the ledge and pasted on the floor as a step up a 2-high pillar with an energy refill on top; a crate walled into a nook, only cut out; a 2-wide pit to fill with both crates, an integrity refill beyond; a patrolling bug to freeze and move |
 | `upgrade_lab` (Phase 3) | 12×12, Abyssal Buffer | west doorway → Room 1 (its new east exit) | Upgrades (step 13, D95): the Zap and Shield disks and the double jump disk by the entrance, a 2-high wall across the room to double-jump over; beyond it the Zap+ and Shield+ disks, a bug patrolling behind a 1-high wall that only a Zap+ shot banked off the east side reaches (stand south-west of the wall's open end and aim diagonally), and a shooter by the east side to reflect bolts at; an integrity refill by the entrance |
+| `vault` (Phase 3) | 8×8, Firewall Citadel | north doorway → Quarantine (its access lock, level 1) | fragments and access (step 16, D101): two fragments on 1-high blocks and an integrity refill, behind the first access lock; reach level 1 with the debug key K (8 fragments a press) and the Boot Sector core |
 | `scheduler` (Phase 3) | 10×10, Abyssal Buffer | east doorway → Quarantine | the cron, worm and crawler looks (D83): a tower in the middle firing four ways, placed off the entrance's axes; a worm patrolling the back row across the tower's line of fire (its bolts can pop it); a crawler chasing from the far corner; pillars, a low wall and a crate to hide behind, an integrity refill in the far corner, and the Firewall data disk on the low wall (step 7, D84) |
 
 ### Room design checklist
@@ -1210,7 +1266,8 @@ A DOM overlay on the stage, sized in 1080p pixels (`--u`), all text from
 |---|---|
 | Top left | Integrity: label over a row of slanted cyan cells, one per point. A lost cell flashes white and empties; at 2 or less the bar turns magenta and blinks. |
 | Top center | Banner: a title decoding from glyphs (0.45 s), holding (1.8 s) and fading (0.7 s), with an optional smaller line below, in its own color. On entering a room (not on respawn) it shows the room name and the biome name in the biome color; later pickups (e.g. a spell installed) use it too. A new banner replaces the one showing. |
-| Top right | Game name and version; the debug readout (F3) shows below it. |
+| Top right | Game name and version; the score and completion (D100) and, once he has a fragment or a level, `FRAGMENTS 03/64 ACCESS 1` in gold (D101); the debug readout (F3) shows below it. |
+| Whole stage | The end-of-game screen (D101): `GRID REBOOTED`, the final score and completion; the game stands still until Enter. |
 | Bottom left | Terminal: lime lines typed at 40 characters/s with a block cursor, kept 4 s, then faded; at most 4 lines. Printed on start, death (one line per cause), respawn and when a crate plugs a hole. |
 | Bottom center | Fullscreen hint while the stage has fewer than 1080 physical pixels of height and the page is not fullscreen; shown for 8 s each time it becomes needed. F toggles fullscreen. |
 | Bottom right | Movement mode tag (see below), always shown; G switches modes. |
@@ -1238,6 +1295,9 @@ F3 toggles debug mode; off by default. While it's on:
   the exit transition (`Game.debugJumpRoom()`); ignored mid-transition.
 - `I` toggles invincibility (`Game.invincible`): holes and void blocks
   never kill and `Game.hurt()` does nothing (so hazards don't hurt).
+- `K` finds the next 8 fragments not found yet (`Game.debugGrantFragments()`),
+  to try access levels without walking the world; the core still has
+  to be touched to raise the level.
 - `H` calls `Game.hurt(1)`, the same path as every damage source: the
   wizard blinks while invulnerable, and at 0 integrity he derezzes.
 
@@ -1522,12 +1582,10 @@ Open questions, settled at the start of their step:
 - **15 Score and secrets:** settled (D100). Superseded questions: how
   many bonus bits a room has; whether they come back after a load and how
   a saved score avoids counting them twice.
-- **16 Fragments and access:** fragment count (in the world and the test
-  world); the access level is stored on its own (D91), not counted from
-  fragment bits: what raises it (delivering fragments to the core, or
-  another reward) and by how much; what a locked
-  exit looks like; a placeholder win screen or a real ending (final score,
-  credits).
+- **16 Fragments and access:** settled (D101); see Fragments and access.
+  Superseded questions: the fragment count (64); what raises the access
+  level (the core, from the fragments found); what an access lock looks
+  like; a placeholder win screen or a real ending.
 - **Test world:** each step adds a test room (D45), so the world grows to
   about 15 rooms; a second hub may be needed to keep every test room at
   most two rooms from Boot Sector (D49).
@@ -1563,7 +1621,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 | `data/rooms/<id>.json` | One room (id = file name) |
 | `data/defs.json` | Object types and their defaults (`crate`: pushable, lime, data bits mark, dark faces; box variants `crate_plain`, `crate_cross` (destructible: data bits with holes, 1 Zap), `crate_dashed`; `platform`: moving platform, cyan; `spiked_platform`: a platform that hurts on touch, hazard red (D82); switches `target` and `plate`, white, see Switches and locked exits); `enemies`: enemy templates (`bug`, `virus`, `sentinel`, see Enemies), each complete or `extend`ing another (D58, D79); `spells`: spell tuning and color (`zap`, see Zap and energy; `shield`, see Shield; `firewall`, see Firewall; `pause`, see Pause; `blink` and `warp`, see Blink and Warp); `pickups`: pickup types (see Pickups and progress; buff chips: Buff items); `blocks`: block types (D60): look or kind, color, properties (`damage`, `lethal`, `regrow`), `extends` for variants; see Block types |
 | `data/biomes.json` | Biome name and room color: `home_lattice` (core, amber), `glitchmire` (pink), `frostbyte_wastes` (ice blue), `abyssal_buffer` (graphite), `firewall_citadel` (ember orange), `phantom_partition` (special, pale violet); optional `look` for the surroundings (background, outer grid and its fade, wall grid, bloom); see Biomes (D61, D62) |
-| `data/world.json` | Start room, exit connections and every room's cell on the world map (`positions`, D66) |
+| `data/world.json` | Start room, exit connections, every room's cell on the world map (`positions`, D66) and the key fragments (`fragments`: how many the core needs, the access thresholds, D101) |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |
 
 Example room (12×12):
