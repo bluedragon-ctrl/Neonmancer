@@ -73,8 +73,9 @@ mobile/touch support, backend or accounts.
 - Coordinates: y is up; room size is [x, y, z] = [width, height, depth];
   the floor is at y = 0; back walls are the x = 0 and z = 0 planes.
 - 1 block = 1 unit (1x1x1). Player jump height: 1 unit (clears exactly one
-  block, never two). A jump buff item raises it later, to skip easier
-  rooms or reach areas closed before (D68).
+  block, never two). A jump upgrade (a double jump or a higher jump,
+  D92) raises it later, to skip easier rooms or reach areas closed
+  before (D68).
 - Player hitbox 0.6 x 1.5 x 0.6 (the hat is visual only), so the wizard
   needs 2 blocks of headroom.
 - Blocks snap to the grid; player and enemies move freely (sub-grid).
@@ -84,7 +85,7 @@ mobile/touch support, backend or accounts.
 - World target: towards 128 rooms, more small rooms rather than a few
   very complex ones (D68). Some areas are locked behind an access level,
   probably linked to fragments; others open only to a stronger spell or
-  a buff (e.g. a higher jump).
+  an upgrade (e.g. the jump upgrade).
 
 ### Engine
 - Fixed-timestep loop: 60 logic updates per second, rendering
@@ -128,6 +129,12 @@ mobile/touch support, backend or accounts.
 - No fall damage. The only instant death is falling onto void blocks.
 - On death the wizard derezzes into pixels and recompiles at the room
   entrance — quick and non-punishing.
+- Backups (lives, D92): each death uses one. With none left the system
+  crashes (`> SYSTEM CRASH`) and the game restores the last backup
+  shrine's state, losing what was found, scored and reached since.
+  Backup shrines store that state and refill the backups; so a load
+  always starts with full backups and the save key holds no backups
+  field.
 
 ### Persistence
 - Rooms fully reset on re-entry (enemies, blocks, moving platforms).
@@ -181,21 +188,23 @@ Planned for Phase 4 (the roster, D88); details settle in their steps:
 - **Pull** — pulls the closest movable object (a crate) or enemy in the
   facing direction one tile towards the wizard (D89)
 
-Spell upgrades have their own disks and save bits (the upgrades block,
-not spells, D88); an upgrade replaces its base spell in the Tab cycle
+Upgrades have their own disks and save bits (the upgrades block, not
+spells, D88); a spell upgrade replaces its base spell in the Tab cycle
 (ZAP becomes ZAP+):
 - **Zap+** — the bolt bounces off walls, reaching targets round corners
 - **Mirror** (Shield upgrade) — reflects bolts back at the shooter
+- **Jump upgrade** (D92) — the wizard's own jump: a double jump or a
+  higher jump (to 2 blocks), settled in the upgrades step
 
-Up to 16 spells and 16 upgrades; 11 spells and 2 upgrades are set, the
+Up to 16 spells and 16 upgrades; 11 spells and 3 upgrades are set, the
 rest stay spare for what content production needs (D88, D89). Intended order
 in the world: early Zap, Shield, Blink, Pause; middle Cut & Paste,
-Firewall, Fork, Scan and the jump buff; late Compile, Warp, Zap+ and
+Firewall, Fork, Scan and the jump upgrade; late Compile, Warp, Zap+ and
 Mirror. Buff items make the wizard himself stronger: more integrity,
-more energy, a higher jump, faster recharge (draft: 4× +1 integrity,
-5× +10 energy, one jump buff to 2 blocks, one recharge buff; settled
-in the buff step). Stronger spells and buffs both let him skip easier
-rooms and reach areas he couldn't before.
+more energy, faster recharge (draft: 4× +1 integrity, 5× +10 energy,
+one recharge buff; settled in the buff step). Stronger spells, upgrades
+and buffs all let him skip easier rooms and reach areas he couldn't
+before.
 
 Mana recharges slowly. Installing a spell plays a short animation.
 Later spells and upgrades are stronger: they let the wizard speedrun
@@ -462,7 +471,8 @@ World map tool for the developer. Pickups and a progress model, data
 disks. Switches (pressure plates, bolt targets) unlocking exits. Viruses,
 Sentinels and Pop-ups. Shield, Firewall, Pause, Warp and Cut & Paste spells.
 A discussion step on further spells, spell upgrades and buff items; the
-first buff items; the upgrades Zap+ and Mirror (D91). Score, bonus bits and secrets. Fragments, access levels
+first buff items; the upgrades Zap+, Mirror and the jump (D91, D92).
+Backups (lives) and backup shrines (D92). Score, bonus bits and secrets. Fragments, access levels
 and the core. Step plan: docs/design.md (D65).
 
 **Phase 4 (v0.4) — Guardians, saves, tooling**
