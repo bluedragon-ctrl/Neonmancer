@@ -51,6 +51,8 @@ export function buildRoom(data, { objectTypes, blockTypes, enemyTemplates = {}, 
     blockTypes: structuredClone(blockTypes),
     /** Hole floor tiles as [x, z]. */
     holes: (data.holes ?? []).flatMap(holeTiles),
+    /** The backup shrine floor tile [x, z] (D97), or null. */
+    shrine: data.shrine ? [...data.shrine] : null,
     /** Typed objects: type defaults merged with this object's overrides. */
     objects: (data.objects ?? []).map((object) => ({
       id: object.id,

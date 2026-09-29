@@ -6,7 +6,21 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- Collapsing blocks are pale white-blue (dashed edges, faces barely
+  tinted) instead of magenta, which is now the wizard's color (D98).
+
 ### Added
+- Backups (Phase 3 step 14, D97): the wizard has 8 backups, shown as
+  pips under the integrity bar; each death uses one. Dying with none
+  left crashes the system (`SYSTEM CRASH` banner) and he reboots on the
+  backup shrine nearest on the world map, keeping everything found.
+  Backup shrines are floor tiles (`"shrine": [x, z]` in room data):
+  stepping onto one refills integrity, energy and backups (`> BACKUP
+  SAVED`) and it flares. Shrine and pips are in the wizard's magenta
+  (showcase `?asset=shrine`); a Shrine tool (9) in the
+  room editor, validation, and shrines in Boot Sector, Scheduler and
+  Upgrade Lab.
 - Glass crates (D96): every crate type is see-through frosted glass
   tinted in its color, with the data bits on a small dark core inside; a
   destructible crate has no core, its bits float loose inside. Hazard

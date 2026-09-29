@@ -12,6 +12,7 @@
     { "at": [1, 0, 5], "to": [2, 0, 5] },
     { "at": [6, 0, 6] }
   ],
+  "shrine": [8, 8],
   "objects": [{ "id": "cover", "type": "crate", "at": [4, 0, 6] }],
   "enemies": [
     { "id": "tower", "template": "tower", "at": [4, 0, 3] },

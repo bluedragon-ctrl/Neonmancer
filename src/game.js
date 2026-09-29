@@ -16,11 +16,15 @@ import { castSpell } from './spells.js';
 import { createLocks, updateSwitches } from './switches.js';
 import { arrival, exitAt } from './world/exits.js';
 import { Grid } from './world/grid.js';
+import { nearestShrine } from './world/map.js';
 import { Progress, pickupBit } from './world/progress.js';
 import { buildRoom } from './world/room.js';
 
 /** Terminal message for each way to die (Player.deathCause). */
 const DEATH_MESSAGES = { hole: 'msg.die', void: 'msg.void', damage: 'msg.derez' };
+
+/** Banner color of a system crash (D97): alarm red. */
+const CRASH_COLOR = '#ff3b5c';
 
 /** Room transition timing in ticks (60 per second). */
 export const TRANSITION = {
@@ -34,7 +38,7 @@ export const TRANSITION = {
  * Something that happened, for views, the HUD and (later) sound. Returned
  * by Game.update() for the tick it happened in.
  * @typedef {object} GameEvent
- * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'|'warp'|'fizzle'|'cut'|'paste'|'airjump'|'reflect'} type
+ * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'|'warp'|'fizzle'|'cut'|'paste'|'airjump'|'reflect'|'shrine'|'crash'} type
  * @property {string} [spell] the spell cast, failed, fizzled (nowhere to
  *   go, energy kept) or selected (cast, deny, fizzle, spell); the teleport (warp)
  * @property {number[]} [from] where a Blink or Warp started (warp)
@@ -60,6 +64,8 @@ export const TRANSITION = {
  * @property {number} [amount] integrity lost (hurt)
  * @property {number[]} [cell] the block that hurt him (hurt), [x, y, z]
  * @property {'hole'|'void'|'damage'} [cause] how the wizard died (die)
+ * @property {boolean} [crash] he died with no backups left (die): he
+ *   reboots on the nearest backup shrine (D97)
  * @property {object} [exit] the exit walked out through (exit); a locked
  *   exit opening (unlock) or closing again (lock)
  */
@@ -85,6 +91,10 @@ export class Game {
     this.player = new Player([0, 0, 0]);
     /** Things pasted so far, for their ids. */
     this.pastes = 0;
+    /** Room of the backup shrine used last (D97), or null: it wins a tie for the nearest one. */
+    this.lastShrine = null;
+    /** He died with no backups left: when he recompiles, the system crashes (D97). */
+    this.crashing = false;
     this.learnSpells();
     this.applyUpgrades();
     // A loaded save starts him buffed and full.
@@ -140,6 +150,8 @@ export class Game {
       return new Pickup(data, bit, bit !== null && this.progress.has(bit));
     });
     this.player.enter(pos ?? this.room.spawn, this.room.reset);
+    /** Is he on the backup shrine? Stepping onto it uses it (touchShrine()). */
+    this.onShrine = false;
     this.refreshBodies();
   }
 
@@ -198,11 +210,71 @@ export class Game {
     if (this.player.dead) this.died();
   }
 
-  /** The wizard just died: report it, with a message naming the cause. */
+  /**
+   * The wizard just died: report it, with a message naming the cause. It
+   * uses one of his backups (D97); with none left, the system crashes when
+   * he recompiles (crash()).
+   */
   died() {
-    const cause = this.player.deathCause;
+    const { player } = this;
+    const cause = player.deathCause;
     say(DEATH_MESSAGES[cause]);
-    this.emit('die', { cause });
+    this.crashing = player.backups === 0;
+    if (this.crashing) say('msg.noBackups');
+    else player.backups--;
+    this.emit('die', { cause, ...(this.crashing && { crash: true }) });
+  }
+
+  /**
+   * He recompiled with no backups left (D97): the system crashes and he
+   * reboots on the backup shrine nearest to the room on the world map
+   * (lastShrine wins a tie), which refills him. Everything found stays
+   * found; the clipboard went with his death. With no shrine in the world,
+   * he reboots at the start.
+   */
+  crash() {
+    this.crashing = false;
+    const { rooms, world } = this.content;
+    const id = nearestShrine(rooms, world.positions ?? {}, this.room.id, this.lastShrine);
+    const shrine = id && rooms.get(id).shrine;
+    this.enterRoom(id ?? world.start, shrine ? [shrine[0] + 0.5, 0, shrine[1] + 0.5] : undefined, null);
+    this.transition = { phase: 'in', tick: 0 };
+    if (shrine) this.useShrine();
+    else this.refill();
+    say('msg.crash');
+    announce('banner.crash', {}, { sub: 'banner.crashSub', subValues: { room: this.room.name }, color: CRASH_COLOR });
+    this.emit('crash');
+  }
+
+  /** Fill his integrity, energy and backups (a backup shrine, a crash). */
+  refill() {
+    const { player } = this;
+    player.integrity = player.maxIntegrity;
+    player.energy = player.maxEnergy;
+    player.backups = PLAYER.backups;
+  }
+
+  /**
+   * Stepping onto the room's backup shrine (D97) uses it: standing on its
+   * floor tile, alive. Staying on it doesn't use it again.
+   */
+  touchShrine() {
+    const { player, room } = this;
+    const [x, y, z] = player.pos;
+    const on = !!room.shrine && !player.dead && y < 0.01 && Math.floor(x) === room.shrine[0] && Math.floor(z) === room.shrine[1];
+    if (on && !this.onShrine) {
+      this.useShrine();
+      say('msg.backupSaved');
+    }
+    this.onShrine = on;
+  }
+
+  /** Use the room's backup shrine: refill him, and remember it for a tie (crash()). */
+  useShrine() {
+    this.refill();
+    this.lastShrine = this.room.id;
+    this.onShrine = true;
+    this.emit('shrine');
   }
 
   /**
@@ -266,8 +338,11 @@ export class Game {
     // Dying drained his integrity (Player). Respawning restores it and
     // resets the room, so no puzzle stays broken.
     if (playerEvent === 'respawn') {
-      say('msg.respawn');
-      this.enterRoom(this.room.id, this.room.reset);
+      if (this.crashing) this.crash();
+      else {
+        say('msg.respawn', { backups: player.backups });
+        this.enterRoom(this.room.id, this.room.reset);
+      }
       this.emit('respawn');
       this.emit('room');
       return this.takeEvents();
@@ -326,6 +401,7 @@ export class Game {
     touchEnemies(this, bounced);
     burnEnemies(this);
     this.takePickups();
+    this.touchShrine();
     updateSwitches(this);
     return this.takeEvents();
   }

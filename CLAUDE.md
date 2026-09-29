@@ -129,12 +129,13 @@ mobile/touch support, backend or accounts.
 - No fall damage. The only instant death is falling onto void blocks.
 - On death the wizard derezzes into pixels and recompiles at the room
   entrance — quick and non-punishing.
-- Backups (lives, D92): each death uses one. With none left the system
-  crashes (`> SYSTEM CRASH`) and the game restores the last backup
-  shrine's state, losing what was found, scored and reached since.
-  Backup shrines store that state and refill the backups; so a load
-  always starts with full backups and the save key holds no backups
-  field.
+- Backups (lives, D92, D97): 8; each death uses one. With none left the
+  system crashes (`> SYSTEM CRASH`) and he reboots on the backup shrine
+  nearest on the world map (map cells |dx| + |dz|; ties to the one used
+  last), keeping everything found; only the clipboard and the room's
+  state are lost. A backup shrine is a floor tile (one per room at most);
+  stepping onto it refills integrity, energy and backups. A load always
+  starts with full backups, so the save key holds no backups field.
 
 ### Persistence
 - Rooms fully reset on re-entry (enemies, blocks, moving platforms).
@@ -256,7 +257,8 @@ Each room has a biome defining look and optional environmental effects,
 defined in data and combinable. Health pickups and safe rooms balance
 drain effects. Six biomes (D61): one core, four side sectors, one special.
 Room colors stay clear of the gameplay colors (lime crates, cyan
-platforms, magenta collapsing, red hazard, violet void, green bugs).
+platforms, pale white-blue collapsing, red hazard, violet void, green bugs;
+magenta is the wizard's color, D98).
 Behaviors below are ideas for Phase 5; for now biomes are look only.
 - **Home Lattice** (core) — amber (the default room color), clean square
   grid, warm rising motes; safe; holds the central core
@@ -326,7 +328,7 @@ The engine is generic; all content lives in data.
 - `data/biomes.json` — palette, floor pattern, effect settings,
   environmental effects
 - `data/rooms/*.json` — one file per room: biome, size [x, y, z], exits,
-  objects, enemies, bonus slots; only overrides of type defaults;
+  objects, enemies, bonus slots, a backup shrine tile; only overrides of type defaults;
   `"authored": true` marks the author's real game rooms (D90, §10)
 - `data/world.json` — room connections, room positions on the world map,
   start room, fragment locations, number of fragments required, core

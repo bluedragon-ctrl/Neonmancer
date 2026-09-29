@@ -1,7 +1,7 @@
 /**
  * The views of the current room, rebuilt whenever the game rebuilds the room.
  * A respawn rebuilds the same room, where only the objects can have changed,
- * so the static views (floor, holes, walls, blocks, exits) are kept then.
+ * so the static views (floor, holes, the shrine, walls, blocks, exits) are kept then.
  * Cut & Paste (D87) takes objects and enemies out and puts new ones in
  * while the room runs (clip()).
  */
@@ -17,6 +17,7 @@ import { flareHazard } from './block-fx.js';
 import { CLIP_FX, pasteGrow } from './clip-fx.js';
 import { clipBounds } from './clip-view.js';
 import { createRoomView } from './room-view.js';
+import { createShrine } from './shrine-view.js';
 import { LockView, PlateView, TargetView } from './switch-view.js';
 import { ZapView } from './zap-view.js';
 
@@ -56,6 +57,8 @@ export class RoomScene {
     this.enemyViews = [];
     this.pickupViews = [];
     this.exitViews = [];
+    /** The room's backup shrine (shrine-view.js, D97), or null. */
+    this.shrine = null;
     /** Locked exits' barriers (switch-view.js), by exit id. */
     this.lockViews = new Map();
     /** Bolts and sparks of the room (made in show()). */
@@ -111,11 +114,14 @@ export class RoomScene {
       const roomView = createRoomView(cutAbove === null ? room : cutRoom(room, cutAbove));
       this.flares = roomView.userData.flares;
       this.flare = null;
+      this.shrine = room.shrine ? createShrine() : null;
+      this.shrine?.position.set(room.shrine[0], 0, room.shrine[1]);
       this.staticGroup = new Group().add(
         createFloor(room.size, room.color, room.holes, room.look),
         createHoleView(room.holes, room.color),
         roomView,
         ...this.exitViews.map((view) => view.group),
+        ...(this.shrine ? [this.shrine] : []),
       );
       frameRoom(renderer.camera, room.size);
       renderer.setLook(room.look);
@@ -150,10 +156,16 @@ export class RoomScene {
       view.group.visible = !lock || lock.openness > 0.5;
       view.update(dt);
     }
+    this.shrine?.userData.update(dt);
     if (this.flare) {
       this.flare.time += dt;
       this.flare.apply(this.flare.time);
     }
+  }
+
+  /** The wizard used the room's backup shrine (D97): make it flare. */
+  useShrine() {
+    this.shrine?.userData.use();
   }
 
   /**

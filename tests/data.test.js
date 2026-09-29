@@ -583,7 +583,7 @@ test('collapsing blocks: each cell of a box becomes a room object with its type\
     type: 'collapsing_regrow',
     at: [1, 0, 3],
     kind: 'collapsing',
-    color: '#ff2bd6',
+    color: '#dff4ff',
     edges: 'solid',
     mark: 'none',
     faces: 'dark',
@@ -653,4 +653,14 @@ test('enemy templates: the schema and the code agree on the allowed values', () 
     errorsAfter((f) => (f['defs.json'].enemies.bug.hostility = 'grumpy')),
     'defs.json › enemies.bug.hostility',
   );
+});
+
+test('backup shrine: a floor tile inside the room, on no block, hole or object (D97)', () => {
+  const setShrine = (tile, holes) => (f) => Object.assign(f['rooms/alpha.json'], { shrine: tile }, holes && { holes });
+  assert.deepEqual(errorsAfter(setShrine([6, 6])), []);
+  assertError(errorsAfter(setShrine([8, 2])), 'shrine', 'tile [8,2] is outside size');
+  assertError(errorsAfter(setShrine([4, 4])), 'shrine', 'tile [4,4] is under blocks[0]');
+  assertError(errorsAfter(setShrine([2, 5])), 'shrine', 'is under objects[0]');
+  assertError(errorsAfter(setShrine([6, 6], [{ at: [6, 6] }])), 'shrine', 'is under holes[0]');
+  assertError(errorsAfter(setShrine([6, 6, 0])), 'rooms/alpha.json › shrine');
 });

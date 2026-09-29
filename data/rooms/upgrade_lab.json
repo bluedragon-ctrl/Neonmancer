@@ -11,6 +11,7 @@
     { "at": [5, 0, 0], "to": [5, 1, 11] },
     { "at": [6, 0, 3], "to": [9, 0, 3] }
   ],
+  "shrine": [3, 6],
   "enemies": [
     { "id": "hidden_bug", "template": "bug", "at": [6, 0, 1], "path": { "points": [[9, 0, 1]], "pause": 0.4 } },
     { "id": "shooter", "template": "shooter", "at": [11, 0, 7] }

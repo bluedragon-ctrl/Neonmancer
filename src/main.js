@@ -9,6 +9,7 @@ import { DebugOverlay } from './debug/overlay.js';
 import { DebugReadout } from './debug/readout.js';
 import { Editor } from './editor/editor.js';
 import { Game } from './game.js';
+import { PLAYER } from './entities/player.js';
 import { PlayerView } from './render/entity-view.js';
 import { HOLO_TIME } from './render/holo.js';
 import { AutoQuality } from './render/quality.js';
@@ -133,6 +134,7 @@ function showEvents(events, { game, roomScene, hud, debug }) {
     if (event.type === 'zap') roomScene.sparks(event.bolt);
     if (event.type === 'ricochet') roomScene.sparks(event.bolt, event.pos, event.dir);
     if (event.type === 'deny') hud.denyEnergy();
+    if (event.type === 'shrine') roomScene.useShrine();
     if (event.type === 'cut' || event.type === 'paste') {
       roomScene.clip(event);
       debug.setRoom(game.room, game.objects, game.enemies);
@@ -150,6 +152,7 @@ function showEvents(events, { game, roomScene, hud, debug }) {
 function syncHud(hud, game, renderer, dt) {
   const { player } = game;
   hud.setIntegrity(player.integrity, player.maxIntegrity);
+  hud.setBackups(player.backups, PLAYER.backups);
   // No energy bar before he knows a spell.
   hud.setEnergy(player.energy, player.maxEnergy, player.spell !== null);
   hud.setSpell(player.spell, player.spells.length, player.spell && game.spellNameKey(player.spell));
