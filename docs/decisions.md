@@ -609,3 +609,24 @@ Roman numeral; every locked exit is a dark door panel. Gold hat bands
 show the level. Test room Vault.
 **Why:** the core is the hub he returns to; the last 16 fragments are for
 the ending.
+
+### D102 — 2026-09-28 — World map tool removes single exits
+Exits are marks on their room's edge, cyan connected and magenta loose.
+Delete removes one by a click on its mark: a connected exit goes with its
+connection and the exit at the other end (every exit must be connected),
+a loose one alone; one undo step. Connect uses a loose 2-wide exit in the
+facing wall, nearest the middle, before opening a new one.
+**Why:** a connection line between neighbours is short and hard to hit,
+and a loose exit (made by hand) has no line at all.
+
+### D103 — 2026-09-28 — World map tool: Undo last save
+Before each save the map keeps a rollback point: `world.json` and every
+room file the save writes or deletes, in session storage so it survives
+the reload a new or deleted room causes. The panel's Undo button (Ctrl+Z)
+undoes edits; with none left it reads Undo last save and puts the point
+back as unsaved changes, for Save to write through its usual checks. One
+step only; another page's save (the room editor) drops the point. The map
+tool's tests use a small world of their own.
+**Why:** a room deleted by accident was gone once saved; restoring it as
+unsaved changes keeps one way to write data and lets the rollback be
+undone.

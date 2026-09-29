@@ -1450,14 +1450,24 @@ players never see it (D67).
     middle of the wall, or the nearest spot that is free of other exits
     and passes the room's checks. Fine-tune it in the room editor.
   - **Delete:** click a room to remove it with the exits into it (not the
-    start room), or a connection to remove it and both its exits.
+    start room), a connection to remove it and both its exits, or an
+    exit's mark on a room edge (D102): a connected exit goes with its
+    partner, a loose one alone.
+- **Exits** show as marks on the room edges, where they are along the
+  side: cyan when connected, magenta when loose (not connected: a data
+  error, e.g. made by hand). Connect uses a 2-wide loose exit already in
+  the facing wall (the middle-most) before making a new one.
 - **Saving:** rooms with unsaved changes show a lime dot; the Save button
   says what it would send. **Save** (or Ctrl+S) sends the moved rooms'
   positions, the new and changed room files, the removed rooms' ids and,
   if the connections changed, `world.json`; the dev server merges the
   positions into `world.json` as it is on disk, checks everything and
-  writes it all or nothing (removed room files are deleted). Ctrl+Z
-  undoes the last edit. A room file with no position yet gets a free cell
+  writes it all or nothing (removed room files are deleted). **Undo**
+  (or Ctrl+Z) undoes the last edit; with nothing left to undo it becomes
+  **Undo last save** (D103): what the last save changed or deleted comes
+  back as unsaved changes (Save writes it). It survives the reload a
+  saved new or deleted room causes, and is dropped when another page
+  (the room editor) saves. A room file with no position yet gets a free cell
   next to the start, saved with the next save.
 - **Opening a room:** click it: the game opens in one reused tab at
   `/?room=<id>&edit`, in the room editor on that room (F2 plays it). The

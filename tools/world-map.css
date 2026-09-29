@@ -86,6 +86,25 @@ button {
   cursor: pointer;
 }
 
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.actions button {
+  margin-top: 0;
+}
+
+.actions button.undo {
+  color: var(--text);
+  background: var(--line);
+}
+
+.actions button.undo:disabled {
+  color: var(--dim);
+}
+
 button:disabled {
   color: var(--dim);
   background: var(--line);
@@ -159,8 +178,21 @@ li[data-room]:hover {
   opacity: 0.45;
 }
 
-.link-end {
+/* An exit on its room's edge (D102): cyan connected, magenta loose. */
+.exit-mark .exit {
   fill: var(--cyan);
+}
+
+.exit-mark.loose .exit {
+  fill: var(--magenta);
+}
+
+.exit-hit {
+  fill: transparent;
+}
+
+.tool-delete .exit-mark:hover .exit {
+  fill: var(--red);
 }
 
 .room {
@@ -315,7 +347,7 @@ li[data-room]:hover {
   cursor: pointer;
 }
 
-.tool-delete .room:hover .box {
+.tool-delete .room:hover:not(:has(.exit-mark:hover)) .box {
   stroke: var(--red);
 }
 
