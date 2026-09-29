@@ -7,7 +7,8 @@
  * Menus stack: a panel such as the options, the controls or the quit
  * question opens over the menu that opened it, and Back (Esc / P) closes
  * the top one. Closing the pause menu itself resumes the game; the title
- * menu stays.
+ * menu stays. The map screen (D112) is a menu without items: M opens it
+ * over the game (or Map in the pause menu), and M, Esc, P or Enter close it.
  */
 import { SETTINGS, Settings } from './settings.js';
 
@@ -19,16 +20,17 @@ import { SETTINGS, Settings } from './settings.js';
  */
 export const MENUS = {
   title: ['continue', 'start', 'enterKey', 'options', 'controls'],
-  pause: ['resume', 'save', 'copyKey', 'copyLink', 'options', 'controls', 'quit'],
+  pause: ['resume', 'map', 'save', 'copyKey', 'copyLink', 'options', 'controls', 'quit'],
   enterKey: ['loadKey', 'back'],
   options: ['music', 'sound', 'visuals', 'back'],
   visuals: ['quality', 'renderScale', 'effects', 'back'],
   controls: ['back'],
   quit: ['quitNo', 'quitYes'],
+  map: [],
 };
 
 /** Items that open another menu. */
-const SUBMENUS = ['options', 'visuals', 'controls', 'quit', 'enterKey'];
+const SUBMENUS = ['options', 'visuals', 'controls', 'quit', 'enterKey', 'map'];
 
 /**
  * Something main.js does for a chosen item: start a new game from the
@@ -119,6 +121,7 @@ export class MenuFlow {
     const menu = this.top;
     if (!menu) return;
     const count = this.items(menu.id).length;
+    if (count === 0) return;
     menu.selected = (menu.selected + step + count) % count;
     this.notice = null;
   }
@@ -216,13 +219,19 @@ export class MenuFlow {
   /**
    * Read the menu actions of one tick: up and down move, left and right
    * adjust a setting, Enter or Space choose, Esc or P go back; while
-   * playing, Esc or P pause.
+   * playing, Esc or P pause and M opens the map, which M, Esc, P, Enter
+   * or Space close.
    * @param {{ pressed(action: string): boolean }} input
    * @returns {MenuCommand | null}
    */
   update(input) {
     if (this.playing) {
       if (input.pressed('pause')) this.pause();
+      else if (input.pressed('map')) this.open('map');
+      return null;
+    }
+    if (this.top.id === 'map') {
+      if (['map', 'pause', 'confirm', 'jump'].some((action) => input.pressed(action))) this.back();
       return null;
     }
     if (input.pressed('pause')) {

@@ -17,6 +17,7 @@ import { createLocks, updateSwitches } from './switches.js';
 import { arrival, exitAt } from './world/exits.js';
 import { Grid } from './world/grid.js';
 import { nearestShrine } from './world/map.js';
+import { RunMap, roomsAround } from './world/run-map.js';
 import { Progress, SAVE_BLOCKS, pickupBit, saveBit } from './world/progress.js';
 import { buildRoom } from './world/room.js';
 import { completion, placedBits, scoreOf } from './world/score.js';
@@ -114,6 +115,8 @@ export class Game {
     this.pastes = 0;
     /** Room of the backup shrine used last (D97), or null: it wins a tie for the nearest one. */
     this.lastShrine = null;
+    /** The rooms of this run on his map (D112): never saved, so a load starts it empty. */
+    this.map = new RunMap();
     /** He died with no backups left: when he recompiles, the system crashes (D97). */
     this.crashing = false;
     /** Key fragments (world.json, D101): how many reboot the Grid, and the access levels they earn. */
@@ -149,6 +152,7 @@ export class Game {
     // Announce the room when it is a different one (not on a respawn).
     if (id !== this.room?.id) this.announceRoom(id);
     this.room = buildRoom(this.content.rooms.get(id), this.content);
+    this.map.visit(id);
     this.grid = new Grid(this.room);
     /** The room's objects (pushables, platforms, collapsing blocks), by kind (entities/kinds.js). */
     this.objects = this.room.objects.map(createObject);
@@ -362,10 +366,12 @@ export class Game {
     say('msg.debugFragments', { found: this.progress.count('fragments') });
   }
 
-  /** Use the room's backup shrine: refill him, and remember it for a tie (crash()). */
+  /** Use the room's backup shrine: refill him, remember it for a tie (crash()), and map the area. */
   useShrine() {
     this.refill();
     this.lastShrine = this.room.id;
+    // The shrine shows the rooms around it on his map (D112).
+    this.map.reveal(roomsAround(this.content.world.positions ?? {}, this.room.id));
     this.onShrine = true;
     this.emit('shrine');
   }

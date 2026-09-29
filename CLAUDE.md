@@ -275,10 +275,11 @@ of the world's permanent pickups found. Secrets are permanent pickups
 hidden where it takes an extra move. No bonus bits, no high score.
 
 ### Map
-Map screen showing visited rooms, connections and fragment markers.
-Current plan, not final: the map covers the current run only and is
-cleared when a save is loaded (the full map is never saved); save shrines
-show a map of the surrounding area (decided with the Phase 4 map step).
+Map screen (M, D112): the rooms entered in this run, their connections,
+stubs for exits not explored yet, and each room's name with icons under
+it (he is here, a fragment he hasn't found, a backup shrine). Never saved: a new game or a load starts it empty. A
+backup shrine reveals the rooms within 2 map cells, dimmed until visited;
+they stay for the run.
 
 ---
 

@@ -35,6 +35,13 @@ bosses that drop loot, tooling) (D104, D105).
   and **Enter key**, which says why it refuses a key. A load starts in the
   saved room, reset, with the key's pickups, access level and backups,
   full integrity and energy.
+- Map screen (D112): M, or **Map** in the pause menu, shows the rooms
+  entered in this run in their biome colors, seen from the game's angle,
+  with their connections, a stub for each exit not explored yet, and
+  each room's name with icons under it: where the wizard is, a fragment
+  still to be found, a backup shrine. A backup shrine reveals the rooms within 2 map cells,
+  dimmed until visited. The map is never saved: a new game or a load
+  starts it empty.
 - World map tool: exits show as marks on the room edges (cyan connected,
   magenta loose), and Delete removes one by a click on its mark (D102): a
   connected exit goes with its partner, a loose one alone. Connect uses a
