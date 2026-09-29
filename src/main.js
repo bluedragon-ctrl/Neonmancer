@@ -15,7 +15,6 @@ import { HOLO_TIME } from './render/holo.js';
 import { AutoQuality } from './render/quality.js';
 import { Renderer } from './render/renderer.js';
 import { RoomScene } from './render/room-scene.js';
-import { SHRINE_FX } from './render/shrine-view.js';
 import { showErrorScreen } from './ui/error-screen.js';
 import { toggleFullscreen, wantsFullscreenHint } from './ui/fullscreen.js';
 import { Hud } from './ui/hud.js';
@@ -38,8 +37,6 @@ function boot() {
   // room and ?edit opens the room editor on it (the world map tool's links).
   const devRoom = DEV_SERVER && content.rooms.has(params.get('room')) ? params.get('room') : undefined;
   const game = new Game(content, { start: devRoom });
-  // The backup shrine look (D96) while the author picks one: ?shrine=white|gold|rainbow.
-  if (SHRINE_FX.looks[params.get('shrine')]) SHRINE_FX.look = params.get('shrine');
 
   // Quality steps down by itself when frames run slow (D76). ?scale=0.5
   // and ?msaa=0 set it by hand instead, until there is a settings menu

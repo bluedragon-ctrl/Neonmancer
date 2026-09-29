@@ -6,26 +6,19 @@
  * rebooted on after a crash), it flares: brighter, with rings sweeping up
  * fast.
  *
- * Three looks are prototyped for the author to choose from (`?shrine=` in
- * the game, `?asset=shrines` in the showcase): white light, gold, and a
- * rainbow shimmer cycling through the hues.
+ * It is in the wizard's magenta, like the backups in the HUD: it is where he
+ * is backed up. Reviewed in the asset showcase (`?asset=shrine`).
  *
  * Layout and timing are pure (shrineMotes(), shrineRings(), shrinePulse());
  * createShrine() animates them.
  */
 import { AdditiveBlending, Color, DoubleSide, Group, Mesh, MeshBasicMaterial, PlaneGeometry } from 'three';
 import { createPixelBurst, placePixels } from './entity-view.js';
-import { fadingLines, lineMaterial, neonLines } from './neon.js';
+import { PALETTE, fadingLines, lineMaterial, neonLines } from './neon.js';
 
 export const SHRINE_FX = {
-  /** The looks, by name; `hue` cycles the colors instead of a fixed one. */
-  looks: {
-    white: { color: 0xe6f2ff },
-    gold: { color: 0xffc23d },
-    rainbow: { hue: true },
-  },
-  /** The look shown in the game (main.js may set it from `?shrine=`). */
-  look: 'white',
+  /** The wizard's magenta, his body's color (D96). */
+  color: PALETTE.magenta,
   /** Lines float this far above the floor. */
   lift: 0.012,
   /** Margin of the outline from the tile edge; of the rune's diamond; half the rune's inner square. */
@@ -55,9 +48,6 @@ export const SHRINE_FX = {
   useRingGap: 0.12,
   useRingTime: 0.6,
   useBoost: 1.6,
-  /** Rainbow: seconds per round of the hues; hue step between parts. */
-  hueTime: 6,
-  hueStep: 0.12,
 };
 
 /**
@@ -133,13 +123,11 @@ function rune(y) {
 /**
  * A backup shrine, its tile's lower corner at the origin. `userData.update(dt)`
  * animates it; `userData.use()` makes it flare.
- * @param {keyof typeof SHRINE_FX.looks} [look]
  */
-export function createShrine(look = SHRINE_FX.look) {
-  const style = SHRINE_FX.looks[look] ?? SHRINE_FX.looks.white;
+export function createShrine() {
   const group = new Group();
   const y = SHRINE_FX.lift;
-  const base = new Color(style.color ?? 0xffffff);
+  const base = new Color(SHRINE_FX.color);
 
   const outlineMat = lineMaterial({ color: base, width: 2.5 });
   const runeMat = lineMaterial({ color: base, width: 1.8 });
@@ -157,6 +145,7 @@ export function createShrine(look = SHRINE_FX.look) {
   fill.rotation.x = -Math.PI / 2;
   fill.position.set(0.5, y / 2, 0.5);
 
+  // White pixels tinted by the material: pale magenta sparks.
   const motes = createPixelBurst(SHRINE_FX.motes, SHRINE_FX.moteSize, [0xffffff]);
   // Rings: a few reused squares, placed and lit each frame.
   const rings = Array.from({ length: SHRINE_FX.useRings + 1 }, () => {
@@ -169,9 +158,6 @@ export function createShrine(look = SHRINE_FX.look) {
 
   let time = 0;
   let since = Infinity;
-  const color = new Color();
-  /** The color of a part `step` hue steps along (the rainbow), or the look's color. */
-  const tint = (step) => (style.hue ? color.setHSL((time / SHRINE_FX.hueTime + step * SHRINE_FX.hueStep) % 1, 1, 0.62) : color.copy(base));
 
   group.userData.use = () => {
     since = 0;
@@ -181,10 +167,10 @@ export function createShrine(look = SHRINE_FX.look) {
     since += dt;
     const { pulse, flare } = shrinePulse(time, since);
     const lit = SHRINE_FX.dim + (SHRINE_FX.bright - SHRINE_FX.dim) * pulse + SHRINE_FX.useBoost * flare;
-    outlineMat.color.copy(tint(0)).multiplyScalar(lit);
-    runeMat.color.copy(tint(1)).multiplyScalar(lit * 0.9);
-    beamMat.color.copy(tint(2)).multiplyScalar(0.5 + 0.5 * pulse + SHRINE_FX.useBoost * flare);
-    fillMat.color.copy(tint(0)).multiplyScalar(SHRINE_FX.fillLow + (SHRINE_FX.fillHigh - SHRINE_FX.fillLow) * pulse + flare);
+    outlineMat.color.copy(base).multiplyScalar(lit);
+    runeMat.color.copy(base).multiplyScalar(lit * 0.9);
+    beamMat.color.copy(base).multiplyScalar(0.5 + 0.5 * pulse + SHRINE_FX.useBoost * flare);
+    fillMat.color.copy(base).multiplyScalar(SHRINE_FX.fillLow + (SHRINE_FX.fillHigh - SHRINE_FX.fillLow) * pulse + flare);
 
     const shown = shrineRings(time, since);
     rings.forEach(({ line, material }, i) => {
@@ -192,11 +178,11 @@ export function createShrine(look = SHRINE_FX.look) {
       line.visible = !!ring;
       if (!ring) return;
       line.position.y = ring.y;
-      material.color.copy(tint(3 + i)).multiplyScalar(ring.brightness);
+      material.color.copy(base).multiplyScalar(ring.brightness);
     });
 
     placePixels(motes, shrineMotes(time).map(({ offset, scale: s }) => ({ offset, scale: s * (1 + flare) })), [0, 0, 0]);
-    motes.material.color.copy(tint(4)).multiplyScalar(1 + flare);
+    motes.material.color.copy(base).multiplyScalar(1 + flare);
   };
   group.userData.update(0);
   return group;
