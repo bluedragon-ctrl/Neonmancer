@@ -278,7 +278,7 @@ hidden where it takes an extra move. No bonus bits, no high score.
 Map screen (M, D112): the rooms entered in this run as glass blocks on
 the floor grid, drawn with the game's renderer, their connections,
 stubs for exits not explored yet, and each room's name with icons under
-it (he is here, a fragment he hasn't found, a backup shrine). Never saved: a new game or a load starts it empty. A
+it (he is here, a fragment he hasn't found, a backup shrine, the core). Never saved: a new game or a load starts it empty. A
 backup shrine reveals the rooms within 2 map cells, dimmed until visited;
 they stay for the run.
 

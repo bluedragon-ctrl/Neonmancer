@@ -40,7 +40,7 @@ bosses that drop loot, tooling) (D104, D105).
   colors on the game's floor grid, seen through the game's camera and
   bloom, with their connections, a stub for each exit not explored yet, and
   each room's name with icons under it: where the wizard is, a fragment
-  still to be found, a backup shrine. A backup shrine reveals the rooms within 2 map cells,
+  still to be found, a backup shrine, the central core. A backup shrine reveals the rooms within 2 map cells,
   dimmed until visited. The map is never saved: a new game or a load
   starts it empty.
 - World map tool: exits show as marks on the room edges (cyan connected,

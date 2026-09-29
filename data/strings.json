@@ -145,6 +145,7 @@
     "map.legend.you": "YOU ARE HERE",
     "map.legend.fragment": "FRAGMENT LEFT",
     "map.legend.shrine": "BACKUP SHRINE",
+    "map.legend.core": "CENTRAL CORE",
     "map.legend.stub": "UNEXPLORED EXIT",
     "controls.movementMode": "MOVEMENT MODE",
     "controls.movementModeKeys": "G",

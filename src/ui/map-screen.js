@@ -4,7 +4,7 @@
  * draws instead of the room while the map is up, with this overlay over
  * it: the heading and the room he is in, a label on each visited room (its
  * name, and under it a row of icons: he is here, a fragment he hasn't
- * found, a backup shrine), the legend and the keys. Sizes use --u like the
+ * found, a backup shrine, the central core), the legend and the keys. Sizes use --u like the
  * HUD; the labels shrink with the map when it is zoomed out to fit (down
  * to LABEL_SCALE_MIN).
  */
@@ -45,6 +45,7 @@ export class MapScreen {
       ['you', 'map.legend.you'],
       ['fragment', 'map.legend.fragment'],
       ['shrine', 'map.legend.shrine'],
+      ['core', 'map.legend.core'],
       ['stub', 'map.legend.stub'],
     ]
       .map(([mark, key]) => `<span><i class="map-icon ${mark}"></i>${this.text(key)}</span>`)
@@ -105,7 +106,7 @@ export class MapScreen {
 
   /**
    * A visited room's label, on its block's top: its name, and under it the
-   * icons that apply (he is here, a fragment left, a backup shrine).
+   * icons that apply (he is here, a fragment left, a backup shrine, the core).
    * @param {{ room: object, center: number[] }} placed a map-view.js mapLayout() room
    */
   label({ room, center }) {
@@ -119,7 +120,7 @@ export class MapScreen {
     name.className = 'map-label-name';
     name.textContent = room.name;
     label.append(name);
-    const icons = ['you', 'fragment', 'shrine'].filter((icon) => (icon === 'you' ? room.current : room[icon]));
+    const icons = ['you', 'fragment', 'shrine', 'core'].filter((icon) => (icon === 'you' ? room.current : room[icon]));
     if (icons.length > 0) {
       const row = document.createElement('div');
       row.className = 'map-label-icons';

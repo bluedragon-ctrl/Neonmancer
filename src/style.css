@@ -1229,9 +1229,16 @@ body {
 }
 
 .map-icon.shrine {
+  background: var(--magenta);
+  box-shadow: 0 0 calc(6 * var(--u)) var(--magenta);
+}
+
+/* The central core: a white ring round its gold crystal. */
+.map-icon.core {
   border-radius: 50%;
-  border: calc(2 * var(--u)) solid var(--magenta);
-  box-shadow: 0 0 calc(5 * var(--u)) var(--magenta);
+  border: calc(2 * var(--u)) solid #eef3ff;
+  background: radial-gradient(circle, var(--gold) 0 35%, transparent 40%);
+  box-shadow: 0 0 calc(6 * var(--u)) #eef3ff;
 }
 
 .map-icon.stub {

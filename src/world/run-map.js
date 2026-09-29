@@ -75,20 +75,20 @@ export function sidePoint([x, z], side) {
  * room shows a stub on each side with an exit that leads somewhere not on
  * the map yet, a gold
  * mark while a fragment he hasn't found lies in it, and whether it has a
- * backup shrine; a revealed one only its outline.
+ * backup shrine or the central core; a revealed one only its outline.
  * @param {object} content loaded game data (data/load.js)
  * @param {RunMap} map
  * @param {object} state
  * @param {string} state.current the room he is in
  * @param {import('./progress.js').Progress} state.progress what he has found
  * @returns {{
- *   rooms: { id: string, name: string, cell: number[], color: string, visited: boolean, current: boolean, fragment: boolean, shrine: boolean }[],
+ *   rooms: { id: string, name: string, cell: number[], color: string, visited: boolean, current: boolean, fragment: boolean, shrine: boolean, core: boolean }[],
  *   stubs: { at: number[], out: number[] }[],
  *   links: { from: number[], to: number[], adjacent: boolean, visited: boolean }[],
  * }} map points are [x, z] in cells
  */
 export function mapModel(content, map, { current, progress }) {
-  const { rooms: roomData, world, biomes, pickupTypes, spells } = content;
+  const { rooms: roomData, world, biomes, pickupTypes, objectTypes, spells } = content;
   const positions = world.positions ?? {};
   const shown = (id) => map.shows(id) && positions[id] && roomData.has(id);
   const rooms = [];
@@ -111,6 +111,7 @@ export function mapModel(content, map, { current, progress }) {
       current: id === current,
       fragment,
       shrine: visited && Boolean(data.shrine),
+      core: visited && (data.objects ?? []).some(({ type }) => objectTypes[type]?.kind === 'core'),
     });
     if (!visited) continue;
     // One stub per side, however many exits lead off the map there.

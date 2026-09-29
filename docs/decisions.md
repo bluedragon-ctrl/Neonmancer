@@ -759,7 +759,8 @@ it yet; where along the wall an exit lies doesn't show. The rooms behind
 stay hidden. Each visited room
 is labelled with its name and, under it, a row of icons: a blinking dot
 where he is, a gold mark while a fragment he hasn't found lies there, a
-magenta ring for a backup shrine. Revealed rooms have no label.
+filled magenta square for a backup shrine, a white ring round a gold dot
+for the central core. Revealed rooms have no label.
 The map is a 3D scene built from the game's own look and drawn through
 its renderer (camera angle, bloom) instead of the room while it is up, so
 east is down-right as in the rooms: the rooms stand on the gray floor grid

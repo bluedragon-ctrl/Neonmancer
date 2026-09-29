@@ -6,7 +6,7 @@ import { MAP_LOOK, mapLayout } from '../src/render/map-view.js';
 import { MenuFlow } from '../src/ui/menus.js';
 import { Progress, saveBit } from '../src/world/progress.js';
 import { ROOM_SIZE, RunMap, mapModel, roomsAround, sidePoint } from '../src/world/run-map.js';
-import { input, testWorld } from './helpers.js';
+import { CORE, CRATE, input, testWorld } from './helpers.js';
 
 /**
  * testWorld() with a fragment in boot_sector and stack_yard, and a backup
@@ -17,6 +17,8 @@ function world() {
   files['rooms/boot_sector.json'].pickups = [{ id: 'f0', type: 'fragment_0', at: [2, 0, 2] }];
   files['rooms/stack_yard.json'].pickups = [{ id: 'f1', type: 'fragment_1', at: [2, 0, 2] }];
   files['rooms/fault_line.json'].shrine = [3, 3];
+  files['defs.json'].objects = { crate: CRATE, core: CORE };
+  files['rooms/cache_hall.json'].objects = [{ id: 'core', type: 'core', at: [4, 0, 4] }];
   return loadGameData(files);
 }
 
@@ -87,6 +89,15 @@ test('a shrine shows on the map in a visited room', () => {
   map.visit('fault_line');
   const model = mapModel(content, map, { current: 'fault_line', progress: new Progress() });
   assert.equal(model.rooms[0].shrine, true);
+});
+
+test('the central core shows on the map in a visited room', () => {
+  const content = world();
+  const map = new RunMap();
+  map.visit('cache_hall');
+  map.visit('boot_sector');
+  const rooms = mapModel(content, map, { current: 'boot_sector', progress: new Progress() }).rooms;
+  assert.deepEqual(rooms.filter((room) => room.core).map((room) => room.id), ['cache_hall']);
 });
 
 test('a stub sits in the middle of its side of the room square; links run center to center', () => {
