@@ -1638,3 +1638,47 @@ Refines D45: test rooms and real rooms live side by side from now on.
 changed by development steps or grow test-room exits. A flag rather
 than a separate folder lets a test room be promoted in place; a written
 rule is enough without a permission block.
+
+### D91 — 2026-09-29 — Access level in the save key; upgrades move to Phase 3
+- **Access level:** the save key gets its own access-level field, 8 bits
+  wide: 4 are used (levels 0–15) and 4 stay spare. The key layout
+  (CLAUDE.md §8) becomes format version 4, room 8, access level 8,
+  pickups 112, health 4, score 20, checksum 16: 172 bits. The level is
+  stored, not counted from fragment bits; what raises it settles in the
+  fragments and access step.
+- **Upgrades in Phase 3:** Zap+ and Mirror (D88) get their own step,
+  13 `feat/spell-upgrades`, right after the buff items (step 12) and
+  apart from them. Score and bits become step 14, fragments and access
+  15, the release 16. Compile, Fork, Scan and Pull stay in Phase 4.
+**Why:** author's choices. A whole byte leaves the access level room to
+grow without a new key format. Upgrades and buffs are different kinds of
+pickup (one changes a spell, the other the wizard), so each gets its own
+step; bringing the upgrades forward makes the first two spells worth
+having late already in Phase 3.
+
+### D92 — 2026-09-29 — The jump becomes an upgrade; backups (lives) and backup shrines
+- **Jump upgrade:** the jump buff (D88) moves from the buffs to the
+  upgrades block. A double jump is weighed against a plain higher jump
+  (1 → 2 blocks) in the upgrades step (13, now `feat/upgrades`). The
+  buff draft keeps 4× +1 integrity, 5× +10 energy and one recharge buff.
+- **Backups:** the wizard gets a limited number of backups (lives). A
+  death uses one; he still recompiles at the room entrance, quick as
+  before. With none left the system crashes (`> SYSTEM CRASH`): the
+  game restores the state stored at the last backup shrine, and
+  pickups, score and places reached since are lost (the pickups lie in
+  their rooms again).
+- **Backup shrines** store that state and refill the backups. A load
+  always starts with full backups, so the save key holds no backups
+  field; the access keys (Phase 4) write the shrine's state as the key.
+- **When:** its own Phase 3 step, 14 `feat/backups`, after the
+  upgrades; score and bits become step 15, fragments and access 16,
+  the release 17.
+Refines the "quick and non-punishing" death (CLAUDE.md §4): a single
+death still is; a run of them costs the progress since the last shrine.
+**Why:** author's choices. Death cost nothing (every pickup is saved when
+taken), so there was no tension. Backups with a rollback to the last
+shrine are the usual gentle answer in the genre: nothing is lost for
+good, and the save key already carries exactly the state to roll back
+to. A double jump may give the jump upgrade more play than a higher
+jump; the step decides. The jump makes the wizard stronger like the
+spell upgrades do, so it belongs with them.

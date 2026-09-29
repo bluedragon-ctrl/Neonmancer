@@ -7,6 +7,14 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The save key's layout gets an 8-bit access-level field (D91, 4 bits
+  used). The spell upgrades Zap+ and Mirror move to Phase 3 as their
+  own step (13 `feat/spell-upgrades`); the later Phase 3 steps are
+  renumbered.
+- Backups (lives) and backup shrines are planned as Phase 3 step 14
+  `feat/backups` (D92): with no backups left the game restores the last
+  shrine. The jump buff becomes the jump upgrade (a double jump is
+  considered); step 13 is now `feat/upgrades`.
 - Authored rooms (D90): a room's `"authored": true` flag, a checkbox in
   the room editor, marks the author's real game rooms. The world map tool
   shows them as AUTHORED and doesn't flag them for lying far from the
