@@ -1,7 +1,7 @@
 /**
  * A pickup in a room (D71): it hovers in its cell and the wizard takes it
  * by touching it. Permanent ones (data disks) have a save bit; one already
- * found shows as a ghost and can't be taken again (buff chips too, D93). Temporary ones
+ * found shows as a ghost and can't be taken again (buff chips, upgrade cards and secrets too, D93, D100). Temporary ones
  * (refills) have none and come back when the room resets. Pure logic.
  */
 
@@ -19,6 +19,12 @@ export const PICKUP = {
  * install animation and banner use it.
  */
 export const BUFF_COLORS = { integrity: '#00f0ff', energy: '#b6ff3c', recharge: '#b6ff3c' };
+
+/**
+ * The score's gold (D100): the HUD score, and the secrets that raise it
+ * most (their gem, install animation, banner and score popup).
+ */
+export const SCORE_COLOR = '#ffe23d';
 
 export class Pickup {
   /**

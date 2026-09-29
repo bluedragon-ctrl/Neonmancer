@@ -53,6 +53,9 @@ import { createBolt, createCastFlare, createSparks, placeBolt, placeCastFlare, p
 import { EnergyBar } from '../src/ui/energy-bar.js';
 import { createCard } from '../src/render/card.js';
 import { createChip } from '../src/render/chip.js';
+import { createGem } from '../src/render/gem.js';
+import { SCORE_COLOR } from '../src/entities/pickup.js';
+import { SCORE_POPUP, ScorePopups } from '../src/render/score-popup.js';
 import { DISK, createDisk, diskMotion, diskPixels, poseDisk } from '../src/render/disk.js';
 import { createRefill, refillMotion } from '../src/render/refill.js';
 import { INSTALL_FX } from '../src/render/install-fx.js';
@@ -222,6 +225,13 @@ const ALL_ASSETS = [
   { label: 'upgrades-row', group: 'upgrades', span: 4, spin: false, build: buildUpgradeRow },
   { label: 'shield-plus', group: 'upgrades', spin: false, shadow: PALETTE.magenta, build: () => buildShield(defs.pickups.upgrade_shield_plus.color) },
   { label: 'double-jump', group: 'upgrades', span: 4, spin: false, build: buildDoubleJump },
+  // Secrets (Phase 3 step 15, D100): a gold gem in the HUD score's gold;
+  // a found one as a gray ghost; beside a disk, a chip and a card; the
+  // score popups floating up from pickups.
+  { label: 'secret', group: 'secrets', spin: false, build: () => buildGem({}) },
+  { label: 'secret-ghost', group: 'secrets', spin: false, build: () => buildGem({ ghost: true }) },
+  { label: 'secrets-row', group: 'secrets', span: 4, spin: false, build: buildGemRow },
+  { label: 'score-popup', group: 'secrets', span: 3, spin: false, build: buildScorePopups },
   // Switches and locked exits (Phase 3 step 4, D75): a target zapped on
   // and off; a plate pressed by a crate dropping on it, then by the wizard;
   // a room with a locked doorway (panel) and a locked front exit (bars)
@@ -583,6 +593,44 @@ function buildChip(options) {
   const chip = createChip(options);
   const asset = new Group().add(chip);
   asset.userData.update = (dt, time) => poseDisk(chip, diskMotion({ time, ghost: options.ghost }));
+  return asset;
+}
+
+/** A secret's gem idling. */
+function buildGem(options) {
+  const gem = createGem(options);
+  const asset = new Group().add(gem);
+  asset.userData.update = (dt, time) => poseDisk(gem, diskMotion({ time, ghost: options.ghost }));
+  return asset;
+}
+
+/** The gem beside the other permanent pickups: a disk, a chip and a card. */
+function buildGemRow() {
+  const models = [createGem(), createDisk(), createChip({ stat: 'energy', slot: 4 }), createCard(defs.pickups.upgrade_zap_plus)];
+  const asset = new Group();
+  models.forEach((model, i) => {
+    const along = (i - 1.5) * 0.9;
+    model.position.set(along, 0, -along);
+    asset.add(model);
+  });
+  asset.userData.update = (dt, time) => models.forEach((model, i) => poseDisk(model, diskMotion({ time: time + i * 0.7 })));
+  return asset;
+}
+
+/** Score popups (D100): a +200 in gold, then a +50 in Zap's color, again and again. */
+function buildScorePopups() {
+  const popups = new ScorePopups();
+  const asset = new Group().add(popups.group);
+  let next = 0;
+  let count = 0;
+  asset.userData.update = (dt, time) => {
+    if (time >= next) {
+      const secret = count++ % 2 === 0;
+      popups.add({ points: secret ? defs.score.secret : defs.score.bit, at: [secret ? -0.4 : 0.4, 0, 0], color: secret ? SCORE_COLOR : defs.spells.zap.color });
+      next = time + SCORE_POPUP.seconds * 0.6;
+    }
+    popups.update(dt);
+  };
   return asset;
 }
 

@@ -71,7 +71,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `ai/patrol.js` | Patrol: next step towards the next waypoint column, pauses at the ends, turns back; off its path it takes the enemy's route back (pure, tested) |
 | `ai/chase.js` | Chase (D78, D80): calm → chase → search → return, greedy steps towards the wizard, routes (round walls) to where it last saw him and home, searches when his Zap hits it, patrols while calm if it has a path (pure, tested) |
 | `ai/sight.js` | Rays through the grid and bodies (`castRay()`), `lineOfSight()`, `reach()` from a point to a box (pure, tested) |
-| `world/progress.js` | What the wizard has for the whole game (D71): save bits in blocks (`SAVE_BLOCKS`, `saveBit()`, `pickupBit()`), `Progress` (bits found, known spells) (pure, tested) |
+| `world/progress.js` | What the wizard has for the whole game (D71): save bits in blocks (`SAVE_BLOCKS`, `saveBit()`, `pickupBit()`), `Progress` (bits found, known spells, a block's count); blocks: spells, buffs, upgrades, fragments, secrets (D100) (pure, tested) |
+| `world/score.js` | The score (D100): points from the save bits (`scoreOf()`), the permanent pickups placed in the world (`placedBits()`) and the share found (`completion()`) (pure, tested) |
 | `entities/warp.js` | Where Blink and Warp take the wizard (D86): `warpTarget()` sweeps his box along his aim through open space, stops at blocks, objects and the room's side, lands short of enemies, reports the enemies passed (pure, tested) |
 | `entities/clip.js` | Where Cut & Paste works (D87): `aimAxis()`, `frontCell()` (the cell in front of him), `cutTarget()` (a resting crate or frozen enemy there or one up, nothing on it), `pasteCell()` (free of blocks, bodies and pickups) (pure, tested); `cutOrPaste()` (spells.js) moves things in and out of the room |
 | `entities/pickup.js` | A pickup in a room: its box, save bit, state (idle, ghost, taken) and pick-up ticks (pure, tested) |
@@ -141,6 +142,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/card.js` | Upgrade card look (D95): a white expansion card, contact fingers in the upgrade's color with a key notch, a bracket, the upgrade's bit on both faces, ghost |
 | `render/switch-view.js` | Switch and locked-exit looks (`SWITCH_FX`): target and plate with their square bull's-eye, the lock's panel or bars with one light per switch; `TargetView`, `PlateView`, `LockView` (marks pure, tested) |
 | `render/chip.js` | Buff chip look (D93): chip in the stat's color, icon on the front, the buff's bit on the back, ghost |
+| `render/gem.js` | Secret look (D100): a gold gem, a stretched octahedron in the score's gold, ghost |
+| `render/score-popup.js` | Score popups (D100): `+50` sprites rising from a pickup in its color and fading, drawn over everything |
 | `render/pickup-model.js` | A pickup's model by kind (disk, upgrade card, chip or refill), for the room view and the install animation |
 | `render/pickup-view.js` | A room pickup's view: its look, idle motion, ghost, pick-up effect |
 | `tools/showcase.html`, `tools/showcase.js` | Asset showcase page: every look on a turntable with the real renderer (also deployed) |

@@ -35,8 +35,8 @@ test('pickup report: every permanent item by its bit, where it lies, not placed 
     ['gamma', {}],
   ]);
   const { items, refills, unknown } = pickupReport(PICKUPS, SPELLS, rooms);
-  assert.deepEqual(items.map((item) => item.bit), [0, 1, 2, 3, 4, 5, 6, 16, 17, 20, 25, 32, 33, 34], 'every defined item, in bit order');
-  assert.deepEqual(bitBlock(items.at(-1).bit), { block: 'upgrades', slot: 2 }, 'the double jump');
+  assert.deepEqual(items.map((item) => item.bit), [0, 1, 2, 3, 4, 5, 6, 16, 17, 20, 25, 32, 33, 34, 112, 113], 'every defined item, in bit order');
+  assert.deepEqual(bitBlock(items.at(-1).bit), { block: 'secrets', slot: 1 }, 'the second secret');
   const zap = items[0];
   assert.deepEqual(zap.types, ['disk_zap']);
   assert.deepEqual(zap.places, [{ room: 'alpha', id: 'd', at: [1, 0, 1] }, { room: 'beta', id: 'd2', at: [3, 0, 3] }], 'placed twice');
@@ -46,5 +46,5 @@ test('pickup report: every permanent item by its bit, where it lies, not placed 
   assert.deepEqual(refills.find((refill) => refill.type === 'refill_energy').places, [{ room: 'alpha', id: 'r', at: [2, 0, 2] }]);
   assert.deepEqual(unknown, [{ room: 'beta', id: 'x', type: 'nope' }]);
   assert.deepEqual(bitBlock(48), { block: 'fragments', slot: 0 });
-  assert.equal(bitBlock(112), null);
+  assert.equal(bitBlock(128), null);
 });

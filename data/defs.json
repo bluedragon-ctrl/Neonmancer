@@ -1,6 +1,7 @@
 {
   "$schema": "../schemas/defs.schema.json",
   "schemaVersion": 1,
+  "score": { "bit": 50, "secret": 200, "accessLevel": 500 },
   "objects": {
     "crate": { "kind": "pushable", "color": "#b6ff3c", "mark": "bits", "faces": "glass" },
     "crate_plain": { "kind": "pushable", "color": "#b6ff3c", "faces": "glass" },
@@ -163,7 +164,9 @@
       "spell": "shield",
       "color": "#cfe8ff"
     },
-    "upgrade_double_jump": { "kind": "upgrade", "upgrade": "double_jump", "slot": 2, "color": "#ff2bd6" }
+    "upgrade_double_jump": { "kind": "upgrade", "upgrade": "double_jump", "slot": 2, "color": "#ff2bd6" },
+    "secret_0": { "kind": "secret", "slot": 0 },
+    "secret_1": { "kind": "secret", "slot": 1 }
   },
   "blocks": {
     "block": { "look": "plain" },

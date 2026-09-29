@@ -13,7 +13,7 @@ and collect key fragments to reboot the Grid.
 > are made in the in-game room editor (F2), with open, data-driven block
 > types and six biome looks. No goal yet. Now: Phase 3 (spells and
 > pickups: a world map tool for the developer, data disks, switches,
-> Viruses and Pop-ups, four more spells, buff items, score and bonus bits,
+> Viruses and Pop-ups, four more spells, buff items, score and secrets,
 > fragments and the core), then Phase 4 (Wardens, more spells, saves,
 > the map, tooling).
 > Latest `main` build: https://bluedragon-ctrl.github.io/Neonmancer/

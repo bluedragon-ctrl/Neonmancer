@@ -1,7 +1,8 @@
 /**
  * The HUD: a DOM overlay on the stage with the integrity bar, the backups
  * under it, the energy
- * bar with the selected spell under it (and the Cut & Paste clipboard), the room name banner, terminal messages and the fullscreen hint. It only shows state;
+ * bar with the selected spell under it (and the Cut & Paste clipboard), the score
+ * and completion under the title (D100), the room name banner, terminal messages and the fullscreen hint. It only shows state;
  * main.js feeds it every frame. Sizes use --u (one pixel at 1080p), so it
  * scales with the stage. All text comes from data/strings.json; terminal
  * messages and banners arrive through say() and announce()
@@ -30,6 +31,7 @@ export class Hud {
       `<div class="hud-integrity"><div class="hud-label"></div><div class="hud-cells"></div></div>
       <div class="hud-backups"><span class="hud-backups-label"></span><span class="hud-pips"></span></div>
       <div class="brand"><span class="brand-title"></span> <span class="brand-version"></span></div>
+      <div class="hud-score"><span class="hud-score-label"></span><span class="hud-score-value"></span><span class="hud-score-done"></span></div>
       <div class="hud-banner"><div class="hud-banner-title"></div><div class="hud-banner-sub"></div></div>
       <div class="hud-terminal"></div>
       <div class="hud-hint"></div>
@@ -38,6 +40,7 @@ export class Hud {
     const find = (selector) => root.querySelector(selector);
     find('.hud-label').textContent = this.text('hud.integrity');
     find('.hud-backups-label').textContent = this.text('hud.backups');
+    find('.hud-score-label').textContent = this.text('hud.score');
     find('.brand-title').textContent = this.text('game.title');
     find('.brand-version').textContent = this.text('game.version', { version: GAME_VERSION });
     find('.hud-hint').textContent = this.text('hint.fullscreen');
@@ -52,6 +55,11 @@ export class Hud {
     this.terminalBox = find('.hud-terminal');
     this.hint = find('.hud-hint');
     this.movementTag = find('.hud-movement');
+    this.scoreBox = find('.hud-score');
+    this.scoreValue = find('.hud-score-value');
+    this.scoreDone = find('.hud-score-done');
+    this.score = null;
+    this.done = null;
     this.movementMode = null;
     this.energy = new EnergyBar(root, this.text('hud.energy'));
     root.insertAdjacentHTML('beforeend', '<div class="hud-spell"><span class="hud-spell-name"></span><span class="hud-clip" hidden></span><span class="hud-spell-key"></span></div>');
@@ -183,6 +191,27 @@ export class Hud {
     this.clipShown = icon;
     this.clipBox.hidden = icon === null;
     this.clipBox.innerHTML = icon ?? '';
+  }
+
+  /**
+   * The score and how much of the world's permanent pickups he has found
+   * (D100); a new score flashes.
+   * @param {number} score
+   * @param {number} percent 0-100
+   */
+  setScore(score, percent) {
+    if (percent !== this.done) {
+      this.done = percent;
+      this.scoreDone.textContent = `${percent}%`;
+    }
+    if (score === this.score) return;
+    const first = this.score === null;
+    this.score = score;
+    this.scoreValue.textContent = String(score).padStart(6, '0');
+    if (first) return;
+    this.scoreBox.classList.remove('scored');
+    void this.scoreBox.offsetWidth; // restart the animation
+    this.scoreBox.classList.add('scored');
   }
 
   /** A cast failed for lack of energy: flash the energy bar. */

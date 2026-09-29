@@ -8,7 +8,7 @@ import { bounceOffEnemies, burnEnemies, touchEnemies, updateAttacks, updateBolts
 import { isBackSide, sideAxes, withExitDefaults } from './data/room-data.js';
 import { Enemy } from './entities/enemy.js';
 import { createObject } from './entities/kinds.js';
-import { BUFF_COLORS, Pickup } from './entities/pickup.js';
+import { BUFF_COLORS, Pickup, SCORE_COLOR } from './entities/pickup.js';
 import { PLAYER, Player } from './entities/player.js';
 import { SWITCH_KINDS } from './entities/switch.js';
 import { groundBelow, overlapsBox, surfaceBelow, touchedCell, touchesBox } from './physics/collision.js';
@@ -19,6 +19,7 @@ import { Grid } from './world/grid.js';
 import { nearestShrine } from './world/map.js';
 import { Progress, pickupBit } from './world/progress.js';
 import { buildRoom } from './world/room.js';
+import { bitPoints, completion, placedBits, scoreOf } from './world/score.js';
 
 /** Terminal message for each way to die (Player.deathCause). */
 const DEATH_MESSAGES = { hole: 'msg.die', void: 'msg.void', damage: 'msg.derez' };
@@ -38,7 +39,7 @@ export const TRANSITION = {
  * Something that happened, for views, the HUD and (later) sound. Returned
  * by Game.update() for the tick it happened in.
  * @typedef {object} GameEvent
- * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'|'warp'|'fizzle'|'cut'|'paste'|'airjump'|'reflect'|'shrine'|'crash'} type
+ * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'|'warp'|'fizzle'|'cut'|'paste'|'airjump'|'reflect'|'shrine'|'crash'|'score'} type
  * @property {string} [spell] the spell cast, failed, fizzled (nowhere to
  *   go, energy kept) or selected (cast, deny, fizzle, spell); the teleport (warp)
  * @property {number[]} [from] where a Blink or Warp started (warp)
@@ -68,6 +69,9 @@ export const TRANSITION = {
  *   reboots on the nearest backup shrine (D97)
  * @property {object} [exit] the exit walked out through (exit); a locked
  *   exit opening (unlock) or closing again (lock)
+ * @property {number} [points] points a permanent pickup added (score, D100)
+ * @property {number[]} [at] where it lay, the middle of its cell (score)
+ * @property {string} [color] its color, for the popup (score)
  */
 
 export class Game {
@@ -81,6 +85,8 @@ export class Game {
     this.content = content;
     /** Permanent pickups found, for the whole game (D71): room resets and death leave it alone. */
     this.progress = progress;
+    /** Save bits of the permanent pickups placed in the world: what 100% means (D100). */
+    this.placedBits = placedBits(content.pickupTypes, content.spells, content.rooms.values());
     /** Debug mode: holes and lethal blocks never kill and hurt() does nothing. */
     this.invincible = false;
     /** 'grid' (default, D23) or 'screen' (D38); toggled with G, not saved. */
@@ -443,6 +449,7 @@ export class Game {
       const { banner, message } = this.gain(data);
       announce(banner.key, banner.values, banner.options);
       say(message.key, message.values);
+      this.emit('score', { points: bitPoints(bit, this.content.score), at: [x + 0.5, y + 0.5, z + 0.5], color: banner.options.color });
       return true;
     }
     // A refill: integrity or energy, up to his maximum.
@@ -455,11 +462,18 @@ export class Game {
 
   /**
    * What a permanent pickup gives him, and how it is announced.
-   * @param {object} data the pickup (buildRoom()): a data disk, a buff chip or an upgrade card
+   * @param {object} data the pickup (buildRoom()): a data disk, a buff chip, an upgrade card or a secret
    * @returns {{ banner: { key: string, values: object, options: object }, message: { key: string, values: object } }}
    */
   gain(data) {
     const { player } = this;
+    if (data.kind === 'secret') {
+      const values = { found: this.progress.count('secrets'), total: this.secretsPlaced() };
+      return {
+        banner: { key: 'banner.secret', values, options: { sub: 'banner.secretSub', subValues: values, color: SCORE_COLOR } },
+        message: { key: 'msg.secretFound', values },
+      };
+    }
     if (data.kind === 'buff') {
       this.applyBuffs();
       // Taking one fills what it raised (D93).
@@ -488,6 +502,25 @@ export class Game {
       banner: { key: 'banner.spell', values: { spell }, options: { sub: 'banner.spellSub', color: this.content.spells[data.spell].color } },
       message: { key: 'msg.spellInstalled', values: { spell } },
     };
+  }
+
+  /** The score (D100): what he has found, worked out from his save bits. */
+  get score() {
+    return scoreOf(this.progress, this.content.score);
+  }
+
+  /** How much of the world's permanent pickups he has found, in whole percent (D100). */
+  get completion() {
+    return completion(this.progress, this.placedBits);
+  }
+
+  /** How many secrets lie in the world (D100), each counted once however often it is placed. */
+  secretsPlaced() {
+    let n = 0;
+    for (const type of Object.values(this.content.pickupTypes)) {
+      if (type.kind === 'secret' && this.placedBits.has(pickupBit(type, this.content.spells))) n++;
+    }
+    return n;
   }
 
   /**
