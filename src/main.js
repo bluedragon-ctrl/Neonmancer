@@ -96,7 +96,7 @@ function boot() {
       run(flow.adjust(step));
     },
   });
-  const bootScreen = new BootScreen(renderer.stage);
+  const bootScreen = new BootScreen(renderer.stage, renderer.camera);
   /** Seconds into the boot sequence after Start (D110), or null when none runs. */
   let boot = null;
 
@@ -113,12 +113,14 @@ function boot() {
     hud.clear();
     if (quiet) return;
     say('msg.loading', { room: content.rooms.get(game.room.id).name.toUpperCase() });
+    bootScreen.start(game.room.size);
     boot = 0;
   }
 
   /** The boot sequence is over (or skipped): the banner, the greeting, and he is yours. */
   function finishBoot() {
     boot = null;
+    bootScreen.stop();
     game.announceRoom();
     say('msg.boot');
     say('msg.welcome');

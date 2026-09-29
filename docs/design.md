@@ -1694,10 +1694,12 @@ one, Enter steps it on and round. They are kept in localStorage
 (`neonmancer.settings`, apart from the access key) and read by nothing
 yet: the audio and quality presets of Phase 5 will.
 
-**Start** plays the boot sequence (D110, `src/render/boot-fx.js`, 2.2 s):
-the logo scrambles and glitches out; the room compiles behind a cyan scan
-line sweeping down the screen while the terminal types `> LOADING
-SECTOR`; the wizard pops in out of gathering pixels (the derez backwards),
+**Start** plays the boot sequence (D110, `src/render/boot-fx.js`, 2.6 s):
+the logo scrambles and glitches out; the room compiles tile by tile along
+its own grid, 2×2-cell tiles clearing in a shuffled wave from the back
+corner forward, each floor outline flashing cyan, while the terminal
+types `> LOADING SECTOR` (`src/ui/boot-screen.js`, a canvas over the
+game); the world round the room fades in last; the wizard pops in out of gathering pixels (the derez backwards),
 flashing white and landing with a squash; then the room's banner and the
 boot messages. The game holds until he lands; Enter, Space, Esc or P skip
 the rest.

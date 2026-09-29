@@ -21,7 +21,8 @@ bosses that drop loot, tooling) (D104, D105).
   submenu (quality, render scale, screen effects), kept in localStorage;
   stubs that nothing applies yet.
 - A boot sequence after Start (D110): the logo glitches out, the room
-  compiles behind a scan line, and the wizard pops in out of pixels; any
+  compiles tile by tile from its back corner, and the wizard pops in out
+  of pixels; any
   menu key skips it.
 - Access keys (D106): the save codec, 42 scrambled hex digits holding the
   room, access level, pickup bits and integrity with a CRC-16; reading

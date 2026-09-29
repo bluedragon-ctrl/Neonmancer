@@ -814,33 +814,18 @@ body {
   }
 }
 
-/* The room compiling: the void covers the game below the scan line, which
-   glows cyan as it sweeps down (--scan, set from JS). Under the HUD. */
+/* The room compiling tile by tile (src/ui/boot-screen.js): a canvas over
+   the game, under the HUD. */
 .boot-cover {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
-  background: var(--void);
-  --scan: 0%;
-  -webkit-mask-image: linear-gradient(to bottom, transparent var(--scan), #000 calc(var(--scan) + 4%));
-  mask-image: linear-gradient(to bottom, transparent var(--scan), #000 calc(var(--scan) + 4%));
 }
 
-.boot-cover[hidden],
-.boot-scan[hidden] {
+.boot-cover[hidden] {
   display: none;
-}
-
-.boot-scan {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: calc(3 * var(--u));
-  pointer-events: none;
-  background: #eaffff;
-  box-shadow:
-    0 0 calc(10 * var(--u)) var(--cyan),
-    0 0 calc(30 * var(--u)) var(--cyan);
 }
 
 /* Debug mode readout (F3), under the score: hidden until debug mode is on. */

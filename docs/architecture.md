@@ -83,7 +83,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `ai/sight.js` | Rays through the grid and bodies (`castRay()`), `lineOfSight()`, `reach()` from a point to a box (pure, tested) |
 | `render/alert-mark.js` | The red "!" over an enemy that noticed the wizard |
 | `render/block-fx.js` | Animated looks of hazard and void blocks (hazard face shader in room coordinates, steady edges, hazard flare; void via mist.js), `BLOCK_FX` tuning |
-| `render/boot-fx.js` | The boot sequence's timing (D110): logo, scan, the wizard's gathering pixels and landing (pure, tested) |
+| `render/boot-fx.js` | The boot sequence's timing (D110): logo, the room's reveal tiles and their order, the wizard's gathering pixels and landing (pure, tested) |
 | `render/break-fx.js` | Destructible object's jolt on a hit that doesn't break it, `BREAK_FX` tuning (pure, tested) |
 | `render/bug.js` | Bug model (ball, eyes colored by mood), hop pose, bounce squash, pop pixels, `BUG` tuning (pure parts tested); `BUG_MODEL` for `EnemyView` |
 | `render/camera.js` | Fixed isometric orthographic camera |
@@ -153,7 +153,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `ui/menus.js` | Title screen and pause menu logic (D109): the stack of menus, selection, what an item does (pure, tested) |
 | `ui/menu-screen.js` | Title screen and pause menu on screen: logo (and its scramble after Start), heading, items with setting values, controls table; mouse hover, click and ◄ ► |
 | `ui/settings.js` | Player settings (D109): volumes and visual stubs, steps, localStorage (pure, tested) |
-| `ui/boot-screen.js` | The room compiling after Start (D110): a void cover cut away behind a scan line |
+| `ui/boot-screen.js` | The room compiling after Start (D110): a canvas covering the room, cleared tile by tile along its grid, outlines flashing |
 | `ui/hud.js` | DOM overlay: integrity bar, backup pips, energy bar, spell tag and Cut & Paste clipboard slot, score, fragments and the boot key, room banner, terminal messages, end screen, fullscreen hint |
 | `ui/terminal.js` | Terminal message queue (typing, hold, fade) and banner timing (pure, tested) |
 | `ui/text.js` | String lookup with `{name}` values; scrambled "decoding" text for the banner (pure, tested) |

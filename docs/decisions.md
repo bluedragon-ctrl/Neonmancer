@@ -701,13 +701,18 @@ player who switched windows from coming back dead. Settings belong to the
 browser, not to the wizard, so they stay out of the access key.
 
 ### D110 — 2026-09-29 — A boot sequence after Start
-Start plays a 2.2-second boot sequence: the logo scrambles into glyphs
-and glitches out, the room compiles behind a cyan scan line sweeping down
-the screen while the terminal types `> LOADING SECTOR`, then the wizard
-pops in out of gathering pixels (the derez backwards), flashing white and
-landing with a squash. Then the room's banner and the boot messages; the
-game holds until he lands. Enter, Space, Esc or P skip it. The scan is a
-DOM cover over the canvas, not a clipping plane, which would recompile
-every shader at its start and end.
+Start plays a 2.6-second boot sequence: the logo scrambles into glyphs
+and glitches out, the room compiles tile by tile along its own grid
+(2×2-cell tiles, each a column up to the ceiling, in a shuffled wave from
+the back corner, each floor outline flashing cyan) while the terminal
+types `> LOADING SECTOR`, and the world round it fades in last; then the
+wizard pops in out of gathering pixels (the derez backwards), flashing
+white and landing with a squash. Then the room's banner and the boot
+messages; the game holds until he lands. Enter, Space, Esc or P skip it.
+The tiles are a 2D canvas over the game, not clipping in 3D, which would
+recompile every shader at its start and end; a cleared tile always
+shows, so at worst a block in front shows a moment early. (A first try,
+a scan line sweeping down the screen, was dropped.) The title's tagline
+is "INTO THE GRID".
 **Why:** starting should feel like being loaded into the Grid; the pixel
 pop-in reuses the derez, so it needs no new asset.
