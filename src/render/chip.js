@@ -1,19 +1,19 @@
 /**
  * Buff chip look (Phase 3 step 12, D93): a permanent buff, a square chip
  * in the color of the stat it raises (BUFF_COLORS: cyan integrity, lime
- * energy, amber recharge), thicker than a data disk and hovering and
+ * energy and recharge, the HUD bars' colors, D94), thicker than a data disk and hovering and
  * spinning the same way (diskMotion()). Pins stick out of its left and
  * right sides; the front carries the stat's icon (a plus, a crystal, a
  * lightning bolt), the back the 4×4 bit grid with the buff's slot lit, one
- * of the 16 buff bits of the save. A chip already found is a gray, dashed
- * ghost like a found disk.
+ * of the 16 buff bits of the save. A chip already found is a gray ghost
+ * like a found disk, solid-lined (D94).
  *
  * Looks are reviewed in the asset showcase (`?asset=chips`) before they go
  * into the game.
  */
 import { Color, ExtrudeGeometry, Group, Mesh, Shape } from 'three';
 import { BUFF_COLORS } from '../entities/pickup.js';
-import { DISK, createBitGrid, restartDashes } from './disk.js';
+import { DISK, createBitGrid } from './disk.js';
 import { PALETTE, faceMaterial, lineMaterial, neonLines } from './neon.js';
 
 /** Sizes in units. */
@@ -84,10 +84,9 @@ export function createChip({ stat = 'integrity', slot = 0, ghost = false } = {})
 
   // The body, one corner clipped like a real chip's pin-1 mark.
   const outline = [[-s, -s], [s, -s], [s, s], [-s + c, s], [-s, s - c]];
-  const bodyLines = lineMaterial({ color, width: CHIP.width, brightness: glow, dashed: ghost });
+  const bodyLines = lineMaterial({ color, width: CHIP.width, brightness: glow });
   const bodyFaces = faceMaterial(new Color(PALETTE.face).lerp(new Color(color), ghost ? 0.05 : CHIP.tint));
   const body = slab(outline, CHIP.thickness, 0, bodyFaces, bodyLines);
-  if (ghost) restartDashes(body[1], outline.length);
 
   // Pins on the left and right sides: small open loops in the middle plane.
   const pins = [];
@@ -100,15 +99,14 @@ export function createChip({ stat = 'integrity', slot = 0, ghost = false } = {})
       pins.push([[x0, y - w, 0], [x1, y - w, 0]], [[x1, y - w, 0], [x1, y + w, 0]], [[x1, y + w, 0], [x0, y + w, 0]]);
     }
   }
-  const pinLines = neonLines(pins, lineMaterial({ color, width: CHIP.width * 0.7, brightness: glow, dashed: ghost }));
+  const pinLines = neonLines(pins, lineMaterial({ color, width: CHIP.width * 0.7, brightness: glow }));
   pinLines.renderOrder = 2;
 
   // The stat's icon, standing out of the front.
   const icon = ICONS[stat].map(([x, y]) => [x * CHIP.icon, y * CHIP.icon]);
-  const iconLines = lineMaterial({ color, width: CHIP.iconWidth, brightness: ghost ? glow : CHIP.iconBrightness, dashed: ghost });
+  const iconLines = lineMaterial({ color, width: CHIP.iconWidth, brightness: ghost ? glow : CHIP.iconBrightness });
   const iconFaces = faceMaterial(new Color(PALETTE.face).lerp(new Color(color), ghost ? 0.1 : CHIP.iconTint));
   const iconParts = slab(icon, CHIP.raise, t + CHIP.raise / 2, iconFaces, iconLines);
-  if (ghost) restartDashes(iconParts[1], icon.length);
 
   // The save bits on the back.
   const bits = createBitGrid({ size: CHIP.size, depth: t, slot, color, ghost, sides: [-1] });

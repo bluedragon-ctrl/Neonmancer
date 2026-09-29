@@ -239,7 +239,7 @@ test('room editor: pickups are placed, picked by id and erased like objects', ()
   assert.deepEqual(edit.data.pickups, [], 'dropped outside the new size');
 });
 
-test('disk model: few draw calls; a ghost dashes each merged zero bit like its own line', () => {
+test('disk model: few draw calls; a ghost is solid-lined (D94)', () => {
   const draws = (model) => {
     let count = 0;
     model.traverse((node) => (count += node.isMesh ? 1 : 0)); // LineSegments2 is a Mesh too
@@ -251,10 +251,9 @@ test('disk model: few draw calls; a ghost dashes each merged zero bit like its o
   assert.equal(draws(ghost), 7);
   const zeros = ghost.userData.spin.children.find((node) => node.isLineSegments2 && node.geometry.attributes.instanceStart.count === 30 * 4);
   assert.ok(zeros, 'one line with the 4 sides of 15 zero bits on both faces');
-  const start = zeros.geometry.attributes.instanceDistanceStart;
-  const end = zeros.geometry.attributes.instanceDistanceEnd;
-  for (let i = 0; i < start.count; i++) {
-    if (i % 4 === 0) assert.equal(start.getX(i), 0, 'each square starts the dash pattern anew');
-    else assert.ok(Math.abs(start.getX(i) - end.getX(i - 1)) < 1e-6, 'and runs on round it');
+  const dashed = [];
+  for (const model of [ghost, createChip({ stat: 'energy', ghost: true })]) {
+    model.traverse((node) => node.isLineSegments2 && node.material.dashed && dashed.push(node));
   }
+  assert.deepEqual(dashed, [], 'found disks and chips are drawn with solid lines');
 });

@@ -13,11 +13,12 @@ export const PICKUP = {
 };
 
 /**
- * A buff's color by the stat it raises (D93): the HUD bars' colors for
- * integrity and energy, amber for recharge. Its chip, install animation
- * and banner use it.
+ * A buff's color by the stat it raises (D93, D94): the color of the HUD bar
+ * it improves, as the refills have, so the player reads it at a glance:
+ * integrity light blue; energy and its recharge yellow-green. Its chip,
+ * install animation and banner use it.
  */
-export const BUFF_COLORS = { integrity: '#00f0ff', energy: '#b6ff3c', recharge: '#ffb020' };
+export const BUFF_COLORS = { integrity: '#00f0ff', energy: '#b6ff3c', recharge: '#b6ff3c' };
 
 export class Pickup {
   /**
