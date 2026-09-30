@@ -44,11 +44,14 @@ Room editor).
 
 The world map tool shows every room and connection on one page, flags
 rooms out of reach, and moves rooms on the map: `/tools/world-map.html` in
-the dev server only (docs/design.md, World map tool).
+the dev server only (docs/design.md, World map tool). The monster editor
+tunes the enemy templates, with a live preview: `/tools/monster-editor.html`
+in the dev server only (docs/design.md, Monster editor).
 
 On Windows, `tools\dev.bat` starts the dev server and opens the game
 (`tools\dev.bat map`, or double-click `tools\world-map.bat`, opens the
-world map; `tools\dev.bat showcase` the asset showcase), and `tools\map-pr.bat "what changed"` sends saved room
+world map; `tools\dev.bat monsters` or `tools\monster-editor.bat` the
+monster editor; `tools\dev.bat showcase` the asset showcase), and `tools\map-pr.bat "what changed"` sends saved room
 and map changes as one pull request.
 
 ## Project layout

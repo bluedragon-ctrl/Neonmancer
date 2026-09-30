@@ -17,7 +17,7 @@ import { Plane, Raycaster, Vector2, Vector3 } from 'three';
 import { isTextField } from '../core/input.js';
 import { MAX_ACCESS_LEVEL } from '../core/rules.js';
 import { linkMap } from '../data/load.js';
-import { sideLength, withExitDefaults } from '../data/room-data.js';
+import { resolveEnemyTemplates, sideLength, withExitDefaults } from '../data/room-data.js';
 import { validateData } from '../data/validate.js';
 import { LoreEdit } from './lore-edit.js';
 import { errorTarget, groupErrors } from './errors.js';
@@ -508,6 +508,63 @@ export class Editor {
       this.status = 'Not saved:';
     }
     this.refresh();
+  }
+
+  /**
+   * Another page (the monster editor, the world map) saved data files: take
+   * the enemy templates, and the rooms this page has no unsaved edits of.
+   * @param {Record<string, any>} saved the files as saved, by path relative to data/
+   */
+  takeSaved(saved) {
+    if (this.saving) return;
+    const taken = [];
+    const kept = [];
+    for (const [file, data] of Object.entries(saved)) {
+      if (file === 'defs.json') {
+        if (formatJson(data) === formatJson(this.files[file])) continue;
+        this.files[file] = data;
+        this.setEnemyTemplates(resolveEnemyTemplates(data.enemies ?? {}));
+        taken.push('the enemy templates');
+      } else if (file.startsWith('rooms/')) {
+        const id = file.slice('rooms/'.length, -'.json'.length);
+        const session = this.sessions.get(id);
+        if (formatJson(data) === (session?.savedText ?? formatJson(this.files[file] ?? null))) continue;
+        if (session?.dirty) {
+          kept.push(id);
+          continue;
+        }
+        this.files[file] = data;
+        this.sessions.delete(id);
+        this.game.content.rooms.set(id, data);
+        taken.push(id);
+      }
+    }
+    if (taken.length === 0 && kept.length === 0) return;
+    // The room open here may have changed under it: open it again.
+    if (this.active && !this.sessions.has(this.edit.id)) {
+      this.edit = this.session(this.edit.id);
+      this.setLayer(this.layer);
+    }
+    if (this.active) this.stale = true;
+    this.status = [
+      taken.length > 0 && `Another page saved ${taken.join(', ')}: taken in.`,
+      kept.length > 0 && `${kept.join(', ')} changed on disk too: your unsaved edits here would overwrite that.`,
+    ]
+      .filter(Boolean)
+      .join(' ');
+    this.refresh();
+  }
+
+  /**
+   * Enemy templates (filled in) for the game and the panel; new enemies of
+   * one that is gone are of the first.
+   * @param {Record<string, object>} templates
+   */
+  setEnemyTemplates(templates) {
+    this.enemyTemplates = templates;
+    this.game.content.enemyTemplates = templates;
+    this.panel.setEnemyTemplates(templates);
+    if (!templates[this.enemyTemplate]) this.enemyTemplate = Object.keys(templates)[0];
   }
 
   /** Are there edits not saved yet, in any room, world.json or lore.json? */

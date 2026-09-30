@@ -12,6 +12,11 @@ Phase 4 splits into 4a (saves and UI) and 4b (spells, Firewall Wardens as
 bosses that drop loot, tooling) (D104, D105).
 
 ### Added
+- Monster editor (D120), `/tools/monster-editor.html` in the dev server
+  (`toolsdev.bat monsters`): the enemy templates with a form made from the
+  schema, where each value comes from, a live preview, variants in colors
+  of their own, rename and delete; the room editor links to it and takes
+  in what it saves.
 - Decorations (D117), a new object kind placed with the room editor:
   the data pillar (`data_pillar`, 1×3×1), a glass shaft round a core with
   four cables of data climbing one face, and the screen (`screen`,

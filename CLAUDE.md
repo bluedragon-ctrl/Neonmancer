@@ -407,6 +407,11 @@ not critical.
   connections; flags rooms out of reach; opens a room in the room editor;
   F3 lists every permanent item by save bit and where it lies. Dev server
   only, never shown to players: exploring is part of the game (D67).
+- **Monster editor** (`tools/monster-editor.html`, D119, D120): the enemy
+  templates in `defs.json`, where enemies are tuned: fields from the
+  schema with where each value comes from, a live preview with the
+  game's models, variants in colors of their own, rename (rooms follow),
+  delete. Dev server only; the room editor only picks templates.
 - **Reachability checker** (Phase 4): script that searches the grid with
   jump height, pushable objects and available spells to flag unsolvable
   rooms. Used by CI, the editor, and design skills/subagents.

@@ -309,8 +309,10 @@ export class EditorPanel {
     this.enemyTemplate.title = 'The enemy template (defs.json): everything about the enemy but its cell and path (D119)';
     this.enemyTemplate.addEventListener('change', () => on.enemyTemplate(this.enemyTemplate.value));
     this.enemyText = el('div', 'editor-hint');
+    // Templates are tuned in the monster editor (dev server only, D119).
+    this.monsterLink = Object.assign(el('a', 'editor-link', 'Edit in the monster editor'), { target: 'neonmancer-monsters', hidden: !this.canSave });
     this.enemyRows = this.group('enemy');
-    this.enemyRows.append(this.row('Template', this.enemyTemplate), this.enemyText);
+    this.enemyRows.append(this.row('Template', this.enemyTemplate), this.enemyText, this.monsterLink);
     this.setEnemyTemplates(enemyTemplates);
     return this.enemyRows;
   }
@@ -475,6 +477,7 @@ export class EditorPanel {
     this.enemyTemplate.value = enemy.template;
     const template = this.enemyTemplates[enemy.template];
     this.enemyText.textContent = template ? templateText(template) : '';
+    this.monsterLink.href = `tools/monster-editor.html#${enemy.template}`;
 
     const path = pathItem?.path;
     for (const node of [this.pathMode, this.pathSpeed, this.pathPause, this.clearPath]) node.disabled = !path;

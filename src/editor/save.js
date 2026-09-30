@@ -30,6 +30,27 @@ export async function saveFiles(edits) {
 }
 
 /**
+ * Read data files as they are on disk now (dev server): what another page
+ * saved.
+ * @param {string[]} paths relative to data/, e.g. "defs.json"
+ * @returns {Promise<Record<string, any>>} the parsed files by path; one that can't be read is left out
+ */
+export async function readDataFiles(paths) {
+  const files = {};
+  await Promise.all(
+    paths.map(async (path) => {
+      try {
+        const response = await fetch(new URL(`../../data/${path}`, import.meta.url), { cache: 'no-store' });
+        if (response.ok) files[path] = await response.json();
+      } catch {
+        // Removed or unreadable: nothing to take.
+      }
+    }),
+  );
+  return files;
+}
+
+/**
  * Download a file (the deployed build has nowhere to save it).
  * @param {string} name file name, e.g. `boot_sector.json`
  * @param {string} text file contents

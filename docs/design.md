@@ -1531,8 +1531,10 @@ list switches to another room; New room makes an empty one (D57).
   says so), a chaser may have one; a stationary template drops the path.
   Changing the template of an enemy with an id the editor made renames it
   (`bug_1` becomes `virus_1`); ids written by hand stay. The room
-  editor doesn't change templates (D119): they are written in
-  `defs.json` (a monster editor is next).
+  editor doesn't change templates (D119): they are tuned in the monster
+  editor ("Edit in the monster editor" opens the picked template there,
+  dev server only). Templates it saves are taken in at once, and so are
+  rooms saved by another page that have no unsaved edits here (D120).
 - **Path** works on a picked platform or enemy (click it). Each click on a
   cell adds a point, with corners added so every leg runs along one axis
   (x, then z, then y); an enemy's points stay at its own height, a
@@ -1659,6 +1661,44 @@ players never see it (D67).
   reloads to show it; with changes not saved yet, it says so instead.
 - **Sending it in:** `tools\map-pr.bat` opens one PR with the saved map
   and room changes (see Room editor).
+
+## Monster editor
+
+The enemy templates in `defs.json` (D119, D120): an enemy is all its
+template, so this is where enemies are tuned. `/tools/monster-editor.html`
+in the dev server (`#bug` picks a template); `tools\dev.bat monsters` or
+`tools\monster-editor.bat` opens it. Not part of the build.
+
+- **List** (left): every template with its color, what it builds on and
+  how many enemies use it (`on bug · 3×`). A name + **Variant** adds a
+  template built on the picked one, with only a color of its own;
+  **Copy** adds one with all its values and no base. A new one gets a
+  bright color as far as can be found from the other templates and from
+  the colors with a meaning (the wizard's magenta, danger red, lime,
+  cyan; `freeColor()` in `src/data/colors.js`). **Rename** gives the
+  picked one the name: the templates built on it and the enemies of it,
+  in every room, follow. **Delete** removes one no enemy uses and no
+  template builds on.
+- **Form** (right): every field in groups (body, moves, notices, attack,
+  takes), made from `defs.schema.json`: lists for its choices, number
+  fields with its limits, a color field with a picker; the field's
+  description shows below when the mouse is on it. Next to each: where
+  the value comes from (`own`, `from bug`, `default`, or `missing` in
+  red), and × to clear an own value so it comes from the base again.
+  **Builds on** changes the base without changing what the template does
+  (values the new base has too are dropped; with no base, every value is
+  written down).
+- **Preview** (middle): an enemy of the template with the game's models,
+  facing the wizard, in a 6 s loop: calm for 3 s (walking at its speed
+  unless stationary), then after him (a provoked one as if hit): the
+  "!", its chase speed, and a charged attack charging and firing (burst,
+  arc, or bolts aimed or four ways). A peaceful one stays calm.
+- **Checks:** the game's validation of the data with the edits in, and
+  templates too alike in color (D119), listed under the actions.
+- **Undo, redo, save:** Ctrl+Z / Ctrl+Y / Ctrl+S too. Save sends
+  `defs.json` and the rooms a rename changed; the dev server checks it
+  all first. When another page saves, the editor reloads to show it; with
+  edits not saved yet, it says so instead.
 
 ---
 
