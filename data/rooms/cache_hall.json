@@ -7,9 +7,8 @@
   "size": [16, 4, 8],
   "spawn": [7.5, 0, 6.5],
   "exits": [
-    { "id": "north", "side": "-z", "at": 7 },
     { "id": "west", "side": "-x", "at": 5 },
-    { "id": "east", "side": "+x", "at": 5 },
+    { "id": "north", "side": "-z", "at": 7 },
     { "id": "south", "side": "+z", "at": 7 }
   ],
   "blocks": [
