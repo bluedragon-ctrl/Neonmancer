@@ -100,6 +100,84 @@
         "ENEMIES GO EVEN INTO A HOLE.",
         "PULLED ENEMIES BLAME YOU. BE READY."
       ]
+    },
+    "help_zap_plus": {
+      "title": "HELP ZAP+.EXE",
+      "lines": [
+        "PATCH FOR ZAP. SAME KEY, SAME COST.",
+        "BOLTS NOW BOUNCE OFF WALLS 3 TIMES.",
+        "BANK A SHOT ROUND A CORNER,",
+        "OR INTO A TARGET OUT OF PLAIN SIGHT."
+      ]
+    },
+    "help_shield_plus": {
+      "title": "HELP SHIELD+.EXE",
+      "lines": [
+        "PATCH FOR SHIELD. SAME KEY, SAME COST.",
+        "ENEMY BOLTS NO LONGER JUST FIZZLE:",
+        "THEY FLY BACK THE WAY THEY CAME, AS YOURS.",
+        "LET THE SENTINELS SHOOT THEMSELVES."
+      ]
+    },
+    "help_double_jump": {
+      "title": "HELP DOUBLE_JUMP.SYS",
+      "lines": [
+        "PRESS JUMP AGAIN IN MID-AIR",
+        "FOR A SECOND JUMP.",
+        "REACHES 2 BLOCKS UP AND WIDER GAPS.",
+        "OLD ROOMS MAY HIDE NEW WAYS. GO BACK."
+      ]
+    },
+    "help_fragments": {
+      "title": "HELP FRAGMENT.DAT",
+      "lines": [
+        "GOLD TILES ARE KEY FRAGMENTS.",
+        "64 OF THEM MAKE THE 8X8 BOOT KEY.",
+        "EACH ONE FILLS A MODULE ON YOUR HUD.",
+        "FOUND IS FOUND: THEY SURVIVE ANY CRASH.",
+        "CARRY THEM TO THE CORE TO USE THEM."
+      ]
+    },
+    "help_core": {
+      "title": "HELP CORE.SYS",
+      "lines": [
+        "THE CENTRAL CORE READS YOUR FRAGMENTS.",
+        "TOUCH IT TO RAISE YOUR ACCESS LEVEL.",
+        "BRING ALL 64 AND THE GRID REBOOTS.",
+        "COME BACK WHENEVER YOUR KEY GROWS."
+      ]
+    },
+    "help_access": {
+      "title": "HELP ACCESS.LVL",
+      "lines": [
+        "DOORS MARKED I, II OR III ARE LOCKED",
+        "TO LOW ACCESS LEVELS.",
+        "CORE GRANTS: 16 FRAGMENTS  -> LEVEL I",
+        "             32 FRAGMENTS  -> LEVEL II",
+        "             48 FRAGMENTS  -> LEVEL III",
+        "A GOLD BAND ON YOUR HAT FOR EACH LEVEL."
+      ]
+    },
+    "access_1": {
+      "title": "ACCESS DENIED",
+      "lines": [
+        "THIS SECTOR NEEDS ACCESS LEVEL I.",
+        "BRING 16 FRAGMENTS TO THE CORE."
+      ]
+    },
+    "access_2": {
+      "title": "ACCESS DENIED",
+      "lines": [
+        "THIS SECTOR NEEDS ACCESS LEVEL II.",
+        "BRING 32 FRAGMENTS TO THE CORE."
+      ]
+    },
+    "access_3": {
+      "title": "ACCESS DENIED",
+      "lines": [
+        "THIS SECTOR NEEDS ACCESS LEVEL III.",
+        "BRING 48 FRAGMENTS TO THE CORE."
+      ]
     }
   }
 }
