@@ -1,5 +1,5 @@
 /**
- * A decoration (D117): a data pillar, a screen. A fixed body as big as its
+ * A decoration (D117): a data pillar, a screen, a memory stack. A fixed body as big as its
  * look (DECO_LOOKS): the wizard walks round it or stands on it, things
  * bump into it and bolts stop at it. A screen may hold a text (D118), which
  * the game shows once the wizard comes near (Game.readScreens()). Pure logic.

@@ -122,6 +122,7 @@ export const OBJECT_STYLE_DEFAULTS = {
 export const DECO_LOOKS = {
   data_pillar: { size: [1, 3, 1] },
   screen: { size: [1, 1, 1] },
+  memory_stack: { size: [1, 1, 1] },
 };
 
 /** The ways a decoration can face: the two sides the camera sees (D115); the first is the default. */

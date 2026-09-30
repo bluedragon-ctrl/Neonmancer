@@ -1142,12 +1142,13 @@ usual, so half behind a wall he is half ghost (D55).
 ## Decorations
 
 Room dressing (D117): object types of kind `deco` in `defs.json`
-(`data_pillar`, `screen`), placed with the room editor's Object tool.
+(`data_pillar`, `screen`, `memory_stack`), placed with the room editor's Object tool.
 
 - A decoration is a fixed body as big as its look (`DECO_LOOKS`,
-  `src/data/room-data.js`): the data pillar 1×3×1, the screen 1×1×1. The
-  wizard walks round it or stands on it (the screen is jumpable, the
-  pillar is not), things bump into it, bolts stop at it; it does nothing
+  `src/data/room-data.js`): the data pillar 1×3×1, the screen and the
+  memory stack 1×1×1. It never falls, so it may stand on anything or on
+  another decoration. The wizard walks round it or stands on it (the
+  screen and a single memory stack are jumpable, the pillar is not), things bump into it, bolts stop at it; it does nothing
   else and resets with nothing.
 - It has no color of its own: it takes the room's (biome's) color, like
   structure (D99). The screen's blue is part of its look.
@@ -1182,6 +1183,20 @@ Room dressing (D117): object types of kind `deco` in `defs.json`
   flat monitor on a post, a CRT box with an oscilloscope, a floating
   hologram): the CRT's shape with the monitor's text. Showcase
   `?asset=screens`.
+- **Memory stack** (`src/render/memory-stack.js`, D123): 1×1×1, four
+  frosted glass plates with memory chips on them, held by a dark spine at
+  the back; lights along the plates' front edge face `+z` or `+x`. A
+  read/write bar rises past the plates, lighting each as it passes, and
+  every few seconds one plate's lights come on one by one (a write), then
+  fade. There is no height option and no wall object: a **memory wall**
+  is stacks placed side by side and on top of each other. The plates run
+  nearly to the cell's sides, so neighbors join, and the light's timing
+  comes from the stack's cell: the bar climbs from a stack into the one
+  above (it repeats every 2 blocks, so a 2-high wall shows it once) and
+  runs along the wall as a slow wave. Chosen from six drafts (memory
+  cells, platters, and three relay nodes: a crystal pylon, a routing ring,
+  a signal mast). Showcase `?asset=memory` (both faces, a 3×2 wall, every
+  biome's color).
 
 ### Screen texts
 

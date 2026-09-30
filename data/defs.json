@@ -13,7 +13,8 @@
     "platform": { "kind": "platform", "color": "#00f0ff", "mark": "brackets", "faces": "tinted" },
     "spiked_platform": { "kind": "platform", "color": "#ff2a3a", "shape": "spiked", "damage": 1 },
     "data_pillar": { "kind": "deco", "look": "data_pillar" },
-    "screen": { "kind": "deco", "look": "screen" }
+    "screen": { "kind": "deco", "look": "screen" },
+    "memory_stack": { "kind": "deco", "look": "memory_stack" }
   },
   "enemies": {
     "bug": {

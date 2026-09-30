@@ -19,6 +19,10 @@ bosses that drop loot, tooling) (D104, D105).
   notes and PR summary now say so.
 
 ### Added
+- Memory stack decoration (`memory_stack`, D123), 1×1×1: glass memory
+  plates with chips, a read/write light rising past them. Stacked side by
+  side and on top of each other they make a memory wall, the light
+  running across it in step. Showcase `?asset=memory`.
 - Home Lattice settled (D121), the first biome of the Phase 4b review: a
   kernel city with enemies in tiers. New peaceful `glowbug` template (a
   pale gold bug, harmless, bouncy); plans for data flows and random glass

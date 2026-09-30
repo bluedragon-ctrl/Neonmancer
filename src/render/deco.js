@@ -1,9 +1,10 @@
 /**
- * Building blocks for decorations (data pillar, screen): dark boxes, their
- * edges and boxes of light; glass boxes are glass.js glassBox(). Boxes are
- * given by their lower and upper corners in the object's cell.
+ * Building blocks for decorations (data pillar, screen, memory stack): dark
+ * boxes, their edges and boxes of light, and turning one to face +x; glass
+ * boxes are glass.js glassBox(). Boxes are given by their lower and upper
+ * corners in the object's cell.
  */
-import { AdditiveBlending, BoxGeometry, InstancedMesh, Matrix4, Mesh, MeshBasicMaterial } from 'three';
+import { AdditiveBlending, BoxGeometry, Group, InstancedMesh, Matrix4, Mesh, MeshBasicMaterial } from 'three';
 import { faceMaterial } from './neon.js';
 
 /**
@@ -53,4 +54,20 @@ const matrix = new Matrix4();
 export function placeLight(mesh, i, [x, y, z], [w, h, d]) {
   matrix.makeScale(w + 1e-4, h + 1e-4, d + 1e-4).setPosition(x, y, z);
   mesh.setMatrixAt(i, matrix);
+}
+
+/**
+ * A decoration built facing +z, in a group that faces `face`: turned about
+ * the cell's middle for +x.
+ * @param {Group} body
+ * @param {'+x'|'+z'} face
+ */
+export function facing(body, face) {
+  const group = new Group();
+  if (face !== '+x') return group.add(body);
+  body.position.set(-0.5, 0, -0.5);
+  const turn = new Group().add(body);
+  turn.position.set(0.5, 0, 0.5);
+  turn.rotation.y = Math.PI / 2;
+  return group.add(turn);
 }
