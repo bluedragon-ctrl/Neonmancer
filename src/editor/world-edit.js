@@ -7,7 +7,7 @@
  */
 import { OPPOSITE_SIDE, withExitDefaults } from '../data/room-data.js';
 import { nearestFreeCell } from '../world/map.js';
-import { formatJson } from './format-json.js';
+import { FileEdit } from './file-edit.js';
 
 /** Is "room.exit" an exit of `roomId`? */
 const inRoom = (ref, roomId) => ref.startsWith(`${roomId}.`);
@@ -15,33 +15,10 @@ const inRoom = (ref, roomId) => ref.startsWith(`${roomId}.`);
 /** Same pair, the same way round. */
 const samePair = (a, b) => a[0] === b[0] && a[1] === b[1];
 
-export class WorldEdit {
-  /** @param {object} data world.json contents */
-  constructor(data) {
-    this.data = structuredClone(data);
-    /** Text as last saved (or loaded), to tell unsaved changes. */
-    this.savedText = this.text();
-  }
-
+export class WorldEdit extends FileEdit {
   /** @returns {string[][]} pairs of "room.exit" */
   get connections() {
     return this.data.connections;
-  }
-
-  toData() {
-    return structuredClone(this.data);
-  }
-
-  text() {
-    return formatJson(this.data);
-  }
-
-  get dirty() {
-    return this.text() !== this.savedText;
-  }
-
-  markSaved() {
-    this.savedText = this.text();
   }
 
   /**

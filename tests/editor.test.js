@@ -6,9 +6,10 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Boxes } from '../src/editor/boxes.js';
 import { formatJson } from '../src/editor/format-json.js';
-import { RoomEdit, newRoom, resizeText, roomErrors, roomIdProblem, sizeProblem } from '../src/editor/room-edit.js';
+import { RoomEdit, newRoom, resizeText, roomIdProblem, sizeProblem } from '../src/editor/room-edit.js';
 import { WorldEdit, linkChoices } from '../src/editor/world-edit.js';
 import { DefsEdit } from '../src/editor/defs-edit.js';
+import { idProblem } from '../src/editor/ids.js';
 import { MAX_ACCESS_LEVEL, ROOM_HEIGHT } from '../src/core/rules.js';
 import { errorTarget, groupErrors } from '../src/editor/errors.js';
 import { cutRoom } from '../src/render/room-scene.js';
@@ -243,13 +244,41 @@ test('RoomEdit marks a room authored (D90) and back; a test room has no flag', (
   assert.equal(edit.toData().authored, true);
 });
 
-test('roomErrors checks the edited room with the rest of the data', () => {
+test('idProblem refuses ids off the pattern and ids in use', () => {
+  assert.equal(idProblem('Exit id', 'north_2', ['north']), null);
+  assert.equal(idProblem('Exit id', 'North', []), 'Exit id: lowercase letters, digits and _, starting with a letter.');
+  assert.equal(idProblem('Exit id', '2nd', []), 'Exit id: lowercase letters, digits and _, starting with a letter.');
+  assert.equal(idProblem('Exit id', 'north', new Set(['north'])), 'Exit id: "north" is taken.');
+});
+
+test('markSaved with the text sent keeps edits made while saving unsaved', () => {
+  const edit = new RoomEdit(sampleRoom());
+  edit.setName('Lab');
+  const sent = edit.text();
+  edit.setName('Lab two'); // while the save is on its way
+  edit.markSaved(sent);
+  assert.equal(edit.dirty, true);
+  edit.undo();
+  assert.equal(edit.dirty, false);
+
+  const world = new WorldEdit({ start: 'a', connections: [] });
+  world.connect('a.east', 'b.west');
+  const worldSent = world.text();
+  world.disconnect('a.east');
+  world.markSaved(worldSent);
+  assert.equal(world.dirty, true);
+  world.markSaved();
+  assert.equal(world.dirty, false);
+});
+
+test('an edited room is checked with the rest of the data', () => {
   const files = dataFiles({ rooms: [sampleRoom()], objects: { crate: { kind: 'pushable', color: '#b6ff3c' } } });
   const edit = new RoomEdit(files['rooms/lab.json']);
-  assert.deepEqual(roomErrors(files, edit.toData()), []);
+  const errors = () => validateData({ ...files, 'rooms/lab.json': edit.toData() });
+  assert.deepEqual(errors(), []);
   edit.placeBlock([1, 0, 1], 'block'); // under the spawn point
-  assert.equal(roomErrors(files, edit.toData()).length, 1);
-  assert.match(roomErrors(files, edit.toData())[0], /rooms\/lab\.json › spawn: the player .* overlaps blocks\[/);
+  assert.equal(errors().length, 1);
+  assert.match(errors()[0], /rooms\/lab\.json › spawn: the player .* overlaps blocks\[/);
 });
 
 test('saveEdits writes valid rooms and world.json together, and refuses invalid data', () => {
