@@ -506,6 +506,8 @@ not critical.
 Done: Phase 1 (v0.1.0, foundations), Phase 2 (v0.2.0, hazards, combat,
 editor), Phase 3 (v0.3.0, spells and pickups); see CHANGELOG.md.
 
+Step plan for Phases 4 to 7: docs/design.md, Step plan (D130).
+
 **Phase 4 (v0.4) — Saves, guardians, tooling** (D105, re-cut D130)
 - 4a — done: access keys, title screen and pause menu, saving and
   loading, map screen.

@@ -2008,28 +2008,80 @@ author, recorded as decisions before the code lands. Every step also
 - updates `docs/design.md`, `docs/architecture.md` and CHANGELOG, and
   records new decisions.
 
-## Roadmap to the Home Lattice playtest (D130)
+## Step plan: Phase 4 to 7 (D130)
 
-Phases 4 to 7 were re-cut (D130; CLAUDE.md section 11 has the list).
-Order of work:
-- **A, foundations:** reachability checker (in CI); room design skill and
-  level-review subagent; the paper design of Home Lattice (about 25-30
-  rooms: where the 16+ fragments, spells, upgrades, two bosses and the
-  Level 1 gates go, and what the wizard must be able to do at each point).
-- **B, bosses:** settle the Warden design, build the engine, boss 1
-  (drops a fragment), boss 2 (drops an upgrade). Phase 4 closes, v0.4.0.
-- **C, sound** (beside B and D): audio engine, effects pass, the
-  author's tracks.
-- **D, content:** Lattice rooms in batches, each checked by the
-  reachability checker and the review subagent; teaser rooms for
-  Glitchmire and Frostbyte behind Level 1 exits; an Outer Buffer cluster
-  of secret rooms; optionally data flows and glass panels.
-- **E, readiness:** quality presets and fallback, onboarding, debug info
-  copy, balance pass. Closes Phase 5 as v0.5.0, Playtest 1.
+The phases were re-cut around a playtest of Home Lattice. The rules of
+"Finished phases" apply to every step: one branch, one PR against `main`,
+CI green, showcase, test room, unit tests, docs. Code steps name their
+branch; design steps end in decisions before any code. **Next step: 4.1.**
 
-Level 1 needs 16 fragments, all inside the Lattice; a few extra lie in
-secret and optional rooms. The end screen stays a placeholder until
-later phases.
+### Phase 4 (v0.4) steps: tools and bosses
+
+Done (4a and the spells): access keys, title and pause menu, saving and
+loading, map screen; Pull, Compile, Scan, Fork.
+
+| # | Branch | Delivers |
+|---|---|---|
+| 4.1 | `feat/reachability-checker` | `tools/check-reach.js`: searches each room's grid with jump height (and the double jump), pushable crates, and the spells the wizard has, flagging unreachable exits and pickups; works out which abilities each exit and pickup needs and checks the world can be finished in some order (D67). Runs in CI and the validate script; the editor and world map tool show its verdict. Open: how deep it searches pushables and spells. |
+| 4.2 | `feat/design-skills` | The room design skill (schema, rules, the checklist above, annotated examples), an enemy design skill (templates, D119 colors), and the level-review subagent (runs the checker, reads the room against the checklist). |
+| 4.3 | `docs/lattice-plan` | Paper design of Home Lattice, no rooms yet: about 25-30 rooms on the world map, the tutorial cluster by the start and the core, where each spell and upgrade sits, the 16 fragments for Level 1 plus a few extra in secret or optional rooms, the two boss arenas, the Level 1 exits to Glitchmire and Frostbyte Wastes, the Outer Buffer secret cluster, and what the wizard needs at each point. Ends in a room list the author approves. |
+| 4.4 | `docs/warden-design` | Settle the Warden design with the author: body size (multi-cell collision and claims), phases or attack patterns, boss integrity bar, weak points, arena rules (shrines stay out, D104), the looks of the two bosses (showcase first). Recorded as decisions. |
+| 4.5 | `feat/warden-engine` | Multi-cell bodies, phases and attack patterns as data in `defs.json`, the boss bar on the HUD, the drop and the "defeated" bit (D104), a test arena. |
+| 4.6 | `feat/boss-one` | The first boss: the arena and fight, dropping a fragment. |
+| 4.7 | `feat/boss-two` | The second boss, harder, dropping an upgrade (which one is settled in 4.4). |
+| 4.8 | `chore/release-0.4.0` | Docs pass, CHANGELOG, tag `v0.4.0` and GitHub Release (CLAUDE.md section 10). |
+
+Bosses are built in test arenas (D90) and placed in the Lattice in
+Phase 5.
+
+### Phase 5 (v0.5) steps: Home Lattice playtest
+
+Sound steps can run beside the content steps; 5.3 waits for the author's
+tracks.
+
+| # | Branch | Delivers |
+|---|---|---|
+| 5.1 | `feat/audio-engine` | `data/audio.json` (named events to files), Howler music with looping and crossfades, ZzFX effects, the Options sliders wired, a stub when a file is missing. |
+| 5.2 | `feat/sfx-pass` | Effects for the existing events: jump, land, zap and every spell, hits, pickups, the install animation, death and derez, doors, switches, UI, enemy alerts. |
+| 5.3 | `feat/music` | The author's tracks trimmed for seamless loops: Lattice, boss, title; room and biome mapping, a boss switch and a crossfade back. |
+| 5.4 | `refactor/dev-wing` | The old test rooms move to a dev-only wing (kept, D45, never deleted): reachable in the dev server and debug mode, absent from the player world. Boot Sector's role settled. |
+| 5.5 | `feat/lattice-tutorial` | The first rooms from the plan: start, movement, pushing, the first disk, the first fragment; screens with hints (D118). |
+| 5.6 | `feat/lattice-spells` | The middle batch: the spell and upgrade rooms and their puzzles and combat rooms. |
+| 5.7 | `feat/lattice-fragments` | The fragment rooms and optional side rooms (the extra fragments), the two boss arenas placed. |
+| 5.8 | `feat/lattice-core-gates` | The core, the Level 1 access locks and the teaser rooms beyond them: a few look-only rooms each for Glitchmire and Frostbyte Wastes (looks in the showcase first). |
+| 5.9 | `feat/outer-buffer-secrets` | The Outer Buffer look (floor, starfield, color re-picked) and the secret cluster, reached by Scan and similar tricks. |
+| 5.10 | `feat/lattice-visual-pass` | Optional: the Lattice's data flows and glass panels (D121). |
+| 5.11 | `feat/quality-presets` | Quality presets, auto fallback and render scale wired up (D76), a check on a weaker GPU. |
+| 5.12 | `feat/onboarding-feedback` | The first minute from title to the first disk, the controls screen, the pause entry that copies debug info (version, room, key) for feedback. |
+| 5.13 | `chore/balance-pass` | Difficulty, energy, backups and shrines across the Lattice from full playthroughs. |
+| 5.14 | `chore/release-0.5.0` | Docs pass, tag `v0.5.0`, the GitHub Release: **Playtest 1**. |
+
+Every Lattice batch goes through the reachability checker and the
+review subagent. Rooms are drafted unflagged; the author refines them in
+the editor and flags them authored (D90).
+
+### Phase 6 (v0.6) steps: the other sectors
+
+Planned after the playtest and reshaped by its feedback; one biome per
+step (roster, look, rooms, its own mechanic of D122).
+
+| # | Branch | Delivers |
+|---|---|---|
+| 6.1 | `feat/playtest-fixes` | What Playtest 1 found. |
+| 6.2 | `feat/glitchmire` | The biome concept and roster (at least three enemies), its looks, rooms. |
+| 6.3 | `feat/frostbyte` | The same for Frostbyte Wastes. |
+| 6.4 | `feat/secrets-ladder` | The secrets rewards (hat star, trail, shimmer) and the 16-secret room in the Outer Buffer, if the author confirms them. |
+| 6.5 | `feat/firewall-citadel` | The same for Firewall Citadel. |
+| 6.6 | `feat/phantom-partition` | The same for Phantom Partition. |
+| 6.7 | `chore/release-0.6.0` | Release. |
+
+### Phase 7 steps: polish, then 1.0.0
+
+Juice and post-processing pass, audio-reactive visuals, fullscreen,
+gamepad, key rebinding, biome environmental effects (Glitchmire low-res,
+Frostbyte ice, Outer Buffer low gravity and darkness) with health
+pickups and safe rooms, the real ending; split into steps when Phase 6
+nears its end.
 
 ## Phase 4 (v0.4) outline
 
