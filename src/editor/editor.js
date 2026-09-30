@@ -658,7 +658,18 @@ export class Editor {
     if (!place) return this.change(() => edit.erase(cell));
     const type = this.objectTypes[this.objectType];
     if (this.pickupTypes[this.objectType]) return this.change(() => edit.placePickup(cell, this.objectType));
+    // A decoration of this type there turns to face the other way (D117).
+    const before = edit.at(cell);
+    if (type?.kind === 'deco' && before?.kind === 'object' && before.item.type === this.objectType) {
+      this.change(() => edit.turnObject(before.item.id));
+      this.status = `${before.item.id} faces ${edit.item(before.item.id)?.overrides?.face ?? '+z'}.`;
+      return this.refresh();
+    }
     this.change(() => edit.placeObject(cell, this.objectType));
+    if (type?.kind === 'deco') {
+      this.status = `${this.objectType} faces +z: click it again to turn it to +x.`;
+      this.refresh();
+    }
     // A new platform is picked, ready for its path.
     const here = edit.at(cell);
     if (type?.kind === 'platform' && here?.kind === 'object' && !here.item.path) {

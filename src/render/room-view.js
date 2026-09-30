@@ -17,7 +17,7 @@ import { BoxGeometry, BufferGeometry, Color, DoubleSide, Float32BufferAttribute,
 import { BLOCK_FX, createActiveBlockView, flareHazard, hazardFaceMaterial } from './block-fx.js';
 import { blockEdges, edgeUnitKeys, groupedBlockEdges } from './edges.js';
 import { BITS, markSegments } from './marks.js';
-import { GLASS, glassFaceMaterial, shrinkSegments } from './glass.js';
+import { GLASS, glassBox, shrinkSegments } from './glass.js';
 import { spikeSegments, spikeTriangles } from './spikes.js';
 import { doorwayTunnels, wallLayout } from './walls.js';
 import {
@@ -202,9 +202,7 @@ export function createObjectView({ at, kind, color, edges, mark, faces, shape = 
     flares.push((since) => flareHazard(material, at, since));
   } else if (faces === 'glass' && !spiked) {
     // See-through (D96, glass.js): drawn after everything opaque.
-    const body = new Mesh(geometry, glassFaceMaterial(color, integrity !== undefined ? GLASS.hollow : {}));
-    body.position.set(...at);
-    group.add(body);
+    group.add(glassBox(at, at.map((v) => v + 1), color, integrity !== undefined ? GLASS.hollow : {}));
   } else {
     const materials = faces === 'tinted' && !spiked ? tintedFaceMaterials(color, tint) : faceMaterial();
     const body = new Mesh(geometry, materials);

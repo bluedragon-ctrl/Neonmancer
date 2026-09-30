@@ -3,7 +3,7 @@
  * room fully resets on re-entry (CLAUDE.md §4). Nothing here points back
  * into the data, so the game can change it freely.
  */
-import { OBJECT_STYLE_DEFAULTS, blockCells, holeTiles, withEnemyDefaults, withExitDefaults } from '../data/room-data.js';
+import { OBJECT_STYLE_DEFAULTS, blockCells, holeTiles, withEnemyDefaults, withExitDefaults, withObjectDefaults } from '../data/room-data.js';
 
 /**
  * The room's block cells by type (D60): static types go into the grid;
@@ -55,13 +55,17 @@ export function buildRoom(data, { objectTypes, blockTypes, enemyTemplates = {}, 
     holes: (data.holes ?? []).flatMap(holeTiles),
     /** The backup shrine floor tile [x, z] (D97), or null. */
     shrine: data.shrine ? [...data.shrine] : null,
-    /** Typed objects: type defaults merged with this object's overrides. */
+    /**
+     * Typed objects: type defaults merged with this object's overrides; a
+     * type without a color (a decoration) is room structure and takes the
+     * room color (D99).
+     */
     objects: (data.objects ?? []).map((object) => ({
       id: object.id,
       type: object.type,
       at: [...object.at],
-      ...OBJECT_STYLE_DEFAULTS,
-      ...objectTypes[object.type],
+      color: biomes[data.biome].color,
+      ...withObjectDefaults(objectTypes[object.type]),
       ...object.overrides,
       // Moving platforms: the path they follow (world/path.js).
       ...(object.path && { path: structuredClone(object.path) }),

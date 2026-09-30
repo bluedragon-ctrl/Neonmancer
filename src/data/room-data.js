@@ -115,6 +115,28 @@ export const OBJECT_STYLE_DEFAULTS = {
 };
 
 /**
+ * Decorations (kind "deco", D117): each look's size in cells [x, y, z]; it
+ * fills them all as a fixed body. The look itself is drawn by
+ * render/deco-view.js.
+ */
+export const DECO_LOOKS = {
+  data_pillar: { size: [1, 3, 1] },
+  screen: { size: [1, 1, 1] },
+};
+
+/** The ways a decoration can face: the two sides the camera sees (D115); the first is the default. */
+export const DECO_FACES = ['+z', '+x'];
+
+/**
+ * An object type with its defaults filled in: the style defaults, and a
+ * decoration's face. Room objects override any of it.
+ * @param {object} type object type from defs.json
+ */
+export function withObjectDefaults(type) {
+  return { ...OBJECT_STYLE_DEFAULTS, ...(type.kind === 'deco' && { face: DECO_FACES[0] }), ...type };
+}
+
+/**
  * Values an enemy template's fields can take (the first is listed first in the
  * schema too). Enemies are universal (D78): any look, movement and attack
  * combine. look: its body (render/entity-view.js ENEMY_MODELS); movement:

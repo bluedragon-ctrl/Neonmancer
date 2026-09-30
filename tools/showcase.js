@@ -84,6 +84,9 @@ import { WYRM_MODEL } from '../src/render/wyrm.js';
 import { PHISH_MODEL } from '../src/render/phish.js';
 import { OVERCLOCK_MODEL } from '../src/render/overclock.js';
 import { PIXIE_MODEL } from '../src/render/pixie.js';
+import { createDataPillar } from '../src/render/data-pillar.js';
+import { createScreen } from '../src/render/screen.js';
+import biomes from '../data/biomes.json';
 
 /** Block types with variants filled in (D60). */
 const BLOCK_TYPES = resolveBlockTypes(defs.blocks);
@@ -125,8 +128,9 @@ const ALL_ASSETS = [
   { label: 'wizard-hit', build: buildWizardHit, shadow: PALETTE.magenta },
   // Every object type from defs.json, in its own style (glass crates, D96:
   // a data core, or empty thinner glass in a destructible one, D99);
-  // switches have their own looks (below), and so has the core (D101).
-  ...Object.entries(defs.objects).filter(([, props]) => !SWITCH_KINDS.includes(props.kind) && props.kind !== 'core').map(([type, props]) => ({
+  // switches have their own looks (below), and so have the core (D101) and
+  // decorations (D117).
+  ...Object.entries(defs.objects).filter(([, props]) => !SWITCH_KINDS.includes(props.kind) && props.kind !== 'core' && props.kind !== 'deco').map(([type, props]) => ({
     label: type,
     build: () => {
       const view = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...props, at: [0, 0, 0] });
@@ -307,7 +311,41 @@ const ALL_ASSETS = [
   // Backup shrine (D97): a glowing floor tile in the
   // wizard's magenta; he steps on and it flares.
   { label: 'shrine', spin: false, build: buildShrine },
+  // Data pillar (decoration): glass round a core (like the crates), data up
+  // its +z face or its +x face, and in every biome's color. Decorations are
+  // seen only from the game's fixed angle (D115), so they stand still.
+  { label: 'pillar', group: 'pillars', spin: false, build: () => buildDeco(createDataPillar, { face: '+z' }) },
+  { label: 'pillar-x', group: 'pillars', spin: false, build: () => buildDeco(createDataPillar, { face: '+x' }) },
+  { label: 'pillar-biomes', group: 'pillars', span: 7, spin: false, build: () => buildDecoRow(createDataPillar, {}) },
+  // Screen (decoration): a glass terminal on a slab, facing +z or +x, and
+  // in every biome's color (the slab; the screen stays blue).
+  { label: 'screen', group: 'screens', spin: false, build: () => buildDeco(createScreen, { face: '+z' }) },
+  { label: 'screen-x', group: 'screens', spin: false, build: () => buildDeco(createScreen, { face: '+x' }) },
+  { label: 'screen-biomes', group: 'screens', span: 7, spin: false, build: () => buildDecoRow(createScreen, {}) },
 ];
+
+/** A decoration (`create` from its module) in the default room color. */
+function buildDeco(create, options) {
+  const deco = create({ color: PALETTE.amber, ...options });
+  deco.position.set(-0.5, 0, -0.5);
+  const asset = new Group().add(deco);
+  asset.userData.update = (dt) => deco.userData.update(dt);
+  return asset;
+}
+
+/** A decoration in every biome's color, in a row. */
+function buildDecoRow(create, options) {
+  const colors = Object.values(biomes.biomes).map((biome) => biome.color);
+  const decos = colors.map((color, i) => {
+    const deco = create({ color, ...options });
+    const t = (i - (colors.length - 1) / 2) * 0.8;
+    deco.position.set(t - 0.5, 0, -t - 0.5);
+    return deco;
+  });
+  const asset = new Group().add(...decos);
+  asset.userData.update = (dt) => decos.forEach((deco) => deco.userData.update(dt));
+  return asset;
+}
 
 /** A backup shrine; the wizard walks onto it every few seconds and it flares. */
 function buildShrine() {

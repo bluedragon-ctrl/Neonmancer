@@ -107,6 +107,9 @@ mobile/touch support, backend or accounts.
 - Types: static, pushable, moving (paths or up/down cycles; player rides
   them; spiked ones hurt on touch, D82), collapsing (vanish after being stepped on, optional respawn),
   hazard (deals damage), void (instant death when the player falls onto it).
+- Decorations (kind `deco`, D117): fixed bodies that dress a room and do
+  nothing, in the room's color, facing +z or +x: the data pillar
+  (1×3×1, always 3 high) and the screen (1×1×1).
 - Switches unlock exits: a floor plate held down by a crate, an enemy or
   the wizard, or a target a bolt switches on and off. A locked exit opens
   while every switch in its room is on, never closes on the wizard, and
@@ -287,6 +290,13 @@ they stay for the run.
 
 - Bright neon wireframe on dark background; saturated cyan, magenta,
   lime, amber. Infinite grid floor fading into darkness.
+- The camera never turns: it looks from +x +y +z, so a static object shows
+  only its top, +x and +z faces. Put detail on those faces and none on the
+  hidden ones; the asset showcase shows static objects without turning
+  (D115). Things that turn in play (characters, spinning pickups) are exempt.
+- Glass (crates, decorations) is always built with `glassBox()` and a
+  `GLASS` preset from `src/render/glass.js` (D116), never a material of
+  its own.
 - Characters (the wizard, monsters) are holograms: a dark core glowing
   towards the silhouette, faint drifting scanlines, a thin neon outline and
   glowing eyes (D22). The world stays wireframe.
@@ -312,7 +322,7 @@ they stay for the run.
 The engine is generic; all content lives in data.
 
 - `data/defs.json` — object types (kind, style, damage for spiked
-  platforms), block types (look or kind, color,
+  platforms, a decoration's look), block types (look or kind, color,
   properties such as damage and lethal; variants `extend` a base, D60),
   enemy templates (look, movement, attack,
   hostility, aggro range, integrity, damage, speeds, bounce, solid, color,

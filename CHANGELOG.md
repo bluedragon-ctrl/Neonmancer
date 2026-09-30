@@ -12,6 +12,16 @@ Phase 4 splits into 4a (saves and UI) and 4b (spells, Firewall Wardens as
 bosses that drop loot, tooling) (D104, D105).
 
 ### Added
+- Decorations (D117), a new object kind placed with the room editor:
+  the data pillar (`data_pillar`, 1×3×1), a glass shaft round a core with
+  four cables of data climbing one face, and the screen (`screen`,
+  1×1×1), a blue glass terminal with scrolling code on a slab. Both are
+  fixed bodies in the room's color, facing +z or +x (click one again in
+  the editor to turn it); showcase `pillars` and `screens`.
+- One glass helper (D116): crates and decorations build glass with
+  `glassBox()` and a `GLASS` preset.
+- A working rule for static looks (D115): the camera never turns, so
+  detail goes only on the faces it sees.
 - The wizard's body language (D114): his head bobs and his hands swing as
   he walks, he breathes, floats his hands and blinks while standing,
   raises his hands and stretches in the air, squashes on landing, and his

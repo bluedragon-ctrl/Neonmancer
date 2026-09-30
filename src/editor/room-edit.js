@@ -8,7 +8,7 @@
  */
 import { MAX_ROOM_FOOTPRINT } from '../core/rules.js';
 import { DATA_SCHEMA_VERSION } from '../core/version.js';
-import { EXIT_DEFAULTS, sideLength, withExitDefaults } from '../data/room-data.js';
+import { DECO_FACES, EXIT_DEFAULTS, sideLength, withExitDefaults } from '../data/room-data.js';
 import { validateData } from '../data/validate.js';
 import { Boxes } from './boxes.js';
 import { formatJson } from './format-json.js';
@@ -553,6 +553,19 @@ export class RoomEdit {
   setPathOptions(id, options) {
     const path = this.item(id)?.path;
     return !!path && this.updateItem(id, { path: withFields(path, options) });
+  }
+
+  /**
+   * Turn a decoration (D117) to face the other seen side: +z (the default,
+   * no override written) and +x take turns.
+   * @param {string} id
+   */
+  turnObject(id) {
+    const item = this.item(id);
+    if (!item) return false;
+    const face = (item.overrides?.face ?? DECO_FACES[0]) === DECO_FACES[0] ? DECO_FACES[1] : DECO_FACES[0];
+    const overrides = withFields(item.overrides ?? {}, { face: face === DECO_FACES[0] ? undefined : face });
+    return this.updateItem(id, { overrides: Object.keys(overrides).length > 0 ? overrides : undefined });
   }
 
   // --- Exits ------------------------------------------------------------

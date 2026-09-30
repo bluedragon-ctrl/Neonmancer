@@ -141,7 +141,7 @@
         "at": { "$ref": "common.schema.json#/$defs/cell" },
         "overrides": {
           "type": "object",
-          "description": "Values that replace the type defaults for this object only."
+          "description": "Values that replace the type defaults for this object only. A decoration (D117) also takes \"face\": \"+z\" (the default) or \"+x\", the side it faces."
         },
         "path": {
           "$ref": "#/$defs/path",
