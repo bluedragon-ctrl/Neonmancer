@@ -1,0 +1,26 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "tractor_bay",
+  "name": "Tractor Bay",
+  "biome": "home_lattice",
+  "size": [12, 4, 12],
+  "spawn": [1.5, 0, 6],
+  "exits": [{ "id": "west", "side": "-x", "at": 5 }],
+  "holes": [
+    { "at": [6, 0], "to": [7, 5] },
+    { "at": [8, 4], "to": [11, 5] },
+    { "at": [4, 9], "to": [11, 9] }
+  ],
+  "objects": [
+    { "id": "crate_a", "type": "crate", "at": [10, 0, 2] },
+    { "id": "crate_b", "type": "crate", "at": [11, 0, 2] }
+  ],
+  "enemies": [
+    { "id": "patrol", "template": "bug", "at": [4, 0, 10], "path": { "points": [[11, 0, 10]], "pause": 0.6 } }
+  ],
+  "pickups": [
+    { "id": "disk_pull", "type": "disk_pull", "at": [3, 0, 5] },
+    { "id": "energy", "type": "refill_energy", "at": [11, 0, 0] }
+  ]
+}

@@ -57,6 +57,7 @@ import { createPauseCage, placePauseCage } from './pause-view.js';
 import { warpFlash } from './warp-fx.js';
 import { createWarpTrail, dashPose, placeWarpTrail } from './warp-view.js';
 import { ClipView } from './clip-view.js';
+import { PullView } from './pull-view.js';
 import { createJumpRings, placeJumpRings } from './jump-view.js';
 import { arrivalLook, gatherPixels } from './boot-fx.js';
 
@@ -217,6 +218,8 @@ export class PlayerView {
     this.trails = new Map();
     /** Cut & Paste (D87): its effect and aim marker, made when he first knows the spell. */
     this.clip = null;
+    /** Pull (D124): its beam and aim marker, made when he first knows the spell. */
+    this.pull = null;
     /** The boot sequence after Start (D110): bootState() while he pops in, or null. */
     this.boot = null;
   }
@@ -318,6 +321,13 @@ export class PlayerView {
       this.group.add(this.clip.group);
     }
     this.clip?.sync(this.game, pos, alpha, dt);
+    // Pull: its beam and its aim marker (D124).
+    const pullSpell = this.game.content.spells.pull;
+    if (!this.pull && pullSpell && player.spells.includes('pull')) {
+      this.pull = new PullView(pullSpell.color);
+      this.group.add(this.pull.group);
+    }
+    this.pull?.sync(this.game, pos, alpha, dt);
     // No ghost while dead: not of him falling into a pit, nor of the derez.
     for (const ghost of this.xray) ghost.visible = !player.dead;
     const derezzing = player.dead && player.deathCause !== 'hole';

@@ -41,23 +41,23 @@ export const TRANSITION = {
  * Something that happened, for views, the HUD and (later) sound. Returned
  * by Game.update() for the tick it happened in.
  * @typedef {object} GameEvent
- * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'|'warp'|'fizzle'|'cut'|'paste'|'airjump'|'reflect'|'shrine'|'crash'|'access'|'win'|'read'} type
+ * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'|'warp'|'fizzle'|'cut'|'paste'|'pull'|'airjump'|'reflect'|'shrine'|'crash'|'access'|'win'|'read'} type
  * @property {string} [spell] the spell cast, failed, fizzled (nowhere to
  *   go, energy kept) or selected (cast, deny, fizzle, spell); the teleport (warp)
  * @property {number[]} [from] where a Blink or Warp started (warp)
  * @property {number[]} [to] where it ended (warp)
  * @property {number[]} [cell] the cell a crate or enemy was cut from or
- *   pasted into (cut, paste; the enemy's own cell, rounded down, for a
+ *   pasted into or pulled from (cut, paste, pull; the enemy's own cell, rounded down, for a
  *   frozen one stopped mid-step)
  * @property {object} [object] the room object it happened to (push, plug,
  *   land of an object; shake, collapse and regrow of a collapsing block;
  *   hit by a spell, break of a destructible one; a switch going on or off;
- *   a crate cut or pasted;
+ *   a crate cut, pasted or pulled;
  *   a spiked platform that hurt the wizard: hurt)
  * @property {object} [enemy] the enemy it happened to (pop, land of an
  *   enemy, bounce off it, hit by a spell, a discharge or a bolt; it noticed
  *   the wizard or something hit it: alert; its charged attack: charge,
- *   discharge (a burst, an arc or bolts fired); cut or pasted) or that
+ *   discharge (a burst, an arc or bolts fired); cut, pasted or pulled) or that
  *   hurt the wizard (hurt)
  * @property {Bolt} [bolt] the bolt that stopped (zap: the wizard's or an
  *   enemy's), where it is now, that bounced (ricochet) or that his Shield+

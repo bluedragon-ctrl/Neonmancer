@@ -33,7 +33,7 @@
     },
     "spells": {
       "type": "object",
-      "description": "Spell tuning, by spell id. What each spell does is built into the engine (SPELL_EFFECTS in src/game.js; Zap: src/entities/bolt.js, Shield and Firewall: Player.raiseShield(), Pause: a bolt that freezes, Enemy.freeze(); Blink and Warp: Game.teleport(), src/entities/warp.js; Cut & Paste: Game.cutOrPaste(), src/entities/clip.js).",
+      "description": "Spell tuning, by spell id. What each spell does is built into the engine (SPELL_EFFECTS in src/game.js; Zap: src/entities/bolt.js, Shield and Firewall: Player.raiseShield(), Pause: a bolt that freezes, Enemy.freeze(); Blink and Warp: Game.teleport(), src/entities/warp.js; Cut & Paste: Game.cutOrPaste(), src/entities/clip.js; Pull: src/entities/pull.js, Enemy.pull()).",
       "required": ["zap"],
       "additionalProperties": false,
       "properties": {
@@ -131,6 +131,19 @@
             "cost": { "$ref": "#/$defs/spellCost", "description": "Energy per cut." },
             "pasteCost": { "type": "integer", "minimum": 0, "description": "Energy per paste (0: free, so he is never stuck holding something)." },
             "cooldown": { "$ref": "#/$defs/spellCooldown" }
+          }
+        },
+        "pull": {
+          "description": "Pull the first crate or enemy in line the way he aims, at the height of his feet, one cell towards him (D124): a crate as if pushed, an enemy over anything, so it may drop into a hole and pop; pulling an enemy provokes it. A block, the room's side or another body in the way, or a target that can't move (right in front of him, a load on the crate): it fizzles and costs nothing.",
+          "type": "object",
+          "required": ["slot", "color", "cost", "cooldown", "range"],
+          "additionalProperties": false,
+          "properties": {
+            "slot": { "$ref": "#/$defs/spellSlot" },
+            "color": { "$ref": "#/$defs/spellColor" },
+            "cost": { "$ref": "#/$defs/spellCost" },
+            "cooldown": { "$ref": "#/$defs/spellCooldown" },
+            "range": { "type": "integer", "minimum": 2, "maximum": 16, "description": "Cells the line reaches, counting the one right in front of him (a target there has nowhere to go)." }
           }
         }
       }
