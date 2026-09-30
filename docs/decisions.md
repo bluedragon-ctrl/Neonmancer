@@ -987,7 +987,7 @@ keeps it from being free. The mint keeps the beam readable on the lime
 crates and the green bug.
 
 ### D125 — 2026-09-30 — Compile: a crate for 7 seconds
-Compile (slot 7, 5 energy, gold `#ffe45c`, late in the world) puts a
+Compile (slot 7, 50 energy, gold `#ffe45c`, late in the world) puts a
 crate of the dashed crate type into the free cell in front of the
 wizard at his feet, where Paste would put one. It is an ordinary crate
 while it lasts: it falls, plugs a hole, can be pushed and pulled. After

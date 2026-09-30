@@ -212,7 +212,7 @@
     "blink": { "slot": 4, "color": "#9ef0ff", "cost": 15, "cooldown": 0.25, "range": 3, "damage": 1, "hitDamage": 2 },
     "warp": { "slot": 5, "color": "#ff6ee8", "cost": 30, "cooldown": 0.25 },
     "cut_paste": { "slot": 6, "color": "#f4f6ff", "cost": 20, "pasteCost": 0, "cooldown": 0.25 },
-    "compile": { "slot": 7, "color": "#ffe45c", "cost": 5, "cooldown": 0.25, "duration": 7, "object": "crate_dashed" },
+    "compile": { "slot": 7, "color": "#ffe45c", "cost": 50, "cooldown": 0.25, "duration": 7, "object": "crate_dashed" },
     "scan": { "slot": 9, "color": "#8f6bff", "cost": 15, "cooldown": 0.25, "range": 6 },
     "pull": { "slot": 10, "color": "#a6ffcf", "cost": 15, "cooldown": 0.25, "range": 6 }
   },
