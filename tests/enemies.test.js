@@ -68,9 +68,9 @@ function until(game, type, limit = 600) {
 /** Fake input pressing cast this tick. */
 const cast = { down: (a) => a === 'cast', pressed: (a) => a === 'cast' };
 
-const virus = (at, id = 'v', overrides) => ({ id, template: 'virus', at, ...(overrides && { overrides }) });
+const virus = (at, id = 'v', variant) => ({ id, template: 'virus', at, ...(variant && { variant }) });
 const shooter = (at, id = 's') => ({ id, template: 'shooter', at });
-const sitter = (at, id = 'b', overrides = {}) => ({ id, template: 'bug', at, overrides: { movement: 'stationary', ...overrides } });
+const sitter = (at, id = 'b', variant = {}) => ({ id, template: 'bug', at, variant: { movement: 'stationary', ...variant } });
 
 // ---- moving (D80)
 
@@ -347,15 +347,11 @@ test('data: chasers need an aggro range, peaceful enemies no charged attack, nob
   const errors = (enemies, blocks = []) =>
     validateData(dataFiles({ rooms: [roomFile('alpha', { enemies, blocks })], enemies: TEMPLATES, objects: { crate: CRATE } })).join('\n');
   assert.equal(errors([shooter([1, 0, 1])]), '');
-  assert.match(errors([virus([1, 0, 1], 'v', { aggroRange: 0, attack: 'touch' })]), /a chaser needs an aggroRange above 0/);
+  assert.match(errors([virus([1, 0, 1], 'v', { aggroRange: 0, attack: 'touch' })]), /virus_v\d+: a chaser needs an aggroRange above 0/);
   assert.match(errors([virus([1, 0, 1], 'v', { hostility: 'peaceful' })]), /a peaceful enemy never fires its burst/);
   assert.equal(errors([virus([1, 0, 1], 'v', { hostility: 'peaceful', attack: 'none' })]), '');
   assert.match(errors([shooter([1, 1, 1])], [{ at: [1, 0, 1], type: 'void' }]), /starts on a lethal block at \[1,0,1\]/);
-  assert.match(errors([{ ...shooter([1, 0, 1]), overrides: { boltSpeed: 40 } }]), /"boltSpeed" must be between 0\.5 and 16/);
-  assert.match(errors([{ ...shooter([1, 0, 1]), overrides: { wings: 2 } }]), /"wings" is not a property of template "shooter"/);
-  assert.match(errors([{ ...shooter([1, 0, 1]), overrides: { boltPattern: 'star' } }]), /"boltPattern" must be one of aimed, cross/);
-  assert.match(errors([{ ...shooter([1, 0, 1]), overrides: { boltBounces: 1.5 } }]), /"boltBounces" must be a whole number/);
-  assert.equal(errors([{ ...shooter([1, 0, 1]), overrides: { boltPattern: 'cross', boltBounces: 3 } }]), '');
+  assert.equal(errors([{ ...shooter([1, 0, 1]), variant: { boltPattern: 'cross', boltBounces: 3 } }]), '');
 });
 
 // ---- looks

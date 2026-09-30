@@ -230,9 +230,11 @@ Each has a distinct color, silhouette and animation. Enemies are
 universal and data-driven (D48, D78, D80): a template in `defs.json` is a
 look, a movement, an attack (touch, burst, arc, bolt or none), a
 hostility (hostile, peaceful, provoked) and a color, plus tuning; any of
-them combine, a template may `extend` another, and a room overrides any
-field per enemy (docs/design.md, Enemies); movement AI is named behavior
-modules referenced from data. Any hit alerts an enemy, and
+them combine, and a template may `extend` another. A room places an
+enemy from a template and gives it only its cell and path, never values
+of its own, so an enemy behaves the same everywhere; each template has a
+color of its own, told apart at a glance (D119; docs/design.md,
+Enemies). Movement AI is named behavior modules referenced from data. Any hit alerts an enemy, and
 the wizard gets the blame (D81). Eye color shows hostility (red hostile,
 amber provoked, cyan peaceful); a red "!" pops up over one that notices
 him. Enemies move cell by cell with physics, never step into holes or

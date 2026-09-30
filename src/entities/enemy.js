@@ -2,9 +2,10 @@
  * An enemy (a corrupted program): a small body that moves one grid cell at
  * a time where its movement behavior (ai/behaviors.js) leads it, and falls
  * when nothing holds it up (D48). Everything about it comes from its
- * template in defs.json and the room's overrides: look, movement, attack,
- * hostility, aggro range, integrity, damage, speeds, bounce, color and the
- * charged attack's values; any look, movement and attack combine (D78).
+ * template in defs.json (D119; a room gives only its cell and path): look,
+ * movement, attack, hostility, aggro range, integrity, damage, speeds,
+ * bounce, color and the charged attack's values; any look, movement and
+ * attack combine (D78).
  * Pure logic, one call each to sense(), update() and updateAttack() per
  * fixed tick (Game.update()).
  *
@@ -98,8 +99,8 @@ export class Enemy {
     this.next = [0, 0, 0];
     /** Direction it faces, radians around y (0 looks along +z, like the models). */
     this.facing = 0;
-    /** Walking speed in units per second: the path's own, else its type's. */
-    this.speed = enemy.path?.speed ?? enemy.speed;
+    /** Walking speed in units per second (its template's, D119). */
+    this.speed = enemy.speed;
     /** Speed of the step it is taking: its chase speed while after the wizard. */
     this.stepSpeed = this.speed;
     this.behavior = new BEHAVIORS[enemy.movement](enemy.at, enemy.path, enemy);

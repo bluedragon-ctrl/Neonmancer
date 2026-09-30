@@ -15,7 +15,7 @@
   "shrine": [8, 8],
   "objects": [{ "id": "cover", "type": "crate", "at": [4, 0, 6] }],
   "enemies": [
-    { "id": "tower", "template": "tower", "at": [4, 0, 3] },
+    { "id": "tower", "template": "cron", "at": [4, 0, 3] },
     { "id": "worm", "template": "worm", "at": [1, 0, 8], "path": { "points": [[8, 0, 8]], "pause": 0.4 } },
     { "id": "crawler", "template": "crawler", "at": [1, 0, 1] }
   ],

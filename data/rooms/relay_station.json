@@ -22,13 +22,5 @@
     { "id": "crate_a", "type": "crate", "at": [4, 0, 5] },
     { "id": "plate_b", "type": "plate", "at": [10, 0, 9] }
   ],
-  "enemies": [
-    {
-      "id": "bug_a",
-      "template": "bug",
-      "at": [10, 0, 4],
-      "overrides": { "hostility": "peaceful" },
-      "path": { "points": [[10, 0, 9]], "pause": 2 }
-    }
-  ]
+  "enemies": [{ "id": "bug_a", "template": "bug", "at": [10, 0, 4], "path": { "points": [[10, 0, 9]], "pause": 2 } }]
 }

@@ -188,7 +188,7 @@ const ALL_ASSETS = [
   // inching along; a crawler (chase) on six legs; calm, then after the
   // wizard (faster); their pops.
   { label: 'cron', group: 'crons', build: buildCron },
-  { label: 'cron-pop', group: 'crons', build: () => buildEnemyPop('tower') },
+  { label: 'cron-pop', group: 'crons', build: () => buildEnemyPop('cron') },
   { label: 'worm', group: 'worms', build: () => buildWalker('worm') },
   { label: 'worm-pop', group: 'worms', build: () => buildEnemyPop('worm') },
   { label: 'crawler', group: 'crawlers', build: () => buildWalker('crawler') },
@@ -535,12 +535,12 @@ function buildFirewall() {
 }
 
 /**
- * Shield blocking (D84) in a loop: a shooter (defs.json) charges and fires
- * at the wizard with his Shield up; the bolt stops at the ring in sparks,
- * the ring flares, he is unhurt.
+ * Shield blocking (D84) in a loop: a bug shooting bolts (SHOOTER_DEMO)
+ * charges and fires at the wizard with his Shield up; the bolt stops at the
+ * ring in sparks, the ring flares, he is unhurt.
  */
 function buildShieldBlock() {
-  const { color, attackColor, attackCharge, boltSpeed } = enemyValues('shooter');
+  const { color, attackColor, attackCharge, boltSpeed } = enemyValues('bug', SHOOTER_DEMO);
   const u = [Math.SQRT1_2, 0, -Math.SQRT1_2];
   const bug = createBug(color);
   bug.position.set(u[0] * -2, 0, u[2] * -2);
@@ -1296,10 +1296,19 @@ function buildBurst(type) {
   return asset;
 }
 
-/** An enemy template from defs.json, filled in (D79) with every default. */
-function enemyValues(id) {
-  return withEnemyDefaults(resolveEnemyTemplates(defs.enemies)[id]);
+/**
+ * An enemy template from defs.json, filled in (D79) with every default;
+ * `demo` changes some for a showcase loop (a bolt attack on a bug).
+ */
+function enemyValues(id, demo = {}) {
+  return withEnemyDefaults({ ...resolveEnemyTemplates(defs.enemies)[id], ...demo });
 }
+
+/** The bolt demos' shooter: a bug firing slow bolts (D80). */
+const SHOOTER_DEMO = { attack: 'bolt', attackCharge: 0.6, boltSpeed: 4 };
+
+/** The bouncing bolt demo's ricochet: a virus firing a faster bolt (D81). */
+const RICOCHET_DEMO = { attack: 'bolt', attackCharge: 0.6, boltSpeed: 5, boltBounces: 2 };
 
 /**
  * Bolts (D80, D81) flying along `routes` at `speed`, in `color`: each route
@@ -1373,12 +1382,12 @@ function boltStopAtWizard(eyes, feet) {
 }
 
 /**
- * The bolt attack (D80) in a loop: a shooter (defs.json, a stationary bug)
+ * The bolt attack (D80) in a loop: a bug shooting bolts (SHOOTER_DEMO)
  * charges, then fires a slow shot in its attack color at the wizard 4
  * away; it bursts into sparks on him and he flashes.
  */
 function buildBoltShot() {
-  const { color, attackColor, attackCharge, boltSpeed } = enemyValues('shooter');
+  const { color, attackColor, attackCharge, boltSpeed } = enemyValues('bug', SHOOTER_DEMO);
   // Along the row on screen.
   const u = [Math.SQRT1_2, 0, -Math.SQRT1_2];
   const bug = createBug(color);
@@ -1398,12 +1407,12 @@ function buildBoltShot() {
 }
 
 /**
- * The bouncing bolt (D81) in a loop: a ricochet (defs.json, a virus)
- * fires a level shot at a crate, which it glances off (sparks) into the
- * wizard beside it.
+ * The bouncing bolt (D81) in a loop: a virus shooting bouncing bolts
+ * (RICOCHET_DEMO) fires a level shot at a crate, which it glances off
+ * (sparks) into the wizard beside it.
  */
 function buildBoltRicochet() {
-  const { color, attackColor, attackCharge, boltSpeed } = enemyValues('ricochet');
+  const { color, attackColor, attackCharge, boltSpeed } = enemyValues('virus', RICOCHET_DEMO);
   const virus = createVirus(color);
   virus.position.set(-1.5, 0, 0.8);
   const wizard = createWizard();
@@ -1428,14 +1437,14 @@ function buildBoltRicochet() {
 }
 
 /**
- * The four-way bolt (D81) in a loop, two shots: a tower (defs.json, a
- * stationary cron, D83) it charges, then fires four level bolts along the
+ * The four-way bolt (D81) in a loop, two shots: a cron (defs.json, a
+ * stationary tower, D83) charges, then fires four level bolts along the
  * grid axes out of its dial's emitters; the first time the wizard stands
  * on its +z axis and is hit, the second time he stands off the axes (a
  * safe corner) and the bolts spark out 2.4 away (walls) past him.
  */
 function buildBoltCross() {
-  const { look, color, attackColor, attackCharge, boltSpeed } = enemyValues('tower');
+  const { look, color, attackColor, attackCharge, boltSpeed } = enemyValues('cron');
   const model = ENEMY_MODELS[look];
   const cron = model.create(color);
   const wizard = createWizard();
@@ -1472,11 +1481,11 @@ function buildBoltCross() {
 }
 
 /**
- * A tower (defs.json, the cron look) alone, calm, then after the wizard
- * (a faster hand), charging and firing without bolts, in a loop.
+ * A cron (defs.json) alone, calm, then after the wizard (a faster hand),
+ * charging and firing without bolts, in a loop.
  */
 function buildCron() {
-  const { look, color, attackCharge } = enemyValues('tower');
+  const { look, color, attackCharge } = enemyValues('cron');
   const model = ENEMY_MODELS[look];
   const cron = model.create(color);
   const asset = new Group().add(cron);

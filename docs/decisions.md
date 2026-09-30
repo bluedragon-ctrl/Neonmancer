@@ -868,3 +868,27 @@ terminal; short texts only, because the terminal is a few lines at the
 screen's corner (a reader panel that pauses the game was left out). A
 codex of texts read was left out too: it would need save bits for what
 isn't an item.
+
+### D119 — 2026-09-30 — An enemy is all its template; a color per template
+A room places an enemy from a template in `defs.json` and gives it only
+its cell and, for a patrol or a chaser, its path: no `overrides`, and a
+path has no speed of its own (the template's speed counts). Every
+template has a body color of its own, at least 0.09 apart from every
+other in OKLab (`MIN_TEMPLATE_COLOR_GAP`, checked by
+`tests/colors.test.js` on the shipped data, not by the loader, so test
+fixtures may share colors). The checks on what could never happen (a
+chaser without an aggro range, a charged attack out of its reach, a
+peaceful one firing) move from the room's enemies to the templates. The
+templates start as one per look, named after it (13), from the
+templates and the Menagerie's overrides of before; `shooter`, `tower`
+and `ricochet` went (the tower is the cron). Test rooms that used
+overrides now use the plain templates and behave differently in places;
+variants are to be made as templates of their own. The room editor's
+Enemy tool only picks a template; templates are to be edited in a
+monster editor of their own (`tools/monster-editor.html`, next).
+**Why:** templates grew complex, and per-room overrides made enemies that
+looked alike behave differently from room to room: the player can't
+learn them. One behavior per template, one color per behavior, makes an
+enemy readable at a glance and keeps tuning in one place. A test (like
+the D99 color rules) rather than a load error keeps the rule on the real
+roster without forcing a color on every fixture.

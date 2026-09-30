@@ -307,10 +307,12 @@ barely tinted faces, that gives way under the wizard.
 ## Enemies
 
 Corrupted programs (D48), listed in a room's `enemies`. Everything about one
-comes from data: its template in `defs.json` `enemies` (D79), and the
-room's `overrides` for that one enemy. A template without `extends` sets
-every required value below; one with `extends` builds on another template
-(and so on down the chain) and sets only what it changes.
+comes from its template in `defs.json` `enemies` (D79): a room gives an
+enemy only its cell and, for a patrol or a chaser, its path (D119), so an
+enemy behaves the same in every room. A template is one behavior, and each
+has a color of its own so the player tells them apart. A template without
+`extends` sets every required value below; one with `extends` builds on
+another template (and so on down the chain) and sets only what it changes.
 Enemies are universal (D78): a look, a
 movement, an attack and a color, and any of them combine (a bug can chase
 and burst; a virus can patrol).
@@ -324,13 +326,13 @@ and burst; a virus can patrol).
 | `aggroRange` | units (default 0) | how far a hostile enemy notices the wizard, with nothing solid in between (a "!" pops up); a chaser goes after him, a charged attack fires at him. 0: it never notices him (a chaser must have one). |
 | `integrity` | 1–15 | how much spell damage it takes before it pops (bug: 2, so two Zaps). |
 | `damage` | ≥ 1 | integrity the wizard loses per attack. |
-| `speed` | units/s | walking speed; a path's own `speed` overrides it. |
+| `speed` | units/s | walking speed, along its path too (an enemy's path has no speed of its own, D119). |
 | `chaseSpeed` | units/s (default: `speed`) | speed while chasing or searching. |
 | `memory` | seconds (default 1.5) | how long a chaser searches where it lost him. |
 | `bounce` | true / false (default false; bug: true) | trampoline top (below). |
 | `solid` | true / false (default false) | blocks the wizard, carries him and shoves him (below). |
 | `pausable` | true / false (default true) | Pause freezes it (D85); false: the spell's bolt stops at it and does nothing (for guardians). |
-| `color` | #rrggbb | body color; the eyes always show hostility, so a room can recolor one enemy with `overrides` without a new template. |
+| `color` | #rrggbb | body color; the eyes show hostility. Each template has a color of its own, told apart at a glance: at least 0.09 apart in OKLab (`MIN_TEMPLATE_COLOR_GAP` in `src/data/colors.js`, checked by `tests/colors.test.js`, D119). |
 | `attackRange` | units (default 1.2) | burst or arc reach, from its eyes to the nearest point of the wizard; for a bolt, how near he must be; `aggroRange` must be at least this. |
 | `attackCharge` | seconds (default 0.4) | the warning before it fires. |
 | `attackCooldown` | seconds (default 1.5) | the wait after firing. |
@@ -339,16 +341,25 @@ and burst; a virus can patrol).
 | `boltPattern` | `aimed`, `cross` (default `aimed`) | a bolt attack's shots: one at the wizard, or four level ones along the grid axes (a tower, D81). |
 | `boltBounces` | 0–8 (default 0) | how often a bolt glances off walls and objects before they stop it (D81). |
 
-| Type | Look | Moves | Attack |
+One template per look for now (D119), named after it; variants of them
+(a tougher bug, a bug that shoots) are to be made as templates of their
+own, each in its own color.
+
+| Template | Look | Moves | Attack |
 |---|---|---|---|
 | `bug` | mint-green ball `#2bff88`, hops, bouncy | patrol, 3 cells/s | touch, 1 |
 | `virus` | yellow sharp cube `#ffe23a`, glides | chase: aggro 5, 2 cells/s calm, 3.5 chasing | burst, range 1.2, charge 0.4 s, cooldown 1.5 s; integrity 2 |
 | `sentinel` | orange sharp octahedron `#ff8a1a`, glides | chase: aggro 7, 1.5 calm, 2.5 chasing; stops 5 away | arc, range 5, charge 0.7 s, cooldown 2 s; integrity 3 |
+| `cron` | rose tower `#ff4f7a` (D83) | stationary | bolts four ways (`cross`) at 3.5 units/s, range 5 (aggro 5), charge 0.6 s, cooldown 1.8 s (D81); integrity 3 |
 | `worm` | blue worm `#4f7dff`, inches along | patrol, 2 cells/s | touch, 1; integrity 2 (D83) |
 | `crawler` | mint six-legged spider `#3dffd0`, walks | chase: aggro 5, 2 cells/s calm, 3.5 chasing | touch, 1; integrity 2 (D83) |
-| `shooter` | a bug (extends `bug`) | stationary | bolt at 4 units/s, range 6 (aggro 6), charge 0.6 s, cooldown 2 s (D80) |
-| `tower` | rose cron `#ff4f7a` (extends `sentinel`, D83) | stationary | bolts four ways (`cross`) at 3.5 units/s, range 5 (aggro 5), charge 0.6 s, cooldown 1.8 s (D81) |
-| `ricochet` | a virus (extends `virus`) | chase: aggro 6, stops 5 away | a bolt bouncing twice, 5 units/s, charge 0.6 s, cooldown 2.2 s (D81) |
+| `warden` | ember knight `#ff5a1f` | stationary | burst, range 1.2 (aggro 2.5); integrity 8, Pause can't freeze it |
+| `daemon` | violet wisp `#a45cff` | chase like a sentinel, provoked | arc, range 5; integrity 3 |
+| `golem` | sky-blue rack `#38a8ff`, solid (carries the wizard) | patrol, 1 cell/s, peaceful | none; integrity 6 |
+| `wyrm` | ice-blue dragon `#73d0ff` | patrol, 2 cells/s, provoked | bolt, range 5 (aggro 5) |
+| `phish` | white disk mimic `#eef3ff` | chase: aggro 2, 2 calm, 3.5 chasing | touch, 1 |
+| `overclock` | orchid chip `#ec73ff` | chase like a virus, provoked | burst, range 1.2 |
+| `pixie` | peach butterfly `#ffbe73` | patrol, 1.5 cells/s, peaceful | touch (never, peaceful) |
 
 - **Moving:** an enemy stands in a grid cell (hitbox 0.6 × 0.6 × 0.6,
   centered) and steps one cell at a time (bug: one hop per cell, 3 cells
@@ -480,10 +491,10 @@ and burst; a virus can patrol).
   round head with four eyes, thin jointed legs walking in a tripod gait
   (three feet down while the other three swing). After the wizard it
   crouches, walks faster and paws with its front legs.
-- **More looks (D107):** looks only so far: no `defs.json` template uses
-  them, a room picks one with `look` in `overrides` (the showcase colors
-  in brackets are suggestions). Each is taller or wider than its hitbox
-  in places, for show.
+- **More looks (D107):** each has a template of its own (D119; the
+  colors in brackets are the showcase's, changed where two templates
+  would look alike). Each is taller or wider than its hitbox in places,
+  for show.
   - **warden** (`#ff5a1f`): a Firewall Warden, a kite shield bricked like
     the Citadel's floor, a helm with a T-slit visor for eyes, two floating
     gauntlets and a greatsword planted point down. The seams breathe;
@@ -520,12 +531,13 @@ and burst; a virus can patrol).
   ones too (they stay peaceful). A hit flashes it white, then cyan, with a
   recoil squash; while damaged it glitches every ~0.8 s (a small sideways
   jump and a faint flash).
-- Validation: known type, valid overrides, a free cell of its own not over
-  a hole nor on a lethal block, ids unique among objects and enemies, a
-  patrol has a level path clear of static blocks (so does a chaser's, if
-  it has one), a stationary enemy has none; a chaser has an `aggroRange`;
-  a charged attack's `aggroRange` reaches its `attackRange`, and no
-  peaceful enemy has one (D80).
+- Validation: a known template, a free cell of its own not over a hole
+  nor on a lethal block, ids unique among objects and enemies, a patrol
+  has a level path clear of static blocks (so does a chaser's, if it has
+  one), a stationary enemy has none, and a path has no speed (D119). A
+  template: a chaser has an `aggroRange`; a charged attack's
+  `aggroRange` reaches its `attackRange`, and no peaceful enemy has one
+  (D80).
 - Tuning: `ENEMY` in `src/entities/enemy.js`, `BOLT` in
   `src/entities/bolt.js`, `PLAYER.bounceHeight`; the looks are `BUG` in
   `src/render/bug.js`, `VIRUS` in `src/render/virus.js`, `SENTINEL` in
@@ -536,7 +548,7 @@ and burst; a virus can patrol).
   pop, in `src/render/enemy-look.js`), the lightning `DISCHARGE` in
   `src/render/discharge.js`; review in the asset showcase
   (`/tools/showcase.html?asset=bugs,viruses,sentinels,crons,worms,crawlers`;
-  the bolt: `bug-bolt`, `?asset=bolts` for the tower and the ricochet;
+  the bolt: `bug-bolt`, `?asset=bolts` for the cron's four-way bolts and a bouncing bolt;
   the D107 looks: `?asset=concepts`, their pops `concept-pops`, wyrms in
   four colors `wyrm-colors`).
 
@@ -1296,19 +1308,19 @@ the world map tool shows the connections and flags any room further out.
 |---|---|---|
 | `boot_sector` (start) | 12×12 | blocks, holes, crates, plates opening a locked exit; the Zap disk, the core, a fragment, a shrine |
 | `cache_hall` | 16×8 | a pit to plug with a crate; the Shield disk, an energy buff |
-| `relay_station` | 12×12 | switches: a Zap target, a crate for a plate, a peaceful bug resting on a plate |
+| `relay_station` | 12×12 | switches: a Zap target, a crate for a plate, a bug patrolling over a plate |
 | `stack_yard` | Glitchmire, 8×8 | stacked crates, a climb via a crate, a plate by a locked doorway |
 | `fault_line` | 12×12 | hazard walls, spiked hoppers, a void field with a zigzag path; an integrity buff |
 | `transit_bus` | 12×12, 5 high | platforms: a ferry, a lift, a loop with a crate, a press, a pusher |
 | `volatile_memory` | 12×12, 5 high | collapsing bridges (one regrowing) and one-shot steps |
-| `crawl_space` | 12×12 | bugs of every kind (solid, bouncy, provoked, peaceful); a secret |
-| `menagerie` | Home Lattice, 12×12, north of Quarantine | the D107 looks: a warden (burst), a daemon (arc, provoked), a solid golem to ride, a wyrm (bolt, provoked), a phish, an overclock (burst, provoked), a pixie (peaceful) |
-| `quarantine` | Glitchmire, 10×10 | a virus, a sentinel, a bursting bug; the Pause disk; the level-1 access lock |
-| `scheduler` | Abyssal Buffer, 10×10 | a tower, a worm, a crawler; the Firewall disk; a shrine |
+| `crawl_space` | 12×12 | bugs, a warden; a secret on a tower, reached by bouncing off a bug |
+| `menagerie` | Home Lattice, 12×12, north of Quarantine | one of each D107 template: a warden (burst), a daemon (arc, provoked), a solid golem to ride, a wyrm (bolt, provoked), a phish, an overclock (burst, provoked), a pixie (peaceful) |
+| `quarantine` | Glitchmire, 10×10 | a virus, a sentinel, a warden; the Pause disk; the level-1 access lock |
+| `scheduler` | Abyssal Buffer, 10×10 | a cron, a worm, a crawler; the Firewall disk; a shrine |
 | `room_1` | 12×12 | an empty hub for the Phase 3 spell rooms |
 | `fast_path` | Frostbyte Wastes, 12×12 | Blink and Warp disks, pits to cross; the recharge buff |
 | `clipboard` | Abyssal Buffer, 12×12 | Cut & Paste: crates to cut and paste as steps and bridges, a bug to freeze and move |
-| `upgrade_lab` | Abyssal Buffer, 12×12 | the upgrades: a wall to double-jump, a bank shot for Zap+, a shooter for Shield+; a secret, a shrine |
+| `upgrade_lab` | Abyssal Buffer, 12×12 | the upgrades: a wall to double-jump, a bank shot for Zap+, a cron's bolts for Shield+; a secret, a shrine |
 | `vault` | Firewall Citadel, 8×8 | behind the access lock: two fragments |
 
 ### Room design checklist
@@ -1407,7 +1419,7 @@ targets stand out in it; violet became free when void blocks turned
 black.
 
 Enemies by biome (D108): Home Lattice's are the default cyberspace four,
-bug, virus, sentinel and cron (the `tower` template); they read as the
+bug, virus, sentinel and cron; they read as the
 Grid's plain enemies and may show up anywhere. Every other biome gets a
 roster of its own, at least three enemies, proposed in the Phase 4
 outline and settled in Phase 4b.
@@ -1511,37 +1523,24 @@ list switches to another room; New room makes an empty one (D57).
   object of the same type leaves it as it is (a platform keeps its path),
   except a decoration, which turns to face the other seen side (D117). A new platform is picked, ready for its path.
   Erasing removes an object or enemy standing in the cell.
-- **Enemy** places an enemy of the panel's template with its settings
-  (grouped: look and color; movement, speed and chase speed; hostility
-  and aggro range; attack, attack range and damage; integrity, bounce,
-  solid; each with a tooltip. Blank is the template's own; other
-  overrides written by hand stay), id `<template>_<n>`, and picks it. A
-  click on an enemy picks it: the fields then show and change it, and new
-  enemies get the same. A patrolling enemy needs a path (the panel says
-  so), a chaser may have one; making one stationary drops its path.
-  Integrity, damage, speed, chase speed, aggro range, attack range and
-  color are typed in (blank: the template's). Changing the template of
-  an enemy with an id the editor made renames it (`bug_1` becomes
-  `virus_1`); ids written by hand stay.
-- **Enemy templates** (D58, D79), any of them, the base ones too: a
-  name + **New** turns the current enemy settings into a new template in
-  `defs.json` (`"extends"` the current template, only the enemy's own
-  values), listed as `bug_tank (on bug)` from then on; the picked enemy
-  becomes one of it. With settings of its own, **Update template** moves
-  them into the template: every enemy of it changes, in every room, and
-  so do the templates built on it (the status line says which rooms and
-  templates). **Rename** gives the template the typed name (only one no
-  other room uses; the room's enemies and the templates built on it
-  follow), **Delete** removes one no enemy uses and no template builds
-  on. Template changes are undo steps of the room they were made in
-  (D59). Saved with Save, like the rooms.
+- **Enemy** places an enemy of the template picked in the panel (a line
+  under it says what the template does: `bug · patrol · touch · hostile
+  · 2 hits · speed 3 · bouncy`), id `<template>_<n>`, and picks it. A
+  click on an enemy picks it: a template picked then is its new one, and
+  new enemies get the same. A patrolling enemy needs a path (the panel
+  says so), a chaser may have one; a stationary template drops the path.
+  Changing the template of an enemy with an id the editor made renames it
+  (`bug_1` becomes `virus_1`); ids written by hand stay. The room
+  editor doesn't change templates (D119): they are written in
+  `defs.json` (a monster editor is next).
 - **Path** works on a picked platform or enemy (click it). Each click on a
   cell adds a point, with corners added so every leg runs along one axis
   (x, then z, then y); an enemy's points stay at its own height, a
   platform's may change layer (a lift); a stationary enemy takes no
-  points (set its Movement to patrol first). Right click takes the last
-  point off. The panel sets the mode (there and back, or loop), speed and pause
-  at the ends, or clears the path. Every path shows as a dashed line; the
+  points (give it a patrolling template first). Right click takes the last
+  point off. The panel sets the mode (there and back, or loop), the speed
+  (platforms only: an enemy walks at its template's) and the pause at the
+  ends, or clears the path. Every path shows as a dashed line; the
   picked one is white, with its points marked.
 - **Exit** opens an exit in the edge cell clicked (in a corner, in the
   wall nearer the mouse), at the layer's height, with the panel's width
@@ -1949,7 +1948,7 @@ Example room:
 - `objects` — typed things with stable ids; `overrides` replace type
   defaults. Platforms also take a `path`:
   `{ "points": [[6, 0, 1]], "mode": "pingpong", "speed": 2, "pause": 0.8 }`.
-- `enemies` — `{ "id", "template", "at", "path", "overrides" }` (see Enemies).
+- `enemies` — `{ "id", "template", "at", "path" }` (see Enemies); an enemy's path has no `speed` (D119).
 - `pickups` — `{ "id", "type", "at" }` (see Pickups and progress).
   Ids are unique among objects, enemies and pickups.
 - Object type style (D17): `edges` `solid`/`dashed`, `mark`

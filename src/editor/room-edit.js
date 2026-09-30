@@ -2,9 +2,8 @@
  * One room being edited (room editor, D56, D57): the room data, the edits
  * the editor's tools make to it, undo and redo, and whether it changed since
  * it was last saved. The room's exit connections live in world.json
- * (WorldEdit); its undo steps take them along, and the enemy templates in
- * defs.json (DefsEdit) and the screen texts in lore.json (LoreEdit) of the
- * steps that changed them. Plain logic, no
+ * (WorldEdit); its undo steps take them along, and the screen texts in
+ * lore.json (LoreEdit) of the steps that changed them. Plain logic, no
  * browser, so tests can drive it.
  */
 import { MAX_ROOM_FOOTPRINT, ROOM_HEIGHT } from '../core/rules.js';
@@ -27,8 +26,8 @@ const LIST_OF = Object.fromEntries(ITEM_LISTS);
 /** Order of a room file's keys when it is written back (as in data/rooms/). */
 const KEY_ORDER = ['$schema', 'schemaVersion', 'id', 'name', 'authored', 'biome', 'size', 'spawn', 'reset', 'exits', 'blocks', 'holes', 'shrine', 'objects', 'enemies', 'pickups'];
 
-/** Files several rooms share, whose changes a room's undo step takes along: defs.json, lore.json. */
-const SHARED = ['defs', 'lore'];
+/** Files several rooms share, whose changes a room's undo step takes along: lore.json. */
+const SHARED = ['lore'];
 
 /** Undo steps kept per room. */
 const UNDO_LIMIT = 200;
@@ -46,13 +45,11 @@ export class RoomEdit {
    * @param {object} data room file contents
    * @param {object} [options]
    * @param {import('./world-edit.js').WorldEdit} [options.world] world.json being edited (exit connections)
-   * @param {import('./defs-edit.js').DefsEdit} [options.defs] defs.json being edited (enemy templates)
    * @param {import('./lore-edit.js').LoreEdit} [options.lore] lore.json being edited (screen texts, D118)
    * @param {boolean} [options.fresh] a new room, not saved yet
    */
-  constructor(data, { world = null, defs = null, lore = null, fresh = false } = {}) {
+  constructor(data, { world = null, lore = null, fresh = false } = {}) {
     this.world = world;
-    this.defs = defs;
     this.lore = lore;
     this.fresh = fresh;
     this.load(data);
@@ -107,15 +104,14 @@ export class RoomEdit {
     this.fresh = false;
   }
 
-  /** The room, its connections, the enemy templates and the screen texts, for undo. */
+  /** The room, its connections and the screen texts, for undo. */
   snapshot() {
-    return { room: this.text(), links: JSON.stringify(this.world?.linksOf(this.id) ?? []), defs: this.defs?.text() ?? null, lore: this.lore?.text() ?? null };
+    return { room: this.text(), links: JSON.stringify(this.world?.linksOf(this.id) ?? []), lore: this.lore?.text() ?? null };
   }
 
   /**
    * Go back to an undo or redo step: the room and its connections, and the
-   * template and text changes of the step if it made any (`defs`, from
-   * `defsAfter`; `lore`, from `loreAfter`).
+   * text changes of the step if it made any (`lore`, from `loreAfter`).
    */
   restore(state) {
     this.load(JSON.parse(state.room));
@@ -140,7 +136,7 @@ export class RoomEdit {
     this.pending = null;
     const now = this.snapshot();
     if (before.room === now.room && before.links === now.links && SHARED.every((key) => before[key] === now[key])) return;
-    // Only a step that changed the templates or texts takes those changes back (other rooms' stay).
+    // Only a step that changed the texts takes those changes back (other rooms' stay).
     for (const key of SHARED) {
       if (before[key] === now[key]) before[key] = null;
       else before[`${key}After`] = now[key];
@@ -178,7 +174,7 @@ export class RoomEdit {
   step(from, to) {
     if (this.pending !== null || from.length === 0) return false;
     const target = from.pop();
-    // The way back of this step: its template and text changes turned round.
+    // The way back of this step: its text changes turned round.
     const now = this.snapshot();
     for (const key of SHARED) {
       now[key] = target[key] === null ? null : target[`${key}After`];
@@ -476,18 +472,18 @@ export class RoomEdit {
   }
 
   /**
-   * Give an enemy a template and overrides (none: `{}`); its id follows the
-   * template (idFor()), and a stationary one loses its path.
+   * Give an enemy another template; its id follows the template (idFor()),
+   * and a stationary one loses its path.
    * @param {string} id
-   * @param {{ template: string, overrides: object }} settings
+   * @param {string} template enemy template id (defs.json "enemies")
    * @param {boolean} walksPath it may have a path with these settings (not stationary)
    * @returns {string|null} its id afterwards, or null if nothing changed
    */
-  setEnemy(id, { template, overrides }, walksPath) {
+  setEnemy(id, template, walksPath) {
     const enemy = this.item(id);
     if (!enemy) return null;
     const next = this.idFor(enemy, enemy.template, template);
-    const fields = { id: next, template, overrides: Object.keys(overrides).length > 0 ? overrides : undefined, path: walksPath ? enemy.path : undefined };
+    const fields = { id: next, template, path: walksPath ? enemy.path : undefined };
     return this.updateItem(id, fields) ? next : null;
   }
 
@@ -497,17 +493,14 @@ export class RoomEdit {
    * template name with the first free number (`bug_1`).
    * @param {number[]} cell
    * @param {string} template enemy template id (defs.json "enemies", D79)
-   * @param {object} [overrides] values that replace the template's
    * @returns {string|null} the new enemy's id, or null if nothing changed
    */
-  placeEnemy(cell, template, overrides = {}) {
+  placeEnemy(cell, template) {
     if (!this.inside(cell) || this.at(cell)?.kind === 'enemy') return null;
     const id = this.freeId(template);
     this.edit(() => {
       this.remove(cell);
-      const enemy = { id, template, at: [...cell] };
-      if (Object.keys(overrides).length > 0) enemy.overrides = structuredClone(overrides);
-      this.data.enemies = [...(this.data.enemies ?? []), enemy];
+      this.data.enemies = [...(this.data.enemies ?? []), { id, template, at: [...cell] }];
     });
     return id;
   }

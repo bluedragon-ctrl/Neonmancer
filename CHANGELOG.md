@@ -83,6 +83,17 @@ bosses that drop loot, tooling) (D104, D105).
   showcase (`?asset=concepts`) and the test room Menagerie, north of
   Quarantine.
 
+### Changed
+- Enemies are all their template (D119): rooms no longer override a
+  template's values for one enemy, and an enemy's path has no speed of
+  its own. The templates are one per look (13, named after it), each in a
+  color of its own (a test keeps them apart); `shooter`, `tower` and
+  `ricochet` are gone (the tower is `cron`). Test rooms that overrode
+  enemies use the plain templates now and play differently in places
+  (Crawl Space, Menagerie, Quarantine, Relay Station, Upgrade Lab). The
+  room editor's Enemy tool picks a template and says what it does; it
+  no longer edits templates.
+
 ### Fixed
 - The map tool's tests use a small world of their own instead of the
   real rooms, so map redesigns no longer break them.

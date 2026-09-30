@@ -595,9 +595,10 @@ test('collapsing blocks: each cell of a box becomes a room object with its type\
   assert.equal(room.blocks.collapsing, undefined, 'not in the grid');
 });
 
-/** The valid game with `enemies` added to room alpha (a crate at [2,0,5], blocks [4..5, 0..1, 4]). */
+/** The valid game with `enemies` added to room alpha (a crate at [2,0,5], blocks [4..5, 0..1, 4]); a stationary bug template "still". */
 function withEnemies(enemies, change = () => {}) {
   return errorsAfter((f) => {
+    f['defs.json'].enemies.still = { extends: 'bug', movement: 'stationary' };
     f['rooms/alpha.json'].enemies = enemies;
     change(f);
   });
@@ -616,13 +617,13 @@ test('enemies: a patrol needs a level path along x or z, clear of blocks', () =>
 });
 
 test('enemies: a stationary enemy has no path', () => {
-  const still = { id: 'b', template: 'bug', at: [1, 0, 1], overrides: { movement: 'stationary' } };
+  const still = { id: 'b', template: 'still', at: [1, 0, 1] };
   assert.deepEqual(withEnemies([still]), []);
   assertError(withEnemies([{ ...still, path: { points: [[3, 0, 1]] } }]), 'enemies[0].path', 'no path');
 });
 
 test('enemies: known type, unique id shared with objects, a free cell of its own, not over a hole', () => {
-  const still = (id, at, extra = {}) => ({ id, template: 'bug', at, overrides: { movement: 'stationary' }, ...extra });
+  const still = (id, at, extra = {}) => ({ id, template: 'still', at, ...extra });
   assertError(withEnemies([still('b', [1, 0, 1], { template: 'moth' })]), 'enemies[0]', 'unknown enemy template "moth"');
   assertError(withEnemies([still('box', [1, 0, 1])]), 'enemies[0]', 'duplicate id "box"');
   assertError(withEnemies([still('b', [2, 0, 5])]), 'enemies[0]', 'filled by objects[0]');
@@ -635,13 +636,33 @@ test('enemies: known type, unique id shared with objects, a free cell of its own
   );
 });
 
-test('enemies: overrides change type fields with valid values only', () => {
-  const bug = (overrides) => [{ id: 'b', template: 'bug', at: [1, 0, 1], overrides: { movement: 'stationary', ...overrides } }];
-  assert.deepEqual(withEnemies(bug({ hostility: 'provoked', bounce: true, speed: 2, color: '#ffffff', aggroRange: 5 })), []);
-  assertError(withEnemies(bug({ hostility: 'grumpy' })), 'enemies[0].overrides', '"hostility" must be one of hostile, peaceful, provoked');
-  assertError(withEnemies(bug({ bounce: 'yes' })), 'enemies[0].overrides', '"bounce" must be a boolean');
-  assertError(withEnemies(bug({ integrity: 1.5 })), 'enemies[0].overrides', '"integrity" must be a whole number');
-  assertError(withEnemies(bug({ wings: 2 })), 'enemies[0].overrides', '"wings" is not a property');
+test('enemies: an enemy is all its template: no overrides, no path speed of its own (D119)', () => {
+  const still = { id: 'b', template: 'still', at: [1, 0, 1] };
+  assertError(withEnemies([{ ...still, overrides: { hostility: 'peaceful' } }]), 'enemies[0]', 'overrides');
+  assertError(
+    withEnemies([{ id: 'b', template: 'bug', at: [1, 0, 1], path: { points: [[3, 0, 1]], speed: 2 } }]),
+    'enemies[0].path.speed',
+    'its template\'s speed',
+  );
+  // A platform's path keeps its speed.
+  assert.deepEqual(
+    errorsAfter((f) => {
+      f['defs.json'].objects.lift = { kind: 'platform', color: '#00f0ff' };
+      f['rooms/alpha.json'].objects.push({ id: 'lift', type: 'lift', at: [1, 0, 3], path: { points: [[3, 0, 3]], speed: 2 } });
+    }),
+    [],
+  );
+});
+
+test('enemy templates: values are checked, and what could never happen is an error', () => {
+  const template = (values) => withEnemies([], (f) => (f['defs.json'].enemies.odd = { extends: 'bug', ...values }));
+  assert.deepEqual(template({ hostility: 'provoked', color: '#ffffff', aggroRange: 5 }), []);
+  assertError(template({ hostility: 'grumpy' }), 'enemies.odd.hostility');
+  assertError(template({ bounce: 'yes' }), 'enemies.odd.bounce');
+  assertError(template({ wings: 2 }), 'enemies.odd');
+  assertError(template({ movement: 'chase' }), 'enemies.odd', 'a chaser needs an aggroRange above 0');
+  assertError(template({ attack: 'burst', aggroRange: 1 }), 'enemies.odd', 'aggroRange 1 is shorter than its attackRange 1.2');
+  assertError(template({ attack: 'arc', aggroRange: 5, hostility: 'peaceful' }), 'enemies.odd', 'a peaceful enemy never fires its arc');
 });
 
 test('enemy templates: the schema and the code agree on the allowed values', () => {

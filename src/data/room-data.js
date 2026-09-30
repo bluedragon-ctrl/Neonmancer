@@ -196,7 +196,7 @@ export const ENEMY_REQUIRED = ['look', 'movement', 'attack', 'hostility', 'integ
 
 /**
  * An enemy's values with every default filled in: ENEMY_DEFAULTS, then
- * `values` (a template, or a template with a room's overrides), then chaseSpeed
+ * `values` (a template, filled in from the ones it extends), then chaseSpeed
  * and attackColor from its speed and color unless set.
  * @param {object} values
  */

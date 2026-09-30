@@ -16,39 +16,16 @@
   "enemies": [
     { "id": "sentry", "template": "bug", "at": [3, 0, 2], "path": { "points": [[3, 0, 10]], "pause": 0.4 } },
     { "id": "diver", "template": "bug", "at": [10, 1, 1], "path": { "points": [[5, 1, 1]], "pause": 0.4 } },
-    {
-      "id": "lane",
-      "template": "bug",
-      "at": [5, 0, 4],
-      "overrides": { "solid": true },
-      "path": { "points": [[11, 0, 4]], "pause": 0.4 }
-    },
-    {
-      "id": "mount",
-      "template": "bug",
-      "at": [5, 0, 11],
-      "overrides": { "solid": true, "bounce": false, "hostility": "peaceful" },
-      "path": { "points": [[10, 0, 11]], "pause": 1 }
-    },
+    { "id": "lane", "template": "bug", "at": [5, 0, 4], "path": { "points": [[11, 0, 4]], "pause": 0.4 } },
+    { "id": "mount", "template": "bug", "at": [5, 0, 11], "path": { "points": [[10, 0, 11]], "pause": 1 } },
     {
       "id": "circler",
       "template": "bug",
       "at": [5, 0, 7],
-      "overrides": { "hostility": "provoked" },
-      "path": { "points": [[8, 0, 7], [8, 0, 10], [5, 0, 10]], "mode": "loop", "speed": 2 }
+      "path": { "points": [[8, 0, 7], [8, 0, 10], [5, 0, 10]], "mode": "loop" }
     },
-    {
-      "id": "tank",
-      "template": "bug",
-      "at": [7, 0, 2],
-      "overrides": { "movement": "stationary", "integrity": 4, "color": "#ffb020" }
-    },
-    {
-      "id": "spring",
-      "template": "bug",
-      "at": [2, 0, 1],
-      "overrides": { "movement": "stationary", "hostility": "peaceful" }
-    }
+    { "id": "tank", "template": "warden", "at": [7, 0, 2] },
+    { "id": "spring", "template": "bug", "at": [2, 0, 1], "path": { "points": [[2, 0, 0]] } }
   ],
   "pickups": [
     { "id": "energy", "type": "refill_energy", "at": [3, 0, 4] },

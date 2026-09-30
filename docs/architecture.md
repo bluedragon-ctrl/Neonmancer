@@ -48,6 +48,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `core/input.js` | Raw keys → action states once per tick |
 | `core/loop.js` | Fixed 60 Hz timestep, step clamp, interpolation alpha |
 | `core/messages.js` | `say(key, values)` terminal messages, `showText(lines)` screen texts (D118) and `announce(key, values, options)` banners from any module, queued until the HUD takes them |
+| `data/colors.js` | How far apart two colors look (OKLab, `colorGap()`) and enemy templates too alike (`templateColorClashes()`, D119) (pure, tested) |
 | `data/lore.js` | Screen texts (D118): `LORE_LIMITS`, `LORE_REACH`, the looks that show a text, `loreLines()` (what the terminal prints) and `loreProblem()` (pure, tested) |
 | `core/rules.js` | Shared rule constants (player hitbox, max room footprint) |
 | `core/version.js` | Game and data-schema version numbers (the game's patch number comes from `tools/game-version.js`, D42) |
@@ -164,20 +165,18 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `ui/terminal.js` | Terminal message queue (typing, hold, fade; a screen's text as a block of its own, D118) and banner timing (pure, tested) |
 | `ui/text.js` | String lookup with `{name}` values; scrambled "decoding" text for the banner (pure, tested) |
 | `editor/boxes.js` | `blocks`/`holes` entries edited cell by cell: untouched entries kept, loose cells merged greedily into boxes (pure, tested) |
-| `editor/defs-edit.js` | `defs.json` being edited: enemy templates (any of them, D79) added, updated, renamed and deleted; a step's template changes applied again for undo/redo (pure, tested) |
 | `editor/editor.js` | Room editor (F2, D56, D57): opens on the current room, switches rooms and makes new ones, mouse picking on a height layer, tools, picking things, keys, rebuilding the room from the edited data, save or export |
 | `editor/errors.js` | The error list: errors grouped by file, and the room, tool and thing each one points at (pure, tested) |
-| `editor/file-edit.js` | `FileEdit`: a data file rooms share (world, defs, lore) being edited: its data, text, dirty state and `markSaved()`; `applyEntryChange()` for undo/redo of its entries among several rooms (pure, tested) |
+| `editor/file-edit.js` | `FileEdit`: a data file rooms share (world, lore) being edited: its data, text, dirty state and `markSaved()`; `applyEntryChange()` for undo/redo of its entries among several rooms (pure, tested) |
 | `editor/format-json.js` | JSON in the data files' hand-written style (pure, tested against every data file) |
 | `editor/ids.js` | `ID_PATTERN` and `idProblem()`: why a new room, exit, template or text id won't do (pure, tested) |
 | `editor/map-edit.js` | The world as the world map tool edits it (D77): `MapEdit` moves, adds and removes rooms, connects rooms with an exit in the middle of each facing wall (`addExit()`), removes connections with both exits (`disconnectExit()`), removes one exit (`removeExit()`, D102) and reuses loose ones (`looseExit()`), undo, rolling back the last save (`rollbackPoint()`, `rollBack()`, D103), and what a save sends (`changes()`) (pure, tested) |
 | `editor/overlay.js` | Editor gizmos: layer grid, cursor, spawn and reset markers, paths, the picked thing's box, `EDITOR_LOOK` |
 | `editor/panel.js` | Editor side panel (DOM): room list, tools and their fields, layer, room settings, actions, errors |
-| `editor/room-edit.js` | One room being edited: place/erase edits, enemies, paths, exits and their connections, spawn/reset, name, biome, size (with a report), undo/redo (with the step's template changes), dirty state, cell descriptions; `newRoom()`, `roomIdProblem()`, `sizeProblem()` (pure, tested) |
+| `editor/room-edit.js` | One room being edited: place/erase edits, enemies, paths, exits and their connections, spawn/reset, name, biome, size (with a report), undo/redo (with the step's screen text changes), dirty state, cell descriptions; `newRoom()`, `roomIdProblem()`, `sizeProblem()` (pure, tested) |
 | `editor/save.js` | Posting edited files to the dev server; downloading them in a build |
 | `editor/lore-edit.js` | `lore.json` being edited (D118): texts added and changed, checked against the limits; a step's text changes applied again for undo/redo (pure, tested) |
 | `editor/texts.js` | The editor's screen text actions (D118): pick the picked screen's text, add a new one for it, change one; which screens show a text |
-| `editor/templates.js` | The editor's enemy template actions (D58, D79): save the enemy settings as a new template, move them into their template, rename, delete; hands the edited templates to the game and the panel |
 | `editor/world-edit.js` | `world.json` being edited: connecting, disconnecting and renaming exits, a room's connections for its undo steps, a new room's map cell (`place()`, `unplace()`); `linkChoices()` (pure, tested) |
 | `debug/overlay.js` | Debug mode's wireframe collision boxes |
 | `debug/readout.js` | Debug mode's stats readout (rates, buffer and quality, GPU resources, actions, position) |
@@ -287,8 +286,8 @@ in the same tick. A block with a regrow time grows back once the time is
 up and no body overlaps its cell.
 
 Enemies (D48) are not room objects: `Game.enemies` holds them, built from
-the room's `enemies` (type fields from `defs.json` merged with the room's
-overrides). They update after the objects, so they see platforms and
+the room's `enemies` (their template's fields from `defs.json`; a room
+gives only the cell and the path, D119). They update after the objects, so they see platforms and
 crates where those are now. An enemy stands in a cell (a 0.6 box centered
 on its floor) and only starts a step from whole cells: it asks its
 movement behavior for the next step and walks one cell, counting the

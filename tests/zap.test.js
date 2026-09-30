@@ -34,8 +34,8 @@ function run(game, inp, ticks) {
   return events;
 }
 
-/** A bug staying in its cell, with more `overrides` of its type. */
-const sitter = (at, id = 'b', overrides = {}) => ({ id, template: 'bug', at, overrides: { movement: 'stationary', ...overrides } });
+/** A bug staying in its cell, with more `variant` values of its template (helpers.js withVariants()). */
+const sitter = (at, id = 'b', variant = {}) => ({ id, template: 'bug', at, variant: { movement: 'stationary', ...variant } });
 
 test('casting Zap spends energy and sends a bolt from his hands the way he aims', () => {
   const game = gameWith();
@@ -132,7 +132,7 @@ test('a bug takes two hits: the first hurts it, the second pops it', () => {
   assert.ok(!game.liveEnemies.includes(bug));
 });
 
-test('the integrity of an enemy follows its overrides; a bolt only hits the first enemy in its way', () => {
+test('the integrity of an enemy follows its template; a bolt only hits the first enemy in its way', () => {
   const game = gameWith({ enemies: [sitter([3, 0, 3], 'front', { integrity: 3 }), sitter([5, 0, 3], 'back')] });
   const [front, back] = game.enemies;
   for (let i = 0; i < 3; i++) {

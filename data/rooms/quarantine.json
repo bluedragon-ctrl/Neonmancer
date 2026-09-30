@@ -21,12 +21,7 @@
   "enemies": [
     { "id": "virus", "template": "virus", "at": [2, 0, 2] },
     { "id": "sentinel", "template": "sentinel", "at": [1, 0, 9] },
-    {
-      "id": "zapbug",
-      "template": "bug",
-      "at": [6, 0, 8],
-      "overrides": { "movement": "stationary", "attack": "burst", "aggroRange": 2 }
-    }
+    { "id": "zapbug", "template": "warden", "at": [6, 0, 8] }
   ],
   "pickups": [
     { "id": "integrity", "type": "refill_integrity", "at": [7, 0, 9] },
