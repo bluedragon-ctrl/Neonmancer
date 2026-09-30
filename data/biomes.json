@@ -13,8 +13,8 @@
       "color": "#9fd0ff",
       "look": { "background": "#06101c", "outerGrid": "#2a4058", "outerFade": 6, "wallGrid": 0.25, "bloom": 1.3 }
     },
-    "abyssal_buffer": {
-      "name": "Abyssal Buffer",
+    "outer_buffer": {
+      "name": "Outer Buffer",
       "color": "#7a8190",
       "look": { "background": "#0b0c0f", "outerGrid": "#26282e", "outerFade": 9, "wallGrid": 0.4, "bloom": 1.7 }
     },

@@ -1317,7 +1317,7 @@ the world map tool shows the connections and flags any room further out.
 | `crawl_space` | 12×12 | bugs, a warden; a secret on a tower, reached by bouncing off a bug |
 | `menagerie` | Home Lattice, 12×12, north of Quarantine | one of each D107 template: a warden (burst), a daemon (arc, provoked), a solid golem to ride, a wyrm (bolt, provoked), a phish, an overclock (burst, provoked), a pixie (peaceful) |
 | `quarantine` | Glitchmire, 10×10 | a virus, a sentinel, a warden; the Pause disk; the level-1 access lock |
-| `scheduler` | Abyssal Buffer, 10×10 | a cron, a worm, a crawler; the Firewall disk; a shrine |
+| `scheduler` | Outer Buffer, 10×10 | a cron, a worm, a crawler; the Firewall disk; a shrine |
 | `room_1` | 12×12 | an empty hub for the Phase 3 spell rooms |
 | `fast_path` | Frostbyte Wastes, 12×12 | Blink and Warp disks, pits to cross; the recharge buff |
 | `clipboard` | Abyssal Buffer, 12×12 | Cut & Paste: crates to cut and paste as steps and bridges, a bug to freeze and move |
@@ -1403,11 +1403,11 @@ Phase 5.
 | Biome | Color | Floor | Particles | Signature |
 |---|---|---|---|---|
 | Home Lattice (core) | amber `#ffb020` | clean square grid | warm motes rising slowly | calm, steady glow |
-| Glitchmire | hot pink `#ff5fa8` | torn tiles, slightly offset | pixel bubbles popping up | edges jitter for a frame now and then |
+| Glitchmire (heavy virtual, D122) | hot pink `#ff5fa8` | torn tiles, slightly offset | pixel bubbles popping up | edges jitter for a frame now and then |
 | Frostbyte Wastes | ice blue `#9fd0ff` | hex crystal pattern | 0/1 flakes falling | soft, frosty bloom |
-| Abyssal Buffer | graphite `#7a8190` | wavy caustics | glitter drifting slowly | gentle sway |
+| Outer Buffer (dark space, D122) | graphite `#7a8190` (to be picked again) | to be settled | a starfield | to be settled |
 | Firewall Citadel | ember orange `#ff6a1f` | brick pattern | sparks rising | warm edge flicker |
-| Phantom Partition (special) | pale violet `#a98bff` (D99) | sparse dots | still stars, twinkling | edges shimmer slowly through the hues |
+| Phantom Partition (special; ghosts, D122) | pale violet `#a98bff` (D99) | sparse dots under low glowing mist | to be settled | edges shimmer slowly through the hues |
 
 Room colors keep clear of the colors objects and blocks carry (the color
 rules, D99): danger red (hazards, spiked platforms), white (plates,
@@ -1425,6 +1425,50 @@ as the Grid's plain enemies and may show up anywhere. Every other biome
 gets a roster of its own, at least three enemies, proposed in the Phase 4
 outline and settled in Phase 4b one biome at a time, each in a section
 of its own below (look, enemies, signature trick, later effect).
+Firewall Wardens are bosses for any biome, Home Lattice too (D122).
+
+### The sectors at a glance (D122)
+
+The high-level map the per-biome passes work within: each sector has a
+theme, an enemy family and one mechanic no other sector has.
+
+| Sector | Theme | Feel | Visual key | Enemy family | Later effect (Phase 5) |
+|---|---|---|---|---|---|
+| Home Lattice (settled, D121) | clean kernel city | safe, orderly | amber, grid, data flows | the plain Grid four, glowbug | none |
+| Glitchmire | heavy virtual: raw virtual space, math made visible | abstract, unstable | hot pink, voxels, low-poly shapes, pixel noise | pixel and geometric monsters that split, morph and hop | low-res (pixelation) |
+| Frostbyte Wastes | frozen storage | cold, slow, precise | ice blue, hex crystals, 0/1 flakes | things that slow and freeze | slippery ice |
+| Outer Buffer | dark space beyond the Grid | lonely, dark, floating | near-black void, starfield, dim cool edges | space things that orbit, fall, pull | low gravity; darkness, a light round the wizard |
+| Firewall Citadel | the fortress | armored, hot | ember orange, bricks, sparks | armored guards, burners, turrets | heat vents |
+| Phantom Partition (special) | ghosts: deleted data that lingers | eerie, quiet, misty | pale violet, low glowing mist over the floor | ghosts that phase, mirror, haunt | mist hides the low floor; blocks phase in and out |
+
+Looks already made go: phish and pixie to Glitchmire; golem (a slow
+"Cold Boot" ice wall) and wyrm to Frostbyte; worm (a space serpent or
+comet) to Outer Buffer; overclock and crawler to Firewall Citadel;
+daemon to Phantom Partition. The warden is a boss anywhere.
+
+Enemy ideas, to refine in each pass:
+- **Glitchmire:** Voxel Swarm (splits in two when hit), Primitive
+  (morphs cube to octahedron between patrol and attack), Null Pointer
+  (dashes straight until a wall), Artifact (short pixel hops), phish,
+  pixie.
+- **Frostbyte Wastes:** Cold Boot (the golem), Flurry (a flake swarm),
+  Freezer (a bolt that slows the wizard), Icicle (drops when he passes
+  under it), wyrm.
+- **Outer Buffer:** Satellite (orbits a point), Meteor (falls from above,
+  its drop shadow warning), Gravity Well (stationary, pulls the wizard),
+  Probe (sweeps a searchlight cone), Asteroid (a solid drifting
+  platform), worm.
+- **Firewall Citadel:** Proxy (a shield knight, hit from behind),
+  Brickling (a wall brick that wakes up), Turret, overclock, crawler.
+- **Phantom Partition:** daemon (drifts through blocks), Zombie Process
+  (moves only while the wizard faces away), Echo (mirrors his moves),
+  Poltergeist (shoves crates), Orphan (a peaceful ghost leading to a
+  secret).
+
+Dropped with this map: the deep-sea and nature ideas for the old
+Abyssal Buffer, Bitrot and Z-Fighter; they may come back if a sector
+needs them. Low-res moves from Frostbyte to Glitchmire, the stars from
+Phantom Partition to Outer Buffer.
 
 Surroundings (`look` in `biomes.json`, D62; every field optional, Home
 Lattice's values are the defaults):
@@ -1442,7 +1486,7 @@ Lattice's values are the defaults):
 | Home Lattice | defaults: near black, neutral gray | 5 | 0.3 | 1.4 |
 | Glitchmire | dark plum, dim mauve | 4 | 0.4 | 1.5 |
 | Frostbyte Wastes | cold blue-black, icy blue: a wide frozen field | 6 | 0.25 | 1.3 |
-| Abyssal Buffer | dark gray, dim gray: the longest, a deep plain around the room | 9 | 0.4 | 1.7 |
+| Outer Buffer | dark gray, dim gray: the longest, a deep plain around the room | 9 | 0.4 | 1.7 |
 | Firewall Citadel | dark ember, dim rust | 5 | 0.45 | 1.7 |
 | Phantom Partition | black, faint gray: the room floats in nothing | 1.5 | 0.15 | 1.2 |
 
@@ -1816,54 +1860,10 @@ Open so far:
   whether there is more than one, and whether a secret lock takes other
   counts so rooms can gate optional side rooms earlier.
 
-- Proposal, to be reviewed in Phase 4b: an enemy roster per biome
-  (D108), so each plays differently, not just in another color. Still
-  six biomes (D61); their colors and setup may change to fit. Home
-  Lattice is settled (D121, see Biomes): glowbug, bug, virus, sentinel,
-  cron. Every other biome gets
-  at least three enemies of its own and one signature trick that twists
-  those four. Tags: (L) a D107 look or an existing template, (N) a new
-  look, (B) a new engine behavior.
-  - **Glitchmire**, you can't trust what you see; could also take the
-    heavy virtual idea (pixelated, abstract enemies): Artifact, flickers
-    and teleports a short hop every few beats (N, B); Z-Fighter, two
-    overlapping copies, only one real (N, B); Bitrot, a slime chaser
-    leaving corrupted tiles that hurt, then fade (N, B); Phish, a data
-    disk mimic (L); Ricochet (L); from the heavy virtual idea: Voxel
-    Swarm, splits into two smaller ones when hit (N, B), Primitive,
-    morphs cube to octahedron between patrol and burst (N, B), Null
-    Pointer, dashes straight until a wall, then turns (N, B).
-  - **Frostbyte Wastes**, slowing and freezing: Cold Boot, a golem that
-    walks a path slowly, solid, a moving ice wall (L); Flurry, a swarm of
-    tiny 0/1 flakes that pop in one hit (N); Freezer, a sentinel whose
-    bolt slows the wizard for a while (B); Icicle, hangs from the ceiling
-    and drops when he passes under it (N, B).
-  - **Abyssal Buffer**, deep sea, drifting; could become the nature
-    sector with insect enemies: Buffer Jelly, a jellyfish floating up
-    and down, bouncy (N, B); Anglerphish, a phish with a lure like a
-    pickup (L); Leviathan, a wyrm on long loops (L); Leak, a vent firing
-    slow bubbles that drift upward (B); from the nature idea: Web
-    Crawler, the crawler as a spider leaving webs that slow him (L, B),
-    Caterpillar, the worm in leaf colors (L), Hardware Beetle, a solid
-    shell carrying him along a path (N), Mantis, stationary, a very
-    short charge, strikes next to it (N), Spam, a gnat cloud that chases
-    (N, B), Pixie, the pixel butterfly (L).
-  - **Firewall Citadel**, armored guards: Firewall Warden, the boss
-    (D104); Overclock, a burning chip with a burst (L); Proxy, a
-    shield-bearing knight that blocks Zaps from the front, hit it from
-    behind with Blink or Warp (N, B); Brickling, a wall brick that wakes
-    up as a chaser (N); Turret, a cron in the battlements (L).
-  - **Phantom Partition**, ghosts and daemons that ignore the rules:
-    Daemon, a wisp drifting through blocks (L, B); Zombie Process, moves
-    only while the wizard faces away (N, B); Echo, a shadow wizard
-    mirroring his moves (N, B); Poltergeist, unseen, shoves crates (B);
-    Orphan, a peaceful ghost whose path leads to a secret (L).
-  Open: where the nature and heavy virtual ideas go (above: Abyssal
-  Buffer and Glitchmire) and the colors that needs (a nature green must
-  keep clear of lime crates and the mint bug, D99); which new behaviors
-  come first (several enemies share them: phasing, blink, a slowing
-  status, split on hit, mirroring, a directional shield); every new look
-  goes to the showcase for the author's OK first.
+- Biome enemy rosters (D108): settled one biome at a time in Phase 4b,
+  within the high-level map of D122 (see Biomes, The sectors at a
+  glance); Home Lattice is done (D121). Every new look goes to the
+  showcase for the author's OK first.
 
 ## Title screen and pause menu
 
