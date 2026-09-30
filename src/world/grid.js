@@ -115,6 +115,11 @@ export class Grid {
     }
   }
 
+  /** The static block in the cell [x, y, z] is gone (a fake block a scan revealed, D128): empty. */
+  clearCell(x, y, z) {
+    if (this.isInside(x, z) && y >= 0 && y < this.h) this.cells[this.index(x, y, z)] = CELL.empty;
+  }
+
   /** A block dropped into the hole tile [x, z]: it is floor from now on (D18). */
   fillHole(x, z) {
     if (this.isInside(x, z)) this.holes[z * this.w + x] = 0;

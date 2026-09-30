@@ -1034,3 +1034,26 @@ stay their own.
 (arcs, pixel counts and sizes, lattices); one reads as one rule, "a spell
 moves data", and tunes in one place. Pull stays a ring beam (the
 author's pick): its rings tell it from Cut at a glance.
+
+### D128 — 2026-09-30 — Scan: fake blocks and hidden exits
+Scan (slot 9, 15 energy, violet `#8f6bff`) sends a square wave from the
+wizard's feet over the grid, at every height, out to 6 units along x and
+z in half a second; what it reaches is revealed, nearest first, and stays
+revealed until the room resets. It never fizzles. Two things hide from
+it: fake blocks (block type `fake`, a static plain block drawn in one
+mass with the others) derez when reached, so what stood on them falls;
+hidden exits (`"hidden": true`) are solid wall, drawn as wall, until
+reached, then their patch of wall derezzes and the doorway shows (a
+locked one is a lock from then on). The exit he came in through is never
+hidden. A pickup may lie inside a fake block: that is the hidden pickup.
+Test rooms Hidden Layer, east of Build Yard, and Secret Cache behind its
+hidden exit.
+**Why:** the author's idea (hidden exits that appear on a scan, fake
+blocks that vanish). A wave with a range makes it a search, cast where a
+room looks suspicious, not a free map of every secret; square suits the
+grid. Revealed things stay for the visit so a doorway never closes on
+him and a vanished block never reappears inside him; the room reset
+already brings secrets back. Fake blocks are static grid cells, not
+objects, so their edges merge with the plain blocks round them and
+nothing gives them away. A pickup inside a fake block covers "secret
+pickups" without a new pickup state.

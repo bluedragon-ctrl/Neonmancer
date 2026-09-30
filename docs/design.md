@@ -193,6 +193,7 @@ the ones it gives:
 | `block` | plain (room color) | none |
 | `hazard` | hazard, danger red | `damage: 1` |
 | `void` | void, black mist with gray wisps (D99) | `lethal: true` |
+| `fake` | plain (room color) | `fake: true`: a scan derezzes it (D128, see Scan) |
 | `collapsing` | kind `collapsing`, room color, dashed edges, faces barely tinted (D98, D99) | gives way (see Collapsing blocks) |
 | `collapsing_regrow` | extends `collapsing` | `regrow: 3` |
 
@@ -627,8 +628,8 @@ enemies).
 - **Spell colors:** each spell has a `color` in `defs.json` (Zap cyan
   `#00f0ff`, Shield neon blue `#3b82ff`, Firewall ember `#ff5a14`, Pause
   lavender `#c9a2ff`, Blink pale cyan `#9ef0ff`, Warp pink `#ff6ee8`,
-  Cut & Paste white `#f4f6ff`, Compile gold `#ffe45c`, Pull pale mint
-  `#a6ffcf`):
+  Cut & Paste white `#f4f6ff`, Compile gold `#ffe45c`, Scan violet
+  `#8f6bff`, Pull pale mint `#a6ffcf`):
   its disk's lit bit, its
   install animation and its banner.
 - **Found before:** a permanent pickup whose bit is set shows as a ghost
@@ -1001,6 +1002,39 @@ step up, or a hole plugged to walk over.
   object, color); the look is `COMPILE_FX` in `src/render/compile-fx.js`
   with `src/render/compile-view.js`; showcase `?asset=compile,disk-compile`.
 
+## Scan
+
+The third Phase 4 spell (D88, D128), from a data disk in Hidden Layer
+(slot 9). It finds what a room hides: fake blocks and hidden exits.
+
+- **Scan** (E; 15 energy): a square wave spreads from his feet over the
+  grid, at every height, out to `range` (6) along x and z, in half a
+  second (`SCAN.spreadTicks`, 30 ticks). What it reaches is revealed
+  then, nearest first. It never fizzles: finding nothing is an answer
+  too. The first find of a cast prints `> SCAN: HIDDEN DATA FOUND`.
+- **Fake blocks:** block type `fake` (`"fake": true`, the plain look, no
+  color): solid like any block and drawn in one mass with the plain ones,
+  so nothing gives it away. Reached, it derezzes (D126) in the room's
+  color and is gone: what stood on it falls. A pickup may lie inside one
+  (a hidden pickup; the validator allows it only there).
+- **Hidden exits:** an exit with `"hidden": true` is solid wall, drawn as
+  wall (a back doorway is not cut, a front exit's floor edge runs on,
+  no arrows), until the wave reaches its opening; then the patch of wall
+  derezzes and the doorway with its stream shows. Locked or access-locked
+  too, it is a lock from then on. The exit he came in through is open
+  and shown from the start (D75), so the way back is never hidden.
+- **Until the room resets:** what a scan revealed stays revealed for the
+  visit; a respawn or a new visit hides it again (rooms fully reset).
+- **Look:** a violet square on the floor he stands on, a dimmer one
+  trailing it, clipped to the room's floor, fading after it has spread;
+  the room view is rebuilt without what it revealed.
+- Tuning: `defs.json` `spells.scan` (cost, cooldown, range, color); the
+  wave is `SCAN` in `src/entities/scan.js`, the look `SCAN_FX` in
+  `src/render/scan-fx.js` with `src/render/scan-view.js`; showcase
+  `?asset=scan,disk-scan`.
+- The room editor has a Hidden checkbox for exits; fake blocks are the
+  `fake` block type.
+
 ## Upgrades
 
 An upgrade (D95) is a permanent pickup with its own
@@ -1162,7 +1196,7 @@ a need for.
 | Cut & Paste | 6 | Move a crate or frozen enemy, room to room | Phase 3 |
 | Compile | 7 | A crate in the cell in front for 7 s: a step, or a hole plugged | Phase 4 (D125) |
 | Fork | 8 | Hologram decoy for a while: holds plates, draws enemies | Phase 4 |
-| Scan | 9 | Reveals hidden blocks, fake walls and secret pickups for a while | Phase 4 |
+| Scan | 9 | A wave that reveals fake blocks (and pickups inside them) and hidden exits | Phase 4 (D128) |
 | Pull | 10 | Pulls the first crate or enemy in line one tile towards the wizard | Phase 4 (D124) |
 
 - **Upgrades:** Zap+, Shield+ and the double jump, built in Phase 3 (see
@@ -1369,6 +1403,9 @@ room.
   he came in through stays open for him while he is in the room, even
   after a respawn, so he can always leave the way he came (D67). The room
   needs at least one switch.
+- **Hidden exit** (`"hidden": true` on an exit, D128): solid and drawn as
+  wall until a scan reaches it (see Scan); with `"locked"` or `"access"`
+  it is a lock once revealed.
 - **Look** (D75, after two showcase rounds): white (`#eef3ff`, the
   type's `color`). Both switches carry a square bull's-eye, a small square
   inside a bigger one, so they read as switches by shape, not only by
@@ -1455,6 +1492,8 @@ the world map tool shows the connections and flags any room further out.
 | `clipboard` | Abyssal Buffer, 12×12 | Cut & Paste: crates to cut and paste as steps and bridges, a bug to freeze and move |
 | `tractor_bay` | Home Lattice, 12×12, east of Cache Hall | Pull: two crates across a moat to pull into it as a bridge, a bug patrolling behind a trench to pull in; the Pull disk, an energy refill |
 | `build_yard` | Home Lattice, 12×12, east of Tractor Bay | Compile: a two-wide trench to plug crate by crate, a ledge two high to climb with a compiled step; the Compile disk, an energy refill on the ledge |
+| `hidden_layer` | Home Lattice, 12×12, east of Build Yard | Scan: a wall across the room with a fake gap, a hidden exit in the back wall behind it, an energy refill inside a fake block; the Scan disk |
+| `secret_cache` | Home Lattice, 8×8, north of Hidden Layer | behind the hidden exit: a secret |
 | `upgrade_lab` | Abyssal Buffer, 12×12 | the upgrades: a wall to double-jump, a bank shot for Zap+, a cron's bolts for Shield+; a secret, a shrine |
 | `vault` | Firewall Citadel, 8×8 | behind the access lock: two fragments |
 
@@ -1941,8 +1980,8 @@ title screen and pause menu (done, D109); saving and loading
 (done, D111); map screen (done, D112).
 
 **Phase 4b — spells, bosses, tooling:** the roster's new spells, one
-step each (D88, D89): Pull (done, D124), Compile (done, D125), Scan (needs hidden blocks, fake
-walls and hidden pickups first), Fork (enemies target the decoy);
+step each (D88, D89): Pull (done, D124), Compile (done, D125), Scan
+(done, D128: fake blocks, hidden exits), Fork (enemies target the decoy);
 Firewall Wardens; reachability checker; design skills and subagents;
 biome enemy rosters (review the proposal below, D108).
 

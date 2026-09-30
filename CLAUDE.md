@@ -106,7 +106,8 @@ mobile/touch support, backend or accounts.
 ### Objects and blocks
 - Types: static, pushable, moving (paths or up/down cycles; player rides
   them; spiked ones hurt on touch, D82), collapsing (vanish after being stepped on, optional respawn),
-  hazard (deals damage), void (instant death when the player falls onto it).
+  hazard (deals damage), void (instant death when the player falls onto it),
+  fake (a plain-looking block that a scan derezzes, D128).
 - Decorations (kind `deco`, D117): fixed bodies that dress a room and do
   nothing, in the room's color, facing +z or +x: the data pillar
   (1×3×1, always 3 high), the screen (1×1×1) and the memory stack
@@ -118,7 +119,8 @@ mobile/touch support, backend or accounts.
   the wizard, or a target a bolt switches on and off. A locked exit opens
   while every switch in its room is on, never closes on the wizard, and
   stays open for him if he came in through it (D69, D75). An access lock
-  opens once his access level is high enough (D101).
+  opens once his access level is high enough (D101). A hidden exit is
+  wall until a scan reveals it (D128).
 - Holes: floor tiles (at y = 0) drawn as black pits. The player dies falling
   in (a trap, no way back out); a block pushed into a hole drops in and fills
   it, turning it into walkable floor. Holes never lead to another room.
@@ -189,8 +191,9 @@ Planned for Phase 4 (the roster, D88); details settle in their steps:
   a step up, or a hole plugged to walk over (D125; built)
 - **Fork** — a hologram decoy of the wizard that stands for a while,
   holds floor plates down and draws enemies
-- **Scan** — reveals hidden blocks, fake walls and secret pickups for a
-  while
+- **Scan** — a wave from the wizard's feet (6 units): fake blocks it
+  reaches derez (a pickup may hide inside one), hidden exits open; they
+  stay revealed until the room resets (D128; built)
 - **Pull** — pulls the first crate or enemy in line (6 cells) one tile
   towards the wizard, an enemy even into a hole (D89, D124; built)
 
@@ -505,7 +508,7 @@ editor), Phase 3 (v0.3.0, spells and pickups); see CHANGELOG.md.
 - 4a — Access keys and tests, title screen and pause menu, saving and
   loading (URL hash, localStorage), map screen.
 - 4b — The roster's new spells (D88, D89): Pull (done, D124), Compile
-  (done, D125), Scan and Fork.
+  (done, D125), Scan (done, D128) and Fork.
   Firewall Wardens (bosses, D104). Reachability checker. Design skills
   and subagents. Last in Phase 4, after the spells and game concepts:
   biome concepts and enemy rosters, one biome at a time within the

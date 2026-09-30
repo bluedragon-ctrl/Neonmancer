@@ -3,7 +3,8 @@
  * A respawn rebuilds the same room, where only the objects can have changed,
  * so the static views (floor, holes, the shrine, walls, blocks, exits) are kept then.
  * Cut & Paste (D87) takes objects and enemies out and puts new ones in
- * while the room runs (clip()).
+ * while the room runs (clip()). A scan (D128) reveals fake blocks and
+ * hidden exits: the room view is rebuilt without them (reveal()).
  */
 import { Group } from 'three';
 import { frameRoom } from './camera.js';
@@ -21,6 +22,7 @@ import { clipBounds } from './clip-view.js';
 import { createRoomView } from './room-view.js';
 import { createShrine } from './shrine-view.js';
 import { LockView, PlateView, TargetView } from './switch-view.js';
+import { ScanView } from './scan-view.js';
 import { ZapView } from './zap-view.js';
 
 /**
@@ -44,8 +46,19 @@ export const OBJECT_VIEWS = {
  * @param {number} layer
  */
 export function cutRoom(room, layer) {
+  if (layer === null) return room;
   const blocks = Object.fromEntries(Object.entries(room.blocks).map(([type, cells]) => [type, cells.filter((cell) => cell[1] <= layer)]));
   return { ...room, blocks };
+}
+
+/**
+ * The room as it shows now: without the hidden exits a scan has yet to
+ * reveal (D128), drawn as wall. Fake blocks it revealed have left the
+ * room's blocks already (entities/scan.js).
+ * @param {import('../game.js').Game} game
+ */
+export function shownRoom({ room, hidden }) {
+  return { ...room, exits: room.exits.filter((exit) => !hidden.exits.includes(exit)) };
 }
 
 export class RoomScene {
@@ -67,6 +80,12 @@ export class RoomScene {
     this.lockViews = new Map();
     /** Bolts and sparks of the room (made in show()). */
     this.zapView = null;
+    /** Scan's wave and the derez of what it reveals (made in show(), D128). */
+    this.scanView = null;
+    /** The blocks and walls (room-view.js), rebuilt when a scan reveals something. */
+    this.roomView = null;
+    /** Game.reveals the room view was built for; it is rebuilt when they differ. */
+    this.reveals = 0;
     /** "x,y,z" of each hazard-look block → its face material (room-view.js). */
     this.flares = new Map();
     /**
@@ -107,15 +126,21 @@ export class RoomScene {
     this.enemyViews = game.enemies.filter(shown).map((enemy) => new EnemyView(game, enemy));
     this.pickupViews = game.pickups.filter((pickup) => cutAbove === null || pickup.data.at[1] <= cutAbove).map((pickup) => new PickupView(game, pickup));
     this.zapView = new ZapView(game);
-    this.lockViews = new Map(game.locks.map((lock) => [lock.exit.id, new LockView(game, lock)]));
-    this.objectGroup = new Group().add(this.zapView.group, ...[...this.lockViews.values()].map((view) => view.group));
+    this.scanView = new ScanView(game);
+    // A hidden exit (D128) that is only hidden has no barrier: it is wall until revealed.
+    const barred = game.locks.filter(({ exit }) => exit.locked || exit.access);
+    this.lockViews = new Map(barred.map((lock) => [lock.exit.id, new LockView(game, lock)]));
+    this.objectGroup = new Group().add(this.zapView.group, this.scanView.group, ...[...this.lockViews.values()].map((view) => view.group));
     // add() with no arguments logs an error (a room without objects).
     const views = [...this.objectViews, ...this.enemyViews, ...this.pickupViews];
     if (views.length > 0) this.objectGroup.add(...views.map((view) => view.group));
-    if (rebuild || room.id !== this.roomId || cutAbove !== this.cutAbove) {
+    // A respawn after a scan brings back what it revealed.
+    if (rebuild || room.id !== this.roomId || cutAbove !== this.cutAbove || game.reveals !== this.reveals) {
       old.push(this.staticGroup);
       this.exitViews = room.exits.map((exit) => new ExitView(exit, room.size, game.destinationColor(exit)));
-      const roomView = createRoomView(cutAbove === null ? room : cutRoom(room, cutAbove));
+      const roomView = createRoomView(cutRoom(shownRoom(game), cutAbove));
+      this.roomView = roomView;
+      this.reveals = game.reveals;
       this.flares = roomView.userData.flares;
       this.flare = null;
       this.shrine = room.shrine ? createShrine() : null;
@@ -164,9 +189,11 @@ export class RoomScene {
     this.flare = null;
     this.shrine = null;
     this.zapView = new ZapView(game);
+    this.scanView = null;
     this.objectGroup = new Group().add(this.zapView.group);
     const shape = { ...room, blocks: {}, holes: [], exits: [] };
-    this.staticGroup = new Group().add(createFloor(room.size, room.color, [], room.look), createRoomView(shape));
+    this.roomView = createRoomView(shape);
+    this.staticGroup = new Group().add(createFloor(room.size, room.color, [], room.look), this.roomView);
     frameRoom(renderer.camera, room.size);
     renderer.setLook(room.look);
     // The next show() builds the room in full, even the same one.
@@ -192,11 +219,18 @@ export class RoomScene {
     this.updateClip(alpha, dt);
     for (const view of this.pickupViews) view.sync(alpha, dt);
     this.zapView.sync(alpha, dt);
-    for (const view of this.lockViews.values()) view.sync(dt);
+    this.scanView?.sync(alpha, dt);
+    if (this.game && this.game.reveals !== this.reveals) this.rebuildRoomView();
+    // Exits a scan has yet to reveal (D128) are wall: no barrier, no stream.
+    const hidden = (id) => this.game?.hidden.exits.some((exit) => exit.id === id) ?? false;
+    for (const [id, view] of this.lockViews) {
+      view.sync(dt);
+      view.group.visible = !hidden(id);
+    }
     for (const view of this.exitViews) {
       // A locked exit's stream shows once its barrier is mostly gone.
       const lock = this.lockViews.get(view.exit.id);
-      view.group.visible = !lock || lock.openness > 0.5;
+      view.group.visible = !hidden(view.exit.id) && (!lock || lock.openness > 0.5);
       view.update(dt);
     }
     this.shrine?.userData.update(dt);
@@ -204,6 +238,29 @@ export class RoomScene {
       this.flare.time += dt;
       this.flare.apply(this.flare.time);
     }
+  }
+
+  /**
+   * A scan revealed a fake block or a hidden exit (D128): it derezzes, and
+   * the room view is rebuilt without it (in update(), once for all of a tick's).
+   * @param {import('../game.js').GameEvent} event 'reveal'
+   */
+  reveal(event) {
+    this.scanView?.reveal(event);
+  }
+
+  /** Build the blocks and walls anew as the room shows now (a scan revealed something). */
+  rebuildRoomView() {
+    const view = createRoomView(cutRoom(shownRoom(this.game), this.cutAbove));
+    if (this.roomView) {
+      this.staticGroup.remove(this.roomView);
+      disposeTree(this.roomView);
+    }
+    this.staticGroup.add(view);
+    this.roomView = view;
+    this.flares = view.userData.flares;
+    this.flare = null;
+    this.reveals = this.game.reveals;
   }
 
   /** The wizard used the room's backup shrine (D97): make it flare. */

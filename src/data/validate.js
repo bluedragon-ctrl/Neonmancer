@@ -291,6 +291,8 @@ function validateRoom(file, room, { objectTypes, pickupTypes, blockTypes, enemyT
     pathCells: new Map(),
     /** "x,y,z" of every collapsing block */
     collapsing: new Set(),
+    /** "x,y,z" of every fake block (D128): a pickup may lie inside one */
+    fake: new Set(),
     /** Ids of objects, enemies and pickups (one namespace per room) */
     ids: new Set(),
     /** "x,z" → path of the plate on that floor tile (D75) */
@@ -379,6 +381,7 @@ function validateBlocks(checks, blockTypes) {
       if (type.damage || type.lethal) checks.blockTypes.set(cellKey(cell), type);
       // Collapsing blocks (D47) give way: they don't hold up the player or a hole.
       if (type.kind === 'collapsing') checks.collapsing.add(cellKey(cell));
+      if (type.fake) checks.fake.add(cellKey(cell));
     }
   });
 }
@@ -514,9 +517,10 @@ function validateEnemies(checks, enemyTemplates) {
 
 /**
  * Pickups (D71): unique ids (shared with objects and enemies), known types,
- * inside the room in a cell no block or object fills, one per cell.
+ * inside the room in a cell no block or object fills, one per cell; inside
+ * a fake block is fine (a hidden pickup a scan reveals, D128).
  */
-function validatePickups({ room, report, ids, filled }, pickupTypes) {
+function validatePickups({ room, report, ids, filled, fake }, pickupTypes) {
   const [w, h, d] = room.size;
   const taken = new Map();
   (room.pickups ?? []).forEach((pickup, i) => {
@@ -527,7 +531,7 @@ function validatePickups({ room, report, ids, filled }, pickupTypes) {
     const [x, y, z] = pickup.at;
     const key = cellKey(pickup.at);
     if (!(x < w && y < h && z < d)) report(path, `cell ${cellText(pickup.at)} is outside size ${cellText(room.size)}`);
-    else if (filled.has(key)) report(path, `cell ${cellText(pickup.at)} is filled by ${filled.get(key)}`);
+    else if (filled.has(key) && !fake.has(key)) report(path, `cell ${cellText(pickup.at)} is filled by ${filled.get(key)}`);
     else if (taken.has(key)) report(path, `cell ${cellText(pickup.at)} is taken by ${taken.get(key)}`);
     taken.set(key, path);
   });

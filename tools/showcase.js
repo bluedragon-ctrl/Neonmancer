@@ -75,6 +75,8 @@ import { createMarquee, placeMarquee } from '../src/render/clip-view.js';
 import { PULL_FX, PULL_PIXELS, pullMarquee, pullPixels } from '../src/render/pull-fx.js';
 import { COMPILE_FX, compileLook } from '../src/render/compile-fx.js';
 import { streamCount } from '../src/render/stream-fx.js';
+import { createWave, placeWave, revealBody } from '../src/render/scan-view.js';
+import { SCAN, cellReach, exitReach } from '../src/entities/scan.js';
 import { clipIcon } from '../src/ui/clip-icon.js';
 import { createJumpRings, placeJumpRings } from '../src/render/jump-view.js';
 import { createShrine } from '../src/render/shrine-view.js';
@@ -241,6 +243,7 @@ const ALL_ASSETS = [
   { label: 'disk-cut-paste', group: 'disks', spin: false, build: () => buildDisk(defs.spells.cut_paste) },
   { label: 'disk-pull', group: 'disks', spin: false, build: () => buildDisk(defs.spells.pull) },
   { label: 'disk-compile', group: 'disks', spin: false, build: () => buildDisk(defs.spells.compile) },
+  { label: 'disk-scan', group: 'disks', spin: false, build: () => buildDisk(defs.spells.scan) },
   // Installing a spell (D73): Zap, then Shield, in a loop.
   { label: 'install', spin: false, shadow: PALETTE.magenta, build: buildInstall },
   // Shield (D73): up for its duration, blinking before it ends.
@@ -331,6 +334,10 @@ const ALL_ASSETS = [
   // in; it blinks, faster at the end, and derezzes (shortened here from
   // 7 s; its disk: disk-compile).
   { label: 'compile', span: 4, spin: false, build: buildCompile },
+  // Scan (D128): the wizard casts, a violet square wave spreads from his
+  // feet over the floor; a fake block in the wall beside him derezzes, then
+  // a hidden doorway in the back wall opens (its disk: disk-scan).
+  { label: 'scan', span: 9, spin: false, build: buildScan },
   // Backup shrine (D97): a glowing floor tile in the
   // wizard's magenta; he steps on and it flares.
   { label: 'shrine', spin: false, build: buildShrine },
@@ -2429,6 +2436,52 @@ function buildCompile() {
     crate.scale.setScalar(look.scale);
     crate.position.set(...cell.map((v) => v + (1 - look.scale) / 2));
     placeDerez(pieces, age >= lifetime ? age - lifetime : null, [cell[0] + 0.5, cell[1], cell[2] + 0.5]);
+  };
+  return asset;
+}
+
+/**
+ * Scan (D128) in a loop, in a 5×5 room: the wizard (facing the wall,
+ * −x) casts; the wave reaches the fake block in the wall first (it derezzes), then the
+ * hidden doorway behind it (its patch of wall derezzes and it opens).
+ * The room view is swapped as each is revealed, as the game rebuilds it.
+ */
+function buildScan() {
+  const { color } = defs.spells.scan;
+  const size = [5, 3, 5];
+  const range = 4;
+  const origin = [3, 0, 3.5];
+  const plain = [0, 1, 3, 4].flatMap((z) => [0, 1, 2].map((y) => [1, y, z])).concat([[1, 2, 2]]);
+  const fake = [[1, 0, 2], [1, 1, 2]];
+  const exit = withExitDefaults({ id: 'north', side: '-z', at: 3, hidden: true });
+  const view = (blocks, exits) => createRoomView({ size, blocks, blockTypes: BLOCK_TYPES, exits, color: PALETTE.amber });
+  const stages = [view({ block: plain, fake }, []), view({ block: plain }, []), view({ block: plain }, [exit])];
+  // When the wave reaches each (its reach, entities/scan.js), in ticks after the cast.
+  const reachedAt = [cellReach(origin, fake[0]), exitReach(origin, exit, size)].map((d) => (d / range) * SCAN.spreadTicks);
+  const wizard = createWizard();
+  wizard.position.set(...origin);
+  wizard.rotation.y = -Math.PI / 2;
+  const flare = createCastFlare();
+  const wave = createWave(color);
+  const found = [{ cell: fake[0] }, { exit }].map((thing) => {
+    const { body, at } = revealBody(thing, size);
+    return { mesh: createDerez(body, [PALETTE.amber, 0xffffff]), at };
+  });
+  const room = new Group().add(...stages, wizard, flare, wave, ...found.map(({ mesh }) => mesh));
+  room.position.set(-2.5, 0, -2.5);
+  const asset = new Group().add(room);
+  // Cast at tick 40; loop 240.
+  const castAt = 40;
+  const loop = 240;
+  let tick = 0;
+  asset.userData.update = (dt) => {
+    tick = (tick + dt * 60) % loop;
+    const age = tick - castAt;
+    placeCastFlare(flare, origin, -Math.PI / 2, age);
+    placeWave(wave, age >= 0 && age < PLAYER.scanTicks ? age : null, origin, range, size);
+    const revealed = reachedAt.filter((at) => age >= at).length;
+    stages.forEach((stage, i) => (stage.visible = i === revealed));
+    found.forEach(({ mesh, at }, i) => placeDerez(mesh, age >= reachedAt[i] ? age - reachedAt[i] : null, at));
   };
   return asset;
 }

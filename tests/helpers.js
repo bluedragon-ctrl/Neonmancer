@@ -85,6 +85,7 @@ export const SPELLS = {
   warp: { slot: 5, color: '#ff6ee8', cost: 30, cooldown: 0.25 },
   cut_paste: { slot: 6, color: '#f4f6ff', cost: 20, pasteCost: 0, cooldown: 0.25 },
   compile: { slot: 7, color: '#ffe45c', cost: 5, cooldown: 0.25, duration: 7, object: 'crate' },
+  scan: { slot: 9, color: '#8f6bff', cost: 15, cooldown: 0.25, range: 6 },
   pull: { slot: 10, color: '#a6ffcf', cost: 15, cooldown: 0.25, range: 6 },
 };
 
@@ -103,6 +104,7 @@ export const PICKUPS = {
   disk_cut_paste: { kind: 'disk', spell: 'cut_paste' },
   disk_compile: { kind: 'disk', spell: 'compile' },
   disk_pull: { kind: 'disk', spell: 'pull' },
+  disk_scan: { kind: 'disk', spell: 'scan' },
   refill_integrity: { kind: 'refill', stat: 'integrity', amount: 2 },
   refill_energy: { kind: 'refill', stat: 'energy', amount: 30 },
   access_pass_3: { kind: 'access', level: 3 },
@@ -124,11 +126,12 @@ export const PICKUPS = {
 /** Score values (D100), as in defs.json. */
 export const SCORE = { bit: 50, secret: 200, accessLevel: 500 };
 
-/** Block types, as in defs.json (D60): plain, hazard, void, collapsing and a variant that grows back after 3 s. */
+/** Block types, as in defs.json (D60): plain, hazard, void, fake (D128), collapsing and a variant that grows back after 3 s. */
 export const BLOCK_TYPES = {
   block: { look: 'plain' },
   hazard: { look: 'hazard', color: '#ff3b30', damage: 1 },
   void: { look: 'void', color: '#8a5cff', lethal: true },
+  fake: { look: 'plain', fake: true },
   collapsing: { kind: 'collapsing' },
   collapsing_regrow: { extends: 'collapsing', regrow: 3 },
 };

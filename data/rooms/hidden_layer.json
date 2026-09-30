@@ -1,0 +1,25 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "hidden_layer",
+  "name": "Hidden Layer",
+  "biome": "home_lattice",
+  "size": [12, 4, 12],
+  "spawn": [1.5, 0, 6.5],
+  "exits": [
+    { "id": "west", "side": "-x", "at": 6 },
+    { "id": "north", "side": "-z", "at": 9, "hidden": true }
+  ],
+  "blocks": [
+    { "at": [7, 0, 0], "to": [7, 2, 4] },
+    { "type": "fake", "at": [7, 0, 5], "to": [7, 1, 6] },
+    { "at": [7, 2, 5], "to": [7, 2, 6] },
+    { "at": [7, 0, 7], "to": [7, 2, 11] },
+    { "at": [3, 0, 10] },
+    { "type": "fake", "at": [4, 0, 10] }
+  ],
+  "pickups": [
+    { "id": "disk_scan", "type": "disk_scan", "at": [2, 0, 3] },
+    { "id": "energy", "type": "refill_energy", "at": [4, 0, 10] }
+  ]
+}
