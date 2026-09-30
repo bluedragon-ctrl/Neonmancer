@@ -7,14 +7,13 @@
  * steps that changed them. Plain logic, no
  * browser, so tests can drive it.
  */
-import { MAX_ROOM_FOOTPRINT } from '../core/rules.js';
+import { MAX_ROOM_FOOTPRINT, ROOM_HEIGHT } from '../core/rules.js';
 import { DATA_SCHEMA_VERSION } from '../core/version.js';
 import { DECO_FACES, EXIT_DEFAULTS, sideLength, withExitDefaults } from '../data/room-data.js';
 import { validateData } from '../data/validate.js';
 import { Boxes } from './boxes.js';
 import { formatJson } from './format-json.js';
 
-/** Order of a room file's keys when it is written back (as in data/rooms/). */
 /** Kinds of things standing in cells, and the room list each is kept in. */
 const ITEM_LISTS = [
   ['object', 'objects'],
@@ -22,6 +21,7 @@ const ITEM_LISTS = [
   ['pickup', 'pickups'],
 ];
 
+/** Order of a room file's keys when it is written back (as in data/rooms/). */
 const KEY_ORDER = ['$schema', 'schemaVersion', 'id', 'name', 'authored', 'biome', 'size', 'spawn', 'reset', 'exits', 'blocks', 'holes', 'shrine', 'objects', 'enemies', 'pickups'];
 
 /** Files several rooms share, whose changes a room's undo step takes along: defs.json, lore.json. */
@@ -569,11 +569,6 @@ export class RoomEdit {
   }
 
   /**
-   * Turn a decoration (D117) to face the other seen side: +z (the default,
-   * no override written) and +x take turns.
-   * @param {string} id
-   */
-  /**
    * Give a screen a text of lore.json (D118), or none (null).
    * @param {string} id the screen's id
    * @param {string|null} text
@@ -583,6 +578,11 @@ export class RoomEdit {
     return this.updateItem(id, { text: text ?? undefined });
   }
 
+  /**
+   * Turn a decoration (D117) to face the other seen side: +z (the default,
+   * no override written) and +x take turns.
+   * @param {string} id
+   */
   turnObject(id) {
     const item = this.item(id);
     if (!item) return false;
@@ -824,7 +824,7 @@ export function resizeText(size, { dropped, moved }) {
  */
 export function sizeProblem([w, h, d]) {
   if (![w, h, d].every(Number.isInteger)) return 'Size: whole numbers only.';
-  if (h < 2 || h > 6) return 'Size: height is 2 to 6.';
+  if (h < ROOM_HEIGHT.min || h > ROOM_HEIGHT.max) return `Size: height is ${ROOM_HEIGHT.min} to ${ROOM_HEIGHT.max}.`;
   if (w < 1 || d < 1) return 'Size: width and depth are at least 1.';
   if (w + d > MAX_ROOM_FOOTPRINT) return `Size: width + depth is at most ${MAX_ROOM_FOOTPRINT}.`;
   return null;

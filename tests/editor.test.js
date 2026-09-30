@@ -9,6 +9,7 @@ import { formatJson } from '../src/editor/format-json.js';
 import { RoomEdit, newRoom, resizeText, roomErrors, roomIdProblem, sizeProblem } from '../src/editor/room-edit.js';
 import { WorldEdit, linkChoices } from '../src/editor/world-edit.js';
 import { DefsEdit } from '../src/editor/defs-edit.js';
+import { MAX_ACCESS_LEVEL, ROOM_HEIGHT } from '../src/core/rules.js';
 import { errorTarget, groupErrors } from '../src/editor/errors.js';
 import { cutRoom } from '../src/render/room-scene.js';
 import { validateData } from '../src/data/validate.js';
@@ -354,6 +355,13 @@ test('sizeProblem keeps room sizes within the schema and camera limits', () => {
   assert.match(sizeProblem([20, 4, 13]), /width \+ depth/);
   assert.match(sizeProblem([0, 4, 8]), /at least 1/);
   assert.match(sizeProblem([8.5, 4, 8]), /whole numbers/);
+});
+
+test('room height and access level limits match the room schema', () => {
+  const schema = JSON.parse(readFileSync(fileURLToPath(new URL('../schemas/room.schema.json', import.meta.url)), 'utf8'));
+  const height = schema.properties.size.prefixItems[1];
+  assert.deepEqual(ROOM_HEIGHT, { min: height.minimum, max: height.maximum });
+  assert.equal(MAX_ACCESS_LEVEL, schema.$defs.exit.properties.access.maximum);
 });
 
 /** Two rooms side by side (lab east of hall), connected; a platform and a bug in lab. */

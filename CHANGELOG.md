@@ -88,6 +88,10 @@ bosses that drop loot, tooling) (D104, D105).
   real rooms, so map redesigns no longer break them.
 - A worm's or crawler's arc discharge would start from nowhere: its
   model's muzzle was a point, not the reach the view expects (D107).
+- Room editor: the help line and the new-room hint named the wrong tool
+  keys (1–8, Exit 8; it is 1–9, Exit 6), and an enemy field left to the
+  defaults showed a wrong template value ("no" for Pausable, "undefined"
+  for numbers).
 
 ## [0.3.0] - 2026-09-29
 

@@ -15,6 +15,7 @@
  */
 import { Plane, Raycaster, Vector2, Vector3 } from 'three';
 import { isTextField } from '../core/input.js';
+import { MAX_ACCESS_LEVEL } from '../core/rules.js';
 import { linkMap } from '../data/load.js';
 import { sideLength, withExitDefaults } from '../data/room-data.js';
 import { validateData } from '../data/validate.js';
@@ -35,8 +36,11 @@ const PAINT_TOOLS = new Set(['block', 'hole', 'object']);
 /** Tools that work on floor tiles (y 0) whatever the layer. */
 const FLOOR_TOOLS = new Set(['hole', 'shrine']);
 
+/** The key that picks a tool. */
+const toolKey = (id) => TOOLS.find((tool) => tool.id === id).key;
+
 /** Hint after placing something that can't do without a path yet. */
-const NEEDS_PATH = (id) => `${id} needs a path: pick the Path tool (${TOOLS.find((tool) => tool.id === 'path').key}) and click cells.`;
+const NEEDS_PATH = (id) => `${id} needs a path: pick the Path tool (${toolKey('path')}) and click cells.`;
 
 export class Editor {
   /**
@@ -226,7 +230,7 @@ export class Editor {
     this.game.content.rooms.set(id, data);
     this.openRoom(id);
     this.panel.newRoomInput.value = '';
-    this.status = `New room ${id}: give it an exit (Exit tool, 8) and connect it, then save.`;
+    this.status = `New room ${id}: give it an exit (Exit tool, ${toolKey('exit')}) and connect it, then save.`;
     this.refresh();
   }
 
@@ -404,12 +408,11 @@ export class Editor {
     this.refresh();
   }
 
-  /** Give an enemy these settings (its id follows the template; a stationary one loses its path) and keep it picked. */
+  /** Give the picked enemy these settings (its id follows the template; a stationary one loses its path) and keep it picked. */
   retype(enemy, settings) {
-    const wasPicked = this.selected?.id === enemy.id;
     let id = null;
     this.change(() => !!(id = this.edit.setEnemy(enemy.id, settings, this.walksPath(settings))));
-    if (id && wasPicked) this.select({ kind: 'item', id });
+    if (id) this.select({ kind: 'item', id });
   }
 
   /** The enemy settings the panel shows: the picked enemy's, or the ones for new enemies. */
@@ -433,7 +436,7 @@ export class Editor {
     } else if (field === 'locked') {
       this.change(() => this.edit.updateExit(exit.id, { locked: value }));
     } else if (field === 'access') {
-      this.change(() => this.edit.updateExit(exit.id, { access: Math.min(15, Math.max(0, Math.round(value))) }));
+      this.change(() => this.edit.updateExit(exit.id, { access: Math.min(MAX_ACCESS_LEVEL, Math.max(0, Math.round(value))) }));
     } else if (field === 'id') {
       if (!ID_PATTERN.test(value)) this.status = 'Exit id: lowercase letters, digits and _, starting with a letter.';
       else if (this.edit.exits.some((e) => e.id === value && e !== exit)) this.status = `Exit id: "${value}" is taken.`;
