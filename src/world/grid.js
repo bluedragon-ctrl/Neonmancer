@@ -119,4 +119,9 @@ export class Grid {
   fillHole(x, z) {
     if (this.isInside(x, z)) this.holes[z * this.w + x] = 0;
   }
+
+  /** The block plugging the hole tile [x, z] is gone (a compiled crate derezzed, D125): a hole again. */
+  openHole(x, z) {
+    if (this.isInside(x, z)) this.holes[z * this.w + x] = 1;
+  }
 }

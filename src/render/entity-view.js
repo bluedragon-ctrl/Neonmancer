@@ -37,6 +37,8 @@ import { PIXIE_MODEL } from './pixie.js';
 import { VIRUS_MODEL } from './virus.js';
 import { hitJolt } from './break-fx.js';
 import { COLLAPSE_FX, COLLAPSE_PIXELS, collapseLook, collapsePixels } from './collapse-fx.js';
+import { compileLook } from './compile-fx.js';
+import { CompileView } from './compile-view.js';
 import { PALETTE, lineMaterial, neonLines, shared } from './neon.js';
 import { fadingDrops } from './hole-view.js';
 import { HIT_FX, derezPixels, hitFlash, wizardLook } from './hit-fx.js';
@@ -220,6 +222,8 @@ export class PlayerView {
     this.clip = null;
     /** Pull (D124): its beam and aim marker, made when he first knows the spell. */
     this.pull = null;
+    /** Compile (D125): its bits and aim marker, made when he first knows the spell. */
+    this.compile = null;
     /** The boot sequence after Start (D110): bootState() while he pops in, or null. */
     this.boot = null;
   }
@@ -328,6 +332,13 @@ export class PlayerView {
       this.group.add(this.pull.group);
     }
     this.pull?.sync(this.game, pos, alpha, dt);
+    // Compile: its bits and its aim marker (D125).
+    const compileSpell = this.game.content.spells.compile;
+    if (!this.compile && compileSpell && player.spells.includes('compile')) {
+      this.compile = new CompileView(compileSpell.color);
+      this.group.add(this.compile.group);
+    }
+    this.compile?.sync(this.game, pos, alpha, dt);
     // No ghost while dead: not of him falling into a pit, nor of the derez.
     for (const ghost of this.xray) ghost.visible = !player.dead;
     const derezzing = player.dead && player.deathCause !== 'hole';
@@ -383,8 +394,8 @@ export class PushableView {
     /** Made once the object plugs a hole (most never do): its vertical edges fade into the pit. */
     this.plugDrops = null;
     this.group.add(this.block, this.shadow);
-    // Destructible: it breaks into pixels like a collapsing block.
-    if (pushable.integrity !== null) {
+    // Destructible, or compiled (D125): it breaks into pixels like a collapsing block.
+    if (pushable.integrity !== null || pushable.temporary) {
       this.pixels = createPixelBurst(COLLAPSE_PIXELS, COLLAPSE_FX.pixelSize, [pushable.object.color, 0xffffff]);
       this.group.add(this.pixels);
     }
@@ -404,6 +415,13 @@ export class PushableView {
       }
       const jolt = hitJolt(pushable.hitTicks === null ? null : pushable.hitTicks + alpha);
       for (let i = 0; i < 3; i++) pos[i] += jolt[i];
+    }
+    // A compiled crate grows in round its middle and blinks before it derezzes.
+    const look = pushable.temporary ? compileLook(pushable.lifetime - pushable.ticksLeft + alpha, pushable.ticksLeft - alpha) : null;
+    if (look) {
+      this.block.visible = look.visible;
+      this.block.scale.setScalar(look.scale);
+      for (let i = 0; i < 3; i++) pos[i] += (1 - look.scale) / 2;
     }
     this.block.position.set(pos[0], pos[1], pos[2]);
     if (pushable.state === 'plugged' && !this.plugDrops) {

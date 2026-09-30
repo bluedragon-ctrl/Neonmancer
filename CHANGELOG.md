@@ -19,6 +19,12 @@ bosses that drop loot, tooling) (D104, D105).
   notes and PR summary now say so.
 
 ### Added
+- Compile spell (D125, slot 7, 5 energy): a crate (the dashed one) in
+  the free cell in front of him for 7 s; it falls, plugs a hole, can be
+  pushed and pulled, blinks before it derezzes (a plugged hole opens
+  again). Gold bits fly into the cell as it grows in; an aim marker.
+  Disk in the new test room Build Yard, east of Tractor Bay; showcase
+  `?asset=compile,disk-compile`.
 - Pull spell (D124, slot 10, 15 energy): the first crate or enemy in line
   the way he aims, within 6 cells, slides one cell towards him; a crate
   as if pushed, an enemy over anything (into a hole it pops), alarmed and

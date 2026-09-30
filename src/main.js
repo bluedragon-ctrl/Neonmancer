@@ -292,7 +292,7 @@ function boot() {
 
 /**
  * One-off effects of a tick's game events in the views: flares, sparks,
- * the energy bar's denial, a cut or paste.
+ * the energy bar's denial, a cut or paste, a compiled crate.
  * @param {import('./game.js').GameEvent[]} events
  */
 function showEvents(events, { game, roomScene, hud, debug }) {
@@ -307,6 +307,10 @@ function showEvents(events, { game, roomScene, hud, debug }) {
     if (event.type === 'win') hud.showWin(game.score, game.completion);
     if (event.type === 'cut' || event.type === 'paste') {
       roomScene.clip(event);
+      debug.setRoom(game.room, game.objects, game.enemies);
+    }
+    if (event.type === 'compile') {
+      roomScene.addCompiled(event);
       debug.setRoom(game.room, game.objects, game.enemies);
     }
   }

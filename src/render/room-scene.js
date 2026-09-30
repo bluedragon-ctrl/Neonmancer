@@ -186,6 +186,7 @@ export class RoomScene {
    * @param {number} dt seconds since the last frame
    */
   update(alpha, dt) {
+    if (this.game) this.dropExpired();
     for (const view of this.objectViews) view.sync(alpha, dt);
     for (const view of this.enemyViews) view.sync(alpha, dt);
     this.updateClip(alpha, dt);
@@ -226,6 +227,28 @@ export class RoomScene {
     const view = object ? new OBJECT_VIEWS[object.kind](this.game, object) : new EnemyView(this.game, enemy);
     list.push(view);
     this.objectGroup.add(view.group);
+  }
+
+  /**
+   * Compile (D125): a crate was compiled in; it gets a view, which grows
+   * in by itself (compileLook()).
+   * @param {import('../game.js').GameEvent} event 'compile'
+   */
+  addCompiled({ object }) {
+    const view = new OBJECT_VIEWS[object.kind](this.game, object);
+    this.objectViews.push(view);
+    this.objectGroup.add(view.group);
+  }
+
+  /** Views of compiled crates the game has dropped (Game.dropExpired()) go. */
+  dropExpired() {
+    const { objects } = this.game;
+    this.objectViews = this.objectViews.filter((view) => {
+      if (!view.pushable?.temporary || objects.includes(view.pushable)) return true;
+      this.objectGroup.remove(view.group);
+      disposeTree(view.group);
+      return false;
+    });
   }
 
   /** Once per frame: views of things cut away go, a pasted one grows in round its middle. */

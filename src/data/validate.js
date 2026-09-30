@@ -157,7 +157,8 @@ const UPGRADE_SPELLS = { zap_plus: 'zap', shield_plus: 'shield', double_jump: nu
 
 /**
  * Spell, buff, upgrade, secret and fragment slots are unique (each is a save bit, D71), a
- * data disk or a spell upgrade names a known spell, each upgrade has one
+ * data disk or a spell upgrade names a known spell, Compile's crate is a
+ * pushable object type, each upgrade has one
  * pickup type (D95), and pickup type ids differ from object type ids
  * (the room editor lists both under its Object tool). All buffs together
  * keep the wizard within the save key's integrity field and recharging at
@@ -169,6 +170,10 @@ function validateSpellsAndPickups(spells, pickupTypes, objectTypes, report) {
   for (const [id, spell] of Object.entries(spells)) {
     if (slots.has(spell.slot)) report('defs.json', `spells.${id}.slot`, `slot ${spell.slot} is taken by "${slots.get(spell.slot)}"`);
     else slots.set(spell.slot, id);
+    // Compile's crate (D125).
+    if (spell.object !== undefined && objectTypes[spell.object]?.kind !== 'pushable') {
+      report('defs.json', `spells.${id}.object`, `"${spell.object}" is no pushable object type`);
+    }
   }
   /** buff slot → pickup type id */
   const buffSlots = new Map();

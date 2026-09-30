@@ -11,6 +11,7 @@ import { Enemy } from './entities/enemy.js';
 import { createObject } from './entities/kinds.js';
 import { BUFF_COLORS, FRAGMENT_COLOR, Pickup, SECRET_COLOR } from './entities/pickup.js';
 import { PLAYER, Player } from './entities/player.js';
+import { PUSHABLE } from './entities/pushable.js';
 import { SWITCH_KINDS } from './entities/switch.js';
 import { groundBelow, overlapsBox, surfaceBelow, touchedCell, touchesBox } from './physics/collision.js';
 import { castSpell } from './spells.js';
@@ -41,18 +42,18 @@ export const TRANSITION = {
  * Something that happened, for views, the HUD and (later) sound. Returned
  * by Game.update() for the tick it happened in.
  * @typedef {object} GameEvent
- * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'|'warp'|'fizzle'|'cut'|'paste'|'pull'|'airjump'|'reflect'|'shrine'|'crash'|'access'|'win'|'read'} type
+ * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'|'warp'|'fizzle'|'cut'|'paste'|'pull'|'compile'|'expire'|'airjump'|'reflect'|'shrine'|'crash'|'access'|'win'|'read'} type
  * @property {string} [spell] the spell cast, failed, fizzled (nowhere to
  *   go, energy kept) or selected (cast, deny, fizzle, spell); the teleport (warp)
  * @property {number[]} [from] where a Blink or Warp started (warp)
  * @property {number[]} [to] where it ended (warp)
  * @property {number[]} [cell] the cell a crate or enemy was cut from or
- *   pasted into or pulled from (cut, paste, pull; the enemy's own cell, rounded down, for a
+ *   pasted into, pulled from or compiled into (cut, paste, pull, compile; the enemy's own cell, rounded down, for a
  *   frozen one stopped mid-step)
  * @property {object} [object] the room object it happened to (push, plug,
  *   land of an object; shake, collapse and regrow of a collapsing block;
  *   hit by a spell, break of a destructible one; a switch going on or off;
- *   a crate cut, pasted or pulled;
+ *   a crate cut, pasted, pulled or compiled, a compiled one derezzing: expire (D125);
  *   a spiked platform that hurt the wizard: hurt)
  * @property {object} [enemy] the enemy it happened to (pop, land of an
  *   enemy, bounce off it, hit by a spell, a discharge or a bolt; it noticed
@@ -114,6 +115,8 @@ export class Game {
     this.player = new Player([0, 0, 0]);
     /** Things pasted so far, for their ids. */
     this.pastes = 0;
+    /** Crates compiled so far (D125), for their ids. */
+    this.compiles = 0;
     /** Room of the backup shrine used last (D97), or null: it wins a tie for the nearest one. */
     this.lastShrine = null;
     /** The rooms of this run on his map (D112): never saved, so a load starts it empty. */
@@ -508,8 +511,9 @@ export class Game {
       if (event) this.emit(event, { object });
       if (event === 'plug') say('msg.plug');
       // Objects above it see the change this same tick (a crate on a collapsed block falls).
-      if (event === 'collapse' || event === 'regrow') this.refreshBodies();
+      if (event === 'collapse' || event === 'regrow' || event === 'expire') this.refreshBodies();
     }
+    this.dropExpired();
 
     // Enemies after objects, so they step off platforms and crates where those are now.
     // Dead ones too: their pop runs on.
@@ -532,6 +536,18 @@ export class Game {
     this.readScreens();
     updateSwitches(this);
     return this.takeEvents();
+  }
+
+  /**
+   * Compiled crates (D125) that derezzed a while ago (their pixels have
+   * flown) leave the room's objects, so casting often doesn't pile them up.
+   */
+  dropExpired() {
+    const gone = (object) => object.temporary && object.state === 'broken' && object.timer >= PUSHABLE.expiredTicks;
+    if (!this.objects.some(gone)) return;
+    for (const list of [this.objects, this.updateOrder]) {
+      for (let i = list.length - 1; i >= 0; i--) if (gone(list[i])) list.splice(i, 1);
+    }
   }
 
   /**
