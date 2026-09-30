@@ -1002,6 +1002,41 @@ step up, or a hole plugged to walk over.
   object, color); the look is `COMPILE_FX` in `src/render/compile-fx.js`
   with `src/render/compile-view.js`; showcase `?asset=compile,disk-compile`.
 
+## Fork
+
+The fourth Phase 4 spell (D88, D129), from a data disk in Decoy Lab
+(slot 8). It makes a second wizard for a while: one more body to stand on
+a plate, and a target for enemies.
+
+- **Fork** (E; 25 energy): a hologram of him, in the spell's blue
+  (`#4d8bff`, white head), stands in the free cell in front of him at the
+  height of his feet, where Compile puts a crate (`pasteCell()`), facing
+  as he did. No free cell: it fizzles (energy back, no cooldown).
+- **Not a solid body:** nothing collides with it and nothing harms it;
+  he walks through it. It falls if nothing holds it up, and derezzes if
+  it lands on a hole.
+- **Plates:** it holds a floor plate down like a body standing on it, so
+  a plate in a slot too low for him (a lintel over it) can be pressed
+  from outside.
+- **Enemies:** a hostile enemy that sees it (aggro range, line of sight)
+  goes for the nearest of it and him; the decoy wins a tie. What the
+  enemy looks at, chases (where it saw it last), faces and aims at is
+  that focus (`Enemy.focus`, `Enemy.aimAt()`): bolts and arcs fly at the
+  decoy, a burst or an arc hits nothing there. Touch attacks never reach
+  it. Once it is gone, enemies go back to him.
+- **Lifetime:** `duration` seconds (10), counted from the cast; it blinks
+  for the last 2 s, faster in the last 0.7 s (as a compiled crate does),
+  then derezzes into pixels (48 ticks) and leaves the room. One at a
+  time: a new fork replaces the old one. A new room has none.
+- **Look:** a wizard hologram in the spell's blue with a white head that
+  grows in with a flash; blue bits stream from his hands into the cell (the
+  stream, D127); while Fork is selected, a dim blue marquee marks the
+  cell a cast would fill.
+- Tuning: `defs.json` `spells.fork` (cost, cooldown, duration, color);
+  the decoy is `src/entities/decoy.js`, the look `src/render/decoy-view.js`
+  and `src/render/fork-view.js`; showcase `?asset=fork,disk-fork`.
+- **Test rooms:** Decoy Lab (see Test rooms).
+
 ## Scan
 
 The third Phase 4 spell (D88, D128), from a data disk in Hidden Layer
@@ -1195,7 +1230,7 @@ a need for.
 | Warp | 5 | Teleport to the first wall | Phase 3 |
 | Cut & Paste | 6 | Move a crate or frozen enemy, room to room | Phase 3 |
 | Compile | 7 | A crate in the cell in front for 7 s: a step, or a hole plugged | Phase 4 (D125) |
-| Fork | 8 | Hologram decoy for a while: holds plates, draws enemies | Phase 4 |
+| Fork | 8 | Hologram decoy for 10 s: holds plates, draws enemies | Phase 4 (D129) |
 | Scan | 9 | A wave that reveals fake blocks (and pickups inside them) and hidden exits | Phase 4 (D128) |
 | Pull | 10 | Pulls the first crate or enemy in line one tile towards the wizard | Phase 4 (D124) |
 
@@ -1494,6 +1529,8 @@ the world map tool shows the connections and flags any room further out.
 | `build_yard` | Home Lattice, 12×12, east of Tractor Bay | Compile: a two-wide trench to plug crate by crate, a ledge two high to climb with a compiled step; the Compile disk, an energy refill on the ledge |
 | `hidden_layer` | Home Lattice, 12×12, east of Build Yard | Scan: a wall across the room with a fake gap, a hidden exit in the back wall behind it, an energy refill inside a fake block; the Scan disk |
 | `secret_cache` | Home Lattice, 8×8, north of Hidden Layer | behind the hidden exit: a secret |
+| `decoy_lab` | Home Lattice, 12×12, north of Build Yard | Fork: a plate in a slot under a lintel (only a decoy can press it), a locked exit that opens while it is pressed, a virus to draw away; the Fork disk |
+| `decoy_vault` | Home Lattice, 12×8, north of Decoy Lab | behind the lock: an energy refill |
 | `upgrade_lab` | Abyssal Buffer, 12×12 | the upgrades: a wall to double-jump, a bank shot for Zap+, a cron's bolts for Shield+; a secret, a shrine |
 | `vault` | Firewall Citadel, 8×8 | behind the access lock: two fragments |
 
@@ -1981,7 +2018,7 @@ title screen and pause menu (done, D109); saving and loading
 
 **Phase 4b — spells, bosses, tooling:** the roster's new spells, one
 step each (D88, D89): Pull (done, D124), Compile (done, D125), Scan
-(done, D128: fake blocks, hidden exits), Fork (enemies target the decoy);
+(done, D128: fake blocks, hidden exits), Fork (done, D129: a decoy that holds plates and draws enemies);
 Firewall Wardens; reachability checker; design skills and subagents;
 biome enemy rosters (review the proposal below, D108).
 

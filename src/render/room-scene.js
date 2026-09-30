@@ -22,6 +22,7 @@ import { clipBounds } from './clip-view.js';
 import { createRoomView } from './room-view.js';
 import { createShrine } from './shrine-view.js';
 import { LockView, PlateView, TargetView } from './switch-view.js';
+import { DecoyView } from './decoy-view.js';
 import { ScanView } from './scan-view.js';
 import { ZapView } from './zap-view.js';
 
@@ -80,6 +81,8 @@ export class RoomScene {
     this.lockViews = new Map();
     /** Bolts and sparks of the room (made in show()). */
     this.zapView = null;
+    /** The wizard's Fork decoy (made in show(), D129). */
+    this.decoyView = null;
     /** Scan's wave and the derez of what it reveals (made in show(), D128). */
     this.scanView = null;
     /** The blocks and walls (room-view.js), rebuilt when a scan reveals something. */
@@ -127,10 +130,11 @@ export class RoomScene {
     this.pickupViews = game.pickups.filter((pickup) => cutAbove === null || pickup.data.at[1] <= cutAbove).map((pickup) => new PickupView(game, pickup));
     this.zapView = new ZapView(game);
     this.scanView = new ScanView(game);
+    this.decoyView = new DecoyView(game);
     // A hidden exit (D128) that is only hidden has no barrier: it is wall until revealed.
     const barred = game.locks.filter(({ exit }) => exit.locked || exit.access);
     this.lockViews = new Map(barred.map((lock) => [lock.exit.id, new LockView(game, lock)]));
-    this.objectGroup = new Group().add(this.zapView.group, this.scanView.group, ...[...this.lockViews.values()].map((view) => view.group));
+    this.objectGroup = new Group().add(this.zapView.group, this.scanView.group, this.decoyView.group, ...[...this.lockViews.values()].map((view) => view.group));
     // add() with no arguments logs an error (a room without objects).
     const views = [...this.objectViews, ...this.enemyViews, ...this.pickupViews];
     if (views.length > 0) this.objectGroup.add(...views.map((view) => view.group));
@@ -190,6 +194,7 @@ export class RoomScene {
     this.shrine = null;
     this.zapView = new ZapView(game);
     this.scanView = null;
+    this.decoyView = null;
     this.objectGroup = new Group().add(this.zapView.group);
     const shape = { ...room, blocks: {}, holes: [], exits: [] };
     this.roomView = createRoomView(shape);
@@ -220,6 +225,7 @@ export class RoomScene {
     for (const view of this.pickupViews) view.sync(alpha, dt);
     this.zapView.sync(alpha, dt);
     this.scanView?.sync(alpha, dt);
+    this.decoyView?.sync(alpha, dt);
     if (this.game && this.game.reveals !== this.reveals) this.rebuildRoomView();
     // Exits a scan has yet to reveal (D128) are wall: no barrier, no stream.
     const hidden = (id) => this.game?.hidden.exits.some((exit) => exit.id === id) ?? false;

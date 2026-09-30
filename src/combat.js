@@ -130,7 +130,8 @@ export function updateAttacks(game) {
 }
 
 /**
- * An arc takes aim as it starts charging: at the wizard's middle, as far
+ * An arc takes aim as it starts charging: at the wizard's middle (or his
+ * decoy's, D129), as far
  * as its range or the first block or object in the way (the aim line).
  * @param {import('./game.js').Game} game
  * @param {Enemy} enemy
@@ -138,14 +139,14 @@ export function updateAttacks(game) {
 function aimDischarge(game, enemy) {
   if (enemy.data.attack !== 'arc') return;
   const from = enemy.middle();
-  const dir = direction(from, boxCenter(game.player.box()));
+  const dir = direction(from, boxCenter(enemy.aimAt(game).box()));
   const { point } = castRay(from, dir, enemy.data.attackRange, game.grid, game.sightBlockers);
   enemy.aim = { dir, end: point };
 }
 
 /**
  * A charged attack fires (D78, D80, D81). Bolts fly off at the wizard's
- * middle as he is now, or four ways (boltDirections(); updateBolts()
+ * (or his decoy's) middle as he is now, or four ways (boltDirections(); updateBolts()
  * resolves them). A burst hits every body within its range that it
  * could see: the wizard and other enemies. An arc flies along its aim
  * until a block or an object stops it (unharmed) or its range runs out,
@@ -159,7 +160,7 @@ function discharge(game, enemy) {
   const { attack, attackRange } = enemy.data;
   const from = enemy.middle();
   if (attack === 'bolt') {
-    for (const dir of boltDirections(enemy.data, from, boxCenter(player.box()), enemy.facing)) game.bolts.push(Bolt.shoot(enemy, dir));
+    for (const dir of boltDirections(enemy.data, from, boxCenter(enemy.aimAt(game).box()), enemy.facing)) game.bolts.push(Bolt.shoot(enemy, dir));
     return;
   }
   let hits;
