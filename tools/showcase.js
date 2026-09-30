@@ -75,6 +75,7 @@ import { FRAGMENT_COLOR } from '../src/entities/pickup.js';
 import { CLIP_FX, clipPixels, marqueeLook, pasteGrow } from '../src/render/clip-fx.js';
 import { createMarquee, placeMarquee } from '../src/render/clip-view.js';
 import { PULL_FX, PULL_PIXELS, pullMarquee, pullPixels } from '../src/render/pull-fx.js';
+import { COMPILE_FX, COMPILE_PIXELS, compileLook, compilePixels } from '../src/render/compile-fx.js';
 import { clipIcon } from '../src/ui/clip-icon.js';
 import { createJumpRings, placeJumpRings } from '../src/render/jump-view.js';
 import { createShrine } from '../src/render/shrine-view.js';
@@ -231,6 +232,7 @@ const ALL_ASSETS = [
   { label: 'disk-warp', group: 'disks', spin: false, build: () => buildDisk(defs.spells.warp) },
   { label: 'disk-cut-paste', group: 'disks', spin: false, build: () => buildDisk(defs.spells.cut_paste) },
   { label: 'disk-pull', group: 'disks', spin: false, build: () => buildDisk(defs.spells.pull) },
+  { label: 'disk-compile', group: 'disks', spin: false, build: () => buildDisk(defs.spells.compile) },
   // Installing a spell (D73): Zap, then Shield, in a loop.
   { label: 'install', spin: false, shadow: PALETTE.magenta, build: buildInstall },
   // Shield (D73): up for its duration, blinking before it ends.
@@ -316,6 +318,11 @@ const ALL_ASSETS = [
   // his hands and it slides one cell towards him (its disk: disk-pull).
   { label: 'pull', group: 'pull', span: 5, spin: false, build: () => buildPull('crate') },
   { label: 'pull-enemy', group: 'pull', span: 5, spin: false, build: () => buildPull('bug') },
+  // Compile (D125): the aim marker on the free cell in front of him; he
+  // casts, gold bits fly from his hands into it and a dashed crate grows
+  // in; it blinks, faster at the end, and derezzes (shortened here from
+  // 7 s; its disk: disk-compile).
+  { label: 'compile', span: 4, spin: false, build: buildCompile },
   // Backup shrine (D97): a glowing floor tile in the
   // wizard's magenta; he steps on and it flares.
   { label: 'shrine', spin: false, build: buildShrine },
@@ -2311,6 +2318,47 @@ function buildPull(kind) {
     if (scale !== null) placeMarquee(marquee, center, frame * scale, time);
     else if (since < 0) placeMarquee(aim, center, crate ? PULL_FX.aimMarquee : frame, time);
     placePixels(pixels, scale !== null ? pullPixels(since, center, hands) : [], [0, 0, 0]);
+  };
+  return asset;
+}
+
+/**
+ * Compile (D125) in a loop: the wizard (left, facing +x) compiles a crate
+ * into the cell in front of him, which lasts a shortened while.
+ */
+function buildCompile() {
+  const { color, object } = defs.spells.compile;
+  const type = { ...OBJECT_STYLE_DEFAULTS, ...defs.objects[object] };
+  const at = [-1, 0, 0];
+  const cell = [-0.5, 0, -0.5];
+  const wizard = createWizard();
+  wizard.position.set(...at);
+  wizard.rotation.y = Math.PI / 2;
+  const flare = createCastFlare();
+  const crate = createObjectView({ ...type, at: [0, 0, 0] });
+  const aim = createMarquee(color, COMPILE_FX.aimBrightness);
+  const bits = createPixelBurst(COMPILE_PIXELS, COMPILE_FX.pixelSize, [color, 0xffffff]);
+  const pieces = createPixelBurst(COLLAPSE_PIXELS, COLLAPSE_FX.pixelSize, [type.color, 0xffffff]);
+  const asset = new Group().add(wizard, flare, crate, aim, bits, pieces);
+  const hands = [at[0] + ZAP_FX.reach, ZAP_FX.height, 0];
+  // Cast at tick 40; the crate lasts 240 ticks here; loop 360.
+  const castAt = 40;
+  const lifetime = 240;
+  const loop = 360;
+  let tick = 0;
+  asset.userData.update = (dt, time) => {
+    tick = (tick + dt * 60) % loop;
+    const age = tick - castAt;
+    placeCastFlare(flare, at, Math.PI / 2, age);
+    aim.visible = false;
+    if (age < 0) placeMarquee(aim, cell.map((v) => v + 0.5), COMPILE_FX.aimMarquee, time);
+    placePixels(bits, age >= 0 ? compilePixels(age, hands, cell) : [], [0, 0, 0]);
+    const alive = age >= 0 && age < lifetime;
+    const look = alive ? compileLook(age, lifetime - age) : { visible: false, scale: 1 };
+    crate.visible = look.visible;
+    crate.scale.setScalar(look.scale);
+    crate.position.set(...cell.map((v) => v + (1 - look.scale) / 2));
+    placePixels(pieces, age >= lifetime ? collapsePixels(age - lifetime) : [], cell);
   };
   return asset;
 }

@@ -133,6 +133,20 @@
             "cooldown": { "$ref": "#/$defs/spellCooldown" }
           }
         },
+        "compile": {
+          "description": "Compile a temporary crate (D125) into the free cell in front of him at the height of his feet, as Paste puts one (D87): it falls from there, plugs a hole it drops into, can be pushed and pulled like any crate, and derezzes after a while (a plugged hole opens again). No free cell: it fizzles and costs nothing.",
+          "type": "object",
+          "required": ["slot", "color", "cost", "cooldown", "duration", "object"],
+          "additionalProperties": false,
+          "properties": {
+            "slot": { "$ref": "#/$defs/spellSlot" },
+            "color": { "$ref": "#/$defs/spellColor" },
+            "cost": { "$ref": "#/$defs/spellCost" },
+            "cooldown": { "$ref": "#/$defs/spellCooldown" },
+            "duration": { "type": "number", "exclusiveMinimum": 0, "maximum": 60, "description": "Seconds the crate lasts; it blinks before it derezzes." },
+            "object": { "$ref": "common.schema.json#/$defs/id", "description": "The object type it compiles: a pushable (a crate)." }
+          }
+        },
         "pull": {
           "description": "Pull the first crate or enemy in line the way he aims, at the height of his feet, one cell towards him (D124): a crate as if pushed, an enemy over anything, so it may drop into a hole and pop; pulling an enemy provokes it. A block, the room's side or another body in the way, or a target that can't move (right in front of him, a load on the crate): it fizzles and costs nothing.",
           "type": "object",

@@ -84,6 +84,7 @@ export const SPELLS = {
   blink: { slot: 4, color: '#9ef0ff', cost: 15, cooldown: 0.25, range: 3, damage: 1, hitDamage: 2 },
   warp: { slot: 5, color: '#ff6ee8', cost: 30, cooldown: 0.25 },
   cut_paste: { slot: 6, color: '#f4f6ff', cost: 20, pasteCost: 0, cooldown: 0.25 },
+  compile: { slot: 7, color: '#ffe45c', cost: 5, cooldown: 0.25, duration: 7, object: 'crate' },
   pull: { slot: 10, color: '#a6ffcf', cost: 15, cooldown: 0.25, range: 6 },
 };
 
@@ -100,6 +101,7 @@ export const PICKUPS = {
   disk_blink: { kind: 'disk', spell: 'blink' },
   disk_warp: { kind: 'disk', spell: 'warp' },
   disk_cut_paste: { kind: 'disk', spell: 'cut_paste' },
+  disk_compile: { kind: 'disk', spell: 'compile' },
   disk_pull: { kind: 'disk', spell: 'pull' },
   refill_integrity: { kind: 'refill', stat: 'integrity', amount: 2 },
   refill_energy: { kind: 'refill', stat: 'energy', amount: 30 },
@@ -146,7 +148,7 @@ export function roomFile(id, props = {}) {
  * one biome "home", the object types, the rooms and their connections.
  * @param {object} options
  * @param {object[]} options.rooms room files (see roomFile())
- * @param {Record<string, object>} [options.objects] object types; a crate by default
+ * @param {Record<string, object>} [options.objects] object types; a crate always (Compile's, D125)
  * @param {Record<string, object>} [options.enemies] enemy templates; a bug by default
  * @param {Record<string, object>} [options.blocks] block types; BLOCK_TYPES by default
  * @param {Record<string, object>} [options.pickups] pickup types; PICKUPS by default
@@ -156,7 +158,7 @@ export function roomFile(id, props = {}) {
  */
 export function dataFiles({
   rooms,
-  objects = { crate: CRATE },
+  objects = {},
   enemies = { bug: BUG },
   blocks = BLOCK_TYPES,
   pickups = PICKUPS,
@@ -167,7 +169,7 @@ export function dataFiles({
 }) {
   const variants = withVariants(rooms, enemies);
   return structuredClone({
-    'defs.json': { schemaVersion: 1, score: SCORE, objects, enemies: variants.enemies, spells: SPELLS, pickups, blocks },
+    'defs.json': { schemaVersion: 1, score: SCORE, objects: { crate: CRATE, ...objects }, enemies: variants.enemies, spells: SPELLS, pickups, blocks },
     'biomes.json': { schemaVersion: 1, biomes: { home: { name: 'Home', color: '#ffb020' } } },
     'world.json': { schemaVersion: 1, start, ...(fragments && { fragments }), connections, positions },
     'strings.json': STRINGS,

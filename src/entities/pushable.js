@@ -8,6 +8,7 @@
  *   rest ──no support──► fall ──land──► rest
  *                               └─into a hole──► plugged (floor from now on)
  *   rest, slide, fall ──last integrity hit away──► broken (gone until the room resets)
+ *   any ──its lifetime is up (a compiled crate, D125)──► broken (a plugged hole opens again)
  */
 import { DT } from '../core/loop.js';
 import { REST_EPS, cellBox, overlapsBox, restsOn, surfaceBelow } from '../physics/collision.js';
@@ -18,6 +19,8 @@ export const PUSHABLE = {
   slideSpeed: 3,
   gravity: 30,
   maxFall: 18,
+  /** Ticks a derezzed compiled crate stays (its pixels fly) before the game drops it (D125). */
+  expiredTicks: 60,
 };
 
 export class Pushable {
@@ -43,6 +46,17 @@ export class Pushable {
     this.vy = 0;
     /** While sliding: the cell it slides into. */
     this.target = null;
+    /**
+     * A compiled crate's lifetime in ticks (Compile, D125), and the ticks
+     * left of it; both null for an ordinary crate, which stays.
+     */
+    this.lifetime = object.lifetime === undefined ? null : Math.round(object.lifetime / DT);
+    this.ticksLeft = this.lifetime;
+  }
+
+  /** Is it a compiled crate (D125), which derezzes after a while? */
+  get temporary() {
+    return this.lifetime !== null;
   }
 
   /** Is it there to collide with (not broken)? */
@@ -115,7 +129,7 @@ export class Pushable {
   /**
    * One fixed tick.
    * @param {{ grid: import('../world/grid.js').Grid, bodies: Iterable<{ box(): number[][] }> }} world
-   * @returns {string|null} event: 'land', 'plug' or null
+   * @returns {string|null} event: 'land', 'plug', 'expire' or null
    */
   update({ grid, bodies }) {
     this.savePrevious();
@@ -124,6 +138,7 @@ export class Pushable {
       this.timer++;
       return null;
     }
+    if (this.ticksLeft !== null && --this.ticksLeft <= 0) return this.expire(grid);
 
     if (this.state === 'slide') {
       const step = PUSHABLE.slideSpeed * DT;
@@ -168,6 +183,20 @@ export class Pushable {
     }
 
     return null; // plugged: part of the floor now
+  }
+
+  /**
+   * A compiled crate's time is up (D125): it derezzes, and a hole it
+   * plugged opens again under whatever stands there.
+   * @param {import('../world/grid.js').Grid} grid
+   * @returns {'expire'}
+   */
+  expire(grid) {
+    if (this.state === 'plugged') grid.openHole(this.pos[0], this.pos[2]);
+    this.state = 'broken';
+    this.timer = 0;
+    this.target = null;
+    return 'expire';
   }
 
   /** Start falling if nothing holds the object up. */

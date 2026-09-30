@@ -6,7 +6,8 @@
  *
  * - Cut takes a crate (a resting pushable) or a frozen enemy there, on
  *   his own level only; one with something resting on it can't be cut
- *   (like pushing, D4), so nothing ever drops out of a stack.
+ *   (like pushing, D4), so nothing ever drops out of a stack. A compiled
+ *   crate (D125) can't be cut either: it only lasts a while.
  * - Paste puts what he holds into that cell at his feet: inside the room,
  *   clear of blocks, bodies (objects, enemies, him) and pickups lying there.
  *   It falls from there if nothing holds it up (into a hole, it plugs it).
@@ -59,6 +60,7 @@ export function cutTarget({ player, objects, liveEnemies, bodies }) {
   const cell = frontCell(player.pos, player.size, aimAxis(player.aim()));
   const [x, y, z] = cell;
   const object = objects.find((o) => o.kind === 'pushable' && o.state === 'rest' && o.pos.every((v, i) => v === cell[i]));
+  if (object?.temporary) return null;
   if (object) return loaded(object.box(), bodies, object) ? null : { object, cell };
   const enemy = liveEnemies.find((e) => {
     const [bx, by, bz] = e.box();

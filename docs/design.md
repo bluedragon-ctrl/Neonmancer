@@ -594,7 +594,8 @@ enemies).
 - **Spell colors:** each spell has a `color` in `defs.json` (Zap cyan
   `#00f0ff`, Shield neon blue `#3b82ff`, Firewall ember `#ff5a14`, Pause
   lavender `#c9a2ff`, Blink pale cyan `#9ef0ff`, Warp pink `#ff6ee8`,
-  Cut & Paste white `#f4f6ff`, Pull pale mint `#a6ffcf`):
+  Cut & Paste white `#f4f6ff`, Compile gold `#ffe45c`, Pull pale mint
+  `#a6ffcf`):
   its disk's lit bit, its
   install animation and its banner.
 - **Found before:** a permanent pickup whose bit is set shows as a ghost
@@ -928,6 +929,44 @@ and enemies, closer.
   look is `PULL_FX` in `src/render/pull-fx.js` with
   `src/render/pull-view.js`; showcase `?asset=pull,disk-pull`.
 
+## Compile
+
+The second Phase 4 spell (D88, D125), from a data disk by the entrance
+of Build Yard (slot 7). It makes a crate out of nothing, for a while: a
+step up, or a hole plugged to walk over.
+
+- **Where:** the free cell in front of him at the height of his feet,
+  as Paste puts a crate (`pasteCell()` in `src/entities/clip.js`): inside
+  the room, clear of blocks, bodies and pickups lying there.
+- **Compile** (E; 5 energy): a crate of the spell's `object` type (the
+  dashed crate, `crate_dashed`) appears there. It is an ordinary crate of
+  the room (`Pushable`, D4): it falls from there if nothing holds it up,
+  plugs a hole it drops into, can be pushed and pulled, holds a plate
+  down and carries what stands on it. No free cell: it fizzles (energy
+  back, no cooldown).
+- **Lifetime:** `duration` seconds (7), counted from the cast; it blinks
+  for the last 2 s, faster in the last 0.7 s, then derezzes into pixels
+  (`Pushable.expire()`): what stands on it falls, and a hole it plugged
+  opens again under whoever is there. Its pixels fly for a second, then
+  it leaves the room's objects.
+- **No limit** on how many stand at once: only the energy (5, back in
+  1 s at the base recharge) and the cooldown hold him back. Stairs are
+  not free-standing: each crate falls to the ground, so a step is one
+  high, as with any crate.
+- Cut & Paste can't take a compiled crate (it only lasts a while); a
+  room reset clears them.
+- **Look:** bits in the spell's gold fly from his hands into the cell
+  (12 ticks each, over 18), each to its point of a lattice through it,
+  while the crate grows in with a flicker; the blinking and the pixels
+  of its end as above. The crate is lime, like every crate (D99): the
+  gold is the spell's.
+- **Aim marker:** while Compile is selected (alive, no transition), a dim
+  gold marquee marks the cell a cast would fill; nothing shows without a
+  free one.
+- Tuning: `defs.json` `spells.compile` (cost, cooldown, duration,
+  object, color); the look is `COMPILE_FX` in `src/render/compile-fx.js`
+  with `src/render/compile-view.js`; showcase `?asset=compile,disk-compile`.
+
 ## Upgrades
 
 An upgrade (D95) is a permanent pickup with its own
@@ -1087,7 +1126,7 @@ a need for.
 | Blink | 4 | 3-unit dash, hits enemies, hurts on a wall | Phase 3 |
 | Warp | 5 | Teleport to the first wall | Phase 3 |
 | Cut & Paste | 6 | Move a crate or frozen enemy, room to room | Phase 3 |
-| Compile | 7 | Temporary block in the cell in front: a step or a bridge tile | Phase 4 |
+| Compile | 7 | A crate in the cell in front for 7 s: a step, or a hole plugged | Phase 4 (D125) |
 | Fork | 8 | Hologram decoy for a while: holds plates, draws enemies | Phase 4 |
 | Scan | 9 | Reveals hidden blocks, fake walls and secret pickups for a while | Phase 4 |
 | Pull | 10 | Pulls the first crate or enemy in line one tile towards the wizard | Phase 4 (D124) |
@@ -1097,7 +1136,7 @@ a need for.
   (ZAP becomes ZAP+), so the cycle stays short.
 - **Order in the world** (intended; rooms place the disks later):
   early Zap, Shield, Blink, Pause; middle Cut & Paste, Firewall, Fork,
-  Scan and the jump upgrade; late Compile, Warp, Zap+ and Shield+. Pull
+  Scan and the jump upgrade; late Compile (D125), Warp, Zap+ and Shield+. Pull
   comes early, with Blink and Pause (D124).
 - **Turned down for now:** Patch (an enemy turns
   peaceful), Overclock (a speed burst), Decrypt (dissolves an encrypted
@@ -1381,6 +1420,7 @@ the world map tool shows the connections and flags any room further out.
 | `fast_path` | Frostbyte Wastes, 12×12 | Blink and Warp disks, pits to cross; the recharge buff |
 | `clipboard` | Abyssal Buffer, 12×12 | Cut & Paste: crates to cut and paste as steps and bridges, a bug to freeze and move |
 | `tractor_bay` | Home Lattice, 12×12, east of Cache Hall | Pull: two crates across a moat to pull into it as a bridge, a bug patrolling behind a trench to pull in; the Pull disk, an energy refill |
+| `build_yard` | Home Lattice, 12×12, east of Tractor Bay | Compile: a two-wide trench to plug crate by crate, a ledge two high to climb with a compiled step; the Compile disk, an energy refill on the ledge |
 | `upgrade_lab` | Abyssal Buffer, 12×12 | the upgrades: a wall to double-jump, a bank shot for Zap+, a cron's bolts for Shield+; a secret, a shrine |
 | `vault` | Firewall Citadel, 8×8 | behind the access lock: two fragments |
 
@@ -1867,7 +1907,7 @@ title screen and pause menu (done, D109); saving and loading
 (done, D111); map screen (done, D112).
 
 **Phase 4b — spells, bosses, tooling:** the roster's new spells, one
-step each (D88, D89): Pull (done, D124), Compile, Scan (needs hidden blocks, fake
+step each (D88, D89): Pull (done, D124), Compile (done, D125), Scan (needs hidden blocks, fake
 walls and hidden pickups first), Fork (enemies target the decoy);
 Firewall Wardens; reachability checker; design skills and subagents;
 biome enemy rosters (review the proposal below, D108).

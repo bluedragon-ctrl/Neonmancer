@@ -5,6 +5,7 @@
  */
 import { DT } from './core/loop.js';
 import { hitEnemy } from './combat.js';
+import { withObjectDefaults } from './data/room-data.js';
 import { Bolt } from './entities/bolt.js';
 import { cutTarget, pasteCell } from './entities/clip.js';
 import { Enemy } from './entities/enemy.js';
@@ -35,6 +36,8 @@ const SPELL_EFFECTS = {
   warp: (game, spell) => teleport(game, 'warp', spell),
   /** Cut the crate or frozen enemy in front of him into his clipboard, or paste what it holds (D87). */
   cut_paste: (game) => cutOrPaste(game),
+  /** Compile a crate that lasts a while into the free cell in front of him (D125). */
+  compile: (game, spell) => compile(game, spell),
   /** Pull the first crate or enemy in line one cell towards him (D124). */
   pull: (game, spell) => pull(game, spell),
 };
@@ -149,6 +152,35 @@ function paste(game) {
   }
   player.clip = { mode: 'paste', target, tick: 0 };
   game.refreshBodies();
+  return true;
+}
+
+/**
+ * Compile (D125): a crate of the spell's `object` type appears in the free
+ * cell in front of him at his feet, where Paste would put one
+ * (entities/clip.js). It is an ordinary crate of the room (it falls, plugs
+ * a hole, can be pushed and pulled) for `duration` seconds, then derezzes
+ * (Pushable.expire()). No free cell: it fizzles.
+ * @param {import('./game.js').Game} game
+ * @param {object} spell its tuning from defs.json
+ * @returns {boolean} false if it fizzled
+ */
+function compile(game, { object: type, duration }) {
+  const cell = pasteCell(game);
+  if (!cell) return false;
+  const object = createObject({
+    id: `compiled~${++game.compiles}`,
+    type,
+    at: cell,
+    color: game.room.color,
+    ...withObjectDefaults(game.content.objectTypes[type]),
+    lifetime: duration,
+  });
+  game.objects.push(object);
+  game.updateOrder.push(object);
+  game.refreshBodies();
+  game.player.compile = { cell, tick: 0 };
+  game.emit('compile', { object, cell });
   return true;
 }
 

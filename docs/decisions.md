@@ -985,3 +985,20 @@ puzzles exact (each cast a move, like a push). Taking any enemy makes
 Pull a tool against them too (into a pit, off a plate), and the blame
 keeps it from being free. The mint keeps the beam readable on the lime
 crates and the green bug.
+
+### D125 — 2026-09-30 — Compile: a crate for 7 seconds
+Compile (slot 7, 5 energy, gold `#ffe45c`, late in the world) puts a
+crate of the dashed crate type into the free cell in front of the
+wizard at his feet, where Paste would put one. It is an ordinary crate
+while it lasts: it falls, plugs a hole, can be pushed and pulled. After
+7 s (blinking for the last 2) it derezzes; what stands on it falls and
+a hole it plugged opens again. Any number may stand at once; Cut &
+Paste can't take one. No free cell: it fizzles. Gold bits fly from his
+hands into the cell as it grows in; an aim marker shows the cell. Test
+room Build Yard, east of Tractor Bay.
+**Why:** the author's picks. A crate rather than a floating block keeps
+one set of rules (D4) and no free-standing stairs: a step is one high,
+a gap is crossed by plugging its holes. Cheap and short-lived, it is a
+tool to use often, not a lasting change to the room; no cap on how many,
+since the 7 s already limits it. The crate stays lime (pushable, D99);
+the gold marks the spell.

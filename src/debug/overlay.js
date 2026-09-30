@@ -92,6 +92,8 @@ export class DebugOverlay {
       this.objectBoxes[i].visible = object.solid !== false;
       place(this.objectBoxes[i], lerpPosition(object.prev, object.pos, alpha), object.size);
     });
+    // Compiled crates dropped since setRoom() (D125) leave spare boxes.
+    for (let i = objects.length; i < this.objectBoxes.length; i++) this.objectBoxes[i].visible = false;
     enemies.forEach((enemy, i) => {
       this.enemyBoxes[i].visible = enemy.alive;
       const corner = enemyBox(lerpPosition(enemy.prev, enemy.pos, alpha), enemy.size).map(([min]) => min);

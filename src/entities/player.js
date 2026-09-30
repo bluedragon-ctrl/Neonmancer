@@ -81,6 +81,8 @@ export const PLAYER = {
   clipTicks: 40,
   /** Ticks the beam of a pull lasts (D124, render/pull-fx.js): about as long as the target slides. */
   pullTicks: 24,
+  /** Ticks the bits of a compile fly (D125, render/compile-fx.js). */
+  compileTicks: 18,
 };
 
 
@@ -178,6 +180,8 @@ export class Player {
     this.clip = null;
     /** The last pull (D124) while its beam lasts, or null: { target, tick }, tick counting up to PLAYER.pullTicks. */
     this.pull = null;
+    /** The last compile (D125) while its bits fly, or null: { cell, tick }, tick counting up to PLAYER.compileTicks. */
+    this.compile = null;
     this.enter(pos, resetPoint);
   }
 
@@ -273,6 +277,7 @@ export class Player {
     this.clipboard = null;
     this.clip = null;
     this.pull = null;
+    this.compile = null;
   }
 
   /**
@@ -394,6 +399,7 @@ export class Player {
     this.warp = null;
     this.clip = null;
     this.pull = null;
+    this.compile = null;
   }
 
   /** Keep this tick's start for render interpolation (copied in place: no new array every tick). */
@@ -448,6 +454,7 @@ export class Player {
     if (this.warp && ++this.warp.tick > PLAYER.warpTicks) this.warp = null;
     if (this.clip && ++this.clip.tick > PLAYER.clipTicks) this.clip = null;
     if (this.pull && ++this.pull.tick > PLAYER.pullTicks) this.pull = null;
+    if (this.compile && ++this.compile.tick > PLAYER.compileTicks) this.compile = null;
     if (this.airJumpTicks !== null && ++this.airJumpTicks > PLAYER.airJumpTicks) this.airJumpTicks = null;
 
     // Walk along the grid axes, or screen-relative (D38); diagonals are normalised.
