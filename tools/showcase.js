@@ -18,6 +18,7 @@ import { VIEW_HEIGHT, frameRoom } from '../src/render/camera.js';
 import { JUMP_SPEED, PLAYER } from '../src/entities/player.js';
 import { PLAYER_HITBOX } from '../src/core/rules.js';
 import { COLLAPSING } from '../src/entities/collapsing.js';
+import { PUSHABLE } from '../src/entities/pushable.js';
 import {
   CollapsingView,
   ENEMY_MODELS,
@@ -116,6 +117,11 @@ const ALL_ASSETS = [
   { label: 'wizard', build: buildWizardIdle, shadow: PALETTE.magenta },
   { label: 'wizard-walk', span: 4, spin: false, build: buildWizardWalk },
   { label: 'wizard-jump', build: buildWizardJump, shadow: PALETTE.magenta },
+  // Action poses: pushing a crate a cell (hands on it, leaning in), casting
+  // ahead and then to his side, dropping into a hole (flailing).
+  { label: 'wizard-push', span: 4, spin: false, build: buildWizardPush },
+  { label: 'wizard-cast', spin: false, shadow: PALETTE.magenta, build: buildWizardCast },
+  { label: 'wizard-hole', span: 3, spin: false, build: buildWizardHole },
   { label: 'wizard-hit', build: buildWizardHit, shadow: PALETTE.magenta },
   // Every object type from defs.json, in its own style (glass crates, D96:
   // a data core, or empty thinner glass in a destructible one, D99);
@@ -1725,6 +1731,87 @@ function buildWizardJump() {
     const grounded = y === 0 && t > 0.1;
     wizard.position.y = y;
     motion.update({ dt, time, pos: [0, y, 0], facing: 0, grounded: grounded || t === 0, moving: false, vy: grounded ? 0 : JUMP_SPEED - PLAYER.gravity * t });
+  };
+  return asset;
+}
+
+/**
+ * The wizard walking up to a crate, pushing it one cell (a short strain,
+ * then it slides as in the game) and standing back; in a loop.
+ */
+function buildWizardPush() {
+  const wizard = createWizard();
+  const motion = new WizardMotion(wizard);
+  const crate = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...defs.objects.crate, at: [0, 0, 0] });
+  const asset = new Group().add(wizard, crate);
+  // Pushing along −x, away from the camera, so the crate never hides him.
+  const half = PLAYER_HITBOX[0] / 2;
+  const start = 1.9;
+  const contact = 0.5 + half; // his front against the crate's near face (crate up to x = 0.5)
+  const walkEnd = (start - contact) / PLAYER.speed;
+  const strainEnd = walkEnd + PLAYER.pushDelay / 60;
+  const slideEnd = strainEnd + 1 / PUSHABLE.slideSpeed;
+  const loop = slideEnd + 1.2;
+  const facing = -Math.PI / 2;
+  asset.userData.update = (dt, time) => {
+    const t = time % loop;
+    const slid = Math.min(1, Math.max(0, (t - strainEnd) * PUSHABLE.slideSpeed));
+    const x = t < walkEnd ? start - t * PLAYER.speed : contact - slid;
+    crate.position.set(-0.5 - slid, 0, -0.5);
+    wizard.position.set(x, 0, 0);
+    wizard.rotation.y = facing;
+    const pushing = t >= walkEnd && t < slideEnd;
+    motion.update({ dt, time, pos: [x, 0, 0], facing, grounded: true, moving: t < slideEnd, vy: 0, pushing });
+  };
+  return asset;
+}
+
+/**
+ * The wizard casting a Zap flare straight ahead, then one to his left
+ * before he has turned (the hands follow the aim, not the body); in a loop.
+ */
+function buildWizardCast() {
+  const wizard = createWizard();
+  const motion = new WizardMotion(wizard);
+  const flare = createCastFlare();
+  const asset = new Group().add(wizard, flare);
+  const casts = [
+    { at: 20, aim: 0 },
+    { at: 80, aim: Math.PI / 2 },
+  ];
+  const loop = 140;
+  asset.userData.update = (dt, time) => {
+    const tick = (time * 60) % loop;
+    const last = [...casts].reverse().find((cast) => tick >= cast.at) ?? { ...casts[1], at: casts[1].at - loop };
+    const since = tick - last.at;
+    motion.update({ dt, time, pos: [0, 0, 0], facing: 0, grounded: true, moving: false, vy: 0, cast: since, aim: last.aim });
+    placeCastFlare(flare, [0, 0, 0], last.aim, since);
+  };
+  return asset;
+}
+
+/** The wizard walking off into a hole and dropping in, flailing; in a loop. */
+function buildWizardHole() {
+  const wizard = createWizard();
+  const motion = new WizardMotion(wizard);
+  const pit = createHoleView([[0, 0]], PALETTE.amber);
+  pit.position.set(0, 0, -0.5);
+  const asset = new Group().add(pit, wizard);
+  const start = -1.2;
+  const edge = 0.5; // the hole's middle: he falls in there
+  const walkEnd = (edge - start) / PLAYER.speed;
+  const fallEnd = walkEnd + PLAYER.deathTicks / 60;
+  const loop = fallEnd + 0.6;
+  asset.userData.update = (dt, time) => {
+    const t = time % loop;
+    const falling = t >= walkEnd && t < fallEnd;
+    const drop = falling ? (PLAYER.gravity * (t - walkEnd) ** 2) / 2 : 0;
+    const x = Math.min(edge, start + t * PLAYER.speed);
+    const y = -Math.min(drop, 3);
+    wizard.visible = t < fallEnd;
+    wizard.position.set(x, y, 0);
+    wizard.rotation.y = Math.PI / 2;
+    motion.update({ dt, time, pos: [x, y, 0], facing: Math.PI / 2, grounded: !falling, moving: t < walkEnd, vy: falling ? -PLAYER.gravity * (t - walkEnd) : 0, falling });
   };
   return asset;
 }

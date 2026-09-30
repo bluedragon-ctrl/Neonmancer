@@ -3,11 +3,15 @@
  * hands swing), an idle float (breathing, drifting hands, a blink now and
  * then), a stretch in the air with the hands up, a squash on landing, and a
  * floppy hat on a spring that trails his motion and wobbles when he stops.
+ * Actions take over the hands: pushing (hands flat on the crate, leaning
+ * in), casting (both hands thrust the way the spell goes) and falling into
+ * a hole (flailing, the hat lifting off).
  *
  * Visual only: it poses the parts of createWizard()'s rig and never touches
  * the hitbox or the game state. The pose and the spring are pure (tested);
  * WizardMotion keeps the few numbers that carry over between frames.
  */
+import { BOLT } from '../entities/bolt.js';
 import { JUMP_SPEED, PLAYER } from '../entities/player.js';
 import { hash } from './hash.js';
 import { WIZARD } from './wizard.js';
@@ -41,6 +45,25 @@ export const MOTION = {
    * and the kick it gets on landing (radians per second, tipping back).
    */
   hat: { trail: 0.05, max: 0.35, stiffness: 160, damping: 8, landKick: 2.2 },
+  /**
+   * Pushing: where the hands go (|x|, y, z from his feet center, before the
+   * lean, which carries them onto the crate's face just past his hitbox),
+   * the lean, and slow straining steps (cycles per second) while the crate
+   * doesn't give yet.
+   */
+  push: { hand: [0.17, 0.58, 0.2], lean: 0.2, steps: 1.4 },
+  /**
+   * Casting, in ticks after the cast: the hands thrust out by `out`, hold
+   * until `hold`, and are back by `back`. They meet where the bolt starts
+   * (BOLT.reach, BOLT.height), `apart` from each other.
+   */
+  cast: { out: 3, hold: 6, back: 18, apart: 0.09 },
+  /**
+   * Falling into a hole: hands high and waving (cycles per second), the
+   * body rocking side to side, the hat lifting off the head. It blends in
+   * faster than the rest (per second): the drop is over in a moment.
+   */
+  flail: { blend: 30, rate: 3.2, handLift: 0.3, wave: 0.12, rock: 0.14, hatLift: 0.12 },
 };
 
 /** Longest spring step, so a slow frame never makes the hat explode. */
@@ -90,6 +113,26 @@ export function eyesOpen(time) {
   return t < 0 || t >= length ? 1 : 1 - Math.sin((t / length) * Math.PI);
 }
 
+/** Where each hand rests (left, right), as WIZARD.hands places them. */
+const HAND_REST = [-1, 1].map((side) => [side * WIZARD.hands.x, WIZARD.hands.y, WIZARD.hands.z]);
+
+/**
+ * How far the hands are thrust out `tick` ticks after a cast (0..1): fast
+ * out, a short hold, eased back. 0 when there is no cast.
+ * @param {number|null} tick
+ */
+export function castReach(tick) {
+  const { out, hold, back } = MOTION.cast;
+  if (tick === null || tick < 0 || tick >= back) return 0;
+  if (tick < out) return Math.sin((tick / out) * (Math.PI / 2));
+  if (tick < hold) return 1;
+  const t = (tick - hold) / (back - hold);
+  return 1 - t * t * (3 - 2 * t);
+}
+
+/** Blend hand offsets `a` towards `b` by `k`. */
+const mix = (a, b, k) => a.map((hand, i) => hand.map((v, j) => v + (b[i][j] - v) * k));
+
 /**
  * The pose for one frame (pure).
  * @param {object} state
@@ -99,11 +142,16 @@ export function eyesOpen(time) {
  * @param {number} state.speed 0..1, his vertical speed as a share of the jump speed
  * @param {number|null} state.landed seconds since he landed, or null
  * @param {number} state.time seconds, for the idle float and the blink
- * @returns {{ scale: number[], lean: number, headY: number, hands: number[][], eyes: number }}
- *   the rig's scale and forward lean, the head's lift, each hand's offset
- *   from its rest place (left, right) and how open the eyes are
+ * @param {number} [state.push] 0..1, how much he pushes
+ * @param {number|null} [state.cast] ticks since his last cast, or null
+ * @param {number} [state.aim] angle of the cast relative to where he faces
+ * @param {number} [state.flail] 0..1, how much he flails (falling into a hole)
+ * @returns {{ scale: number[], lean: number, roll: number, headY: number, hatLift: number, hands: number[][], eyes: number }}
+ *   the rig's scale, forward lean and sideways rock, the head's and the
+ *   hat's lift, each hand's offset from its rest place (left, right) and
+ *   how open the eyes are
  */
-export function wizardPose({ phase, walk, air, speed, landed, time }) {
+export function wizardPose({ phase, walk, air, speed, landed, time, push = 0, cast = null, aim = 0, flail = 0 }) {
   const m = MOTION;
   const still = (1 - walk) * (1 - air);
   const swing = Math.sin(phase * 2 * Math.PI);
@@ -117,7 +165,7 @@ export function wizardPose({ phase, walk, air, speed, landed, time }) {
   height *= 1 - squash;
   const width = 1 / Math.sqrt(height);
 
-  const hands = [-1, 1].map((side, i) => {
+  let hands = [-1, 1].map((side, i) => {
     const float = m.float.height * Math.sin((time * m.float.rate + i * 0.5) * 2 * Math.PI) * still;
     return [
       side * m.air.handOut * air,
@@ -125,10 +173,34 @@ export function wizardPose({ phase, walk, air, speed, landed, time }) {
       -side * m.swing * swing * walk,
     ];
   });
+
+  // Actions take the hands in turn: a push, over it a cast, over all a flail.
+  if (push > 0) {
+    const [x, y, z] = m.push.hand;
+    hands = mix(hands, [-1, 1].map((side, i) => [side * x - HAND_REST[i][0], y - HAND_REST[i][1], z - HAND_REST[i][2]]), push);
+  }
+  const thrust = castReach(cast);
+  if (thrust > 0) {
+    const [fx, fz] = [Math.sin(aim), Math.cos(aim)];
+    const target = [-1, 1].map((side, i) => {
+      const x = fx * BOLT.reach + fz * side * m.cast.apart;
+      const z = fz * BOLT.reach - fx * side * m.cast.apart;
+      return [x - HAND_REST[i][0], BOLT.height - HAND_REST[i][1], z - HAND_REST[i][2]];
+    });
+    hands = mix(hands, target, thrust);
+  }
+  if (flail > 0) {
+    const wave = Math.sin(time * m.flail.rate * 2 * Math.PI);
+    const target = [-1, 1].map((side) => [side * m.air.handOut, m.flail.handLift + side * wave * m.flail.wave, side * wave * m.flail.wave * 0.5]);
+    hands = mix(hands, target, flail);
+  }
+
   return {
     scale: [width, height, width],
-    lean: m.lean * walk * (1 - air),
+    lean: (m.lean * walk * (1 - air)) * (1 - push) + m.push.lean * push,
+    roll: m.flail.rock * Math.sin(time * m.flail.rate * Math.PI) * flail,
     headY: -m.bob * bob * walk,
+    hatLift: m.flail.hatLift * flail,
     hands,
     eyes: eyesOpen(time),
   };
@@ -151,6 +223,8 @@ export class WizardMotion {
     this.phase = 0;
     this.walk = 0;
     this.air = 0;
+    this.push = 0;
+    this.flail = 0;
     this.grounded = true;
     this.landed = null;
     this.pitch = { x: 0, v: 0 };
@@ -166,8 +240,12 @@ export class WizardMotion {
    * @param {boolean} frame.grounded
    * @param {boolean} frame.moving walking (input held)
    * @param {number} frame.vy vertical speed in units per second
+   * @param {boolean} [frame.pushing] walking into a crate lined up to push
+   * @param {number|null} [frame.cast] ticks since his last cast, or null
+   * @param {number} [frame.aim] angle the cast goes (as rotation.y)
+   * @param {boolean} [frame.falling] falling into a hole (dead)
    */
-  update({ dt, time, pos, facing, grounded, moving, vy }) {
+  update({ dt, time, pos, facing, grounded, moving, vy, pushing = false, cast = null, aim = facing, falling = false }) {
     const { hat } = MOTION;
     const dx = this.last ? pos[0] - this.last[0] : 0;
     const dz = this.last ? pos[2] - this.last[2] : 0;
@@ -178,9 +256,13 @@ export class WizardMotion {
     // Steps follow the distance walked (never more than walking speed, so
     // riding a platform doesn't make him run).
     if (grounded && moving) this.phase += Math.min(moved, PLAYER.speed * dt * 1.5) / MOTION.stride;
+    // Straining against a crate that doesn't give yet: slow steps on the spot.
+    if (pushing && moved < PLAYER.speed * dt * 0.5) this.phase += MOTION.push.steps * dt;
     const k = Math.min(1, dt * MOTION.blend);
     this.walk += ((grounded && moving ? 1 : 0) - this.walk) * k;
     this.air += ((grounded ? 0 : 1) - this.air) * k;
+    this.push += ((pushing ? 1 : 0) - this.push) * k;
+    this.flail += ((falling ? 1 : 0) - this.flail) * Math.min(1, dt * MOTION.flail.blend);
     if (grounded && !this.grounded) {
       this.landed = 0;
       this.pitch.v -= hat.landKick;
@@ -199,11 +281,25 @@ export class WizardMotion {
       this.roll = springStep(this.roll, clamp(hat.trail * side), dt);
     }
 
-    const pose = wizardPose({ phase: this.phase, walk: this.walk, air: this.air, speed: vy / JUMP_SPEED, landed: this.landed, time });
+    const aimed = Math.atan2(Math.sin(aim - facing), Math.cos(aim - facing));
+    const pose = wizardPose({
+      phase: this.phase,
+      walk: this.walk,
+      air: this.air,
+      speed: vy / JUMP_SPEED,
+      landed: this.landed,
+      time,
+      push: this.push,
+      cast,
+      aim: aimed,
+      flail: this.flail,
+    });
     const { rig, head, hands, eyes } = this.rig;
     rig.scale.set(...pose.scale);
     rig.rotation.x = pose.lean;
+    rig.rotation.z = pose.roll;
     head.position.y = pose.headY;
+    this.rig.hat.position.y = WIZARD.brim.y + pose.hatLift;
     hands.forEach((hand, i) => hand.position.set(...pose.hands[i]));
     this.rig.hat.rotation.x = -WIZARD.hatTilt + this.pitch.x;
     this.rig.hat.rotation.z = this.roll.x;

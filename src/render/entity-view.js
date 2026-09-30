@@ -271,7 +271,19 @@ export class PlayerView {
     this.wizard.position.set(pos[0], pos[1], pos[2]);
     this.wizard.rotation.y = lerpAngle(player.prevFacing, player.facing, alpha);
     this.time += dt;
-    this.motion.update({ dt, time: this.time, pos, facing: this.wizard.rotation.y, grounded: player.grounded, moving: player.moving && !player.dead, vy: player.vy });
+    this.motion.update({
+      dt,
+      time: this.time,
+      pos,
+      facing: this.wizard.rotation.y,
+      grounded: player.grounded,
+      moving: player.moving && !player.dead,
+      vy: player.vy,
+      pushing: player.pushTarget !== null && !player.dead,
+      cast: player.castTicks === null || player.dead ? null : player.castTicks + alpha,
+      aim: player.targetFacing,
+      falling: player.dead && player.deathCause === 'hole',
+    });
     // Blinking after a hit; derezzing when he dies out of a hole.
     const look = wizardLook(player, PLAYER.deathTicks);
     this.wizard.visible = look.visible;

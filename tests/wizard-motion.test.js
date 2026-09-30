@@ -1,6 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { MOTION, WizardMotion, eyesOpen, landSquash, springStep, wizardPose } from '../src/render/wizard-motion.js';
+import { MOTION, WizardMotion, castReach, eyesOpen, landSquash, springStep, wizardPose } from '../src/render/wizard-motion.js';
+import { BOLT } from '../src/entities/bolt.js';
+import { PLAYER_HITBOX } from '../src/core/rules.js';
 import { WIZARD, createWizard } from '../src/render/wizard.js';
 import { addXray } from '../src/render/xray.js';
 
@@ -141,4 +143,68 @@ test('wizard motion: the rig moves the x-ray ghosts with the parts', () => {
     return false;
   });
   assert.equal(handGhosts.length, 1, "a hand's ghost lives inside the hand, so it follows it");
+});
+
+/** Where a hand is (feet-relative, before the rig's lean) for a pose offset. */
+const handAt = (pose, i) => pose.hands[i].map((v, j) => v + [[-WIZARD.hands.x, WIZARD.hands.y, WIZARD.hands.z], [WIZARD.hands.x, WIZARD.hands.y, WIZARD.hands.z]][i][j]);
+
+test('wizard motion: pushing puts both hands on the crate and leans him in', () => {
+  const pose = wizardPose({ ...STILL, walk: 1, phase: 0.25, push: 1 });
+  const [left, right] = [handAt(pose, 0), handAt(pose, 1)];
+  assert.ok(close(left[2], right[2]) && close(left[1], right[1]), 'side by side, no swing');
+  assert.ok(close(left[0], -right[0]));
+  assert.ok(pose.lean > wizardPose({ ...STILL, walk: 1 }).lean);
+  // After the lean, the hands reach the crate's face (just past the hitbox) and not far into it.
+  const z = left[2] * Math.cos(pose.lean) + left[1] * Math.sin(pose.lean);
+  assert.ok(z > PLAYER_HITBOX[2] / 2 - 0.02 && z < PLAYER_HITBOX[2] / 2 + 0.05, `hands at z ${z.toFixed(3)}`);
+});
+
+test('wizard motion: a cast thrusts the hands out fast, holds, and brings them back', () => {
+  const { out, hold, back } = MOTION.cast;
+  assert.equal(castReach(null), 0);
+  assert.equal(castReach(back), 0);
+  assert.ok(castReach(out / 2) > 0.5, 'fast out');
+  assert.equal(castReach(out), 1);
+  assert.equal(castReach(hold), 1);
+  assert.ok(castReach((hold + back) / 2) > 0 && castReach((hold + back) / 2) < 1);
+});
+
+test('wizard motion: casting, the hands meet where the bolt starts, the way it goes', () => {
+  const ahead = wizardPose({ ...STILL, cast: MOTION.cast.out });
+  const [left, right] = [handAt(ahead, 0), handAt(ahead, 1)];
+  assert.ok(close((left[2] + right[2]) / 2, BOLT.reach), 'at the bolt start');
+  assert.ok(close(left[1], BOLT.height) && close(right[1], BOLT.height));
+  assert.ok(close(right[0] - left[0], 2 * MOTION.cast.apart));
+  // Aimed a quarter turn to his left (+x), before he has turned: the hands go that way.
+  const side = wizardPose({ ...STILL, cast: MOTION.cast.out, aim: Math.PI / 2 });
+  const middle = (handAt(side, 0)[0] + handAt(side, 1)[0]) / 2;
+  assert.ok(close(middle, BOLT.reach));
+  // Long after the cast, the hands are back.
+  assert.deepEqual(wizardPose({ ...STILL, cast: 100 }).hands, wizardPose(STILL).hands);
+});
+
+test('wizard motion: falling into a hole he flails, rocks and loses his hat a little', () => {
+  const pose = wizardPose({ ...STILL, flail: 1, time: 0.1 });
+  for (const [, y] of pose.hands) assert.ok(y > 0.15, 'hands high');
+  assert.ok(pose.hatLift > 0);
+  const rocks = Array.from({ length: 20 }, (_, i) => wizardPose({ ...STILL, flail: 1, time: i * 0.05 }).roll);
+  assert.ok(Math.min(...rocks) < -0.05 && Math.max(...rocks) > 0.05, 'rocking both ways');
+  const waves = Array.from({ length: 20 }, (_, i) => wizardPose({ ...STILL, flail: 1, time: i * 0.05 }).hands[0][1]);
+  assert.ok(Math.max(...waves) - Math.min(...waves) > 0.1, 'hands waving');
+});
+
+test('wizard motion: straining against a crate steps on the spot; the push pose blends in', () => {
+  const wizard = createWizard();
+  const motion = new WizardMotion(wizard);
+  for (let i = 0; i < 30; i++) motion.update({ dt: 1 / 60, time: i / 60, pos: [0, 0, 0], facing: 0, grounded: true, moving: true, vy: 0, pushing: true });
+  assert.ok(close(motion.phase, (30 / 60) * MOTION.push.steps, 1e-6));
+  assert.ok(motion.push > 0.9);
+  assert.ok(wizard.userData.rig.rig.rotation.x > MOTION.lean);
+});
+
+test('wizard motion: dropping into a hole lifts the hat off his head', () => {
+  const wizard = createWizard();
+  const motion = new WizardMotion(wizard);
+  for (let i = 0; i < 30; i++) motion.update({ dt: 1 / 60, time: i / 60, pos: [0, -i * 0.02, 0], facing: 0, grounded: false, moving: false, vy: -3, falling: true });
+  assert.ok(wizard.userData.rig.hat.position.y > WIZARD.brim.y + 0.1);
 });

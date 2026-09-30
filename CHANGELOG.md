@@ -15,8 +15,11 @@ bosses that drop loot, tooling) (D104, D105).
 - The wizard's body language (D114): his head bobs and his hands swing as
   he walks, he breathes, floats his hands and blinks while standing,
   raises his hands and stretches in the air, squashes on landing, and his
-  hat trails his motion on a spring and wobbles when he stops. Visual
-  only; showcase entries `wizard-walk` and `wizard-jump`.
+  hat trails his motion on a spring and wobbles when he stops. Action
+  poses: hands on the crate and leaning in while pushing, both hands
+  thrust the way a spell goes when casting, flailing (hat lifting off)
+  when falling into a hole. Visual only; showcase entries `wizard-walk`,
+  `wizard-jump`, `wizard-push`, `wizard-cast` and `wizard-hole`.
 - An access pass for testing (D113): a new temporary pickup kind that
   raises the access level at once (`access_pass_3`, level 3), placed in
   Boot Sector beside the core.

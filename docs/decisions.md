@@ -793,5 +793,7 @@ calls or effect passes, and the x-ray ghosts are children of the parts,
 so they follow for free. Deforming meshes (skinning, per-vertex changes)
 was ruled out as the one option with a real cost. Tying steps to
 distance keeps his feet from sliding and his stride from freezing
-mid-step. Poses for pushing, casting and falling into a hole are a
-possible follow-up.
+mid-step. Action poses follow the same way: pushing, casting (the hands
+follow the aim, where the bolt starts, not the turning body) and falling
+into a hole; each reads existing player state (`pushTarget`,
+`castTicks`, `deathCause`), so the game logic is unchanged.

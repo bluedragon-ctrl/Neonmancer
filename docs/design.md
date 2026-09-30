@@ -87,9 +87,19 @@ He moves like he's alive (D114, `src/render/wizard-motion.js`, tuning in
   frame (walking forward tips it back, sideways tips it the other way)
   and wobbles when he stops or turns; landing kicks it back.
 
-Walk, idle and air blend in and out over ~0.1 s. A move of more than 0.5
+- **Actions** take over the hands (a push, over it a cast, over all a
+  flail): **pushing** (walking into a crate lined up to push) puts both
+  hands flat on its face and leans him in, with slow straining steps on
+  the spot until it gives; **casting** any spell thrusts both hands out
+  to where the bolt starts, the way the spell goes (his aim, even before
+  his body has turned), holds them there a moment and brings them back
+  (18 ticks); **falling into a hole** he flails, hands high and waving,
+  rocking side to side, his hat lifting off his head.
+
+Walk, idle, air and push blend in and out over ~0.1 s, the flail faster. A move of more than 0.5
 units in one frame (respawn, Warp, Blink) counts as a cut, not motion.
-Showcase: `wizard` (idle), `wizard-walk`, `wizard-jump`.
+Showcase: `wizard` (idle), `wizard-walk`, `wizard-jump`, `wizard-push`,
+`wizard-cast`, `wizard-hole`.
 
 ### Damage
 
