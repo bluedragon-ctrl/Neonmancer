@@ -100,6 +100,10 @@ bosses that drop loot, tooling) (D104, D105).
   Quarantine.
 
 ### Changed
+- Biome map (D122): Glitchmire becomes the heavy virtual sector (pixel and
+  geometric monsters), Abyssal Buffer becomes Outer Buffer (dark space;
+  id `outer_buffer`), Phantom Partition the ghost sector; Firewall
+  Wardens are bosses for any biome.
 - Enemy colors (D121): virus violet `#b35cff` (was yellow), sentinel sky
   blue `#4fa8ff` (was orange), so they stand out in amber rooms; daemon,
   golem and pixie moved to keep every template its own color.

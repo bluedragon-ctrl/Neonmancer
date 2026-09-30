@@ -931,3 +931,26 @@ city. A peaceful bug gives the safe sector life and a harmless first
 enemy to learn on, with no engine change (any hostility and bounce
 combine, D80). The glass panels are looks only, so a new random set per
 entry costs nothing and keeps rooms from looking stamped.
+
+### D122 — 2026-09-30 — The sectors at a glance; Outer Buffer
+Before settling the remaining biomes one by one, a high-level map of all
+six: each has a theme, an enemy family and one mechanic of its own
+(docs/design.md, Biomes). Glitchmire becomes the heavy virtual sector
+(pixel and geometric monsters that split, morph and hop; later low-res,
+moved from Frostbyte). Abyssal Buffer becomes **Outer Buffer**, dark space
+beyond the Grid (id `outer_buffer`; things that orbit, fall and pull;
+later low gravity and darkness with a light round the wizard; the stars
+move here from Phantom Partition). Phantom Partition becomes the ghost
+sector (low glowing mist; ghosts that phase, mirror and haunt).
+Frostbyte Wastes (slowing, freezing; later slippery ice) and Firewall
+Citadel (armored guards) stay. The looks already made are spread over
+the sectors, and Firewall Wardens are bosses for any biome, Home Lattice
+too. The deep-sea and nature ideas, Bitrot and Z-Fighter are dropped for
+now.
+**Why:** settling biomes one at a time without a map risked sectors that
+overlap; a theme, an enemy family and a mechanic of its own per sector
+keep them apart. Space, heavy virtual and ghosts were the author's three
+wishes and fit the existing sectors' setup (low gravity, pixelation,
+the special sector). Bosses anywhere let every sector close with one. The per-biome passes
+wait for the end of Phase 4, once the spells and game concepts they
+build on are ready.

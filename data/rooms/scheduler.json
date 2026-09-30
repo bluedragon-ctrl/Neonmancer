@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "id": "scheduler",
   "name": "Scheduler",
-  "biome": "abyssal_buffer",
+  "biome": "outer_buffer",
   "size": [10, 4, 10],
   "spawn": [8.5, 0, 5.5],
   "exits": [{ "id": "east", "side": "+x", "at": 5 }],

@@ -217,8 +217,9 @@ and some exits and pickups wait for a spell or buff found later
 - **Worms** and **Crawlers** — a patroller and a chaser that bite on
   touch; **towers** (the cron look) fire bolts four ways (D83)
 - **Shooters** — stationary, fire slow bolts (the Pop-up idea, D84)
-- **Firewall Wardens** — bosses of combat rooms; each drops a permanent
-  pickup and stays away once it is found (D104)
+- **Firewall Wardens** — bosses of combat rooms in any biome, Home
+  Lattice too (D122); each drops a permanent pickup and stays away once
+  it is found (D104)
 - Home Lattice's own enemies are the default cyberspace four: bug,
   virus, sentinel and cron (the tower) (D108), plus the peaceful glowbug,
   in tiers (D121); each other biome gets its own roster, reviewed one
@@ -257,17 +258,23 @@ Behaviors below are ideas for Phase 5; for now biomes are look only.
   default room color), clean square grid, warm rising motes; later data
   flows on the grid and random glass wall panels; safe; holds the
   central core
-- **Glitchmire** — hot pink, torn offset floor tiles, pixel bubbles, edges
-  that jitter; later: slow health drain
-- **Frostbyte Wastes** — ice blue, hex crystal floor, falling 0/1 flakes,
-  soft frosty bloom; later: low-res, reduced visibility
-- **Abyssal Buffer** — graphite gray, wavy caustics on the floor, slowly
-  drifting glitter, gentle sway; later: low gravity
-- **Firewall Citadel** — ember orange, brick floor, rising sparks, warm
-  flicker; guardians
-- **Phantom Partition** (special: secrets, backtracking) — pale violet (D99),
-  sparse dotted floor, still twinkling stars, edges slowly shimmering
-  through the hues
+The high-level map (D122, docs/design.md, Biomes) sets each sector's
+theme, enemy family and one mechanic of its own; details are settled one
+biome at a time.
+- **Glitchmire** — heavy virtual: pixel and geometric monsters that
+  split, morph and hop; hot pink, torn offset floor tiles, pixel bubbles,
+  edges that jitter; later: low-res
+- **Frostbyte Wastes** — frozen storage: things that slow and freeze; ice
+  blue, hex crystal floor, falling 0/1 flakes, soft frosty bloom; later:
+  slippery ice
+- **Outer Buffer** — dark space beyond the Grid: things that orbit, fall
+  and pull; a near-black void with a starfield, dim cool edges; later:
+  low gravity, darkness with a light round the wizard
+- **Firewall Citadel** — the fortress: armored guards, burners, turrets;
+  ember orange, brick floor, rising sparks, warm flicker; later: heat vents
+- **Phantom Partition** (special: secrets, backtracking) — ghosts that
+  phase, mirror and haunt; pale violet (D99), sparse dotted floor under
+  low glowing mist, edges slowly shimmering through the hues
 
 ### Goal
 Collect the 64 key fragments and bring them to the central core (D101).
@@ -495,9 +502,10 @@ editor), Phase 3 (v0.3.0, spells and pickups); see CHANGELOG.md.
   loading (URL hash, localStorage), map screen.
 - 4b — The roster's new spells (D88, D89): Compile, Fork, Scan and Pull.
   Firewall Wardens (bosses, D104). Reachability checker. Design skills
-  and subagents. Biome enemy rosters: review the proposal (at least three
-  enemies of its own per biome, still six biomes; colors and setup may
-  change) and settle it before content production (D108).
+  and subagents. Last in Phase 4, after the spells and game concepts:
+  biome concepts and enemy rosters, one biome at a time within the
+  high-level map (D122; at least three enemies of its own per biome),
+  settled before content production (D108); Home Lattice done (D121).
 - Proposal, not yet confirmed: visual rewards for secrets found (a hat
   star, a star trail, a Phantom shimmer) and a special room behind a
   lock for all 16 (docs/design.md, Phase 4 outline).
@@ -506,5 +514,6 @@ editor), Phase 3 (v0.3.0, spells and pickups); see CHANGELOG.md.
 Full post-processing, juice pass, music and SFX, audio-reactive visuals,
 settings menu with quality presets, fullscreen, gamepad, key rebinding.
 Then content production toward 1.0.0, including biome environmental
-effects (Glitchmire drain, Frostbyte low-res, Abyssal low gravity) with
+effects (D122: Glitchmire low-res, Frostbyte ice, Outer Buffer low gravity
+and darkness) with
 health pickups and safe rooms.
