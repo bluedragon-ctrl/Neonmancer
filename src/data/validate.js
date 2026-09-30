@@ -17,7 +17,6 @@ import {
   CHARGED_ATTACKS,
   DECO_FACES,
   DECO_LOOKS,
-  ENEMY_OPTIONS,
   ENEMY_REQUIRED,
   OBJECT_STYLES,
   OPPOSITE_SIDE,
@@ -121,7 +120,11 @@ export function validateData(files) {
 
 /**
  * Enemy templates (D58, D79): `extends` names a known template, the chain
- * of them has no loop, and each template is complete once filled in.
+ * of them has no loop, and each template is complete once filled in. What
+ * could never happen is an error (an enemy is all its template, D119): a
+ * chaser needs an aggro range to see the wizard; a charged attack only
+ * fires at a wizard it has noticed, so its aggro range must reach its
+ * attack range, and a peaceful enemy never fires one.
  */
 function validateTemplates(enemies, report) {
   const resolved = resolveEnemyTemplates(enemies);
@@ -131,7 +134,21 @@ function validateTemplates(enemies, report) {
     if (unknown) report('defs.json', `${path}.extends`, `unknown enemy template "${unknown}"`);
     else if (loop) report('defs.json', `${path}.extends`, `a loop: ${[...chain, enemies[chain.at(-1)].extends].join(' → ')}`);
     const missing = ENEMY_REQUIRED.filter((key) => resolved[id][key] === undefined);
-    if (!unknown && !loop && missing.length > 0) report('defs.json', path, `missing ${missing.join(', ')}`);
+    if (unknown || loop) continue;
+    if (missing.length > 0) {
+      report('defs.json', path, `missing ${missing.join(', ')}`);
+      continue;
+    }
+    const values = withEnemyDefaults(resolved[id]);
+    if (values.movement === 'chase' && !(values.aggroRange > 0)) {
+      report('defs.json', path, 'a chaser needs an aggroRange above 0: it never sees the wizard to chase');
+    }
+    if (CHARGED_ATTACKS.includes(values.attack)) {
+      if (values.aggroRange < values.attackRange) {
+        report('defs.json', path, `its aggroRange ${values.aggroRange} is shorter than its attackRange ${values.attackRange}: it only fires at a wizard it has noticed`);
+      }
+      if (values.hostility === 'peaceful') report('defs.json', path, `a peaceful enemy never fires its ${values.attack}: make it hostile or provoked, or its attack none`);
+    }
   }
 }
 
@@ -448,14 +465,12 @@ function validatePathShape(room, report, path, at, points, mode, level = false) 
 }
 
 /**
- * Enemies (D48, D78, D80): unique ids (shared with objects), known types
- * and valid overrides, each in a free cell of its own, not starting over a
- * hole nor on a lethal block; patrols have a path, level (legs along x or
- * z) and through no static block; chasers may have one (walked while
- * calm); stationary enemies have none. What could never happen is an
- * error: a chaser needs an aggro range to see the wizard; a charged attack
- * only fires at a wizard it has noticed, so its aggro range must reach its
- * attack range, and a peaceful enemy never fires one.
+ * Enemies (D48, D78, D80): unique ids (shared with objects), known
+ * templates, each in a free cell of its own, not starting over a hole nor
+ * on a lethal block; patrols have a path, level (legs along x or z) and
+ * through no static block; chasers may have one (walked while calm);
+ * stationary enemies have none. A path has no speed of its own: an enemy
+ * walks at its template's (D119).
  */
 function validateEnemies(checks, enemyTemplates) {
   const { room, report, ids, filled, holes, blockTypes } = checks;
@@ -465,23 +480,10 @@ function validateEnemies(checks, enemyTemplates) {
     const path = `enemies[${i}]`;
     if (ids.has(enemy.id)) report(path, `duplicate id "${enemy.id}"`);
     ids.add(enemy.id);
-    const type = enemyTemplates[enemy.template] && withEnemyDefaults(enemyTemplates[enemy.template]);
+    const type = enemyTemplates[enemy.template];
     if (!type) report(path, `unknown enemy template "${enemy.template}"`);
-    else {
-      validateOverrides(report, `${path}.overrides`, enemy, type, ENEMY_OPTIONS, `template "${enemy.template}"`);
-      const values = { ...type, ...enemy.overrides };
-      if (values.movement === 'chase' && !(values.aggroRange > 0)) {
-        report(path, 'a chaser needs an aggroRange above 0: it never sees the wizard to chase');
-      }
-      if (CHARGED_ATTACKS.includes(values.attack)) {
-        if (values.aggroRange < values.attackRange) {
-          report(path, `its aggroRange ${values.aggroRange} is shorter than its attackRange ${values.attackRange}: it only fires at a wizard it has noticed`);
-        }
-        if (values.hostility === 'peaceful') report(path, `a peaceful enemy never fires its ${values.attack}: make it hostile or provoked, or its attack none`);
-      }
-    }
     // A patrol walks its path; a stationary enemy has none.
-    const movement = enemy.overrides?.movement ?? type?.movement;
+    const movement = type?.movement;
     if (movement === 'patrol' && !enemy.path) report(path, 'a patrolling enemy needs a "path"');
     if (movement === 'stationary' && enemy.path) report(`${path}.path`, 'a stationary enemy has no path');
 
@@ -498,6 +500,7 @@ function validateEnemies(checks, enemyTemplates) {
     if (blockTypes.get(cellKey([x, y - 1, z]))?.lethal) report(path, `it starts on a lethal block at ${cellText([x, y - 1, z])}: it would pop at once`);
 
     if (!enemy.path) return;
+    if (enemy.path.speed !== undefined) report(`${path}.path.speed`, `an enemy walks at its template's speed (D119): set it in "${enemy.template}"`);
     const { points, mode } = enemy.path;
     if (!validatePathShape(room, report, `${path}.path`, enemy.at, points, mode, true)) return;
     clearPathCells(filled, report, `${path}.path`, enemy.at, { points, mode });
@@ -525,38 +528,25 @@ function validatePickups({ room, report, ids, filled }, pickupTypes) {
   });
 }
 
-/** Number ranges of overridable values, as in the schemas: [min, max, whole numbers only]. */
+/** Number ranges of overridable object values, as in the schemas: [min, max, whole numbers only]. */
 const OVERRIDE_RANGES = {
   tint: [0, 1, false],
-  aggroRange: [0, 32, false],
-  speed: [0.01, 8, false],
-  chaseSpeed: [0.01, 8, false],
-  memory: [0, 10, false],
-  attackRange: [0.5, 16, false],
-  attackCharge: [0, 3, false],
-  attackCooldown: [0, 10, false],
-  boltSpeed: [0.5, 16, false],
-  boltBounces: [0, 8, true],
   integrity: [1, 15, true],
   damage: [1, 99, true],
 };
 
-/** Override values that are colors (#rrggbb). */
-const COLOR_KEYS = ['color', 'attackColor'];
-
 /**
- * Overrides can only change existing properties of the type, with valid
- * values (`enums`: the allowed values of listed properties).
- * @param {string} [typeName] how errors name the type ('type "crate"'; an enemy's template)
+ * A room object's overrides can only change existing properties of its
+ * type, with valid values (`enums`: the allowed values of listed properties).
  */
-function validateOverrides(report, path, object, type, enums = OBJECT_STYLES, typeName = `type "${object.type}"`) {
+function validateOverrides(report, path, object, type, enums) {
   for (const [key, value] of Object.entries(object.overrides ?? {})) {
     const range = OVERRIDE_RANGES[key];
-    if (!(key in type)) report(path, `"${key}" is not a property of ${typeName}`);
+    if (!(key in type)) report(path, `"${key}" is not a property of type "${object.type}"`);
     else if (typeof value !== typeof type[key]) report(path, `"${key}" must be a ${typeof type[key]}`);
     else if (enums[key] && !enums[key].includes(value)) {
       report(path, `"${key}" must be one of ${enums[key].join(', ')}`);
-    } else if (COLOR_KEYS.includes(key) && !/^#[0-9a-fA-F]{6}$/.test(value)) report(path, `"${key}" must be #rrggbb`);
+    } else if (key === 'color' && !/^#[0-9a-fA-F]{6}$/.test(value)) report(path, `"${key}" must be #rrggbb`);
     else if (range && !(value >= range[0] && value <= range[1] && (!range[2] || Number.isInteger(value)))) {
       report(path, `"${key}" must be ${range[2] ? 'a whole number ' : ''}between ${range[0]} and ${range[1]}`);
     }

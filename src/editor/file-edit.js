@@ -1,6 +1,6 @@
 /**
- * A data file several rooms share (world.json, defs.json, lore.json) while
- * the room editor changes it: the data, its text as last saved, and undo
+ * A data file several rooms share (world.json, lore.json) while the room
+ * editor changes it: the data, its text as last saved, and undo
  * of its entries among several rooms' steps. Plain logic, no browser.
  */
 import { formatJson } from './format-json.js';
@@ -39,8 +39,8 @@ export class FileEdit {
 /**
  * Make the entry changes that turned file text `from` into `to` again in
  * `now` (the map under `key`), keeping entries changed since that weren't
- * part of it: undo and redo of a shared file (defs.json's templates,
- * lore.json's texts) among several rooms' steps.
+ * part of it: undo and redo of a shared file (lore.json's texts) among
+ * several rooms' steps.
  * @param {string} from
  * @param {string} to
  * @param {string} key

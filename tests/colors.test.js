@@ -2,13 +2,15 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import DEFS from '../data/defs.json' with { type: 'json' };
 import BIOMES from '../data/biomes.json' with { type: 'json' };
+import { MIN_TEMPLATE_COLOR_GAP, colorGap, templateColorClashes } from '../src/data/colors.js';
 import { PALETTE } from '../src/render/neon.js';
 
 /**
  * The color rules (D99): room colors (biomes) stay clear of the colors that
  * carry meaning for objects and blocks, so a crate, a platform, a switch or
- * a hazard never blends into its room. Monsters and spell effects are not
- * checked yet.
+ * a hazard never blends into its room. Each enemy template has a color of
+ * its own (D119); monster colors against the rules and spell effects are
+ * not checked yet.
  */
 
 /** Smallest hue gap (degrees) between two saturated colors. */
@@ -73,4 +75,25 @@ test('color rules: everything that hurts is the one danger red (D99)', () => {
 
 test('color rules: collapsing blocks take the room color (D99)', () => {
   assert.equal(DEFS.blocks.collapsing.color, undefined);
+});
+
+test('color rules: every enemy template has a color of its own (D119)', () => {
+  const clashes = templateColorClashes(DEFS.enemies).map(({ a, b, gap }) => `${a} vs ${b}: gap ${gap.toFixed(3)}`);
+  assert.deepEqual(clashes, []);
+});
+
+test('templateColorClashes finds templates too alike, an inherited color included', () => {
+  const templates = {
+    bug: { look: 'bug', color: '#2bff88' },
+    shooter: { extends: 'bug' },
+    worm: { look: 'worm', color: '#4f7dff' },
+    pixie: { look: 'pixie', color: '#7a7dff' },
+    golem: { look: 'golem', color: '#ffb020' },
+  };
+  assert.deepEqual(
+    templateColorClashes(templates).map(({ a, b }) => `${a}-${b}`),
+    ['bug-shooter', 'worm-pixie'],
+  );
+  assert.equal(colorGap('#2bff88', '#2bff88'), 0);
+  assert.ok(colorGap('#2bff88', '#4f7dff') > MIN_TEMPLATE_COLOR_GAP);
 });

@@ -1,7 +1,7 @@
 /**
  * Movement behaviors by name, as enemy templates in defs.json refer to them
  * ("movement"). A behavior is made with the enemy's start cell, its path
- * (if any) and its values (the enemy template with overrides) and has:
+ * (if any) and its values (its enemy template, filled in) and has:
  * - `next(x, z, senses, route)`: the next step [dx, dz] from the enemy's
  *   column, or a list of steps to try, best first, or null to stay put this
  *   tick; `senses` is the enemy (sees, lastSeen, inRange; see

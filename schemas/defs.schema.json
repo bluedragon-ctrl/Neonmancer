@@ -347,7 +347,7 @@
         },
         "integrity": { "type": "integer", "minimum": 1, "maximum": 15, "description": "Hits it takes to destroy (spells, from step 6)." },
         "damage": { "type": "integer", "minimum": 1, "description": "Integrity the wizard loses per attack." },
-        "speed": { "type": "number", "exclusiveMinimum": 0, "maximum": 8, "description": "Walking speed in units per second (a path's own speed overrides it)." },
+        "speed": { "type": "number", "exclusiveMinimum": 0, "maximum": 8, "description": "Walking speed in units per second (along its path too, D119)." },
         "bounce": {
           "type": "boolean",
           "default": false,

@@ -160,7 +160,7 @@ test('an enemy that is not pausable shrugs Pause off, alarmed (D81, D85)', () =>
 });
 
 test('a Pause bolt provokes: a provoked enemy thaws hostile', () => {
-  const game = gameWith([{ id: 'b', template: 'sitter', at: [5, 0, 3], overrides: { hostility: 'provoked' } }]);
+  const game = gameWith([{ id: 'b', template: 'sitter', at: [5, 0, 3], variant: { hostility: 'provoked' } }]);
   const [bug] = game.enemies;
   assert.equal(bug.hostile, false);
   freeze(game);

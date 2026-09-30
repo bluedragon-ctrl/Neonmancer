@@ -36,8 +36,8 @@ function run(game, inp, ticks) {
 /** A bug patrolling from `at` to `to` (ping-pong, no pause). */
 const bug = (at, to, id = 'b') => ({ id, template: 'bug', at, path: { points: [to] } });
 
-/** A bug staying in its cell, with more `overrides` of its type. */
-const sitter = (at, id = 'b', overrides = {}) => ({ id, template: 'bug', at, overrides: { movement: 'stationary', ...overrides } });
+/** A bug staying in its cell, with more `variant` values of its template (helpers.js withVariants()). */
+const sitter = (at, id = 'b', variant = {}) => ({ id, template: 'bug', at, variant: { movement: 'stationary', ...variant } });
 
 /** Cells a patrol walks from [x, z] in `steps` calls (none while pausing). */
 function walk(patrol, [x, z], steps) {
@@ -283,8 +283,8 @@ test('a platform waits while a bug steps on or off it', () => {
 
 test('a platform waits rather than carry a solid bug into the wizard', () => {
   const lift = { id: 'p', type: 'lift', at: [1, 0, 1], path: { points: [[5, 0, 1]] } };
-  const plan = (overrides) => {
-    const game = gameWith({ enemies: [sitter([1, 1, 1], 'b', overrides)], objects: [lift] });
+  const plan = (variant) => {
+    const game = gameWith({ enemies: [sitter([1, 1, 1], 'b', variant)], objects: [lift] });
     // Mid-jump beside the bug (not riding), just clear of its box (x up to 1.8).
     game.player.place([2.12, 1.2, 1.5]);
     return game.objects[0].plan([1.05, 0, 1], [0.05, 0, 0], game);
@@ -337,7 +337,7 @@ test('a solid bug blocks the wizard; leaning on a hostile one hurts', () => {
 
 test('the wizard stands on a solid bug that does not bounce and rides along', () => {
   const game = gameWith({
-    enemies: [bug([1, 0, 1], [4, 0, 1], 'mount')].map((e) => ({ ...e, overrides: { solid: true, bounce: false, hostility: 'peaceful' } })),
+    enemies: [bug([1, 0, 1], [4, 0, 1], 'mount')].map((e) => ({ ...e, variant: { solid: true, bounce: false, hostility: 'peaceful' } })),
     pos: [1.5, 0.6, 1.5],
   });
   run(game, idle, 3 * CELL_TICKS);
@@ -348,13 +348,13 @@ test('the wizard stands on a solid bug that does not bounce and rides along', ()
 
 test('a solid bug shoves the wizard along, and turns back when he is pinned', () => {
   const peaceful = { solid: true, hostility: 'peaceful' };
-  const free = gameWith({ enemies: [{ ...bug([1, 0, 3], [5, 0, 3]), overrides: peaceful }], pos: [2.5, 0, 3.5] });
+  const free = gameWith({ enemies: [{ ...bug([1, 0, 3], [5, 0, 3]), variant: peaceful }], pos: [2.5, 0, 3.5] });
   run(free, idle, 30);
   assert.ok(free.player.pos[0] > 2.5, `shoved: ${free.player.pos}`);
 
   // Pinned against a block at x = 3.
   const pinned = gameWith({
-    enemies: [{ ...bug([1, 0, 3], [2, 0, 3]), overrides: peaceful }],
+    enemies: [{ ...bug([1, 0, 3], [2, 0, 3]), variant: peaceful }],
     blocks: [{ at: [3, 0, 2], to: [3, 0, 4] }],
     pos: [2.7, 0, 3.5],
   });

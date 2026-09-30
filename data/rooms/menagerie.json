@@ -8,77 +8,13 @@
   "spawn": [3, 0, 10.5],
   "exits": [{ "id": "south", "side": "+z", "at": 2 }],
   "enemies": [
-    {
-      "id": "warden",
-      "template": "bug",
-      "at": [9, 0, 2],
-      "overrides": {
-        "look": "warden",
-        "color": "#ff5a1f",
-        "movement": "stationary",
-        "attack": "burst",
-        "aggroRange": 2.5,
-        "integrity": 8,
-        "bounce": false,
-        "pausable": false
-      }
-    },
-    {
-      "id": "daemon",
-      "template": "sentinel",
-      "at": [2, 0, 2],
-      "overrides": { "look": "daemon", "color": "#a45cff", "hostility": "provoked" }
-    },
-    {
-      "id": "golem",
-      "template": "bug",
-      "at": [5, 0, 5],
-      "path": { "points": [[9, 0, 5]], "pause": 0.8 },
-      "overrides": {
-        "look": "golem",
-        "color": "#38a8ff",
-        "speed": 1,
-        "solid": true,
-        "bounce": false,
-        "hostility": "peaceful",
-        "integrity": 6
-      }
-    },
-    {
-      "id": "wyrm",
-      "template": "bug",
-      "at": [10, 0, 7],
-      "path": { "points": [[10, 0, 11]], "pause": 0.5 },
-      "overrides": {
-        "look": "wyrm",
-        "color": "#ffc83a",
-        "speed": 2,
-        "attack": "bolt",
-        "aggroRange": 5,
-        "attackRange": 5,
-        "hostility": "provoked",
-        "bounce": false
-      }
-    },
-    {
-      "id": "phish",
-      "template": "crawler",
-      "at": [6, 0, 1],
-      "overrides": { "look": "phish", "color": "#eef3ff", "aggroRange": 2 }
-    },
-    {
-      "id": "overclock",
-      "template": "virus",
-      "at": [2, 0, 7],
-      "overrides": { "look": "overclock", "color": "#ff6a2a", "hostility": "provoked" }
-    },
-    {
-      "id": "pixie",
-      "template": "bug",
-      "at": [7, 0, 9],
-      "path": { "points": [[5, 0, 9]], "pause": 0.6 },
-      "overrides": { "look": "pixie", "color": "#7a7dff", "speed": 1.5, "hostility": "peaceful", "bounce": false }
-    }
+    { "id": "warden", "template": "warden", "at": [9, 0, 2] },
+    { "id": "daemon", "template": "daemon", "at": [2, 0, 2] },
+    { "id": "golem", "template": "golem", "at": [5, 0, 5], "path": { "points": [[9, 0, 5]], "pause": 0.8 } },
+    { "id": "wyrm", "template": "wyrm", "at": [10, 0, 7], "path": { "points": [[10, 0, 11]], "pause": 0.5 } },
+    { "id": "phish", "template": "phish", "at": [6, 0, 1] },
+    { "id": "overclock", "template": "overclock", "at": [2, 0, 7] },
+    { "id": "pixie", "template": "pixie", "at": [7, 0, 9], "path": { "points": [[5, 0, 9]], "pause": 0.6 } }
   ],
   "pickups": [{ "id": "integrity", "type": "refill_integrity", "at": [0, 0, 11] }]
 }

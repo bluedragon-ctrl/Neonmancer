@@ -8,7 +8,6 @@ import { Boxes } from '../src/editor/boxes.js';
 import { formatJson } from '../src/editor/format-json.js';
 import { RoomEdit, newRoom, resizeText, roomIdProblem, sizeProblem } from '../src/editor/room-edit.js';
 import { WorldEdit, linkChoices } from '../src/editor/world-edit.js';
-import { DefsEdit } from '../src/editor/defs-edit.js';
 import { idProblem } from '../src/editor/ids.js';
 import { MAX_ACCESS_LEVEL, ROOM_HEIGHT } from '../src/core/rules.js';
 import { errorTarget, groupErrors } from '../src/editor/errors.js';
@@ -16,7 +15,7 @@ import { cutRoom } from '../src/render/room-scene.js';
 import { validateData } from '../src/data/validate.js';
 import { loadGameData } from '../src/data/load.js';
 import { resolveBlockTypes, resolveEnemyTemplates, templateChain } from '../src/data/room-data.js';
-import { ENEMY_FIELDS, ENEMY_NUMBERS, ENEMY_ROWS, blockTypeText } from '../src/editor/panel.js';
+import { blockTypeText, templateText } from '../src/editor/panel.js';
 import { buildRoom } from '../src/world/room.js';
 import { checkSchemas, readSchemas } from '../tools/check-data.js';
 import { refuseSaveRequest, saveEdits } from '../tools/room-save.js';
@@ -101,7 +100,7 @@ function sampleRoom() {
     blocks: [{ at: [0, 0, 0], to: [1, 0, 0] }, { type: 'hazard', at: [6, 0, 6] }],
     holes: [{ at: [4, 4] }],
     objects: [{ id: 'crate_1', type: 'crate', at: [3, 0, 3] }],
-    enemies: [{ id: 'sentry', template: 'bug', at: [5, 0, 1], overrides: { movement: 'stationary' } }],
+    enemies: [{ id: 'sentry', template: 'bug', at: [5, 0, 1], variant: { movement: 'stationary' } }],
   });
 }
 
@@ -316,8 +315,8 @@ test('saveEdits writes valid rooms and world.json together, and refuses invalid 
 
     // A template in defs.json and an enemy of it, saved together.
     const defs = JSON.parse(readFileSync(join(root, 'data/defs.json'), 'utf8'));
-    defs.enemies.tank = { extends: 'bug', integrity: 4 };
-    const guarded = { ...annex, enemies: [{ id: 'tank_1', template: 'tank', at: [3, 0, 3], overrides: { movement: 'stationary' } }] };
+    defs.enemies.tank = { extends: 'bug', movement: 'stationary', integrity: 4 };
+    const guarded = { ...annex, enemies: [{ id: 'tank_1', template: 'tank', at: [3, 0, 3] }] };
     assert.equal(saveEdits(root, { rooms: [guarded] }).ok, false, 'unknown type without the new defs');
     assert.deepEqual(saveEdits(root, { rooms: [guarded], defs }).files, ['data/rooms/annex.json', 'data/defs.json']);
     assert.equal(readFileSync(join(root, 'data/defs.json'), 'utf8'), formatJson(defs));
@@ -445,10 +444,8 @@ test('RoomEdit places enemies and edits them; paths get corners and lose points'
   const files = twoRooms();
   const edit = new RoomEdit(files['rooms/lab.json']);
   assert.equal(edit.placeEnemy([2, 0, 6], 'bug'), null, 'an enemy is there');
-  assert.equal(edit.placeEnemy([1, 0, 4], 'bug', { movement: 'stationary' }), 'bug_2');
-  assert.deepEqual(edit.item('bug_2'), { id: 'bug_2', template: 'bug', at: [1, 0, 4], overrides: { movement: 'stationary' } });
-  assert.equal(edit.updateItem('bug_2', { overrides: undefined }), true);
-  assert.equal(edit.updateItem('bug_2', { overrides: undefined }), false);
+  assert.equal(edit.placeEnemy([1, 0, 4], 'bug'), 'bug_2');
+  assert.deepEqual(edit.item('bug_2'), { id: 'bug_2', template: 'bug', at: [1, 0, 4] });
 
   // A click off both axes adds a corner: along x first, then z.
   assert.equal(edit.addWaypoint('bug_2', [4, 0, 1]), true);
@@ -528,7 +525,7 @@ test('enemy templates take the values of the ones they build on, down the chain;
   assert.deepEqual(resolved.big_tank, { ...BUG, integrity: 4, color: '#ffb020', damage: 2 });
   assert.deepEqual(templateChain(types, 'big_tank'), { chain: ['big_tank', 'tank', 'bug'], loop: false, unknown: null });
 
-  const room = roomFile('lab', { enemies: [{ id: 'tank_1', template: 'tank', at: [4, 0, 4], overrides: { movement: 'stationary' } }] });
+  const room = roomFile('lab', { enemies: [{ id: 'tank_1', template: 'tank', at: [4, 0, 4], path: { points: [[6, 0, 4]] } }] });
   const files = dataFiles({ rooms: [room], enemies: types });
   assert.deepEqual(validateData(files), []);
   assert.deepEqual(checkSchemas(files, readSchemas(fileURLToPath(new URL('..', import.meta.url)))), [], 'a template needs only what it changes');
@@ -552,12 +549,10 @@ test('RoomEdit removes items, and ids the editor made follow a new type', () => 
   assert.equal(edit.idFor(edit.item('bug_1'), 'bug', 'bug_tank'), 'bug_tank_1');
   assert.equal(edit.idFor(edit.item('lift'), 'platform', 'crate'), 'lift', 'written by hand: stays');
 
-  // A new type renames it; a stationary one loses its path; the same settings change nothing.
-  assert.equal(edit.setEnemy('bug_1', { template: 'virus', overrides: { movement: 'stationary' } }, false), 'virus_1');
-  assert.deepEqual(edit.item('virus_1'), { id: 'virus_1', template: 'virus', at: [2, 0, 6], overrides: { movement: 'stationary' } });
-  assert.equal(edit.setEnemy('virus_1', { template: 'virus', overrides: { movement: 'stationary' } }, false), null);
-  assert.equal(edit.setEnemy('virus_1', { template: 'virus', overrides: {} }, true), 'virus_1');
-  assert.equal('overrides' in edit.item('virus_1'), false);
+  // A new template renames it; a stationary one loses its path; the same template changes nothing.
+  assert.equal(edit.setEnemy('bug_1', 'virus', false), 'virus_1');
+  assert.deepEqual(edit.item('virus_1'), { id: 'virus_1', template: 'virus', at: [2, 0, 6] });
+  assert.equal(edit.setEnemy('virus_1', 'virus', false), null);
 
   assert.equal(edit.removeItem('virus_1'), true);
   assert.equal(edit.removeItem('virus_1'), false);
@@ -611,55 +606,6 @@ test('RoomEdit keeps its text until the next change', () => {
   edit.placeBlock([2, 2, 2], 'block');
   assert.notEqual(edit.text(), text, 'within a stroke too');
   edit.end();
-});
-
-test('DefsEdit adds, updates, renames and deletes enemy templates, any of them (D79)', () => {
-  const defs = new DefsEdit({ enemies: { bug: BUG, virus: BUG } });
-  assert.match(defs.addTemplate('Tank', 'bug', {}), /lowercase/);
-  assert.match(defs.addTemplate('virus', 'bug', {}), /taken/);
-  assert.equal(defs.addTemplate('tank', 'bug', { integrity: 4 }), null);
-  // A template of a template builds on it, with only its own values.
-  assert.equal(defs.addTemplate('big_tank', 'tank', { damage: 2 }), null);
-  assert.deepEqual(defs.enemies.big_tank, { extends: 'tank', damage: 2 });
-  assert.deepEqual(defs.builtOn('tank'), ['big_tank']);
-
-  assert.equal(defs.updateTemplate('tank', { color: '#ffb020' }), true);
-  assert.equal(defs.updateTemplate('bug', { speed: 4 }), true, 'one without extends too');
-  assert.equal(defs.enemies.bug.speed, 4);
-  assert.equal(defs.updateTemplate('tank', {}), false);
-  assert.equal(defs.updateTemplate('beetle', { speed: 4 }), false);
-
-  assert.match(defs.renameTemplate('beetle', 'bugs'), /not a template/);
-  assert.match(defs.renameTemplate('tank', 'virus'), /taken/);
-  assert.equal(defs.renameTemplate('tank', 'heavy'), null);
-  assert.deepEqual(Object.keys(defs.enemies), ['bug', 'virus', 'heavy', 'big_tank'], 'in its place');
-  assert.equal(defs.enemies.big_tank.extends, 'heavy', 'the templates built on it follow');
-  assert.match(defs.deleteTemplate('heavy'), /big_tank is built on heavy/);
-  assert.equal(defs.deleteTemplate('big_tank'), null);
-  assert.equal(defs.deleteTemplate('heavy'), null);
-  assert.equal(defs.deleteTemplate('virus'), null, 'one without extends too');
-  assert.deepEqual(Object.keys(defs.enemies), ['bug']);
-  assert.equal(defs.dirty, true);
-});
-
-test('undo takes back the template changes of its step only', () => {
-  const files = twoRooms();
-  const defs = new DefsEdit(files['defs.json']);
-  const lab = new RoomEdit(files['rooms/lab.json'], { defs });
-  const hall = new RoomEdit(files['rooms/hall.json'], { defs });
-  lab.edit(() => defs.addTemplate('tank', 'bug', { integrity: 4 }) === null && !!lab.setEnemy('bug_1', { template: 'tank', overrides: {} }, true));
-  lab.placeBlock([1, 0, 1], 'block');
-  hall.edit(() => defs.addTemplate('scout', 'bug', { speed: 5 }) === null);
-
-  // Undoing the block keeps both templates; undoing the template step takes tank back (not scout).
-  lab.undo();
-  assert.deepEqual(Object.keys(defs.enemies), ['bug', 'tank', 'scout']);
-  lab.undo();
-  assert.deepEqual(Object.keys(defs.enemies), ['bug', 'scout']);
-  assert.equal(lab.item('bug_1').template, 'bug');
-  lab.redo();
-  assert.deepEqual(Object.keys(defs.enemies), ['bug', 'tank', 'scout']);
-  assert.equal(lab.item('tank_1').template, 'tank');
 });
 
 test('linkChoices lists free exits of other rooms in the opposite side, equally wide', () => {
@@ -720,9 +666,10 @@ test('blockTypeText: what a block type does, for the Block tool\'s type list', (
 });
 
 
-test('the Enemy panel has one row for each enemy setting, in its order', () => {
-  const fields = ENEMY_ROWS.map(([field]) => field);
-  assert.deepEqual([...fields].sort(), [...Object.keys(ENEMY_FIELDS), ...Object.keys(ENEMY_NUMBERS), 'color'].sort());
+test('templateText: what an enemy template does, for the Enemy tool (D119)', () => {
+  assert.equal(templateText(BUG), 'bug · patrol · touch · hostile · 2 hits · speed 3 · bouncy');
+  const tower = { ...BUG, look: 'cron', movement: 'stationary', attack: 'bolt', boltPattern: 'cross', integrity: 1, bounce: false, solid: true, pausable: false };
+  assert.equal(templateText(tower), 'cron · stationary · bolt ×4 · hostile · 1 hit · speed 3 · solid · unpausable');
 });
 
 test('RoomEdit moves and removes the backup shrine, written after the holes; a resize drops it when outside (D97)', () => {

@@ -163,13 +163,39 @@ export function dataFiles({
   positions = Object.fromEntries(rooms.map((room, i) => [room.id, [i, 0]])),
   fragments,
 }) {
+  const variants = withVariants(rooms, enemies);
   return structuredClone({
-    'defs.json': { schemaVersion: 1, score: SCORE, objects, enemies, spells: SPELLS, pickups, blocks },
+    'defs.json': { schemaVersion: 1, score: SCORE, objects, enemies: variants.enemies, spells: SPELLS, pickups, blocks },
     'biomes.json': { schemaVersion: 1, biomes: { home: { name: 'Home', color: '#ffb020' } } },
     'world.json': { schemaVersion: 1, start, ...(fragments && { fragments }), connections, positions },
     'strings.json': STRINGS,
-    ...Object.fromEntries(rooms.map((room) => [`rooms/${room.id}.json`, room])),
+    ...Object.fromEntries(variants.rooms.map((room) => [`rooms/${room.id}.json`, room])),
   });
+}
+
+/**
+ * Test rooms may give an enemy `variant` values (test fixtures only: a room
+ * enemy is all its template, D119): each becomes a template of its own
+ * built on the enemy's (`bug_v1`, `bug_v2`...), so a test can tweak one
+ * enemy without naming a template for it.
+ * @param {object[]} rooms room files
+ * @param {Record<string, object>} enemies enemy templates
+ * @returns {{ rooms: object[], enemies: Record<string, object> }} copies with the variants made templates
+ */
+export function withVariants(rooms, enemies) {
+  const templates = { ...enemies };
+  let n = 0;
+  const out = rooms.map((room) => {
+    if (!room.enemies?.some((enemy) => enemy.variant)) return room;
+    const list = room.enemies.map(({ variant, ...enemy }) => {
+      if (!variant) return enemy;
+      const id = `${enemy.template}_v${++n}`;
+      templates[id] = { extends: enemy.template, ...variant };
+      return { ...enemy, template: id };
+    });
+    return { ...room, enemies: list };
+  });
+  return { rooms: out, enemies: templates };
 }
 
 /**
