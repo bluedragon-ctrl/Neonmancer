@@ -29,6 +29,7 @@
       "solid": false,
       "color": "#2bff88"
     },
+    "glowbug": { "extends": "bug", "hostility": "peaceful", "color": "#ffd27a" },
     "virus": {
       "look": "virus",
       "movement": "chase",
@@ -39,7 +40,7 @@
       "damage": 1,
       "speed": 2,
       "chaseSpeed": 3.5,
-      "color": "#ffe23a",
+      "color": "#b35cff",
       "attackRange": 1.2,
       "attackCharge": 0.4,
       "attackCooldown": 1.5
@@ -54,7 +55,7 @@
       "damage": 1,
       "speed": 1.5,
       "chaseSpeed": 2.5,
-      "color": "#ff8a1a",
+      "color": "#4fa8ff",
       "attackRange": 5,
       "attackCharge": 0.7,
       "attackCooldown": 2
@@ -121,7 +122,7 @@
       "damage": 1,
       "speed": 1.5,
       "chaseSpeed": 2.5,
-      "color": "#a45cff",
+      "color": "#c79bff",
       "attackRange": 5,
       "attackCharge": 0.7,
       "attackCooldown": 2
@@ -137,7 +138,7 @@
       "speed": 1,
       "bounce": false,
       "solid": true,
-      "color": "#38a8ff"
+      "color": "#a0a8c0"
     },
     "wyrm": {
       "look": "wyrm",
@@ -191,7 +192,7 @@
       "speed": 1.5,
       "bounce": false,
       "solid": false,
-      "color": "#ffbe73"
+      "color": "#ff9a5a"
     }
   },
   "spells": {

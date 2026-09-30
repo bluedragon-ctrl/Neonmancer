@@ -220,8 +220,9 @@ and some exits and pickups wait for a spell or buff found later
 - **Firewall Wardens** — bosses of combat rooms; each drops a permanent
   pickup and stays away once it is found (D104)
 - Home Lattice's own enemies are the default cyberspace four: bug,
-  virus, sentinel and cron (the tower) (D108); each other biome gets its
-  own roster, reviewed in Phase 4b
+  virus, sentinel and cron (the tower) (D108), plus the peaceful glowbug,
+  in tiers (D121); each other biome gets its own roster, reviewed one
+  biome at a time in Phase 4b (docs/design.md, Biomes)
 - More looks for content (D107), no template yet: warden, daemon (wisp),
   golem (server rack), wyrm (packet dragon), phish (a data disk mimic),
   overclock (burning chip), pixie (pixel butterfly)
@@ -252,8 +253,10 @@ cyan moves (platforms); magenta is the wizard (D98); lime is pushable
 (crates). Room colors stay clear of them (`tests/colors.test.js`).
 Monsters and spell effects are not bound by them yet.
 Behaviors below are ideas for Phase 5; for now biomes are look only.
-- **Home Lattice** (core) — amber (the default room color), clean square
-  grid, warm rising motes; safe; holds the central core
+- **Home Lattice** (core, settled D121) — a clean kernel city; amber (the
+  default room color), clean square grid, warm rising motes; later data
+  flows on the grid and random glass wall panels; safe; holds the
+  central core
 - **Glitchmire** — hot pink, torn offset floor tiles, pixel bubbles, edges
   that jitter; later: slow health drain
 - **Frostbyte Wastes** — ice blue, hex crystal floor, falling 0/1 flakes,

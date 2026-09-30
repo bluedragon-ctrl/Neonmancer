@@ -908,3 +908,26 @@ flagged).
 room editor, whose panel had grown an override form; a tool of its own
 has room for every field, their descriptions and a preview of the
 behavior, not just the look.
+
+### D121 — 2026-09-30 — Home Lattice settled: a kernel city, enemies in tiers
+The first biome settled in Phase 4b's per-biome review (D108): Home
+Lattice is the Grid's kernel, a clean, orderly, technical city, the
+reference every other sector twists. Its enemies come in tiers: a new
+peaceful `glowbug` (extends `bug`, pale gold `#ffd27a`, harmless and
+bouncy, a friendly springboard), the hostile bug patrolling a fixed path
+(bouncy too), and virus, sentinel and cron, all hostile. Virus turns
+violet (`#b35cff`, was yellow) and sentinel sky blue (`#4fa8ff`, was
+orange); daemon (`#c79bff`), golem (`#a0a8c0`) and pixie (`#ff9a5a`),
+not yet placed in a biome, move to keep every template its own color
+(D119) and get their real colors with their biomes. Planned for the
+Phase 5 visual pass: data flows running along the floor grid in and
+around the room, random 1×1 glass panels in the back walls (new on every
+entry) showing the flows outside, and possibly a core heartbeat. Each
+biome is settled the same way: look, enemies, signature trick, later
+effect (docs/design.md, Biomes).
+**Why:** yellow and orange sat 0.12 and 0.09 (OKLab) from the amber rooms
+and blended into them; cool colors make the hostile ones pop in the warm
+city. A peaceful bug gives the safe sector life and a harmless first
+enemy to learn on, with no engine change (any hostility and bounce
+combine, D80). The glass panels are looks only, so a new random set per
+entry costs nothing and keeps rooms from looking stamped.
