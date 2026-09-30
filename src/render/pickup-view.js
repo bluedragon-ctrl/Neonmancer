@@ -1,7 +1,8 @@
 /**
  * A room pickup's view (D71): its model (pickup-model.js) hovering and
  * spinning in its cell; a found permanent one as a ghost; once taken, a
- * refill's pick-up effect and its pixel burst, then nothing; any other
+ * temporary one's (a refill's or an access pass's) pick-up effect and its
+ * pixel burst, then nothing; any other
  * goes at once, as the install animation on the wizard takes it over
  * (install-view.js, D73).
  */
@@ -21,6 +22,8 @@ export class PickupView {
     this.pickup = pickup;
     const { data } = pickup;
     this.refill = data.kind === 'refill';
+    /** No save bit (a refill or an access pass): it plays its own pick-up effect. */
+    this.temporary = pickup.bit === null;
     this.model = createPickupModel(game.content, data, pickup.state === 'ghost');
     const [x, y, z] = data.at;
     this.model.position.set(x + 0.5, y, z + 0.5);
@@ -38,7 +41,7 @@ export class PickupView {
   sync(alpha, dt) {
     this.time += dt;
     const { state, takenTicks } = this.pickup;
-    if (!this.refill && takenTicks !== null) {
+    if (!this.temporary && takenTicks !== null) {
       this.group.visible = false;
       return;
     }

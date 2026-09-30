@@ -379,6 +379,8 @@ not critical.
 
 - **Debug mode** (toggle key): collision boxes, FPS, room jump,
   invincibility, test damage, finding fragments (K).
+- **Access pass** (D113): a test pickup (kind `access`) that raises the
+  access level at once; one (level 3) lies in Boot Sector. Test rooms only.
 - **Asset showcase** (`tools/showcase.html`, also deployed): every character
   and object look on a turntable with the real renderer. Add every new
   visual asset (monsters, pickups) to it.

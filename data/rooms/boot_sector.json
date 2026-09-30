@@ -34,6 +34,7 @@
   ],
   "pickups": [
     { "id": "disk_zap_1", "type": "disk_zap", "at": [0, 3, 0] },
-    { "id": "fragment_a", "type": "fragment_0", "at": [2, 0, 10] }
+    { "id": "fragment_a", "type": "fragment_0", "at": [2, 0, 10] },
+    { "id": "access_pass", "type": "access_pass_3", "at": [5, 0, 2] }
   ]
 }

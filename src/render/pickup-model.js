@@ -1,8 +1,9 @@
 /**
  * The model of a room pickup by its kind (D71): a data disk (disk.js), an
  * upgrade card (card.js), a buff chip (chip.js), a secret (secret.js), a
- * key fragment (fragment.js) or a refill (refill.js). The room view and
- * the install animation both build them here.
+ * key fragment (fragment.js), a refill (refill.js) or an access pass (a
+ * gold card, its lit bit the level it grants). The room view and the
+ * install animation both build them here.
  */
 import { createCard } from './card.js';
 import { createChip } from './chip.js';
@@ -10,15 +11,17 @@ import { createDisk } from './disk.js';
 import { createFragment } from './fragment.js';
 import { createSecret } from './secret.js';
 import { createRefill } from './refill.js';
+import { FRAGMENT_COLOR } from '../entities/pickup.js';
 
 /**
- * The model of a pickup: a refill, a buff chip, an upgrade card, a secret, a fragment or a data disk.
+ * The model of a pickup: a refill, an access pass, a buff chip, an upgrade card, a secret, a fragment or a data disk.
  * @param {object} content loaded game data
  * @param {object} data the pickup (buildRoom()) or its type
  * @param {boolean} [ghost] permanent and found already
  */
 export function createPickupModel(content, data, ghost = false) {
   if (data.kind === 'refill') return createRefill(data.stat);
+  if (data.kind === 'access') return createCard({ color: FRAGMENT_COLOR, slot: data.level });
   if (data.kind === 'buff') return createChip({ stat: data.stat, slot: data.slot, ghost });
   if (data.kind === 'upgrade') return createCard({ color: data.color, slot: data.slot, ghost });
   if (data.kind === 'secret') return createSecret({ ghost });

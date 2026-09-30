@@ -511,7 +511,8 @@ export class Game {
    * data disk installs its spell for good (with an install animation
    * on him, D73); a buff chip makes him stronger for good (D93), an
    * upgrade card improves a spell or his jump (D95); a refill restores integrity or
-   * energy, and is left lying while that is full. Reported as 'pickup'.
+   * energy, and is left lying while that is full; an access pass raises his
+   * access level (for testing). Reported as 'pickup'.
    */
   takePickups() {
     for (const pickup of this.pickups) pickup.update();
@@ -543,6 +544,16 @@ export class Game {
       const { banner, message } = this.gain(data);
       announce(banner.key, banner.values, banner.options);
       say(message.key, message.values);
+      return true;
+    }
+    // An access pass (for testing): his access level, as the core raises
+    // it (D101); left lying while he has that level already.
+    if (data.kind === 'access') {
+      if (this.progress.accessLevel >= data.level) return false;
+      this.progress.accessLevel = data.level;
+      say('msg.accessPass', { level: data.level });
+      announce('banner.access', { level: data.level }, { sub: 'banner.accessPassSub', color: FRAGMENT_COLOR });
+      this.emit('access', { level: data.level });
       return true;
     }
     // A refill: integrity or energy, up to his maximum.

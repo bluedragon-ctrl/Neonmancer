@@ -137,7 +137,7 @@
     },
     "pickups": {
       "type": "object",
-      "description": "Pickup types (D71), by id. Permanent ones (data disks, buffs, upgrades, secrets, fragments) set a save bit and stay found; temporary ones (refills) come back with the room.",
+      "description": "Pickup types (D71), by id. Permanent ones (data disks, buffs, upgrades, secrets, fragments) set a save bit and stay found; temporary ones (refills, access passes) come back with the room.",
       "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
       "additionalProperties": { "$ref": "#/$defs/pickupType" }
     },
@@ -165,7 +165,7 @@
       "type": "object",
       "required": ["kind"],
       "properties": {
-        "kind": { "enum": ["disk", "refill", "buff", "upgrade", "secret", "fragment"], "description": "disk: teaches a spell (permanent); refill: restores integrity or energy (temporary); buff: makes the wizard stronger for good (permanent); upgrade: improves a spell or his jump for good (permanent, D95); secret: a hidden gem worth extra score (permanent, D100); fragment: a key fragment, counted by the core for access levels and the end of the game (permanent, D101)." }
+        "kind": { "enum": ["disk", "refill", "access", "buff", "upgrade", "secret", "fragment"], "description": "disk: teaches a spell (permanent); refill: restores integrity or energy (temporary); access: a test pass that raises the access level at once, as the core would (temporary, for testing access locks); buff: makes the wizard stronger for good (permanent); upgrade: improves a spell or his jump for good (permanent, D95); secret: a hidden gem worth extra score (permanent, D100); fragment: a key fragment, counted by the core for access levels and the end of the game (permanent, D101)." }
       },
       "allOf": [
         {
@@ -188,6 +188,17 @@
               "kind": true,
               "stat": { "enum": ["integrity", "energy"], "description": "What it restores (its look and color follow)." },
               "amount": { "type": "integer", "minimum": 1, "maximum": 99, "description": "How much, up to the wizard's maximum. A refill is left lying while that stat is full." }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "access" } } },
+          "then": {
+            "required": ["level"],
+            "additionalProperties": false,
+            "properties": {
+              "kind": true,
+              "level": { "type": "integer", "minimum": 1, "maximum": 15, "description": "The access level it raises the wizard to (D101); it never lowers it, and is left lying while his level is that high already. His level is saved in the key as the core's is." }
             }
           }
         },

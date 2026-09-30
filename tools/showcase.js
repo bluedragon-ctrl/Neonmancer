@@ -69,6 +69,7 @@ import { createWarpTrail, dashPose, placeWarpTrail } from '../src/render/warp-vi
 import { createHoleView } from '../src/render/hole-view.js';
 import { createLock, createPlate, createTarget } from '../src/render/switch-view.js';
 import { SWITCH_KINDS } from '../src/entities/switch.js';
+import { FRAGMENT_COLOR } from '../src/entities/pickup.js';
 import { CLIP_FX, clipPixels, marqueeLook, pasteGrow } from '../src/render/clip-fx.js';
 import { createMarquee, placeMarquee } from '../src/render/clip-view.js';
 import { clipIcon } from '../src/ui/clip-icon.js';
@@ -237,6 +238,8 @@ const ALL_ASSETS = [
   { label: 'refill-energy', group: 'refills', spin: false, build: () => buildRefill('energy') },
   { label: 'refill-collect', group: 'refills', spin: false, build: buildRefillCollect },
   { label: 'pickups-in-room', group: 'refills', span: 5.5, spin: false, build: buildPickupsInRoom },
+  // The access pass (for testing): a gold card, its lit bit the level it grants.
+  { label: 'access-pass', group: 'refills', spin: false, build: () => buildCard({ color: FRAGMENT_COLOR, slot: defs.pickups.access_pass_3.level }) },
   // Buff chips (D93): permanent buffs, a chip in the
   // stat's color with pins, its icon on the front and the save bit on the
   // back; a found one as a gray ghost; all three in a row beside a disk.

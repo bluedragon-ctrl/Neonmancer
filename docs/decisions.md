@@ -765,3 +765,16 @@ game's isometric angle, so east is down-right as in the rooms.
 remembers what he has seen; shrines give a local chart as a reward for
 reaching them, and the stubs show the way on without giving away the
 rooms. Fragment marks save revisiting rooms to check what is left.
+
+### D113 — 2026-09-30 — An access pass for testing
+A new temporary pickup kind, `access` (`access_pass_3` in defs.json),
+raises the wizard's access level to its `level` when he touches it, as
+the core does (D101), and lies in Boot Sector beside the core. It has no
+save bit, comes back with the room, never lowers his level and is left
+lying while he has that level. It looks like a gold upgrade card with the
+level as its lit bit.
+**Why:** access-locked exits and rooms behind them are tedious to test
+when every level needs 16 fragments at the core; debug K still finds
+fragments, but the pass works without debug mode and in a normal
+playthrough of the test rooms. It is a test item: real game rooms should
+not use it.
