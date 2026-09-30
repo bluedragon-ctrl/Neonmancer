@@ -251,7 +251,8 @@ onto void, and pop if the ground goes from under them.
 ### Biomes (Grid sectors)
 Each room has a biome defining look and optional environmental effects,
 defined in data and combinable. Health pickups and safe rooms balance
-drain effects. Six biomes (D61): one core, four side sectors, one special.
+drain effects. Six biomes (D61): one core, four side sectors, one special (Outer
+Buffer, secrets, D130).
 Color rules (D99), for objects and blocks: red hurts or is about to
 (hazards, spiked platforms, hostile eyes: one red, `#ff2a3a`); the room
 color is structure (plain and collapsing blocks); black is a pit (holes,
@@ -273,12 +274,12 @@ biome at a time.
 - **Frostbyte Wastes** — frozen storage: things that slow and freeze; ice
   blue, hex crystal floor, falling 0/1 flakes, soft frosty bloom; later:
   slippery ice
-- **Outer Buffer** — dark space beyond the Grid: things that orbit, fall
-  and pull; a near-black void with a starfield, dim cool edges; later:
+- **Outer Buffer** (special: secrets and optional rooms, D130) — dark
+  space beyond the Grid: things that orbit, fall and pull; a near-black void with a starfield, dim cool edges; later:
   low gravity, darkness with a light round the wizard
 - **Firewall Citadel** — the fortress: armored guards, burners, turrets;
   ember orange, brick floor, rising sparks, warm flicker; later: heat vents
-- **Phantom Partition** (special: secrets, backtracking) — ghosts that
+- **Phantom Partition** (a late sector, D130) — ghosts that
   phase, mirror and haunt; pale violet (D99), sparse dotted floor under
   low glowing mist, edges slowly shimmering through the hues
 
@@ -505,24 +506,42 @@ not critical.
 Done: Phase 1 (v0.1.0, foundations), Phase 2 (v0.2.0, hazards, combat,
 editor), Phase 3 (v0.3.0, spells and pickups); see CHANGELOG.md.
 
-**Phase 4 (v0.4) — Saves, guardians, tooling**, in two parts (D105):
-- 4a — Access keys and tests, title screen and pause menu, saving and
-  loading (URL hash, localStorage), map screen.
-- 4b — The roster's new spells (D88, D89): Pull (done, D124), Compile
-  (done, D125), Scan (done, D128) and Fork (done, D129).
-  Firewall Wardens (bosses, D104). Reachability checker. Design skills
-  and subagents. Last in Phase 4, after the spells and game concepts:
-  biome concepts and enemy rosters, one biome at a time within the
-  high-level map (D122; at least three enemies of its own per biome),
-  settled before content production (D108); Home Lattice done (D121).
-- Proposal, not yet confirmed: visual rewards for secrets found (a hat
-  star, a star trail, a Phantom shimmer) and a special room behind a
-  lock for all 16 (docs/design.md, Phase 4 outline).
+**Phase 4 (v0.4) — Saves, guardians, tooling** (D105, re-cut D130)
+- 4a — done: access keys, title screen and pause menu, saving and
+  loading, map screen.
+- 4b — the four new spells are done (D124, D125, D128, D129). Left:
+  the reachability checker (in CI), the room design skill and the
+  level-review subagent, the paper design of Home Lattice (D130), and the
+  Firewall Wardens (D104): settle the design (size, phases, boss bar),
+  build the engine, then the two Lattice bosses. Phase 4 closes as
+  v0.4.0 after the bosses. Biome rosters and the secrets ladder move to
+  Phase 6.
 
-**Phase 5 (v0.5+) — Polish**
-Full post-processing, juice pass, music and SFX, audio-reactive visuals,
-settings menu with quality presets, fullscreen, gamepad, key rebinding.
-Then content production toward 1.0.0, including biome environmental
-effects (D122: Glitchmire low-res, Frostbyte ice, Outer Buffer low gravity
-and darkness) with
-health pickups and safe rooms.
+**Phase 5 (v0.5) — Home Lattice playtest** (D130): finish one good,
+sounding Home Lattice and ship it to testers.
+- Sound: audio engine (Howler music with crossfades, ZzFX effects,
+  `audio.json`, the Options sliders wired), an effects pass over existing
+  events, the author's music tracks (Lattice, boss, title).
+- Content: Home Lattice, about 25-30 rooms: 16 fragments that give Level 1
+  plus a few extra in secret or optional rooms, two bosses (one drops a
+  fragment, one an upgrade), the tutorial near the core. Two Level 1
+  exits lead to the next two biomes, Glitchmire and Frostbyte Wastes,
+  each only a few teaser rooms (look only); an Outer Buffer cluster of
+  secret rooms. Optional: the Lattice's data flows and glass panels.
+- Readiness: quality presets, auto fallback and render scale wired up,
+  a check on a weaker GPU; first-minute onboarding; a "copy debug info"
+  pause entry for feedback; a balance pass.
+- Rooms: real-content rooms are drafted unflagged; the author refines
+  them in the editor and flags them authored. Old test rooms move to a
+  dev-only wing, none are deleted.
+- Closes as v0.5.0, "Playtest 1".
+
+**Phase 6 (v0.6+) — The other sectors**, from playtest feedback, one
+biome at a time: enemy roster, look, rooms. Glitchmire and Frostbyte
+first, then Firewall Citadel and Phantom Partition; the secrets ladder
+(docs/design.md, Phase 4 outline) and the Outer Buffer's 16-secret room.
+
+**Phase 7 — Polish and 1.0.0**: juice and post-processing pass,
+audio-reactive visuals, fullscreen, gamepad, key rebinding, biome
+environmental effects (D122: Glitchmire low-res, Frostbyte ice, Outer
+Buffer low gravity and darkness) with health pickups and safe rooms.

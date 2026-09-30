@@ -1603,8 +1603,8 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
 
 ## Biomes
 
-Six Grid sectors (D61): one core, four side sectors and one special sector
-for secrets and rooms reached by backtracking. A biome sets the room color
+Six Grid sectors (D61): one core, four side sectors and one special sector,
+the Outer Buffer, for secrets and optional rooms (D130). A biome sets the room color
 (block edges, walls, floor grid), the name in the room banner and the
 room's surroundings (`look`, D62); floor patterns, particles and the
 signature effects in the table are planned, and gameplay effects wait for
@@ -1615,9 +1615,9 @@ Phase 5.
 | Home Lattice (core) | amber `#ffb020` | clean square grid | warm motes rising slowly | calm, steady glow |
 | Glitchmire (heavy virtual, D122) | hot pink `#ff5fa8` | torn tiles, slightly offset | pixel bubbles popping up | edges jitter for a frame now and then |
 | Frostbyte Wastes | ice blue `#9fd0ff` | hex crystal pattern | 0/1 flakes falling | soft, frosty bloom |
-| Outer Buffer (dark space, D122) | graphite `#7a8190` (to be picked again) | to be settled | a starfield | to be settled |
+| Outer Buffer (special: secrets, D130; dark space, D122) | graphite `#7a8190` (to be picked again) | to be settled | a starfield | to be settled |
 | Firewall Citadel | ember orange `#ff6a1f` | brick pattern | sparks rising | warm edge flicker |
-| Phantom Partition (special; ghosts, D122) | pale violet `#a98bff` (D99) | sparse dots under low glowing mist | to be settled | edges shimmer slowly through the hues |
+| Phantom Partition (late sector; ghosts, D122, D130) | pale violet `#a98bff` (D99) | sparse dots under low glowing mist | to be settled | edges shimmer slowly through the hues |
 
 Room colors keep clear of the colors objects and blocks carry (the color
 rules, D99): danger red (hazards, spiked platforms), white (plates,
@@ -1649,7 +1649,7 @@ theme, an enemy family and one mechanic no other sector has.
 | Frostbyte Wastes | frozen storage | cold, slow, precise | ice blue, hex crystals, 0/1 flakes | things that slow and freeze | slippery ice |
 | Outer Buffer | dark space beyond the Grid | lonely, dark, floating | near-black void, starfield, dim cool edges | space things that orbit, fall, pull | low gravity; darkness, a light round the wizard |
 | Firewall Citadel | the fortress | armored, hot | ember orange, bricks, sparks | armored guards, burners, turrets | heat vents |
-| Phantom Partition (special) | ghosts: deleted data that lingers | eerie, quiet, misty | pale violet, low glowing mist over the floor | ghosts that phase, mirror, haunt | mist hides the low floor; blocks phase in and out |
+| Phantom Partition (late sector, D130) | ghosts: deleted data that lingers | eerie, quiet, misty | pale violet, low glowing mist over the floor | ghosts that phase, mirror, haunt | mist hides the low floor; blocks phase in and out |
 
 Looks already made go: phish and pixie to Glitchmire; golem (a slow
 "Cold Boot" ice wall) and wyrm to Frostbyte; worm (a space serpent or
@@ -2008,6 +2008,29 @@ author, recorded as decisions before the code lands. Every step also
 - updates `docs/design.md`, `docs/architecture.md` and CHANGELOG, and
   records new decisions.
 
+## Roadmap to the Home Lattice playtest (D130)
+
+Phases 4 to 7 were re-cut (D130; CLAUDE.md section 11 has the list).
+Order of work:
+- **A, foundations:** reachability checker (in CI); room design skill and
+  level-review subagent; the paper design of Home Lattice (about 25-30
+  rooms: where the 16+ fragments, spells, upgrades, two bosses and the
+  Level 1 gates go, and what the wizard must be able to do at each point).
+- **B, bosses:** settle the Warden design, build the engine, boss 1
+  (drops a fragment), boss 2 (drops an upgrade). Phase 4 closes, v0.4.0.
+- **C, sound** (beside B and D): audio engine, effects pass, the
+  author's tracks.
+- **D, content:** Lattice rooms in batches, each checked by the
+  reachability checker and the review subagent; teaser rooms for
+  Glitchmire and Frostbyte behind Level 1 exits; an Outer Buffer cluster
+  of secret rooms; optionally data flows and glass panels.
+- **E, readiness:** quality presets and fallback, onboarding, debug info
+  copy, balance pass. Closes Phase 5 as v0.5.0, Playtest 1.
+
+Level 1 needs 16 fragments, all inside the Lattice; a few extra lie in
+secret and optional rooms. The end screen stays a placeholder until
+later phases.
+
 ## Phase 4 (v0.4) outline
 
 Saves, guardians and tooling, in two parts (D105), planned step by step.
@@ -2019,8 +2042,8 @@ title screen and pause menu (done, D109); saving and loading
 **Phase 4b — spells, bosses, tooling:** the roster's new spells, one
 step each (D88, D89): Pull (done, D124), Compile (done, D125), Scan
 (done, D128: fake blocks, hidden exits), Fork (done, D129: a decoy that holds plates and draws enemies);
-Firewall Wardens; reachability checker; design skills and subagents;
-biome enemy rosters (review the proposal below, D108).
+Firewall Wardens; reachability checker; design skills and subagents.
+Biome enemy rosters moved to Phase 6 (D130).
 
 Settled:
 - Saving is a player action, any time, from the pause menu (D105); it
@@ -2063,15 +2086,15 @@ Open so far:
   - 12: a Phantom shimmer, his outline now and then shifting through the
     Phantom Partition hues (mostly magenta still, D99);
   - 16: a special room behind a secret lock (like the access lock, a
-    magenta star instead of a gold numeral), probably Phantom Partition;
+    magenta star instead of a gold numeral), in the Outer Buffer (D130);
     the shimmer stays on.
   Each step would reuse the install banner and a terminal line. Open:
   the steps and looks (showcase first), what the special room holds and
   whether there is more than one, and whether a secret lock takes other
   counts so rooms can gate optional side rooms earlier.
 
-- Biome enemy rosters (D108): settled one biome at a time at the end of
-  Phase 4b, after the spells and game concepts,
+- Biome enemy rosters (D108, moved to Phase 6, D130): settled one biome
+  at a time after the playtest,
   within the high-level map of D122 (see Biomes, The sectors at a
   glance); Home Lattice is done (D121). Every new look goes to the
   showcase for the author's OK first.

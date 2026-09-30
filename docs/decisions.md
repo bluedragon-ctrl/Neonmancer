@@ -1073,3 +1073,27 @@ virus away). Ghost-like and harmless keeps the rules small: no health, no
 blocking, no cleanup but the timer. Casting it in front of him, like
 Compile, makes it aimable and needs no new input. The nearer-wins rule
 keeps enemies from ignoring him when he stands next to them.
+
+
+### D130 — 2026-09-30 — Roadmap: a Home Lattice playtest first
+Phases re-cut. Phase 4 keeps the reachability checker, design skills and
+subagents, and the Firewall Wardens (two Lattice bosses: one drops a
+fragment, one an upgrade), and closes as v0.4.0. Phase 5 (v0.5.0,
+Playtest 1) finishes Home Lattice with sound: about 25-30 rooms, 16
+fragments for Level 1 plus a few extra in secret or optional rooms, two
+bosses, the author's music, quality presets, onboarding and a debug-info
+copy. Two Level 1 exits open onto Glitchmire and Frostbyte Wastes as
+teaser rooms only. Biome rosters, the secrets ladder and the other
+sectors move to Phase 6; polish, gamepad, rebinding and biome effects to
+Phase 7. The Outer Buffer becomes the special sector for secrets and
+optional rooms (was Phantom Partition), and the 16-secret room goes
+there; Phantom Partition becomes a late regular sector. Real-content
+rooms are drafted unflagged by Claude, refined and flagged authored by
+the author; old test rooms move to a dev-only wing, none deleted
+(adjusts D45 and D90 for content production). Refines D61, D105, D108
+and D122.
+**Why:** the basic gameplay is done, and feedback on one polished sector
+is worth more than six half-built ones. The Outer Buffer's lonely dark
+suits hidden rooms; Phantom's ghosts suit a late fight sector. The
+checker and review tools come first because 30 rooms cannot be checked by
+hand.
