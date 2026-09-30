@@ -292,7 +292,7 @@ function boot() {
 
 /**
  * One-off effects of a tick's game events in the views: flares, sparks,
- * the energy bar's denial, a cut or paste, a compiled crate.
+ * the energy bar's denial, a cut or paste, a compiled crate, what a scan revealed.
  * @param {import('./game.js').GameEvent[]} events
  */
 function showEvents(events, { game, roomScene, hud, debug }) {
@@ -311,6 +311,10 @@ function showEvents(events, { game, roomScene, hud, debug }) {
     }
     if (event.type === 'compile') {
       roomScene.addCompiled(event);
+      debug.setRoom(game.room, game.objects, game.enemies);
+    }
+    if (event.type === 'reveal') {
+      roomScene.reveal(event);
       debug.setRoom(game.room, game.objects, game.enemies);
     }
   }

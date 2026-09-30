@@ -12,6 +12,7 @@ import { createObject } from './entities/kinds.js';
 import { BUFF_COLORS, FRAGMENT_COLOR, Pickup, SECRET_COLOR } from './entities/pickup.js';
 import { PLAYER, Player } from './entities/player.js';
 import { PUSHABLE } from './entities/pushable.js';
+import { hiddenThings, updateScan } from './entities/scan.js';
 import { SWITCH_KINDS } from './entities/switch.js';
 import { groundBelow, overlapsBox, surfaceBelow, touchedCell, touchesBox } from './physics/collision.js';
 import { castSpell } from './spells.js';
@@ -42,14 +43,14 @@ export const TRANSITION = {
  * Something that happened, for views, the HUD and (later) sound. Returned
  * by Game.update() for the tick it happened in.
  * @typedef {object} GameEvent
- * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'|'warp'|'fizzle'|'cut'|'paste'|'pull'|'compile'|'expire'|'airjump'|'reflect'|'shrine'|'crash'|'access'|'win'|'read'} type
+ * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'|'warp'|'fizzle'|'cut'|'paste'|'pull'|'compile'|'expire'|'scan'|'reveal'|'airjump'|'reflect'|'shrine'|'crash'|'access'|'win'|'read'} type
  * @property {string} [spell] the spell cast, failed, fizzled (nowhere to
  *   go, energy kept) or selected (cast, deny, fizzle, spell); the teleport (warp)
  * @property {number[]} [from] where a Blink or Warp started (warp)
  * @property {number[]} [to] where it ended (warp)
  * @property {number[]} [cell] the cell a crate or enemy was cut from or
  *   pasted into, pulled from or compiled into (cut, paste, pull, compile; the enemy's own cell, rounded down, for a
- *   frozen one stopped mid-step)
+ *   frozen one stopped mid-step); the fake block a scan revealed (reveal, D128)
  * @property {object} [object] the room object it happened to (push, plug,
  *   land of an object; shake, collapse and regrow of a collapsing block;
  *   hit by a spell, break of a destructible one; a switch going on or off;
@@ -71,7 +72,8 @@ export const TRANSITION = {
  * @property {boolean} [crash] he died with no backups left (die): he
  *   reboots on the nearest backup shrine (D97)
  * @property {object} [exit] the exit walked out through (exit); a locked
- *   exit opening (unlock) or closing again (lock)
+ *   exit opening (unlock) or closing again (lock); a hidden exit a scan
+ *   revealed (reveal, D128)
  * @property {number} [level] his new access level (access, D101)
  */
 
@@ -179,6 +181,10 @@ export class Game {
     this.onCore = false;
     /** The exit he came in through: it stays open for him while he is in the room (D75). */
     this.entryExit = entry;
+    /** What a scan has yet to reveal (D128): fake block cells and hidden exits. */
+    this.hidden = hiddenThings(this.room, entry);
+    /** How many things scans revealed since the room was built (the room view rebuilds after one). */
+    this.reveals = 0;
     /** Locked exits (D75), open while every switch is on; closed ones are solid (Grid.setOpening()). */
     this.locks = createLocks(this);
     /** The room's enemies (entities/enemy.js), dead ones included until the room resets. */
@@ -499,6 +505,7 @@ export class Game {
       if (input.pressed(action) && player.selectSpell(step)) this.emit('spell', { spell: player.spell });
     }
     if (!player.dead && input.pressed('cast')) castSpell(this);
+    updateScan(this);
 
     // (Not an object he has just cut away.)
     const intent = player.pushIntent;

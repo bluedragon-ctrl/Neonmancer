@@ -19,6 +19,13 @@ bosses that drop loot, tooling) (D104, D105).
   notes and PR summary now say so.
 
 ### Added
+- Scan spell (D128, slot 9, 15 energy): a violet square wave spreads from
+  his feet out to 6 units; fake blocks it reaches derez (block type
+  `fake`, looking like any plain block; a pickup may hide inside one),
+  hidden exits (`"hidden": true`, wall until then) open. Revealed until
+  the room resets. A Hidden checkbox for exits in the room editor. Disk in
+  the new test room Hidden Layer, east of Build Yard, with Secret Cache
+  behind its hidden exit; showcase `?asset=scan,disk-scan`.
 - Compile spell (D125, slot 7, 5 energy): a crate (the dashed one) in
   the free cell in front of him for 7 s; it falls, plugs a hole, can be
   pushed and pulled, blinks before it derezzes (a plugged hole opens

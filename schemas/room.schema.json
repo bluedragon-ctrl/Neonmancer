@@ -99,6 +99,11 @@
           "minimum": 1,
           "maximum": 15,
           "description": "Closed (solid) until the wizard's access level is at least this (D101); the core raises it. With \"locked\" too, both must be met. Always open for the wizard when he came in through it."
+        },
+        "hidden": {
+          "type": "boolean",
+          "default": false,
+          "description": "Solid wall, drawn as one, until a scan reaches it (D128); then it opens and shows (with \"locked\" or \"access\" it is a lock from then on). Revealed until the room resets; always open for the wizard when he came in through it."
         }
       }
     },

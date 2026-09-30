@@ -40,6 +40,8 @@ const SPELL_EFFECTS = {
   compile: (game, spell) => compile(game, spell),
   /** Pull the first crate or enemy in line one cell towards him (D124). */
   pull: (game, spell) => pull(game, spell),
+  /** A wave from his feet that reveals fake blocks and hidden exits it reaches (D128). */
+  scan: (game, spell) => scan(game, spell),
 };
 
 /**
@@ -210,4 +212,17 @@ function pull(game, { range }) {
   player.pull = { target: object ?? enemy, tick: 0 };
   game.emit('pull', { ...(object ? { object } : { enemy }), cell });
   return true;
+}
+
+/**
+ * Scan (D128): a square wave spreads from his feet out to the spell's
+ * `range`; while it spreads, what it reaches is revealed (entities/scan.js
+ * updateScan()). It never fizzles: finding nothing is an answer too.
+ * @param {import('./game.js').Game} game
+ * @param {object} spell its tuning from defs.json
+ */
+function scan(game, { range }) {
+  const { player } = game;
+  player.scan = { origin: [...player.pos], range, tick: 0, found: false };
+  game.emit('scan');
 }

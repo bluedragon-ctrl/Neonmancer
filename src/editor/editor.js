@@ -414,8 +414,8 @@ export class Editor {
     }
     if (field === 'link') {
       this.change(() => this.edit.linkExit(exit.id, value));
-    } else if (field === 'locked') {
-      this.change(() => this.edit.updateExit(exit.id, { locked: value }));
+    } else if (field === 'locked' || field === 'hidden') {
+      this.change(() => this.edit.updateExit(exit.id, { [field]: value }));
     } else if (field === 'access') {
       this.change(() => this.edit.updateExit(exit.id, { access: Math.min(MAX_ACCESS_LEVEL, Math.max(0, Math.round(value))) }));
     } else if (field === 'id') {

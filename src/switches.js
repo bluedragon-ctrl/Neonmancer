@@ -1,6 +1,7 @@
 /**
- * Switches and the locked exits they open (D69, D75), and exits locked
- * behind an access level (D101). Functions of the
+ * Switches and the locked exits they open (D69, D75), exits locked
+ * behind an access level (D101), and hidden exits a scan reveals (D128),
+ * solid wall until then. Functions of the
  * Game (game.js); they change its state and report through game.emit().
  */
 import { say } from './core/messages.js';
@@ -14,7 +15,7 @@ import { cellBox, overlapsBox } from './physics/collision.js';
  * @returns {{ exit: object, open: boolean }[]}
  */
 export function createLocks(game) {
-  const locks = game.room.exits.filter((exit) => exit.locked || exit.access).map((exit) => ({ exit, open: false }));
+  const locks = game.room.exits.filter((exit) => exit.locked || exit.access || exit.hidden).map((exit) => ({ exit, open: false }));
   for (const lock of locks) setLock(game, lock, lockWanted(game, lock));
   return locks;
 }
@@ -51,11 +52,13 @@ export function updateSwitches(game) {
 }
 
 /**
- * Should a locked exit be open: every switch on (a switch lock) and his
- * access level high enough (an access lock), or the wizard came in through it?
+ * Should a locked exit be open: revealed if hidden (D128), every switch on
+ * (a switch lock) and his access level high enough (an access lock), or
+ * the wizard came in through it?
  */
 function lockWanted(game, { exit }) {
   if (exit.id === game.entryExit) return true;
+  if (game.hidden.exits.includes(exit)) return false;
   const switched = !exit.locked || game.switches.every((object) => object.on);
   return switched && game.progress.accessLevel >= (exit.access ?? 0);
 }
@@ -66,6 +69,18 @@ function setLock(game, lock, open) {
   game.grid.setOpening(lock.exit, open);
 }
 
+/**
+ * A scan revealed the hidden exit `exit` (D128): it opens now, unless it
+ * is locked too and waits for its switches or his access level. Opening
+ * here, not in updateSwitches(), leaves out the 'unlock' of a lock.
+ * @param {import('./game.js').Game} game
+ * @param {object} exit
+ */
+export function revealExit(game, exit) {
+  const lock = game.locks.find((one) => one.exit === exit);
+  if (lock && lockWanted(game, lock)) setLock(game, lock, true);
+}
+
 /** Is the wizard in the opening of `exit` (its row of cells beyond the side)? */
 function inOpening(game, exit) {
   const box = game.player.box();
@@ -74,7 +89,8 @@ function inOpening(game, exit) {
 
 /**
  * Is the exit open? Every exit is, except a locked one while its switches
- * are not all on (D75) or his access level is too low (D101).
+ * are not all on (D75) or his access level is too low (D101), and a
+ * hidden one until a scan reveals it (D128).
  * @param {import('./game.js').Game} game
  * @param {object} exit exit of the current room
  */

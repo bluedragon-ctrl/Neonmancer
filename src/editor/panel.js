@@ -361,8 +361,22 @@ export class EditorPanel {
     this.exitAccess.title = 'Access level it asks for (D101): closed until the core raised his level this high; 0 for none';
     this.exitAccess.addEventListener('change', () => on.exit('access', numberValue(this.exitAccess) ?? 0));
     this.exitAccessRow = this.row('Access level', this.exitAccess);
+    // Hidden (D128): wall until a scan reveals it.
+    this.exitHidden = Object.assign(el('input'), { type: 'checkbox', title: 'Solid wall until a scan reaches it (D128)' });
+    this.exitHidden.addEventListener('change', () => on.exit('hidden', this.exitHidden.checked));
+    this.exitHiddenRow = this.row('Hidden', this.exitHidden);
     this.exitRows = this.group('exit');
-    this.exitRows.append(this.exitIdRow, this.exitAtRow, this.exitYRow, this.row('Width', this.exitWidth), this.row('Height', this.exitHeight), this.exitLinkRow, this.exitLockedRow, this.exitAccessRow);
+    this.exitRows.append(
+      this.exitIdRow,
+      this.exitAtRow,
+      this.exitYRow,
+      this.row('Width', this.exitWidth),
+      this.row('Height', this.exitHeight),
+      this.exitLinkRow,
+      this.exitLockedRow,
+      this.exitAccessRow,
+      this.exitHiddenRow,
+    );
     return this.exitRows;
   }
 
@@ -488,8 +502,9 @@ export class EditorPanel {
     this.setNumber(this.pathSpeed, path?.speed);
     this.setNumber(this.pathPause, path?.pause);
 
-    this.exitIdRow.hidden = this.exitLinkRow.hidden = this.exitAtRow.hidden = this.exitYRow.hidden = this.exitLockedRow.hidden = this.exitAccessRow.hidden = !exit.id;
+    this.exitIdRow.hidden = this.exitLinkRow.hidden = this.exitAtRow.hidden = this.exitYRow.hidden = this.exitLockedRow.hidden = this.exitAccessRow.hidden = this.exitHiddenRow.hidden = !exit.id;
     this.exitLocked.checked = !!exit.locked;
+    this.exitHidden.checked = !!exit.hidden;
     this.setNumber(this.exitAccess, exit.access ?? 0);
     this.setNumber(this.exitAt, exit.at);
     this.setNumber(this.exitY, exit.y);

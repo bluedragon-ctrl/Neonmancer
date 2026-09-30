@@ -41,9 +41,9 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 |---|---|
 | `main.js` | Bootstrap: load and validate data, build systems, route input (menus first), start the loop, error screen |
 | `game.js` | Owns game state; fixed-order `update()` returning typed events; room switching; `reset()` starts over in place (a new game) |
-| `spells.js` | What each spell does once cast (`SPELL_EFFECTS`): `castSpell(game)`, Blink and Warp, Cut & Paste, Pull, Compile |
+| `spells.js` | What each spell does once cast (`SPELL_EFFECTS`): `castSpell(game)`, Blink and Warp, Cut & Paste, Pull, Compile, Scan |
 | `combat.js` | Bolts, enemies' charged attacks, bouncing off, touching and burning enemies; every hit on an enemy (`hitEnemy(game, …)`, `pauseEnemy(game, …)`) |
-| `switches.js` | Plates and the locked exits they open (D75): `updateSwitches(game)`, `exitOpen()`, `switchesOn()` |
+| `switches.js` | Plates and the locked exits they open (D75), hidden exits a scan opens (D128, `revealExit()`): `updateSwitches(game)`, `exitOpen()`, `switchesOn()` |
 | `core/bindings.js` | Default key → action map (the only place raw key codes appear) |
 | `core/input.js` | Raw keys → action states once per tick |
 | `core/loop.js` | Fixed 60 Hz timestep, step clamp, interpolation alpha |
@@ -58,7 +58,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `data/validate.js` | Semantic checks and readable error messages (Ajv schema pass is dev/CI) |
 | `world/boot-key.js` | The boot key (D101): the 8×8 code whose modules are the 64 fragments (`BOOT_KEY`) |
 | `world/exits.js` | Which exit the wizard left through; where he arrives in the connected room |
-| `world/grid.js` | 3D occupancy grid: a block type code per cell (`typeAt()` gives its properties), room sides with exit openings (a locked exit's opening closes with `setOpening()`), hole tiles (`fillHole()`, `openHole()`) |
+| `world/grid.js` | 3D occupancy grid: a block type code per cell (`typeAt()` gives its properties), room sides with exit openings (a locked exit's opening closes with `setOpening()`), hole tiles (`fillHole()`, `openHole()`); a fake block a scan revealed leaves (`clearCell()`) |
 | `world/map.js` | The world map (D66): `nearestFreeCell()` for new rooms, `roomDistances()` from the start, `mapWarnings()` (unreachable rooms, test rooms too far out, D49; authored rooms exempt, D90) (pure, tested) |
 | `world/path.js` | Shared path format: legs from `at` through `points`, `advance()` / `positionOf()` on a small path state, swept cells |
 | `world/pickup-report.js` | The world map tool's pickup report: every permanent item by save bit, the rooms it lies in, refills per type, unknown types (pure, tested) |
@@ -72,6 +72,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `entities/bolt.js` | A bolt: the wizard's Zap or Pause (`Bolt.cast()`, level; a Pause bolt carries `freeze` ticks, D85) or an enemy's shot (`Bolt.shoot()`, D80; `boltDirections()`: aimed, or four ways, D81); flies in sub-steps one axis at a time, bounces off walls and objects if it has bounces left (D81), stops at the first body it may hit, block, object or room side (`BOLT` tuning) |
 | `entities/clip.js` | Where Cut & Paste works (D87): `aimAxis()`, `frontCell()` (the cell in front of him), `cutTarget()` (a resting crate or frozen enemy there or one up, nothing on it), `pasteCell()` (free of blocks, bodies and pickups) (pure, tested); `cutOrPaste()` (spells.js) moves things in and out of the room |
 | `entities/pull.js` | What Pull reaches (D124): `pullTarget()`, the first crate or enemy in line the way he aims within the spell's range (pure, tested); `Pushable.push()` and `Enemy.pull()` move it a cell towards him |
+| `entities/scan.js` | Scan (D128): the wave's reach (`scanReach()`, square to a cell or an exit, `cellReach()`, `exitReach()`), what a room hides (`hiddenThings()`: fake block cells, hidden exits) and revealing what the wave reaches each tick (`updateScan(game)`) |
 | `entities/collapsing.js` | Collapsing block: solid → shake (the wizard stood on it) → gone → optional regrow once its cell is clear (D47) |
 | `entities/core.js` | The central core (D101): a fixed 1×2×1 body that takes the fragments; touching it is `Game.touchCore()` (pure) |
 | `entities/enemy.js` | Enemy body: steps cell by cell where its movement behavior leads (never into a hole or onto void, never into a cell another enemy is walking into), turns back when blocked, falls (mid-step too), rides platforms, pops in holes and on void; hostility, provoke, bounce state (D48); seeing the wizard, the "!", the charged attack's charge and cooldown (D78); `alarm()` when anything hits it (D81) and `route()`, a shortest walk to a column (D80); `freeze()` by Pause (D85): still, harmless and solid until it thaws |
@@ -96,6 +97,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/chip.js` | Buff chip look (D93): chip in the stat's color, icon on the front, the buff's bit on the back, ghost |
 | `render/clip-fx.js`, `render/clip-view.js` | Cut & Paste (D87): the marquee and grow-in (pure, tested; the pixels are the stream) and its meshes with the aim marker and paste ghost (`ClipView`, shown by `PlayerView`); `RoomScene.clip()` keeps a cut thing's view until the marquee has snapped on and adds a pasted one's |
 | `render/pull-fx.js`, `render/pull-view.js` | Pull (D124): the beam's pixel rings and the marquee's snap (pure, tested) and their meshes with the aim marker (`PullView`, shown by `PlayerView`) |
+| `render/scan-fx.js`, `render/scan-view.js` | Scan (D128): the wave's square clipped to the floor, its fading, a hidden exit's slab (pure, tested); the wave and the derez of what it revealed (`ScanView`, in `RoomScene`, which rebuilds the room view after a reveal) |
 | `render/compile-fx.js`, `render/compile-view.js` | Compile (D125): the crate's grow-in and blinking (pure, tested); the bits' stream and the aim marker (`CompileView`, shown by `PlayerView`); `PushableView` draws the crate |
 | `render/collapse-fx.js` | Collapsing-block look: shake, regrow, `COLLAPSE_FX` tuning (pure, tested) |
 | `render/core-view.js` | The core's reactor look (D101): crystal, pedestal, one orbit ring per access level, `CORE_FX` |
