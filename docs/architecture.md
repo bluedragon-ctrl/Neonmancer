@@ -94,9 +94,9 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/camera.js` | Fixed isometric orthographic camera |
 | `render/card.js` | Upgrade card look (D95): a white expansion card, contact fingers in the upgrade's color with a key notch, a bracket, the upgrade's bit on both faces, ghost |
 | `render/chip.js` | Buff chip look (D93): chip in the stat's color, icon on the front, the buff's bit on the back, ghost |
-| `render/clip-fx.js`, `render/clip-view.js` | Cut & Paste (D87): the marquee, pixel stream and grow-in (pure, tested) and its meshes with the aim marker and paste ghost (`ClipView`, shown by `PlayerView`); `RoomScene.clip()` keeps a cut thing's view until the marquee has snapped on and adds a pasted one's |
+| `render/clip-fx.js`, `render/clip-view.js` | Cut & Paste (D87): the marquee and grow-in (pure, tested; the pixels are the stream) and its meshes with the aim marker and paste ghost (`ClipView`, shown by `PlayerView`); `RoomScene.clip()` keeps a cut thing's view until the marquee has snapped on and adds a pasted one's |
 | `render/pull-fx.js`, `render/pull-view.js` | Pull (D124): the beam's pixel rings and the marquee's snap (pure, tested) and their meshes with the aim marker (`PullView`, shown by `PlayerView`) |
-| `render/compile-fx.js`, `render/compile-view.js` | Compile (D125): the bits flying into the cell and the crate's grow-in and blinking (pure, tested); the bits' mesh and the aim marker (`CompileView`, shown by `PlayerView`); `PushableView` draws the crate |
+| `render/compile-fx.js`, `render/compile-view.js` | Compile (D125): the crate's grow-in and blinking (pure, tested); the bits' stream and the aim marker (`CompileView`, shown by `PlayerView`); `PushableView` draws the crate |
 | `render/collapse-fx.js` | Collapsing-block look: shake, regrow, `COLLAPSE_FX` tuning (pure, tested) |
 | `render/core-view.js` | The core's reactor look (D101): crystal, pedestal, one orbit ring per access level, `CORE_FX` |
 | `render/crawler.js` | Crawler model (D83): six-legged spider, tripod gait (`crawlerFoot()`, `placeLimb()`), crouch and pawing, `CRAWLER` tuning; `CRAWLER_MODEL` |
@@ -114,6 +114,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/fragment.js` | Key fragment look (D101): a gold tile with the boot key dim and its own module lit, ghost |
 | `render/glass.js` | Glass faces (D96): a see-through face shader (transparent, no depth written, clipping) and the data core's shrunk mark; a destructible glass crate is an empty shell (D99) |
 | `render/golem.js` | Golem model (D107): stacked rack units with blinking LEDs (`ledOn()`) and scrolling slats, block fists, stomping legs, `GOLEM` tuning; `GOLEM_MODEL` |
+| `render/stream-fx.js` | The stream (D127): pixels a spell carries between two ends, each a body box or a point (`streamPixels()`, `streamCount()`), `STREAM` tuning; Cut, Paste, Compile and Warp (pure, tested) |
 | `render/derez-fx.js` | The derez (D126): one pixel burst for anything that is gone, from a body box (`derezPixels()`, `derezCount()`, `BLOCK_BODY`), `DEREZ` tuning (pure, tested) |
 | `render/hash.js` | Fixed pseudo-random numbers for pixel bursts (pure) |
 | `render/hit-fx.js` | Damage look: blinking while invulnerable, derez flicker, his derez body, `HIT_FX` tuning (pure, tested) |
@@ -131,7 +132,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/pickup-model.js` | A pickup's model by kind (disk, upgrade card, chip, fragment, secret or refill), for the room view and the install animation |
 | `render/pickup-view.js` | A room pickup's view: its look, idle motion, ghost, pick-up effect |
 | `render/pixie.js` | Pixie model (D107): butterfly with pixel wings (`wingPixels()`), shimmer, flapping (`pixieFlap()`), dust, `PIXIE` tuning; `PIXIE_MODEL` |
-| `render/pixels.js` | Pixel bursts (`createPixelBurst()`, `placePixels()`) every effect places, and the derez mesh (`createDerez(body, colors)`, `placeDerez()`, D126) |
+| `render/pixels.js` | Pixel bursts (`createPixelBurst()`, `placePixels()`) every effect places, the derez mesh (`createDerez(body, colors)`, `placeDerez()`, D126) and the stream's (`createStream()`, `placeStream()`, D127) |
 | `render/post.js` | pmndrs postprocessing composer (bloom) |
 | `render/quality.js` | Automatic quality fallback: steps MSAA, then render scale, down when frames run slow (D76; pure, tested) |
 | `render/rails.js` | Guide line along a platform's path, `RAILS` tuning (pure, tested) |
@@ -148,7 +149,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/virus.js` | Virus model (D78): sharp tipped cube, orbiting bits, glide, charge pose, pop pixels, `VIRUS` tuning; `VIRUS_MODEL` |
 | `render/walls.js` | Back walls with doorways and dark tunnels behind them, front edges with gaps, arrow shape for front exits (pure, tested) |
 | `render/warden.js` | Warden model (D107): kite shield with brick seams, T-slit helm, gauntlets, greatsword poses (`swordAngle()`), `WARDEN` tuning; `WARDEN_MODEL` |
-| `render/warp-fx.js`, `render/warp-view.js` | Blink's dash (drawn position and stretch, streaks, kicked-up pixels) and Warp's pixel stream and arrival flash (D86): the look (pure, tested) and its meshes, shown by `PlayerView` |
+| `render/warp-fx.js`, `render/warp-view.js` | Blink's dash (drawn position and stretch, streaks, kicked-up pixels) and Warp's arrival flash (D86; its pixels are the stream): the look (pure, tested) and its meshes, shown by `PlayerView` |
 | `render/wizard.js` | Wizard model: parts as data (pure, tested), built in the hologram look, with a rig (head, hands, hat) for animation |
 | `render/wizard-motion.js` | Wizard body language (D114): walk bob and hand swing, idle float and blink, air pose, landing squash, hat spring, push/cast/hole-fall poses; pure pose and spring (tested), `WizardMotion` poses the rig each frame |
 | `render/worm.js` | Worm model (D83): head with antennae dragging a tail of balls, inching hump and wiggle (`wormSpine()`), rearing up, `WORM` tuning; `WORM_MODEL` |

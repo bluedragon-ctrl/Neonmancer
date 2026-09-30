@@ -116,6 +116,13 @@ bosses that drop loot, tooling) (D104, D105).
   Quarantine.
 
 ### Changed
+- One stream for pixels a spell carries (D127): Cut, Paste, Compile and
+  Warp send their pixels from one end to the other the same way (each
+  from its own spot, staggered, on a slight arc; full size in a body,
+  small at his hands), with the derez's pixel size. Compile's bits now
+  fill the cell, Cut and Paste use the same pixel size as the rest, and
+  Warp's pixels keep his shape from start to end. Pull's beam stays as
+  it is. Showcase `stream`.
 - One derez for everything that is gone (D126): the wizard dying, enemies
   popping, collapsing blocks, destructible and compiled crates breaking
   and pickups taken all break into pixels the same way (start through the

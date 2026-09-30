@@ -1,13 +1,16 @@
 /**
  * three.js pieces of the Blink dash and the Warp afterimage (D86; timing
  * in warp-fx.js), in the spell's color: Blink's light streaks and the
- * pixels kicked up where it started; Warp's stream of pixels from where
- * he was to where he is.
+ * pixels kicked up where it started; Warp's stream of pixels from his
+ * body where he was to where he is (stream-fx.js, D127).
  */
 import { Group } from 'three';
-import { createPixelBurst, placePixels } from './pixels.js';
+import { PLAYER } from '../entities/player.js';
+import { HIT_FX } from './hit-fx.js';
+import { createPixelBurst, createStream, placePixels, placeStream } from './pixels.js';
+import { streamCount } from './stream-fx.js';
 import { fadingLines, lineMaterial, neonLines } from './neon.js';
-import { WARP_FX, dashLook, kickPixels, streakLook, warpPixels } from './warp-fx.js';
+import { WARP_FX, dashLook, kickPixels, streakLook } from './warp-fx.js';
 
 /**
  * The trail of a Blink (`dash`: streaks and a kick) or a Warp (`pixels`)
@@ -36,7 +39,8 @@ export function createWarpTrail(color, spell) {
     Object.assign(view.userData, { streak, kick });
     view.add(streak, kick);
   } else {
-    const burst = createPixelBurst(WARP_FX.pixels, WARP_FX.pixelSize, [color, 0xffffff]);
+    const body = { at: [0, 0, 0], body: HIT_FX.body };
+    const burst = createStream(streamCount(body, body), [color, 0xffffff]);
     view.userData.burst = burst;
     view.add(burst);
   }
@@ -85,6 +89,6 @@ export function placeWarpTrail(view, warp, tick) {
     const dir = length > 0 ? [d[0] / length, d[1] / length] : [0, 1];
     placePixels(kick, kickPixels(tick, dir), from);
   } else {
-    placePixels(burst, warpPixels(tick, from, to), [0, 0, 0]);
+    placeStream(burst, tick, PLAYER.warpTicks, { at: from, body: HIT_FX.body }, { at: to, body: HIT_FX.body });
   }
 }

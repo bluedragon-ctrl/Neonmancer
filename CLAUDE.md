@@ -321,7 +321,9 @@ they stay for the run.
 - "Juice": squash-and-stretch on jumps and landings, small screen shake
   and hit-flash on hits, particle bursts on pickups, anything gone
   (the wizard, enemies, blocks, crates, pickups) derezzes into pixels
-  in one shared look (D126), moving platforms glide on glowing rails.
+  in one shared look (D126), pixels a spell carries (Cut & Paste,
+  Compile, Warp) stream in one shared look too (D127), moving platforms
+  glide on glowing rails.
 - Effects react to gameplay: afterimage on Warp, glitch and chromatic
   aberration on damage. Pixelation, scanlines and noise are subtle by
   default; stronger effects are short bursts.

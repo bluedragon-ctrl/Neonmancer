@@ -8,9 +8,11 @@
 import { Color, Group } from 'three';
 import { ENEMY, Enemy } from '../entities/enemy.js';
 import { cutTarget, pasteCell } from '../entities/clip.js';
-import { CLIP_FX, clipPixels, marqueeLook } from './clip-fx.js';
+import { CLIP_FX, marqueeLook } from './clip-fx.js';
+import { BLOCK_BODY } from './derez-fx.js';
 import { blockEdges } from './edges.js';
-import { createPixelBurst, placePixels } from './pixels.js';
+import { createStream, placeStream } from './pixels.js';
+import { streamCount } from './stream-fx.js';
 import { lineMaterial, neonLines } from './neon.js';
 import { ZAP_FX } from './zap-fx.js';
 
@@ -65,7 +67,8 @@ export class ClipView {
     this.aim = createMarquee(color, CLIP_FX.aimBrightness);
     /** Ghosts of what he holds, by color, made on first use. */
     this.ghosts = new Map();
-    this.pixels = createPixelBurst(CLIP_FX.pixels, CLIP_FX.pixelSize, [color]);
+    // As many pixels as a crate's stream (an enemy's has fewer).
+    this.pixels = createStream(streamCount({ at: [0, 0, 0], body: BLOCK_BODY }, { at: [0, 0, 0] }), [color]);
     /** The target the pixels are colored for. */
     this.colored = null;
     this.group = new Group().add(this.marquee, this.aim, this.pixels);
@@ -108,11 +111,14 @@ export class ClipView {
       if (look.visible) placeMarquee(this.marquee, center, frame * look.scale, this.time);
       this.colorPixels(clip.target);
       const [dx, dz] = player.aim();
-      const hands = [pos[0] + dx * ZAP_FX.reach, pos[1] + ZAP_FX.height, pos[2] + dz * ZAP_FX.reach];
-      placePixels(this.pixels, clipPixels(clip.mode, tick, center, size, hands), [0, 0, 0]);
+      const hands = { at: [pos[0] + dx * ZAP_FX.reach, pos[1] + ZAP_FX.height, pos[2] + dz * ZAP_FX.reach] };
+      // The stream (D127) between his hands and the object's body: out of it once the marquee has snapped on, or into it.
+      const body = { at: [center[0], center[1] - size / 2, center[2]], body: enemy ? { size: [size, size, size] } : BLOCK_BODY };
+      if (clip.mode === 'cut') placeStream(this.pixels, tick - CLIP_FX.snapTicks, CLIP_FX.streamTicks, body, hands);
+      else placeStream(this.pixels, tick, CLIP_FX.streamTicks, hands, body);
       return;
     }
-    placePixels(this.pixels, [], [0, 0, 0]);
+    placeStream(this.pixels, null);
     this.placeAim(game);
   }
 
@@ -149,7 +155,7 @@ export class ClipView {
     this.colored = target;
     const own = new Color(target.object?.color ?? target.data.color).multiplyScalar(1.6);
     const spell = this.color.clone().multiplyScalar(1.6);
-    for (let i = 0; i < CLIP_FX.pixels; i++) this.pixels.setColorAt(i, i % 2 ? spell : own);
+    for (let i = 0; i < this.pixels.instanceMatrix.count; i++) this.pixels.setColorAt(i, i % 2 ? spell : own);
     this.pixels.instanceColor.needsUpdate = true;
   }
 }

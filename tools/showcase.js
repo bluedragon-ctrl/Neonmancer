@@ -26,7 +26,7 @@ import {
   createRails,
   showHitFlash,
 } from '../src/render/entity-view.js';
-import { createDerez, createPixelBurst, placeDerez, placePixels } from '../src/render/pixels.js';
+import { createDerez, createPixelBurst, createStream, placeDerez, placePixels, placeStream } from '../src/render/pixels.js';
 import { BLOCK_BODY, DEREZ } from '../src/render/derez-fx.js';
 import { advance, buildTrack, positionOf, startState } from '../src/world/path.js';
 import { HIT_FX, hitFlash, wizardLook } from '../src/render/hit-fx.js';
@@ -70,10 +70,11 @@ import { createHoleView } from '../src/render/hole-view.js';
 import { createLock, createPlate, createTarget } from '../src/render/switch-view.js';
 import { SWITCH_KINDS } from '../src/entities/switch.js';
 import { FRAGMENT_COLOR } from '../src/entities/pickup.js';
-import { CLIP_FX, clipPixels, marqueeLook, pasteGrow } from '../src/render/clip-fx.js';
+import { CLIP_FX, marqueeLook, pasteGrow } from '../src/render/clip-fx.js';
 import { createMarquee, placeMarquee } from '../src/render/clip-view.js';
 import { PULL_FX, PULL_PIXELS, pullMarquee, pullPixels } from '../src/render/pull-fx.js';
-import { COMPILE_FX, COMPILE_PIXELS, compileLook, compilePixels } from '../src/render/compile-fx.js';
+import { COMPILE_FX, compileLook } from '../src/render/compile-fx.js';
+import { streamCount } from '../src/render/stream-fx.js';
 import { clipIcon } from '../src/ui/clip-icon.js';
 import { createJumpRings, placeJumpRings } from '../src/render/jump-view.js';
 import { createShrine } from '../src/render/shrine-view.js';
@@ -131,6 +132,11 @@ const ALL_ASSETS = [
   // its own colors, from its own body: the wizard, a crate, a bug, a
   // sentinel and a data disk side by side, together, in a loop.
   { label: 'derez', span: 5, spin: false, build: buildDerez },
+  // The stream (D127): pixels carried from one place to another the same
+  // way in every spell: out of a crate into a point (Cut), from a point
+  // into a crate (Paste, Compile), and from the wizard's body to his body
+  // further on (Warp), in a loop.
+  { label: 'stream', span: 5, spin: false, build: buildStream },
   // Every object type from defs.json, in its own style (glass crates, D96:
   // a data core, or empty thinner glass in a destructible one, D99);
   // switches have their own looks (below), and so have the core (D101) and
@@ -1903,6 +1909,30 @@ function buildWizardHole() {
   return asset;
 }
 
+function buildStream() {
+  const lime = defs.objects.crate.color;
+  const gold = defs.spells.compile.color;
+  const warp = defs.spells.warp.color;
+  const crate = (x) => ({ at: [x, 0, 0], body: BLOCK_BODY });
+  const point = (x) => ({ at: [x, 0.7, 0] });
+  const wizard = (x) => ({ at: [x, 0, 0], body: HIT_FX.body });
+  // [from, to, colors]
+  const streams = [
+    [crate(-2.2), point(-1.2), [lime, defs.spells.cut_paste.color]],
+    [point(-0.6), crate(0.4), [gold, 0xffffff]],
+    [wizard(1), wizard(2.6), [warp, 0xffffff]],
+  ].map(([from, to, colors]) => ({ from, to, pixels: createStream(streamCount(from, to), colors) }));
+  const asset = new Group().add(...streams.map(({ pixels }) => pixels));
+  const ticks = 24;
+  const loop = ticks + 30;
+  let tick = 0;
+  asset.userData.update = (dt) => {
+    tick = (tick + dt * 60) % loop;
+    for (const { from, to, pixels } of streams) placeStream(pixels, tick, ticks, from, to);
+  };
+  return asset;
+}
+
 function buildDerez() {
   const crate = defs.objects.crate;
   const bug = defs.enemies.bug.color;
@@ -2271,9 +2301,10 @@ function buildCutPaste(kind) {
   const marquee = createMarquee(color, CLIP_FX.brightness);
   const aim = createMarquee(color, CLIP_FX.aimBrightness);
   const ghost = createMarquee(thingColor, CLIP_FX.ghostBrightness);
-  const pixels = createPixelBurst(CLIP_FX.pixels, CLIP_FX.pixelSize, [thingColor, color]);
+  const body = { at: [0, 0, 0], body: { size: [size, size, size] } };
+  const hands = { at: [at[0] + ZAP_FX.reach, ZAP_FX.height, 0] };
+  const pixels = createStream(streamCount(body, hands), [thingColor, color]);
   const asset = new Group().add(wizard, flare, thing, marquee, aim, ghost, pixels);
-  const hands = [at[0] + ZAP_FX.reach, ZAP_FX.height, 0];
   // Cut at tick 50, paste at 170; loop 280.
   const cutAt = 50;
   const pasteAt = 170;
@@ -2295,7 +2326,9 @@ function buildCutPaste(kind) {
     const look = effect ? marqueeLook(mode, since) : { visible: false };
     marquee.visible = false;
     if (look.visible) placeMarquee(marquee, center, frame * look.scale, time);
-    placePixels(pixels, effect ? clipPixels(mode, since, center, size, hands) : [], [0, 0, 0]);
+    if (!effect) placeStream(pixels, null);
+    else if (mode === 'cut') placeStream(pixels, since - CLIP_FX.snapTicks, CLIP_FX.streamTicks, body, hands);
+    else placeStream(pixels, since, CLIP_FX.streamTicks, hands, body);
     aim.visible = false;
     ghost.visible = false;
     if (!effect && !held) placeMarquee(aim, center, crate ? CLIP_FX.aimMarquee : CLIP_FX.enemyMarquee, time);
@@ -2373,10 +2406,11 @@ function buildCompile() {
   const flare = createCastFlare();
   const crate = createObjectView({ ...type, at: [0, 0, 0] });
   const aim = createMarquee(color, COMPILE_FX.aimBrightness);
-  const bits = createPixelBurst(COMPILE_PIXELS, COMPILE_FX.pixelSize, [color, 0xffffff]);
+  const hands = { at: [at[0] + ZAP_FX.reach, ZAP_FX.height, 0] };
+  const into = { at: [cell[0] + 0.5, cell[1], cell[2] + 0.5], body: BLOCK_BODY };
+  const bits = createStream(streamCount(hands, into), [color, 0xffffff]);
   const pieces = createDerez(BLOCK_BODY, [type.color, 0xffffff]);
   const asset = new Group().add(wizard, flare, crate, aim, bits, pieces);
-  const hands = [at[0] + ZAP_FX.reach, ZAP_FX.height, 0];
   // Cast at tick 40; the crate lasts 240 ticks here; loop 360.
   const castAt = 40;
   const lifetime = 240;
@@ -2388,7 +2422,7 @@ function buildCompile() {
     placeCastFlare(flare, at, Math.PI / 2, age);
     aim.visible = false;
     if (age < 0) placeMarquee(aim, cell.map((v) => v + 0.5), COMPILE_FX.aimMarquee, time);
-    placePixels(bits, age >= 0 ? compilePixels(age, hands, cell) : [], [0, 0, 0]);
+    placeStream(bits, age >= 0 ? age : null, PLAYER.compileTicks, hands, into);
     const alive = age >= 0 && age < lifetime;
     const look = alive ? compileLook(age, lifetime - age) : { visible: false, scale: 1 };
     crate.visible = look.visible;

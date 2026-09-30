@@ -5,7 +5,7 @@ import { Game } from '../src/game.js';
 import { PLAYER } from '../src/entities/player.js';
 import { PLAYER_HITBOX } from '../src/core/rules.js';
 import { aimAxis, frontCell } from '../src/entities/clip.js';
-import { CLIP_FX, clipPixels, marqueeLook, pasteGrow } from '../src/render/clip-fx.js';
+import { CLIP_FX, marqueeLook, pasteGrow } from '../src/render/clip-fx.js';
 import { clipIcon } from '../src/ui/clip-icon.js';
 import { Progress, saveBit } from '../src/world/progress.js';
 import { BUG, CRATE, SPELLS, eventTypes, gameData, idle, roomFile } from './helpers.js';
@@ -192,16 +192,11 @@ test('dying loses what he holds', () => {
   assert.equal(game.player.clipboard, null);
 });
 
-test('the effect: the marquee snaps on, the pixels stream, a pasted thing grows in', () => {
-  const { snapTicks, streamTicks } = CLIP_FX;
+test('the effect: the marquee snaps on, a pasted thing grows in (the pixels: stream.test.js)', () => {
+  const { snapTicks } = CLIP_FX;
   assert.ok(marqueeLook('cut', 0).visible);
   assert.ok(marqueeLook('cut', 0).scale > marqueeLook('cut', snapTicks).scale, 'it snaps in');
   assert.equal(marqueeLook('cut', PLAYER.clipTicks).visible, false);
-  const from = [2.5, 0.5, 3.5];
-  const hands = [1.8, 0.48, 3.5];
-  assert.equal(clipPixels('cut', 0, from, 1, hands).length, 0, 'the crate still shows while the marquee snaps on');
-  assert.equal(clipPixels('cut', snapTicks + 1, from, 1, hands).length, CLIP_FX.pixels);
-  assert.equal(clipPixels('cut', snapTicks + streamTicks, from, 1, hands).length, 0);
   assert.equal(pasteGrow(0), 0);
   assert.equal(pasteGrow(PLAYER.clipTicks), 1);
 });

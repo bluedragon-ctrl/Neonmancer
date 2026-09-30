@@ -6,8 +6,8 @@
  * at once, but he is drawn shooting forward over dashTicks, stretched,
  * with light streaks at his feet, hands and head trailing behind (the
  * tail running after him) and a kick of pixels where he pushed off.
- * Warp is a teleport: he bursts into pixels where he was, and they
- * stream to where he is.
+ * Warp is a teleport: his pixels stream from where he was to where he is
+ * (the stream every spell shares, stream-fx.js, D127).
  */
 
 import { PLAYER } from '../entities/player.js';
@@ -24,8 +24,7 @@ export const WARP_FX = {
   kickPixels: 16,
   /** Heights of the streak's lines above his feet: feet, hands, head. */
   streakHeights: [0.12, 0.48, 0.95],
-  /** Pixels in the stream, and the edge of one. */
-  pixels: 40,
+  /** The edge of a kicked pixel. */
   pixelSize: 0.08,
 };
 
@@ -89,36 +88,4 @@ export function streakLook(tick) {
   const t = tick / PLAYER.warpTicks;
   if (tick < 0 || t >= 1) return { visible: false, tail: 1 };
   return { visible: true, tail: 1 - (1 - t) ** 2 };
-}
-
-/**
- * The pixels `tick` ticks after he teleported from `from` to `to` (feet
- * centers): each leaves a spot in his body where he was, a little later
- * than the one before, flies along the way on a slight arc and shrinks
- * into him at the end.
- * @param {number} tick may be fractional
- * @param {number[]} from
- * @param {number[]} to
- * @returns {{ offset: number[], scale: number }[]} world positions (offsets
- *   from the origin); empty once they are over
- */
-export function warpPixels(tick, from, to) {
-  const ticks = PLAYER.warpTicks;
-  if (tick < 0 || tick >= ticks) return [];
-  const pixels = [];
-  for (let i = 0; i < WARP_FX.pixels; i++) {
-    const delay = hash(i, 0) * ticks * 0.4;
-    const t = Math.max(0, Math.min(1, (tick - delay) / (ticks - delay)));
-    const eased = t * t * (3 - 2 * t);
-    const angle = hash(i, 1) * Math.PI * 2;
-    const radius = 0.08 + hash(i, 2) * 0.22;
-    const height = 0.1 + hash(i, 3) * 1.3;
-    const arc = Math.sin(Math.PI * eased) * 0.25 * hash(i, 4);
-    const body = [Math.cos(angle) * radius, height + arc, Math.sin(angle) * radius];
-    pixels.push({
-      offset: [0, 1, 2].map((k) => from[k] + (to[k] - from[k]) * eased + body[k] * (1 - 0.6 * eased)),
-      scale: t >= 1 ? 0 : 1 - 0.5 * eased,
-    });
-  }
-  return pixels;
 }
