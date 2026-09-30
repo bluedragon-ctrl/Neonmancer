@@ -9,13 +9,14 @@ import { RoomEdit } from '../src/editor/room-edit.js';
 import { Game } from '../src/game.js';
 import { PILLAR_FX, packetFade, packetT } from '../src/render/data-pillar.js';
 import { codeWords, terminalRows } from '../src/render/screen.js';
+import { MEMORY_FX, sweepGlow, sweepY } from '../src/render/memory-stack.js';
 import { buildRoom } from '../src/world/room.js';
 import { CRATE, dataFiles, hold, roomFile } from './helpers.js';
 
 const schemas = readSchemas(fileURLToPath(new URL('..', import.meta.url)));
 
 /** Decoration types, as in defs.json (D117). */
-const DECOS = { crate: CRATE, data_pillar: { kind: 'deco', look: 'data_pillar' }, screen: { kind: 'deco', look: 'screen' } };
+const DECOS = { crate: CRATE, data_pillar: { kind: 'deco', look: 'data_pillar' }, screen: { kind: 'deco', look: 'screen' }, memory_stack: { kind: 'deco', look: 'memory_stack' } };
 
 /** One 8×4×8 room with these objects and the decoration types. */
 function files(objects, room = {}) {
@@ -24,9 +25,11 @@ function files(objects, room = {}) {
 
 const errors = (data) => checkFiles(data, schemas);
 
-test('defs.json has both decorations, sized by their look: the pillar 3 high, the screen 1 (D117)', () => {
+test('defs.json has the decorations, sized by their look: the pillar 3 high, the screen and the memory stack 1 (D117, D123)', () => {
   assert.deepEqual(DEFS.objects.data_pillar, DECOS.data_pillar);
   assert.deepEqual(DEFS.objects.screen, DECOS.screen);
+  assert.deepEqual(DEFS.objects.memory_stack, DECOS.memory_stack);
+  assert.deepEqual(DECO_LOOKS.memory_stack.size, [1, 1, 1]);
   assert.deepEqual(DECO_LOOKS.data_pillar.size, [1, 3, 1]);
   assert.deepEqual(DECO_LOOKS.screen.size, [1, 1, 1]);
   assert.equal(PILLAR_FX.height, DECO_LOOKS.data_pillar.size[1], 'the look is drawn as high as it collides');
@@ -122,4 +125,26 @@ test('the screen shows lines of code across its width, the bottom one typing out
   assert.ok(b >= a);
   // Once typed, the bottom line (line rows - 1 at first) scrolls up a row, whole.
   assert.deepEqual(terminalRows(0.5, rows).rows[rows - 2], codeWords(rows - 1));
+});
+
+test('memory stacks make a wall side by side and on top of each other: no height option (D123)', () => {
+  const wall = [0, 1, 2].flatMap((x) => [0, 1].map((y) => ({ id: `mem_${x}_${y}`, type: 'memory_stack', at: [2 + x, y, 3] })));
+  assert.deepEqual(errors(files(wall)), []);
+  const game = new Game(loadGameData(files(wall)), { start: 'alpha' });
+  const top = game.objects.find((object) => object.id === 'mem_1_1');
+  assert.deepEqual(top.box(), [[3, 4], [1, 2], [3, 4]]);
+  assert.deepEqual(top.pos, [3, 1, 3], 'it never falls');
+});
+
+test("a memory wall's light climbs from a stack into the one above and runs along the wall", () => {
+  const lag = MEMORY_FX.lag * MEMORY_FX.period / MEMORY_FX.rise;
+  for (const time of [0.3, 1.7, 2.9, 40]) {
+    const low = sweepY(time, [4, 0, 2]);
+    const high = sweepY(time, [4, 1, 2]);
+    assert.ok(Math.abs(high - (low - 1)) < 1e-9, `the same light, a block lower in the upper stack at ${time}`);
+    // The next stack along shows what this one showed a moment ago.
+    assert.ok(Math.abs(sweepY(time + lag, [5, 0, 2]) - low) < 1e-9);
+  }
+  assert.equal(sweepGlow(0.5, 0.5), 1);
+  assert.equal(sweepGlow(0.9, 0.5), 0);
 });

@@ -86,6 +86,7 @@ import { OVERCLOCK_MODEL } from '../src/render/overclock.js';
 import { PIXIE_MODEL } from '../src/render/pixie.js';
 import { createDataPillar } from '../src/render/data-pillar.js';
 import { createScreen } from '../src/render/screen.js';
+import { createMemoryStack } from '../src/render/memory-stack.js';
 import biomes from '../data/biomes.json';
 
 /** Block types with variants filled in (D60). */
@@ -324,6 +325,13 @@ const ALL_ASSETS = [
   // A screen with a text not read yet (D118): its top light blinks, the code runs faster.
   { label: 'screen-text', group: 'screens', spin: false, build: () => buildDeco(createScreen, { face: '+z' }, (screen) => screen.userData.setWaiting(true)) },
   { label: 'screen-biomes', group: 'screens', span: 7, spin: false, build: () => buildDecoRow(createScreen, {}) },
+  // Memory stack (decoration, D123): glass plates with chips, facing +z or
+  // +x; stacks make a memory wall (3 wide, 2 high: the light runs across it
+  // in step); in every biome's color.
+  { label: 'memory', group: 'memory', spin: false, build: () => buildDeco(createMemoryStack, { face: '+z' }) },
+  { label: 'memory-x', group: 'memory', spin: false, build: () => buildDeco(createMemoryStack, { face: '+x' }) },
+  { label: 'memory-wall', group: 'memory', span: 4, spin: false, build: buildMemoryWall },
+  { label: 'memory-biomes', group: 'memory', span: 7, spin: false, build: () => buildDecoRow(createMemoryStack, {}) },
 ];
 
 /** A decoration (`create` from its module) in the default room color. */
@@ -347,6 +355,21 @@ function buildDecoRow(create, options) {
   });
   const asset = new Group().add(...decos);
   asset.userData.update = (dt) => decos.forEach((deco) => deco.userData.update(dt));
+  return asset;
+}
+
+/** Memory stacks as a wall facing +z, 3 wide and 2 high, each told its cell. */
+function buildMemoryWall() {
+  const stacks = [];
+  for (let x = 0; x < 3; x++) {
+    for (let y = 0; y < 2; y++) {
+      const stack = createMemoryStack({ color: PALETTE.amber, face: '+z', cell: [x, y, 0] });
+      stack.position.set(x - 1.5, y, -0.5);
+      stacks.push(stack);
+    }
+  }
+  const asset = new Group().add(...stacks);
+  asset.userData.update = (dt) => stacks.forEach((stack) => stack.userData.update(dt));
   return asset;
 }
 

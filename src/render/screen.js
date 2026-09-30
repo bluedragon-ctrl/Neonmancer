@@ -8,11 +8,11 @@
  * Showcase `?asset=screens`.
  *
  * The camera never turns (D115): the screen faces +z or +x, one of the
- * faces it sees. What it shows is pure (codeWords(), terminalRows());
+ * faces it sees (built facing +z, turned by deco.js facing()). What it shows is pure (codeWords(), terminalRows());
  * createScreen() animates it.
  */
 import { Color, Group } from 'three';
-import { boxEdges, boxFaces, lightBoxes, placeLight } from './deco.js';
+import { boxEdges, boxFaces, facing, lightBoxes, placeLight } from './deco.js';
 import { GLASS, glassBox } from './glass.js';
 import { hash } from './hash.js';
 import { lineMaterial, neonLines } from './neon.js';
@@ -109,16 +109,7 @@ export function createScreen({ color = '#ffb020', face = '+z' } = {}) {
   body.add(lamp);
   let waiting = false;
 
-  const group = new Group();
-  if (face === '+x') {
-    body.position.set(-0.5, 0, -0.5);
-    const turn = new Group().add(body);
-    turn.position.set(0.5, 0, 0.5);
-    turn.rotation.y = Math.PI / 2;
-    group.add(turn);
-  } else {
-    group.add(body);
-  }
+  const group = facing(body, face);
   let time = 0;
   let clock = 0;
   group.userData.setWaiting = (on) => {

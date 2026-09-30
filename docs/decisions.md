@@ -954,3 +954,16 @@ wishes and fit the existing sectors' setup (low gravity, pixelation,
 the special sector). Bosses anywhere let every sector close with one. The per-biome passes
 wait for the end of Phase 4, once the spells and game concepts they
 build on are ready.
+
+### D123 — 2026-09-30 — The memory stack; walls are stacks
+A third decoration (D117), the memory stack: a 1×1×1 cell of glass
+memory plates with chips on a spine, a read/write light rising past them
+and plates writing now and then. Stacks placed side by side and on top of
+each other make a memory wall; there is no height option and no wall
+object. The look takes its light's timing from its cell, so a wall's
+plates line up and the light climbs and runs across it as one.
+**Why:** chosen in the showcase from six drafts (three memory looks,
+three relay nodes); the author wanted a decoration that also builds
+walls. A cooling vent was dropped first: it doesn't fit a virtual grid.
+One 1-cell piece keeps data and editor unchanged (decorations already
+never fall and may stand on anything) and lets a wall take any shape.

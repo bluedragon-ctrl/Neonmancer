@@ -109,7 +109,9 @@ mobile/touch support, backend or accounts.
   hazard (deals damage), void (instant death when the player falls onto it).
 - Decorations (kind `deco`, D117): fixed bodies that dress a room and do
   nothing, in the room's color, facing +z or +x: the data pillar
-  (1×3×1, always 3 high) and the screen (1×1×1). A screen may hold a
+  (1×3×1, always 3 high), the screen (1×1×1) and the memory stack
+  (1×1×1; stacked side by side and on top it makes a memory wall, D123).
+  Decorations never fall. A screen may hold a
   short text of `data/lore.json`, printed in the wizard's terminal once
   per visit when he comes near (hints and lore, D118).
 - Switches unlock exits: a floor plate held down by a crate, an enemy or
