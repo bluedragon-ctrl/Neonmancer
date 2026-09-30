@@ -90,6 +90,8 @@ function createEyes() {
 
 /**
  * The wizard as a three.js group (origin at the feet, looking along +z).
+ * `userData.rig` holds the parts wizard-motion.js animates (rig, head,
+ * hands, hat, eyes); the group's own scale stays free for hit looks.
  * `userData.flash` holds his own flash uniforms (holo.js createFlash()):
  * set `amount` and `color` to flash the whole hologram, e.g. on a hit.
  * @param {object} [colors]
@@ -108,16 +110,25 @@ export function createWizard({ body = PALETTE.magenta, head = PALETTE.cyan, hat 
     return mesh;
   };
 
-  const group = new Group();
-  group.userData.flash = flash;
+  // The rig (wizard-motion.js poses it): the body squashes and leans at the
+  // feet; the head carries the eyes and hat, so they bob together; each hand
+  // floats on its own. Parts keep their rest positions inside their groups.
   const parts = wizardParts();
-  group.add(...parts.main.map(build), ...createEyes());
+  const [bodyPart, headPart, ...handParts] = parts.main.map(build);
+  const eyes = createEyes();
+  const headGroup = new Group().add(headPart, ...eyes);
+  const hands = handParts.map((hand) => new Group().add(hand));
+  const rig = new Group().add(bodyPart, headGroup, ...hands);
+
+  const group = new Group().add(rig);
+  group.userData.flash = flash;
 
   const hatGroup = new Group();
   hatGroup.position.y = WIZARD.brim.y;
   hatGroup.rotation.x = -WIZARD.hatTilt; // tip back (−z), brim front up
   hatGroup.add(...parts.hat.map(build));
-  group.add(hatGroup);
+  headGroup.add(hatGroup);
+  group.userData.rig = { rig, head: headGroup, hands, hat: hatGroup, eyes };
 
   const bandMaterial = lineMaterial({ color: FRAGMENT_COLOR, width: 2.2, brightness: 1.8 });
   const rings = hatBands(bands).map(({ y, r }) => {

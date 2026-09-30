@@ -71,6 +71,36 @@ drifting up and a thin neon outline. Proportions are `WIZARD` in
 `src/render/wizard.js`; review looks in the asset showcase
 (`/tools/showcase.html?asset=wizard`).
 
+He moves like he's alive (D114, `src/render/wizard-motion.js`, tuning in
+`MOTION`), all visual only (the hitbox never changes):
+- **Walking:** the head (with the hat) dips at each step and the body
+  squashes a little, the hands swing forward and back in turn, and he
+  leans forward. The steps follow the distance he walks (one cycle of two
+  steps per 1.1 units), so they match his speed and stop cleanly; riding
+  a platform without walking takes no steps.
+- **Standing:** slow breathing, the hands drifting up and down out of
+  step, and a blink once every ~3.4 s at an irregular moment.
+- **In the air:** hands up and out, the body stretched while he moves
+  fast (none at the top of a jump). **Landing** squashes him flat and he
+  springs back through a small stretch (0.22 s).
+- **Hat:** an underdamped spring on its tilt trails his motion in his own
+  frame (walking forward tips it back, sideways tips it the other way)
+  and wobbles when he stops or turns; landing kicks it back.
+
+- **Actions** take over the hands (a push, over it a cast, over all a
+  flail): **pushing** (walking into a crate lined up to push) puts both
+  hands flat on its face and leans him in, with slow straining steps on
+  the spot until it gives; **casting** any spell thrusts both hands out
+  to where the bolt starts, the way the spell goes (his aim, even before
+  his body has turned), holds them there a moment and brings them back
+  (18 ticks); **falling into a hole** he flails, hands high and waving,
+  rocking side to side, his hat lifting off his head.
+
+Walk, idle, air and push blend in and out over ~0.1 s, the flail faster. A move of more than 0.5
+units in one frame (respawn, Warp, Blink) counts as a cut, not motion.
+Showcase: `wizard` (idle), `wizard-walk`, `wizard-jump`, `wizard-push`,
+`wizard-cast`, `wizard-hole`.
+
 ### Damage
 
 Integrity (health) is 8, 12 with every buff (not saved: a load starts

@@ -44,6 +44,7 @@ import { lerpAngle, lerpPosition, shadowScale } from './interp.js';
 import { railSegments } from './rails.js';
 import { createObjectView } from './room-view.js';
 import { createWizard } from './wizard.js';
+import { WizardMotion } from './wizard-motion.js';
 import { addXray } from './xray.js';
 import { damagedGlitch, enemyHitLook } from './zap-fx.js';
 import { createCastFlare, placeCastFlare } from './zap-view.js';
@@ -196,6 +197,10 @@ export class PlayerView {
     this.game = game;
     this.group = new Group();
     this.wizard = createWizard({ bands: game.fragmentRules.access.length });
+    /** His walk, idle float, jump squash and floppy hat (wizard-motion.js). */
+    this.motion = new WizardMotion(this.wizard);
+    /** Seconds of play drawn so far, for the idle float and the blink. */
+    this.time = 0;
     /** Ghost of his parts hidden behind blocks (xray.js). */
     this.xray = addXray(this.wizard);
     this.shadow = createDropShadow(PALETTE.magenta);
@@ -265,6 +270,20 @@ export class PlayerView {
 
     this.wizard.position.set(pos[0], pos[1], pos[2]);
     this.wizard.rotation.y = lerpAngle(player.prevFacing, player.facing, alpha);
+    this.time += dt;
+    this.motion.update({
+      dt,
+      time: this.time,
+      pos,
+      facing: this.wizard.rotation.y,
+      grounded: player.grounded,
+      moving: player.moving && !player.dead,
+      vy: player.vy,
+      pushing: player.pushTarget !== null && !player.dead,
+      cast: player.castTicks === null || player.dead ? null : player.castTicks + alpha,
+      aim: player.targetFacing,
+      falling: player.dead && player.deathCause === 'hole',
+    });
     // Blinking after a hit; derezzing when he dies out of a hole.
     const look = wizardLook(player, PLAYER.deathTicks);
     this.wizard.visible = look.visible;
