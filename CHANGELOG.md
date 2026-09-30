@@ -12,6 +12,11 @@ Phase 4 splits into 4a (saves and UI) and 4b (spells, Firewall Wardens as
 bosses that drop loot, tooling) (D104, D105).
 
 ### Added
+- The wizard's body language (D114): his head bobs and his hands swing as
+  he walks, he breathes, floats his hands and blinks while standing,
+  raises his hands and stretches in the air, squashes on landing, and his
+  hat trails his motion on a spring and wobbles when he stops. Visual
+  only; showcase entries `wizard-walk` and `wizard-jump`.
 - An access pass for testing (D113): a new temporary pickup kind that
   raises the access level at once (`access_pass_3`, level 3), placed in
   Boot Sector beside the core.

@@ -778,3 +778,20 @@ when every level needs 16 fragments at the core; debug K still finds
 fragments, but the pass works without debug mode and in a normal
 playthrough of the test rooms. It is a test item: real game rooms should
 not use it.
+
+### D114 — 2026-09-30 — The wizard's body language
+The wizard gets a walk cycle (head bob, hand swing, forward lean), an
+idle float (breathing, drifting hands, blinks), an air pose with a
+stretch, a landing squash and a hat on a spring (docs/design.md, Player,
+Look). It is all transforms of the model's existing parts, posed by a
+pure function in the render layer (`wizard-motion.js`); the walk cycle
+follows the distance walked, not time.
+**Why:** a rigid wizard sliding over the floor looked static, and he is
+on screen all the time. Moving, rotating and scaling half a dozen parts
+per frame costs nothing measurable: no new geometry, materials, draw
+calls or effect passes, and the x-ray ghosts are children of the parts,
+so they follow for free. Deforming meshes (skinning, per-vertex changes)
+was ruled out as the one option with a real cost. Tying steps to
+distance keeps his feet from sliding and his stride from freezing
+mid-step. Poses for pushing, casting and falling into a hole are a
+possible follow-up.

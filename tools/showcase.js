@@ -40,6 +40,7 @@ import { COLLAPSE_FX, COLLAPSE_PIXELS, collapsePixels } from '../src/render/coll
 import { ExitView } from '../src/render/exit-view.js';
 import { HOLO_TIME } from '../src/render/holo.js';
 import { createWizard } from '../src/render/wizard.js';
+import { WizardMotion } from '../src/render/wizard-motion.js';
 import { addXray } from '../src/render/xray.js';
 import { BUG, BUG_MODEL, animateBug, createBug, popPixels, setEyeMood } from '../src/render/bug.js';
 import { VIRUS, VIRUS_MIDDLE, animateVirus, createVirus, virusPopPixels } from '../src/render/virus.js';
@@ -110,7 +111,11 @@ const WYRM_COLORS = ['#ffc83a', '#3dff9a', '#4f7dff', '#c05cff'];
  * the origin, standing on y = 0.
  */
 const ALL_ASSETS = [
-  { label: 'wizard', build: () => createWizard(), shadow: PALETTE.magenta },
+  // The wizard standing (breathing, hands floating, blinking); walking a
+  // square with stops, so the hat trails and wobbles; jumping in place.
+  { label: 'wizard', build: buildWizardIdle, shadow: PALETTE.magenta },
+  { label: 'wizard-walk', span: 4, spin: false, build: buildWizardWalk },
+  { label: 'wizard-jump', build: buildWizardJump, shadow: PALETTE.magenta },
   { label: 'wizard-hit', build: buildWizardHit, shadow: PALETTE.magenta },
   // Every object type from defs.json, in its own style (glass crates, D96:
   // a data core, or empty thinner glass in a destructible one, D99);
@@ -910,12 +915,13 @@ function buildXray() {
   const crate = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...defs.objects.crate, at: [0, 0, 3] });
   const wizard = createWizard();
   addXray(wizard);
+  const motion = new WizardMotion(wizard);
   room.add(crate, wizard);
   room.position.set(-2, 0, -2);
   const asset = new Group().add(room);
   const loop = 360;
   let tick = 0;
-  asset.userData.update = (dt) => {
+  asset.userData.update = (dt, time) => {
     tick = (tick + dt * 60) % loop;
     // Back and forth along x, behind the crate and the wall.
     const t = tick / loop;
@@ -923,6 +929,7 @@ function buildXray() {
     const x = t < 0.5 ? 0.5 + leg * 3 : 3.5 - leg * 3;
     wizard.position.set(x, 0, 2.2);
     wizard.rotation.y = t < 0.5 ? Math.PI / 2 : -Math.PI / 2;
+    motion.update({ dt, time, pos: [x, 0, 2.2], facing: wizard.rotation.y, grounded: true, moving: true, vy: 0 });
     const hit = Math.floor(tick) % 180;
     showHitFlash(wizard, hitFlash({ invulnerable: hit < 60 ? PLAYER.invulnerableTicks - hit : 0, dead: false }));
   };
@@ -1663,6 +1670,65 @@ function buildBugPop() {
  * The wizard getting hurt, in a loop: hit (a flash, then blinking while invulnerable),
  * a pause, then losing his last point (derez into pixels), then back.
  */
+/** The wizard standing still: only his idle motion (wizard-motion.js). */
+function buildWizardIdle() {
+  const wizard = createWizard();
+  const motion = new WizardMotion(wizard);
+  wizard.userData.update = (dt, time) => motion.update({ dt, time, pos: [0, 0, 0], facing: 0, grounded: true, moving: false, vy: 0 });
+  return wizard;
+}
+
+/**
+ * The wizard walking round a 2.5-unit square at his walking speed, turning
+ * at each corner and standing there for a moment (the hat wobbles).
+ */
+function buildWizardWalk() {
+  const wizard = createWizard();
+  const shadow = createDropShadow(PALETTE.magenta);
+  shadow.scale.set(PLAYER_HITBOX[0] * 1.5, PLAYER_HITBOX[0] * 1.5, 1);
+  const motion = new WizardMotion(wizard);
+  const asset = new Group().add(wizard, shadow);
+  const side = 2.5;
+  const legTime = side / PLAYER.speed;
+  const pause = 0.6;
+  const corners = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([x, z]) => [(x * side) / 2, (z * side) / 2]);
+  let facing = 0;
+  asset.userData.update = (dt, time) => {
+    const t = time % (4 * (legTime + pause));
+    const leg = Math.floor(t / (legTime + pause));
+    const along = Math.min(1, (t - leg * (legTime + pause)) / legTime);
+    const [ax, az] = corners[leg];
+    const [bx, bz] = corners[(leg + 1) % 4];
+    const x = ax + (bx - ax) * along;
+    const z = az + (bz - az) * along;
+    const moving = along < 1;
+    // Turn quickly towards the next leg, as the game does.
+    const target = moving ? Math.atan2(bx - ax, bz - az) : Math.atan2(corners[(leg + 2) % 4][0] - bx, corners[(leg + 2) % 4][1] - bz);
+    facing += Math.atan2(Math.sin(target - facing), Math.cos(target - facing)) * Math.min(1, dt * 60 * PLAYER.turnRate);
+    wizard.position.set(x, 0, z);
+    wizard.rotation.y = facing;
+    shadow.position.set(x, 0.01, z);
+    motion.update({ dt, time, pos: [x, 0, z], facing, grounded: true, moving, vy: 0 });
+  };
+  return asset;
+}
+
+/** The wizard jumping in place, as high as in the game, every 1.4 s. */
+function buildWizardJump() {
+  const wizard = createWizard();
+  const motion = new WizardMotion(wizard);
+  const asset = new Group().add(wizard);
+  const every = 1.4;
+  asset.userData.update = (dt, time) => {
+    const t = time % every;
+    const y = Math.max(0, JUMP_SPEED * t - (PLAYER.gravity * t * t) / 2);
+    const grounded = y === 0 && t > 0.1;
+    wizard.position.y = y;
+    motion.update({ dt, time, pos: [0, y, 0], facing: 0, grounded: grounded || t === 0, moving: false, vy: grounded ? 0 : JUMP_SPEED - PLAYER.gravity * t });
+  };
+  return asset;
+}
+
 function buildWizardHit() {
   const wizard = createWizard();
   const pixels = createDerezPixels();

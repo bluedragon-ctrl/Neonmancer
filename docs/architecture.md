@@ -142,7 +142,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/walls.js` | Back walls with doorways and dark tunnels behind them, front edges with gaps, arrow shape for front exits (pure, tested) |
 | `render/warden.js` | Warden model (D107): kite shield with brick seams, T-slit helm, gauntlets, greatsword poses (`swordAngle()`), `WARDEN` tuning; `WARDEN_MODEL` |
 | `render/warp-fx.js`, `render/warp-view.js` | Blink's dash (drawn position and stretch, streaks, kicked-up pixels) and Warp's pixel stream and arrival flash (D86): the look (pure, tested) and its meshes, shown by `PlayerView` |
-| `render/wizard.js` | Wizard model: parts as data (pure, tested), built in the hologram look |
+| `render/wizard.js` | Wizard model: parts as data (pure, tested), built in the hologram look, with a rig (head, hands, hat) for animation |
+| `render/wizard-motion.js` | Wizard body language (D114): walk bob and hand swing, idle float and blink, air pose, landing squash, hat spring; pure pose and spring (tested), `WizardMotion` poses the rig each frame |
 | `render/worm.js` | Worm model (D83): head with antennae dragging a tail of balls, inching hump and wiggle (`wormSpine()`), rearing up, `WORM` tuning; `WORM_MODEL` |
 | `render/wyrm.js` | Wyrm model (D107): flying horned head trailing hex plates in shades of its color (`wyrmShades()`, `wyrmSpine()`), packets, jaw, `WYRM` tuning; `WYRM_MODEL` |
 | `render/xray.js` | X-ray ghost of the wizard's hidden parts (reversed depth test), render orders of the ghost and the characters, `XRAY` tuning |
