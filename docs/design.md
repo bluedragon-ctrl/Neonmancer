@@ -569,6 +569,16 @@ enemies).
   is full. No save bit: it comes back when the room resets (entering it,
   or dying in it). Terminal lines `> INTEGRITY RESTORED` and `> ENERGY
   RECHARGED`.
+- **Temporary: access pass (for testing, D113).** `access_pass_3` (kind
+  `access`, `level` 1–15) raises the wizard's access level to its level
+  at once, as the core would (D101): access locks open, the hat gets its
+  bands, and the level is saved in the key like the core's. It never
+  lowers the level and is left lying while he has that level already. No
+  save bit, no score of its own (the level scores as usual). A gold
+  upgrade card whose lit bit is the level; picked up like a refill.
+  Banner `ACCESS LEVEL n` / `GRANTED BY A TEST PASS`, terminal line
+  `> TEST PASS: ACCESS LEVEL n GRANTED`. One lies in Boot Sector next to
+  the core; showcase `?asset=access-pass`.
 - **Look:** a data disk is an abstract white slab with both top corners
   clipped, hovering half a block up, spinning (a turn every ~4 s) and
   bobbing; both faces carry a 4×4 bit grid of dark gray squares whose

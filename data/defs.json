@@ -140,6 +140,7 @@
     "disk_cut_paste": { "kind": "disk", "spell": "cut_paste" },
     "refill_integrity": { "kind": "refill", "stat": "integrity", "amount": 3 },
     "refill_energy": { "kind": "refill", "stat": "energy", "amount": 30 },
+    "access_pass_3": { "kind": "access", "level": 3 },
     "buff_integrity_1": { "kind": "buff", "slot": 0, "stat": "integrity", "amount": 1 },
     "buff_integrity_2": { "kind": "buff", "slot": 1, "stat": "integrity", "amount": 1 },
     "buff_integrity_3": { "kind": "buff", "slot": 2, "stat": "integrity", "amount": 1 },

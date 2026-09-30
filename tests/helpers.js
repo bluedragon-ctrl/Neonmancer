@@ -87,7 +87,7 @@ export const SPELLS = {
 };
 
 /**
- * Pickup types (D71): the data disks, both refills, a buff of each stat
+ * Pickup types (D71): the data disks, both refills, the level 3 access pass, a buff of each stat
  * (D93), the three upgrades (D95) and two secrets (D100), as in defs.json.
  * The integrity refill gives 2 here (3 in defs.json); the tests read its amount from here.
  */
@@ -101,6 +101,7 @@ export const PICKUPS = {
   disk_cut_paste: { kind: 'disk', spell: 'cut_paste' },
   refill_integrity: { kind: 'refill', stat: 'integrity', amount: 2 },
   refill_energy: { kind: 'refill', stat: 'energy', amount: 30 },
+  access_pass_3: { kind: 'access', level: 3 },
   buff_integrity_1: { kind: 'buff', slot: 0, stat: 'integrity', amount: 1 },
   buff_integrity_2: { kind: 'buff', slot: 1, stat: 'integrity', amount: 1 },
   buff_energy_1: { kind: 'buff', slot: 4, stat: 'energy', amount: 10 },

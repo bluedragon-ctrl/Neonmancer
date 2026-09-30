@@ -12,6 +12,9 @@ Phase 4 splits into 4a (saves and UI) and 4b (spells, Firewall Wardens as
 bosses that drop loot, tooling) (D104, D105).
 
 ### Added
+- An access pass for testing (D113): a new temporary pickup kind that
+  raises the access level at once (`access_pass_3`, level 3), placed in
+  Boot Sector beside the core.
 - Title screen and pause menu (D109): the game opens on the logo over
   the start room's empty shape (Start, Options, Controls; the room loads
   after Start); Esc or P, or leaving the

@@ -107,6 +107,33 @@ test('the core raises his access level to what his fragments earn, once per touc
   assert.deepEqual(takeMessages().map(({ key, values }) => [key, values]), [['msg.coreAccess', { found: 2, needed: 3, level: 2 }]], 'it tells him how many more');
 });
 
+test('an access pass (for testing) raises his level at once and opens access locks; it has no save bit and comes back with the room', () => {
+  takeMessages();
+  takeAnnouncements();
+  const game = gameWith({ pickups: [{ id: 'pass', type: 'access_pass_3', at: [2, 0, 5] }] });
+  assert.equal(pickupBit(PICKUPS.access_pass_3, SPELLS), null, 'temporary: no save bit');
+  const exit = game.room.exits.find((e) => e.id === 'east');
+  assert.equal(exitOpen(game, exit), false);
+  game.player.place([2.5, 0, 5.5]);
+  const events = game.update(idle);
+  assert.ok(eventTypes(events).includes('pickup'));
+  assert.deepEqual(events.filter((e) => e.type === 'access'), [{ type: 'access', level: 3 }]);
+  assert.equal(game.progress.accessLevel, 3);
+  assert.equal(game.player.install, null, 'no install animation: it is not a permanent pickup');
+  assert.deepEqual(takeMessages().map(({ key, values }) => [key, values]), [['msg.accessPass', { level: 3 }], ['msg.unlocked', undefined]]);
+  assert.equal(takeAnnouncements().at(-1).key, 'banner.access');
+  assert.equal(exitOpen(game, exit), true);
+
+  // It comes back with the room, but lies there while his level is 3 already.
+  game.enterRoom('alpha');
+  assert.equal(game.pickups[0].state, 'idle');
+  game.player.place([2.5, 0, 5.5]);
+  assert.ok(!eventTypes(game.update(idle)).includes('pickup'));
+  // The core never lowers it.
+  touchCore(game);
+  assert.equal(game.progress.accessLevel, 3);
+});
+
 test('the core blocks him like a 2-high block: he cannot walk through or jump onto it', () => {
   const game = gameWith();
   assert.deepEqual(game.core.box(), [[4, 5], [0, 2], [4, 5]]);
