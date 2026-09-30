@@ -7,7 +7,7 @@
  */
 import { isFunctionKey } from '../core/input.js';
 import { LORE_LIMITS } from '../data/lore.js';
-import { ENEMY_OPTIONS, EXIT_DEFAULTS, PATH_DEFAULTS } from '../data/room-data.js';
+import { ENEMY_OPTIONS, EXIT_DEFAULTS, PATH_DEFAULTS, withEnemyDefaults } from '../data/room-data.js';
 
 /**
  * The editor's tools, in panel order; `key` is the digit that picks it.
@@ -79,7 +79,7 @@ export const ENEMY_ROWS = [
 
 const HELP = [
   'Left click: place / pick · Right click: erase',
-  'Wheel or PgUp/PgDn: layer · 1–8: tool',
+  `Wheel or PgUp/PgDn: layer · ${TOOLS[0].key}–${TOOLS.at(-1).key}: tool`,
   'Esc: drop the selection · Del: remove it',
   'Ctrl+Z / Ctrl+Y: undo / redo · Ctrl+S: save',
   'F2: play the room · F3: debug',
@@ -544,9 +544,10 @@ export class EditorPanel {
     for (const [key, [idle, busy]] of Object.entries(HINTS)) this.hints[key].textContent = picked[key] ? busy(picked[key]) : idle;
 
     this.enemyTemplate.value = enemy.template;
-    const values = this.enemyTemplates[enemy.template] ?? {};
+    // What the template gives, defaults included (as the game fills them in).
+    const values = withEnemyDefaults(this.enemyTemplates[enemy.template] ?? {});
     for (const [field, node] of Object.entries(this.enemySelects)) {
-      node.options[0].textContent = `template's (${yesNo(values[field] ?? false)})`;
+      node.options[0].textContent = `template's (${yesNo(values[field])})`;
       node.value = field in enemy.overrides ? String(enemy.overrides[field]) : '';
     }
     for (const [field, node] of Object.entries(this.enemyNumbers)) {
