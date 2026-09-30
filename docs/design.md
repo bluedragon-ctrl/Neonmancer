@@ -1583,8 +1583,8 @@ list switches to another room; New room makes an empty one (D57).
   into boxes.
 - **Sending the rooms in:** `tools\map-pr.bat ["what changed"]` (Windows)
   puts only `data/rooms/`, `data/world.json` (connections, and room
-  positions from the world map tool) and `data/defs.json` (enemy
-  templates) on a new branch, room and map changes in one PR,
+  positions from the world map tool), `data/defs.json` (enemy
+  templates) and `data/lore.json` (screen texts, D118) on a new branch, room and map changes in one PR,
   `feat/map-<date>` from `origin/main` (after `npm run validate:data`),
   commits, pushes and opens the PR with the GitHub CLI, or prints a
   compare link without it. Other uncommitted changes stay uncommitted; you

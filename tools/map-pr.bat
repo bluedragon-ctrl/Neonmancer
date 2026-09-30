@@ -1,8 +1,9 @@
 @echo off
 rem Open a pull request with the room and map changes: data\rooms\*.json,
 rem data\world.json (connections, and room positions from the world map
-rem tool) and data\defs.json (enemy templates), saved from the room editor
-rem and the world map tool (D56, D58, D66). Rooms and map go in one PR.
+rem tool), data\defs.json (enemy templates) and data\lore.json (screen
+rem texts), saved from the room editor, the world map tool and the monster
+rem editor (D56, D66, D118, D120). Rooms and map go in one PR.
 rem
 rem Usage: tools\map-pr.bat ["what changed"]
 rem
@@ -23,9 +24,9 @@ setlocal EnableDelayedExpansion
 
 rem Anything to send?
 set "CHANGED="
-for /f "delims=" %%f in ('git status --porcelain -- data/rooms data/world.json data/defs.json') do set "CHANGED=1"
+for /f "delims=" %%f in ('git status --porcelain -- data/rooms data/world.json data/defs.json data/lore.json') do set "CHANGED=1"
 if not defined CHANGED (
-  echo No changes in data\rooms, data\world.json or data\defs.json: nothing to send.
+  echo No changes in data\rooms, data\world.json, data\defs.json or data\lore.json: nothing to send.
   exit /b 1
 )
 
@@ -48,15 +49,17 @@ if errorlevel 1 (
   exit /b 1
 )
 
-git add -A -- data/rooms data/world.json data/defs.json || exit /b 1
+git add -A -- data/rooms data/world.json data/defs.json data/lore.json || exit /b 1
 
 rem What kind of change it is, for the summary.
 set "ROOMS="
 set "WORLD="
 set "DEFS="
+set "LORE="
 for /f "delims=" %%f in ('git diff --cached --name-only -- data/rooms') do set "ROOMS=1"
 for /f "delims=" %%f in ('git diff --cached --name-only -- data/world.json') do set "WORLD=1"
 for /f "delims=" %%f in ('git diff --cached --name-only -- data/defs.json') do set "DEFS=1"
+for /f "delims=" %%f in ('git diff --cached --name-only -- data/lore.json') do set "LORE=1"
 
 set "BODY=%TEMP%\neonmancer-map-pr.md"
 > "%BODY%" echo ## Summary
@@ -65,7 +68,8 @@ set "BODY=%TEMP%\neonmancer-map-pr.md"
 >> "%BODY%" echo.
 if defined ROOMS >> "%BODY%" echo - Rooms edited in the room editor
 if defined WORLD >> "%BODY%" echo - World map: connections and/or room positions ^(world.json^)
-if defined DEFS >> "%BODY%" echo - Enemy templates ^(defs.json^)
+if defined DEFS >> "%BODY%" echo - Enemy templates from the monster editor ^(defs.json^)
+if defined LORE >> "%BODY%" echo - Screen texts ^(lore.json^)
 >> "%BODY%" echo.
 >> "%BODY%" echo Changed files:
 >> "%BODY%" echo.
@@ -76,6 +80,7 @@ for /f "tokens=1,*" %%a in ('git diff --cached --name-status') do >> "%BODY%" ec
 >> "%BODY%" echo - [x] `npm run validate:data` passes
 >> "%BODY%" echo - [ ] Rooms played in the game (`tools\dev.bat`)
 >> "%BODY%" echo - [ ] World map checked (`tools\dev.bat map`)
+if defined DEFS >> "%BODY%" echo - [ ] Templates checked in the monster editor ^(`tools\dev.bat monsters`^)
 
 git commit -q -m "feat(map): !WHAT!" || exit /b 1
 git push -u origin "%BRANCH%" || exit /b 1

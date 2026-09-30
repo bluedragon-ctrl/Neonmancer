@@ -187,7 +187,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `tools/monster-editor.bat` | Windows: double-click to start the dev server on the monster editor (`dev.bat monsters`) |
 | `tools/monster-editor.html`, `tools/monster-editor.js`, `tools/monster-editor.css` | Monster editor (D119, D120): the enemy templates, a form made from `defs.schema.json`, checks, undo, save. Dev server only, not built |
 | `tools/monster-preview.js` | The monster editor's preview: an enemy of the template facing the wizard, walking, noticing him and attacking in a loop, with the game's models and effects |
-| `tools/map-pr.bat` | Windows: opens one PR with only `data/rooms/`, `data/world.json` and `data/defs.json` changes, rooms and map together (validates first) |
+| `tools/map-pr.bat` | Windows: opens one PR with only `data/rooms/`, `data/world.json`, `data/defs.json` and `data/lore.json` changes, rooms and map together (validates first) |
 | `tools/room-save.js` | Dev only: checks edited rooms, `world.json` and `defs.json` with the rest of `data/` and writes them; deletes rooms the world map removed |
 | `tools/run-tests.js` | `npm test`: runs `node --test` on an explicit list of `tests/*.test.js` (works on Node 20 and 22+, Windows and Linux) |
 | `tools/showcase.html`, `tools/showcase.js` | Asset showcase page: every look on a turntable with the real renderer (also deployed) |

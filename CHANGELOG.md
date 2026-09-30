@@ -11,9 +11,16 @@ docs/decisions.md).
 Phase 4 splits into 4a (saves and UI) and 4b (spells, Firewall Wardens as
 bosses that drop loot, tooling) (D104, D105).
 
+### Fixed
+- `tools\map-pr.bat` sends `data/lore.json` too: screen texts written in
+  the room editor went missing from the PR (and a room showing a new
+  text failed the data check there). It already sent the monster
+  editor's templates (`data/defs.json`, and rooms a rename changed); its
+  notes and PR summary now say so.
+
 ### Added
 - Monster editor (D120), `/tools/monster-editor.html` in the dev server
-  (`toolsdev.bat monsters`): the enemy templates with a form made from the
+  (`tools\dev.bat monsters`): the enemy templates with a form made from the
   schema, where each value comes from, a live preview, variants in colors
   of their own, rename and delete; the room editor links to it and takes
   in what it saves.
