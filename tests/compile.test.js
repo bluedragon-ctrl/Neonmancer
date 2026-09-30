@@ -46,7 +46,7 @@ function run(game, ticks) {
   return events;
 }
 
-test('Compile puts a crate into the free cell in front of him for 5 energy (D125)', () => {
+test('Compile puts a crate into the free cell in front of him for 50 energy (D125)', () => {
   const game = gameWith();
   const events = cast(game);
   assert.deepEqual(eventTypes(events), ['compile', 'cast']);
@@ -135,8 +135,10 @@ test('a hole it plugged opens again when it derezzes, under whoever stands there
 test('any number stand at once; energy and the cooldown are the only limits', () => {
   const game = gameWith();
   cast(game);
+  game.player.energy = PLAYER.maxEnergy;
   stand(game, [4.5, 0, 3.5]);
   cast(game);
+  game.player.energy = PLAYER.maxEnergy;
   stand(game, [6.5, 0, 3.5]);
   cast(game);
   assert.deepEqual(
@@ -154,6 +156,7 @@ test('Cut & Paste leaves a compiled crate alone: it only lasts a while', () => {
   const game = gameWith();
   cast(game);
   assert.equal(cutTarget(game), null);
+  game.player.energy = PLAYER.maxEnergy;
   game.player.spell = 'cut_paste';
   assert.deepEqual(eventTypes(cast(game)), ['fizzle']);
 });

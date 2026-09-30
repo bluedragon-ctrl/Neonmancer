@@ -42,7 +42,7 @@ bosses that drop loot, tooling) (D104, D105).
   the room resets. A Hidden checkbox for exits in the room editor. Disk in
   the new test room Hidden Layer, east of Build Yard, with Secret Cache
   behind its hidden exit; showcase `?asset=scan,disk-scan`.
-- Compile spell (D125, slot 7, 5 energy): a crate (the dashed one) in
+- Compile spell (D125, slot 7, 50 energy): a crate (the dashed one) in
   the free cell in front of him for 7 s; it falls, plugs a hole, can be
   pushed and pulled, blinks before it derezzes (a plugged hole opens
   again). Gold bits fly into the cell as it grows in; an aim marker.

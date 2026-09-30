@@ -974,7 +974,7 @@ step up, or a hole plugged to walk over.
 - **Where:** the free cell in front of him at the height of his feet,
   as Paste puts a crate (`pasteCell()` in `src/entities/clip.js`): inside
   the room, clear of blocks, bodies and pickups lying there.
-- **Compile** (E; 5 energy): a crate of the spell's `object` type (the
+- **Compile** (E; 50 energy): a crate of the spell's `object` type (the
   dashed crate, `crate_dashed`) appears there. It is an ordinary crate of
   the room (`Pushable`, D4): it falls from there if nothing holds it up,
   plugs a hole it drops into, can be pushed and pulled, holds a plate
