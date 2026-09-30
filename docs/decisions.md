@@ -967,3 +967,21 @@ three relay nodes); the author wanted a decoration that also builds
 walls. A cooling vent was dropped first: it doesn't fit a virtual grid.
 One 1-cell piece keeps data and editor unchanged (decorations already
 never fall and may stand on anything) and lets a wall take any shape.
+
+### D124 — 2026-09-30 — Pull: the first crate or enemy in line, one cell
+Pull (slot 10, 15 energy, pale mint `#a6ffcf`, early in the world with
+Blink and Pause) takes the first crate or enemy in line the way the
+wizard aims, at his level, within 6 cells; a block, the room's side or
+another body first stops the line, holes don't. The target slides one
+cell towards him per cast: a crate as if pushed (nothing on it, into a
+free cell), any live enemy, frozen or not, over anything, so it can be
+pulled into a hole; pulling alarms it and he gets the blame (D81). Right
+in front of him, or with nowhere to go, it fizzles. A tractor beam of
+pixel rings and a marquee on the target; an aim marker while selected.
+Test room Tractor Bay, east of Cache Hall.
+**Why:** the author's picks among the proposals. A line to the first
+thing, like Warp's, is easy to read and aim; one cell per cast keeps the
+puzzles exact (each cast a move, like a push). Taking any enemy makes
+Pull a tool against them too (into a pit, off a plate), and the blame
+keeps it from being free. The mint keeps the beam readable on the lime
+crates and the green bug.

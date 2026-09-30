@@ -74,6 +74,7 @@ import { SWITCH_KINDS } from '../src/entities/switch.js';
 import { FRAGMENT_COLOR } from '../src/entities/pickup.js';
 import { CLIP_FX, clipPixels, marqueeLook, pasteGrow } from '../src/render/clip-fx.js';
 import { createMarquee, placeMarquee } from '../src/render/clip-view.js';
+import { PULL_FX, PULL_PIXELS, pullMarquee, pullPixels } from '../src/render/pull-fx.js';
 import { clipIcon } from '../src/ui/clip-icon.js';
 import { createJumpRings, placeJumpRings } from '../src/render/jump-view.js';
 import { createShrine } from '../src/render/shrine-view.js';
@@ -229,6 +230,7 @@ const ALL_ASSETS = [
   { label: 'disk-blink', group: 'disks', spin: false, build: () => buildDisk(defs.spells.blink) },
   { label: 'disk-warp', group: 'disks', spin: false, build: () => buildDisk(defs.spells.warp) },
   { label: 'disk-cut-paste', group: 'disks', spin: false, build: () => buildDisk(defs.spells.cut_paste) },
+  { label: 'disk-pull', group: 'disks', spin: false, build: () => buildDisk(defs.spells.pull) },
   // Installing a spell (D73): Zap, then Shield, in a loop.
   { label: 'install', spin: false, shadow: PALETTE.magenta, build: buildInstall },
   // Shield (D73): up for its duration, blinking before it ends.
@@ -309,6 +311,11 @@ const ALL_ASSETS = [
   { label: 'cut-paste', group: 'cut-paste', span: 4.5, spin: false, build: () => buildCutPaste('crate') },
   { label: 'cut-paste-enemy', group: 'cut-paste', span: 4.5, spin: false, build: () => buildCutPaste('bug') },
   { label: 'clip-hud', group: 'cut-paste', span: 1, spin: false, build: buildClipHud },
+  // Pull (D124): the aim marker on the crate (or bug) three cells ahead;
+  // he casts, a marquee snaps on, rings of green pixels flow from it into
+  // his hands and it slides one cell towards him (its disk: disk-pull).
+  { label: 'pull', group: 'pull', span: 5, spin: false, build: () => buildPull('crate') },
+  { label: 'pull-enemy', group: 'pull', span: 5, spin: false, build: () => buildPull('bug') },
   // Backup shrine (D97): a glowing floor tile in the
   // wizard's magenta; he steps on and it flares.
   { label: 'shrine', spin: false, build: buildShrine },
@@ -2250,6 +2257,60 @@ function buildCutPaste(kind) {
     ghost.visible = false;
     if (!effect && !held) placeMarquee(aim, center, crate ? CLIP_FX.aimMarquee : CLIP_FX.enemyMarquee, time);
     if (!effect && held) placeMarquee(ghost, center, size, time);
+  };
+  return asset;
+}
+
+/**
+ * Pull (D124) in a loop: the wizard (left, facing +x) pulls the crate or
+ * bug three cells ahead one cell towards him.
+ * @param {'crate'|'bug'} kind
+ */
+function buildPull(kind) {
+  const { color } = defs.spells.pull;
+  const at = [-2, 0, 0];
+  const wizard = createWizard();
+  wizard.position.set(...at);
+  wizard.rotation.y = Math.PI / 2;
+  const flare = createCastFlare();
+  const crate = kind === 'crate';
+  const thing = new Group();
+  let bug = null;
+  if (crate) {
+    const view = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...defs.objects.crate, at: [0, 0, 0] });
+    view.position.set(-0.5, 0, -0.5);
+    thing.add(view);
+  } else {
+    bug = createBug(defs.enemies.bug.color);
+    bug.rotation.y = -Math.PI / 2;
+    thing.add(bug);
+  }
+  const height = crate ? 1 : ENEMY.size[1];
+  const frame = crate ? PULL_FX.crateMarquee : PULL_FX.enemyMarquee;
+  const marquee = createMarquee(color, PULL_FX.brightness);
+  const aim = createMarquee(color, PULL_FX.aimBrightness);
+  const pixels = createPixelBurst(PULL_PIXELS, PULL_FX.pixelSize, [color]);
+  const asset = new Group().add(wizard, flare, thing, marquee, aim, pixels);
+  const hands = [at[0] + ZAP_FX.reach, ZAP_FX.height, 0];
+  // Cast at tick 50; it slides a cell in 20 ticks (3 units a second); loop 160.
+  const castAt = 50;
+  const slideTicks = 20;
+  const loop = 160;
+  let tick = 0;
+  asset.userData.update = (dt, time) => {
+    tick = (tick + dt * 60) % loop;
+    const since = tick - castAt;
+    placeCastFlare(flare, at, Math.PI / 2, since);
+    const x = 1 - Math.max(0, Math.min(1, since / slideTicks));
+    thing.position.set(x, 0, 0);
+    if (bug) animateBug(bug, { state: since >= 0 && since < slideTicks ? 'walk' : 'rest', walked: since / slideTicks, time });
+    const center = [x, height / 2, 0];
+    const scale = since >= 0 ? pullMarquee(since) : null;
+    marquee.visible = false;
+    aim.visible = false;
+    if (scale !== null) placeMarquee(marquee, center, frame * scale, time);
+    else if (since < 0) placeMarquee(aim, center, crate ? PULL_FX.aimMarquee : frame, time);
+    placePixels(pixels, scale !== null ? pullPixels(since, center, hands) : [], [0, 0, 0]);
   };
   return asset;
 }

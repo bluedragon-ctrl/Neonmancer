@@ -594,7 +594,7 @@ enemies).
 - **Spell colors:** each spell has a `color` in `defs.json` (Zap cyan
   `#00f0ff`, Shield neon blue `#3b82ff`, Firewall ember `#ff5a14`, Pause
   lavender `#c9a2ff`, Blink pale cyan `#9ef0ff`, Warp pink `#ff6ee8`,
-  Cut & Paste white `#f4f6ff`):
+  Cut & Paste white `#f4f6ff`, Pull pale mint `#a6ffcf`):
   its disk's lit bit, its
   install animation and its banner.
 - **Found before:** a permanent pickup whose bit is set shows as a ghost
@@ -884,6 +884,50 @@ The seventh spell (D87), from a data disk by the entrance of Clipboard
   `src/render/clip-view.js`, the icons `src/ui/clip-icon.js`; showcase
   `?asset=cut-paste,disk-cut-paste`.
 
+## Pull
+
+The first Phase 4 spell (D89, D124), from a data disk by the entrance of
+Tractor Bay (slot 10). Pushing only moves crates away; Pull brings them,
+and enemies, closer.
+
+- **The line:** along the grid axis he aims on (as Cut & Paste: the
+  larger part of his aim, x on a tie), in his column across it, at the
+  height of his feet (the nearest level mid-jump), from the cell right in
+  front of him up to `range` cells (6). Holes and hazard or void floors
+  below don't stop it; a block, the room's side or any other body in a
+  cell does. The first crate or enemy on it is the target.
+  `pullTarget()` in `src/entities/pull.js`.
+- **Pull** (E; 15 energy): the target slides one cell towards him.
+  - A crate moves as if pushed (`Pushable.push()`, D4): only a resting
+    one with nothing on it, supported, into a free cell; it falls or
+    plugs a hole from there.
+  - An enemy (any live one, frozen too, walking or standing; not
+    falling, not riding a platform between stops) is dragged from its
+    cell, or of the two it walks between the one it is nearer, over
+    anything: over a hole it drops in and pops, onto a void block it
+    dies (`Enemy.pull()`). It slides at `ENEMY.pullSpeed` (3 units a
+    second, a pushed crate's speed) and does nothing else until it
+    arrives; an attack it was charging is cut off. Something in the way
+    on the way drags it back to its cell. Pulling provokes it and
+    alarms it (D81): he gets the blame.
+  - Nothing in line, or a target with nowhere to go (right in front of
+    him, a load on the crate, a body in the cell, another enemy walking
+    into it): it fizzles (energy back, no cooldown).
+  - One cell per cast; cast again to pull it further.
+- **Look:** a marquee in the spell's color snaps onto the target (from
+  1.35 times its size, 6 ticks) and rides along with it; square rings of
+  pixels leave it every 3 ticks and shrink as they flow into his hands
+  (12 ticks each): a tractor beam. The beam lasts `PLAYER.pullTicks`
+  (24), about as long as the target slides, and doesn't hold him up.
+- **Aim marker:** while Pull is selected (alive, no transition, no beam
+  running), a dim marquee marks what a pull would take; nothing shows
+  without a target that has somewhere to go.
+- **Color:** a pale mint, not the crate's lime nor the bug's green, so the
+  beam reads on both.
+- Tuning: `defs.json` `spells.pull` (cost, cooldown, range, color); the
+  look is `PULL_FX` in `src/render/pull-fx.js` with
+  `src/render/pull-view.js`; showcase `?asset=pull,disk-pull`.
+
 ## Upgrades
 
 An upgrade (D95) is a permanent pickup with its own
@@ -1046,15 +1090,15 @@ a need for.
 | Compile | 7 | Temporary block in the cell in front: a step or a bridge tile | Phase 4 |
 | Fork | 8 | Hologram decoy for a while: holds plates, draws enemies | Phase 4 |
 | Scan | 9 | Reveals hidden blocks, fake walls and secret pickups for a while | Phase 4 |
-| Pull | 10 | Pulls the closest crate or enemy in the facing direction one tile towards the wizard | Phase 4 |
+| Pull | 10 | Pulls the first crate or enemy in line one tile towards the wizard | Phase 4 (D124) |
 
 - **Upgrades:** Zap+, Shield+ and the double jump, built in Phase 3 (see
   Upgrades). Found, an upgrade replaces its base spell in the Tab cycle
   (ZAP becomes ZAP+), so the cycle stays short.
 - **Order in the world** (intended; rooms place the disks later):
   early Zap, Shield, Blink, Pause; middle Cut & Paste, Firewall, Fork,
-  Scan and the jump upgrade; late Compile, Warp, Zap+ and Shield+. Pull's
-  place settles in its step.
+  Scan and the jump upgrade; late Compile, Warp, Zap+ and Shield+. Pull
+  comes early, with Blink and Pause (D124).
 - **Turned down for now:** Patch (an enemy turns
   peaceful), Overclock (a speed burst), Decrypt (dissolves an encrypted
   wall type), Rollback (back to where he was 3 s ago); upgrades Halt
@@ -1336,6 +1380,7 @@ the world map tool shows the connections and flags any room further out.
 | `room_1` | 12×12 | an empty hub for the Phase 3 spell rooms |
 | `fast_path` | Frostbyte Wastes, 12×12 | Blink and Warp disks, pits to cross; the recharge buff |
 | `clipboard` | Abyssal Buffer, 12×12 | Cut & Paste: crates to cut and paste as steps and bridges, a bug to freeze and move |
+| `tractor_bay` | Home Lattice, 12×12, east of Cache Hall | Pull: two crates across a moat to pull into it as a bridge, a bug patrolling behind a trench to pull in; the Pull disk, an energy refill |
 | `upgrade_lab` | Abyssal Buffer, 12×12 | the upgrades: a wall to double-jump, a bank shot for Zap+, a cron's bolts for Shield+; a secret, a shrine |
 | `vault` | Firewall Citadel, 8×8 | behind the access lock: two fragments |
 
@@ -1822,7 +1867,7 @@ title screen and pause menu (done, D109); saving and loading
 (done, D111); map screen (done, D112).
 
 **Phase 4b — spells, bosses, tooling:** the roster's new spells, one
-step each (D88, D89): Pull, Compile, Scan (needs hidden blocks, fake
+step each (D88, D89): Pull (done, D124), Compile, Scan (needs hidden blocks, fake
 walls and hidden pickups first), Fork (enemies target the decoy);
 Firewall Wardens; reachability checker; design skills and subagents;
 biome enemy rosters (review the proposal below, D108).

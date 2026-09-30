@@ -191,8 +191,8 @@ Planned for Phase 4 (the roster, D88); details settle in their steps:
   holds floor plates down and draws enemies
 - **Scan** — reveals hidden blocks, fake walls and secret pickups for a
   while
-- **Pull** — pulls the closest movable object (a crate) or enemy in the
-  facing direction one tile towards the wizard (D89)
+- **Pull** — pulls the first crate or enemy in line (6 cells) one tile
+  towards the wizard, an enemy even into a hole (D89, D124; built)
 
 Upgrades (Zap+, Shield+, the double jump, D95) have their own save
 bits; a spell upgrade replaces its base spell in the Tab cycle (ZAP
@@ -502,7 +502,8 @@ editor), Phase 3 (v0.3.0, spells and pickups); see CHANGELOG.md.
 **Phase 4 (v0.4) — Saves, guardians, tooling**, in two parts (D105):
 - 4a — Access keys and tests, title screen and pause menu, saving and
   loading (URL hash, localStorage), map screen.
-- 4b — The roster's new spells (D88, D89): Compile, Fork, Scan and Pull.
+- 4b — The roster's new spells (D88, D89): Pull (done, D124), Compile,
+  Scan and Fork.
   Firewall Wardens (bosses, D104). Reachability checker. Design skills
   and subagents. Last in Phase 4, after the spells and game concepts:
   biome concepts and enemy rosters, one biome at a time within the

@@ -79,6 +79,8 @@ export const PLAYER = {
   warpTicks: 24,
   /** Ticks the effect of a cut or a paste lasts (D87, render/clip-fx.js); it doesn't hold him up. */
   clipTicks: 40,
+  /** Ticks the beam of a pull lasts (D124, render/pull-fx.js): about as long as the target slides. */
+  pullTicks: 24,
 };
 
 
@@ -174,6 +176,8 @@ export class Player {
      * pasted, tick counting up to PLAYER.clipTicks.
      */
     this.clip = null;
+    /** The last pull (D124) while its beam lasts, or null: { target, tick }, tick counting up to PLAYER.pullTicks. */
+    this.pull = null;
     this.enter(pos, resetPoint);
   }
 
@@ -268,6 +272,7 @@ export class Player {
     this.shield = null;
     this.clipboard = null;
     this.clip = null;
+    this.pull = null;
   }
 
   /**
@@ -388,6 +393,7 @@ export class Player {
     this.pushIntent = null;
     this.warp = null;
     this.clip = null;
+    this.pull = null;
   }
 
   /** Keep this tick's start for render interpolation (copied in place: no new array every tick). */
@@ -441,6 +447,7 @@ export class Player {
     if (this.install && ++this.install.tick > PLAYER.installTicks) this.install = null;
     if (this.warp && ++this.warp.tick > PLAYER.warpTicks) this.warp = null;
     if (this.clip && ++this.clip.tick > PLAYER.clipTicks) this.clip = null;
+    if (this.pull && ++this.pull.tick > PLAYER.pullTicks) this.pull = null;
     if (this.airJumpTicks !== null && ++this.airJumpTicks > PLAYER.airJumpTicks) this.airJumpTicks = null;
 
     // Walk along the grid axes, or screen-relative (D38); diagonals are normalised.

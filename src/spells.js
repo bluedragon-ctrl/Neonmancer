@@ -9,6 +9,7 @@ import { Bolt } from './entities/bolt.js';
 import { cutTarget, pasteCell } from './entities/clip.js';
 import { Enemy } from './entities/enemy.js';
 import { createObject } from './entities/kinds.js';
+import { pullTarget } from './entities/pull.js';
 import { warpTarget } from './entities/warp.js';
 
 /**
@@ -34,6 +35,8 @@ const SPELL_EFFECTS = {
   warp: (game, spell) => teleport(game, 'warp', spell),
   /** Cut the crate or frozen enemy in front of him into his clipboard, or paste what it holds (D87). */
   cut_paste: (game) => cutOrPaste(game),
+  /** Pull the first crate or enemy in line one cell towards him (D124). */
+  pull: (game, spell) => pull(game, spell),
 };
 
 /**
@@ -146,5 +149,33 @@ function paste(game) {
   }
   player.clip = { mode: 'paste', target, tick: 0 };
   game.refreshBodies();
+  return true;
+}
+
+/**
+ * Pull (D124): the first crate or enemy in line the way he aims, within
+ * the spell's `range` (entities/pull.js), slides one cell towards him: a
+ * crate as if pushed (Pushable.push()), an enemy as if it walked, but over
+ * anything (Enemy.pull()), so it may drop into a hole and pop. Pulling an
+ * enemy provokes it and alarms it (D81): he gets the blame. Nothing in
+ * line, or it can't move (right in front of him, a load on the crate,
+ * something in the cell): it fizzles.
+ * @param {import('./game.js').Game} game
+ * @param {object} spell its tuning from defs.json
+ * @returns {boolean} false if it fizzled
+ */
+function pull(game, { range }) {
+  const { player } = game;
+  const found = pullTarget(game, range);
+  if (!found) return false;
+  const { object, enemy, dir, cell } = found;
+  if (object && !object.push(dir, game)) return false;
+  if (enemy) {
+    if (!enemy.pull(dir, game)) return false;
+    enemy.provoke();
+    if (enemy.alarm(player)) game.emit('alert', { enemy });
+  }
+  player.pull = { target: object ?? enemy, tick: 0 };
+  game.emit('pull', { ...(object ? { object } : { enemy }), cell });
   return true;
 }

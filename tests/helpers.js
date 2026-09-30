@@ -84,6 +84,7 @@ export const SPELLS = {
   blink: { slot: 4, color: '#9ef0ff', cost: 15, cooldown: 0.25, range: 3, damage: 1, hitDamage: 2 },
   warp: { slot: 5, color: '#ff6ee8', cost: 30, cooldown: 0.25 },
   cut_paste: { slot: 6, color: '#f4f6ff', cost: 20, pasteCost: 0, cooldown: 0.25 },
+  pull: { slot: 10, color: '#a6ffcf', cost: 15, cooldown: 0.25, range: 6 },
 };
 
 /**
@@ -99,6 +100,7 @@ export const PICKUPS = {
   disk_blink: { kind: 'disk', spell: 'blink' },
   disk_warp: { kind: 'disk', spell: 'warp' },
   disk_cut_paste: { kind: 'disk', spell: 'cut_paste' },
+  disk_pull: { kind: 'disk', spell: 'pull' },
   refill_integrity: { kind: 'refill', stat: 'integrity', amount: 2 },
   refill_energy: { kind: 'refill', stat: 'energy', amount: 30 },
   access_pass_3: { kind: 'access', level: 3 },

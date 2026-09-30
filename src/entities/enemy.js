@@ -15,6 +15,7 @@
  *   falls into a hole or onto a void block ──► dead (pops; gone until the room resets)
  *   hit by a spell, a discharge or a bolt ──► integrity − damage; at 0 ──► dead (pops)
  *   hit by Pause ──► frozen for a while (still falls; hits still hurt it) ──► thaws
+ *   pulled (D124) ──► walk a cell towards the wizard, frozen or not (it can't act until there)
  *
  * It never steps into a hole or where it would land on a lethal block
  * (D78); it only ends up in one when the ground goes from under it (while
@@ -62,6 +63,8 @@ export const ENEMY = {
   dischargeTicks: 10,
   /** Ticks the "!" stays up at least, once it notices him or is provoked. */
   alertTicks: 60,
+  /** Units per second it slides when Pull drags it (D124): as fast as a pushed crate. */
+  pullSpeed: 3,
 };
 
 /** A step this close to done counts as done. */
@@ -142,6 +145,12 @@ export class Enemy {
     this.deathCause = null;
     /** Ticks since it died, for the pop. */
     this.timer = 0;
+    /**
+     * Being pulled (D124): the whole cell it goes back to if something
+     * stops it on the way ([x, y, z]), or null. It walks there while
+     * frozen too, and does nothing else until it arrives.
+     */
+    this.pulled = null;
   }
 
   get alive() {
@@ -186,6 +195,41 @@ export class Enemy {
     this.sees = false;
     this.inRange = false;
     return 'freeze';
+  }
+
+  /**
+   * Pull drags it a cell along `dir` towards the wizard (D124), from the
+   * cell it stands in, or of the two it is walking between the one it is
+   * nearer: the way it walks, but over anything, so a hole or a lethal
+   * floor there is its end. Frozen or not, it slides there at
+   * ENEMY.pullSpeed and does nothing else until it arrives; an attack it
+   * was charging is cut off. A block, the room's side or a body (the
+   * wizard too) in that cell, or another enemy walking into it, holds it.
+   * @param {number[]} dir [dx, dz]
+   * @param {import('../game.js').Game} game grid, obstacles, liveEnemies and player
+   * @returns {boolean} whether it moves
+   */
+  pull([dx, dz], game) {
+    if (!this.alive || this.state === 'fall') return false;
+    const base = this.state === 'walk' ? (this.walked < 0.5 ? this.from : this.target) : this.pos;
+    if (!Number.isInteger(base[0]) || !Number.isInteger(base[2])) return false; // riding a platform between stops
+    const [x, y, z] = [base[0], this.pos[1], base[2]];
+    const target = [x + dx, y, z + dz];
+    if (!game.grid.isInside(target[0], target[2]) || this.claimed(target, game)) return false;
+    if (this.blockedAt(target, game, [...game.obstacles, game.player])) return false;
+    if (this.attackTick !== null) this.endAttack();
+    this.pulled = [x, y, z];
+    this.pullTo(target);
+    return true;
+  }
+
+  /** Slide from where it is to the cell `target`, at the pull's speed. */
+  pullTo(target) {
+    this.state = 'walk';
+    this.from = [...this.pos];
+    this.target = target;
+    this.walked = 0;
+    this.stepSpeed = ENEMY.pullSpeed / (Math.hypot(target[0] - this.pos[0], target[2] - this.pos[2]) || 1);
   }
 
   /** Is its attack charged (a burst, an arc or a bolt)? */
@@ -413,8 +457,9 @@ export class Enemy {
     if (this.vy !== 0 || support < this.pos[1] - REST_EPS) {
       if (this.drop(support) && support < 0) return this.die('hole');
       from[1] = target[1] = this.pos[1];
+      if (this.pulled) this.pulled[1] = this.pos[1];
     }
-    if (this.frozen) return null; // stopped mid-step; it walks on once it thaws
+    if (this.frozen && !this.pulled) return null; // stopped mid-step; it walks on once it thaws
     // Distance from the cell it left, counted on its own so that whole
     // cells are exact (adding up small float steps drifts).
     const walked = Math.min(this.walked + this.stepSpeed * DT, 1);
@@ -422,7 +467,9 @@ export class Enemy {
     for (let i = 0; i < 3; i++) next[i] = arrived ? target[i] : from[i] + (target[i] - from[i]) * walked;
     // Something in the way, or (solid) the wizard pinned: turn back instead of crushing him.
     if (this.blockedAt(next, game) || (this.solid && !this.carryPlayer(next, game))) {
-      this.turnAround();
+      // Pulled: back to the whole cell it was pulled from (or wait there on the way).
+      if (!this.pulled) this.turnAround();
+      else if (!target.every((v, i) => v === this.pulled[i])) this.pullTo([...this.pulled]);
       return null;
     }
     for (let i = 0; i < 3; i++) this.pos[i] = next[i];
@@ -430,6 +477,7 @@ export class Enemy {
     if (arrived) {
       this.state = 'rest';
       this.from = this.target = null;
+      this.pulled = null;
       // Off a ledge or onto a hole: fall right away.
       if (!this.startFalling(game) && this.onLethal(game.grid)) return this.die('void');
     }
@@ -487,6 +535,7 @@ export class Enemy {
   die(cause) {
     this.state = 'dead';
     this.frozen = null;
+    this.pulled = null;
     this.deathCause = cause;
     this.timer = 0;
     this.sees = false;

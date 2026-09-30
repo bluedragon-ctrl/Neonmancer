@@ -19,6 +19,12 @@ bosses that drop loot, tooling) (D104, D105).
   notes and PR summary now say so.
 
 ### Added
+- Pull spell (D124, slot 10, 15 energy): the first crate or enemy in line
+  the way he aims, within 6 cells, slides one cell towards him; a crate
+  as if pushed, an enemy over anything (into a hole it pops), alarmed and
+  blaming him. A tractor beam of pixel rings, a marquee on the target, an
+  aim marker. Disk in the new test room Tractor Bay, east of Cache Hall;
+  showcase `?asset=pull,disk-pull`.
 - Memory stack decoration (`memory_stack`, D123), 1×1×1: glass memory
   plates with chips, a read/write light rising past them. Stacked side by
   side and on top of each other they make a memory wall, the light

@@ -41,7 +41,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 |---|---|
 | `main.js` | Bootstrap: load and validate data, build systems, route input (menus first), start the loop, error screen |
 | `game.js` | Owns game state; fixed-order `update()` returning typed events; room switching; `reset()` starts over in place (a new game) |
-| `spells.js` | What each spell does once cast (`SPELL_EFFECTS`): `castSpell(game)`, Blink and Warp, Cut & Paste |
+| `spells.js` | What each spell does once cast (`SPELL_EFFECTS`): `castSpell(game)`, Blink and Warp, Cut & Paste, Pull |
 | `combat.js` | Bolts, enemies' charged attacks, bouncing off, touching and burning enemies; every hit on an enemy (`hitEnemy(game, …)`, `pauseEnemy(game, …)`) |
 | `switches.js` | Plates and the locked exits they open (D75): `updateSwitches(game)`, `exitOpen()`, `switchesOn()` |
 | `core/bindings.js` | Default key → action map (the only place raw key codes appear) |
@@ -71,6 +71,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `physics/collision.js` | Axis-separated AABB movement against the grid; surface below a body; box helpers (`restsOn()`, `touchesBox()`, `shoveClear()`) shared by all entities |
 | `entities/bolt.js` | A bolt: the wizard's Zap or Pause (`Bolt.cast()`, level; a Pause bolt carries `freeze` ticks, D85) or an enemy's shot (`Bolt.shoot()`, D80; `boltDirections()`: aimed, or four ways, D81); flies in sub-steps one axis at a time, bounces off walls and objects if it has bounces left (D81), stops at the first body it may hit, block, object or room side (`BOLT` tuning) |
 | `entities/clip.js` | Where Cut & Paste works (D87): `aimAxis()`, `frontCell()` (the cell in front of him), `cutTarget()` (a resting crate or frozen enemy there or one up, nothing on it), `pasteCell()` (free of blocks, bodies and pickups) (pure, tested); `cutOrPaste()` (spells.js) moves things in and out of the room |
+| `entities/pull.js` | What Pull reaches (D124): `pullTarget()`, the first crate or enemy in line the way he aims within the spell's range (pure, tested); `Pushable.push()` and `Enemy.pull()` move it a cell towards him |
 | `entities/collapsing.js` | Collapsing block: solid → shake (the wizard stood on it) → gone → optional regrow once its cell is clear (D47) |
 | `entities/core.js` | The central core (D101): a fixed 1×2×1 body that takes the fragments; touching it is `Game.touchCore()` (pure) |
 | `entities/enemy.js` | Enemy body: steps cell by cell where its movement behavior leads (never into a hole or onto void, never into a cell another enemy is walking into), turns back when blocked, falls (mid-step too), rides platforms, pops in holes and on void; hostility, provoke, bounce state (D48); seeing the wizard, the "!", the charged attack's charge and cooldown (D78); `alarm()` when anything hits it (D81) and `route()`, a shortest walk to a column (D80); `freeze()` by Pause (D85): still, harmless and solid until it thaws |
@@ -94,6 +95,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/card.js` | Upgrade card look (D95): a white expansion card, contact fingers in the upgrade's color with a key notch, a bracket, the upgrade's bit on both faces, ghost |
 | `render/chip.js` | Buff chip look (D93): chip in the stat's color, icon on the front, the buff's bit on the back, ghost |
 | `render/clip-fx.js`, `render/clip-view.js` | Cut & Paste (D87): the marquee, pixel stream and grow-in (pure, tested) and its meshes with the aim marker and paste ghost (`ClipView`, shown by `PlayerView`); `RoomScene.clip()` keeps a cut thing's view until the marquee has snapped on and adds a pasted one's |
+| `render/pull-fx.js`, `render/pull-view.js` | Pull (D124): the beam's pixel rings and the marquee's snap (pure, tested) and their meshes with the aim marker (`PullView`, shown by `PlayerView`) |
 | `render/collapse-fx.js` | Collapsing-block look: shake, pixels breaking off, regrow, `COLLAPSE_FX` tuning (pure, tested) |
 | `render/core-view.js` | The core's reactor look (D101): crystal, pedestal, one orbit ring per access level, `CORE_FX` |
 | `render/crawler.js` | Crawler model (D83): six-legged spider, tripod gait (`crawlerFoot()`, `placeLimb()`), crouch and pawing, `CRAWLER` tuning; `CRAWLER_MODEL` |
