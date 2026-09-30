@@ -189,8 +189,9 @@ bit on its disk (D71).
 Planned for Phase 4 (the roster, D88); details settle in their steps:
 - **Compile** — a crate in the free cell in front of the wizard for 7 s:
   a step up, or a hole plugged to walk over (D125; built)
-- **Fork** — a hologram decoy of the wizard that stands for a while,
-  holds floor plates down and draws enemies
+- **Fork** — a hologram decoy of the wizard in the free cell in front of
+  him for 10 s: it holds floor plates down and draws hostile enemies,
+  which go for the nearer of it and him (D129; built)
 - **Scan** — a wave from the wizard's feet (6 units): fake blocks it
   reaches derez (a pickup may hide inside one), hidden exits open; they
   stay revealed until the room resets (D128; built)
@@ -508,7 +509,7 @@ editor), Phase 3 (v0.3.0, spells and pickups); see CHANGELOG.md.
 - 4a — Access keys and tests, title screen and pause menu, saving and
   loading (URL hash, localStorage), map screen.
 - 4b — The roster's new spells (D88, D89): Pull (done, D124), Compile
-  (done, D125), Scan (done, D128) and Fork.
+  (done, D125), Scan (done, D128) and Fork (done, D129).
   Firewall Wardens (bosses, D104). Reachability checker. Design skills
   and subagents. Last in Phase 4, after the spells and game concepts:
   biome concepts and enemy rosters, one biome at a time within the

@@ -85,6 +85,8 @@ export const PLAYER = {
   compileTicks: 18,
   /** Ticks the wave of a scan shows (D128, render/scan-fx.js); it spreads over SCAN.spreadTicks of them (entities/scan.js). */
   scanTicks: 45,
+  /** Ticks the bits of a fork fly (D129, render/decoy-view.js). */
+  forkTicks: 18,
 };
 
 
@@ -186,6 +188,8 @@ export class Player {
     this.compile = null;
     /** The last scan (D128) while its wave spreads, or null: { origin, range, tick }, tick counting up to PLAYER.scanTicks. */
     this.scan = null;
+    /** The last fork (D129) while its bits fly, or null: { cell, tick }, tick counting up to PLAYER.forkTicks. */
+    this.fork = null;
     this.enter(pos, resetPoint);
   }
 
@@ -283,6 +287,7 @@ export class Player {
     this.pull = null;
     this.compile = null;
     this.scan = null;
+    this.fork = null;
   }
 
   /**
@@ -406,6 +411,7 @@ export class Player {
     this.pull = null;
     this.compile = null;
     this.scan = null;
+    this.fork = null;
   }
 
   /** Keep this tick's start for render interpolation (copied in place: no new array every tick). */
@@ -462,6 +468,7 @@ export class Player {
     if (this.pull && ++this.pull.tick > PLAYER.pullTicks) this.pull = null;
     if (this.compile && ++this.compile.tick > PLAYER.compileTicks) this.compile = null;
     if (this.scan && ++this.scan.tick > PLAYER.scanTicks) this.scan = null;
+    if (this.fork && ++this.fork.tick > PLAYER.forkTicks) this.fork = null;
     if (this.airJumpTicks !== null && ++this.airJumpTicks > PLAYER.airJumpTicks) this.airJumpTicks = null;
 
     // Walk along the grid axes, or screen-relative (D38); diagonals are normalised.

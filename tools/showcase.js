@@ -74,6 +74,8 @@ import { CLIP_FX, marqueeLook, pasteGrow } from '../src/render/clip-fx.js';
 import { createMarquee, placeMarquee } from '../src/render/clip-view.js';
 import { PULL_FX, PULL_PIXELS, pullMarquee, pullPixels } from '../src/render/pull-fx.js';
 import { COMPILE_FX, compileLook } from '../src/render/compile-fx.js';
+import { DECOY } from '../src/entities/decoy.js';
+import { createDecoyModel, placeDecoyModel } from '../src/render/decoy-view.js';
 import { streamCount } from '../src/render/stream-fx.js';
 import { createWave, placeWave, revealBody } from '../src/render/scan-view.js';
 import { SCAN, cellReach, exitReach } from '../src/entities/scan.js';
@@ -243,6 +245,7 @@ const ALL_ASSETS = [
   { label: 'disk-cut-paste', group: 'disks', spin: false, build: () => buildDisk(defs.spells.cut_paste) },
   { label: 'disk-pull', group: 'disks', spin: false, build: () => buildDisk(defs.spells.pull) },
   { label: 'disk-compile', group: 'disks', spin: false, build: () => buildDisk(defs.spells.compile) },
+  { label: 'disk-fork', group: 'disks', spin: false, build: () => buildDisk(defs.spells.fork) },
   { label: 'disk-scan', group: 'disks', spin: false, build: () => buildDisk(defs.spells.scan) },
   // Installing a spell (D73): Zap, then Shield, in a loop.
   { label: 'install', spin: false, shadow: PALETTE.magenta, build: buildInstall },
@@ -334,6 +337,11 @@ const ALL_ASSETS = [
   // in; it blinks, faster at the end, and derezzes (shortened here from
   // 7 s; its disk: disk-compile).
   { label: 'compile', span: 4, spin: false, build: buildCompile },
+  // Fork (D129): the aim marker on the free cell in front of him; he casts,
+  // blue bits fly from his hands into it and a hologram of him grows in;
+  // it blinks, faster at the end, and derezzes (shortened here from 10 s;
+  // its disk: disk-fork).
+  { label: 'fork', span: 4, spin: false, build: buildFork },
   // Scan (D128): the wizard casts, a violet square wave spreads from his
   // feet over the floor; a fake block in the wall beside him derezzes, then
   // a hidden doorway in the back wall opens (its disk: disk-scan).
@@ -2436,6 +2444,45 @@ function buildCompile() {
     crate.scale.setScalar(look.scale);
     crate.position.set(...cell.map((v) => v + (1 - look.scale) / 2));
     placeDerez(pieces, age >= lifetime ? age - lifetime : null, [cell[0] + 0.5, cell[1], cell[2] + 0.5]);
+  };
+  return asset;
+}
+
+/**
+ * Fork (D129) in a loop: the wizard casts, blue bits fly from his hands
+ * into the cell in front of him and a hologram of him grows in there; it
+ * stands, blinks (faster at the end) and derezzes.
+ */
+function buildFork() {
+  const { color } = defs.spells.fork;
+  const at = [-1, 0, 0];
+  const cell = [-0.5, 0, -0.5];
+  const feet = [cell[0] + 0.5, cell[1], cell[2] + 0.5];
+  const wizard = createWizard();
+  wizard.position.set(...at);
+  wizard.rotation.y = Math.PI / 2;
+  const flare = createCastFlare();
+  const decoy = createDecoyModel(color);
+  const aim = createMarquee(color, 0.8);
+  const hands = { at: [at[0] + ZAP_FX.reach, ZAP_FX.height, 0] };
+  const into = { at: feet, body: BLOCK_BODY };
+  const bits = createStream(streamCount(hands, into), [color, 0xffffff]);
+  const asset = new Group().add(wizard, flare, decoy.group, aim, bits);
+  // Cast at tick 40; the decoy stands 240 ticks here; loop 360.
+  const castAt = 40;
+  const lifetime = 240;
+  const loop = 360;
+  let tick = 0;
+  asset.userData.update = (dt, time) => {
+    tick = (tick + dt * 60) % loop;
+    const age = tick - castAt;
+    placeCastFlare(flare, at, Math.PI / 2, age);
+    aim.visible = false;
+    if (age < 0) placeMarquee(aim, [feet[0], feet[1] + 0.5, feet[2]], 1.06, time);
+    placeStream(bits, age >= 0 ? age : null, PLAYER.forkTicks, hands, into);
+    const gone = age >= lifetime ? age - lifetime : null;
+    decoy.group.visible = age >= 0;
+    placeDecoyModel(decoy, { pos: feet, facing: Math.PI / 2, age, ticksLeft: lifetime - age, gone, ground: 0, width: 0.6, dt });
   };
   return asset;
 }

@@ -36,6 +36,7 @@ import { collapseLook } from './collapse-fx.js';
 import { BLOCK_BODY, DEREZ } from './derez-fx.js';
 import { compileLook } from './compile-fx.js';
 import { CompileView } from './compile-view.js';
+import { ForkView } from './fork-view.js';
 import { PALETTE, lineMaterial, neonLines, shared } from './neon.js';
 import { fadingDrops } from './hole-view.js';
 import { HIT_FX, hitFlash, wizardLook } from './hit-fx.js';
@@ -129,7 +130,7 @@ const SHADOW_PLANE = shared(new PlaneGeometry(1, 1));
  * @param {number|null} ground
  * @param {number} diameter at the surface
  */
-function placeShadow(shadow, x, z, bottom, ground, diameter) {
+export function placeShadow(shadow, x, z, bottom, ground, diameter) {
   shadow.visible = ground !== null;
   if (ground === null) return;
   const { scale, opacity } = shadowScale(bottom - ground);
@@ -184,6 +185,8 @@ export class PlayerView {
     this.pull = null;
     /** Compile (D125): its bits and aim marker, made when he first knows the spell. */
     this.compile = null;
+    /** Fork (D129): its bits and aim marker, made when he first knows the spell. */
+    this.fork = null;
     /** The boot sequence after Start (D110): bootState() while he pops in, or null. */
     this.boot = null;
   }
@@ -299,6 +302,13 @@ export class PlayerView {
       this.group.add(this.compile.group);
     }
     this.compile?.sync(this.game, pos, alpha, dt);
+    // Fork: its bits and its aim marker (D129).
+    const forkSpell = this.game.content.spells.fork;
+    if (!this.fork && forkSpell && player.spells.includes('fork')) {
+      this.fork = new ForkView(forkSpell.color);
+      this.group.add(this.fork.group);
+    }
+    this.fork?.sync(this.game, pos, alpha, dt);
     // No ghost while dead: not of him falling into a pit, nor of the derez.
     for (const ghost of this.xray) ghost.visible = !player.dead;
     const derezzing = player.dead && player.deathCause !== 'hole';

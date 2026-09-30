@@ -113,6 +113,8 @@ export class Enemy {
     this.lastSeen = null;
     /** Is he within its attack range (while it sees him)? */
     this.inRange = false;
+    /** What it sees and goes after: the wizard, or his Fork's decoy when that is nearer (D129); null when it sees nothing. */
+    this.focus = null;
     /** Ticks since the "!" popped up (it noticed him, was provoked or hit), or null. */
     this.alert = null;
     /** Charged attack: ticks since it started charging (null: not attacking), ticks until it may again. */
@@ -278,27 +280,34 @@ export class Enemy {
   }
 
   /**
-   * Look for the wizard: does it see him (hostile, within its aggro range,
-   * nothing solid in between), and is he within its attack range? Then
+   * Look for the wizard, or his decoy (D129): does it see one (hostile,
+   * within its aggro range, nothing solid in between), and is it within its attack range? Then
    * its behavior follows what it sees. Once a tick, before update(); a
    * dead enemy sees nothing and thinks nothing.
    * @param {import('../game.js').Game} game grid, player and sightBlockers
    * @returns {boolean} whether it has just noticed him (a new "!")
    */
-  sense({ grid, player, sightBlockers }) {
+  sense({ grid, player, decoy, sightBlockers }) {
     if (!this.alive) return false;
     if (this.alert !== null) this.alert++;
     const saw = this.sees;
     this.sees = false;
     this.inRange = false;
+    this.focus = null;
     if (this.frozen) return false;
-    if (this.hostile && !player.dead && this.data.aggroRange > 0) {
+    if (this.hostile && this.data.aggroRange > 0) {
       const eyes = this.middle();
-      const box = player.box();
-      const distance = reach(eyes, box);
-      this.sees = distance <= this.data.aggroRange && lineOfSight(eyes, boxCenter(box), grid, sightBlockers);
-      if (this.sees) {
-        this.lastSeen = [Math.floor(player.pos[0]), Math.floor(player.pos[2])];
+      // The nearest of the wizard and his decoy it sees; the decoy wins a tie (D129).
+      let nearest = Infinity;
+      for (const body of [decoy?.active ? decoy : null, player.dead ? null : player]) {
+        if (!body) continue;
+        const box = body.box();
+        const distance = reach(eyes, box);
+        if (distance >= nearest || distance > this.data.aggroRange || !lineOfSight(eyes, boxCenter(box), grid, sightBlockers)) continue;
+        nearest = distance;
+        this.focus = body;
+        this.sees = true;
+        this.lastSeen = [Math.floor(body.pos[0]), Math.floor(body.pos[2])];
         this.inRange = this.charged && distance <= this.data.attackRange;
       }
     }
@@ -306,6 +315,11 @@ export class Enemy {
     if (!this.sees || saw) return false;
     this.alert = 0;
     return true;
+  }
+
+  /** What it looks at and attacks: what it sees (the wizard or his decoy), else the wizard. */
+  aimAt({ player }) {
+    return this.focus ?? player;
   }
 
   /** Turn to face the point `[x, , z]`. */
@@ -342,7 +356,7 @@ export class Enemy {
     }
     if (!this.alive || !this.readyToAttack || this.state !== 'rest') return null;
     this.attackTick = 0;
-    this.faceTowards(game.player.pos);
+    this.faceTowards(this.aimAt(game).pos);
     return 'charge';
   }
 
@@ -425,7 +439,7 @@ export class Enemy {
     const found = this.behavior.next(x, z, this, (column) => this.route(column, game));
     if (!found) {
       // Holding its ground or searching: it keeps its eyes on him.
-      if (this.sees) this.faceTowards(game.player.pos);
+      if (this.sees) this.faceTowards(this.aimAt(game).pos);
       return null;
     }
     const steps = Array.isArray(found[0]) ? found : [found];
