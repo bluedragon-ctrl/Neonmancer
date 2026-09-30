@@ -9,6 +9,97 @@
         "KEY FRAGMENTS SCATTERED ACROSS SECTORS.",
         "BRING THEM HOME. MIND THE GAPS."
       ]
+    },
+    "help_zap": {
+      "title": "HELP ZAP.EXE",
+      "lines": [
+        "FIRES A FAST BOLT THE WAY YOU FACE.",
+        "SHORT COOLDOWN, 10 ENERGY A SHOT.",
+        "HITS ENEMIES AND SWITCHES TARGETS ON/OFF.",
+        "TIP: A HIT ALERTS THE TARGET. AIM FIRST."
+      ]
+    },
+    "help_shield": {
+      "title": "HELP SHIELD.EXE",
+      "lines": [
+        "WRAPS YOU IN A CRACKLING RING FOR 7 SEC.",
+        "BLOCKS INCOMING BOLTS, ARCS AND BURSTS.",
+        "DOES NOT STOP A BITE. KEEP YOUR DISTANCE."
+      ]
+    },
+    "help_firewall": {
+      "title": "HELP FIREWALL.EXE",
+      "lines": [
+        "A RING OF FLAMES AROUND YOU FOR 7 SEC.",
+        "BLOCKS BOLTS, BURSTS AND TOUCH ALIKE.",
+        "BURNS ANY ENEMY THAT PRESSES CLOSE.",
+        "COSTS 40 ENERGY. WORTH EVERY BYTE."
+      ]
+    },
+    "help_pause": {
+      "title": "HELP PAUSE.EXE",
+      "lines": [
+        "A BOLT THAT FREEZES AN ENEMY FOR 5 SEC.",
+        "FROZEN PROCESSES ARE HARMLESS AND SOLID:",
+        "STAND ON THEM, PARK THEM ON A PLATE.",
+        "STILL HITTABLE. RESUMES WHEN TIME RUNS OUT."
+      ]
+    },
+    "help_blink": {
+      "title": "HELP BLINK.EXE",
+      "lines": [
+        "DASHES UP TO 3 UNITS AHEAD IN A FLASH,",
+        "OVER GAPS, HAZARDS AND HOLES.",
+        "HURTS ANY ENEMY YOU DASH THROUGH.",
+        "WARNING: A WALL IN THE WAY HURTS YOU."
+      ]
+    },
+    "help_warp": {
+      "title": "HELP WARP.EXE",
+      "lines": [
+        "TELEPORTS YOU AHEAD, AS FAR AS THE FIRST",
+        "WALL OR OBJECT IN LINE. ANY GAP, ANY WIDTH.",
+        "SAFE LANDING, SHORT OF WHAT STOPS YOU.",
+        "COSTS 30 ENERGY."
+      ]
+    },
+    "help_cut_paste": {
+      "title": "HELP CUT_PASTE.EXE",
+      "lines": [
+        "CAST: CUT THE CRATE OR FROZEN ENEMY",
+        "IN FRONT OF YOU INTO YOUR CLIPBOARD.",
+        "CAST AGAIN: PASTE IT INTO THE FREE CELL",
+        "IN FRONT OF YOU. PASTING IS FREE.",
+        "THE CLIPBOARD TRAVELS WITH YOU.",
+        "NOTHING ON TOP, YOUR LEVEL ONLY."
+      ]
+    },
+    "help_compile": {
+      "title": "HELP COMPILE.EXE",
+      "lines": [
+        "BUILDS A CRATE IN THE FREE CELL AHEAD.",
+        "A STEP UP, OR A PLUG FOR A HOLE.",
+        "PUSH IT, PULL IT, STAND ON IT.",
+        "IT DEREZZES AFTER 7 SEC. WATCH THE BLINK."
+      ]
+    },
+    "help_scan": {
+      "title": "HELP SCAN.EXE",
+      "lines": [
+        "SENDS A WAVE 6 UNITS OUT FROM YOUR FEET.",
+        "FAKE BLOCKS IT REACHES DEREZ.",
+        "HIDDEN EXITS IT REACHES OPEN UP.",
+        "SOMETHING LOOKS OFF? SCAN IT."
+      ]
+    },
+    "help_pull": {
+      "title": "HELP PULL.EXE",
+      "lines": [
+        "PULLS THE FIRST CRATE OR ENEMY IN LINE,",
+        "UP TO 6 CELLS AWAY, ONE CELL TOWARD YOU.",
+        "ENEMIES GO EVEN INTO A HOLE.",
+        "PULLED ENEMIES BLAME YOU. BE READY."
+      ]
     }
   }
 }

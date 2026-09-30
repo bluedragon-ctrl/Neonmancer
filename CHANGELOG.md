@@ -19,6 +19,11 @@ bosses that drop loot, tooling) (D104, D105).
   notes and PR summary now say so.
 
 ### Added
+- Spell help texts in `data/lore.json` (`help_zap`, `help_shield`,
+  `help_firewall`, `help_pause`, `help_blink`, `help_warp`,
+  `help_cut_paste`, `help_compile`, `help_scan`, `help_pull`): a screen
+  decoration can name one to explain a spell near where it is found
+  (D118). No room uses them yet; Fork gets one once it is built.
 - Scan spell (D128, slot 9, 15 energy): a violet square wave spreads from
   his feet out to 6 units; fake blocks it reaches derez (block type
   `fake`, looking like any plain block; a pickup may hide inside one),
