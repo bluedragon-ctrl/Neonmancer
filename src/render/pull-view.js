@@ -7,7 +7,7 @@ import { Group } from 'three';
 import { ENEMY, Enemy } from '../entities/enemy.js';
 import { pullTarget } from '../entities/pull.js';
 import { createMarquee, placeMarquee } from './clip-view.js';
-import { createPixelBurst, placePixels } from './entity-view.js';
+import { createPixelBurst, placePixels } from './pixels.js';
 import { lerpPosition } from './interp.js';
 import { PULL_FX, PULL_PIXELS, pullMarquee, pullPixels } from './pull-fx.js';
 import { ZAP_FX } from './zap-fx.js';

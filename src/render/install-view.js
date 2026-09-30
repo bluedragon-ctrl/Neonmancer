@@ -6,7 +6,7 @@
  */
 import { Color, Group } from 'three';
 import { poseDisk } from './disk.js';
-import { createPixelBurst, placePixels } from './entity-view.js';
+import { createPixelBurst, placePixels } from './pixels.js';
 import { INSTALL_FX, installLook } from './install-fx.js';
 import { lineMaterial, neonLines } from './neon.js';
 

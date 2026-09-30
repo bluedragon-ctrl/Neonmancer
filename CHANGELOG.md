@@ -116,6 +116,12 @@ bosses that drop loot, tooling) (D104, D105).
   Quarantine.
 
 ### Changed
+- One derez for everything that is gone (D126): the wizard dying, enemies
+  popping, collapsing blocks, destructible and compiled crates breaking
+  and pickups taken all break into pixels the same way (start through the
+  body, drift out and up, shrink away in 0.8 s); only the body's size and
+  the colors differ. Blocks' pixels now rise instead of tumbling down,
+  and every burst has the same pixel size and timing. Showcase `derez`.
 - Biome map (D122): Glitchmire becomes the heavy virtual sector (pixel and
   geometric monsters), Abyssal Buffer becomes Outer Buffer (dark space;
   id `outer_buffer`), Phantom Partition the ghost sector; Firewall

@@ -5,7 +5,7 @@
  * he was to where he is.
  */
 import { Group } from 'three';
-import { createPixelBurst, placePixels } from './entity-view.js';
+import { createPixelBurst, placePixels } from './pixels.js';
 import { fadingLines, lineMaterial, neonLines } from './neon.js';
 import { WARP_FX, dashLook, kickPixels, streakLook, warpPixels } from './warp-fx.js';
 

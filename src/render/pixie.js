@@ -18,7 +18,7 @@
 import { BoxGeometry, CapsuleGeometry, Color, CylinderGeometry, ExtrudeGeometry, Group, Mesh, MeshBasicMaterial, Shape, SphereGeometry } from 'three';
 import { ENEMY } from '../entities/enemy.js';
 import { dischargeLook } from './discharge.js';
-import { EYE, flaredGlow, glowEyes, popBurst, setMood } from './enemy-look.js';
+import { EYE, flaredGlow, glowEyes, setMood } from './enemy-look.js';
 import { hash } from './hash.js';
 import { createFlash, holoPart, sharpGeometry, sharpPart } from './holo.js';
 import { shared } from './neon.js';
@@ -41,7 +41,8 @@ export const PIXIE = {
   eyeGlow: { calm: 2.4, alert: 4.5 },
   markHeight: 1.05,
   turnRate: 6,
-  pop: { pixels: 36, pixelSize: 0.05, ticks: 36, spread: 0.9, rise: 0.6 },
+  /** The body it derezzes from when it dies (derez-fx.js, D126); square, as it turns. */
+  derez: { size: [0.6, 0.4, 0.6], y: 0.25 },
 };
 
 /** Is point [x, y] inside the polygon (even-odd rule)? */
@@ -231,16 +232,12 @@ export function animatePixie(pixie, { state = 'rest', time = 0, alert = 0, attac
   glowEyes(pixie, flaredGlow(PIXIE.eyeGlow, alert, look.charge));
 }
 
-/** The pixels of it popping `tick` ticks after it died (enemy-look.js popBurst()). */
-export const pixiePopPixels = popBurst(PIXIE.pop, { seed: 121, middle: PIXIE.height, start: 0.2, scatter: 0.2 });
-
 /** Everything EnemyView needs to show a pixie (see BUG_MODEL in bug.js). */
 export const PIXIE_MODEL = {
   create: createPixie,
   setMood,
   animate: animatePixie,
-  popPixels: pixiePopPixels,
-  pop: PIXIE.pop,
+  derez: PIXIE.derez,
   turnRate: PIXIE.turnRate,
   markHeight: PIXIE.markHeight,
   muzzle: 0.25,

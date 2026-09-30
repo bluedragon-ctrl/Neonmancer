@@ -10,7 +10,7 @@ import { ENEMY, Enemy } from '../entities/enemy.js';
 import { cutTarget, pasteCell } from '../entities/clip.js';
 import { CLIP_FX, clipPixels, marqueeLook } from './clip-fx.js';
 import { blockEdges } from './edges.js';
-import { createPixelBurst, placePixels } from './entity-view.js';
+import { createPixelBurst, placePixels } from './pixels.js';
 import { lineMaterial, neonLines } from './neon.js';
 import { ZAP_FX } from './zap-fx.js';
 

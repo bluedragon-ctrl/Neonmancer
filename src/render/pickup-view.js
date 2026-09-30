@@ -2,13 +2,13 @@
  * A room pickup's view (D71): its model (pickup-model.js) hovering and
  * spinning in its cell; a found permanent one as a ghost; once taken, a
  * temporary one's (a refill's or an access pass's) pick-up effect and its
- * pixel burst, then nothing; any other
+ * derez, then nothing; any other
  * goes at once, as the install animation on the wizard takes it over
  * (install-view.js, D73).
  */
 import { Group } from 'three';
-import { DISK, diskMotion, diskPixels, poseDisk } from './disk.js';
-import { createPixelBurst, placePixels } from './entity-view.js';
+import { DISK, diskMotion, poseDisk } from './disk.js';
+import { createDerez, placeDerez } from './pixels.js';
 import { hash } from './hash.js';
 import { createPickupModel } from './pickup-model.js';
 import { refillMotion } from './refill.js';
@@ -27,8 +27,7 @@ export class PickupView {
     this.model = createPickupModel(game.content, data, pickup.state === 'ghost');
     const [x, y, z] = data.at;
     this.model.position.set(x + 0.5, y, z + 0.5);
-    const { pixels, pixelSize } = DISK.collect;
-    this.pixels = createPixelBurst(pixels, pixelSize, [this.model.userData.color, this.model.userData.bitColor]);
+    this.pixels = createDerez(DISK.collect.body, [this.model.userData.color, this.model.userData.bitColor]);
     this.group = new Group().add(this.model, this.pixels);
     /** Seconds of idle motion, started at a different point for each cell so pickups don't move in step. */
     this.time = hash(x * 31 + z, y, [12.9, 78.2]) * 10;
@@ -49,8 +48,7 @@ export class PickupView {
     const motion = diskMotion({ time: this.time, ghost: state === 'ghost', collected });
     const pose = this.refill ? refillMotion(motion) : motion;
     poseDisk(this.model, pose);
-    const burst = collected === undefined ? [] : diskPixels(collected - DISK.collect.riseTicks);
     const { x, z } = this.model.position;
-    placePixels(this.pixels, burst, [x, this.model.position.y + pose.y, z]);
+    placeDerez(this.pixels, collected === undefined ? null : collected - DISK.collect.riseTicks, [x, this.model.position.y + pose.y, z]);
   }
 }

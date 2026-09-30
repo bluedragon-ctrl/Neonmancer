@@ -18,7 +18,7 @@
  */
 import { BoxGeometry, Color, Group, LatheGeometry, Mesh, MeshBasicMaterial, Vector2 } from 'three';
 import { dischargeLook } from './discharge.js';
-import { EYE, flaredGlow, glowEyes, popBurst, setMood } from './enemy-look.js';
+import { EYE, flaredGlow, glowEyes, setMood } from './enemy-look.js';
 import { hash } from './hash.js';
 import { createFlash, holoPart, sharpGeometry, sharpPart } from './holo.js';
 import { shared } from './neon.js';
@@ -45,7 +45,8 @@ export const OVERCLOCK = {
   eyeGlow: { calm: 2.4, alert: 4.5 },
   markHeight: 1.05,
   turnRate: 6,
-  pop: { pixels: 34, pixelSize: 0.06, ticks: 36, spread: 0.9, rise: 1 },
+  /** The body it derezzes from when it dies (derez-fx.js, D126); square, as it turns. */
+  derez: { size: [0.55, 0.45, 0.55] },
 };
 
 /** A flame tongue's profile for LatheGeometry: a rounded base, a bulge, a point. */
@@ -237,16 +238,12 @@ export function animateOverclock(overclock, { state = 'rest', walked = 0, time =
   glowEyes(overclock, flaredGlow(OVERCLOCK.eyeGlow, alert, look.charge));
 }
 
-/** The pixels of it popping `tick` ticks after it died (enemy-look.js popBurst()). */
-export const overclockPopPixels = popBurst(OVERCLOCK.pop, { seed: 111, middle: DIE_TOP, start: 0.15, scatter: 0.4 });
-
 /** Everything EnemyView needs to show an overclock (see BUG_MODEL in bug.js). */
 export const OVERCLOCK_MODEL = {
   create: createOverclock,
   setMood,
   animate: animateOverclock,
-  popPixels: overclockPopPixels,
-  pop: OVERCLOCK.pop,
+  derez: OVERCLOCK.derez,
   turnRate: OVERCLOCK.turnRate,
   markHeight: OVERCLOCK.markHeight,
   muzzle: DIE.size / 2 + 0.05,

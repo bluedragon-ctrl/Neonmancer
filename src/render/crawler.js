@@ -13,7 +13,7 @@
  */
 import { CylinderGeometry, Group, IcosahedronGeometry, Mesh, MeshBasicMaterial, Quaternion, SphereGeometry, Vector3 } from 'three';
 import { dischargeLook } from './discharge.js';
-import { EYE, flaredGlow, glowEyes, popBurst, setMood } from './enemy-look.js';
+import { EYE, flaredGlow, glowEyes, setMood } from './enemy-look.js';
 import { hash } from './hash.js';
 import { createFlash, holoPart, sharpGeometry, sharpPart } from './holo.js';
 import { shared } from './neon.js';
@@ -40,7 +40,8 @@ export const CRAWLER = {
   eyeGlow: { calm: 2.2, alert: 4 },
   markHeight: 0.8,
   turnRate: 12,
-  pop: { pixels: 28, pixelSize: 0.07, ticks: 36, spread: 0.9, rise: 0.6 },
+  /** The body it derezzes from when it dies (derez-fx.js, D126); square, as it turns. */
+  derez: { size: [0.6, 0.35, 0.6], y: 0.1 },
 };
 
 const GEO = {
@@ -185,16 +186,12 @@ export function animateCrawler(crawler, { state = 'rest', walked = 0, time = 0, 
   glowEyes(crawler, flaredGlow(CRAWLER.eyeGlow, alert, look.charge));
 }
 
-/** The pixels of it popping `tick` ticks after it died (enemy-look.js popBurst()). */
-export const crawlerPopPixels = popBurst(CRAWLER.pop, { seed: 61, middle: CRAWLER.y, scatter: 0.2 });
-
 /** Everything EnemyView needs to show a crawler (see BUG_MODEL in bug.js). */
 export const CRAWLER_MODEL = {
   create: createCrawler,
   setMood,
   animate: animateCrawler,
-  popPixels: crawlerPopPixels,
-  pop: CRAWLER.pop,
+  derez: CRAWLER.derez,
   turnRate: CRAWLER.turnRate,
   markHeight: CRAWLER.markHeight,
   muzzle: CRAWLER.head.z + CRAWLER.head.r,

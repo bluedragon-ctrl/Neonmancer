@@ -17,7 +17,7 @@
  */
 import { BoxGeometry, ConeGeometry, CylinderGeometry, ExtrudeGeometry, Group, Mesh, MeshBasicMaterial, Shape } from 'three';
 import { dischargeLook } from './discharge.js';
-import { flaredGlow, glowEyes, popBurst, setMood } from './enemy-look.js';
+import { flaredGlow, glowEyes, setMood } from './enemy-look.js';
 import { hash } from './hash.js';
 import { createFlash, holoPart, sharpGeometry, sharpPart } from './holo.js';
 import { shared } from './neon.js';
@@ -41,7 +41,8 @@ export const WARDEN = {
   eyeGlow: { calm: 2.6, alert: 5 },
   markHeight: 1.25,
   turnRate: 3,
-  pop: { pixels: 40, pixelSize: 0.08, ticks: 40, spread: 1, rise: 0.9 },
+  /** The body it derezzes from when it dies (derez-fx.js, D126); square, as it turns. */
+  derez: { size: [0.5, 1, 0.5] },
 };
 
 const { half, top, taper, point, depth } = WARDEN.shield;
@@ -219,16 +220,12 @@ export function animateWarden(warden, { state = 'rest', walked = 0, time = 0, al
   glowEyes(warden, flaredGlow(WARDEN.eyeGlow, alert, look.charge));
 }
 
-/** The pixels of it popping `tick` ticks after it died (enemy-look.js popBurst()). */
-export const wardenPopPixels = popBurst(WARDEN.pop, { seed: 61, middle: 0.5, scatter: 0.7 });
-
 /** Everything EnemyView needs to show a warden (see BUG_MODEL in bug.js). */
 export const WARDEN_MODEL = {
   create: createWarden,
   setMood,
   animate: animateWarden,
-  popPixels: wardenPopPixels,
-  pop: WARDEN.pop,
+  derez: WARDEN.derez,
   turnRate: WARDEN.turnRate,
   markHeight: WARDEN.markHeight,
   muzzle: 0.3,

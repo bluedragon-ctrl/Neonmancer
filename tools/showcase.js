@@ -22,30 +22,28 @@ import { PUSHABLE } from '../src/entities/pushable.js';
 import {
   CollapsingView,
   ENEMY_MODELS,
-  createDerezPixels,
-  createPixelBurst,
   createDropShadow,
   createRails,
-  placePixels,
   showHitFlash,
 } from '../src/render/entity-view.js';
+import { createDerez, createPixelBurst, placeDerez, placePixels } from '../src/render/pixels.js';
+import { BLOCK_BODY, DEREZ } from '../src/render/derez-fx.js';
 import { advance, buildTrack, positionOf, startState } from '../src/world/path.js';
-import { derezPixels, hitFlash, wizardLook } from '../src/render/hit-fx.js';
+import { HIT_FX, hitFlash, wizardLook } from '../src/render/hit-fx.js';
 import { createFloor } from '../src/render/floor.js';
 import { PALETTE } from '../src/render/neon.js';
 import { Renderer } from '../src/render/renderer.js';
 import { ASPECT } from '../src/render/viewport.js';
 import { createActiveBlockView, flareHazard } from '../src/render/block-fx.js';
 import { createObjectView, createRoomView } from '../src/render/room-view.js';
-import { COLLAPSE_FX, COLLAPSE_PIXELS, collapsePixels } from '../src/render/collapse-fx.js';
 import { ExitView } from '../src/render/exit-view.js';
 import { HOLO_TIME } from '../src/render/holo.js';
 import { createWizard } from '../src/render/wizard.js';
 import { WizardMotion } from '../src/render/wizard-motion.js';
 import { addXray } from '../src/render/xray.js';
-import { BUG, BUG_MODEL, animateBug, createBug, popPixels, setEyeMood } from '../src/render/bug.js';
-import { VIRUS, VIRUS_MIDDLE, animateVirus, createVirus, virusPopPixels } from '../src/render/virus.js';
-import { SENTINEL, SENTINEL_MODEL, animateSentinel, createSentinel, sentinelPopPixels } from '../src/render/sentinel.js';
+import { BUG, BUG_MODEL, animateBug, createBug, setEyeMood } from '../src/render/bug.js';
+import { VIRUS, VIRUS_MIDDLE, animateVirus, createVirus } from '../src/render/virus.js';
+import { SENTINEL, SENTINEL_MODEL, animateSentinel, createSentinel } from '../src/render/sentinel.js';
 import { DISCHARGE, chargeGlow, createDischarge, dischargeLook, placeDischarge } from '../src/render/discharge.js';
 import { createAlertMark, placeAlertMark } from '../src/render/alert-mark.js';
 import { ENEMY } from '../src/entities/enemy.js';
@@ -58,7 +56,7 @@ import { createChip } from '../src/render/chip.js';
 import { createSecret } from '../src/render/secret.js';
 import { createCore } from '../src/render/core-view.js';
 import { createFragment } from '../src/render/fragment.js';
-import { DISK, createDisk, diskMotion, diskPixels, poseDisk } from '../src/render/disk.js';
+import { DISK, createDisk, diskMotion, poseDisk } from '../src/render/disk.js';
 import { createRefill, refillMotion } from '../src/render/refill.js';
 import { INSTALL_FX } from '../src/render/install-fx.js';
 import { createInstall, placeInstall } from '../src/render/install-view.js';
@@ -129,6 +127,10 @@ const ALL_ASSETS = [
   { label: 'wizard-cast', spin: false, shadow: PALETTE.magenta, build: buildWizardCast },
   { label: 'wizard-hole', span: 3, spin: false, build: buildWizardHole },
   { label: 'wizard-hit', build: buildWizardHit, shadow: PALETTE.magenta },
+  // The derez (D126): everything that is gone breaks up the same way, in
+  // its own colors, from its own body: the wizard, a crate, a bug, a
+  // sentinel and a data disk side by side, together, in a loop.
+  { label: 'derez', span: 5, spin: false, build: buildDerez },
   // Every object type from defs.json, in its own style (glass crates, D96:
   // a data core, or empty thinner glass in a destructible one, D99);
   // switches have their own looks (below), and so have the core (D101) and
@@ -904,11 +906,11 @@ function buildRefill(stat) {
 /** Both refills picked up every 2 s, a moment apart. */
 function buildRefillCollect() {
   const asset = new Group();
-  const { pixels: count, pixelSize, riseTicks } = DISK.collect;
+  const { body, riseTicks } = DISK.collect;
   const items = ['integrity', 'energy'].map((stat, i) => {
     const model = createRefill(stat);
     model.position.x = i === 0 ? -0.6 : 0.6;
-    const pixels = createPixelBurst(count, pixelSize, [model.userData.color, 0xffffff]);
+    const pixels = createDerez(body, [model.userData.color, 0xffffff]);
     asset.add(model, pixels);
     return { model, pixels, start: 50 + i * 20 };
   });
@@ -920,8 +922,7 @@ function buildRefillCollect() {
       const collected = tick >= start ? tick - start : undefined;
       const motion = refillMotion(diskMotion({ time, collected }));
       poseDisk(model, motion);
-      const burst = collected === undefined ? [] : diskPixels(collected - riseTicks);
-      placePixels(pixels, burst, [model.position.x, motion.y, 0]);
+      placeDerez(pixels, collected === undefined ? null : collected - riseTicks, [model.position.x, motion.y, 0]);
     }
   };
   return asset;
@@ -969,11 +970,11 @@ function buildDiskSlots() {
   return asset;
 }
 
-/** A data disk picked up every 2 s: it rises, flashes and bursts into pixels, then comes back. */
+/** A data disk picked up every 2 s: it rises, flashes and derezzes, then comes back. */
 function buildDiskCollect() {
   const disk = createDisk();
-  const { pixels: count, pixelSize, riseTicks } = DISK.collect;
-  const pixels = createPixelBurst(count, pixelSize, [disk.userData.color, disk.userData.glyphColor]);
+  const { body, riseTicks } = DISK.collect;
+  const pixels = createDerez(body, [disk.userData.color, disk.userData.glyphColor]);
   const asset = new Group().add(disk, pixels);
   const loop = 120;
   let tick = 0;
@@ -982,8 +983,7 @@ function buildDiskCollect() {
     const collected = tick >= 50 ? tick - 50 : undefined;
     const motion = diskMotion({ time, collected });
     poseDisk(disk, motion);
-    const burst = collected === undefined ? [] : diskPixels(collected - riseTicks);
-    placePixels(pixels, burst, [0, motion.y, 0]);
+    placeDerez(pixels, collected === undefined ? null : collected - riseTicks, [0, motion.y, 0]);
   };
   return asset;
 }
@@ -1030,7 +1030,7 @@ function buildZapBreak() {
   const props = defs.objects.crate_cross;
   const crate = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...props, at: [0, 0, 0] });
   crate.position.set(0.8, 0, -0.5);
-  const pixels = createPixelBurst(COLLAPSE_PIXELS, COLLAPSE_FX.pixelSize, [props.color, 0xffffff]);
+  const pixels = createDerez(BLOCK_BODY, [props.color, 0xffffff]);
   asset.add(crate, pixels);
 
   const loop = 180;
@@ -1047,7 +1047,7 @@ function buildZapBreak() {
     }
     zapper.sync();
     crate.visible = broke === Infinity;
-    placePixels(pixels, collapsePixels(broke), [0.8, 0, -0.5]);
+    placeDerez(pixels, broke, [1.3, 0, 0]);
   };
   return asset;
 }
@@ -1131,7 +1131,7 @@ function buildZapBug() {
   const bug = createBug(color);
   bug.position.x = 1.5;
   bug.rotation.y = -Math.PI / 2;
-  const pixels = createPixelBurst(BUG.pop.pixels, BUG.pop.pixelSize, [color, 0xffffff]);
+  const pixels = createDerez(BUG.derez, [color, 0xffffff]);
   pixels.position.x = 1.5;
   asset.add(bug, pixels);
 
@@ -1162,7 +1162,7 @@ function buildZapBug() {
     const flash = Math.max(hit.flash, glitch.flash);
     bug.userData.flash.amount.value = flash;
     bug.userData.flash.color.value.set(hit.flash > 0 && hit.color === 'white' ? 0xffffff : PALETTE.cyan);
-    placePixels(pixels, popPixels(popTick), [0, 0, 0]);
+    placeDerez(pixels, popTick, [0, 0, 0]);
   };
   return asset;
 }
@@ -1611,14 +1611,14 @@ function buildWyrmColors() {
 /** A concept enemy look (CONCEPTS) popping into pixels, in a loop. */
 function buildConceptPop(model, color) {
   const enemy = model.create(color);
-  const pixels = createPixelBurst(model.pop.pixels, model.pop.pixelSize, [color, 0xffffff]);
+  const pixels = createDerez(model.derez, [color, 0xffffff]);
   const asset = new Group().add(enemy, pixels);
   let tick = 0;
   asset.userData.update = (dt, time) => {
     tick = (tick + dt * 60) % 90;
     enemy.visible = tick < 40;
     model.animate(enemy, { time, alert: 1 });
-    placePixels(pixels, tick >= 40 ? model.popPixels(tick - 40) : [], [0, 0, 0]);
+    placeDerez(pixels, tick >= 40 ? tick - 40 : null, [0, 0, 0]);
   };
   return asset;
 }
@@ -1631,14 +1631,14 @@ function buildEnemyPop(type) {
   const { look, color } = enemyValues(type);
   const model = ENEMY_MODELS[look];
   const enemy = model.create(color);
-  const pixels = createPixelBurst(model.pop.pixels, model.pop.pixelSize, [color, 0xffffff]);
+  const pixels = createDerez(model.derez, [color, 0xffffff]);
   const asset = new Group().add(enemy, pixels);
   let tick = 0;
   asset.userData.update = (dt, time) => {
     tick = (tick + dt * 60) % 90;
     enemy.visible = tick < 40;
     model.animate(enemy, { time });
-    placePixels(pixels, tick >= 40 ? model.popPixels(tick - 40) : [], [0, 0, 0]);
+    placeDerez(pixels, tick >= 40 ? tick - 40 : null, [0, 0, 0]);
   };
   return asset;
 }
@@ -1712,14 +1712,14 @@ function buildSentinelAttack() {
 function buildSentinelPop() {
   const { color } = defs.enemies.sentinel;
   const sentinel = createSentinel(color);
-  const pixels = createPixelBurst(SENTINEL.pop.pixels, SENTINEL.pop.pixelSize, [color, 0xffffff]);
+  const pixels = createDerez(SENTINEL.derez, [color, 0xffffff]);
   const asset = new Group().add(sentinel, pixels);
   let tick = 0;
   asset.userData.update = (dt, time) => {
     tick = (tick + dt * 60) % 90;
     sentinel.visible = tick < 40;
     animateSentinel(sentinel, { time });
-    placePixels(pixels, tick >= 40 ? sentinelPopPixels(tick - 40) : [], [0, 0, 0]);
+    placeDerez(pixels, tick >= 40 ? tick - 40 : null, [0, 0, 0]);
   };
   return asset;
 }
@@ -1728,7 +1728,7 @@ function buildSentinelPop() {
 function buildVirusPop() {
   const { color } = defs.enemies.virus;
   const virus = createVirus(color);
-  const pixels = createPixelBurst(VIRUS.pop.pixels, VIRUS.pop.pixelSize, [color, 0xffffff]);
+  const pixels = createDerez(VIRUS.derez, [color, 0xffffff]);
   const asset = new Group().add(virus, pixels);
   const loop = 90;
   let tick = 0;
@@ -1737,7 +1737,7 @@ function buildVirusPop() {
     const popped = tick >= 40;
     virus.visible = !popped;
     animateVirus(virus, { time });
-    placePixels(pixels, popped ? virusPopPixels(tick - 40) : [], [0, 0, 0]);
+    placeDerez(pixels, popped ? tick - 40 : null, [0, 0, 0]);
   };
   return asset;
 }
@@ -1746,7 +1746,7 @@ function buildVirusPop() {
 function buildBugPop() {
   const { color } = defs.enemies.bug;
   const bug = createBug(color);
-  const pixels = createPixelBurst(BUG.pop.pixels, BUG.pop.pixelSize, [color, 0xffffff]);
+  const pixels = createDerez(BUG.derez, [color, 0xffffff]);
   const asset = new Group().add(bug, pixels);
   const loop = 90;
   let tick = 0;
@@ -1754,7 +1754,7 @@ function buildBugPop() {
     tick = (tick + dt * 60) % loop;
     const popped = tick >= 40;
     bug.visible = !popped;
-    placePixels(pixels, popped ? popPixels(tick - 40) : [], [0, 0, 0]);
+    placeDerez(pixels, popped ? tick - 40 : null, [0, 0, 0]);
   };
   return asset;
 }
@@ -1903,9 +1903,45 @@ function buildWizardHole() {
   return asset;
 }
 
+function buildDerez() {
+  const crate = defs.objects.crate;
+  const bug = defs.enemies.bug.color;
+  const sentinel = defs.enemies.sentinel.color;
+  const disk = createDisk();
+  // [model, its derez, its feet center]
+  const things = [
+    [createWizard(), createDerez(HIT_FX.body, [PALETTE.cyan, PALETTE.magenta]), [-2.4, 0, 0]],
+    [createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...crate, at: [0, 0, 0] }), createDerez(BLOCK_BODY, [crate.color, 0xffffff]), [-1.2, 0, 0]],
+    [createBug(bug), createDerez(BUG.derez, [bug, 0xffffff]), [0, 0, 0]],
+    [createSentinel(sentinel), createDerez(SENTINEL.derez, [sentinel, 0xffffff]), [1.2, 0, 0]],
+    [disk, createDerez(DISK.collect.body, [disk.userData.color, disk.userData.glyphColor]), [2.4, 0, 0]],
+  ];
+  const asset = new Group();
+  for (const [model, pixels, [x]] of things) {
+    model.position.x = x;
+    asset.add(model, pixels);
+  }
+  things[1][0].position.set(-1.7, 0, -0.5); // a crate's view stands on its lower corner
+  const start = 40;
+  const loop = start + DEREZ.ticks + 30;
+  let tick = 0;
+  asset.userData.update = (dt, time) => {
+    tick = (tick + dt * 60) % loop;
+    const derez = tick >= start ? tick - start : null;
+    const motion = diskMotion({ time });
+    poseDisk(disk, motion);
+    animateSentinel(things[3][0], { time });
+    for (const [model, pixels, feet] of things) {
+      model.visible = derez === null;
+      placeDerez(pixels, derez, model === disk ? [feet[0], motion.y, 0] : feet);
+    }
+  };
+  return asset;
+}
+
 function buildWizardHit() {
   const wizard = createWizard();
-  const pixels = createDerezPixels();
+  const pixels = createDerez(HIT_FX.body, [PALETTE.cyan, PALETTE.magenta]);
   const asset = new Group().add(wizard, pixels);
   const hitTicks = PLAYER.invulnerableTicks + 30;
   const loop = hitTicks + PLAYER.deathTicks + 30;
@@ -1924,7 +1960,7 @@ function buildWizardHit() {
     wizard.visible = look.visible;
     wizard.scale.set(...look.scale);
     showHitFlash(wizard, hitFlash(player));
-    placePixels(pixels, dead ? derezPixels(derezTick) : [], [0, 0, 0]);
+    placeDerez(pixels, dead ? derezTick : null, [0, 0, 0]);
   };
   return asset;
 }
@@ -2338,7 +2374,7 @@ function buildCompile() {
   const crate = createObjectView({ ...type, at: [0, 0, 0] });
   const aim = createMarquee(color, COMPILE_FX.aimBrightness);
   const bits = createPixelBurst(COMPILE_PIXELS, COMPILE_FX.pixelSize, [color, 0xffffff]);
-  const pieces = createPixelBurst(COLLAPSE_PIXELS, COLLAPSE_FX.pixelSize, [type.color, 0xffffff]);
+  const pieces = createDerez(BLOCK_BODY, [type.color, 0xffffff]);
   const asset = new Group().add(wizard, flare, crate, aim, bits, pieces);
   const hands = [at[0] + ZAP_FX.reach, ZAP_FX.height, 0];
   // Cast at tick 40; the crate lasts 240 ticks here; loop 360.
@@ -2358,7 +2394,7 @@ function buildCompile() {
     crate.visible = look.visible;
     crate.scale.setScalar(look.scale);
     crate.position.set(...cell.map((v) => v + (1 - look.scale) / 2));
-    placePixels(pieces, age >= lifetime ? collapsePixels(age - lifetime) : [], cell);
+    placeDerez(pieces, age >= lifetime ? age - lifetime : null, [cell[0] + 0.5, cell[1], cell[2] + 0.5]);
   };
   return asset;
 }

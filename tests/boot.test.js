@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { BOOT, BOOT_TIME, arrivalLook, bootState, gatherPixels, outsideCover, revealTiles, tileLook } from '../src/render/boot-fx.js';
+import { derezCount } from '../src/render/derez-fx.js';
 import { HIT_FX } from '../src/render/hit-fx.js';
 
 test('boot sequence: the logo goes, the room compiles, then he pops in and lands', () => {
@@ -19,7 +20,7 @@ test('his pixels gather: none before or after, all of them in between, falling i
   assert.deepEqual(gatherPixels(1), []);
   const early = gatherPixels(0.1);
   const late = gatherPixels(0.8);
-  assert.equal(early.length, HIT_FX.pixels);
+  assert.equal(early.length, derezCount(HIT_FX.body));
   const height = (pixels) => pixels.reduce((sum, pixel) => sum + pixel.offset[1] * (pixel.scale > 0), 0) / pixels.filter((pixel) => pixel.scale > 0).length;
   assert.ok(height(early) > height(late)); // they come down
   assert.ok(late.some((pixel) => pixel.scale > 0.5));

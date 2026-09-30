@@ -5,13 +5,9 @@
  */
 import {
   AdditiveBlending,
-  BoxGeometry,
   Color,
   Group,
-  InstancedMesh,
-  Matrix4,
   Mesh,
-  MeshBasicMaterial,
   Plane,
   PlaneGeometry,
   ShaderMaterial,
@@ -36,13 +32,15 @@ import { OVERCLOCK_MODEL } from './overclock.js';
 import { PIXIE_MODEL } from './pixie.js';
 import { VIRUS_MODEL } from './virus.js';
 import { hitJolt } from './break-fx.js';
-import { COLLAPSE_FX, COLLAPSE_PIXELS, collapseLook, collapsePixels } from './collapse-fx.js';
+import { collapseLook } from './collapse-fx.js';
+import { BLOCK_BODY, DEREZ } from './derez-fx.js';
 import { compileLook } from './compile-fx.js';
 import { CompileView } from './compile-view.js';
 import { PALETTE, lineMaterial, neonLines, shared } from './neon.js';
 import { fadingDrops } from './hole-view.js';
-import { HIT_FX, derezPixels, hitFlash, wizardLook } from './hit-fx.js';
+import { HIT_FX, hitFlash, wizardLook } from './hit-fx.js';
 import { lerpAngle, lerpPosition, shadowScale } from './interp.js';
+import { createDerez, placeDerez, placePixels } from './pixels.js';
 import { railSegments } from './rails.js';
 import { createObjectView } from './room-view.js';
 import { createWizard } from './wizard.js';
@@ -140,46 +138,8 @@ function placeShadow(shadow, x, z, bottom, ground, diameter) {
   shadow.material.uniforms.uOpacity.value = opacity;
 }
 
-/**
- * A burst of glowing pixels: small additive cubes, taking turns in the
- * given colors, hidden until placePixels() shows some.
- * @param {number} count
- * @param {number} size edge of one cube
- * @param {(number|string)[]} colors
- */
-export function createPixelBurst(count, size, colors) {
-  const geometry = new BoxGeometry(size, size, size);
-  const material = new MeshBasicMaterial({ blending: AdditiveBlending, depthWrite: false, transparent: true });
-  const mesh = new InstancedMesh(geometry, material, count);
-  const tints = colors.map((color) => new Color(color).multiplyScalar(1.6));
-  for (let i = 0; i < count; i++) mesh.setColorAt(i, tints[i % tints.length]);
-  mesh.frustumCulled = false; // instances move far from the geometry's own bounds
-  mesh.visible = false;
-  return mesh;
-}
-
-/** The burst of pixels a derezzing wizard leaves (see hit-fx.js), in his colors. */
-export function createDerezPixels() {
-  return createPixelBurst(HIT_FX.pixels, HIT_FX.pixelSize, [PALETTE.cyan, PALETTE.magenta]);
-}
-
-const pixelMatrix = new Matrix4();
-
-/**
- * Show a pixel burst around `pos`, or hide it when there are no pixels.
- * @param {InstancedMesh} mesh from createPixelBurst()
- * @param {{ offset: number[], scale: number }[]} pixels offsets from `pos`
- *   (e.g. from derezPixels() or collapsePixels())
- * @param {number[]} pos
- */
-export function placePixels(mesh, pixels, pos) {
-  mesh.visible = pixels.length > 0;
-  pixels.forEach(({ offset: [x, y, z], scale }, i) => {
-    pixelMatrix.makeScale(scale, scale, scale).setPosition(pos[0] + x, pos[1] + y, pos[2] + z);
-    mesh.setMatrixAt(i, pixelMatrix);
-  });
-  mesh.instanceMatrix.needsUpdate = true;
-}
+/** The feet center of a block or crate in the cell at `pos`, where its derez stands. */
+const feetOf = ([x, y, z]) => [x + 0.5, y, z + 0.5];
 
 /**
  * Set a wizard model's flash uniforms from hitFlash().
@@ -207,7 +167,7 @@ export class PlayerView {
     /** Ghost of his parts hidden behind blocks (xray.js). */
     this.xray = addXray(this.wizard);
     this.shadow = createDropShadow(PALETTE.magenta);
-    this.pixels = createDerezPixels();
+    this.pixels = createDerez(HIT_FX.body, [PALETTE.cyan, PALETTE.magenta]);
     this.flare = createCastFlare();
     /** The double jump's kick-off rings (D95). */
     this.jumpRings = createJumpRings();
@@ -342,7 +302,7 @@ export class PlayerView {
     // No ghost while dead: not of him falling into a pit, nor of the derez.
     for (const ghost of this.xray) ghost.visible = !player.dead;
     const derezzing = player.dead && player.deathCause !== 'hole';
-    placePixels(this.pixels, derezzing ? derezPixels(PLAYER.deathTicks - player.deathTimer + alpha) : [], pos);
+    placeDerez(this.pixels, derezzing ? PLAYER.deathTicks - player.deathTimer + alpha : null, pos);
 
     // The flare at his hands, the way the bolt flies (his aim, not his turning body).
     placeCastFlare(this.flare, pos, player.targetFacing, player.castTicks === null || player.dead ? Infinity : player.castTicks + alpha);
@@ -394,9 +354,9 @@ export class PushableView {
     /** Made once the object plugs a hole (most never do): its vertical edges fade into the pit. */
     this.plugDrops = null;
     this.group.add(this.block, this.shadow);
-    // Destructible, or compiled (D125): it breaks into pixels like a collapsing block.
+    // Destructible, or compiled (D125): it derezzes (D126).
     if (pushable.integrity !== null || pushable.temporary) {
-      this.pixels = createPixelBurst(COLLAPSE_PIXELS, COLLAPSE_FX.pixelSize, [pushable.object.color, 0xffffff]);
+      this.pixels = createDerez(BLOCK_BODY, [pushable.object.color, 0xffffff]);
       this.group.add(this.pixels);
     }
   }
@@ -408,7 +368,7 @@ export class PushableView {
     if (this.pixels) {
       const broken = pushable.state === 'broken';
       this.block.visible = !broken;
-      placePixels(this.pixels, broken ? collapsePixels(pushable.timer + alpha) : [], pushable.pos);
+      placeDerez(this.pixels, broken ? pushable.timer + alpha : null, feetOf(pushable.pos));
       if (broken) {
         this.shadow.visible = false;
         return;
@@ -474,9 +434,7 @@ export class CollapsingView {
     this.view = createObjectView({ ...block.object, at: [0, 0, 0] });
     this.view.position.set(-0.5, -0.5, -0.5);
     this.center = new Group().add(this.view);
-    this.pixels = createPixelBurst(COLLAPSE_PIXELS, COLLAPSE_FX.pixelSize, [block.object.color]);
-    // Pixels falling into a pit disappear at the floor, like objects.
-    this.pixels.material.clippingPlanes = FLOOR_CLIP;
+    this.pixels = createDerez(BLOCK_BODY, [block.object.color, 0xffffff]);
     this.group = new Group().add(this.center, this.pixels);
   }
 
@@ -488,7 +446,7 @@ export class CollapsingView {
     this.center.visible = look.visible;
     this.center.position.set(x + 0.5 + look.offset[0], y + 0.5 + look.offset[1], z + 0.5 + look.offset[2]);
     this.center.scale.setScalar(look.scale);
-    placePixels(this.pixels, block.state === 'gone' ? collapsePixels(block.timer + alpha) : [], block.pos);
+    placeDerez(this.pixels, block.state === 'gone' ? block.timer + alpha : null, feetOf(block.pos));
   }
 }
 
@@ -539,7 +497,7 @@ export class EnemyView {
     this.kind = ENEMY_MODELS[look];
     if (!this.kind) throw new Error(`No enemy look "${look}" (ENEMY_MODELS)`);
     this.model = this.kind.create(color);
-    this.pixels = createPixelBurst(this.kind.pop.pixels, this.kind.pop.pixelSize, [color, 0xffffff]);
+    this.pixels = createDerez(this.kind.derez, [color, 0xffffff]);
     this.mood = null;
     /** The "!" over it while it has noticed the wizard (any enemy). */
     this.mark = createAlertMark();
@@ -584,7 +542,7 @@ export class EnemyView {
       if (this.discharge) this.discharge.visible = false;
       // Popped in a pit: the burst comes out at the floor. Once it is over
       // (hidden by an empty burst), there is nothing left to update.
-      if (enemy.timer <= kind.pop.ticks) placePixels(this.pixels, kind.popPixels(enemy.timer + alpha), [feet[0], Math.max(feet[1], 0), feet[2]]);
+      if (enemy.timer <= DEREZ.ticks) placeDerez(this.pixels, enemy.timer + alpha, [feet[0], Math.max(feet[1], 0), feet[2]]);
       return;
     }
 

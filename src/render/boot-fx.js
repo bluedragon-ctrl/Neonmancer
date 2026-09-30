@@ -8,7 +8,8 @@
  * and a squash. Any menu key skips to the end. Times in seconds.
  */
 import { hash } from './hash.js';
-import { HIT_FX, derezPixels } from './hit-fx.js';
+import { DEREZ, derezPixels } from './derez-fx.js';
+import { HIT_FX } from './hit-fx.js';
 
 export const BOOT = {
   /** The logo scrambles and glitches out. */
@@ -121,7 +122,7 @@ export function outsideCover(wipe) {
  */
 export function gatherPixels(pop) {
   if (pop <= 0 || pop >= 1) return [];
-  return derezPixels((1 - pop) * (HIT_FX.pixelTicks - 1));
+  return derezPixels((1 - pop) * (DEREZ.ticks - 1), HIT_FX.body);
 }
 
 /**

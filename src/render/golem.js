@@ -16,7 +16,7 @@
  */
 import { BoxGeometry, Group, Mesh, MeshBasicMaterial } from 'three';
 import { dischargeLook } from './discharge.js';
-import { MOODS, flaredGlow, glowEyes, popBurst, setMood } from './enemy-look.js';
+import { MOODS, flaredGlow, glowEyes, setMood } from './enemy-look.js';
 import { hash } from './hash.js';
 import { createFlash, sharpGeometry, sharpPart } from './holo.js';
 import { shared } from './neon.js';
@@ -40,7 +40,8 @@ export const GOLEM = {
   eyeGlow: { calm: 2.2, alert: 4.5 },
   markHeight: 1.05,
   turnRate: 3,
-  pop: { pixels: 40, pixelSize: 0.08, ticks: 40, spread: 1, rise: 0.8 },
+  /** The body it derezzes from when it dies (derez-fx.js, D126); square, as it turns. */
+  derez: { size: [0.5, 0.8, 0.5] },
 };
 
 const [UW, UH, UD] = GOLEM.unit;
@@ -190,16 +191,12 @@ export function animateGolem(golem, { state = 'rest', walked = 0, time = 0, aler
   glowEyes(golem, flaredGlow(GOLEM.eyeGlow, alert, look.charge));
 }
 
-/** The pixels of it popping `tick` ticks after it died (enemy-look.js popBurst()). */
-export const golemPopPixels = popBurst(GOLEM.pop, { seed: 81, middle: 0.42, start: 0.2, scatter: 0.6 });
-
 /** Everything EnemyView needs to show a golem (see BUG_MODEL in bug.js). */
 export const GOLEM_MODEL = {
   create: createGolem,
   setMood,
   animate: animateGolem,
-  popPixels: golemPopPixels,
-  pop: GOLEM.pop,
+  derez: GOLEM.derez,
   turnRate: GOLEM.turnRate,
   markHeight: GOLEM.markHeight,
   muzzle: GOLEM.head.size[2] / 2 + 0.05,

@@ -2,7 +2,7 @@
  * The bug model in the hologram look (D22, D48): a plain ball with two
  * slanted eyes whose color shows its mood (red: hostile, amber: calm until
  * provoked, cyan: peaceful), hopping from cell to cell with squash and
- * stretch; it squashes when the wizard bounces off it. Pure pose and pop
+ * stretch; it squashes when the wizard bounces off it. Pure pose
  * functions are tested.
  *
  * The model stands on y = 0 around the y axis and looks along +z. The ball
@@ -10,7 +10,7 @@
  */
 import { Group, Mesh, MeshBasicMaterial, SphereGeometry } from 'three';
 import { dischargeLook } from './discharge.js';
-import { EYE, eyeMood, popBurst, setMood } from './enemy-look.js';
+import { EYE, eyeMood, setMood } from './enemy-look.js';
 import { hash } from './hash.js';
 import { createFlash, holoPart } from './holo.js';
 import { shared } from './neon.js';
@@ -31,8 +31,8 @@ export const BUG = {
   idleLift: 0.4,
   /** Turning speed towards where it walks, per second. */
   turnRate: 14,
-  /** Pop into pixels when it dies. */
-  pop: { pixels: 24, pixelSize: 0.07, ticks: 36, spread: 0.8, rise: 0.6 },
+  /** The body it derezzes from when it dies (derez-fx.js, D126); square, as it turns. */
+  derez: { size: [0.5, 0.55, 0.5], y: 0.05 },
 };
 
 const SEGMENTS = 32;
@@ -137,21 +137,14 @@ export function animateBug(bug, { state = 'rest', walked = 0, time = 0, bounced 
 }
 
 /**
- * The pixels of a popping bug `tick` ticks after it died: a burst flying
- * out from the ball's middle (enemy-look.js popBurst()).
- */
-export const popPixels = popBurst(BUG.pop, { seed: 1, middle: BUG.r });
-
-/**
  * Everything EnemyView needs to show a bug: build it, color its eyes,
- * animate it, and its pop.
+ * animate it, and the body it derezzes from.
  */
 export const BUG_MODEL = {
   create: createBug,
   setMood,
   animate: animateBug,
-  popPixels,
-  pop: BUG.pop,
+  derez: BUG.derez,
   turnRate: BUG.turnRate,
   /** Height of the "!" above its feet. */
   markHeight: 0.85,

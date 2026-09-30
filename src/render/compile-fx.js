@@ -6,7 +6,7 @@
  * front of him, each to its own point of a lattice through the cell,
  * while the crate grows in there with a flicker, as a collapsing block
  * recompiles (collapse-fx.js). Before it derezzes the crate blinks, faster
- * at the end, then breaks into pixels like a destructible crate. While the
+ * at the end, then derezzes like anything else (derez-fx.js). While the
  * spell is selected, a dim marquee marks the cell a cast would fill (the
  * aim marker).
  */
