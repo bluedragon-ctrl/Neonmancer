@@ -28,6 +28,13 @@ bosses that drop loot, tooling) (D104, D105).
   `help_double_jump`), fragments, the core and access levels
   (`help_fragments`, `help_core`, `help_access`), and one per level for
   a screen by an access-locked exit (`access_1` to `access_3`).
+- Fork spell (D129, slot 8, 25 energy): a hologram of him in the free
+  cell in front of him for 10 s; it holds a floor plate down and hostile
+  enemies that see it go for the nearer of it and him (they aim their
+  bolts and arcs at it). One at a time. Blue bits fly into the cell as it
+  grows in; an aim marker. Disk in the new test room Decoy Lab, north of
+  Build Yard (a plate only a decoy can press, a locked exit), with Decoy
+  Vault behind it; showcase `?asset=fork,disk-fork`.
 - Scan spell (D128, slot 9, 15 energy): a violet square wave spreads from
   his feet out to 6 units; fake blocks it reaches derez (block type
   `fake`, looking like any plain block; a pickup may hide inside one),

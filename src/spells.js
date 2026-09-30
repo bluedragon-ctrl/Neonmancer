@@ -8,6 +8,7 @@ import { hitEnemy } from './combat.js';
 import { withObjectDefaults } from './data/room-data.js';
 import { Bolt } from './entities/bolt.js';
 import { cutTarget, pasteCell } from './entities/clip.js';
+import { Decoy } from './entities/decoy.js';
 import { Enemy } from './entities/enemy.js';
 import { createObject } from './entities/kinds.js';
 import { pullTarget } from './entities/pull.js';
@@ -40,6 +41,8 @@ const SPELL_EFFECTS = {
   compile: (game, spell) => compile(game, spell),
   /** Pull the first crate or enemy in line one cell towards him (D124). */
   pull: (game, spell) => pull(game, spell),
+  /** A hologram of him in the free cell in front of him, for a while: enemies go for it (D129). */
+  fork: (game, spell) => fork(game, spell),
   /** A wave from his feet that reveals fake blocks and hidden exits it reaches (D128). */
   scan: (game, spell) => scan(game, spell),
 };
@@ -225,4 +228,23 @@ function scan(game, { range }) {
   const { player } = game;
   player.scan = { origin: [...player.pos], range, tick: 0, found: false };
   game.emit('scan');
+}
+
+/**
+ * Fork (D129): a decoy of the wizard (entities/decoy.js) stands in the
+ * free cell in front of him, where Compile puts a crate, for the spell's
+ * `duration`. Only one at a time: a new one replaces the old. No free
+ * cell: it fizzles.
+ * @param {import('./game.js').Game} game
+ * @param {object} spell its tuning from defs.json
+ * @returns {boolean} false if it fizzled
+ */
+function fork(game, { duration }) {
+  const { player } = game;
+  const cell = pasteCell(game);
+  if (!cell) return false;
+  game.decoy = new Decoy(cell, player.targetFacing, player.size, duration);
+  player.fork = { cell, tick: 0 };
+  game.emit('fork', { decoy: game.decoy, cell });
+  return true;
 }

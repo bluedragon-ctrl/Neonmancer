@@ -85,6 +85,7 @@ export const SPELLS = {
   warp: { slot: 5, color: '#ff6ee8', cost: 30, cooldown: 0.25 },
   cut_paste: { slot: 6, color: '#f4f6ff', cost: 20, pasteCost: 0, cooldown: 0.25 },
   compile: { slot: 7, color: '#ffe45c', cost: 5, cooldown: 0.25, duration: 7, object: 'crate' },
+  fork: { slot: 8, color: '#4d8bff', cost: 25, cooldown: 0.25, duration: 10 },
   scan: { slot: 9, color: '#8f6bff', cost: 15, cooldown: 0.25, range: 6 },
   pull: { slot: 10, color: '#a6ffcf', cost: 15, cooldown: 0.25, range: 6 },
 };
@@ -104,6 +105,7 @@ export const PICKUPS = {
   disk_cut_paste: { kind: 'disk', spell: 'cut_paste' },
   disk_compile: { kind: 'disk', spell: 'compile' },
   disk_pull: { kind: 'disk', spell: 'pull' },
+  disk_fork: { kind: 'disk', spell: 'fork' },
   disk_scan: { kind: 'disk', spell: 'scan' },
   refill_integrity: { kind: 'refill', stat: 'integrity', amount: 2 },
   refill_energy: { kind: 'refill', stat: 'energy', amount: 30 },

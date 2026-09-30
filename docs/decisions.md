@@ -1057,3 +1057,19 @@ already brings secrets back. Fake blocks are static grid cells, not
 objects, so their edges merge with the plain blocks round them and
 nothing gives them away. A pickup inside a fake block covers "secret
 pickups" without a new pickup state.
+
+### D129 — 2026-09-30 — Fork: a decoy of the wizard
+Fork (slot 8, 25 energy, blue `#4d8bff`) stands a hologram of the wizard
+in the free cell in front of him (where Compile puts a crate) for 10 s.
+It is no solid body: nothing collides with it or harms it. It holds a
+floor plate down, and a hostile enemy that sees it goes for the nearer of
+it and him (the decoy wins a tie): it chases, faces and aims at that
+focus, so bolts and arcs fly at the decoy. One at a time, a new fork
+replaces the old; a new room has none. Test rooms Decoy Lab, north of
+Build Yard, and Decoy Vault behind its locked exit.
+**Why:** the roster's Fork (D88): a second body for puzzles (a plate he
+can't reach himself) and for combat (draw a sentinel's bolt, pull a
+virus away). Ghost-like and harmless keeps the rules small: no health, no
+blocking, no cleanup but the timer. Casting it in front of him, like
+Compile, makes it aimable and needs no new input. The nearer-wins rule
+keeps enemies from ignoring him when he stands next to them.

@@ -83,6 +83,16 @@
         "IT DEREZZES AFTER 7 SEC. WATCH THE BLINK."
       ]
     },
+    "help_fork": {
+      "title": "HELP FORK.EXE",
+      "lines": [
+        "SPAWNS A HOLOGRAM OF YOU IN THE FREE CELL",
+        "AHEAD. IT STANDS FOR 10 SEC.",
+        "IT HOLDS A FLOOR PLATE DOWN.",
+        "ENEMIES THAT SEE IT GO FOR IT, NOT YOU.",
+        "A NEW FORK REPLACES THE OLD ONE."
+      ]
+    },
     "help_scan": {
       "title": "HELP SCAN.EXE",
       "lines": [

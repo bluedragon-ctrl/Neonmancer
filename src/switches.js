@@ -21,7 +21,7 @@ export function createLocks(game) {
 }
 
 /**
- * Plates follow what stands on them (a crate, an enemy, the wizard);
+ * Plates follow what stands on them (a crate, an enemy, the wizard, his decoy, D129);
  * targets were switched by bolts already. Then the locked exits follow
  * the switches and his access level (raised at the core, D101): open while every one is on (reported as 'unlock', with a
  * terminal line), closed again ('lock') once one goes off, but never on
@@ -35,6 +35,7 @@ export function updateSwitches(game) {
     ...game.objects.filter((object) => object.kind === 'pushable' && object.solid).map((object) => object.box()),
     ...game.liveEnemies.map((enemy) => enemy.box()),
     ...(player.dead ? [] : [player.box()]),
+    ...(game.decoy?.active ? [game.decoy.box()] : []),
   ];
   for (const plate of game.switches) {
     if (plate.kind !== 'plate') continue;

@@ -43,7 +43,7 @@ export const TRANSITION = {
  * Something that happened, for views, the HUD and (later) sound. Returned
  * by Game.update() for the tick it happened in.
  * @typedef {object} GameEvent
- * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'|'warp'|'fizzle'|'cut'|'paste'|'pull'|'compile'|'expire'|'scan'|'reveal'|'airjump'|'reflect'|'shrine'|'crash'|'access'|'win'|'read'} type
+ * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'|'warp'|'fizzle'|'cut'|'paste'|'pull'|'compile'|'fork'|'expire'|'scan'|'reveal'|'airjump'|'reflect'|'shrine'|'crash'|'access'|'win'|'read'} type
  * @property {string} [spell] the spell cast, failed, fizzled (nowhere to
  *   go, energy kept) or selected (cast, deny, fizzle, spell); the teleport (warp)
  * @property {number[]} [from] where a Blink or Warp started (warp)
@@ -51,6 +51,7 @@ export const TRANSITION = {
  * @property {number[]} [cell] the cell a crate or enemy was cut from or
  *   pasted into, pulled from or compiled into (cut, paste, pull, compile; the enemy's own cell, rounded down, for a
  *   frozen one stopped mid-step); the fake block a scan revealed (reveal, D128)
+ * @property {object} [decoy] the decoy a Fork cast stands (fork, D129)
  * @property {object} [object] the room object it happened to (push, plug,
  *   land of an object; shake, collapse and regrow of a collapsing block;
  *   hit by a spell, break of a destructible one; a switch going on or off;
@@ -183,6 +184,8 @@ export class Game {
     this.entryExit = entry;
     /** What a scan has yet to reveal (D128): fake block cells and hidden exits. */
     this.hidden = hiddenThings(this.room, entry);
+    /** The wizard's Fork decoy (D129, entities/decoy.js), or null; a room starts without one. */
+    this.decoy = null;
     /** How many things scans revealed since the room was built (the room view rebuilds after one). */
     this.reveals = 0;
     /** Locked exits (D75), open while every switch is on; closed ones are solid (Grid.setOpening()). */
@@ -521,6 +524,8 @@ export class Game {
       if (event === 'collapse' || event === 'regrow' || event === 'expire') this.refreshBodies();
     }
     this.dropExpired();
+    this.decoy?.update(this);
+    if (this.decoy?.finished) this.decoy = null;
 
     // Enemies after objects, so they step off platforms and crates where those are now.
     // Dead ones too: their pop runs on.

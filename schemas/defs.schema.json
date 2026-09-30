@@ -33,7 +33,7 @@
     },
     "spells": {
       "type": "object",
-      "description": "Spell tuning, by spell id. What each spell does is built into the engine (SPELL_EFFECTS in src/game.js; Zap: src/entities/bolt.js, Shield and Firewall: Player.raiseShield(), Pause: a bolt that freezes, Enemy.freeze(); Blink and Warp: Game.teleport(), src/entities/warp.js; Cut & Paste: Game.cutOrPaste(), src/entities/clip.js; Pull: src/entities/pull.js, Enemy.pull(); Compile: src/spells.js compile(); Scan: src/entities/scan.js).",
+      "description": "Spell tuning, by spell id. What each spell does is built into the engine (SPELL_EFFECTS in src/game.js; Zap: src/entities/bolt.js, Shield and Firewall: Player.raiseShield(), Pause: a bolt that freezes, Enemy.freeze(); Blink and Warp: Game.teleport(), src/entities/warp.js; Cut & Paste: Game.cutOrPaste(), src/entities/clip.js; Pull: src/entities/pull.js, Enemy.pull(); Compile: src/spells.js compile(); Fork: src/entities/decoy.js; Scan: src/entities/scan.js).",
       "required": ["zap"],
       "additionalProperties": false,
       "properties": {
@@ -145,6 +145,19 @@
             "cooldown": { "$ref": "#/$defs/spellCooldown" },
             "duration": { "type": "number", "exclusiveMinimum": 0, "maximum": 60, "description": "Seconds the crate lasts; it blinks before it derezzes." },
             "object": { "$ref": "common.schema.json#/$defs/id", "description": "The object type it compiles: a pushable (a crate)." }
+          }
+        },
+        "fork": {
+          "description": "A hologram decoy of the wizard (D129) in the free cell in front of him, at the height of his feet, as Compile puts a crate (D125); it falls from there and stands for a while. It holds a floor plate down, and hostile enemies that see it go for the nearest of it and him, and attack it in vain. One at a time: a new fork replaces the old. No free cell: it fizzles and costs nothing.",
+          "type": "object",
+          "required": ["slot", "color", "cost", "cooldown", "duration"],
+          "additionalProperties": false,
+          "properties": {
+            "slot": { "$ref": "#/$defs/spellSlot" },
+            "color": { "$ref": "#/$defs/spellColor" },
+            "cost": { "$ref": "#/$defs/spellCost" },
+            "cooldown": { "$ref": "#/$defs/spellCooldown" },
+            "duration": { "type": "number", "exclusiveMinimum": 0, "maximum": 60, "description": "Seconds the decoy stands; it blinks before it derezzes." }
           }
         },
         "scan": {

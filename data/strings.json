@@ -19,6 +19,7 @@
     "spell.warp": "WARP",
     "spell.cut_paste": "CUT & PASTE",
     "spell.compile": "COMPILE",
+    "spell.fork": "FORK",
     "spell.scan": "SCAN",
     "spell.pull": "PULL",
     "upgrade.zap_plus": "ZAP+",
