@@ -69,6 +69,8 @@ export function buildRoom(data, { objectTypes, blockTypes, enemyTemplates = {}, 
       ...object.overrides,
       // Moving platforms: the path they follow (world/path.js).
       ...(object.path && { path: structuredClone(object.path) }),
+      // A screen's text id (lore.json, D118).
+      ...(object.text && { text: object.text }),
     })).concat(fromBlocks.objects),
     /** Enemies: template values (look, movement, attack, speed...) merged with this enemy's overrides, id, cell and path. */
     enemies: (data.enemies ?? []).map((enemy) => ({

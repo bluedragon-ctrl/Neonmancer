@@ -3,7 +3,9 @@
  * of frosted glass (like the crates, D96) round a dark tube sits on a plain
  * slab a little smaller than it. Code scrolls up the tube's face, the bottom
  * line typing out behind a blinking cursor. The slab is structure, in the
- * room's (biome's) color; the screen is blue. Showcase `?asset=screens`.
+ * room's (biome's) color; the screen is blue. A screen with a text for the
+ * wizard not read yet (D118) blinks a light on its top and scrolls faster.
+ * Showcase `?asset=screens`.
  *
  * The camera never turns (D115): the screen faces +z or +x, one of the
  * faces it sees. What it shows is pure (codeWords(), terminalRows());
@@ -32,6 +34,9 @@ export const SCREEN_FX = {
   rows: 6,
   rowTime: 0.45,
   blink: 2.5,
+  /** A text waiting (D118): the light on top (center, size) and how much faster the code scrolls. */
+  lamp: [[0.5, 1.012, 0.62], [0.2, 0.024, 0.2]],
+  waitingSpeed: 2.5,
 };
 
 /**
@@ -74,7 +79,8 @@ export function terminalRows(time, rows = SCREEN_FX.rows) {
 
 /**
  * A screen, its lower corner at the origin, 1×1×1.
- * `userData.update(dt)` animates it.
+ * `userData.update(dt)` animates it; `userData.setWaiting(on)` shows that
+ * it has a text not read yet (D118).
  * @param {object} [options]
  * @param {number|string} [options.color] the slab's: the room's (biome's) color
  * @param {'+x'|'+z'} [options.face] the way the screen faces
@@ -99,6 +105,9 @@ export function createScreen({ color = '#ffb020', face = '+z' } = {}) {
   const text = lightBoxes(rows * perRow + 1, light);
   view.add(text);
   const rowH = h / rows;
+  const lamp = lightBoxes(1, light);
+  body.add(lamp);
+  let waiting = false;
 
   const group = new Group();
   if (face === '+x') {
@@ -111,8 +120,16 @@ export function createScreen({ color = '#ffb020', face = '+z' } = {}) {
     group.add(body);
   }
   let time = 0;
+  let clock = 0;
+  group.userData.setWaiting = (on) => {
+    waiting = on;
+  };
   group.userData.update = (dt) => {
-    time += dt;
+    time += dt * (waiting ? SCREEN_FX.waitingSpeed : 1);
+    clock += dt;
+    const lit = waiting && Math.floor(clock * SCREEN_FX.blink) % 2 === 0;
+    placeLight(lamp, 0, SCREEN_FX.lamp[0], lit ? SCREEN_FX.lamp[1] : [0, 0, 0]);
+    lamp.instanceMatrix.needsUpdate = true;
     const shown = terminalRows(time, rows);
     shown.rows.forEach((words, r) => {
       const y = h - (r + 0.5) * rowH;

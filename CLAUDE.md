@@ -109,7 +109,9 @@ mobile/touch support, backend or accounts.
   hazard (deals damage), void (instant death when the player falls onto it).
 - Decorations (kind `deco`, D117): fixed bodies that dress a room and do
   nothing, in the room's color, facing +z or +x: the data pillar
-  (1×3×1, always 3 high) and the screen (1×1×1).
+  (1×3×1, always 3 high) and the screen (1×1×1). A screen may hold a
+  short text of `data/lore.json`, printed in the wizard's terminal once
+  per visit when he comes near (hints and lore, D118).
 - Switches unlock exits: a floor plate held down by a crate, an enemy or
   the wizard, or a target a bolt switches on and off. A locked exit opens
   while every switch in its room is on, never closes on the wizard, and
@@ -337,6 +339,8 @@ The engine is generic; all content lives in data.
   start room, the fragments the core needs and the access thresholds
   (D101); fragments lie in the rooms' pickups, the core is a room object
 - `data/strings.json` — all UI text
+- `data/lore.json` — screen texts (hints and lore, D118), by id; a
+  screen room object names one
 - `data/audio.json` — named audio events mapped to files
   (e.g. "jump", "pickup", "music:glitchmire")
 - `schemas/*.json` — JSON Schema for every data format, used both as

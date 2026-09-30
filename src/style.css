@@ -523,6 +523,12 @@ body {
   white-space: pre;
 }
 
+/* A screen's text (D118): in the screens' blue (render/screen.js SCREEN_FX.color). */
+.hud-terminal .lore {
+  color: #8fb8ff;
+  text-shadow: 0 0 calc(8 * var(--u)) #4a8dff;
+}
+
 /* Block cursor on the line being typed. */
 .hud-terminal .typing::after {
   content: '';
@@ -955,7 +961,8 @@ body {
 
 .editor-panel button,
 .editor-panel input,
-.editor-panel select {
+.editor-panel select,
+.editor-panel textarea {
   font: inherit;
   color: inherit;
   background: #0b1020;
@@ -980,6 +987,19 @@ body {
 
 .editor-tool {
   text-align: left;
+}
+
+/* A screen's text (D118), typed as the terminal shows it. */
+.editor-panel .editor-text {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: calc(4 * var(--u)) 0;
+  font-family: var(--terminal);
+  font-size: 0.8em;
+  white-space: pre;
+  overflow-x: auto;
+  resize: vertical;
 }
 
 .editor-tool.active {

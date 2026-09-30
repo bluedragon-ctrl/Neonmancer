@@ -3,7 +3,8 @@
  * the editor's tools make to it, undo and redo, and whether it changed since
  * it was last saved. The room's exit connections live in world.json
  * (WorldEdit); its undo steps take them along, and the enemy templates in
- * defs.json (DefsEdit) of the steps that changed them. Plain logic, no
+ * defs.json (DefsEdit) and the screen texts in lore.json (LoreEdit) of the
+ * steps that changed them. Plain logic, no
  * browser, so tests can drive it.
  */
 import { MAX_ROOM_FOOTPRINT } from '../core/rules.js';
@@ -22,6 +23,9 @@ const ITEM_LISTS = [
 ];
 
 const KEY_ORDER = ['$schema', 'schemaVersion', 'id', 'name', 'authored', 'biome', 'size', 'spawn', 'reset', 'exits', 'blocks', 'holes', 'shrine', 'objects', 'enemies', 'pickups'];
+
+/** Files several rooms share, whose changes a room's undo step takes along: defs.json, lore.json. */
+const SHARED = ['defs', 'lore'];
 
 /** Undo steps kept per room. */
 const UNDO_LIMIT = 200;
@@ -43,11 +47,13 @@ export class RoomEdit {
    * @param {object} [options]
    * @param {import('./world-edit.js').WorldEdit} [options.world] world.json being edited (exit connections)
    * @param {import('./defs-edit.js').DefsEdit} [options.defs] defs.json being edited (enemy templates)
+   * @param {import('./lore-edit.js').LoreEdit} [options.lore] lore.json being edited (screen texts, D118)
    * @param {boolean} [options.fresh] a new room, not saved yet
    */
-  constructor(data, { world = null, defs = null, fresh = false } = {}) {
+  constructor(data, { world = null, defs = null, lore = null, fresh = false } = {}) {
     this.world = world;
     this.defs = defs;
+    this.lore = lore;
     this.fresh = fresh;
     this.load(data);
     /** Text of the room as last saved (or loaded), to tell unsaved changes. */
@@ -98,19 +104,20 @@ export class RoomEdit {
     this.fresh = false;
   }
 
-  /** The room, its connections and the enemy templates, for undo. */
+  /** The room, its connections, the enemy templates and the screen texts, for undo. */
   snapshot() {
-    return { room: this.text(), links: JSON.stringify(this.world?.linksOf(this.id) ?? []), defs: this.defs?.text() ?? null };
+    return { room: this.text(), links: JSON.stringify(this.world?.linksOf(this.id) ?? []), defs: this.defs?.text() ?? null, lore: this.lore?.text() ?? null };
   }
 
   /**
    * Go back to an undo or redo step: the room and its connections, and the
-   * template changes of the step if it made any (`defs`, from `defsAfter`).
+   * template and text changes of the step if it made any (`defs`, from
+   * `defsAfter`; `lore`, from `loreAfter`).
    */
-  restore({ room, links, defs, defsAfter }) {
-    this.load(JSON.parse(room));
-    this.world?.setLinks(this.id, JSON.parse(links));
-    if (defs !== null) this.defs?.applyChange(defsAfter, defs);
+  restore(state) {
+    this.load(JSON.parse(state.room));
+    this.world?.setLinks(this.id, JSON.parse(state.links));
+    for (const key of SHARED) if (state[key] !== null) this[key]?.applyChange(state[`${key}After`], state[key]);
   }
 
   // --- Undo -------------------------------------------------------------
@@ -129,10 +136,12 @@ export class RoomEdit {
     const before = this.pending;
     this.pending = null;
     const now = this.snapshot();
-    if (before.room === now.room && before.links === now.links && before.defs === now.defs) return;
-    // Only a step that changed the templates takes those changes back (other rooms' stay).
-    if (before.defs === now.defs) before.defs = null;
-    else before.defsAfter = now.defs;
+    if (before.room === now.room && before.links === now.links && SHARED.every((key) => before[key] === now[key])) return;
+    // Only a step that changed the templates or texts takes those changes back (other rooms' stay).
+    for (const key of SHARED) {
+      if (before[key] === now[key]) before[key] = null;
+      else before[`${key}After`] = now[key];
+    }
     this.undoStack.push(before);
     if (this.undoStack.length > UNDO_LIMIT) this.undoStack.shift();
     this.redoStack = [];
@@ -166,8 +175,12 @@ export class RoomEdit {
   step(from, to) {
     if (this.pending !== null || from.length === 0) return false;
     const target = from.pop();
-    // The way back of this step: its template changes turned round.
-    const now = { ...this.snapshot(), defs: target.defs === null ? null : target.defsAfter, defsAfter: target.defs };
+    // The way back of this step: its template and text changes turned round.
+    const now = this.snapshot();
+    for (const key of SHARED) {
+      now[key] = target[key] === null ? null : target[`${key}After`];
+      now[`${key}After`] = target[key];
+    }
     to.push(now);
     this.restore(target);
     return true;
@@ -560,6 +573,16 @@ export class RoomEdit {
    * no override written) and +x take turns.
    * @param {string} id
    */
+  /**
+   * Give a screen a text of lore.json (D118), or none (null).
+   * @param {string} id the screen's id
+   * @param {string|null} text
+   * @returns {boolean} whether anything changed
+   */
+  setText(id, text) {
+    return this.updateItem(id, { text: text ?? undefined });
+  }
+
   turnObject(id) {
     const item = this.item(id);
     if (!item) return false;

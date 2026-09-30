@@ -146,6 +146,10 @@
         "path": {
           "$ref": "#/$defs/path",
           "description": "Required for platforms (and only allowed on them): the path they follow, starting at \"at\"."
+        },
+        "text": {
+          "$ref": "common.schema.json#/$defs/id",
+          "description": "Screens only (D118): the id of a text in data/lore.json, shown in the wizard's terminal when he comes near."
         }
       }
     },

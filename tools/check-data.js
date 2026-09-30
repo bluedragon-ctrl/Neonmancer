@@ -16,6 +16,7 @@ export function schemaFor(file) {
     'biomes.json': 'biomes.schema.json',
     'world.json': 'world.schema.json',
     'strings.json': 'strings.schema.json',
+    'lore.json': 'lore.schema.json',
   }[file];
 }
 

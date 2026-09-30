@@ -1139,8 +1139,11 @@ Room dressing (D117): object types of kind `deco` in `defs.json`
 - It has no color of its own: it takes the room's (biome's) color, like
   structure (D99). The screen's blue is part of its look.
 - It faces `+z` by default; the room object's override `"face": "+x"`
-  turns it. In the editor, clicking a placed decoration again with the
-  same type turns it (the override is left out while it faces `+z`).
+  turns it. In the editor, clicking a placed decoration with the same
+  type picks it, and clicking the picked one turns it (the override is
+  left out while it faces `+z`).
+- A screen may show a text in the wizard's terminal (D118, Screen texts
+  below).
 - In the game: `src/entities/deco.js` (the body) and
   `src/render/deco-view.js` (the look, by `look`).
 - Static objects are seen from one fixed angle (D115): only the top and
@@ -1166,6 +1169,37 @@ Room dressing (D117): object types of kind `deco` in `defs.json`
   flat monitor on a post, a CRT box with an oscilloscope, a floating
   hologram): the CRT's shape with the monitor's text. Showcase
   `?asset=screens`.
+
+### Screen texts
+
+Hints and lore (D118). A screen room object may name a text:
+`{ "id": "screen_1", "type": "screen", "at": [5, 0, 10], "text": "boot_hello" }`.
+
+- Texts live in `data/lore.json` (`schemas/lore.schema.json`), by id: an
+  optional `title` (at most 32 characters, printed as `> TITLE`) and
+  `lines`, 1 to 6 of at most 48 characters, printed as written
+  (`LORE_LIMITS`, `src/data/lore.js`). One text may be shown by screens
+  in several rooms. Only screens show texts; the data checks refuse a
+  text on any other object and an id lore.json doesn't have.
+- The wizard reads a screen by coming near it, alive: within 1 unit
+  (`LORE_REACH`) in front of it, at its side or on top. The text prints
+  in his terminal, once per visit to the room (a respawn doesn't repeat
+  it; leaving and coming back does). Nothing is saved.
+- In the terminal a text is a block of its own, in the screens' blue:
+  messages don't count it towards their 4 lines, so they can't push it
+  off; it stays at least as long as a message and as long as it takes to
+  read (12 characters a second), then its lines fade at once. A newer
+  text replaces it.
+- A screen with a text not read yet on this visit blinks a light on its
+  top and its code scrolls faster (showcase `?asset=screen-text`); once
+  read it looks like any screen.
+- **Editor:** placing a screen picks it; clicking a placed one picks it,
+  clicking the picked one turns it. With a screen picked, the Object
+  tool's fields show its text: pick one of lore.json's texts (or none),
+  change the picked text (Update: every screen showing it changes), or
+  write a title and lines and add them under a new id (New). Save writes
+  lore.json with the rooms; undo takes text changes back with the room's
+  step.
 
 ## Switches and locked exits
 

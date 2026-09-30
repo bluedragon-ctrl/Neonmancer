@@ -842,3 +842,29 @@ screen's blue would sit too close to Frostbyte's ice blue as a rule
 color) and always suit their biome. A fixed height for the pillar keeps
 rooms consistent; it fits every room at least 3 high. Only two facings
 are needed because the hidden sides are never seen.
+
+### D118 — 2026-09-30 — Screen texts: hints and lore in the terminal
+A screen may name a text (`"text": "<id>"` on the room object), kept in a
+new file, `data/lore.json`: an optional title and 1–6 lines of at most
+48 characters. When the wizard comes near the screen (within 1 unit in
+front of it, at its side or on top), his terminal prints the text in the
+screens' blue, once per visit to the room: a respawn doesn't repeat it,
+coming back does. It is a block of its own in the terminal: messages
+don't push it off, it stays until it could be read (12 characters a
+second, at least a message's hold) and fades at once; a newer text
+replaces it. A screen with a text not read yet blinks a light on its top
+and scrolls faster. The room editor picks a screen's text from a list,
+writes a new one, or changes one (every screen showing it changes);
+lore.json is saved with the rooms and its changes are part of the room's
+undo steps. Only screens show texts. Nothing is saved: the save holds
+what the wizard has, not what he read.
+**Why:** hints and story need a place in the world without a new
+system: the terminal already speaks to the player. Texts live in their
+own file, not in `strings.json` (which is the game's own words) or in
+the room (a hint may repeat in several rooms). Proximity rather than a
+use key: the game has no interact action, and walking up to a screen is
+reading it. Once per visit so a screen by the path doesn't flood the
+terminal; short texts only, because the terminal is a few lines at the
+screen's corner (a reader panel that pauses the game was left out). A
+codex of texts read was left out too: it would need save bits for what
+isn't an item.

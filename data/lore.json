@@ -1,0 +1,14 @@
+{
+  "$schema": "../schemas/lore.schema.json",
+  "schemaVersion": 1,
+  "texts": {
+    "boot_hello": {
+      "title": "SYSLOG 0x01",
+      "lines": [
+        "CORE OFFLINE. GRID IN SAFE MODE.",
+        "KEY FRAGMENTS SCATTERED ACROSS SECTORS.",
+        "BRING THEM HOME. MIND THE GAPS."
+      ]
+    }
+  }
+}

@@ -1,7 +1,8 @@
 /**
  * A decoration (D117): a data pillar, a screen. A fixed body as big as its
  * look (DECO_LOOKS): the wizard walks round it or stands on it, things
- * bump into it and bolts stop at it. It does nothing else. Pure logic.
+ * bump into it and bolts stop at it. A screen may hold a text (D118), which
+ * the game shows once the wizard comes near (Game.readScreens()). Pure logic.
  */
 import { DECO_LOOKS } from '../data/room-data.js';
 
@@ -17,6 +18,10 @@ export class Deco {
     /** Lower corner [x, y, z]; it never moves. */
     this.pos = [...object.at];
     this.prev = [...this.pos];
+    /** Id of its text in lore.json (a screen, D118), or null. */
+    this.text = object.text ?? null;
+    /** Its text was shown on this visit to the room. */
+    this.read = false;
   }
 
   /** Nothing moves: prev stays pos. */

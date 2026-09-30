@@ -5,8 +5,9 @@
  * edited room from its start point (unsaved edits included), so editing
  * and testing take turns without a reload. Edits are kept per room until
  * the page is closed; the panel switches between rooms and makes new ones.
- * Exit connections are edited in world.json, and enemy templates in
- * defs.json (D58, D79); both are saved with the rooms.
+ * Exit connections are edited in world.json, enemy templates in defs.json
+ * (D58, D79) and screen texts in lore.json (D118); all are saved with the
+ * rooms.
  *
  * The editor reads the mouse and its own keys directly, not through action
  * mapping (a tool, not the game; D56). Saving writes data/ through the dev
@@ -18,6 +19,7 @@ import { linkMap } from '../data/load.js';
 import { sideLength, withExitDefaults } from '../data/room-data.js';
 import { validateData } from '../data/validate.js';
 import { DefsEdit } from './defs-edit.js';
+import { LoreEdit } from './lore-edit.js';
 import { errorTarget, groupErrors } from './errors.js';
 import { formatJson } from './format-json.js';
 import { EditorOverlay } from './overlay.js';
@@ -25,6 +27,7 @@ import { EditorPanel, TOOLS } from './panel.js';
 import { ID_PATTERN, RoomEdit, newRoom, resizeText, roomIdProblem, sizeProblem } from './room-edit.js';
 import { downloadFile, saveFiles } from './save.js';
 import { applyEnemyTemplates, deleteTemplate, renameTemplate, saveTemplate, updateTemplate } from './templates.js';
+import { newText, pickedScreen, setScreenText, textUsers, updateText } from './texts.js';
 import { WorldEdit, linkChoices } from './world-edit.js';
 
 /** Tools a mouse drag paints with; the others act on the cell clicked only. */
@@ -59,6 +62,8 @@ export class Editor {
     /** defs.json being edited (enemy templates, D58), and its text as the game last got it. */
     this.defs = new DefsEdit(files['defs.json']);
     this.defsApplied = '';
+    /** lore.json being edited (screen texts, D118); a new file if there is none yet. */
+    this.lore = new LoreEdit(files['lore.json']);
     /** Edited rooms by id, kept while the page is open. */
     this.sessions = new Map();
     /** @type {RoomEdit|null} the room being edited */
@@ -125,6 +130,9 @@ export class Editor {
         updateTemplate: () => updateTemplate(this),
         renameTemplate: (name) => renameTemplate(this, name),
         deleteTemplate: () => deleteTemplate(this),
+        screenText: (id) => setScreenText(this, id),
+        newText: (id, text) => newText(this, id, text),
+        updateText: (text) => updateText(this, text),
         path: (field, value) => this.pathItem && this.change(() => this.edit.setPathOptions(this.pathItem.id, { [field]: value })),
         clearPath: () => this.pathItem && this.change(() => this.edit.updateItem(this.pathItem.id, { path: undefined })),
         exit: (field, value) => this.setExit(field, value),
@@ -188,7 +196,7 @@ export class Editor {
 
   /** The edit of a room, started the first time it is opened. */
   session(id) {
-    if (!this.sessions.has(id)) this.sessions.set(id, new RoomEdit(this.files[`rooms/${id}.json`], { world: this.world, defs: this.defs }));
+    if (!this.sessions.has(id)) this.sessions.set(id, new RoomEdit(this.files[`rooms/${id}.json`], { world: this.world, defs: this.defs, lore: this.lore }));
     return this.sessions.get(id);
   }
 
@@ -214,7 +222,7 @@ export class Editor {
     }
     const data = newRoom(id, this.edit.data.biome);
     this.world.place(id, this.edit.id);
-    this.sessions.set(id, new RoomEdit(data, { world: this.world, defs: this.defs, fresh: true }));
+    this.sessions.set(id, new RoomEdit(data, { world: this.world, defs: this.defs, lore: this.lore, fresh: true }));
     this.game.content.rooms.set(id, data);
     this.openRoom(id);
     this.panel.newRoomInput.value = '';
@@ -251,7 +259,7 @@ export class Editor {
 
   /** Every data file with the edits in: what saving would write. */
   editedFiles() {
-    const files = { ...this.files, 'world.json': this.world.toData(), 'defs.json': this.defs.toData() };
+    const files = { ...this.files, 'world.json': this.world.toData(), 'defs.json': this.defs.toData(), 'lore.json': this.lore.toData() };
     for (const [id, edit] of this.sessions) files[`rooms/${id}.json`] = edit.toData();
     return files;
   }
@@ -285,6 +293,7 @@ export class Editor {
     this.errors = validateData(this.editedFiles());
     // Undo and redo may have changed the templates.
     if (this.defs.text() !== this.defsApplied) applyEnemyTemplates(this);
+    this.game.content.lore = this.lore.texts;
     this.game.content.rooms.set(data.id, data);
     this.game.content.links = linkMap(this.world.connections);
     try {
@@ -477,18 +486,19 @@ export class Editor {
     const rooms = [...this.sessions.values()].filter((edit) => edit.dirty);
     const world = this.world.dirty ? this.world.toData() : undefined;
     const defs = this.defs.dirty ? this.defs.toData() : undefined;
+    const lore = this.lore.dirty ? this.lore.toData() : undefined;
+    const shared = [['world.json', world], ['defs.json', defs], ['lore.json', lore]].filter(([, data]) => data);
     if (!this.canSave) {
       // Nothing changed: export the room shown.
-      const exported = rooms.length > 0 || world || defs ? rooms : [this.edit];
+      const exported = rooms.length > 0 || shared.length > 0 ? rooms : [this.edit];
       for (const edit of exported) downloadFile(`${edit.id}.json`, edit.text());
-      if (world) downloadFile('world.json', formatJson(world));
-      if (defs) downloadFile('defs.json', formatJson(defs));
-      const names = [...exported.map((edit) => `${edit.id}.json`), ...(world ? ['world.json'] : []), ...(defs ? ['defs.json'] : [])];
+      for (const [name, data] of shared) downloadFile(name, formatJson(data));
+      const names = [...exported.map((edit) => `${edit.id}.json`), ...shared.map(([name]) => name)];
       this.status = `Exported ${names.join(', ')}${this.errors.length > 0 ? ' (with errors)' : ''}.`;
       this.refresh();
       return;
     }
-    if (rooms.length === 0 && !world && !defs) return;
+    if (rooms.length === 0 && shared.length === 0) return;
     if (this.errors.length > 0) {
       this.status = 'Not saved: fix the errors below first.';
       this.refresh();
@@ -498,7 +508,7 @@ export class Editor {
     this.refresh();
     const sent = rooms.map((edit) => edit.toData());
     this.saving = true;
-    const result = await saveFiles({ rooms: sent, world, defs }).finally(() => (this.saving = false));
+    const result = await saveFiles({ rooms: sent, world, defs, lore }).finally(() => (this.saving = false));
     if (result.ok) {
       // Edits made while saving stay unsaved.
       rooms.forEach((edit, i) => {
@@ -514,6 +524,10 @@ export class Editor {
         this.defs.savedText = formatJson(defs);
         this.files['defs.json'] = defs;
       }
+      if (lore) {
+        this.lore.savedText = formatJson(lore);
+        this.files['lore.json'] = lore;
+      }
       this.status = `Saved ${result.files.join(', ')}.`;
     } else {
       this.serverErrors = result.errors;
@@ -522,9 +536,9 @@ export class Editor {
     this.refresh();
   }
 
-  /** Are there edits not saved yet, in any room, world.json or defs.json? */
+  /** Are there edits not saved yet, in any room, world.json, defs.json or lore.json? */
   get unsaved() {
-    return this.world.dirty || this.defs.dirty || [...this.sessions.values()].some((edit) => edit.dirty);
+    return this.world.dirty || this.defs.dirty || this.lore.dirty || [...this.sessions.values()].some((edit) => edit.dirty);
   }
 
   refresh() {
@@ -541,6 +555,7 @@ export class Editor {
       enemy: this.enemySettings,
       pathItem,
       pathItemIsEnemy: !!pathItem && pathItem === enemy,
+      screen: this.screenState(),
       exit: exit
         ? {
             ...withExitDefaults(exit),
@@ -554,6 +569,13 @@ export class Editor {
       status: this.status,
       unsaved: this.unsaved,
     });
+  }
+
+  /** The picked screen for the panel (D118): its id, its text and who shows that, and every text; or null. */
+  screenState() {
+    const screen = pickedScreen(this);
+    if (!screen) return null;
+    return { id: screen.id, text: screen.text ?? null, texts: this.lore.texts, users: screen.text ? textUsers(this, screen.text) : [] };
   }
 
   /** Remove the picked object, enemy or exit (Delete key). */
@@ -658,16 +680,25 @@ export class Editor {
     if (!place) return this.change(() => edit.erase(cell));
     const type = this.objectTypes[this.objectType];
     if (this.pickupTypes[this.objectType]) return this.change(() => edit.placePickup(cell, this.objectType));
-    // A decoration of this type there turns to face the other way (D117).
+    // A decoration of this type there is picked (a screen's text is set in
+    // the panel, D118); clicking the picked one turns it to face the other way (D117).
     const before = edit.at(cell);
     if (type?.kind === 'deco' && before?.kind === 'object' && before.item.type === this.objectType) {
-      this.change(() => edit.turnObject(before.item.id));
-      this.status = `${before.item.id} faces ${edit.item(before.item.id)?.overrides?.face ?? '+z'}.`;
+      const { id } = before.item;
+      if (this.selected?.id !== id) {
+        this.select({ kind: 'item', id });
+        this.status = `${id} picked: click it again to turn it.`;
+        return this.refresh();
+      }
+      this.change(() => edit.turnObject(id));
+      this.status = `${id} faces ${edit.item(id)?.overrides?.face ?? '+z'}.`;
       return this.refresh();
     }
     this.change(() => edit.placeObject(cell, this.objectType));
-    if (type?.kind === 'deco') {
-      this.status = `${this.objectType} faces +z: click it again to turn it to +x.`;
+    const placed = edit.at(cell);
+    if (type?.kind === 'deco' && placed?.kind === 'object') {
+      this.select({ kind: 'item', id: placed.item.id });
+      this.status = `${placed.item.id} faces +z: click it again to turn it to +x.`;
       this.refresh();
     }
     // A new platform is picked, ready for its path.
