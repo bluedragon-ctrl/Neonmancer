@@ -47,7 +47,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `core/bindings.js` | Default key → action map (the only place raw key codes appear) |
 | `core/input.js` | Raw keys → action states once per tick |
 | `core/loop.js` | Fixed 60 Hz timestep, step clamp, interpolation alpha |
-| `core/messages.js` | `say(key, values)` terminal messages and `announce(key, values, options)` banners from any module, queued until the HUD takes them |
+| `core/messages.js` | `say(key, values)` terminal messages, `showText(lines)` screen texts (D118) and `announce(key, values, options)` banners from any module, queued until the HUD takes them |
+| `data/lore.js` | Screen texts (D118): `LORE_LIMITS`, `LORE_REACH`, the looks that show a text, `loreLines()` (what the terminal prints) and `loreProblem()` (pure, tested) |
 | `core/rules.js` | Shared rule constants (player hitbox, max room footprint) |
 | `core/version.js` | Game and data-schema version numbers (the game's patch number comes from `tools/game-version.js`, D42) |
 | `data/bundle.js` | The only Vite-specific module: bundles `data/**/*.json`, imports dev schema errors, `DEV_SERVER` flag |
@@ -160,7 +161,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `ui/settings.js` | Player settings (D109): volumes and visual stubs, steps, localStorage (pure, tested) |
 | `ui/boot-screen.js` | The room compiling after Start (D110): a canvas covering the room, cleared tile by tile along its grid, outlines flashing |
 | `ui/hud.js` | DOM overlay: integrity bar, backup pips, energy bar, spell tag and Cut & Paste clipboard slot, score, fragments and the boot key, room banner, terminal messages, end screen, fullscreen hint |
-| `ui/terminal.js` | Terminal message queue (typing, hold, fade) and banner timing (pure, tested) |
+| `ui/terminal.js` | Terminal message queue (typing, hold, fade; a screen's text as a block of its own, D118) and banner timing (pure, tested) |
 | `ui/text.js` | String lookup with `{name}` values; scrambled "decoding" text for the banner (pure, tested) |
 | `editor/boxes.js` | `blocks`/`holes` entries edited cell by cell: untouched entries kept, loose cells merged greedily into boxes (pure, tested) |
 | `editor/defs-edit.js` | `defs.json` being edited: enemy templates (any of them, D79) added, updated, renamed and deleted; a step's template changes applied again for undo/redo (pure, tested) |
@@ -172,6 +173,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `editor/panel.js` | Editor side panel (DOM): room list, tools and their fields, layer, room settings, actions, errors |
 | `editor/room-edit.js` | One room being edited: place/erase edits, enemies, paths, exits and their connections, spawn/reset, name, biome, size (with a report), undo/redo (with the step's template changes), dirty state, cell descriptions; `roomErrors()`, `newRoom()` (pure, tested) |
 | `editor/save.js` | Posting edited files to the dev server; downloading them in a build |
+| `editor/lore-edit.js` | `lore.json` being edited (D118): texts added and changed, checked against the limits; a step's text changes applied again for undo/redo (pure, tested) |
+| `editor/texts.js` | The editor's screen text actions (D118): pick the picked screen's text, add a new one for it, change one; which screens show a text |
 | `editor/templates.js` | The editor's enemy template actions (D58, D79): save the enemy settings as a new template, move them into their template, rename, delete; hands the edited templates to the game and the panel |
 | `editor/world-edit.js` | `world.json` being edited: connecting, disconnecting and renaming exits, a room's connections for its undo steps, a new room's map cell (`place()`, `unplace()`); `linkChoices()` (pure, tested) |
 | `debug/overlay.js` | Debug mode's wireframe collision boxes |

@@ -3,8 +3,9 @@
  * the state, they never change it.
  */
 import { DT } from './core/loop.js';
-import { announce, say } from './core/messages.js';
+import { announce, say, showText } from './core/messages.js';
 import { bounceOffEnemies, burnEnemies, touchEnemies, updateAttacks, updateBolts, updateFrozen } from './combat.js';
+import { LORE_REACH, loreLines } from './data/lore.js';
 import { isBackSide, sideAxes, withExitDefaults } from './data/room-data.js';
 import { Enemy } from './entities/enemy.js';
 import { createObject } from './entities/kinds.js';
@@ -40,7 +41,7 @@ export const TRANSITION = {
  * Something that happened, for views, the HUD and (later) sound. Returned
  * by Game.update() for the tick it happened in.
  * @typedef {object} GameEvent
- * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'|'warp'|'fizzle'|'cut'|'paste'|'airjump'|'reflect'|'shrine'|'crash'|'access'|'win'} type
+ * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'|'warp'|'fizzle'|'cut'|'paste'|'airjump'|'reflect'|'shrine'|'crash'|'access'|'win'|'read'} type
  * @property {string} [spell] the spell cast, failed, fizzled (nowhere to
  *   go, energy kept) or selected (cast, deny, fizzle, spell); the teleport (warp)
  * @property {number[]} [from] where a Blink or Warp started (warp)
@@ -150,7 +151,11 @@ export class Game {
    */
   enterRoom(id, pos, entry = id === this.room?.id ? this.entryExit : null) {
     // Announce the room when it is a different one (not on a respawn).
-    if (id !== this.room?.id) this.announceRoom(id);
+    if (id !== this.room?.id) {
+      this.announceRoom(id);
+      /** Ids of the screens whose text was shown on this visit (D118): not again, even after a respawn. */
+      this.readTexts = new Set();
+    }
     this.room = buildRoom(this.content.rooms.get(id), this.content);
     this.map.visit(id);
     this.grid = new Grid(this.room);
@@ -162,6 +167,9 @@ export class Game {
     this.switches = this.objects.filter((object) => SWITCH_KINDS.includes(object.kind));
     /** Objects that hurt the wizard on touch: spiked platforms (D82). */
     this.spiked = this.objects.filter((object) => object.damage > 0);
+    /** Screens with a text (D118); the ones read on this visit stay read. */
+    this.screens = this.objects.filter((object) => object.kind === 'deco' && object.text);
+    for (const screen of this.screens) screen.read = this.readTexts.has(screen.id);
     /** The central core, if it is in this room (D101). */
     this.core = this.objects.find((object) => object.kind === 'core') ?? null;
     /** Is he touching the core? Touching it again only counts after he stepped away (touchCore()). */
@@ -292,6 +300,25 @@ export class Game {
     player.integrity = player.maxIntegrity;
     player.energy = player.maxEnergy;
     player.backups = PLAYER.backups;
+  }
+
+  /**
+   * Coming near a screen with a text (D118), alive, shows the text in his
+   * terminal: in front of it, at its side or on top, within LORE_REACH.
+   * Once per visit to the room; reported as 'read'.
+   */
+  readScreens() {
+    const { player } = this;
+    if (player.dead) return;
+    const box = player.box();
+    for (const screen of this.screens) {
+      if (screen.read || !touchesBox(box, screen.box(), LORE_REACH)) continue;
+      screen.read = true;
+      this.readTexts.add(screen.id);
+      const text = this.content.lore?.[screen.text];
+      if (text) showText(loreLines(text));
+      this.emit('read', { object: screen });
+    }
   }
 
   /**
@@ -502,6 +529,7 @@ export class Game {
     this.takePickups();
     this.touchShrine();
     this.touchCore();
+    this.readScreens();
     updateSwitches(this);
     return this.takeEvents();
   }

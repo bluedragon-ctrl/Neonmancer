@@ -89,7 +89,7 @@ test('terminal types one line at a time, holds it, then fades it out', () => {
   terminal.push('> TWO');
   // Only the line being typed is shown, with nothing of the waiting one.
   terminal.update(2 / TERMINAL.typeRate);
-  assert.deepEqual(terminal.lines(), [{ text: '> ', typing: true, opacity: 1 }]);
+  assert.deepEqual(terminal.lines(), [{ text: '> ', typing: true, opacity: 1, lore: false }]);
 
   terminal.update(1); // both lines typed by now
   const [one, two] = terminal.lines();
@@ -111,6 +111,41 @@ test('terminal keeps at most maxLines lines, dropping the oldest', () => {
   const lines = terminal.lines();
   assert.equal(lines.length, TERMINAL.maxLines);
   assert.equal(lines[0].text, '> 2');
+});
+
+test('a screen text (D118) is a block of its own: messages cannot push it off, it stays till read and fades at once', () => {
+  const terminal = new Terminal();
+  terminal.push('> BEFORE');
+  // Long enough to need more reading time than a message's hold.
+  const lines = ['> SYSLOG 0x01', 'THE CORE WENT DARK AT 03:14 AND NEVER WOKE.', 'NOBODY CAME BACK TO RESTART IT, SO FAR.'];
+  assert.ok(lines.join('').length / TERMINAL.readRate > TERMINAL.hold + 2 * TERMINAL.fade);
+  terminal.pushText(lines);
+  for (let i = 0; i < TERMINAL.maxLines + 1; i++) terminal.push(`> ${i}`);
+  const chars = ['> BEFORE', ...lines].join('').length + (TERMINAL.maxLines + 1) * 3;
+  terminal.update(chars / TERMINAL.typeRate + 0.01);
+  const shown = terminal.lines();
+  assert.deepEqual(shown.filter((line) => line.lore).map((line) => line.text), lines, 'the whole text is there');
+  assert.equal(shown.filter((line) => !line.lore).length, TERMINAL.maxLines, 'messages keep their own limit');
+  // Plain lines are gone after their hold; the text, longer, is still fully there.
+  terminal.update(TERMINAL.hold + TERMINAL.fade);
+  const left = terminal.lines();
+  assert.ok(left.length === lines.length && left.every((line) => line.lore && line.opacity === 1), JSON.stringify(left));
+  // Its lines fade out together.
+  for (let steps = 0; terminal.lines()[0].opacity === 1 && steps < 1000; steps++) terminal.update(0.05);
+  terminal.update(TERMINAL.fade / 2);
+  const fading = terminal.lines().map((line) => line.opacity);
+  assert.equal(fading.length, lines.length);
+  assert.ok(fading.every((o) => o > 0 && o < 1 && Math.abs(o - fading[0]) < 0.05), fading.join());
+  terminal.update(TERMINAL.fade);
+  assert.equal(terminal.lines().length, 0);
+});
+
+test('a newer screen text replaces the one shown', () => {
+  const terminal = new Terminal();
+  terminal.pushText(['OLD']);
+  terminal.pushText(['NEW', 'TEXT']);
+  terminal.update(1);
+  assert.deepEqual(terminal.lines().map((line) => line.text), ['NEW', 'TEXT']);
 });
 
 test('room banner decodes, holds, then fades out', () => {

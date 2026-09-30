@@ -403,7 +403,10 @@ export class Hud {
       }
     }
 
-    for (const { key, values } of takeMessages()) this.terminal.push(this.text(key, values));
+    for (const message of takeMessages()) {
+      if (message.lines) this.terminal.pushText(message.lines);
+      else this.terminal.push(this.text(message.key, message.values));
+    }
     this.terminal.update(dt);
     const banner = takeAnnouncements().at(-1);
     if (banner) this.showBanner(banner);
@@ -415,6 +418,7 @@ export class Hud {
       // Only write what changed: most frames nothing does.
       if (element.textContent !== line.text) element.textContent = line.text;
       element.classList.toggle('typing', line.typing);
+      element.classList.toggle('lore', line.lore);
       const opacity = String(line.opacity);
       if (element.style.opacity !== opacity) element.style.opacity = opacity;
     });

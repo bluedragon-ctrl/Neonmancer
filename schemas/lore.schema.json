@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "lore.schema.json",
+  "title": "Screen texts (data/lore.json)",
+  "description": "Short hints and lore (D118): a screen in a room names one by id (\"text\"), and the wizard's terminal shows it when he comes near. The limits keep a text within the terminal (src/data/lore.js LORE_LIMITS).",
+  "type": "object",
+  "required": ["schemaVersion", "texts"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+    "texts": {
+      "type": "object",
+      "description": "Text id → text. One text may be shown by screens in several rooms.",
+      "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
+      "additionalProperties": {
+        "type": "object",
+        "required": ["lines"],
+        "additionalProperties": false,
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32,
+            "description": "First line, printed as a prompt (\"> SYSLOG 0x01\")."
+          },
+          "lines": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 6,
+            "items": { "type": "string", "minLength": 1, "maxLength": 48, "pattern": "\\S" },
+            "description": "The text, printed as written, one terminal line each."
+          }
+        }
+      }
+    }
+  }
+}

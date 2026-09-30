@@ -7,6 +7,29 @@
 import { formatJson } from './format-json.js';
 import { ID_PATTERN } from './room-edit.js';
 
+/**
+ * Make the entry changes that turned file text `from` into `to` again in
+ * `now` (the map under `key`), keeping entries changed since that weren't
+ * part of it: undo and redo of a shared file (defs.json's templates,
+ * lore.json's texts) among several rooms' steps.
+ * @param {string} from
+ * @param {string} to
+ * @param {string} key
+ * @param {Record<string, object>} now
+ * @returns {Record<string, object>}
+ */
+export function applyEntryChange(from, to, key, now) {
+  const [before, after] = [from, to].map((text) => JSON.parse(text)[key] ?? {});
+  const changed = (id) => JSON.stringify(before[id]) !== JSON.stringify(after[id]);
+  const out = {};
+  for (const id of Object.keys(after)) {
+    if (changed(id)) out[id] = after[id];
+    else if (id in now) out[id] = now[id];
+  }
+  for (const id of Object.keys(now)) if (!(id in out) && !changed(id)) out[id] = now[id];
+  return out;
+}
+
 export class DefsEdit {
   /** @param {object} data defs.json contents */
   constructor(data) {
@@ -43,16 +66,7 @@ export class DefsEdit {
    * @param {string} to
    */
   applyChange(from, to) {
-    const [before, after] = [from, to].map((text) => JSON.parse(text).enemies ?? {});
-    const changed = (id) => JSON.stringify(before[id]) !== JSON.stringify(after[id]);
-    const now = this.enemies;
-    const out = {};
-    for (const id of Object.keys(after)) {
-      if (changed(id)) out[id] = after[id];
-      else if (id in now) out[id] = now[id];
-    }
-    for (const id of Object.keys(now)) if (!(id in out) && !changed(id)) out[id] = now[id];
-    this.data.enemies = out;
+    this.data.enemies = applyEntryChange(from, to, 'enemies', this.enemies);
   }
 
   /** Templates that extend `id` directly. */

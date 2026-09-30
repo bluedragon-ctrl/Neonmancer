@@ -321,12 +321,15 @@ const ALL_ASSETS = [
   // in every biome's color (the slab; the screen stays blue).
   { label: 'screen', group: 'screens', spin: false, build: () => buildDeco(createScreen, { face: '+z' }) },
   { label: 'screen-x', group: 'screens', spin: false, build: () => buildDeco(createScreen, { face: '+x' }) },
+  // A screen with a text not read yet (D118): its top light blinks, the code runs faster.
+  { label: 'screen-text', group: 'screens', spin: false, build: () => buildDeco(createScreen, { face: '+z' }, (screen) => screen.userData.setWaiting(true)) },
   { label: 'screen-biomes', group: 'screens', span: 7, spin: false, build: () => buildDecoRow(createScreen, {}) },
 ];
 
 /** A decoration (`create` from its module) in the default room color. */
-function buildDeco(create, options) {
+function buildDeco(create, options, setup = () => {}) {
   const deco = create({ color: PALETTE.amber, ...options });
+  setup(deco);
   deco.position.set(-0.5, 0, -0.5);
   const asset = new Group().add(deco);
   asset.userData.update = (dt) => deco.userData.update(dt);

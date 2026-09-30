@@ -6,6 +6,7 @@
  * strings.json (like the debug readout).
  */
 import { isFunctionKey } from '../core/input.js';
+import { LORE_LIMITS } from '../data/lore.js';
 import { ENEMY_OPTIONS, EXIT_DEFAULTS, PATH_DEFAULTS } from '../data/room-data.js';
 
 /**
@@ -134,6 +135,25 @@ function numberValue(input) {
 
 const yesNo = (value) => (value === true ? 'yes' : value === false ? 'no' : String(value));
 
+/**
+ * A text as typed in the panel (D118): the title field (blank: none) and one
+ * line per row of the box, trailing spaces and empty rows at the end dropped.
+ * @param {string} title
+ * @param {string} body
+ * @returns {{ title?: string, lines: string[] }}
+ */
+export function typedText(title, body) {
+  const trimmed = body.replace(/\s+$/, '');
+  const lines = trimmed === '' ? [] : trimmed.split('\n').map((line) => line.trimEnd());
+  return { ...(title.trim() && { title: title.trim() }), lines };
+}
+
+/** A text's first line, cut short, for the list of texts. */
+const preview = (text) => {
+  const first = text.title ?? text.lines[0] ?? '';
+  return first.length > 24 ? `${first.slice(0, 23)}…` : first;
+};
+
 export class EditorPanel {
   /**
    * @param {HTMLElement} root the stage (the panel scales with --u)
@@ -145,6 +165,7 @@ export class EditorPanel {
    * @param {boolean} options.canSave the dev server can save; a build only exports
    * @param {Record<string, Function>} options.on callbacks: room(id), newRoom(id), tool(id), blockType(id), objectType(id),
    *   enemy(field, value), saveTemplate(name), updateTemplate(), renameTemplate(name), deleteTemplate(),
+   *   screenText(id|null), newText(id, text), updateText(text),
    *   path(field, value), clearPath(), exit(field, value), layer(step), cut(on), discard(), error(text), name(text),
    *   authored(on), biome(id), size([x, y, z]), undo(), redo(), save(), revert()
    */
@@ -272,8 +293,41 @@ export class EditorPanel {
     this.objectSelect = select(Object.entries(objectTypes).map(([id, type]) => [id, `${id} (${type.kind})`]));
     this.objectSelect.addEventListener('change', () => on.objectType(this.objectSelect.value));
     this.objectRows = el('div', 'editor-group');
-    this.objectRows.append(this.row('Object', this.objectSelect));
+    this.objectRows.append(this.row('Object', this.objectSelect), this.textGroup());
     return [this.blockRows, this.objectRows];
+  }
+
+  /**
+   * Fields of a picked screen (D118): the text of lore.json it shows, that
+   * text to change (every screen showing it changes), or a new one.
+   */
+  textGroup() {
+    const { on } = this;
+    this.textRows = el('div', 'editor-group');
+    this.textHint = el('div', 'editor-hint');
+    this.textSelect = el('select');
+    this.textSelect.title = 'The text of data/lore.json the wizard\'s terminal shows when he comes near this screen';
+    this.textSelect.addEventListener('change', () => on.screenText(this.textSelect.value || null));
+    this.textTitle = Object.assign(el('input'), { type: 'text', placeholder: 'title (optional)', maxLength: LORE_LIMITS.titleLength });
+    this.textBody = Object.assign(el('textarea', 'editor-text'), {
+      rows: LORE_LIMITS.lines,
+      placeholder: `up to ${LORE_LIMITS.lines} lines of ${LORE_LIMITS.lineLength} characters`,
+      spellcheck: false,
+    });
+    this.textUsers = el('div', 'editor-hint');
+    const typed = () => typedText(this.textTitle.value, this.textBody.value);
+    this.updateTextButton = el('button', 'editor-action');
+    this.updateTextButton.addEventListener('click', () => on.updateText(typed()));
+    this.textIdInput = Object.assign(el('input'), { type: 'text', placeholder: 'new_text_id' });
+    const addText = () => this.textIdInput.value.trim() && on.newText(this.textIdInput.value.trim(), typed());
+    const newButton = el('button', 'editor-small', 'New');
+    newButton.title = 'Add the text above to lore.json under this id; this screen shows it';
+    newButton.addEventListener('click', addText);
+    this.textIdInput.addEventListener('keydown', (e) => e.key === 'Enter' && addText());
+    const newRow = el('div', 'editor-row');
+    newRow.append(el('span', 'editor-label', 'New text'), this.textIdInput, newButton);
+    this.textRows.append(this.textHint, this.row('Text', this.textSelect), this.row('Title', this.textTitle), this.textBody, this.textUsers, this.updateTextButton, newRow);
+    return this.textRows;
   }
 
   /** Fields of the Enemy tool: its template, overrides, and the templates themselves. */
@@ -402,7 +456,9 @@ export class EditorPanel {
     });
     // Function keys (F2 plays the room) commit the field first.
     this.element.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' || e.key === 'Enter' || isFunctionKey(e.code)) e.target.blur();
+      // Enter makes a new line in a text box (D118).
+      const enter = e.key === 'Enter' && e.target.tagName !== 'TEXTAREA';
+      if (e.key === 'Escape' || enter || isFunctionKey(e.code)) e.target.blur();
     });
   }
 
@@ -454,6 +510,8 @@ export class EditorPanel {
    * @param {{ id?: string, template: string, overrides: object }} state.enemy enemy settings: the picked enemy's (with its id), or for new ones
    * @param {object|null} state.pathItem the platform or enemy whose path is edited
    * @param {boolean} state.pathItemIsEnemy it is an enemy (its speed defaults to its template's)
+   * @param {{ id: string, text: string|null, texts: Record<string, { title?: string, lines: string[] }>, users: string[] }|null} state.screen
+   *   the picked screen (D118): its text, every text, and the screens showing its text
    * @param {{ id: string|null, width: number, height: number, link: string|null, links: string[] }} state.exit
    *   the picked exit (id null: the settings for new ones) and the exits it can lead to
    * @param {number} state.layer
@@ -463,7 +521,7 @@ export class EditorPanel {
    * @param {string} state.status a line about the last action
    * @param {boolean} state.unsaved there are unsaved edits (any room, or world.json)
    */
-  show({ edit, rooms, tool, blockType, objectType, enemy, pathItem, pathItemIsEnemy, exit, layer, cut, errors, status, unsaved }) {
+  show({ edit, rooms, tool, blockType, objectType, enemy, pathItem, pathItemIsEnemy, screen, exit, layer, cut, errors, status, unsaved }) {
     const data = edit.data;
     const changed = edit.dirty || edit.linksChanged;
     this.roomLabel.textContent = `${data.id}${changed ? ' • unsaved' : unsaved ? ' • other rooms unsaved' : ''}`;
@@ -477,6 +535,7 @@ export class EditorPanel {
     this.blockSelect.value = blockType;
     this.objectRows.hidden = tool !== 'object';
     this.objectSelect.value = objectType;
+    this.showScreen(screen);
 
     this.enemyRows.hidden = tool !== 'enemy';
     this.pathRows.hidden = tool !== 'path';
@@ -547,6 +606,31 @@ export class EditorPanel {
         }),
       ]),
     );
+  }
+
+  /** The picked screen's text fields (D118), hidden while no screen is picked. */
+  showScreen(screen) {
+    this.textRows.hidden = !screen;
+    if (!screen) {
+      this.textShown = null;
+      return;
+    }
+    const ids = Object.keys(screen.texts);
+    this.textSelect.replaceChildren(option('', '— no text —'), ...ids.map((id) => option(id, `${id}: ${preview(screen.texts[id])}`)));
+    this.textSelect.value = screen.text ?? '';
+    this.textHint.textContent = `Screen ${screen.id}: the text the wizard reads when he comes near.`;
+    const text = screen.text ? screen.texts[screen.text] : null;
+    // Fill the fields when another screen or text is picked, or the text changed (undo); not while typing.
+    const shown = `${screen.id}:${screen.text}:${JSON.stringify(text)}`;
+    if (shown !== this.textShown) {
+      this.textShown = shown;
+      this.textTitle.value = text?.title ?? '';
+      this.textBody.value = text?.lines.join('\n') ?? '';
+    }
+    this.textUsers.textContent = screen.users.length > 1 ? `Shown by ${screen.users.join(', ')}.` : '';
+    this.updateTextButton.hidden = !screen.text;
+    this.updateTextButton.textContent = `Update text ${screen.text}`;
+    this.updateTextButton.title = `Write the fields into ${screen.text}: every screen showing it changes`;
   }
 
   /** Put a number in a field (blank for undefined), unless it is being typed in. */

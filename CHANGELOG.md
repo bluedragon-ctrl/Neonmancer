@@ -18,6 +18,11 @@ bosses that drop loot, tooling) (D104, D105).
   1×1×1), a blue glass terminal with scrolling code on a slab. Both are
   fixed bodies in the room's color, facing +z or +x (click one again in
   the editor to turn it); showcase `pillars` and `screens`.
+- Screen texts (D118): a screen can show a short hint or piece of lore
+  from the new `data/lore.json`. When the wizard comes near, his
+  terminal prints it in blue, once per visit to the room; an unread
+  screen blinks a light on its top. The room editor picks a screen's
+  text, writes new ones and changes them; they are saved with the rooms.
 - One glass helper (D116): crates and decorations build glass with
   `glassBox()` and a `GLASS` preset.
 - A working rule for static looks (D115): the camera never turns, so

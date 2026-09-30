@@ -36,6 +36,7 @@ import {
   STATIC_BLOCK_VALUES,
 } from './room-data.js';
 import { SWITCH_KINDS } from '../entities/switch.js';
+import { TEXT_LOOKS } from './lore.js';
 import { mapKey } from '../world/map.js';
 import { legAxis, pathCells } from '../world/path.js';
 
@@ -103,6 +104,8 @@ export function validateData(files) {
     blockTypes: resolveBlockTypes(blocks),
     enemyTemplates: resolveEnemyTemplates(enemies),
     biomes: files['biomes.json'].biomes ?? {},
+    // Screen texts (D118); the file is optional while no room uses one.
+    texts: files['lore.json']?.texts ?? {},
   };
   /** room id (from the file name) → room data */
   const rooms = new Map();
@@ -242,7 +245,7 @@ function guarded(file, report, check) {
   }
 }
 
-function validateRoom(file, room, { objectTypes, pickupTypes, blockTypes, enemyTemplates, biomes }, report) {
+function validateRoom(file, room, { objectTypes, pickupTypes, blockTypes, enemyTemplates, biomes, texts = {} }, report) {
   const expectedId = roomIdFromFile(file);
   if (room.id !== expectedId) report(file, 'id', `"${room.id}" must match the file name ("${expectedId}")`);
 
@@ -274,7 +277,7 @@ function validateRoom(file, room, { objectTypes, pickupTypes, blockTypes, enemyT
   const exits = (room.exits ?? []).map(withExitDefaults);
   const exitFits = validateExitBounds(checks, exits);
   validateBlocks(checks, blockTypes);
-  validateObjects(checks, objectTypes);
+  validateObjects(checks, objectTypes, texts);
   validateHoles(checks);
   validateShrine(checks);
   validateEnemies(checks, enemyTemplates);
@@ -358,8 +361,8 @@ function validateBlocks(checks, blockTypes) {
   });
 }
 
-/** Objects: unique ids, known types, valid overrides, each in a free cell. */
-function validateObjects(checks, objectTypes) {
+/** Objects: unique ids, known types, valid overrides, each in a free cell; a screen's text is in lore.json. */
+function validateObjects(checks, objectTypes, texts) {
   const { report, ids } = checks;
   (checks.room.objects ?? []).forEach((object, i) => {
     const path = `objects[${i}]`;
@@ -369,6 +372,11 @@ function validateObjects(checks, objectTypes) {
     const type = objectTypes[object.type] && withObjectDefaults(objectTypes[object.type]);
     if (!type) report(path, `unknown object type "${object.type}"`);
     else validateOverrides(report, `${path}.overrides`, object, type, { ...OBJECT_STYLES, face: DECO_FACES, look: Object.keys(DECO_LOOKS) });
+    // Only a screen shows a text (D118), one lore.json has.
+    if (object.text !== undefined && type) {
+      if (type.kind !== 'deco' || !TEXT_LOOKS.includes(object.overrides?.look ?? type.look)) report(`${path}.text`, `only screens show a text, not "${object.type}"`);
+      else if (!Object.hasOwn(texts, object.text)) report(`${path}.text`, `unknown text "${object.text}" (data/lore.json)`);
+    }
     // A plate is a floor tile, no body (D75): things may stand on it.
     if (type?.kind === 'plate') return validatePlate(checks, path, object.at);
     const inside = fillCell(checks, object.at, path);

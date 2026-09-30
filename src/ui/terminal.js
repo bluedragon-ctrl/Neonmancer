@@ -12,8 +12,10 @@ export const TERMINAL = {
   hold: 4,
   /** Fade-out time at the end. */
   fade: 0.6,
-  /** Lines on screen at most; the oldest goes first. */
+  /** Lines on screen at most; the oldest goes first (a screen's text doesn't count). */
   maxLines: 4,
+  /** Reading speed of a screen's text (characters per second): it stays at least this long after it is typed. */
+  readRate: 12,
 };
 
 /** Room banner tuning (seconds). */
@@ -28,18 +30,38 @@ export const BANNER = {
 
 /**
  * Terminal log: lines are typed out one after another, stay a while, then
- * fade. Newer lines push the oldest off when there are too many.
+ * fade. Newer lines push the oldest off when there are too many. A screen's
+ * text (D118) is a block of its own: it doesn't count towards the lines,
+ * so messages can't push it off half read; it stays long enough to read,
+ * its lines fading together, and a newer text replaces it.
  */
 export class Terminal {
   constructor() {
-    /** @type {{ text: string, typed: number, age: number }[]} age counts from fully typed */
+    /** @type {{ text: string, typed: number, age: number, hold: number, lore: boolean }[]} age counts from fully typed */
     this.entries = [];
   }
 
   /** @param {string} text */
   push(text) {
-    this.entries.push({ text, typed: 0, age: 0 });
-    if (this.entries.length > TERMINAL.maxLines) this.entries.shift();
+    this.entries.push({ text, typed: 0, age: 0, hold: TERMINAL.hold, lore: false });
+    const plain = this.entries.filter((entry) => !entry.lore);
+    if (plain.length > TERMINAL.maxLines) this.entries.splice(this.entries.indexOf(plain[0]), 1);
+  }
+
+  /**
+   * A screen's text: its lines, held until it could be read, all fading at once.
+   * @param {string[]} lines
+   */
+  pushText(lines) {
+    this.entries = this.entries.filter((entry) => !entry.lore);
+    const total = lines.reduce((sum, line) => sum + line.length, 0);
+    const hold = Math.max(TERMINAL.hold, total / TERMINAL.readRate);
+    for (const text of lines) this.entries.push({ text, typed: 0, age: 0, hold, lore: true });
+  }
+
+  /** How long an entry has been shown in full: a screen's text counts from its last line (so its lines fade at once). */
+  ageOf(entry) {
+    return entry.lore ? this.entries.findLast((other) => other.lore).age : entry.age;
   }
 
   /** @param {number} dt seconds since the last frame */
@@ -52,13 +74,13 @@ export class Terminal {
       budget -= typing;
       if (entry.typed >= entry.text.length && typing === 0) entry.age += dt;
     }
-    this.entries = this.entries.filter((entry) => entry.age < TERMINAL.hold + TERMINAL.fade);
+    this.entries = this.entries.filter((entry) => this.ageOf(entry) < entry.hold + TERMINAL.fade);
   }
 
   /**
    * What to draw now: lines typed so far and the one being typed (lines
    * still waiting their turn are left out).
-   * @returns {{ text: string, typing: boolean, opacity: number }[]}
+   * @returns {{ text: string, typing: boolean, opacity: number, lore: boolean }[]} lore: a line of a screen's text
    */
   lines() {
     const waiting = this.entries.findIndex((entry) => entry.typed < entry.text.length);
@@ -66,7 +88,8 @@ export class Terminal {
     return started.map((entry) => ({
       text: entry.text.slice(0, Math.floor(entry.typed)),
       typing: entry.typed < entry.text.length,
-      opacity: Math.min(1, (TERMINAL.hold + TERMINAL.fade - entry.age) / TERMINAL.fade),
+      opacity: Math.min(1, (entry.hold + TERMINAL.fade - this.ageOf(entry)) / TERMINAL.fade),
+      lore: entry.lore,
     }));
   }
 }
