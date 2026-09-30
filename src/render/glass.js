@@ -15,8 +15,12 @@
  * faceMaterial()). Only front faces draw, so each point behind is tinted
  * once. No extra render pass: a few triangles per object. The faces
  * honor clipping planes (a crate sinking into a hole is cut at the floor).
+ *
+ * Anything glass (crates, decorations) is built with glassBox(): a box
+ * between two corners, in a color, with a preset from GLASS.
  */
-import { Color, ShaderMaterial } from 'three';
+import { BoxGeometry, Color, Mesh, ShaderMaterial } from 'three';
+import { shared } from './neon.js';
 
 /** Tuning; brightness values are raw colors (the bloom threshold is 0.12). */
 export const GLASS = {
@@ -42,6 +46,11 @@ export const GLASS = {
   hollow: { alpha: 0.35, tint: 0.08 },
   /** Hazard blocks as glass: how much of what's behind they hide. */
   hazardAlpha: 0.5,
+  /**
+   * Decorations (data pillar, screen) show something inside the glass,
+   * so they hide less of what's behind.
+   */
+  deco: { alpha: 0.4 },
 };
 
 // Local position in the unit cell (the geometry runs 0..1) and the face normal.
@@ -119,6 +128,24 @@ export function glassFaceMaterial(color, tuning = {}) {
     clipping: true,
     ...GLASS_BLEND,
   });
+}
+
+/** A unit cube running 0..1: the glass shader works in the unit cell. */
+const UNIT_BOX = shared(new BoxGeometry(1, 1, 1).translate(0.5, 0.5, 0.5));
+
+/**
+ * A glass box between corners `lo` and `hi`: the unit cube scaled into
+ * place, so rim and frost follow the box.
+ * @param {number[]} lo lower corner
+ * @param {number[]} hi upper corner
+ * @param {number|string|Color} color
+ * @param {Parameters<typeof glassFaceMaterial>[1]} [tuning] e.g. GLASS.deco
+ */
+export function glassBox([x0, y0, z0], [x1, y1, z1], color, tuning = {}) {
+  const mesh = new Mesh(UNIT_BOX, glassFaceMaterial(color, tuning));
+  mesh.position.set(x0, y0, z0);
+  mesh.scale.set(x1 - x0, y1 - y0, z1 - z0);
+  return mesh;
 }
 
 /**

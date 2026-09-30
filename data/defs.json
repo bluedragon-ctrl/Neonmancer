@@ -11,7 +11,9 @@
     "core": { "kind": "core", "color": "#eef3ff" },
     "plate": { "kind": "plate", "color": "#eef3ff", "edges": "dashed" },
     "platform": { "kind": "platform", "color": "#00f0ff", "mark": "brackets", "faces": "tinted" },
-    "spiked_platform": { "kind": "platform", "color": "#ff2a3a", "shape": "spiked", "damage": 1 }
+    "spiked_platform": { "kind": "platform", "color": "#ff2a3a", "shape": "spiked", "damage": 1 },
+    "data_pillar": { "kind": "deco", "look": "data_pillar" },
+    "screen": { "kind": "deco", "look": "screen" }
   },
   "enemies": {
     "bug": {

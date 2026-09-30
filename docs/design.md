@@ -1126,6 +1126,47 @@ usual, so half behind a wall he is half ghost (D55).
   dropping in sinks out of sight). Puzzle idea: push the crate into the pit to cross it.
 - No way down: holes are only a look plus a rule, never a real lower level.
 
+## Decorations
+
+Room dressing (D117): object types of kind `deco` in `defs.json`
+(`data_pillar`, `screen`), placed with the room editor's Object tool.
+
+- A decoration is a fixed body as big as its look (`DECO_LOOKS`,
+  `src/data/room-data.js`): the data pillar 1×3×1, the screen 1×1×1. The
+  wizard walks round it or stands on it (the screen is jumpable, the
+  pillar is not), things bump into it, bolts stop at it; it does nothing
+  else and resets with nothing.
+- It has no color of its own: it takes the room's (biome's) color, like
+  structure (D99). The screen's blue is part of its look.
+- It faces `+z` by default; the room object's override `"face": "+x"`
+  turns it. In the editor, clicking a placed decoration again with the
+  same type turns it (the override is left out while it faces `+z`).
+- In the game: `src/entities/deco.js` (the body) and
+  `src/render/deco-view.js` (the look, by `look`).
+- Static objects are seen from one fixed angle (D115): only the top and
+  the +x and +z faces. Detail goes on those faces; hidden faces stay dark.
+- Glass (D96, D116): crates and decorations are built with
+  `glassBox()` (`src/render/glass.js`) and a preset from `GLASS`.
+  Decorations use `GLASS.deco`, which hides less of what's behind than a
+  crate, so what's inside shows.
+  Shared pieces (dark boxes, edges, boxes of light) are in
+  `src/render/deco.js`.
+- **Data pillar** (`src/render/data-pillar.js`): a frosted glass shaft in
+  one cell, always 3 blocks high, one segment per block, on a plinth
+  under a cap. Inside stands a slimmer dark core; one of its seen faces
+  (`+z` or `+x`) carries four cables over a softly pulsing panel, with
+  dashes of data climbing them. Glass, core and cables are in the biome's
+  color, the data a brighter, whiter tint of it. Showcase
+  `?asset=pillars` (both faces, every biome's color).
+- **Screen** (`src/render/screen.js`): a blue terminal (`#4a8dff`, clear
+  of cyan, which moves) in a 1×1×1 cell, facing `+z` or `+x`. A deep
+  glass box round a dark tube sits on a plain slab a little smaller than
+  it, in the biome's color. Code scrolls up the tube's face, the bottom
+  line typing out behind a blinking cursor. Chosen from three variants (a
+  flat monitor on a post, a CRT box with an oscilloscope, a floating
+  hologram): the CRT's shape with the monitor's text. Showcase
+  `?asset=screens`.
+
 ## Switches and locked exits
 
 Switches unlock a room's exits (D69, D75). Two object types in
@@ -1433,7 +1474,8 @@ list switches to another room; New room makes an empty one (D57).
   erase fills it in.
 - **Object** places the type picked in the panel (its fields show only
   while this tool is picked), with the id `<type>_<n>`. Placing on an
-  object of the same type leaves it as it is (a platform keeps its path). A new platform is picked, ready for its path.
+  object of the same type leaves it as it is (a platform keeps its path),
+  except a decoration, which turns to face the other seen side (D117). A new platform is picked, ready for its path.
   Erasing removes an object or enemy standing in the cell.
 - **Enemy** places an enemy of the panel's template with its settings
   (grouped: look and color; movement, speed and chase speed; hostility

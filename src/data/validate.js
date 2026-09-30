@@ -15,10 +15,11 @@ import { MAX_ROOM_FOOTPRINT, MAX_SAVED_INTEGRITY, PLAYER_HITBOX } from '../core/
 import { PLAYER } from '../entities/player.js';
 import {
   CHARGED_ATTACKS,
+  DECO_FACES,
+  DECO_LOOKS,
   ENEMY_OPTIONS,
   ENEMY_REQUIRED,
   OBJECT_STYLES,
-  OBJECT_STYLE_DEFAULTS,
   OPPOSITE_SIDE,
   blockCells,
   cellKey,
@@ -30,6 +31,7 @@ import {
   templateChain,
   withEnemyDefaults,
   withExitDefaults,
+  withObjectDefaults,
   KIND_BLOCK_VALUES,
   STATIC_BLOCK_VALUES,
 } from './room-data.js';
@@ -82,6 +84,11 @@ export function validateData(files) {
     if (type.damage !== undefined && type.kind !== 'platform') {
       report('defs.json', `objects.${id}.damage`, `only platforms can hurt, not a ${type.kind}`);
     }
+    // Only a decoration has a look (D117); every other kind needs a color.
+    if (type.kind === 'deco' && !DECO_LOOKS[type.look]) report('defs.json', `objects.${id}.look`, `a decoration needs a look: ${Object.keys(DECO_LOOKS).join(', ')}`);
+    if (type.kind !== 'deco' && type.look !== undefined) report('defs.json', `objects.${id}.look`, `only decorations have a look, not a ${type.kind}`);
+    if (type.kind !== 'deco' && type.color === undefined) report('defs.json', `objects.${id}.color`, `a ${type.kind} needs a color`);
+    if (type.kind === 'deco' && type.color !== undefined) report('defs.json', `objects.${id}.color`, 'a decoration takes the room color, it has none of its own');
   }
 
   const enemies = files['defs.json'].enemies ?? {};
@@ -359,14 +366,17 @@ function validateObjects(checks, objectTypes) {
     if (ids.has(object.id)) report(path, `duplicate object id "${object.id}"`);
     ids.add(object.id);
 
-    const type = objectTypes[object.type] && { ...OBJECT_STYLE_DEFAULTS, ...objectTypes[object.type] };
+    const type = objectTypes[object.type] && withObjectDefaults(objectTypes[object.type]);
     if (!type) report(path, `unknown object type "${object.type}"`);
-    else validateOverrides(report, `${path}.overrides`, object, type);
+    else validateOverrides(report, `${path}.overrides`, object, type, { ...OBJECT_STYLES, face: DECO_FACES, look: Object.keys(DECO_LOOKS) });
     // A plate is a floor tile, no body (D75): things may stand on it.
     if (type?.kind === 'plate') return validatePlate(checks, path, object.at);
     const inside = fillCell(checks, object.at, path);
-    // The core stands 2 high (D101): the cell above is its too.
-    if (type?.kind === 'core') fillCell(checks, [object.at[0], object.at[1] + 1, object.at[2]], path);
+    // The core stands 2 high (D101), a decoration as high as its look
+    // (D117): the cells above are theirs too.
+    const look = DECO_LOOKS[object.overrides?.look ?? type?.look];
+    const height = type?.kind === 'core' ? 2 : type?.kind === 'deco' && look ? look.size[1] : 1;
+    for (let dy = 1; dy < height; dy++) fillCell(checks, [object.at[0], object.at[1] + dy, object.at[2]], path);
 
     // Among objects only platforms follow a path (D46).
     if (type?.kind === 'platform' && !object.path) report(path, 'a platform needs a "path"');

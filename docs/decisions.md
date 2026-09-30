@@ -797,3 +797,48 @@ mid-step. Action poses follow the same way: pushing, casting (the hands
 follow the aim, where the bolt starts, not the turning body) and falling
 into a hole; each reads existing player state (`pushTarget`,
 `castTicks`, `deathCause`), so the game logic is unchanged.
+
+### D115 — 2026-09-30 — Static objects are drawn for the fixed view
+The camera never turns and looks from +x +y +z, so a static object shows
+only its top and its +x and +z faces. New static looks put their detail
+on those faces and draw nothing on the hidden ones, and the asset
+showcase shows them standing still, as they are seen in play. The first
+is the data pillar, a decoration: a glass shaft round a core with four
+data cables up one seen face, in the biome's color (docs/design.md,
+Decorations).
+**Why:** detail on hidden faces is never seen but still costs lines and
+draw work, and a turning showcase hid how the object really looks in a
+room. Of three pillar looks tried (a solid shaft with traces, a cable
+bundle round a glowing rod, an open lattice with rising bits), the shaft
+read best; data on one face only keeps it calm as room dressing. It was
+then made glass like the crates, and rooms get only that one version.
+Characters and pickups that turn in play keep full detail.
+
+### D116 — 2026-09-30 — One glass helper for everything glass
+Glass objects are built with `glassBox(lo, hi, color, preset)` in
+`src/render/glass.js`: the crates, the data pillar and the screen. Its
+tuning lives in `GLASS`, with presets per use: `hollow` (destructible
+crates) and `deco` (decorations, hiding less so what's inside shows).
+**Why:** glass is spreading from crates to decorations. One helper keeps
+the look the same everywhere, and the shader's rim and frost correct:
+they work in a unit cell, so every box is the unit cube scaled into place
+rather than a geometry of its own size. Presets keep new objects from
+inventing their own glass values.
+
+### D117 — 2026-09-30 — Decorations: the data pillar and the screen
+A new object kind, `deco`, for room dressing: a fixed body that does
+nothing, as big as its `look` (the data pillar 1×3×1, the screen 1×1×1),
+placed with the room editor's Object tool. A decoration type has no
+color: it takes the room's, as structure does (D99). It faces +z or +x,
+the two sides the camera sees (D115); +z is the default and a room
+object's `"face": "+x"` override turns it; in the editor, clicking it
+again turns it. The pillar is always 3 high.
+**Why:** one kind with a look, like enemies, keeps the engine generic:
+a new decoration is a look and a size, not a new class. Solid bodies
+match what they show, so the wizard never walks through a pillar, and
+the fixed-body code (collision, bolts, standing on it) is the core's.
+Without their own color, decorations never break the color rules (the
+screen's blue would sit too close to Frostbyte's ice blue as a rule
+color) and always suit their biome. A fixed height for the pillar keeps
+rooms consistent; it fits every room at least 3 high. Only two facings
+are needed because the hidden sides are never seen.
