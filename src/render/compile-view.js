@@ -1,14 +1,18 @@
 /**
  * three.js pieces of Compile (D125; timing and shapes in compile-fx.js):
- * the bits flying from his hands into the cell, and the aim marker while
+ * the bits streaming from his hands into the cell (stream-fx.js, D127),
+ * and the aim marker while
  * the spell is selected. The crate itself is an ordinary PushableView,
  * which grows in and blinks (compileLook()).
  */
 import { Group } from 'three';
 import { pasteCell } from '../entities/clip.js';
 import { createMarquee, placeMarquee } from './clip-view.js';
-import { COMPILE_FX, COMPILE_PIXELS, compilePixels } from './compile-fx.js';
-import { createPixelBurst, placePixels } from './pixels.js';
+import { PLAYER } from '../entities/player.js';
+import { COMPILE_FX } from './compile-fx.js';
+import { BLOCK_BODY } from './derez-fx.js';
+import { createStream, placeStream } from './pixels.js';
+import { streamCount } from './stream-fx.js';
 import { ZAP_FX } from './zap-fx.js';
 
 /** The spell whose aim marker this is. */
@@ -20,7 +24,7 @@ export class CompileView {
    */
   constructor(color) {
     this.aim = createMarquee(color, COMPILE_FX.aimBrightness);
-    this.pixels = createPixelBurst(COMPILE_PIXELS, COMPILE_FX.pixelSize, [color, 0xffffff]);
+    this.pixels = createStream(streamCount({ at: [0, 0, 0] }, { at: [0, 0, 0], body: BLOCK_BODY }), [color, 0xffffff]);
     this.group = new Group().add(this.aim, this.pixels);
     /** Seconds, for the marching ants. */
     this.time = 0;
@@ -38,8 +42,9 @@ export class CompileView {
     const { player } = game;
     const { compile } = player;
     const [dx, dz] = player.aim();
-    const hands = [pos[0] + dx * ZAP_FX.reach, pos[1] + ZAP_FX.height, pos[2] + dz * ZAP_FX.reach];
-    placePixels(this.pixels, compile ? compilePixels(compile.tick + alpha, hands, compile.cell) : [], [0, 0, 0]);
+    const hands = { at: [pos[0] + dx * ZAP_FX.reach, pos[1] + ZAP_FX.height, pos[2] + dz * ZAP_FX.reach] };
+    const into = compile && { at: [compile.cell[0] + 0.5, compile.cell[1], compile.cell[2] + 0.5], body: BLOCK_BODY };
+    placeStream(this.pixels, compile ? compile.tick + alpha : null, PLAYER.compileTicks, hands, into);
     this.aim.visible = false;
     if (player.spell !== SPELL || player.dead || game.transition) return;
     const cell = pasteCell(game);

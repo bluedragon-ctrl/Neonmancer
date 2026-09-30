@@ -5,7 +5,7 @@ import { Game } from '../src/game.js';
 import { cutTarget } from '../src/entities/clip.js';
 import { PLAYER } from '../src/entities/player.js';
 import { PUSHABLE } from '../src/entities/pushable.js';
-import { COMPILE_FX, COMPILE_PIXELS, compileLook, compilePixels } from '../src/render/compile-fx.js';
+import { COMPILE_FX, compileLook } from '../src/render/compile-fx.js';
 import { Progress, saveBit } from '../src/world/progress.js';
 import { SPELLS, dataFiles, eventTypes, gameData, idle, roomFile } from './helpers.js';
 
@@ -172,17 +172,7 @@ test("data: Compile's object must be a pushable type", () => {
   assert.match(errors, /spells\.compile\.object.*no pushable object type/);
 });
 
-test('the look: bits fly from his hands into the cell, the crate grows in, blinks at the end', () => {
-  const hands = [1.8, 0.7, 3.5];
-  const cell = [2, 0, 3];
-  assert.equal(compilePixels(0, hands, cell).length, COMPILE_PIXELS);
-  const flying = compilePixels(COMPILE_FX.stagger, hands, cell).filter((p) => p.scale > 0);
-  assert.ok(flying.length > 0, 'bits on the way');
-  const done = compilePixels(PLAYER.compileTicks, hands, cell);
-  assert.ok(done.every((p) => p.scale === 0), 'all arrived');
-  assert.ok(done.every((p) => p.offset.every((v, i) => v >= cell[i] && v <= cell[i] + 1)), 'inside the cell');
-  assert.ok(COMPILE_FX.flyTicks + COMPILE_FX.stagger <= PLAYER.compileTicks, 'every bit arrives in time');
-
+test('the look: the crate grows in and blinks at the end (the bits: stream.test.js)', () => {
   const growing = compileLook(0, LIFETIME);
   assert.ok(growing.scale < 1);
   assert.deepEqual(compileLook(COMPILE_FX.growTicks, LIFETIME - COMPILE_FX.growTicks), { visible: true, scale: 1 });

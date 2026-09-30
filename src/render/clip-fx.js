@@ -5,12 +5,12 @@
  * Cut: a bright dashed marquee ("marching ants") in the spell's color
  * snaps onto the object, which then streams as pixels into his hands.
  * Paste: the pixels stream from his hands into a marquee snapping onto
- * the cell, and the object pops up in it. While the spell is selected, a
+ * the cell, and the object pops up in it. The pixels are the stream
+ * every spell shares (stream-fx.js, D127). While the spell is selected, a
  * dim marquee marks what a cut would take and a dashed ghost where a
  * paste would go (the aim marker).
  */
 import { PLAYER } from '../entities/player.js';
-import { hash } from './hash.js';
 
 /** Timing in ticks (the effect lasts PLAYER.clipTicks), sizes in units. */
 export const CLIP_FX = {
@@ -24,10 +24,6 @@ export const CLIP_FX = {
   growLead: 4,
   /** How much it overshoots as it grows. */
   growOvershoot: 0.12,
-  /** Pixels in the stream, the edge of one, how high they arc. */
-  pixels: 48,
-  pixelSize: 0.07,
-  arc: 0.4,
   /** The marquee round a crate and round an enemy, as a share of a block. */
   crateMarquee: 1.04,
   enemyMarquee: 0.84,
@@ -63,38 +59,6 @@ export function marqueeLook(mode, tick) {
   const end = mode === 'cut' ? snapTicks + streamTicks : GROW_START + growTicks + 6;
   if (tick < 0 || tick >= Math.min(end, PLAYER.clipTicks)) return { visible: false, scale: 1 };
   return { visible: true, scale: 1 + (snapScale - 1) * (1 - ease(tick / snapTicks)) };
-}
-
-/**
- * The pixels `tick` ticks after a cut (streaming from the object into his
- * hands, once the marquee has snapped on) or a paste (from his hands into
- * the cell): each leaves a spot in the object's volume, or arrives there,
- * a little later than the one before, on a slight arc.
- * @param {'cut'|'paste'} mode
- * @param {number} tick may be fractional
- * @param {number[]} center the middle of the object
- * @param {number} size its size (1 for a crate)
- * @param {number[]} hands where his hands are now
- * @returns {{ offset: number[], scale: number }[]} world positions; empty
- *   while there are none
- */
-export function clipPixels(mode, tick, center, size, hands) {
-  const { streamTicks, pixels, arc } = CLIP_FX;
-  const out = mode === 'cut';
-  const t = out ? tick - CLIP_FX.snapTicks : tick;
-  if (t < 0 || t >= streamTicks) return [];
-  const list = [];
-  for (let i = 0; i < pixels; i++) {
-    const start = [0, 1, 2].map((k) => center[k] + (hash(i, k) - 0.5) * 0.9 * size);
-    const delay = hash(i, 3) * streamTicks * 0.4;
-    const u = ease((t - delay) / (streamTicks * 0.6));
-    const along = out ? u : 1 - u;
-    const lift = Math.sin(Math.PI * along) * arc * (0.5 + hash(i, 4));
-    const offset = [0, 1, 2].map((k) => start[k] + (hands[k] - start[k]) * along + (k === 1 ? lift : 0));
-    const scale = out ? (u >= 1 ? 0 : 1 - 0.7 * u) : u <= 0 ? 0 : 0.3 + 0.7 * u;
-    list.push({ offset, scale });
-  }
-  return list;
 }
 
 /**

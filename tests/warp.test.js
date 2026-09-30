@@ -4,7 +4,7 @@ import { Game } from '../src/game.js';
 import { PLAYER } from '../src/entities/player.js';
 import { WARP, warpTarget } from '../src/entities/warp.js';
 import { PLAYER_HITBOX } from '../src/core/rules.js';
-import { WARP_FX, dashLook, kickPixels, warpFlash, warpPixels } from '../src/render/warp-fx.js';
+import { WARP_FX, dashLook, kickPixels, warpFlash } from '../src/render/warp-fx.js';
 import { dashPose } from '../src/render/warp-view.js';
 import { Progress, saveBit } from '../src/world/progress.js';
 import { BUG, SPELLS, eventTypes, gameData, grid, idle, roomFile } from './helpers.js';
@@ -229,14 +229,7 @@ test('the Blink dash is drawn shooting forward, stretched, then settles (D86)', 
   assert.deepEqual(dashPose({ ...warp, spell: 'warp' }, [3, 0, 0], 0), { pos: [3, 0, 0], stretch: 1 }, 'Warp is no dash');
 });
 
-test('Warp pixels stream from where he was to where he is, then are gone', () => {
-  const from = [0, 0, 0];
-  const to = [5, 0, 0];
-  const start = warpPixels(0, from, to);
-  assert.equal(start.length, WARP_FX.pixels);
-  for (const { offset } of start) assert.ok(Math.abs(offset[0]) < 0.5);
-  for (const { offset, scale } of warpPixels(PLAYER.warpTicks - 0.01, from, to)) assert.ok(scale === 0 || Math.abs(offset[0] - 5) < 0.5);
-  assert.deepEqual(warpPixels(PLAYER.warpTicks, from, to), []);
+test('the Blink kick and the Warp flash are over in time (the Warp pixels: stream.test.js)', () => {
   assert.deepEqual(kickPixels(PLAYER.warpTicks, [1, 0]), []);
   assert.ok(warpFlash(0) > 0.5);
   assert.equal(warpFlash(WARP_FX.flashTicks), 0);

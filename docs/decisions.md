@@ -1019,3 +1019,18 @@ motion, timing, pixel sizes, per-look pop settings); one look reads as
 one rule of the Grid, "gone is derezzed", and a tweak in one place now
 changes them all. Rising suits a digital derez better than falling
 rubble.
+
+### D127 — 2026-09-30 — One stream for pixels a spell carries
+Cut, Paste, Compile and Warp share one stream (`stream-fx.js`): between
+two ends, each a body box (as a derez's, D126) or a point (his hands),
+each pixel leaves its own spot of the start, staggered over 40% of the
+stream's time, and flies on a slight arc to the same spot of the end;
+full size at a body, where it waits before leaving or after arriving,
+small at a point. The count comes from the bigger body, the pixel size
+from the derez. A spell gives only the ends, its duration and colors.
+Pull's ring beam, the install spiral, Zap's sparks and the Blink kick
+stay their own.
+**Why:** the author's proposal after D126. Four streams had grown apart
+(arcs, pixel counts and sizes, lattices); one reads as one rule, "a spell
+moves data", and tunes in one place. Pull stays a ring beam (the
+author's pick): its rings tell it from Cut at a glance.

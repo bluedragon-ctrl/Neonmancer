@@ -143,6 +143,23 @@ backwards. Tuning: `DEREZ` in `src/render/derez-fx.js`; showcase
 `?asset=derez` (the wizard, a crate, a bug, a sentinel and a disk side by
 side).
 
+### Stream
+
+One look for pixels a spell carries from one place to another (D127):
+Cut (the object into his hands), Paste and Compile (his hands into the
+cell), Warp (his body where he was into his body where he is). Each end
+is a body (a box, as a derez's) or a point (his hands). Each pixel leaves
+its own spot of the start, the last 40% of the stream's time after the
+first, and flies on a slight arc (up to 0.35) to the same spot of the
+end. At a body the pixels are full size and wait there before leaving or
+after arriving; at a point they are small (0.3) and gone. As many pixels
+as the bigger body's derez (24 between two points), the derez's pixel
+size. Each spell keeps its own timing (Cut and Paste 22 ticks, Compile
+18, Warp 24) and colors. Pull's tractor beam of rings stays its own, and
+so do the install spiral, Zap's sparks and the Blink kick. Tuning:
+`STREAM` in `src/render/stream-fx.js`; showcase `?asset=stream` (Cut,
+Paste and Warp side by side).
+
 ### Backups
 
 Lives (D97): the wizard has 8 (`PLAYER.backups`), shown as magenta pips
@@ -847,8 +864,9 @@ Path (slot 4), Warp from one further in (slot 5).
 - **Look:** Blink is a super-speed dash: he is drawn shooting from where
   he was to where he is over 6 ticks (fast at first), stretched along the
   way, with light streaks at his feet, hands and head trailing behind
-  and a kick of pixels where he pushed off. Warp: he bursts into pixels
-  that stream along the way into him, and his hologram flashes in its
+  and a kick of pixels where he pushed off. Warp: his pixels stream from
+  his body where he was into his body where he is (the stream, D127),
+  and his hologram flashes in its
   color as he lands (12 ticks). The afterimage lasts `PLAYER.warpTicks`
   (24).
 - Tuning: `defs.json` `spells.blink` (cost, cooldown, range, damage,
@@ -885,8 +903,9 @@ The seventh spell (D87), from a data disk by the entrance of Clipboard
 - **Look:** a bright dashed marquee in white (marching ants) snaps onto
   what he cuts (from 1.35 times its size, 8 ticks); the object shows
   until then, then streams into his hands as pixels in its color and
-  white (22 ticks). Pasting streams the pixels from his hands into a
-  marquee on the cell, and the object grows in with a small overshoot.
+  white (22 ticks; the stream, D127). Pasting streams the pixels from his
+  hands into a marquee on the cell, and the object grows in with a small
+  overshoot.
   The effect lasts `PLAYER.clipTicks` (40) and doesn't hold him up.
 - **Aim marker:** while Cut & Paste is selected (alive, no transition, no
   effect running), a dim marquee marks what a cut would take, or a
@@ -971,9 +990,8 @@ step up, or a hole plugged to walk over.
   high, as with any crate.
 - Cut & Paste can't take a compiled crate (it only lasts a while); a
   room reset clears them.
-- **Look:** bits in the spell's gold fly from his hands into the cell
-  (12 ticks each, over 18), each to its point of a lattice through it,
-  while the crate grows in with a flicker; the blinking and the pixels
+- **Look:** bits in the spell's gold stream from his hands into the cell
+  (18 ticks; the stream, D127) while the crate grows in with a flicker; the blinking and the pixels
   of its end as above. The crate is lime, like every crate (D99): the
   gold is the spell's.
 - **Aim marker:** while Compile is selected (alive, no transition), a dim
