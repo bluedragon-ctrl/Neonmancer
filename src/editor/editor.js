@@ -23,9 +23,10 @@ import { DefsEdit } from './defs-edit.js';
 import { LoreEdit } from './lore-edit.js';
 import { errorTarget, groupErrors } from './errors.js';
 import { formatJson } from './format-json.js';
+import { idProblem } from './ids.js';
 import { EditorOverlay } from './overlay.js';
 import { EditorPanel, TOOLS } from './panel.js';
-import { ID_PATTERN, RoomEdit, newRoom, resizeText, roomIdProblem, sizeProblem } from './room-edit.js';
+import { RoomEdit, newRoom, resizeText, roomIdProblem, sizeProblem } from './room-edit.js';
 import { downloadFile, saveFiles } from './save.js';
 import { applyEnemyTemplates, deleteTemplate, renameTemplate, saveTemplate, updateTemplate } from './templates.js';
 import { newText, pickedScreen, setScreenText, textUsers, updateText } from './texts.js';
@@ -68,6 +69,8 @@ export class Editor {
     this.defsApplied = '';
     /** lore.json being edited (screen texts, D118); a new file if there is none yet. */
     this.lore = new LoreEdit(files['lore.json']);
+    /** The files rooms share, by name without .json: saved and exported with the rooms. */
+    this.shared = { world: this.world, defs: this.defs, lore: this.lore };
     /** Edited rooms by id, kept while the page is open. */
     this.sessions = new Map();
     /** @type {RoomEdit|null} the room being edited */
@@ -263,7 +266,8 @@ export class Editor {
 
   /** Every data file with the edits in: what saving would write. */
   editedFiles() {
-    const files = { ...this.files, 'world.json': this.world.toData(), 'defs.json': this.defs.toData(), 'lore.json': this.lore.toData() };
+    const files = { ...this.files };
+    for (const [name, file] of Object.entries(this.shared)) files[`${name}.json`] = file.toData();
     for (const [id, edit] of this.sessions) files[`rooms/${id}.json`] = edit.toData();
     return files;
   }
@@ -438,8 +442,8 @@ export class Editor {
     } else if (field === 'access') {
       this.change(() => this.edit.updateExit(exit.id, { access: Math.min(MAX_ACCESS_LEVEL, Math.max(0, Math.round(value))) }));
     } else if (field === 'id') {
-      if (!ID_PATTERN.test(value)) this.status = 'Exit id: lowercase letters, digits and _, starting with a letter.';
-      else if (this.edit.exits.some((e) => e.id === value && e !== exit)) this.status = `Exit id: "${value}" is taken.`;
+      const problem = idProblem('Exit id', value, this.edit.exits.filter((e) => e !== exit).map((e) => e.id));
+      if (problem) this.status = problem;
       else if (this.edit.updateExit(exit.id, { id: value })) {
         this.selected = { kind: 'exit', id: value };
         this.change(() => true);
@@ -487,21 +491,20 @@ export class Editor {
     // An edit this frame may not be checked yet.
     if (this.stale) this.rebuild();
     const rooms = [...this.sessions.values()].filter((edit) => edit.dirty);
-    const world = this.world.dirty ? this.world.toData() : undefined;
-    const defs = this.defs.dirty ? this.defs.toData() : undefined;
-    const lore = this.lore.dirty ? this.lore.toData() : undefined;
-    const shared = [['world.json', world], ['defs.json', defs], ['lore.json', lore]].filter(([, data]) => data);
+    // The changed shared files, as they are now: { world: data, ... }.
+    const shared = Object.fromEntries(Object.entries(this.shared).filter(([, file]) => file.dirty).map(([name, file]) => [name, file.toData()]));
+    const sharedNames = Object.keys(shared).map((name) => `${name}.json`);
     if (!this.canSave) {
       // Nothing changed: export the room shown.
-      const exported = rooms.length > 0 || shared.length > 0 ? rooms : [this.edit];
+      const exported = rooms.length > 0 || sharedNames.length > 0 ? rooms : [this.edit];
       for (const edit of exported) downloadFile(`${edit.id}.json`, edit.text());
-      for (const [name, data] of shared) downloadFile(name, formatJson(data));
-      const names = [...exported.map((edit) => `${edit.id}.json`), ...shared.map(([name]) => name)];
+      for (const [name, data] of Object.entries(shared)) downloadFile(`${name}.json`, formatJson(data));
+      const names = [...exported.map((edit) => `${edit.id}.json`), ...sharedNames];
       this.status = `Exported ${names.join(', ')}${this.errors.length > 0 ? ' (with errors)' : ''}.`;
       this.refresh();
       return;
     }
-    if (rooms.length === 0 && shared.length === 0) return;
+    if (rooms.length === 0 && sharedNames.length === 0) return;
     if (this.errors.length > 0) {
       this.status = 'Not saved: fix the errors below first.';
       this.refresh();
@@ -511,25 +514,16 @@ export class Editor {
     this.refresh();
     const sent = rooms.map((edit) => edit.toData());
     this.saving = true;
-    const result = await saveFiles({ rooms: sent, world, defs, lore }).finally(() => (this.saving = false));
+    const result = await saveFiles({ rooms: sent, ...shared }).finally(() => (this.saving = false));
     if (result.ok) {
-      // Edits made while saving stay unsaved.
+      // Edits made while saving stay unsaved: what was sent is what is saved.
       rooms.forEach((edit, i) => {
-        edit.savedText = formatJson(sent[i]);
-        edit.fresh = false;
+        edit.markSaved(formatJson(sent[i]));
         this.files[`rooms/${edit.id}.json`] = sent[i];
       });
-      if (world) {
-        this.world.savedText = formatJson(world);
-        this.files['world.json'] = world;
-      }
-      if (defs) {
-        this.defs.savedText = formatJson(defs);
-        this.files['defs.json'] = defs;
-      }
-      if (lore) {
-        this.lore.savedText = formatJson(lore);
-        this.files['lore.json'] = lore;
+      for (const [name, data] of Object.entries(shared)) {
+        this.shared[name].markSaved(formatJson(data));
+        this.files[`${name}.json`] = data;
       }
       this.status = `Saved ${result.files.join(', ')}.`;
     } else {
@@ -541,7 +535,7 @@ export class Editor {
 
   /** Are there edits not saved yet, in any room, world.json, defs.json or lore.json? */
   get unsaved() {
-    return this.world.dirty || this.defs.dirty || this.lore.dirty || [...this.sessions.values()].some((edit) => edit.dirty);
+    return Object.values(this.shared).some((file) => file.dirty) || [...this.sessions.values()].some((edit) => edit.dirty);
   }
 
   refresh() {
@@ -594,18 +588,22 @@ export class Editor {
 
   // --- Errors -------------------------------------------------------------
 
+  /** Where an error points in the editor, or null (errors.js). */
+  errorTarget(error) {
+    return errorTarget(error, { roomData: (id) => this.roomData(id), connections: this.world.connections });
+  }
+
   /** The errors by file, each marked if a click can go to it. */
   errorGroups() {
-    const context = { roomData: (id) => this.roomData(id), connections: this.world.connections };
     return groupErrors([...this.serverErrors, ...this.errors]).map((group) => ({
       ...group,
-      errors: group.errors.map((entry) => ({ ...entry, target: errorTarget(entry.error, context) !== null })),
+      errors: group.errors.map((entry) => ({ ...entry, target: this.errorTarget(entry.error) !== null })),
     }));
   }
 
   /** Go to what an error is about: its room, the tool that edits it, picked, on its layer. */
   goTo(error) {
-    const target = errorTarget(error, { roomData: (id) => this.roomData(id), connections: this.world.connections });
+    const target = this.errorTarget(error);
     if (!target) return;
     if (target.room !== this.edit.id) this.openRoom(target.room);
     if (target.tool) this.setTool(target.tool);
@@ -698,15 +696,15 @@ export class Editor {
       return this.refresh();
     }
     this.change(() => edit.placeObject(cell, this.objectType));
-    const placed = edit.at(cell);
-    if (type?.kind === 'deco' && placed?.kind === 'object') {
-      this.select({ kind: 'item', id: placed.item.id });
-      this.status = `${placed.item.id} faces +z: click it again to turn it to +x.`;
+    const here = edit.at(cell);
+    if (here?.kind !== 'object') return;
+    if (type?.kind === 'deco') {
+      this.select({ kind: 'item', id: here.item.id });
+      this.status = `${here.item.id} faces +z: click it again to turn it to +x.`;
       this.refresh();
     }
     // A new platform is picked, ready for its path.
-    const here = edit.at(cell);
-    if (type?.kind === 'platform' && here?.kind === 'object' && !here.item.path) {
+    if (type?.kind === 'platform' && !here.item.path) {
       this.status = NEEDS_PATH(here.item.id);
       this.select({ kind: 'item', id: here.item.id });
     }

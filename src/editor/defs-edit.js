@@ -4,59 +4,13 @@
  * with only the values it changes. Room undo steps that change a template
  * take it along (room-edit.js). Plain logic, no browser.
  */
-import { formatJson } from './format-json.js';
-import { ID_PATTERN } from './room-edit.js';
+import { FileEdit, applyEntryChange } from './file-edit.js';
+import { idProblem } from './ids.js';
 
-/**
- * Make the entry changes that turned file text `from` into `to` again in
- * `now` (the map under `key`), keeping entries changed since that weren't
- * part of it: undo and redo of a shared file (defs.json's templates,
- * lore.json's texts) among several rooms' steps.
- * @param {string} from
- * @param {string} to
- * @param {string} key
- * @param {Record<string, object>} now
- * @returns {Record<string, object>}
- */
-export function applyEntryChange(from, to, key, now) {
-  const [before, after] = [from, to].map((text) => JSON.parse(text)[key] ?? {});
-  const changed = (id) => JSON.stringify(before[id]) !== JSON.stringify(after[id]);
-  const out = {};
-  for (const id of Object.keys(after)) {
-    if (changed(id)) out[id] = after[id];
-    else if (id in now) out[id] = now[id];
-  }
-  for (const id of Object.keys(now)) if (!(id in out) && !changed(id)) out[id] = now[id];
-  return out;
-}
-
-export class DefsEdit {
-  /** @param {object} data defs.json contents */
-  constructor(data) {
-    this.data = structuredClone(data);
-    /** Text as last saved (or loaded), to tell unsaved changes. */
-    this.savedText = this.text();
-  }
-
+export class DefsEdit extends FileEdit {
   /** @returns {Record<string, object>} enemy templates by id, as written */
   get enemies() {
     return this.data.enemies ?? {};
-  }
-
-  toData() {
-    return structuredClone(this.data);
-  }
-
-  text() {
-    return formatJson(this.data);
-  }
-
-  get dirty() {
-    return this.text() !== this.savedText;
-  }
-
-  markSaved() {
-    this.savedText = this.text();
   }
 
   /**
@@ -79,9 +33,7 @@ export class DefsEdit {
    * @param {string} name
    */
   nameProblem(name) {
-    if (!ID_PATTERN.test(name)) return 'Template name: lowercase letters, digits and _, starting with a letter.';
-    if (this.enemies[name]) return `Template name: "${name}" is taken.`;
-    return null;
+    return idProblem('Template name', name, Object.keys(this.enemies));
   }
 
   /**

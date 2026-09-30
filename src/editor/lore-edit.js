@@ -5,19 +5,18 @@
  */
 import { DATA_SCHEMA_VERSION } from '../core/version.js';
 import { loreProblem } from '../data/lore.js';
-import { applyEntryChange } from './defs-edit.js';
-import { formatJson } from './format-json.js';
-import { ID_PATTERN } from './room-edit.js';
+import { FileEdit, applyEntryChange } from './file-edit.js';
+import { idProblem } from './ids.js';
 
 /** lore.json before its first text. */
 const EMPTY = { $schema: '../schemas/lore.schema.json', schemaVersion: DATA_SCHEMA_VERSION, texts: {} };
 
-export class LoreEdit {
+export class LoreEdit extends FileEdit {
   /** @param {object} [data] lore.json contents; none yet: an empty file */
   constructor(data) {
-    this.data = structuredClone(data ?? EMPTY);
-    /** Text of the file as last saved (or loaded; '' when there is no file yet), to tell unsaved changes. */
-    this.savedText = data ? this.text() : '';
+    super(data ?? EMPTY);
+    // No file yet: nothing saved ('').
+    if (!data) this.savedText = '';
   }
 
   /** @returns {Record<string, { title?: string, lines: string[] }>} texts by id */
@@ -25,21 +24,9 @@ export class LoreEdit {
     return this.data.texts;
   }
 
-  toData() {
-    return structuredClone(this.data);
-  }
-
-  text() {
-    return formatJson(this.data);
-  }
-
   /** Changed since saved; a file not written yet only once it has a text. */
   get dirty() {
     return this.savedText === '' ? Object.keys(this.texts).length > 0 : this.text() !== this.savedText;
-  }
-
-  markSaved() {
-    this.savedText = this.text();
   }
 
   /**
@@ -55,9 +42,7 @@ export class LoreEdit {
    * @param {string} id
    */
   idProblem(id) {
-    if (!ID_PATTERN.test(id)) return 'Text id: lowercase letters, digits and _, starting with a letter.';
-    if (this.texts[id]) return `Text id: "${id}" is taken.`;
-    return null;
+    return idProblem('Text id', id, Object.keys(this.texts));
   }
 
   /**

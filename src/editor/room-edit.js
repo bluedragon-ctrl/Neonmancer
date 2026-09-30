@@ -10,9 +10,9 @@
 import { MAX_ROOM_FOOTPRINT, ROOM_HEIGHT } from '../core/rules.js';
 import { DATA_SCHEMA_VERSION } from '../core/version.js';
 import { DECO_FACES, EXIT_DEFAULTS, sideLength, withExitDefaults } from '../data/room-data.js';
-import { validateData } from '../data/validate.js';
 import { Boxes } from './boxes.js';
 import { formatJson } from './format-json.js';
+import { idProblem } from './ids.js';
 
 /** Kinds of things standing in cells, and the room list each is kept in. */
 const ITEM_LISTS = [
@@ -20,6 +20,9 @@ const ITEM_LISTS = [
   ['enemy', 'enemies'],
   ['pickup', 'pickups'],
 ];
+
+/** The room list of each kind of item: `objects` for 'object'. */
+const LIST_OF = Object.fromEntries(ITEM_LISTS);
 
 /** Order of a room file's keys when it is written back (as in data/rooms/). */
 const KEY_ORDER = ['$schema', 'schemaVersion', 'id', 'name', 'authored', 'biome', 'size', 'spawn', 'reset', 'exits', 'blocks', 'holes', 'shrine', 'objects', 'enemies', 'pickups'];
@@ -34,9 +37,6 @@ const sameCell = (a, b) => a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
 
 /** Exit names by side, as the rooms use them (north is the -z side). */
 export const SIDE_NAMES = { '-z': 'north', '+x': 'east', '+z': 'south', '-x': 'west' };
-
-/** Room ids and exit ids (common.schema.json). */
-export const ID_PATTERN = /^[a-z][a-z0-9_]*$/;
 
 /** Size of a new room. */
 const NEW_ROOM_SIZE = [12, 4, 12];
@@ -98,9 +98,12 @@ export class RoomEdit {
     return this.fresh || this.text() !== this.savedText;
   }
 
-  /** The room was saved as it is now. */
-  markSaved() {
-    this.savedText = this.text();
+  /**
+   * The room was saved.
+   * @param {string} [text] the text written (edits made since stay unsaved); default: as it is now
+   */
+  markSaved(text = this.text()) {
+    this.savedText = text;
     this.fresh = false;
   }
 
@@ -267,30 +270,28 @@ export class RoomEdit {
    * @returns {boolean} whether anything changed
    */
   placeObject(cell, type) {
-    if (!this.inside(cell)) return false;
-    const here = this.at(cell);
-    if (here?.kind === 'object' && here.item.type === type) return false;
-    return this.edit(() => {
-      this.remove(cell);
-      this.data.objects = [...(this.data.objects ?? []), { id: this.freeId(type), type, at: [...cell] }];
-      return true;
-    });
+    return this.placeItem('objects', cell, type);
   }
 
   /**
-   * Put a new pickup of `type` in a cell (D71), replacing whatever was there;
-   * its id is the type name with the first free number (`disk_zap_1`).
+   * Put a new pickup of `type` in a cell (D71), like placeObject(): its id
+   * is `disk_zap_1`...
    * @param {number[]} cell
    * @param {string} type pickup type id (defs.json "pickups")
    * @returns {boolean} whether anything changed
    */
   placePickup(cell, type) {
+    return this.placeItem('pickups', cell, type);
+  }
+
+  /** placeObject() and placePickup(), into room list `key`. */
+  placeItem(key, cell, type) {
     if (!this.inside(cell)) return false;
     const here = this.at(cell);
-    if (here?.kind === 'pickup' && here.item.type === type) return false;
+    if (here && LIST_OF[here.kind] === key && here.item.type === type) return false;
     return this.edit(() => {
       this.remove(cell);
-      this.data.pickups = [...(this.data.pickups ?? []), { id: this.freeId(type), type, at: [...cell] }];
+      this.data[key] = [...(this.data[key] ?? []), { id: this.freeId(type), type, at: [...cell] }];
       return true;
     });
   }
@@ -341,13 +342,25 @@ export class RoomEdit {
     });
   }
 
-  /** @param {string} name */
-  setName(name) {
-    if (name === this.data.name) return false;
+  /**
+   * Set a plain room field (a string, number or boolean; `undefined`
+   * removes it) as one undo step.
+   * @param {string} key
+   * @param {string|number|boolean|undefined} value
+   * @returns {boolean} whether anything changed
+   */
+  setField(key, value) {
+    if (value === this.data[key]) return false;
     return this.edit(() => {
-      this.data.name = name;
+      if (value === undefined) delete this.data[key];
+      else this.data[key] = value;
       return true;
     });
+  }
+
+  /** @param {string} name */
+  setName(name) {
+    return this.setField('name', name);
   }
 
   /**
@@ -355,21 +368,12 @@ export class RoomEdit {
    * @param {boolean} on
    */
   setAuthored(on) {
-    if (on === (this.data.authored === true)) return false;
-    return this.edit(() => {
-      if (on) this.data.authored = true;
-      else delete this.data.authored;
-      return true;
-    });
+    return this.setField('authored', on || undefined);
   }
 
   /** @param {string} biome biome id */
   setBiome(biome) {
-    if (biome === this.data.biome) return false;
-    return this.edit(() => {
-      this.data.biome = biome;
-      return true;
-    });
+    return this.setField('biome', biome);
   }
 
   /**
@@ -702,7 +706,7 @@ export class RoomEdit {
     const here = this.at(cell);
     if (!here) return false;
     if (here.kind === 'block') return this.blocks.set(cell, null);
-    const key = ITEM_LISTS.find(([kind]) => kind === here.kind)[1];
+    const key = LIST_OF[here.kind];
     this.data[key] = this.data[key].filter((item) => item !== here.item);
     return true;
   }
@@ -743,17 +747,6 @@ export function exitFields({ id, side, at, width, y, height, locked, access }) {
 /** Do two exits in one side share an opening cell? (defaults applied) */
 export function exitsOverlap(a, b) {
   return a.at < b.at + b.width && b.at < a.at + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
-}
-
-/**
- * Check a room as edited against the rest of the game data, the way the
- * game checks it at load time.
- * @param {Record<string, any>} files every data file, keyed like data/ (the room's own included)
- * @param {object} room edited room data
- * @returns {string[]} error messages; empty when it is valid
- */
-export function roomErrors(files, room) {
-  return validateData({ ...files, [`rooms/${room.id}.json`]: room });
 }
 
 /**
@@ -800,9 +793,7 @@ export function newRoom(id, biome) {
  * @param {Iterable<string>} taken ids of the rooms there are
  */
 export function roomIdProblem(id, taken) {
-  if (!ID_PATTERN.test(id)) return 'Room id: lowercase letters, digits and _, starting with a letter.';
-  if (new Set(taken).has(id)) return `Room id: "${id}" is taken.`;
-  return null;
+  return idProblem('Room id', id, taken);
 }
 
 /**
