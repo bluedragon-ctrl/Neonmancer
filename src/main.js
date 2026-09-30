@@ -4,11 +4,12 @@
 import { DT, FixedLoop } from './core/loop.js';
 import { Input } from './core/input.js';
 import { say } from './core/messages.js';
-import { DATA_FILES, DEV_SERVER, SCHEMA_ERRORS } from './data/bundle.js';
+import { DATA_FILES, DEV_SERVER, SCHEMA_ERRORS, onDataSaved } from './data/bundle.js';
 import { DataError, loadGameData } from './data/load.js';
 import { DebugOverlay } from './debug/overlay.js';
 import { DebugReadout } from './debug/readout.js';
 import { Editor } from './editor/editor.js';
+import { readDataFiles } from './editor/save.js';
 import { Game } from './game.js';
 import { PLAYER } from './entities/player.js';
 import { PlayerView } from './render/entity-view.js';
@@ -75,6 +76,8 @@ function boot() {
 
   // F2: the room editor (saves in the dev server, exports in a build).
   const editor = new Editor({ game, renderer, files: DATA_FILES, canSave: DEV_SERVER, onRoom: (options) => showRoom({ rebuild: true, ...options }) });
+  // Templates and rooms saved in the monster editor or the world map (D119).
+  onDataSaved(async (paths) => editor.takeSaved(await readDataFiles(paths.filter((path) => path === 'defs.json' || path.startsWith('rooms/')))));
   if (DEV_SERVER && params.has('edit')) editor.open();
 
   // The title screen first; the world map tool's links go straight in,

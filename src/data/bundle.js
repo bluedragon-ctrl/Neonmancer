@@ -5,6 +5,7 @@
  * server.
  */
 import schemaErrors from 'virtual:data-schema-errors';
+import { DATA_SAVED_EVENT } from '../editor/save.js';
 
 const modules = import.meta.glob('../../data/**/*.json', { eager: true, import: 'default' });
 
@@ -18,6 +19,16 @@ export const DATA_FILES = Object.fromEntries(
  * straight to data/rooms/ there (D56).
  */
 export const DEV_SERVER = import.meta.env.DEV;
+
+/**
+ * Dev server: call `callback(paths)` whenever a page (this one or another:
+ * the room editor, the world map, the monster editor) saved data files;
+ * `paths` relative to data/, e.g. "defs.json".
+ * @param {(paths: string[]) => void} callback
+ */
+export function onDataSaved(callback) {
+  import.meta.hot?.on(DATA_SAVED_EVENT, ({ files }) => callback(files.map((file) => file.replace(/^data\//, ''))));
+}
 
 /**
  * JSON Schema errors (dev server only; a build with schema errors fails,

@@ -1022,6 +1022,11 @@ body {
   font-size: calc(13 * var(--u));
 }
 
+.editor-link {
+  color: var(--cyan);
+  font-size: calc(13 * var(--u));
+}
+
 .editor-group > .editor-action {
   width: 100%;
 }

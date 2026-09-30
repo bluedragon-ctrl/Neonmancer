@@ -40,6 +40,49 @@ export function colorGap(a, b) {
 }
 
 /**
+ * Colors a new template keeps clear of, besides the other templates': the
+ * ones with a meaning (D99): the wizard's magenta, the danger red, lime
+ * (pushable) and cyan (moving), as in render/neon.js PALETTE.
+ */
+export const AVOID_COLORS = ['#ff2bd6', '#ff2a3a', '#b6ff3c', '#00f0ff'];
+
+/** Least OKLab lightness of a color picked for a new template: bright enough to glow on the dark void. */
+export const MIN_TEMPLATE_LIGHTNESS = 0.68;
+
+/**
+ * '#rrggbb' of a hue (degrees), saturation and value (0–1).
+ * @param {number} h
+ * @param {number} s
+ * @param {number} v
+ */
+export function hsvHex(h, s, v) {
+  const channel = (n) => {
+    const k = (n + h / 60) % 6;
+    return v - v * s * Math.max(0, Math.min(k, 4 - k, 1));
+  };
+  return `#${[channel(5), channel(3), channel(1)].map((c) => Math.round(c * 255).toString(16).padStart(2, '0')).join('')}`;
+}
+
+/**
+ * A bright color as far from all of `taken` (and AVOID_COLORS) as can be
+ * found: for a new enemy template, which needs a color of its own (D119).
+ * @param {string[]} taken '#rrggbb'
+ * @returns {string}
+ */
+export function freeColor(taken) {
+  let best = null;
+  for (let h = 0; h < 360; h += 3) {
+    for (const s of [0.55, 0.7, 0.85, 1]) {
+      const color = hsvHex(h, s, 1);
+      if (oklab(color)[0] < MIN_TEMPLATE_LIGHTNESS) continue;
+      const gap = Math.min(...[...taken, ...AVOID_COLORS].map((other) => colorGap(color, other)));
+      if (!best || gap > best.gap) best = { color, gap };
+    }
+  }
+  return best.color;
+}
+
+/**
  * Pairs of enemy templates whose colors (filled in from the templates they
  * extend) are too alike to tell apart.
  * @param {Record<string, object>} templates defs.json `enemies`, as written

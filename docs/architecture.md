@@ -48,7 +48,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `core/input.js` | Raw keys → action states once per tick |
 | `core/loop.js` | Fixed 60 Hz timestep, step clamp, interpolation alpha |
 | `core/messages.js` | `say(key, values)` terminal messages, `showText(lines)` screen texts (D118) and `announce(key, values, options)` banners from any module, queued until the HUD takes them |
-| `data/colors.js` | How far apart two colors look (OKLab, `colorGap()`) and enemy templates too alike (`templateColorClashes()`, D119) (pure, tested) |
+| `data/colors.js` | How far apart two colors look (OKLab, `colorGap()`), enemy templates too alike (`templateColorClashes()`, D119) and a free color for a new one (`freeColor()`, D120) (pure, tested) |
 | `data/lore.js` | Screen texts (D118): `LORE_LIMITS`, `LORE_REACH`, the looks that show a text, `loreLines()` (what the terminal prints) and `loreProblem()` (pure, tested) |
 | `core/rules.js` | Shared rule constants (player hitbox, max room footprint) |
 | `core/version.js` | Game and data-schema version numbers (the game's patch number comes from `tools/game-version.js`, D42) |
@@ -177,12 +177,16 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `editor/save.js` | Posting edited files to the dev server; downloading them in a build |
 | `editor/lore-edit.js` | `lore.json` being edited (D118): texts added and changed, checked against the limits; a step's text changes applied again for undo/redo (pure, tested) |
 | `editor/texts.js` | The editor's screen text actions (D118): pick the picked screen's text, add a new one for it, change one; which screens show a text |
+| `editor/monster-edit.js` | The enemy templates as the monster editor edits them (D120): where each value comes from (`field()`), setting and clearing fields, a new base without a change in behavior (`setBase()`), variants and copies in a free color (`add()`), renames the rooms follow, deletes, usage, color clashes, undo/redo, what a save sends (pure, tested) |
 | `editor/world-edit.js` | `world.json` being edited: connecting, disconnecting and renaming exits, a room's connections for its undo steps, a new room's map cell (`place()`, `unplace()`); `linkChoices()` (pure, tested) |
 | `debug/overlay.js` | Debug mode's wireframe collision boxes |
 | `debug/readout.js` | Debug mode's stats readout (rates, buffer and quality, GPU resources, actions, position) |
 | `tools/check-data.js` | Dev only: Ajv schema check + semantic checks over `data/` |
-| `tools/dev.bat` | Windows: installs packages if needed and starts the dev server, opening the game (or `dev.bat map`: the world map tool, `dev.bat showcase`: the asset showcase) |
+| `tools/dev.bat` | Windows: installs packages if needed and starts the dev server, opening the game (or `dev.bat map`: the world map tool, `dev.bat monsters`: the monster editor, `dev.bat showcase`: the asset showcase) |
 | `tools/game-version.js` | Dev only: the game version for builds, PATCH counted from git merges since the phase tag (D42) |
+| `tools/monster-editor.bat` | Windows: double-click to start the dev server on the monster editor (`dev.bat monsters`) |
+| `tools/monster-editor.html`, `tools/monster-editor.js`, `tools/monster-editor.css` | Monster editor (D119, D120): the enemy templates, a form made from `defs.schema.json`, checks, undo, save. Dev server only, not built |
+| `tools/monster-preview.js` | The monster editor's preview: an enemy of the template facing the wizard, walking, noticing him and attacking in a loop, with the game's models and effects |
 | `tools/map-pr.bat` | Windows: opens one PR with only `data/rooms/`, `data/world.json` and `data/defs.json` changes, rooms and map together (validates first) |
 | `tools/room-save.js` | Dev only: checks edited rooms, `world.json` and `defs.json` with the rest of `data/` and writes them; deletes rooms the world map removed |
 | `tools/run-tests.js` | `npm test`: runs `node --test` on an explicit list of `tests/*.test.js` (works on Node 20 and 22+, Windows and Linux) |
@@ -491,6 +495,7 @@ If the game cannot start, `ui/error-screen.js` lists them.
 editor (page) ──POST /__editor/save {rooms, world?, defs?}──► tools/vite-plugin-data.js
 world map ─POST /__editor/save {positions, rooms?, remove?,──►   └─ tools/room-save.js: read data/, swap in the edited files,
                                 world?}                           drop removed rooms, merge positions,
+monster editor ─POST /__editor/save {defs, rooms?}──────────►
                                                                   schema + semantic checks,
                                                                   write (and delete) them all or none
 page ◄── { ok, errors, files } ────────────────────────────────┘  (no page reload for those writes)

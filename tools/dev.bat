@@ -1,9 +1,10 @@
 @echo off
 rem Start the dev server and open the game in the browser.
 rem
-rem Usage: tools\dev.bat [map | showcase]
+rem Usage: tools\dev.bat [map | monsters | showcase]
 rem   (nothing)  the game (F2: room editor)
 rem   map        the world map tool (D66)
+rem   monsters   the monster editor (D119)
 rem   showcase   the asset showcase
 rem
 rem Installs the packages first if node_modules is missing. Ctrl+C stops
@@ -14,6 +15,7 @@ cd /d "%~dp0.."
 
 set "PAGE=/"
 if /i "%~1"=="map" set "PAGE=/tools/world-map.html"
+if /i "%~1"=="monsters" set "PAGE=/tools/monster-editor.html"
 if /i "%~1"=="showcase" set "PAGE=/tools/showcase.html"
 
 where npm >nul 2>nul

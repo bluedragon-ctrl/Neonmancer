@@ -892,3 +892,19 @@ learn them. One behavior per template, one color per behavior, makes an
 enemy readable at a glance and keeps tuning in one place. A test (like
 the D99 color rules) rather than a load error keeps the rule on the real
 roster without forcing a color on every fixture.
+
+### D120 — 2026-09-30 — The monster editor
+Enemy templates are tuned in a tool of their own, `tools/monster-editor.html`
+(dev server only, not built, like the world map): a list of templates, a
+form made from `defs.schema.json` showing where each value comes from
+(own, a base template, the default), a live preview with the game's
+models (walking, noticing the wizard, attacking in a loop), variants and
+copies in a free color, rename (rooms follow), delete (only unused),
+undo, and the color check. Save sends `defs.json` and the rooms a rename
+changed. The room editor only picks templates; it takes in templates and
+rooms another page saved (rooms with unsaved edits there are kept and
+flagged).
+**Why:** with enemies all their template (D119), tuning moves out of the
+room editor, whose panel had grown an override form; a tool of its own
+has room for every field, their descriptions and a preview of the
+behavior, not just the look.

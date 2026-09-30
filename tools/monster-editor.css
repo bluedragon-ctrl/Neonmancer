@@ -1,0 +1,224 @@
+/* Monster editor (D119): dev server only, never shown to players. The
+   preview fills the window (the game's stage); the panels lie over its sides. */
+
+:root {
+  --panel: rgba(11, 13, 24, 0.94);
+  --line: #1c2036;
+  --text: #c9d2ff;
+  --dim: #6c7399;
+  --red: #ff2a3a;
+}
+
+.me-panel {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+  box-sizing: border-box;
+  overflow-y: auto;
+  padding: 16px;
+  background: var(--panel);
+  color: var(--text);
+  font: 14px var(--terminal);
+}
+
+#list {
+  left: 0;
+  width: 300px;
+  border-right: 1px solid var(--line);
+}
+
+#form {
+  right: 0;
+  width: 420px;
+  overflow-x: hidden;
+  border-left: 1px solid var(--line);
+}
+
+.me-panel h1 {
+  margin: 0 0 12px;
+  font: 700 18px var(--arcade);
+  letter-spacing: 0.1em;
+  color: var(--cyan);
+}
+
+.me-panel h2 {
+  margin: 16px 0 6px;
+  font: 700 13px var(--arcade);
+  letter-spacing: 0.08em;
+  color: var(--amber);
+}
+
+.me-panel p {
+  margin: 4px 0;
+}
+
+.me-panel input,
+.me-panel select {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 3px 6px;
+  font: inherit;
+  color: var(--text);
+  background: #070912;
+  border: 1px solid var(--line);
+}
+
+.me-panel input:focus,
+.me-panel select:focus {
+  outline: 1px solid var(--cyan);
+}
+
+button.template {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  margin: 0 0 2px;
+  padding: 4px 8px;
+  font: inherit;
+  text-align: left;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+button.template:hover {
+  border-color: var(--line);
+}
+
+button.template.selected {
+  border-color: var(--cyan);
+  background: rgba(0, 240, 255, 0.08);
+}
+
+.swatch {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+}
+
+.template .sub {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--dim);
+}
+
+.clash,
+.missing .source,
+.bad {
+  color: var(--red);
+}
+
+.ok {
+  color: var(--lime);
+}
+
+.dim {
+  color: var(--dim);
+}
+
+button.action {
+  margin: 4px 4px 0 0;
+  padding: 5px 10px;
+  font: inherit;
+  color: var(--void);
+  background: var(--lime);
+  border: none;
+  cursor: pointer;
+}
+
+button.action:disabled {
+  color: var(--dim);
+  background: var(--line);
+  cursor: default;
+}
+
+.name-row {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.name-row input {
+  flex: 1;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 112px 1fr 84px 18px;
+  gap: 6px;
+  align-items: center;
+  margin: 3px 0;
+}
+
+.row > * {
+  min-width: 0;
+}
+
+.row label {
+  color: var(--text);
+}
+
+.row .source {
+  overflow: hidden;
+  font-size: 11px;
+  color: var(--dim);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.row.inherited input,
+.row.inherited select {
+  color: var(--dim);
+}
+
+.row .clear {
+  padding: 0;
+  font: inherit;
+  color: var(--dim);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.row .clear:hover {
+  color: var(--red);
+}
+
+.color-pair {
+  display: flex;
+  gap: 4px;
+}
+
+.color-pair input[type='text'] {
+  flex: 1;
+}
+
+.color-pair input[type='color'] {
+  width: 32px;
+  height: 24px;
+  padding: 0;
+}
+
+.help {
+  min-height: 5em;
+  margin-top: 12px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--dim);
+}
+
+.errors {
+  margin: 6px 0;
+  padding-left: 16px;
+  font-size: 12px;
+  color: var(--red);
+}
+
+.used {
+  font-size: 12px;
+  color: var(--dim);
+}
