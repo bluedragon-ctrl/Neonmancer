@@ -41,7 +41,8 @@ export const WORM = {
   eyeGlow: { calm: 2.2, alert: 4 },
   markHeight: 0.85,
   turnRate: 8,
-  pop: { pixels: 28, pixelSize: 0.07, ticks: 36, spread: 0.8, rise: 0.6 },
+  /** The body it derezzes from when it dies (derez-fx.js, D126); square, as it turns. */
+  derez: { size: [0.7, 0.3, 0.7] },
 };
 
 const GEO = {
@@ -169,35 +170,12 @@ export function animateWorm(worm, { state = 'rest', walked = 0, time = 0, alert 
   glowEyes(worm, flaredGlow(WORM.eyeGlow, alert, look.charge));
 }
 
-/**
- * The pixels of it popping `tick` ticks after it died: a burst from along
- * its whole length.
- * @param {number} tick may be fractional
- * @returns {{ offset: number[], scale: number }[]}
- */
-export function wormPopPixels(tick) {
-  const { pixels, ticks, spread, rise } = WORM.pop;
-  if (tick < 0 || tick >= ticks) return [];
-  const t = tick / ticks;
-  const spine = wormSpine(0, 0);
-  const out = [];
-  for (let i = 0; i < pixels; i++) {
-    const [x, y, z] = spine[i % spine.length];
-    const angle = hash(i, 51) * Math.PI * 2;
-    const radius = (0.05 + hash(i, 52) * spread * 0.6) * Math.sqrt(t);
-    const height = y + (hash(i, 53) - 0.3) * rise * t;
-    out.push({ offset: [x + Math.cos(angle) * radius, height, z + Math.sin(angle) * radius], scale: 1 - t });
-  }
-  return out;
-}
-
 /** Everything EnemyView needs to show a worm (see BUG_MODEL in bug.js). */
 export const WORM_MODEL = {
   create: createWorm,
   setMood,
   animate: animateWorm,
-  popPixels: wormPopPixels,
-  pop: WORM.pop,
+  derez: WORM.derez,
   turnRate: WORM.turnRate,
   markHeight: WORM.markHeight,
   muzzle: WORM.head.z + WORM.head.r,

@@ -17,7 +17,7 @@
  */
 import { BoxGeometry, Group, Mesh, MeshBasicMaterial } from 'three';
 import { dischargeLook } from './discharge.js';
-import { EYE, flaredGlow, glowEyes, popBurst, setMood } from './enemy-look.js';
+import { EYE, flaredGlow, glowEyes, setMood } from './enemy-look.js';
 import { hash } from './hash.js';
 import { createFlash, sharpGeometry, sharpPart } from './holo.js';
 
@@ -39,7 +39,8 @@ export const VIRUS = {
   /** Height of the "!" above its feet. */
   markHeight: 0.95,
   turnRate: 10,
-  pop: { pixels: 28, pixelSize: 0.07, ticks: 36, spread: 0.9, rise: 0.7 },
+  /** The body it derezzes from when it dies (derez-fx.js, D126); square, as it turns. */
+  derez: { size: [0.45, 0.5, 0.45], y: 0.15 },
 };
 
 /** Geometry shared by every virus (never disposed with a room). */
@@ -136,16 +137,12 @@ export function animateVirus(virus, { state = 'rest', time = 0, alert = 0, attac
 /** The middle of a virus above its feet: where its discharge comes from. */
 export const VIRUS_MIDDLE = VIRUS.hover + VIRUS.y;
 
-/** The pixels of a popping virus `tick` ticks after it died (enemy-look.js popBurst()). */
-export const virusPopPixels = popBurst(VIRUS.pop, { seed: 11, middle: VIRUS_MIDDLE });
-
 /** Everything EnemyView needs to show a virus (see BUG_MODEL in bug.js). */
 export const VIRUS_MODEL = {
   create: createVirus,
   setMood,
   animate: animateVirus,
-  popPixels: virusPopPixels,
-  pop: VIRUS.pop,
+  derez: VIRUS.derez,
   turnRate: VIRUS.turnRate,
   markHeight: VIRUS.markHeight,
   /** How far in front of its eyes an arc leaves it (along the line of fire). */

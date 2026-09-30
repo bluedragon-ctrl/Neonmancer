@@ -4,7 +4,7 @@ import { Patrol } from '../src/ai/patrol.js';
 import { ENEMY } from '../src/entities/enemy.js';
 import { Game } from '../src/game.js';
 import { overlapsBox } from '../src/physics/collision.js';
-import { BUG as BUG_LOOK, bugPose, popPixels } from '../src/render/bug.js';
+import { BUG as BUG_LOOK, bugPose } from '../src/render/bug.js';
 import { BOUNCE_SPEED, PLAYER } from '../src/entities/player.js';
 import { CRATE, LIFT, eventTypes, gameData, hold, idle, roomFile } from './helpers.js';
 
@@ -318,14 +318,6 @@ test('look: a hop lifts the bug in the air and squashes it on landing', () => {
   assert.ok(land.scale[1] < 1 && land.scale[0] > 1);
   assert.deepEqual(bugPose(0), { lift: 0, scale: [1, 1, 1] });
   assert.ok(bugPose(BUG_LOOK.hop.air / 2, 0.5).lift < up.lift);
-});
-
-test('look: a pop bursts out from the ball and is over after its time', () => {
-  const start = popPixels(0);
-  assert.equal(start.length, BUG_LOOK.pop.pixels);
-  assert.ok(start.every(({ scale }) => scale === 1));
-  assert.ok(popPixels(BUG_LOOK.pop.ticks - 1).every(({ scale }) => scale < 0.1));
-  assert.deepEqual(popPixels(BUG_LOOK.pop.ticks), []);
 });
 
 test('a solid bug blocks the wizard; leaning on a hostile one hurts', () => {

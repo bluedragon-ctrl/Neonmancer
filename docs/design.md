@@ -117,8 +117,8 @@ debug `H` key.
   No knockback. Invulnerability carries through exits and ends on respawn.
 - Losing the last point kills him (`die` event, cause `damage`): he
   derezzes on the spot, flickering and squeezing into a thin beam while
-  a burst of cyan and magenta pixels drifts up out of him (placeholder
-  until the Phase 5 juice pass), then recompiles at the room's reset point
+  his cyan and magenta pixels drift up out of him (the derez, below;
+  placeholder until the Phase 5 juice pass), then recompiles at the room's reset point
   after about 1.1 s, like a hole death (cause `hole`, dropping into the pit)
   or a void death. Each cause prints its own terminal line, and each death
   uses a backup (below).
@@ -126,6 +126,22 @@ debug `H` key.
 - Tuning: `invulnerableTicks` and `deathTicks` in `PLAYER`; the look is
   `HIT_FX` in `src/render/hit-fx.js`, shown looping in the asset showcase
   (`/tools/showcase.html?asset=wizard-hit`).
+
+### Derez
+
+One look for anything that is gone (D126): the wizard dying, an enemy
+popping, a collapsing block, a destructible or compiled crate breaking,
+a pickup taken. Its pixels start spread through its body, a few ticks
+apart (10), drift out from its middle and up (up to 0.7 and 1 units) and
+shrink to nothing in 48 ticks (0.8 s). Only two things differ: the
+body, a box standing on its feet (the wizard 0.6 × 1.8 × 0.6, a block or
+crate its cell, each enemy look its own, square as it turns, a pickup a
+small box round its middle), which also sets how many pixels (48 for a
+cell, fewer for smaller bodies, 24–64); and the colors, its own, white as
+the second where it has only one. The boot's arrival plays the wizard's
+backwards. Tuning: `DEREZ` in `src/render/derez-fx.js`; showcase
+`?asset=derez` (the wizard, a crate, a bug, a sentinel and a disk side by
+side).
 
 ### Backups
 
@@ -286,7 +302,7 @@ barely tinted faces, that gives way under the wizard.
   it or a crate resting on it does nothing; a dead wizard doesn't trigger
   it either.
 - **Shake, then gone:** it shakes for 0.5 s, harder towards the end, then
-  breaks into pixels that tumble down and fade, and is gone: whatever
+  derezzes (D126), and is gone: whatever
   stood on it falls (the wizard, crates). Once shaking it goes even if he
   steps off. Running across a row of them is safe; stopping is not.
 - **Regrow** (optional, `regrow` seconds on the block type, e.g.
@@ -545,8 +561,8 @@ own, each in its own color.
   `src/render/sentinel.js`, `CRON`, `WORM` and `CRAWLER` in
   `src/render/cron.js`, `worm.js` and `crawler.js`, and the D107 looks in
   `warden.js`, `daemon.js`, `golem.js`, `wyrm.js`, `phish.js`,
-  `overclock.js` and `pixie.js` (what they share, mood colors, eyes and the
-  pop, in `src/render/enemy-look.js`), the lightning `DISCHARGE` in
+  `overclock.js` and `pixie.js` (what they share, mood colors and eyes, in
+  `src/render/enemy-look.js`; each look's `derez` body for its pop, D126), the lightning `DISCHARGE` in
   `src/render/discharge.js`; review in the asset showcase
   (`/tools/showcase.html?asset=bugs,viruses,sentinels,crons,worms,crawlers`;
   the bolt: `bug-bolt`, `?asset=bolts` for the cron's four-way bolts and a bouncing bolt;
@@ -630,8 +646,8 @@ enemies).
   spell's color, is the spell's slot (row by row from the top left). The
   integrity refill is a cyan plus of five voxels, the energy refill a lime
   crystal (the HUD bars' colors), smaller and lower than a disk. Taking
-  one lifts it, spins it up and flashes it white (10 ticks), then bursts it
-  into pixels in its colors. Tuning: `DISK` in `src/render/disk.js`,
+  one lifts it, spins it up and flashes it white (10 ticks), then derezzes
+  it in its colors (D126). Tuning: `DISK` in `src/render/disk.js`,
   `REFILL` in `src/render/refill.js`; showcase `?asset=disks` and
   `?asset=refills`.
 - **Rules:** he takes a pickup when his box overlaps its box (its cell,
@@ -1188,7 +1204,7 @@ usual, so half behind a wall he is half ghost (D55).
 ## Destructible crates
 
 - A pushable type with `integrity` (1–15) is destructible: each Zap takes
-  1, and at 0 it breaks into pixels (like a collapsing block) and is gone
+  1, and at 0 it derezzes (D126) and is gone
   until the room resets; whatever stood on it falls. `crate_cross` has
   integrity 1: one Zap. A hit that doesn't break it jolts it.
 - It always shows it, standing still. Crates are glass (D96): the plain

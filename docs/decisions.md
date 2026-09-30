@@ -1002,3 +1002,20 @@ a gap is crossed by plugging its holes. Cheap and short-lived, it is a
 tool to use often, not a lasting change to the room; no cap on how many,
 since the 7 s already limits it. The crate stays lime (pushable, D99);
 the gold marks the spell.
+
+### D126 — 2026-09-30 — One derez for everything that is gone
+The wizard's death, enemy pops (13 looks), collapsing blocks,
+destructible and compiled crates and taken pickups share one pixel
+burst (`derez-fx.js`): pixels start spread through a body box standing
+on the thing's feet, a few ticks apart, drift out from its middle and
+up, and shrink away in 48 ticks, all the same pixel size. A caller
+gives only the body (which also sets the pixel count) and the colors:
+its own, white as the second where it has only one. Blocks' pixels rise
+now, where they used to tumble down. Effects that carry pixels
+somewhere (Cut & Paste, Compile's bits, Pull, Warp, sparks, install)
+stay their own.
+**Why:** the author's proposal. Five bursts had grown apart (different
+motion, timing, pixel sizes, per-look pop settings); one look reads as
+one rule of the Grid, "gone is derezzed", and a tweak in one place now
+changes them all. Rising suits a digital derez better than falling
+rubble.

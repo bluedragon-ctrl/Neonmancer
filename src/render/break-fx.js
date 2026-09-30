@@ -1,8 +1,8 @@
 /**
  * How a destructible object reacts (pure, tested; no three.js). It stands
  * still, told apart by its data bits with some missing (marks.js); a hit
- * that doesn't break it jolts it; breaking bursts it into pixels (the
- * collapsing block's, collapse-fx.js).
+ * that doesn't break it jolts it; breaking derezzes it (derez-fx.js,
+ * D126).
  */
 
 /** Timing in ticks, sizes in units. */

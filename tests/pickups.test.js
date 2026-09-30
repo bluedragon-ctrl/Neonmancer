@@ -6,7 +6,7 @@ import { RoomEdit } from '../src/editor/room-edit.js';
 import { Game } from '../src/game.js';
 import { PLAYER } from '../src/entities/player.js';
 import { createChip } from '../src/render/chip.js';
-import { DISK, createDisk, diskMotion, diskPixels } from '../src/render/disk.js';
+import { DISK, createDisk, diskMotion } from '../src/render/disk.js';
 import { PICKUP_BITS, Progress, SAVE_BLOCKS, pickupBit, saveBit } from '../src/world/progress.js';
 import { PICKUPS, SPELLS, dataFiles, eventTypes, gameData, idle, roomFile } from './helpers.js';
 
@@ -221,9 +221,6 @@ test('disk look: a ghost spins without the bob; a pick-up rises and flashes, the
   assert.ok(rising.visible && rising.y > diskMotion({ time: 1 }).y);
   const gone = diskMotion({ time: 1, collected: DISK.collect.riseTicks });
   assert.equal(gone.visible, false);
-  assert.equal(diskPixels(0).length, DISK.collect.pixels);
-  assert.deepEqual(diskPixels(DISK.collect.pixelTicks), []);
-  assert.deepEqual(diskPixels(-1), []);
 });
 
 test('room editor: pickups are placed, picked by id and erased like objects', () => {

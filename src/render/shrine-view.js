@@ -13,7 +13,7 @@
  * createShrine() animates them.
  */
 import { AdditiveBlending, Color, DoubleSide, Group, Mesh, MeshBasicMaterial, PlaneGeometry } from 'three';
-import { createPixelBurst, placePixels } from './entity-view.js';
+import { createPixelBurst, placePixels } from './pixels.js';
 import { PALETTE, fadingLines, lineMaterial, neonLines } from './neon.js';
 
 export const SHRINE_FX = {

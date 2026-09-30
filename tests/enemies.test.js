@@ -5,16 +5,13 @@ import { BOLT, boltDirections } from '../src/entities/bolt.js';
 import { ENEMY } from '../src/entities/enemy.js';
 import { Game } from '../src/game.js';
 import { Vector3 } from 'three';
-import { BUG as BUG_LOOK, popPixels } from '../src/render/bug.js';
-import { CRAWLER, animateCrawler, crawlerFoot, crawlerPopPixels, createCrawler } from '../src/render/crawler.js';
-import { CRON, animateCron, createCron, cronHand, cronPopPixels } from '../src/render/cron.js';
-import { MOODS, eyeMood, popBurst } from '../src/render/enemy-look.js';
+import { CRAWLER, animateCrawler, crawlerFoot, createCrawler } from '../src/render/crawler.js';
+import { CRON, animateCron, createCron, cronHand } from '../src/render/cron.js';
+import { MOODS, eyeMood } from '../src/render/enemy-look.js';
 import { ENEMY_MODELS } from '../src/render/entity-view.js';
 import { PHISH, animatePhish, createPhish } from '../src/render/phish.js';
 import { WYRM, wyrmShades } from '../src/render/wyrm.js';
-import { SENTINEL, sentinelPopPixels } from '../src/render/sentinel.js';
-import { VIRUS as VIRUS_LOOK, virusPopPixels } from '../src/render/virus.js';
-import { WORM, wormPopPixels, wormSpine } from '../src/render/worm.js';
+import { WORM, wormSpine } from '../src/render/worm.js';
 import { Progress, saveBit } from '../src/world/progress.js';
 import { BUG, CRATE, SENTINEL as SENTINEL_TYPE, VIRUS, dataFiles, eventTypes, gameData, idle, roomFile } from './helpers.js';
 
@@ -356,25 +353,11 @@ test('data: chasers need an aggro range, peaceful enemies no charged attack, nob
 
 // ---- looks
 
-test('look: every enemy shares the mood colors, and every pop is over after its time', () => {
+test('look: every enemy shares the mood colors', () => {
   assert.equal(eyeMood({ hostile: true, data: { hostility: 'provoked' } }), 'hostile');
   assert.equal(eyeMood({ hostile: false, data: { hostility: 'provoked' } }), 'provoked');
   assert.equal(eyeMood({ hostile: false, data: { hostility: 'peaceful' } }), 'peaceful');
   assert.deepEqual(Object.keys(MOODS), ['hostile', 'provoked', 'peaceful']);
-  for (const [pop, look] of [
-    [popPixels, BUG_LOOK],
-    [virusPopPixels, VIRUS_LOOK],
-    [sentinelPopPixels, SENTINEL],
-    [cronPopPixels, CRON],
-    [wormPopPixels, WORM],
-    [crawlerPopPixels, CRAWLER],
-  ]) {
-    assert.equal(pop(0).length, look.pop.pixels);
-    assert.deepEqual(pop(look.pop.ticks), []);
-    assert.deepEqual(pop(-1), []);
-  }
-  const burst = popBurst({ pixels: 3, ticks: 10, spread: 0, rise: 0 }, { seed: 1, middle: 0.5, start: 0 });
-  assert.deepEqual(burst(5).map(({ offset }) => offset[1]), [0.5, 0.5, 0.5], 'no rise nor scatter: level');
 });
 
 test('look (D107): every model builds, poses in every state without NaN, arcs from a reach and pops', () => {
@@ -393,8 +376,8 @@ test('look (D107): every model builds, poses in every state without NaN, arcs fr
       enemy.updateMatrixWorld(true);
       enemy.traverse((node) => assert.ok(node.matrixWorld.elements.every(Number.isFinite), `${look}: finite pose`));
     }
-    assert.equal(model.popPixels(0).length, model.pop.pixels, look);
-    assert.deepEqual(model.popPixels(model.pop.ticks), [], look);
+    const [w, h, d] = model.derez.size;
+    assert.ok(w === d && h > 0, `${look}: a derez body, square as it turns`);
   }
 });
 

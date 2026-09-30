@@ -16,7 +16,7 @@
  */
 import { Group, Mesh, MeshBasicMaterial, OctahedronGeometry, TetrahedronGeometry } from 'three';
 import { dischargeLook } from './discharge.js';
-import { EYE, flaredGlow, glowEyes, popBurst, setMood } from './enemy-look.js';
+import { EYE, flaredGlow, glowEyes, setMood } from './enemy-look.js';
 import { hash } from './hash.js';
 import { createFlash, sharpGeometry, sharpPart } from './holo.js';
 
@@ -38,7 +38,8 @@ export const SENTINEL = {
   eyeGlow: { calm: 2.4, alert: 4.5 },
   markHeight: 1.2,
   turnRate: 6,
-  pop: { pixels: 32, pixelSize: 0.07, ticks: 36, spread: 0.9, rise: 0.8 },
+  /** The body it derezzes from when it dies (derez-fx.js, D126); square, as it turns. */
+  derez: { size: [0.5, 0.7, 0.5], y: 0.25 },
 };
 
 /** Where its visor eye is, from its feet center, looking along +z (its arc starts this far in front). */
@@ -140,19 +141,12 @@ export function animateSentinel(sentinel, { state = 'rest', time = 0, alert = 0,
   glowEyes(sentinel, flaredGlow(SENTINEL.eyeGlow, alert, look.charge));
 }
 
-/**
- * The pixels of it popping `tick` ticks after it died (enemy-look.js
- * popBurst()), starting spread over its tall body.
- */
-export const sentinelPopPixels = popBurst(SENTINEL.pop, { seed: 21, middle: SENTINEL.hover + SENTINEL.y, start: 0.1, scatter: 0.6 });
-
 /** Everything EnemyView needs to show a sentinel (see BUG_MODEL in bug.js). */
 export const SENTINEL_MODEL = {
   create: createSentinel,
   setMood,
   animate: animateSentinel,
-  popPixels: sentinelPopPixels,
-  pop: SENTINEL.pop,
+  derez: SENTINEL.derez,
   turnRate: SENTINEL.turnRate,
   markHeight: SENTINEL.markHeight,
   /** How far in front of its eyes an arc leaves it (along the line of fire): its visor. */

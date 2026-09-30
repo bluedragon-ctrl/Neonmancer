@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { HIT_FX, derezPixels, hitFlash, wizardLook } from '../src/render/hit-fx.js';
+import { HIT_FX, hitFlash, wizardLook } from '../src/render/hit-fx.js';
 import { PLAYER } from '../src/entities/player.js';
 
 const alive = { invulnerable: 0, dead: false, deathCause: null, deathTimer: 0 };
@@ -23,20 +23,6 @@ test('wizardLook: a derez thins him out of sight; a hole death leaves him drawn'
     visible: true,
     scale: [1, 1, 1],
   });
-});
-
-test('derezPixels: one per pixel, rising and shrinking, gone before he respawns', () => {
-  assert.ok(HIT_FX.pixelTicks < PLAYER.deathTicks);
-  assert.deepEqual(derezPixels(-1), []);
-  assert.deepEqual(derezPixels(HIT_FX.pixelTicks), []);
-  const early = derezPixels(12);
-  const late = derezPixels(30);
-  assert.equal(early.length, HIT_FX.pixels);
-  assert.equal(late.length, HIT_FX.pixels);
-  const mean = (list, f) => list.reduce((sum, p) => sum + f(p), 0) / list.length;
-  assert.ok(mean(late, (p) => p.offset[1]) > mean(early, (p) => p.offset[1]));
-  assert.ok(mean(late, (p) => p.scale) < mean(early, (p) => p.scale));
-  assert.deepEqual(derezPixels(20), derezPixels(20), 'the same every time');
 });
 
 test('hitFlash: white-hot right after a hit, then fading magenta, then nothing; the wizard shows throughout', () => {

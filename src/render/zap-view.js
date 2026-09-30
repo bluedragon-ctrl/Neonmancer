@@ -6,7 +6,7 @@
 import { AdditiveBlending, Color, Group, Mesh, MeshBasicMaterial, SphereGeometry } from 'three';
 import { PALETTE, lineMaterial, neonLines, shared } from './neon.js';
 import { ZAP_FX, boltLook, castFlare, sparkPixels, trailPoints } from './zap-fx.js';
-import { createPixelBurst, placePixels } from './entity-view.js';
+import { createPixelBurst, placePixels } from './pixels.js';
 import { lerpPosition } from './interp.js';
 
 /** Unit sphere every bolt and flare shares. */

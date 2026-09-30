@@ -19,7 +19,7 @@ import { BoxGeometry, ConeGeometry, CylinderGeometry, Group, Mesh, MeshBasicMate
 import { BOLT } from '../entities/bolt.js';
 import { ENEMY } from '../entities/enemy.js';
 import { dischargeLook } from './discharge.js';
-import { EYE, flaredGlow, glowEyes, popBurst, setMood } from './enemy-look.js';
+import { EYE, flaredGlow, glowEyes, setMood } from './enemy-look.js';
 import { hash } from './hash.js';
 import { createFlash, holoPart, sharpGeometry, sharpPart } from './holo.js';
 import { shared } from './neon.js';
@@ -46,7 +46,8 @@ export const CRON = {
   eyeGlow: { calm: 2.2, alert: 4 },
   markHeight: 1,
   turnRate: 4,
-  pop: { pixels: 30, pixelSize: 0.07, ticks: 36, spread: 0.9, rise: 0.8 },
+  /** The body it derezzes from when it dies (derez-fx.js, D126); square, as it turns. */
+  derez: { size: [0.55, 0.6, 0.55], y: 0.05 },
 };
 
 /** The grid axes the emitters sit on (the cross pattern's, entities/bolt.js). */
@@ -182,16 +183,12 @@ export function animateCron(cron, { time = 0, alert = 0, attack = null, charge =
   glowEyes(cron, flaredGlow(CRON.eyeGlow, alert, look.charge));
 }
 
-/** The pixels of it popping `tick` ticks after it died (enemy-look.js popBurst()). */
-export const cronPopPixels = popBurst(CRON.pop, { seed: 41, middle: CRON.dial.y, scatter: 0.4 });
-
 /** Everything EnemyView needs to show a cron (see BUG_MODEL in bug.js). */
 export const CRON_MODEL = {
   create: createCron,
   setMood,
   animate: animateCron,
-  popPixels: cronPopPixels,
-  pop: CRON.pop,
+  derez: CRON.derez,
   turnRate: CRON.turnRate,
   markHeight: CRON.markHeight,
   /** How far in front of its eyes an arc leaves it: its emitters (a bolt starts BOLT.reach out). */

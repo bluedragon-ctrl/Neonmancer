@@ -17,7 +17,7 @@
 import { ConeGeometry, CylinderGeometry, BoxGeometry, Group, Mesh, MeshBasicMaterial, Quaternion, Vector3 } from 'three';
 import { DISK, createDisk } from './disk.js';
 import { dischargeLook } from './discharge.js';
-import { EYE, flaredGlow, glowEyes, popBurst, setMood } from './enemy-look.js';
+import { EYE, flaredGlow, glowEyes, setMood } from './enemy-look.js';
 import { hash } from './hash.js';
 import { createFlash, holoPart, sharpGeometry, sharpPart } from './holo.js';
 import { PALETTE, shared } from './neon.js';
@@ -42,7 +42,8 @@ export const PHISH = {
   eyeGlow: { calm: 2.4, alert: 4.5 },
   markHeight: 1.15,
   turnRate: 7,
-  pop: { pixels: 30, pixelSize: 0.06, ticks: 36, spread: 0.9, rise: 0.7 },
+  /** The body it derezzes from when it dies (derez-fx.js, D126); square, as it turns. */
+  derez: { size: [0.55, 0.5, 0.55], y: 0.2 },
 };
 
 const S = DISK.size / 2;
@@ -201,16 +202,12 @@ export function animatePhish(phish, { state = 'rest', walked = 0, time = 0, aler
   glowEyes(phish, flaredGlow(PHISH.eyeGlow, alert, look.charge));
 }
 
-/** The pixels of it popping `tick` ticks after it died (enemy-look.js popBurst()). */
-export const phishPopPixels = popBurst(PHISH.pop, { seed: 101, middle: PHISH.stand, start: 0.2, scatter: 0.4 });
-
 /** Everything EnemyView needs to show a phish (see BUG_MODEL in bug.js). */
 export const PHISH_MODEL = {
   create: createPhish,
   setMood,
   animate: animatePhish,
-  popPixels: phishPopPixels,
-  pop: PHISH.pop,
+  derez: PHISH.derez,
   turnRate: PHISH.turnRate,
   markHeight: PHISH.markHeight,
   muzzle: 0.1,

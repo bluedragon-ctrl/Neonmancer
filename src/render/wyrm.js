@@ -47,7 +47,8 @@ export const WYRM = {
   eyeGlow: { calm: 2.4, alert: 4.5 },
   markHeight: 1,
   turnRate: 5,
-  pop: { pixels: 32, pixelSize: 0.06, ticks: 36, spread: 0.7, rise: 0.6 },
+  /** The body it derezzes from when it dies (derez-fx.js, D126); square, as it turns. */
+  derez: { size: [0.8, 0.35, 0.8], y: 0.25 },
 };
 
 const GEO = {
@@ -195,34 +196,12 @@ export function animateWyrm(wyrm, { time = 0, alert = 0, attack = null, charge =
   glowEyes(wyrm, flaredGlow(WYRM.eyeGlow, alert, look.charge));
 }
 
-/**
- * The pixels of it popping `tick` ticks after it died: a burst from along
- * its whole chain.
- * @param {number} tick may be fractional
- * @returns {{ offset: number[], scale: number }[]}
- */
-export function wyrmPopPixels(tick) {
-  const { pixels, ticks, spread, rise } = WYRM.pop;
-  if (tick < 0 || tick >= ticks) return [];
-  const t = tick / ticks;
-  const spine = wyrmSpine(0);
-  const out = [];
-  for (let i = 0; i < pixels; i++) {
-    const [x, y, z] = spine[i % spine.length];
-    const angle = hash(i, 91) * Math.PI * 2;
-    const radius = (0.05 + hash(i, 92) * spread * 0.6) * Math.sqrt(t);
-    out.push({ offset: [x + Math.cos(angle) * radius, y + (hash(i, 93) - 0.3) * rise * t, z + Math.sin(angle) * radius], scale: 1 - t });
-  }
-  return out;
-}
-
 /** Everything EnemyView needs to show a wyrm (see BUG_MODEL in bug.js). */
 export const WYRM_MODEL = {
   create: createWyrm,
   setMood,
   animate: animateWyrm,
-  popPixels: wyrmPopPixels,
-  pop: WYRM.pop,
+  derez: WYRM.derez,
   turnRate: WYRM.turnRate,
   markHeight: WYRM.markHeight,
   muzzle: 0.26,

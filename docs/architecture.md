@@ -97,16 +97,16 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/clip-fx.js`, `render/clip-view.js` | Cut & Paste (D87): the marquee, pixel stream and grow-in (pure, tested) and its meshes with the aim marker and paste ghost (`ClipView`, shown by `PlayerView`); `RoomScene.clip()` keeps a cut thing's view until the marquee has snapped on and adds a pasted one's |
 | `render/pull-fx.js`, `render/pull-view.js` | Pull (D124): the beam's pixel rings and the marquee's snap (pure, tested) and their meshes with the aim marker (`PullView`, shown by `PlayerView`) |
 | `render/compile-fx.js`, `render/compile-view.js` | Compile (D125): the bits flying into the cell and the crate's grow-in and blinking (pure, tested); the bits' mesh and the aim marker (`CompileView`, shown by `PlayerView`); `PushableView` draws the crate |
-| `render/collapse-fx.js` | Collapsing-block look: shake, pixels breaking off, regrow, `COLLAPSE_FX` tuning (pure, tested) |
+| `render/collapse-fx.js` | Collapsing-block look: shake, regrow, `COLLAPSE_FX` tuning (pure, tested) |
 | `render/core-view.js` | The core's reactor look (D101): crystal, pedestal, one orbit ring per access level, `CORE_FX` |
 | `render/crawler.js` | Crawler model (D83): six-legged spider, tripod gait (`crawlerFoot()`, `placeLimb()`), crouch and pawing, `CRAWLER` tuning; `CRAWLER_MODEL` |
 | `render/cron.js` | Cron model (D83), the tower's look: hex pedestal, bell, a dial holding the grid axes with four emitters where a cross's bolts leave, sweeping hand, slam, `CRON` tuning; `CRON_MODEL` |
 | `render/daemon.js` | Daemon model (D107): floating teardrop flame with embers, stretch and squeeze (`daemonStretch()`), `DAEMON` tuning; `DAEMON_MODEL` |
 | `render/discharge.js` | Discharge lightning (D78): charge timing and glow (`dischargeLook()`, `chargeGlow()`), burst and arc zigzags (pure, tested), the aim line, `DISCHARGE` tuning |
-| `render/disk.js`, `render/refill.js` | Pickup looks: the data disk (bit grid showing the spell's slot, ghost, pick-up and pixel burst; motion pure, tested) and the refills |
+| `render/disk.js`, `render/refill.js` | Pickup looks: the data disk (bit grid showing the spell's slot, ghost, pick-up and its derez body; motion pure, tested) and the refills |
 | `render/edges.js` | Visible block edges from grid occupancy; several plain types as one mass, each edge to a type (`groupedBlockEdges()`, D64); merging unit segments into runs (pure, tested) |
-| `render/enemy-look.js` | What every enemy model shares (D80): mood colors (`MOODS`, `eyeMood()`, `setMood()`), the eye geometry and glow, the pop burst (`popBurst()`) (pure parts tested) |
-| `render/entity-view.js` | Player (with the cast flare), pushable, platform, collapsing-block and enemy views (enemy bodies by `look`: `ENEMY_MODELS`; spell-hit flash and glitch, charge glow, "!" and discharge), glowing drop shadows, pixel bursts (derez, collapse), platform guide lines |
+| `render/enemy-look.js` | What every enemy model shares (D80): mood colors (`MOODS`, `eyeMood()`, `setMood()`), the eye geometry and glow (pure parts tested); each look's `derez` body is in its own module |
+| `render/entity-view.js` | Player (with the cast flare), pushable, platform, collapsing-block and enemy views (enemy bodies by `look`: `ENEMY_MODELS`; spell-hit flash and glitch, charge glow, "!" and discharge), glowing drop shadows, platform guide lines |
 | `render/exit-layout.js` | Exit effect layout and timing, `EXIT_FX` tuning (pure, tested) |
 | `render/exit-view.js` | Exit effect in the destination color: dashed stream into doorway tunnels, arrows gliding out of front exits |
 | `render/firewall-fx.js`, `render/firewall-view.js` | Firewall's ring of flames (D84): the segments (pure, tested; timing is the Shield's) and its meshes, shown by `PlayerView` |
@@ -114,8 +114,9 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/fragment.js` | Key fragment look (D101): a gold tile with the boot key dim and its own module lit, ghost |
 | `render/glass.js` | Glass faces (D96): a see-through face shader (transparent, no depth written, clipping) and the data core's shrunk mark; a destructible glass crate is an empty shell (D99) |
 | `render/golem.js` | Golem model (D107): stacked rack units with blinking LEDs (`ledOn()`) and scrolling slats, block fists, stomping legs, `GOLEM` tuning; `GOLEM_MODEL` |
+| `render/derez-fx.js` | The derez (D126): one pixel burst for anything that is gone, from a body box (`derezPixels()`, `derezCount()`, `BLOCK_BODY`), `DEREZ` tuning (pure, tested) |
 | `render/hash.js` | Fixed pseudo-random numbers for pixel bursts (pure) |
-| `render/hit-fx.js` | Damage look: blinking while invulnerable, derez flicker and pixel burst, `HIT_FX` tuning (pure, tested) |
+| `render/hit-fx.js` | Damage look: blinking while invulnerable, derez flicker, his derez body, `HIT_FX` tuning (pure, tested) |
 | `render/hole-view.js` | Hole pits: walls fading to black, rim, short fading corner lines; outline math (tested) |
 | `render/holo.js` | Hologram look for characters: rim-glow material, inverted-hull outline, eyes, shared clock; sharp parts with hard edges (`sharpPart()`) |
 | `render/install-fx.js`, `render/install-view.js` | Installing a spell from a data disk (D73): the look (pure, tested) and its meshes, shown by `PlayerView` |
@@ -130,6 +131,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/pickup-model.js` | A pickup's model by kind (disk, upgrade card, chip, fragment, secret or refill), for the room view and the install animation |
 | `render/pickup-view.js` | A room pickup's view: its look, idle motion, ghost, pick-up effect |
 | `render/pixie.js` | Pixie model (D107): butterfly with pixel wings (`wingPixels()`), shimmer, flapping (`pixieFlap()`), dust, `PIXIE` tuning; `PIXIE_MODEL` |
+| `render/pixels.js` | Pixel bursts (`createPixelBurst()`, `placePixels()`) every effect places, and the derez mesh (`createDerez(body, colors)`, `placeDerez()`, D126) |
 | `render/post.js` | pmndrs postprocessing composer (bloom) |
 | `render/quality.js` | Automatic quality fallback: steps MSAA, then render scale, down when frames run slow (D76; pure, tested) |
 | `render/rails.js` | Guide line along a platform's path, `RAILS` tuning (pure, tested) |

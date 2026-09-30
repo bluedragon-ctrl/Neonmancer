@@ -15,7 +15,7 @@
  */
 import { BoxGeometry, Group, LatheGeometry, Mesh, MeshBasicMaterial, Vector2 } from 'three';
 import { dischargeLook } from './discharge.js';
-import { EYE, flaredGlow, glowEyes, popBurst, setMood } from './enemy-look.js';
+import { EYE, flaredGlow, glowEyes, setMood } from './enemy-look.js';
 import { hash } from './hash.js';
 import { createFlash, holoPart } from './holo.js';
 import { shared } from './neon.js';
@@ -34,7 +34,8 @@ export const DAEMON = {
   eyeGlow: { calm: 2.4, alert: 4.5 },
   markHeight: 1,
   turnRate: 6,
-  pop: { pixels: 30, pixelSize: 0.06, ticks: 36, spread: 0.8, rise: 1 },
+  /** The body it derezzes from when it dies (derez-fx.js, D126); square, as it turns. */
+  derez: { size: [0.45, 0.45, 0.45], y: 0.1 },
 };
 
 const { r: R, tip: TIP } = DAEMON.flame;
@@ -155,16 +156,12 @@ export function animateDaemon(daemon, { state = 'rest', time = 0, alert = 0, att
   glowEyes(daemon, flaredGlow(DAEMON.eyeGlow, alert, look.charge));
 }
 
-/** The pixels of it popping `tick` ticks after it died (enemy-look.js popBurst()). */
-export const daemonPopPixels = popBurst(DAEMON.pop, { seed: 71, middle: DAEMON.hover + R, scatter: 0.3 });
-
 /** Everything EnemyView needs to show a daemon (see BUG_MODEL in bug.js). */
 export const DAEMON_MODEL = {
   create: createDaemon,
   setMood,
   animate: animateDaemon,
-  popPixels: daemonPopPixels,
-  pop: DAEMON.pop,
+  derez: DAEMON.derez,
   turnRate: DAEMON.turnRate,
   markHeight: DAEMON.markHeight,
   muzzle: R + 0.05,

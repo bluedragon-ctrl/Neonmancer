@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { COLLAPSING } from '../src/entities/collapsing.js';
 import { Game } from '../src/game.js';
-import { COLLAPSE_FX, COLLAPSE_PIXELS, collapseLook, collapsePixels } from '../src/render/collapse-fx.js';
+import { COLLAPSE_FX, collapseLook } from '../src/render/collapse-fx.js';
 import { BLOCK_TYPES, CRATE, eventTypes, gameData, hold, idle, roomFile } from './helpers.js';
 
 /** Block types: the usual ones and a collapsing block that grows back after 1 s. */
@@ -148,14 +148,3 @@ test('look: the shake grows but stays small; gone is hidden; a regrow grows from
   assert.equal(collapseLook({ state: 'solid', timer: COLLAPSE_FX.regrowTicks, regrown: true }, 0).scale, 1);
 });
 
-test('look: a vanished block breaks into pixels that start inside it, drop and fade', () => {
-  const start = collapsePixels(0);
-  assert.equal(start.length, COLLAPSE_PIXELS);
-  for (const { offset, scale } of start) {
-    assert.ok(offset.every((v) => v > 0 && v < 1), `pixel at ${offset}`);
-    assert.equal(scale, 1);
-  }
-  const later = collapsePixels(COLLAPSE_FX.pixelTicks / 2);
-  assert.ok(later.every((pixel, i) => pixel.offset[1] < start[i].offset[1] && pixel.scale < 1));
-  assert.deepEqual(collapsePixels(COLLAPSE_FX.pixelTicks), []);
-});

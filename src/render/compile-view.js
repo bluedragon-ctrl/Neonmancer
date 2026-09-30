@@ -8,7 +8,7 @@ import { Group } from 'three';
 import { pasteCell } from '../entities/clip.js';
 import { createMarquee, placeMarquee } from './clip-view.js';
 import { COMPILE_FX, COMPILE_PIXELS, compilePixels } from './compile-fx.js';
-import { createPixelBurst, placePixels } from './entity-view.js';
+import { createPixelBurst, placePixels } from './pixels.js';
 import { ZAP_FX } from './zap-fx.js';
 
 /** The spell whose aim marker this is. */

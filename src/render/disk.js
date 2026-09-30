@@ -6,13 +6,11 @@
  * spell's slot, one of the 16 spell bits of the save: set bits are small
  * raised cubes in the spell's color, the others dim squares. A disk already
  * found is a gray ghost, solid-lined, spinning without the bob (D67, D74,
- * D94). Picking one up lifts it, flashes it and bursts its bits into
- * pixels.
+ * D94). Picking one up lifts it, flashes it and derezzes it.
  *
  * Showcase: `?asset=disks`.
  */
 import { BoxGeometry, Color, EdgesGeometry, ExtrudeGeometry, Group, Mesh, Shape } from 'three';
-import { hash } from './hash.js';
 import { PALETTE, faceMaterial, lineMaterial, neonLines } from './neon.js';
 
 /** Sizes in units, times in seconds unless named ticks. */
@@ -47,8 +45,8 @@ export const DISK = {
   bitTint: 0.35,
   /** A found disk: gray, dim and still. */
   ghost: { color: 0x9aa0b8, brightness: 0.9 },
-  /** Pick-up: ticks it rises and flashes, how high; then the pixel burst. */
-  collect: { riseTicks: 10, rise: 0.4, pixels: 24, pixelSize: 0.06, pixelTicks: 36, spread: 0.8, lift: 0.5 },
+  /** Pick-up: ticks it rises and flashes, how high; then it derezzes from a body round its middle (derez-fx.js, D126). */
+  collect: { riseTicks: 10, rise: 0.4, body: { size: [0.5, 0.5, 0.5], y: -0.25 } },
 };
 
 
@@ -219,29 +217,5 @@ export function poseDisk(model, { visible, y, angle, scale, flash }) {
     const material = node.material;
     material.userData.base ??= material.color.clone();
     material.color.copy(material.userData.base).lerp(new Color(0xffffff).multiplyScalar(2.4), flash);
-  });
-}
-
-/** Seed of the burst's hash() sequence. */
-const SEED = [47.3, 191.9];
-
-/**
- * The pixels of a picked-up disk, `tick` ticks after it vanished, as
- * offsets from its center: its bits fly out and up and shrink to nothing.
- * @param {number} tick
- * @returns {{ offset: number[], scale: number }[]} empty once they are gone
- */
-export function diskPixels(tick) {
-  const { pixels, pixelTicks, spread, lift } = DISK.collect;
-  if (tick < 0 || tick >= pixelTicks) return [];
-  const t = tick / pixelTicks;
-  const out = 1 - (1 - t) * (1 - t);
-  return Array.from({ length: pixels }, (_, i) => {
-    const angle = (i / pixels) * 2 * Math.PI + hash(i, 0, SEED);
-    const reach = spread * (0.5 + 0.5 * hash(i, 1, SEED)) * out;
-    return {
-      offset: [Math.cos(angle) * reach, lift * out * (0.4 + hash(i, 2, SEED)) + Math.sin(angle) * reach * 0.4, Math.sin(angle) * reach],
-      scale: 1 - t,
-    };
   });
 }

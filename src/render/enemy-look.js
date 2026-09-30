@@ -1,15 +1,14 @@
 /**
  * What every enemy model shares (bug.js, virus.js, sentinel.js, cron.js,
  * worm.js, crawler.js): the eye colors by mood, the eye geometry, how
- * bright the eyes glow, and the burst of pixels an enemy pops into. Pure
- * functions are tested.
+ * bright the eyes glow. An enemy pops into the derez everything shares
+ * (derez-fx.js, D126). Pure functions are tested.
  *
  * A model keeps its eye material in `userData.eyes`, its mood in
  * `userData.mood` and its calm eye brightness in `userData.glow`, so one
  * setMood() colors any of them.
  */
 import { SphereGeometry } from 'three';
-import { hash } from './hash.js';
 import { PALETTE, shared } from './neon.js';
 
 /** Eye color by mood: red hostile, amber calm until provoked, cyan peaceful. */
@@ -57,31 +56,4 @@ export function setMood(model, mood) {
  */
 export function flaredGlow({ calm, alert: flared }, alert, charge) {
   return calm + (flared - calm) * Math.max(alert, charge);
-}
-
-/**
- * The pop of an enemy: a function giving the pixels `tick` ticks after it
- * died (may be fractional), a burst flying out from its middle, rising a
- * little and shrinking to nothing; empty once the burst is over.
- * @param {{ pixels: number, ticks: number, spread: number, rise: number }} pop
- * @param {object} shape
- * @param {number} shape.seed first of the hash channels it uses (four in a row)
- * @param {number} shape.middle height of the burst's middle above its feet
- * @param {number} [shape.start] radius the pixels start from
- * @param {number} [shape.scatter] height the pixels start spread over (a tall body)
- * @returns {(tick: number) => { offset: number[], scale: number }[]} offsets from its feet center
- */
-export function popBurst({ pixels, ticks, spread, rise }, { seed, middle, start = 0.15, scatter = 0 }) {
-  return (tick) => {
-    if (tick < 0 || tick >= ticks) return [];
-    const t = tick / ticks;
-    const out = [];
-    for (let i = 0; i < pixels; i++) {
-      const angle = hash(i, seed) * Math.PI * 2;
-      const radius = (start + hash(i, seed + 1) * spread) * Math.sqrt(t);
-      const height = middle + (hash(i, seed + 2) - 0.3) * rise * t + (hash(i, seed + 3) - 0.5) * scatter;
-      out.push({ offset: [Math.cos(angle) * radius, height, Math.sin(angle) * radius], scale: 1 - t });
-    }
-    return out;
-  };
 }
