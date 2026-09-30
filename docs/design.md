@@ -348,18 +348,19 @@ own, each in its own color.
 | Template | Look | Moves | Attack |
 |---|---|---|---|
 | `bug` | mint-green ball `#2bff88`, hops, bouncy | patrol, 3 cells/s | touch, 1 |
-| `virus` | yellow sharp cube `#ffe23a`, glides | chase: aggro 5, 2 cells/s calm, 3.5 chasing | burst, range 1.2, charge 0.4 s, cooldown 1.5 s; integrity 2 |
-| `sentinel` | orange sharp octahedron `#ff8a1a`, glides | chase: aggro 7, 1.5 calm, 2.5 chasing; stops 5 away | arc, range 5, charge 0.7 s, cooldown 2 s; integrity 3 |
+| `glowbug` | the bug in pale gold `#ffd27a` (extends `bug`, D121) | patrol, 3 cells/s, peaceful | none (peaceful); bouncy, a friendly springboard |
+| `virus` | violet sharp cube `#b35cff` (D121), glides | chase: aggro 5, 2 cells/s calm, 3.5 chasing | burst, range 1.2, charge 0.4 s, cooldown 1.5 s; integrity 2 |
+| `sentinel` | sky-blue sharp octahedron `#4fa8ff` (D121), glides | chase: aggro 7, 1.5 calm, 2.5 chasing; stops 5 away | arc, range 5, charge 0.7 s, cooldown 2 s; integrity 3 |
 | `cron` | rose tower `#ff4f7a` (D83) | stationary | bolts four ways (`cross`) at 3.5 units/s, range 5 (aggro 5), charge 0.6 s, cooldown 1.8 s (D81); integrity 3 |
 | `worm` | blue worm `#4f7dff`, inches along | patrol, 2 cells/s | touch, 1; integrity 2 (D83) |
 | `crawler` | mint six-legged spider `#3dffd0`, walks | chase: aggro 5, 2 cells/s calm, 3.5 chasing | touch, 1; integrity 2 (D83) |
 | `warden` | ember knight `#ff5a1f` | stationary | burst, range 1.2 (aggro 2.5); integrity 8, Pause can't freeze it |
-| `daemon` | violet wisp `#a45cff` | chase like a sentinel, provoked | arc, range 5; integrity 3 |
-| `golem` | sky-blue rack `#38a8ff`, solid (carries the wizard) | patrol, 1 cell/s, peaceful | none; integrity 6 |
+| `daemon` | lilac wisp `#c79bff` | chase like a sentinel, provoked | arc, range 5; integrity 3 |
+| `golem` | steel-gray rack `#a0a8c0`, solid (carries the wizard) | patrol, 1 cell/s, peaceful | none; integrity 6 |
 | `wyrm` | ice-blue dragon `#73d0ff` | patrol, 2 cells/s, provoked | bolt, range 5 (aggro 5) |
 | `phish` | white disk mimic `#eef3ff` | chase: aggro 2, 2 calm, 3.5 chasing | touch, 1 |
 | `overclock` | orchid chip `#ec73ff` | chase like a virus, provoked | burst, range 1.2 |
-| `pixie` | peach butterfly `#ffbe73` | patrol, 1.5 cells/s, peaceful | touch (never, peaceful) |
+| `pixie` | tangerine butterfly `#ff9a5a` | patrol, 1.5 cells/s, peaceful | touch (never, peaceful) |
 
 - **Moving:** an enemy stands in a grid cell (hitbox 0.6 × 0.6 × 0.6,
   centered) and steps one cell at a time (bug: one hop per cell, 3 cells
@@ -1419,10 +1420,11 @@ targets stand out in it; violet became free when void blocks turned
 black.
 
 Enemies by biome (D108): Home Lattice's are the default cyberspace four,
-bug, virus, sentinel and cron; they read as the
-Grid's plain enemies and may show up anywhere. Every other biome gets a
-roster of its own, at least three enemies, proposed in the Phase 4
-outline and settled in Phase 4b.
+bug, virus, sentinel and cron, plus the peaceful glowbug (D121); they read
+as the Grid's plain enemies and may show up anywhere. Every other biome
+gets a roster of its own, at least three enemies, proposed in the Phase 4
+outline and settled in Phase 4b one biome at a time, each in a section
+of its own below (look, enemies, signature trick, later effect).
 
 Surroundings (`look` in `biomes.json`, D62; every field optional, Home
 Lattice's values are the defaults):
@@ -1443,6 +1445,37 @@ Lattice's values are the defaults):
 | Abyssal Buffer | dark gray, dim gray: the longest, a deep plain around the room | 9 | 0.4 | 1.7 |
 | Firewall Citadel | dark ember, dim rust | 5 | 0.45 | 1.7 |
 | Phantom Partition | black, faint gray: the room floats in nothing | 1.5 | 0.15 | 1.2 |
+
+### Home Lattice (settled, D121)
+
+The Grid's kernel: a clean, orderly, technical city. The hub at the
+center of the world map; it holds the central core and opens onto the
+four side sectors, and its rooms near the core double as the tutorial.
+Every other biome is a twist on it.
+
+- **Look:** amber `#ffb020`, the default surroundings. A clean square
+  floor grid, every line whole and straight: the healthy version the
+  other sectors corrupt. Warm motes rising slowly.
+- **Data flows (Phase 5):** short bright dashes now and then run along
+  the grid lines, on the room floor and on the surrounding grid outside
+  it; random decoration, not a guide.
+- **Glass panels (Phase 5):** random 1×1 glass panels set into the back
+  walls (`glassBox()` with a `GLASS` preset, D116), framed in the room
+  color, never over an exit; a new random set on every entry, since they
+  are looks only. The data flows outside show through them: windows onto
+  the city.
+- **Decorations:** pillars with steady, evenly spaced data; screens with
+  clean, friendly terminal text (tutorial hints).
+- **Enemies, in tiers:** the glowbug (peaceful, harmless, bouncy), life
+  in the safe sector; the bug (hostile, patrols a fixed path, bouncy);
+  virus, sentinel and cron, all hostile (the cron fires four ways). Both
+  bugs can be jumped on. The hostile ones are cool colors against the
+  warm rooms (mint, violet, sky blue) or the cron's red-pink; the glowbug
+  is a pale gold close to the grid, part of the city.
+- **Signature trick:** none, the Lattice is the reference. A core
+  heartbeat (the room glowing up faintly every few seconds) is to be
+  discussed in the Phase 5 visual pass.
+- **Later effect:** none, the safe sector.
 
 ## HUD
 
@@ -1786,7 +1819,8 @@ Open so far:
 - Proposal, to be reviewed in Phase 4b: an enemy roster per biome
   (D108), so each plays differently, not just in another color. Still
   six biomes (D61); their colors and setup may change to fit. Home
-  Lattice is settled: bug, virus, sentinel, cron. Every other biome gets
+  Lattice is settled (D121, see Biomes): glowbug, bug, virus, sentinel,
+  cron. Every other biome gets
   at least three enemies of its own and one signature trick that twists
   those four. Tags: (L) a D107 look or an existing template, (N) a new
   look, (B) a new engine behavior.

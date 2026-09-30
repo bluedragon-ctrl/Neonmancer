@@ -12,6 +12,10 @@ Phase 4 splits into 4a (saves and UI) and 4b (spells, Firewall Wardens as
 bosses that drop loot, tooling) (D104, D105).
 
 ### Added
+- Home Lattice settled (D121), the first biome of the Phase 4b review: a
+  kernel city with enemies in tiers. New peaceful `glowbug` template (a
+  pale gold bug, harmless, bouncy); plans for data flows and random glass
+  wall panels in the Phase 5 visual pass (docs/design.md, Biomes).
 - Monster editor (D120), `/tools/monster-editor.html` in the dev server
   (`toolsdev.bat monsters`): the enemy templates with a form made from the
   schema, where each value comes from, a live preview, variants in colors
@@ -89,6 +93,9 @@ bosses that drop loot, tooling) (D104, D105).
   Quarantine.
 
 ### Changed
+- Enemy colors (D121): virus violet `#b35cff` (was yellow), sentinel sky
+  blue `#4fa8ff` (was orange), so they stand out in amber rooms; daemon,
+  golem and pixie moved to keep every template its own color.
 - Enemies are all their template (D119): rooms no longer override a
   template's values for one enemy, and an enemy's path has no speed of
   its own. The templates are one per look (13, named after it), each in a
