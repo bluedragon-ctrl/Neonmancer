@@ -1860,7 +1860,8 @@ Open so far:
   whether there is more than one, and whether a secret lock takes other
   counts so rooms can gate optional side rooms earlier.
 
-- Biome enemy rosters (D108): settled one biome at a time in Phase 4b,
+- Biome enemy rosters (D108): settled one biome at a time at the end of
+  Phase 4b, after the spells and game concepts,
   within the high-level map of D122 (see Biomes, The sectors at a
   glance); Home Lattice is done (D121). Every new look goes to the
   showcase for the author's OK first.

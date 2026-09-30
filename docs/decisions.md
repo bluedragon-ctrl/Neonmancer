@@ -951,4 +951,6 @@ now.
 overlap; a theme, an enemy family and a mechanic of its own per sector
 keep them apart. Space, heavy virtual and ghosts were the author's three
 wishes and fit the existing sectors' setup (low gravity, pixelation,
-the special sector). Bosses anywhere let every sector close with one.
+the special sector). Bosses anywhere let every sector close with one. The per-biome passes
+wait for the end of Phase 4, once the spells and game concepts they
+build on are ready.

@@ -502,10 +502,10 @@ editor), Phase 3 (v0.3.0, spells and pickups); see CHANGELOG.md.
   loading (URL hash, localStorage), map screen.
 - 4b — The roster's new spells (D88, D89): Compile, Fork, Scan and Pull.
   Firewall Wardens (bosses, D104). Reachability checker. Design skills
-  and subagents. Biome concepts and enemy rosters, one biome at a time
-  within the high-level map (D122; at least three enemies of its own per
-  biome), settled before content production (D108); Home Lattice done
-  (D121).
+  and subagents. Last in Phase 4, after the spells and game concepts:
+  biome concepts and enemy rosters, one biome at a time within the
+  high-level map (D122; at least three enemies of its own per biome),
+  settled before content production (D108); Home Lattice done (D121).
 - Proposal, not yet confirmed: visual rewards for secrets found (a hat
   star, a star trail, a Phantom shimmer) and a special room behind a
   lock for all 16 (docs/design.md, Phase 4 outline).
