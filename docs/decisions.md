@@ -1175,3 +1175,40 @@ the author's room review and design.
 **Why:** a hub with cross-linked wings gives branching and backtracking
 instead of a line, keeps the first playtest to five simple spells, and
 lets the drafting steps (5.5 to 5.9) start from an agreed list.
+
+### D134 — 2026-10-01 — Firewall Wardens: one cell, a visor to hit, a boss bar
+Step 4.4 settles the two Lattice bosses with the author.
+- **Body:** one cell on the floor, one or two cubes high; no multi-cell
+  bodies, no multi-cell claims, so pathfinding and collision stay as they
+  are. The Warden is the usual one-cell, 1.5-high body; the second boss is
+  a bigger virus two cubes high (2 high, so it cannot be jumped, only
+  gone round). Snake-like segmented bosses are an idea for later.
+- **Damage:** a boss is hurt only through its visor. The visor glows (the
+  T-slit for the Warden, the eyes of the virus) while it is open, and only
+  then does a bolt count; at other times bolts spark off. Pause never
+  freezes a boss (`pausable` false). Integrity is shown on a boss bar on
+  the HUD, with a tick for each phase, while the boss is awake.
+- **Boss 1, the Warden (drops fragment 7):** shoots aimed bolts at the
+  wizard and from time to time teleports to another cell of its arena,
+  which forces him to take cover and retarget. The visor opens when it
+  has fired and when it arrives from a teleport. The arena has blocks
+  that stop bolts (cover) and no shrine (D104). Phases by integrity: it
+  fires faster and teleports more often as it weakens.
+- **Boss 2, the Gatekeeper (drops the +10 energy buff, D133):** a big
+  virus, immune to every spell until it is lured onto an overload plate
+  of the arena; while it stands on one (a held floor plate, D75) its
+  armor is open and its visor lit, and bolts hurt it. Leaving the plate
+  closes it. The wizard lures it by walking it over a plate, or with a
+  Fork decoy (D129) parked beside one, which holds it there for the
+  decoy's 10 s; the Fork wing teaches this. A phase adds a quicker chase
+  and a close-range burst, so standing still beside the plate costs. It
+  works without Fork, so reaching the Gatekeeper through the Scan wing
+  first is not a dead end.
+- **Engine (4.5):** a `boss` block in a template: visor timing, an
+  attack pattern per phase (bolt, teleport, chase), phase thresholds, the
+  bar, and a "vulnerable only on a plate" mode; `size` height for a taller
+  hitbox. Nothing else about the grid changes.
+**Why:** one-cell bodies keep the grid claims, enemy pathing and the
+reachability checker as they are, and let two different boss ideas (cover
+and retargeting; luring) carry the fights, one per boss, rather than one
+big engine step. A visor and a bar make the fight readable.

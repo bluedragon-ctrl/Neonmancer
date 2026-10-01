@@ -57,7 +57,7 @@ joins the Scan and Fork wings as a shortcut.
 | 9 | `ledger_cell` | 8x8 | A dead end with a plate; fragment 5 |
 | 10 | `freeze_hall` | 12x12 | Pause disk; a bug patrol to stop |
 | 11 | `cold_stairs` | 12x12 | Frozen enemies as steps over a gap; fragment 6; the door to the Fork wing |
-| 12 | `warden_pit` | 16x16 | Boss 1, drops fragment 7 |
+| 12 | `warden_pit` | 16x16 | Boss 1, drops fragment 7; cover blocks, no shrine (D134) |
 | 13 | `idle_cache` | 8x8 | Reached after the boss; fragment 8 |
 | 14 | `scan_lab` | 12x12 | Scan disk; fake blocks |
 | 15 | `mirror_stacks` | 12x12 | Memory walls with fake blocks; fragment 9 |
@@ -67,7 +67,7 @@ joins the Scan and Fork wings as a shortcut.
 | 19 | `twin_plates` | 12x12 | Two plates, one decoy; fragment 12 |
 | 20 | `guard_loop` | 12x12 | Viruses to draw away; fragment 13 |
 | 21 | `split_vault` | 12x8 | A lock held by a decoy; fragments 14 and 15 |
-| 22 | `gatekeeper` | 16x16 | Boss 2, drops an energy buff; doors west, east, north |
+| 22 | `gatekeeper` | 16x16 | Boss 2, a big virus, drops an energy buff; overload plates to lure it onto (D134); doors west, east, north |
 | 23 | `core` | 16x16 | The central core, no fragment; Level 1 locks east and west and north (vault) |
 | 24 | `dj_vault` | 8x8 | The double jump, behind the Level 1 lock |
 | 25 | `junction` | 8x8 | Off `drift_bay`, a small loop back to the Scan wing; fragment 16 |
