@@ -14,15 +14,16 @@ import { idProblem } from './ids.js';
 /**
  * The template fields in the editor's order, grouped: its body, how it
  * moves, how it notices the wizard, how it attacks, how it takes hits and
- * what the wizard can do with it (every field of defs.schema.json's
- * enemyTemplate but `extends`).
+ * what the wizard can do with it, and a boss's block (D135; every field of
+ * defs.schema.json's enemyTemplate but `extends`).
  */
 export const FIELD_GROUPS = [
-  ['Body', ['look', 'color']],
+  ['Body', ['look', 'color', 'height']],
   ['Moves', ['movement', 'speed', 'chaseSpeed', 'memory']],
   ['Notices', ['hostility', 'aggroRange']],
   ['Attack', ['attack', 'damage', 'attackRange', 'attackCharge', 'attackCooldown', 'attackColor', 'boltSpeed', 'boltPattern', 'boltBounces']],
   ['Takes', ['integrity', 'bounce', 'solid', 'pausable']],
+  ['Boss', ['boss']],
 ];
 
 /** Every field, in FIELD_GROUPS order. */

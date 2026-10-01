@@ -311,8 +311,13 @@ export class EditorPanel {
     this.enemyText = el('div', 'editor-hint');
     // Templates are tuned in the monster editor (dev server only, D119).
     this.monsterLink = Object.assign(el('a', 'editor-link', 'Edit in the monster editor'), { target: 'neonmancer-monsters', hidden: !this.canSave });
+    // A boss drops one of the room's permanent pickups (D104, D135).
+    this.enemyDrop = el('select');
+    this.enemyDrop.title = "The room pickup this boss holds until it is beaten (D104); while it is found, the boss stays away";
+    this.enemyDrop.addEventListener('change', () => on.enemyDrop(this.enemyDrop.value));
+    this.enemyDropRow = this.row('Drops', this.enemyDrop);
     this.enemyRows = this.group('enemy');
-    this.enemyRows.append(this.row('Template', this.enemyTemplate), this.enemyText, this.monsterLink);
+    this.enemyRows.append(this.row('Template', this.enemyTemplate), this.enemyDropRow, this.enemyText, this.monsterLink);
     this.setEnemyTemplates(enemyTemplates);
     return this.enemyRows;
   }
@@ -452,7 +457,8 @@ export class EditorPanel {
    * @param {string} state.tool
    * @param {string} state.blockType the Block tool's type
    * @param {string} state.objectType
-   * @param {{ id: string|null, template: string }} state.enemy the picked enemy's template (with its id), or new enemies'
+   * @param {{ id: string|null, template: string, drop: string|null, drops: string[] }} state.enemy the picked enemy's template
+   *   (with its id and, a boss, its drop and the room's permanent pickups it may drop), or new enemies'
    * @param {object|null} state.pathItem the platform or enemy whose path is edited
    * @param {boolean} state.pathItemIsEnemy it is an enemy (it walks at its template's speed, D119)
    * @param {{ id: string, text: string|null, texts: Record<string, { title?: string, lines: string[] }>, users: string[] }|null} state.screen
@@ -491,6 +497,14 @@ export class EditorPanel {
     this.enemyTemplate.value = enemy.template;
     const template = this.enemyTemplates[enemy.template];
     this.enemyText.textContent = template ? templateText(template) : '';
+    this.enemyDropRow.hidden = !(enemy.id && template?.boss);
+    if (!this.enemyDropRow.hidden) {
+      const ids = ['', ...enemy.drops];
+      if (this.enemyDrop.options.length !== ids.length || ids.some((id, i) => this.enemyDrop.options[i].value !== id)) {
+        this.enemyDrop.replaceChildren(...ids.map((id) => option(id, id || '— none —')));
+      }
+      this.enemyDrop.value = enemy.drop ?? '';
+    }
     this.monsterLink.href = `tools/monster-editor.html#${enemy.template}`;
 
     const path = pathItem?.path;

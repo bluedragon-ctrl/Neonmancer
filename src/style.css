@@ -1345,3 +1345,70 @@ body {
   color: var(--amber);
   opacity: 0.75;
 }
+
+/* Boss bar (D135): top middle while a boss is awake; its name over a long
+   slanted bar of its integrity in its color, ticks where its later phases
+   start. Shut plate armor dims it; a hit flashes it. */
+.hud-boss {
+  position: absolute;
+  top: calc(30 * var(--u));
+  left: 50%;
+  width: calc(620 * var(--u));
+  transform: translateX(-50%);
+  color: var(--boss, var(--amber));
+  --boss: var(--amber);
+}
+
+.hud-boss[hidden] {
+  display: none;
+}
+
+.hud-boss-name {
+  font-weight: 700;
+  font-size: calc(18 * var(--u));
+  letter-spacing: 0.2em;
+  margin-bottom: calc(8 * var(--u));
+  text-align: center;
+  text-shadow: 0 0 calc(8 * var(--u)) currentColor;
+}
+
+.hud-boss-bar {
+  position: relative;
+  height: calc(16 * var(--u));
+  transform: skewX(-18deg);
+  box-sizing: border-box;
+  border: calc(2 * var(--u)) solid currentColor;
+  box-shadow: 0 0 calc(10 * var(--u)) currentColor;
+}
+
+.hud-boss-bar b {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: currentColor;
+  transition: width 0.25s ease-out;
+}
+
+/* Where a later phase starts. */
+.hud-boss-bar i {
+  position: absolute;
+  top: calc(-6 * var(--u));
+  bottom: calc(-6 * var(--u));
+  width: calc(2 * var(--u));
+  background: #fff;
+  box-shadow: 0 0 calc(6 * var(--u)) #fff;
+}
+
+.hud-boss.armored .hud-boss-bar b {
+  opacity: 0.35;
+}
+
+.hud-boss-bar.hit {
+  animation: boss-hit 0.25s steps(1);
+}
+
+@keyframes boss-hit {
+  50% {
+    border-color: #fff;
+    box-shadow: 0 0 calc(18 * var(--u)) #fff;
+  }
+}

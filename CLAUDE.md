@@ -225,7 +225,10 @@ and some exits and pickups wait for a spell or buff found later
 - **Shooters** — stationary, fire slow bolts (the Pop-up idea, D84)
 - **Firewall Wardens** — bosses of combat rooms in any biome, Home
   Lattice too (D122); each drops a permanent pickup and stays away once
-  it is found (D104)
+  it is found (D104). A template's `boss` block: phases by integrity
+  that change how it fights (teleports too), plate armor, a boss bar,
+  three gold rings round its normal body; never paused or pulled; one a
+  room, no shrine, its room's locked exits wait for it (D134, D135)
 - Home Lattice's own enemies are the default cyberspace four: bug,
   virus, sentinel and cron (the tower) (D108), plus the peaceful glowbug,
   in tiers (D121); each other biome gets its own roster, reviewed one
@@ -349,8 +352,8 @@ The engine is generic; all content lives in data.
   properties such as damage and lethal; variants `extend` a base, D60),
   enemy templates (look, movement, attack,
   hostility, aggro range, integrity, damage, speeds, bounce, solid, color,
-  charged attack values; a template may `extend` another, D58, D78, D79,
-  D80), spells
+  charged attack values, height, a boss block; a template may `extend`
+  another, D58, D78, D79, D80, D135), spells
 - `data/biomes.json` — palette, floor pattern, effect settings,
   environmental effects
 - `data/rooms/*.json` — one file per room: biome, size [x, y, z], exits,
@@ -521,8 +524,8 @@ Step plan for Phases 4 to 7: docs/design.md, Step plan (D130).
 - 4b — the four new spells (D124, D125, D128, D129) and the reachability
   checker (D131, in CI) are done. Left: the room design skill and the
   level-review subagent, the paper design of Home Lattice (D130), and the
-  Firewall Wardens (D104, design settled D134: one-cell bodies, a visor
-  to hit, a boss bar): build the engine, then the two Lattice bosses. Phase 4 closes as
+  Firewall Wardens (D104, design settled D134: one-cell bodies up to
+  two cubes high, a boss bar; engine built D135): the two Lattice bosses. Phase 4 closes as
   v0.4.0 after the bosses. Biome rosters and the secrets ladder move to
   Phase 6.
 

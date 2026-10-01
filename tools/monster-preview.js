@@ -5,7 +5,9 @@
  * stationary), then after the wizard (a provoked one as if a Zap hit it):
  * a "!" if it notices him, its chase speed, and a charged attack charging
  * and firing (a burst or arc of lightning, or bolts, aimed or four ways).
- * A peaceful one stays calm. Dev tool (tools/monster-editor.js).
+ * A peaceful one stays calm. A taller body is drawn bigger, a boss wears
+ * its gold rings (shut while plate armor is calm, D135). Dev tool
+ * (tools/monster-editor.js).
  */
 import { Group } from 'three';
 import { ENEMY } from '../src/entities/enemy.js';
@@ -14,6 +16,7 @@ import { CHARGED_ATTACKS, DISCHARGES } from '../src/data/room-data.js';
 import { frameRoom } from '../src/render/camera.js';
 import { chargeGlow, createDischarge, dischargeLook, placeDischarge } from '../src/render/discharge.js';
 import { createAlertMark, placeAlertMark } from '../src/render/alert-mark.js';
+import { bodyScale, createBossMark } from '../src/render/boss-mark.js';
 import { ENEMY_MODELS } from '../src/render/entity-view.js';
 import { createFloor } from '../src/render/floor.js';
 import { PALETTE, disposeTree } from '../src/render/neon.js';
@@ -68,7 +71,7 @@ export class MonsterPreview {
   show(values) {
     this.values = values;
     // Rebuilt only when what it is built from changes.
-    const key = values ? JSON.stringify([values.look, values.color, values.attack, values.attackColor, values.attackRange, values.boltPattern]) : '';
+    const key = values ? JSON.stringify([values.look, values.color, values.attack, values.attackColor, values.attackRange, values.boltPattern, values.height, Boolean(values.boss)]) : '';
     if (key === this.key) return;
     this.key = key;
     disposeTree(this.group);
@@ -77,16 +80,24 @@ export class MonsterPreview {
     const kind = values && ENEMY_MODELS[values.look];
     if (!kind) return;
     const model = kind.create(values.color);
+    // A taller body is drawn bigger; a boss wears its gold rings (D134).
+    const scale = bodyScale(values.height);
+    model.scale.setScalar(scale);
     model.position.set(AT[0] + 0.5, AT[1], AT[2] + 0.5);
     model.rotation.y = Math.atan2(WIZARD[0] - AT[0] - 0.5, WIZARD[2] - AT[2] - 0.5);
     const mark = createAlertMark();
     mark.position.copy(model.position);
     this.group.add(model, mark);
+    const ring = values.boss ? createBossMark(values.height) : null;
+    if (ring) {
+      ring.position.copy(model.position);
+      this.group.add(ring);
+    }
     const discharge = DISCHARGES.includes(values.attack) ? createDischarge({ color: values.attackColor, shape: values.attack, range: values.attackRange }) : null;
     if (discharge) this.group.add(discharge);
     const bolts = values.attack === 'bolt' ? (values.boltPattern === 'cross' ? CROSS : [null]).map(() => createBolt(values.attackColor)) : [];
     this.group.add(...bolts);
-    this.parts = { kind, model, mark, discharge, bolts, mood: null };
+    this.parts = { kind, model, mark, ring, scale, discharge, bolts, mood: null };
   }
 
   /**
@@ -115,9 +126,10 @@ export class MonsterPreview {
     kind.animate(model, { state: pace > 0 ? 'walk' : 'rest', walked: this.walked, time, alert: noticed ? 1 : 0, attack: attacking ? tick : null, charge: chargeTicks });
     model.userData.flash.amount.value = chargeGlow(dischargeLook(attacking ? tick : null, chargeTicks));
     model.userData.flash.color.value.set(0xffffff);
-    placeAlertMark(mark, noticed ? 1 : 0, time, kind.markHeight);
+    placeAlertMark(mark, noticed ? 1 : 0, time, kind.markHeight * this.parts.scale);
+    this.parts.ring?.userData.update(dt, { armored: values.boss?.armor === 'plate' ? !after : null });
 
-    const eyes = [AT[0] + 0.5, ENEMY.eyeHeight, AT[2] + 0.5];
+    const eyes = [AT[0] + 0.5, (ENEMY.eyeHeight * values.height) / ENEMY.size[1], AT[2] + 0.5];
     if (discharge) placeDischarge(discharge, attacking ? tick : null, chargeTicks, eyes, [WIZARD[0], 0.75, WIZARD[2]]);
     // Bolts leave when the charge is done and fly at the bolt speed.
     const flown = tick === null ? -1 : tick - chargeTicks;

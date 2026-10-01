@@ -194,6 +194,49 @@
       "bounce": false,
       "solid": false,
       "color": "#ff9a5a"
+    },
+    "proto_warden": {
+      "look": "bug",
+      "movement": "stationary",
+      "attack": "bolt",
+      "hostility": "hostile",
+      "aggroRange": 16,
+      "integrity": 24,
+      "damage": 1,
+      "speed": 1,
+      "pausable": false,
+      "color": "#ff73c0",
+      "attackRange": 14,
+      "attackCharge": 0.7,
+      "attackCooldown": 1.6,
+      "boltSpeed": 5,
+      "boss": {
+        "phases": [
+          { "from": 1, "teleport": 5 },
+          { "from": 0.5, "teleport": 3, "attackCharge": 0.5, "attackCooldown": 1.1 },
+          { "from": 0.25, "teleport": 2, "attackCooldown": 0.8, "boltSpeed": 6 }
+        ]
+      }
+    },
+    "proto_gatekeeper": {
+      "look": "virus",
+      "movement": "chase",
+      "attack": "burst",
+      "hostility": "hostile",
+      "aggroRange": 16,
+      "memory": 10,
+      "integrity": 12,
+      "damage": 2,
+      "speed": 1.5,
+      "chaseSpeed": 2,
+      "solid": true,
+      "pausable": false,
+      "color": "#d9ff5c",
+      "height": 1.6,
+      "attackRange": 1.6,
+      "attackCharge": 1.2,
+      "attackCooldown": 1.5,
+      "boss": { "armor": "plate", "phases": [{ "from": 1 }, { "from": 0.5, "attackCharge": 0.8, "chaseSpeed": 2.5 }] }
     }
   },
   "spells": {

@@ -175,7 +175,8 @@ export const CHARGED_ATTACKS = [...DISCHARGES, 'bolt'];
  * (Pause freezes it, D85), memory
  * (seconds a chaser searches after losing sight of him), a charged attack's
  * range (units), charge and cooldown (seconds), and a bolt attack's speed
- * (units per second), pattern and bounces (D81). chaseSpeed and attackColor
+ * (units per second), pattern and bounces (D81), and its hitbox height
+ * (units; a boss may stand up to two cubes high, D134). chaseSpeed and attackColor
  * default to the enemy's speed and color (withEnemyDefaults()).
  */
 export const ENEMY_DEFAULTS = {
@@ -190,7 +191,50 @@ export const ENEMY_DEFAULTS = {
   boltSpeed: 4,
   boltPattern: 'aimed',
   boltBounces: 0,
+  height: 0.6,
 };
+
+/**
+ * Bosses (D104, D134, D135): a template with a `boss` block. Its phases
+ * start as its integrity drops (`from`: the share of its integrity at or
+ * below which one starts; the first has 1) and change how it fights: any
+ * of BOSS_PHASE_FIELDS, `teleport` (seconds between jumps to another cell
+ * of its arena) among them. `armor: "plate"`: spells only hurt it while it
+ * stands on a floor plate (D75). Pause never freezes a boss, Pull never
+ * drags one; a room gives it the pickup it drops (`drop`).
+ */
+export const BOSS_PHASE_FIELDS = [
+  'movement',
+  'attack',
+  'boltPattern',
+  'speed',
+  'chaseSpeed',
+  'aggroRange',
+  'attackRange',
+  'attackCharge',
+  'attackCooldown',
+  'boltSpeed',
+  'boltBounces',
+  'damage',
+  'teleport',
+];
+
+/** What a boss's armor can be (D135): none, or open only on a floor plate. */
+export const BOSS_ARMOR = ['none', 'plate'];
+
+/** Integrity of an ordinary enemy at most; only a boss takes more (D135). */
+export const ENEMY_MAX_INTEGRITY = 15;
+
+/**
+ * Its values in each of its phases: the template's (filled in), then the
+ * phase's own; a template without a `boss` block has one phase.
+ * @param {object} values an enemy's values, filled in (withEnemyDefaults())
+ * @returns {object[]}
+ */
+export function bossPhases(values) {
+  const phases = values.boss?.phases ?? [{ from: 1 }];
+  return phases.map(({ from, ...own }) => ({ ...values, ...own }));
+}
 
 /** Enemy template fields every template needs, its own or from the ones it extends (as in the schema). */
 export const ENEMY_REQUIRED = ['look', 'movement', 'attack', 'hostility', 'integrity', 'damage', 'speed', 'color'];

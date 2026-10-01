@@ -15,6 +15,8 @@ import { MAX_ROOM_FOOTPRINT, MAX_SAVED_INTEGRITY, PLAYER_HITBOX } from '../core/
 import { PLAYER } from '../entities/player.js';
 import {
   CHARGED_ATTACKS,
+  ENEMY_MAX_INTEGRITY,
+  bossPhases,
   DECO_FACES,
   DECO_LOOKS,
   ENEMY_REQUIRED,
@@ -140,16 +142,37 @@ function validateTemplates(enemies, report) {
       continue;
     }
     const values = withEnemyDefaults(resolved[id]);
-    if (values.movement === 'chase' && !(values.aggroRange > 0)) {
-      report('defs.json', path, 'a chaser needs an aggroRange above 0: it never sees the wizard to chase');
-    }
-    if (CHARGED_ATTACKS.includes(values.attack)) {
-      if (values.aggroRange < values.attackRange) {
-        report('defs.json', path, `its aggroRange ${values.aggroRange} is shorter than its attackRange ${values.attackRange}: it only fires at a wizard it has noticed`);
+    if (values.boss) validateBoss(values, path, report);
+    else if (values.integrity > ENEMY_MAX_INTEGRITY) report('defs.json', `${path}.integrity`, `at most ${ENEMY_MAX_INTEGRITY}: only a boss takes more`);
+    // Each boss phase is checked as the enemy it makes (one phase without a boss block).
+    bossPhases(values).forEach((phase, i) => {
+      const where = values.boss ? `${path}.boss.phases[${i}]` : path;
+      if (phase.movement === 'chase' && !(phase.aggroRange > 0)) {
+        report('defs.json', where, 'a chaser needs an aggroRange above 0: it never sees the wizard to chase');
       }
-      if (values.hostility === 'peaceful') report('defs.json', path, `a peaceful enemy never fires its ${values.attack}: make it hostile or provoked, or its attack none`);
-    }
+      if (CHARGED_ATTACKS.includes(phase.attack)) {
+        if (phase.aggroRange < phase.attackRange) {
+          report('defs.json', where, `its aggroRange ${phase.aggroRange} is shorter than its attackRange ${phase.attackRange}: it only fires at a wizard it has noticed`);
+        }
+        if (phase.hostility === 'peaceful') report('defs.json', where, `a peaceful enemy never fires its ${phase.attack}: make it hostile or provoked, or its attack none`);
+      }
+    });
   }
+}
+
+/**
+ * A boss (D134, D135) is hostile, and its phases run from the start ("from"
+ * 1) to ever lower shares of its integrity, each starting at a whole
+ * integrity left above 0 (or it would never come).
+ */
+function validateBoss(values, path, report) {
+  if (values.hostility !== 'hostile') report('defs.json', `${path}.hostility`, 'a boss is hostile');
+  const { phases } = values.boss;
+  if (phases[0].from !== 1) report('defs.json', `${path}.boss.phases[0].from`, 'the first phase starts at once: "from" 1');
+  phases.forEach((phase, i) => {
+    if (i > 0 && phase.from >= phases[i - 1].from) report('defs.json', `${path}.boss.phases[${i}].from`, `lower than the phase before (${phases[i - 1].from})`);
+    if (i > 0 && Math.floor(phase.from * values.integrity) < 1) report('defs.json', `${path}.boss.phases[${i}].from`, `${phase.from} of integrity ${values.integrity} leaves less than 1: the phase never comes`);
+  });
 }
 
 /** The spell each upgrade improves (D95); the jump improves none. */
@@ -306,8 +329,9 @@ function validateRoom(file, room, { objectTypes, pickupTypes, blockTypes, enemyT
   validateShrine(checks);
   validateEnemies(checks, enemyTemplates);
   validatePickups(checks, pickupTypes);
+  validateBosses(checks, enemyTemplates, pickupTypes);
   validateExitPassage(checks, exits, exitFits);
-  validateLocks(checks, exits, objectTypes);
+  validateLocks(checks, exits, objectTypes, enemyTemplates);
 
   // Spawn and reset (D39). reset defaults to spawn (buildRoom does the
   // same), so it only needs its own check when a room gives it explicitly.
@@ -504,6 +528,12 @@ function validateEnemies(checks, enemyTemplates) {
     if (filled.has(key)) report(path, `cell ${cellText(enemy.at)} is filled by ${filled.get(key)}`);
     else if (taken.has(key)) report(path, `cell ${cellText(enemy.at)} is taken by ${taken.get(key)}`);
     taken.set(key, path);
+    // Two cubes high (D134): the cell above is its too.
+    if (type && withEnemyDefaults(type).height > 1) {
+      const above = [x, y + 1, z];
+      if (y + 1 >= h) report(path, `it stands ${withEnemyDefaults(type).height} high: no room above it at ${cellText(above)}`);
+      else if (filled.has(cellKey(above))) report(path, `it stands two cubes high: the cell above, ${cellText(above)}, is filled by ${filled.get(cellKey(above))}`);
+    }
     if (y === 0 && holes.has(cellKey([x, z]))) report(path, `it starts over ${holes.get(cellKey([x, z]))}`);
     if (blockTypes.get(cellKey([x, y - 1, z]))?.lethal) report(path, `it starts on a lethal block at ${cellText([x, y - 1, z])}: it would pop at once`);
 
@@ -534,6 +564,41 @@ function validatePickups({ room, report, ids, filled, fake }, pickupTypes) {
     else if (filled.has(key) && !fake.has(key)) report(path, `cell ${cellText(pickup.at)} is filled by ${filled.get(key)}`);
     else if (taken.has(key)) report(path, `cell ${cellText(pickup.at)} is taken by ${taken.get(key)}`);
     taken.set(key, path);
+  });
+}
+
+/** Pickup kinds with a save bit (D71): the permanent ones a boss may drop (D104). */
+const PERMANENT_PICKUPS = ['disk', 'buff', 'upgrade', 'secret', 'fragment'];
+
+/**
+ * Bosses (D104, D135): at most one in a room, and none in a room with a
+ * shrine; every boss drops a permanent pickup of the room (its "drop"),
+ * one no other enemy drops; only bosses drop anything.
+ */
+function validateBosses({ room, report }, enemyTemplates, pickupTypes) {
+  const enemies = room.enemies ?? [];
+  const pickups = room.pickups ?? [];
+  const bosses = enemies.filter((enemy) => enemyTemplates[enemy.template]?.boss);
+  if (bosses.length > 1) report('enemies', `at most one boss in a room, not ${bosses.length} (${bosses.map((enemy) => enemy.id).join(', ')})`);
+  if (bosses.length > 0 && room.shrine) report('shrine', 'no shrine in a boss room (D104)');
+  const dropped = new Map();
+  enemies.forEach((enemy, i) => {
+    const path = `enemies[${i}]`;
+    const boss = Boolean(enemyTemplates[enemy.template]?.boss);
+    if (enemy.drop === undefined) {
+      if (boss) report(path, 'a boss drops a permanent pickup of the room: give it a "drop" (D104)');
+      return;
+    }
+    if (!boss) {
+      report(`${path}.drop`, `only a boss drops a pickup, not a "${enemy.template}"`);
+      return;
+    }
+    const pickup = pickups.find((one) => one.id === enemy.drop);
+    if (!pickup) report(`${path}.drop`, `no pickup "${enemy.drop}" in the room`);
+    else if (pickupTypes[pickup.type] && !PERMANENT_PICKUPS.includes(pickupTypes[pickup.type].kind)) {
+      report(`${path}.drop`, `"${enemy.drop}" is a ${pickupTypes[pickup.type].kind}: a boss drops a permanent pickup (${PERMANENT_PICKUPS.join(', ')})`);
+    } else if (dropped.has(enemy.drop)) report(`${path}.drop`, `"${enemy.drop}" is dropped by ${dropped.get(enemy.drop)} already`);
+    dropped.set(enemy.drop, path);
   });
 }
 
@@ -575,11 +640,16 @@ function validatePlate({ room, report, filled, plates }, path, [x, y, z]) {
   else plates.set(cellKey([x, z]), path);
 }
 
-/** A locked exit (D75) opens when every switch in the room is on, so the room needs one. */
-function validateLocks({ room, report }, exits, objectTypes) {
+/**
+ * A locked exit (D75) opens when every switch in the room is on, so the
+ * room needs one; in a boss room, when the boss is beaten (D135).
+ */
+function validateLocks({ room, report }, exits, objectTypes, enemyTemplates) {
   const switches = (room.objects ?? []).filter((object) => SWITCH_KINDS.includes(objectTypes[object.type]?.kind));
+  // In a boss room the boss locks them instead (D135).
+  const boss = (room.enemies ?? []).some((enemy) => enemyTemplates[enemy.template]?.boss);
   exits.forEach((exit, i) => {
-    if (exit.locked && switches.length === 0) report(`exits[${i}].locked`, 'a locked exit needs a switch in the room (a target or a plate)');
+    if (exit.locked && switches.length === 0 && !boss) report(`exits[${i}].locked`, 'a locked exit needs a switch in the room (a target or a plate) or a boss');
   });
 }
 

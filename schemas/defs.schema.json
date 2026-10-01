@@ -399,7 +399,7 @@
           "default": 0,
           "description": "How often a bolt glances off blocks, room sides and objects before they stop it (D81); after its first bounce it can hit its own shooter too. 0: it doesn't bounce."
         },
-        "integrity": { "type": "integer", "minimum": 1, "maximum": 15, "description": "Hits it takes to destroy (spells, from step 6)." },
+        "integrity": { "type": "integer", "minimum": 1, "maximum": 99, "description": "Hits it takes to destroy (Zap: 1 per hit). At most 15, but a boss (\"boss\") may take more (D135)." },
         "damage": { "type": "integer", "minimum": 1, "description": "Integrity the wizard loses per attack." },
         "speed": { "type": "number", "exclusiveMinimum": 0, "maximum": 8, "description": "Walking speed in units per second (along its path too, D119)." },
         "bounce": {
@@ -415,9 +415,68 @@
         "pausable": {
           "type": "boolean",
           "default": true,
-          "description": "Pause freezes it (D85). False: the spell's bolt stops at it and does nothing (for guardians)."
+          "description": "Pause freezes it (D85). False: the spell's bolt stops at it and does nothing (for guardians). A boss is never frozen, whatever this says (D134)."
         },
-        "color": { "$ref": "common.schema.json#/$defs/color", "description": "Body (hologram) color; the eyes show hostility." }
+        "color": { "$ref": "common.schema.json#/$defs/color", "description": "Body (hologram) color; the eyes show hostility." },
+        "height": {
+          "type": "number",
+          "minimum": 0.3,
+          "maximum": 1.9,
+          "default": 0.6,
+          "description": "Height of its hitbox in units, on a 0.6 × 0.6 footprint in its one cell; its model is drawn as much bigger. Above 1 it stands two cubes high: it needs the cell above it free, and the wizard can't jump over it (D134, D135)."
+        },
+        "boss": {
+          "type": "object",
+          "required": ["phases"],
+          "additionalProperties": false,
+          "description": "Makes it a boss (D104, D134, D135): three gold rings round its body (render/boss-mark.js), a boss bar on the HUD once it is awake (it saw the wizard or was hit), never frozen by Pause nor dragged by Pull. In a room it drops a permanent pickup (room enemy \"drop\") and stays away once that is found; the room has no shrine; its locked exits wait for it to be beaten, not for switches. It must be hostile.",
+          "properties": {
+            "armor": {
+              "enum": ["none", "plate"],
+              "default": "none",
+              "description": "none: every hit counts. plate: spells, discharges and bolts glance off it unless it stands on a floor plate (an object of kind plate, D75), where its armor opens."
+            },
+            "phases": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 6,
+              "description": "How it fights as its integrity drops, first to last: each starts once its integrity is at or below its \"from\" share and changes the template's values it names (\"teleport\" too). The first has \"from\" 1; each later one a lower \"from\".",
+              "items": { "$ref": "#/$defs/bossPhase" }
+            }
+          }
+        }
+      }
+    },
+    "bossPhase": {
+      "type": "object",
+      "required": ["from"],
+      "additionalProperties": false,
+      "description": "A boss phase (D135): the template's values it changes from when it starts, as the template's fields mean them.",
+      "properties": {
+        "from": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "description": "Share of its integrity at or below which this phase starts (1: from the start)."
+        },
+        "movement": { "$ref": "#/$defs/enemyTemplate/properties/movement" },
+        "attack": { "$ref": "#/$defs/enemyTemplate/properties/attack" },
+        "boltPattern": { "$ref": "#/$defs/enemyTemplate/properties/boltPattern" },
+        "speed": { "$ref": "#/$defs/enemyTemplate/properties/speed" },
+        "chaseSpeed": { "$ref": "#/$defs/enemyTemplate/properties/chaseSpeed" },
+        "aggroRange": { "$ref": "#/$defs/enemyTemplate/properties/aggroRange" },
+        "attackRange": { "$ref": "#/$defs/enemyTemplate/properties/attackRange" },
+        "attackCharge": { "$ref": "#/$defs/enemyTemplate/properties/attackCharge" },
+        "attackCooldown": { "$ref": "#/$defs/enemyTemplate/properties/attackCooldown" },
+        "boltSpeed": { "$ref": "#/$defs/enemyTemplate/properties/boltSpeed" },
+        "boltBounces": { "$ref": "#/$defs/enemyTemplate/properties/boltBounces" },
+        "damage": { "$ref": "#/$defs/enemyTemplate/properties/damage" },
+        "teleport": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 30,
+          "description": "Seconds between teleports while it is awake: it flickers out and appears in another free cell of its floor, away from the wizard, one that sees him if it can (forcing him to find new cover and retarget). Without it, it doesn't teleport in this phase."
+        }
       }
     },
     "objectType": {

@@ -29,6 +29,7 @@ import { RoomEdit, newRoom, resizeText, roomIdProblem, sizeProblem } from './roo
 import { downloadFile, saveFiles } from './save.js';
 import { newText, pickedScreen, setScreenText, textUsers, updateText } from './texts.js';
 import { WorldEdit, linkChoices } from './world-edit.js';
+import { pickupBit } from '../world/progress.js';
 
 /** Tools a mouse drag paints with; the others act on the cell clicked only. */
 const PAINT_TOOLS = new Set(['block', 'hole', 'object']);
@@ -128,6 +129,7 @@ export class Editor {
           this.refresh();
         },
         enemyTemplate: (id) => this.setEnemyTemplate(id),
+        enemyDrop: (id) => this.setEnemyDrop(id),
         screenText: (id) => setScreenText(this, id),
         newText: (id, text) => newText(this, id, text),
         updateText: (text) => updateText(this, text),
@@ -398,8 +400,14 @@ export class Editor {
   /** Give the picked enemy a template (its id follows it; a stationary one loses its path) and keep it picked. */
   retype(enemy, template) {
     let id = null;
-    this.change(() => !!(id = this.edit.setEnemy(enemy.id, template, this.walksPath(template))));
+    this.change(() => !!(id = this.edit.setEnemy(enemy.id, template, this.walksPath(template), Boolean(this.enemyTemplates[template]?.boss))));
     if (id) this.select({ kind: 'item', id });
+  }
+
+  /** The pickup the picked boss drops (D104), picked in the panel; '' for none. */
+  setEnemyDrop(drop) {
+    const enemy = this.selectedEnemy;
+    if (enemy) this.change(() => this.edit.setDrop(enemy.id, drop || null));
   }
 
   /** An exit field changed in the panel: for the picked exit, or new ones. */
@@ -583,7 +591,13 @@ export class Editor {
       tool: this.tool,
       blockType: this.blockType,
       objectType: this.objectType,
-      enemy: { id: enemy?.id ?? null, template: enemy?.template ?? this.enemyTemplate },
+      enemy: {
+        id: enemy?.id ?? null,
+        template: enemy?.template ?? this.enemyTemplate,
+        // A boss's drop (D104): one of the room's permanent pickups.
+        drop: enemy?.drop ?? null,
+        drops: (this.edit.data.pickups ?? []).filter((pickup) => pickupBit(this.game.content.pickupTypes[pickup.type] ?? {}, this.game.content.spells) !== null).map((pickup) => pickup.id),
+      },
       pathItem,
       pathItemIsEnemy: !!pathItem && pathItem === enemy,
       screen: this.screenState(),

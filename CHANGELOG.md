@@ -19,6 +19,14 @@ bosses that drop loot, tooling) (D104, D105).
   notes and PR summary now say so.
 
 ### Added
+- Boss engine (D135): a `boss` block in an enemy template (phases by
+  integrity share that change how it fights, teleports, plate armor),
+  `height` for bodies up to two cubes high, a boss bar on the HUD, the
+  three gold rings of the boss mark (`render/boss-mark.js`), a room
+  enemy's `drop` (held until the boss is beaten, which also opens the
+  room's locked exits; the boss stays away once it is found), the drop
+  picker in the room editor, the boss block in the monster editor, two
+  test arenas off Build Yard, showcase `?asset=bosses`.
 - Boss design (D134): one-cell bosses one or two cubes high with a boss
   bar; boss 1 (bug body, three gold rings) shoots and teleports, boss 2
   (a big virus) chases and winds up a surround burst, and is hurt only

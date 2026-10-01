@@ -3,7 +3,8 @@
  * by touching it. Permanent ones (data disks, buff chips, upgrade cards,
  * fragments, secrets) have a save bit; one already found shows as a ghost
  * and can't be taken again. Temporary ones (refills) have none and come
- * back when the room resets. Pure logic.
+ * back when the room resets. A boss's drop (D104) is held, unseen and out
+ * of reach, until the boss is beaten; then it falls into its cell. Pure logic.
  */
 
 /** Sizes in units. */
@@ -11,6 +12,8 @@ export const PICKUP = {
   /** The box he must touch: this far in from the cell's sides, and from its bottom and top. */
   inset: 0.2,
   insetY: 0.1,
+  /** Ticks a boss's drop takes to fall into its cell (D104). */
+  dropTicks: 36,
 };
 
 /**
@@ -47,10 +50,28 @@ export class Pickup {
   constructor(data, bit, found) {
     this.data = data;
     this.bit = bit;
-    /** 'idle' (can be taken), 'ghost' (found before) or 'taken' (this visit). */
+    /** 'idle' (can be taken), 'ghost' (found before), 'taken' (this visit) or 'held' (by a boss, D104). */
     this.state = found ? 'ghost' : 'idle';
     /** Ticks since he took it, for its pick-up effect; null until then. */
     this.takenTicks = null;
+    /** Ticks since a boss dropped it (it falls into its cell), or null. */
+    this.droppedTicks = null;
+  }
+
+  /** A boss holds it until it is beaten (D104): unseen, and it can't be taken. */
+  hold() {
+    this.state = 'held';
+  }
+
+  /** The boss holding it was beaten: it falls into its cell, and he can take it once it is there. */
+  release() {
+    this.state = 'idle';
+    this.droppedTicks = 0;
+  }
+
+  /** Can he take it now: not taken, found or held, and not still falling? */
+  get takeable() {
+    return this.state === 'idle' && (this.droppedTicks === null || this.droppedTicks >= PICKUP.dropTicks);
   }
 
   /** Box he takes it by touching. */
@@ -73,5 +94,6 @@ export class Pickup {
   /** One tick: its pick-up effect runs on. */
   update() {
     if (this.takenTicks !== null) this.takenTicks++;
+    if (this.droppedTicks !== null) this.droppedTicks++;
   }
 }
