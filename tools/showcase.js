@@ -69,7 +69,8 @@ import { createPauseCage, placePauseCage } from '../src/render/pause-view.js';
 import { warpFlash } from '../src/render/warp-fx.js';
 import { createWarpTrail, dashPose, placeWarpTrail } from '../src/render/warp-view.js';
 import { createHoleView } from '../src/render/hole-view.js';
-import { createLock, createPlate, createTarget } from '../src/render/switch-view.js';
+import { createLock, createPlate, createTarget, switchLight } from '../src/render/switch-view.js';
+import { createGate } from '../src/render/gate-view.js';
 import { SWITCH_KINDS } from '../src/entities/switch.js';
 import { FRAGMENT_COLOR } from '../src/entities/pickup.js';
 import { CLIP_FX, marqueeLook, pasteGrow } from '../src/render/clip-fx.js';
@@ -330,6 +331,11 @@ const ALL_ASSETS = [
   { label: 'target', group: 'switches', span: 5, spin: false, build: buildTargetZap },
   { label: 'plate', group: 'switches', span: 4, spin: false, build: buildPlate },
   { label: 'locks-in-room', group: 'switches', span: 5.5, spin: false, build: buildLocks },
+  // Timed switches (D140): a target and a plate switched on, blinking ever
+  // faster as their time runs out, then off; a gate and a bridge on one
+  // plate: the gate sinks as the bridge rises, and back.
+  { label: 'timed-switches', group: 'switches', span: 4, spin: false, build: buildTimedSwitches },
+  { label: 'gates', group: 'switches', span: 4.5, spin: false, build: buildGates },
   // Cut & Paste (D87): the wizard cuts the crate in front
   // of him (a marquee snaps on, it streams into his hands as pixels), holds
   // it, and pastes it back (the pixels stream into a marquee, it grows in);
@@ -548,6 +554,48 @@ function buildLocks() {
     }
     target.userData.update(dt);
     plate.userData.update(dt);
+  };
+  return asset;
+}
+
+/** A timed target and a timed plate (D140): on, counting down 3 s with a quickening blink, off. */
+function buildTimedSwitches() {
+  const target = createTarget(SWITCH_COLOR, { timed: true });
+  target.position.set(-1.5, 0, -0.5);
+  const plate = createPlate(SWITCH_COLOR, { timed: true });
+  plate.position.set(0.5, 0, -0.5);
+  const asset = new Group().add(target, plate);
+  const timer = 3;
+  let time = 0;
+  asset.userData.update = (dt) => {
+    time = (time + dt) % 5;
+    const on = time > 0.5 && time < 0.5 + timer;
+    const countdown = on ? 1 - (time - 0.5) / timer : null;
+    target.userData.set(switchLight(on, countdown, time), { hit: Math.abs(time - 0.5) < dt });
+    plate.userData.set(switchLight(on, countdown, time));
+    target.userData.update(dt);
+    plate.userData.update(dt);
+  };
+  return asset;
+}
+
+/** A gate and a bridge (D140) on one plate: pressed, the gate sinks and the bridge rises. */
+function buildGates() {
+  const plate = createPlate(SWITCH_COLOR);
+  plate.position.set(-2, 0, -0.5);
+  const gate = createGate(SWITCH_COLOR, { lights: 1 });
+  gate.position.set(-0.5, 0, -0.5);
+  const bridge = createGate(SWITCH_COLOR, { lights: 1, closed: false });
+  bridge.position.set(1, 0, -0.5);
+  const asset = new Group().add(plate, gate, bridge);
+  let time = 0;
+  asset.userData.update = (dt) => {
+    time = (time + dt) % 6;
+    const on = time > 1 && time < 4;
+    plate.userData.set(on);
+    gate.userData.set({ closed: !on, lit: Number(on) });
+    bridge.userData.set({ closed: on, lit: Number(on) });
+    for (const view of [plate, gate, bridge]) view.userData.update(dt);
   };
   return asset;
 }

@@ -71,6 +71,8 @@ export function buildRoom(data, { objectTypes, blockTypes, enemyTemplates = {}, 
       ...(object.path && { path: structuredClone(object.path) }),
       // A screen's text id (lore.json, D118).
       ...(object.text && { text: object.text }),
+      // The switches that power a gate or run a platform (D140).
+      ...(object.switches && { switches: [...object.switches] }),
     })).concat(fromBlocks.objects),
     /** Enemies: their template's values (look, movement, attack, speed...; D119) with this enemy's id, cell, path and a boss's drop. */
     enemies: (data.enemies ?? []).map((enemy) => ({

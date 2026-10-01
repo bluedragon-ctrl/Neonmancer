@@ -43,7 +43,7 @@ export const TRANSITION = {
  * Something that happened, for views, the HUD and (later) sound. Returned
  * by Game.update() for the tick it happened in.
  * @typedef {object} GameEvent
- * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'|'warp'|'fizzle'|'cut'|'paste'|'pull'|'compile'|'fork'|'expire'|'scan'|'reveal'|'airjump'|'reflect'|'shrine'|'crash'|'access'|'win'|'read'|'armor'|'exposed'|'armored'|'phase'|'teleport'|'drop'|'pickup'} type
+ * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'tick'|'gate'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'|'warp'|'fizzle'|'cut'|'paste'|'pull'|'compile'|'fork'|'expire'|'scan'|'reveal'|'airjump'|'reflect'|'shrine'|'crash'|'access'|'win'|'read'|'armor'|'exposed'|'armored'|'phase'|'teleport'|'drop'|'pickup'} type
  * @property {string} [spell] the spell cast, failed, fizzled (nowhere to
  *   go, energy kept) or selected (cast, deny, fizzle, spell); the teleport (warp)
  * @property {number[]} [from] where a Blink or Warp started (warp)
@@ -54,7 +54,8 @@ export const TRANSITION = {
  * @property {object} [decoy] the decoy a Fork cast stands (fork, D129)
  * @property {object} [object] the room object it happened to (push, plug,
  *   land of an object; shake, collapse and regrow of a collapsing block;
- *   hit by a spell, break of a destructible one; a switch going on or off;
+ *   hit by a spell, break of a destructible one; a switch going on or off,
+ *   a timed one counting down (tick, D140); a gate opening or closing (gate, D140);
  *   a crate cut, pasted, pulled or compiled, a compiled one derezzing: expire (D125);
  *   a spiked platform that hurt the wizard: hurt)
  * @property {object} [enemy] the enemy it happened to (pop, land of an
@@ -76,6 +77,7 @@ export const TRANSITION = {
  *   exit opening (unlock) or closing again (lock); a hidden exit a scan
  *   revealed (reveal, D128)
  * @property {number} [level] his new access level (access, D101)
+ * @property {boolean} [open] the gate opened, not closed (gate, D140)
  */
 
 export class Game {
@@ -169,7 +171,7 @@ export class Game {
     this.objects = this.room.objects.map(createObject);
     /** The objects in update order, lowest first; re-sorted in place every tick. */
     this.updateOrder = [...this.objects];
-    /** The room's switches (entities/switch.js): targets and plates, all off. */
+    /** The room's switches (entities/switch.js): targets and plates, all off; they power exits, gates and platforms (D140). */
     this.switches = this.objects.filter((object) => SWITCH_KINDS.includes(object.kind));
     /** Objects that hurt the wizard on touch: spiked platforms (D82). */
     this.spiked = this.objects.filter((object) => object.damage > 0);
@@ -206,7 +208,7 @@ export class Game {
     if (this.boss) this.pickups.find((pickup) => pickup.data.id === this.boss.dropId)?.hold();
     /** Bolts in flight, the wizard's Zaps and enemies' shots (entities/bolt.js); a room starts without any. */
     this.bolts = [];
-    /** Locked exits (D75), open while every switch is on; closed ones are solid (Grid.setOpening()). */
+    /** Locked exits (D75), open while their switches are all on (D140); closed ones are solid (Grid.setOpening()). */
     this.locks = createLocks(this);
     this.player.enter(pos ?? this.room.spawn, this.room.reset);
     /** Is he on the backup shrine? Stepping onto it uses it (touchShrine()). */

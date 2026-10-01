@@ -17,6 +17,7 @@ import { PickupView } from './pickup-view.js';
 import { flareHazard } from './block-fx.js';
 import { CoreView } from './core-view.js';
 import { DecoView } from './deco-view.js';
+import { GateView } from './gate-view.js';
 import { CLIP_FX, pasteGrow } from './clip-fx.js';
 import { clipBounds } from './clip-view.js';
 import { createRoomView } from './room-view.js';
@@ -38,6 +39,7 @@ export const OBJECT_VIEWS = {
   plate: PlateView,
   core: CoreView,
   deco: DecoView,
+  gate: GateView,
 };
 
 /**

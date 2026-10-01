@@ -107,7 +107,8 @@ mobile/touch support, backend or accounts.
 - Types: static, pushable, moving (paths or up/down cycles; player rides
   them; spiked ones hurt on touch, D82), collapsing (vanish after being stepped on, optional respawn),
   hazard (deals damage), void (instant death when the player falls onto it),
-  fake (a plain-looking block that a scan derezzes, D128).
+  fake (a plain-looking block that a scan derezzes, D128), gate and bridge
+  (switched by power, D140).
 - Decorations (kind `deco`, D117): fixed bodies that dress a room and do
   nothing, in the room's color, facing +z or +x: the data pillar
   (1×3×1, always 3 high), the screen (1×1×1) and the memory stack
@@ -115,10 +116,15 @@ mobile/touch support, backend or accounts.
   Decorations never fall. A screen may hold a
   short text of `data/lore.json`, printed in the wizard's terminal once
   per visit when he comes near (hints and lore, D118).
-- Switches unlock exits: a floor plate held down by a crate, an enemy or
-  the wizard, or a target a bolt switches on and off. A locked exit opens
-  while every switch in its room is on, never closes on the wizard, and
-  stays open for him if he came in through it (D69, D75). An access lock
+- Switches power exits, gates and platforms: a floor plate held down by a
+  crate, an enemy or the wizard, or a target a bolt switches on and off;
+  a timed one goes off by itself after a few seconds (D140). Each locked
+  exit, gate or platform names its switches (`switches`, by default every
+  switch in the room) and is powered while they are all on (D140). A
+  locked exit opens then, never closes on the wizard, and stays open for
+  him if he came in through it (D69, D75). A gate (a white block) opens,
+  a bridge (an inverted gate) appears, neither closing on anything in
+  its cell; a platform with switches runs only while powered. An access lock
   opens once his access level is high enough (D101). A hidden exit is
   wall until a scan reveals it (D128).
 - Holes: floor tiles (at y = 0) drawn as black pits. The player dies falling
@@ -348,7 +354,7 @@ they stay for the run.
 The engine is generic; all content lives in data.
 
 - `data/defs.json` — object types (kind, style, damage for spiked
-  platforms, a decoration's look), block types (look or kind, color,
+  platforms, a decoration's look, a switch's timer, an inverted gate), block types (look or kind, color,
   properties such as damage and lethal; variants `extend` a base, D60),
   enemy templates (look, movement, attack,
   hostility, aggro range, integrity, damage, speeds, bounce, solid, color,
@@ -357,7 +363,7 @@ The engine is generic; all content lives in data.
 - `data/biomes.json` — palette, floor pattern, effect settings,
   environmental effects
 - `data/rooms/*.json` — one file per room: biome, size [x, y, z], exits,
-  objects, enemies, pickups, a backup shrine tile; only overrides of type defaults;
+  objects (switch links, D140), enemies, pickups, a backup shrine tile; only overrides of type defaults;
   `"authored": true` marks the author's real game rooms (D90, §10)
 - `data/world.json` — room connections, room positions on the world map,
   start room, the fragments the core needs and the access thresholds

@@ -12,9 +12,11 @@
  *   shows round a crate standing on it.
  * - Lock: the barrier across a locked exit, on back doorways and front
  *   exits alike: a dark panel that sinks into the threshold. It carries
- *   one small bull's-eye light per switch in the room, lit when that many
+ *   one small bull's-eye light per switch linked to it (D140), lit when that many
  *   switches are on; an access lock its level in gold Roman numerals
  *   (D101).
+ * - Timed switches (D140): the outer square of the bull's-eye is dashed;
+ *   counting down, the switch blinks, faster as its time runs out.
  *
  * Each view has `userData.set(...)` and `userData.update(dt)`; states ease
  * in over a few frames. Reviewed in the asset showcase (`?asset=switches`).
@@ -34,7 +36,7 @@ import {
 import { blockEdges } from './edges.js';
 import { PALETTE, faceMaterial, lineMaterial, neonLines, shadedFaces, shared } from './neon.js';
 import { FRAGMENT_COLOR } from '../entities/pickup.js';
-import { switchesOn } from '../switches.js';
+import { linkedSwitches, switchesOn } from '../switches.js';
 
 /** Tuning (units, seconds). */
 export const SWITCH_FX = {
@@ -76,6 +78,15 @@ export const SWITCH_FX = {
   letter: 0.36,
   letterGap: 0.08,
   numeralBrightness: 2.2,
+  /**
+   * A timed switch counting down (D140) blinks: seconds per blink with its
+   * whole time left and at the very end, the lit share of a blink and how
+   * bright it dips in between (0..1 of on).
+   */
+  blinkSlow: 0.6,
+  blinkFast: 0.12,
+  blinkLit: 0.6,
+  blinkDip: 0.25,
 };
 
 const FACE = new Color(PALETTE.face);
@@ -217,11 +228,29 @@ class Ease {
 const brightness = (t) => SWITCH_FX.off + (SWITCH_FX.on - SWITCH_FX.off) * t;
 
 /**
- * The Zap target, its lower corner at the origin.
- * `userData.set(on, { hit })`: switch it; `hit` flashes and jolts it.
- * @param {number|string} color
+ * How lit a switch is (0..1, pure): on or off, and while a timed one
+ * counts down (D140) blinking, faster as `countdown` (share of its time
+ * left) runs out.
+ * @param {boolean} on
+ * @param {number|null} countdown 1 → 0 while counting down, else null
+ * @param {number} time seconds, for the blink phase
  */
-export function createTarget(color) {
+export function switchLight(on, countdown, time) {
+  if (!on) return 0;
+  if (countdown === null) return 1;
+  const { blinkSlow, blinkFast, blinkLit, blinkDip } = SWITCH_FX;
+  const period = blinkFast + (blinkSlow - blinkFast) * countdown;
+  return (time % period) / period < blinkLit ? 1 : blinkDip;
+}
+
+/**
+ * The Zap target, its lower corner at the origin.
+ * `userData.set(on, { hit })`: switch it (on: 0..1, see switchLight());
+ * `hit` flashes and jolts it.
+ * @param {number|string} color
+ * @param {{ timed?: boolean }} [options] a timed target (D140): dashed outer squares
+ */
+export function createTarget(color, { timed = false } = {}) {
   const base = new Color(color);
   const group = new Group();
   // Built round its center, so the jolt scales it in place.
@@ -236,9 +265,10 @@ export function createTarget(color) {
   inner.add(new Mesh(UNIT_BOX, [faces[1], faces[1], faces[0], faces[0], faces[2], faces[2]]));
   const edgeMat = lineMaterial({ color: base, width: 2.5 });
   const markMat = lineMaterial({ color: base, width: 1.8 });
+  const outerMat = timed ? lineMaterial({ color: base, width: 1.8, dashed: true }) : markMat;
   const fillMat = glowMaterial(base);
   const marks = targetMarks();
-  for (const line of [neonLines(blockEdges([[0, 0, 0]]), edgeMat), neonLines([...marks.outer, ...marks.inner], markMat)]) {
+  for (const line of [neonLines(blockEdges([[0, 0, 0]]), edgeMat), neonLines(marks.outer, outerMat), neonLines(marks.inner, markMat)]) {
     line.renderOrder = 2;
     inner.add(line);
   }
@@ -248,7 +278,7 @@ export function createTarget(color) {
   let flash = 0;
   const color_ = new Color();
   group.userData.set = (state, { hit = false } = {}) => {
-    on.target = state ? 1 : 0;
+    on.target = Number(state);
     if (hit) flash = SWITCH_FX.flash;
   };
   group.userData.update = (dt) => {
@@ -258,6 +288,7 @@ export function createTarget(color) {
     const lit = (b) => color_.copy(base).lerp(WHITE, f).multiplyScalar(b + f * 1.5);
     edgeMat.color.copy(lit(brightness(t)));
     markMat.color.copy(lit(brightness(t)));
+    outerMat.color.copy(markMat.color);
     fillMat.opacity = t;
     fillMat.color.copy(base).multiplyScalar(SWITCH_FX.fill);
     [1, 0.6, 0.4].forEach((share, i) => faces[i].color.copy(FACE).lerp(base, SWITCH_FX.tint * t * share).lerp(WHITE, f * 0.3 * share));
@@ -269,10 +300,11 @@ export function createTarget(color) {
 
 /**
  * The pressure plate, its tile corner at the origin (floor level).
- * `userData.set(pressed)`.
+ * `userData.set(pressed)` (0..1, see switchLight()).
  * @param {number|string} color
+ * @param {{ timed?: boolean }} [options] a timed plate (D140): a dashed outer square
  */
-export function createPlate(color) {
+export function createPlate(color, { timed = false } = {}) {
   const base = new Color(color);
   const group = new Group();
   const y = SWITCH_FX.lift;
@@ -285,9 +317,11 @@ export function createPlate(color) {
   };
   const tileMat = lineMaterial({ color: base, width: 2.2, dashed: true });
   const markMat = lineMaterial({ color: base, width: 1.8 });
+  const outerMat = timed ? lineMaterial({ color: base, width: 1.8, dashed: true }) : markMat;
   const bracketMat = lineMaterial({ color: base, width: 2.2 });
   line(marks.tile, tileMat);
-  line([...marks.outer, ...marks.inner], markMat);
+  line(marks.outer, outerMat);
+  line(marks.inner, markMat);
   line(marks.brackets, bracketMat);
   const fillMat = glowMaterial(base);
   const fill = new Mesh(new PlaneGeometry(1 - 2 * SWITCH_FX.inner, 1 - 2 * SWITCH_FX.inner), fillMat);
@@ -298,12 +332,13 @@ export function createPlate(color) {
 
   const on = new Ease();
   group.userData.set = (pressed) => {
-    on.target = pressed ? 1 : 0;
+    on.target = Number(pressed);
   };
   group.userData.update = (dt) => {
     const t = on.step(dt);
     tileMat.color.copy(base).multiplyScalar(brightness(t));
     markMat.color.copy(base).multiplyScalar(brightness(t));
+    outerMat.color.copy(markMat.color);
     bracketMat.color.copy(base).multiplyScalar(SWITCH_FX.on * t);
     fillMat.opacity = t;
     fillMat.color.copy(base).multiplyScalar(SWITCH_FX.fill);
@@ -324,7 +359,7 @@ export function createPlate(color) {
  * `userData.openness` (0..1) tells how far it has opened.
  * @param {{ side: string, at: number, width: number, y: number, height: number }} exit defaults applied
  * @param {number[]} size room size
- * @param {{ color: number|string, switches: number, access?: number }} options switches in the room (one light
+ * @param {{ color: number|string, switches: number, access?: number }} options switches linked to it (one light
  *   each; 0 for an access lock alone) and the access level it asks for (D101, shown as a gold Roman numeral)
  */
 export function createLock(exit, size, { color, switches, access = 0 }) {
@@ -419,7 +454,7 @@ export function createLock(exit, size, { color, switches, access = 0 }) {
 /**
  * A lock's lights, a small bull's-eye per switch in a row centered on
  * `center`, each with its own brightness ease (see createLock()).
- * @param {number} count switches in the room
+ * @param {number} count switches linked to the lock
  * @param {object} at
  * @param {Color} at.base the lock's color
  * @param {number[]} at.center [a, h]: along the side, and height
@@ -459,10 +494,11 @@ export class TargetView {
    */
   constructor(game, target) {
     this.target = target;
-    this.group = createTarget(target.object.color);
+    this.group = createTarget(target.object.color, { timed: target.timed });
     this.group.position.set(...target.pos);
-    this.on = target.on;
-    this.group.userData.set(this.on);
+    this.hits = target.hits ?? 0;
+    this.time = 0;
+    this.group.userData.set(target.on);
   }
 
   /**
@@ -470,11 +506,12 @@ export class TargetView {
    * @param {number} [dt] seconds since the last frame
    */
   sync(alpha, dt = 0) {
-    // Only a bolt switches a target, so every change is a hit.
-    if (this.target.on !== this.on) {
-      this.on = this.target.on;
-      this.group.userData.set(this.on, { hit: true });
-    }
+    this.time += dt;
+    // A bolt hitting it flashes it (a timed one going off by itself does not).
+    const hits = this.target.hits ?? 0;
+    const hit = hits !== this.hits;
+    this.hits = hits;
+    this.group.userData.set(switchLight(this.target.on, this.target.countdown ?? null, this.time), { hit });
     this.group.userData.update(dt);
   }
 }
@@ -487,8 +524,9 @@ export class PlateView {
    */
   constructor(game, plate) {
     this.plate = plate;
-    this.group = createPlate(plate.object.color);
+    this.group = createPlate(plate.object.color, { timed: plate.timed });
     this.group.position.set(...plate.pos);
+    this.time = 0;
   }
 
   /**
@@ -496,7 +534,8 @@ export class PlateView {
    * @param {number} [dt] seconds since the last frame
    */
   sync(alpha, dt = 0) {
-    this.group.userData.set(this.plate.on);
+    this.time += dt;
+    this.group.userData.set(switchLight(this.plate.on, this.plate.countdown ?? null, this.time));
     this.group.userData.update(dt);
   }
 }
@@ -547,7 +586,7 @@ export function romanBars(value, [a, h]) {
   return quads;
 }
 
-/** A locked exit of the room (Game.locks): its barrier, one light per switch and the access level it asks for. */
+/** A locked exit of the room (Game.locks): its barrier, one light per switch linked to it (D140) and the access level it asks for. */
 export class LockView {
   /**
    * @param {import('../game.js').Game} game
@@ -558,7 +597,7 @@ export class LockView {
     this.lock = lock;
     const color = game.switches[0]?.object.color ?? game.content.objectTypes.target?.color ?? 0xffffff;
     const { exit } = lock;
-    this.group = createLock(exit, game.room.size, { color, switches: exit.locked ? game.switches.length : 0, access: exit.access ?? 0 });
+    this.group = createLock(exit, game.room.size, { color, switches: exit.locked ? linkedSwitches(game, exit.switches).length : 0, access: exit.access ?? 0 });
     this.sync(0);
   }
 
@@ -569,7 +608,7 @@ export class LockView {
 
   /** @param {number} dt seconds since the last frame */
   sync(dt) {
-    this.group.userData.set({ lit: switchesOn(this.game), open: this.lock.open });
+    this.group.userData.set({ lit: switchesOn(this.game, this.lock.exit.switches), open: this.lock.open });
     this.group.userData.update(dt);
   }
 }

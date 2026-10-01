@@ -16,6 +16,10 @@
  * A spiked platform (a type with `damage`, D82) moves the same way; the
  * game hurts the wizard whenever he touches it (Game.update()), like a
  * hazard block that moves.
+ *
+ * A platform with `switches` (D140) runs only while those switches are all
+ * on and stops where it is when one goes off; the game sets `powered`
+ * (updateSwitches() in switches.js).
  */
 import { DT } from '../core/loop.js';
 import { cellBox, moveAxis, overlapsBox, overlapsSolid, restsOn, shoveClear } from '../physics/collision.js';
@@ -48,6 +52,10 @@ export class Platform {
     this.pos = positionOf(this.track, this.pathState);
     /** Position at the previous tick, for render interpolation. */
     this.prev = [...this.pos];
+    /** Ids of the switches that run it (D140), or null: it always runs. */
+    this.switches = object.switches ?? null;
+    /** Does it run: always without switches, else while they are all on (set by the game). */
+    this.powered = this.switches === null;
   }
 
   /** Keep this tick's start for render interpolation (copied in place: no new array every tick). */
@@ -67,6 +75,7 @@ export class Platform {
    */
   update(game) {
     this.savePrevious();
+    if (!this.powered) return null;
     const next = advance(this.track, this.pathState, this.track.speed * DT);
     const to = positionOf(this.track, next);
     const delta = to.map((v, i) => v - this.pos[i]);

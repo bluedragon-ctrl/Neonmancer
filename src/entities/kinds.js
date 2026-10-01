@@ -13,6 +13,7 @@
 import { Collapsing } from './collapsing.js';
 import { Core } from './core.js';
 import { Deco } from './deco.js';
+import { Gate } from './gate.js';
 import { Platform } from './platform.js';
 import { Pushable } from './pushable.js';
 import { Plate, Target } from './switch.js';
@@ -25,6 +26,7 @@ export const OBJECT_KINDS = {
   plate: Plate,
   core: Core,
   deco: Deco,
+  gate: Gate,
 };
 
 /**

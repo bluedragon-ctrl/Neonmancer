@@ -92,7 +92,11 @@
         "locked": {
           "type": "boolean",
           "default": false,
-          "description": "Closed (solid) until every switch in the room (targets and plates) is on; it closes again when one goes off, but not while the wizard stands in it. Always open for the wizard when he came in through it (D75). The room needs at least one switch."
+          "description": "Closed (solid) until its switches (\"switches\", by default every switch in the room: targets and plates) are all on; it closes again when one goes off, but not while the wizard stands in it. Always open for the wizard when he came in through it (D75). The room needs at least one switch."
+        },
+        "switches": {
+          "$ref": "#/$defs/switches",
+          "description": "Locked exits only (D140): the ids of the switches that open it, instead of every switch in the room."
         },
         "access": {
           "type": "integer",
@@ -155,8 +159,19 @@
         "text": {
           "$ref": "common.schema.json#/$defs/id",
           "description": "Screens only (D118): the id of a text in data/lore.json, shown in the wizard's terminal when he comes near."
+        },
+        "switches": {
+          "$ref": "#/$defs/switches",
+          "description": "Gates and platforms only (D140): the ids of the switches that power it. A gate opens (a bridge appears) while they are all on, by default every switch in the room; a platform with switches runs only while they are all on and stops where it is when one goes off (without, it always runs)."
         }
       }
+    },
+    "switches": {
+      "description": "Ids of switches (targets and plates) in the room (D140).",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "common.schema.json#/$defs/id" }
     },
     "pickup": {
       "type": "object",

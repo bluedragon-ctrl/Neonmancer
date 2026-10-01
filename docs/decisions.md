@@ -1318,3 +1318,26 @@ sounds (`ui_move`, `ui_open`, `ui_back`, `ui_choose`, `ui_adjust`,
 Appearing (respawn, regrow, paste, compile, fork) is the reverse of the pop: a swoop that falls while the sound swells. Spells are clean "pew" tones, not noise. A sound with `"loop": true` runs while the game keeps it on (`AudioEngine.setLoop`, main.js): the shield and firewall hum while they are up.
 **Why:** one coherent sound identity that fits the neon-hologram world;
 recipes stay data, so the author can retune them without code.
+
+### D140 — 2026-10-01 — Linked switches, gates and timed switches
+Switches no longer only open a room's locked exits all together. A
+locked exit, a gate or a platform names the switches that power it
+(`switches`, ids of the room's targets and plates) and is powered while
+they are all on; without a list it takes every switch in the room, so
+existing rooms (authored ones included) behave as before and need no
+migration. New object kind `gate`: a white barred block, solid until
+powered; `inverted` makes it a bridge, there only while powered. A gate
+never closes on a body in its cell, and may stand in a hole like a
+collapsing block. A platform with `switches` runs only while powered
+and stops where it is. A switch type's `timer` (seconds) makes a timed
+switch: a target stays on that long after a bolt (another bolt restarts
+it, never switches it off), a plate that long after it is released;
+counting down it blinks faster and ticks. The reachability checker
+treats a gate that can be both open and closed as floor never in the
+way and counts timed switches as on for good (it knows no timing).
+**Why:** the switch mechanic could only gate exits, so a room could not
+chain steps (switch → bridge → plate → exit) or give two switches
+different jobs; timed switches add the "hit it, then race" puzzles. A
+default of every switch keeps the rule simple and leaves authored rooms
+untouched; links are explicit ids rather than channels so a room file
+reads on its own.

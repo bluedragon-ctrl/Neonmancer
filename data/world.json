@@ -19,7 +19,8 @@
     ["decoy_lab.north", "decoy_vault.south"],
     ["hidden_layer.north", "secret_cache.south"],
     ["build_yard.south", "boss_arena.north"],
-    ["boss_arena.east", "boss_plates.west"]
+    ["boss_arena.east", "boss_plates.west"],
+    ["fast_path.south", "switch_works.north"]
   ],
   "positions": {
     "boot_sector": [-1, -1],
@@ -38,6 +39,7 @@
     "decoy_vault": [2, -3],
     "secret_cache": [3, -2],
     "boss_arena": [2, 0],
-    "boss_plates": [3, 0]
+    "boss_plates": [3, 0],
+    "switch_works": [0, 1]
   }
 }

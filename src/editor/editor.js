@@ -131,6 +131,7 @@ export class Editor {
         enemyTemplate: (id) => this.setEnemyTemplate(id),
         enemyDrop: (id) => this.setEnemyDrop(id),
         screenText: (id) => setScreenText(this, id),
+        itemSwitches: (ids) => this.selectedItem && this.change(() => this.edit.setSwitches(this.selectedItem.id, ids)),
         newText: (id, text) => newText(this, id, text),
         updateText: (text) => updateText(this, text),
         path: (field, value) => this.pathItem && this.change(() => this.edit.setPathOptions(this.pathItem.id, { [field]: value })),
@@ -422,7 +423,7 @@ export class Editor {
     }
     if (field === 'link') {
       this.change(() => this.edit.linkExit(exit.id, value));
-    } else if (field === 'locked' || field === 'hidden') {
+    } else if (field === 'locked' || field === 'hidden' || field === 'switches') {
       this.change(() => this.edit.updateExit(exit.id, { [field]: value }));
     } else if (field === 'access') {
       this.change(() => this.edit.updateExit(exit.id, { access: Math.min(MAX_ACCESS_LEVEL, Math.max(0, Math.round(value))) }));
@@ -591,6 +592,7 @@ export class Editor {
       tool: this.tool,
       blockType: this.blockType,
       objectType: this.objectType,
+      links: this.linksState(),
       enemy: {
         id: enemy?.id ?? null,
         template: enemy?.template ?? this.enemyTemplate,
@@ -614,6 +616,13 @@ export class Editor {
       status: this.status,
       unsaved: this.unsaved,
     });
+  }
+
+  /** The picked gate or platform for the panel (D140): its kind and switches; or null. */
+  linksState() {
+    const item = this.selectedItem;
+    const kind = item && this.objectTypes[item.type]?.kind;
+    return kind === 'gate' || kind === 'platform' ? { kind, switches: item.switches ?? [] } : null;
   }
 
   /** The picked screen for the panel (D118): its id, its text and who shows that, and every text; or null. */

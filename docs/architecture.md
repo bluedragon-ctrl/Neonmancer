@@ -43,7 +43,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `game.js` | Owns game state; fixed-order `update()` returning typed events; room switching; `reset()` starts over in place (a new game) |
 | `spells.js` | What each spell does once cast (`SPELL_EFFECTS`): `castSpell(game)`, Blink and Warp, Cut & Paste, Pull, Compile, Scan, Fork |
 | `combat.js` | Bolts, enemies' charged attacks, bouncing off, touching and burning enemies; every hit on an enemy (`hitEnemy(game, …)`, `pauseEnemy(game, …)`), a boss's next phase, plate armor (`updateArmor()`) |
-| `switches.js` | Plates and the locked exits they open (D75), hidden exits a scan opens (D128, `revealExit()`): `updateSwitches(game)`, `exitOpen()`, `switchesOn()` |
+| `switches.js` | Switches and what they power (D75, D140): plates, timed switches ticking, gates, powered platforms and locked exits, each by its `switches` or every switch in the room (`linkedSwitches()`, `powered()`); hidden exits a scan opens (D128, `revealExit()`): `updateSwitches(game)`, `exitOpen()`, `switchesOn()` |
 | `core/bindings.js` | Default key → action map (the only place raw key codes appear) |
 | `core/input.js` | Raw keys → action states once per tick |
 | `core/loop.js` | Fixed 60 Hz timestep, step clamp, interpolation alpha |
@@ -89,7 +89,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `entities/platform.js` | Moving platform: follows its path, carries riders, waits when blocked, shoves or squeezes the wizard (D46); a spiked one hurts on touch (D82) |
 | `entities/player.js` | Movement, jump, gravity, turning, pushing, integrity, invulnerability after a hit, death (hole or damage), respawn; one wizard for the whole game |
 | `entities/pushable.js` | Rest → slide → fall → land / plug-a-hole state machine; destructible ones break (`hit()` → `broken`); a compiled crate (D125, `lifetime`) derezzes when its time is up (`expire()`, a plugged hole opens again) |
-| `entities/switch.js` | Switches (D75): `Target` (a fixed body a bolt switches over) and `Plate` (a floor tile, no body, on while something stands on it); `SWITCH_KINDS` (pure, tested) |
+| `entities/switch.js` | Switches (D75): `Target` (a fixed body a bolt switches over) and `Plate` (a floor tile, no body, on while something stands on it); a type's `timer` makes either go off by itself (D140, `countdown`); `SWITCH_KINDS` (pure, tested) |
+| `entities/gate.js` | Gates (D140): `Gate`, a fixed block solid until powered (an inverted one, a bridge, only while powered) that never closes on a body (`power()`, pure, tested) |
 | `entities/warp.js` | Where Blink and Warp take the wizard (D86): `warpTarget()` sweeps his box along his aim through open space, stops at blocks, objects and the room's side, lands short of enemies, reports the enemies passed (pure, tested) |
 | `ai/behaviors.js` | Movement behaviors by name (`BEHAVIORS`: `patrol`, `stationary`, `chase`), as enemy templates refer to them |
 | `ai/chase.js` | Chase (D78, D80): calm → chase → search → return, greedy steps towards the wizard, routes (round walls) to where it last saw him and home, searches when his Zap hits it, patrols while calm if it has a path (pure, tested) |
@@ -156,7 +157,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/shield-fx.js`, `render/shield-view.js` | The Shield's lightning ring (D73): the look (pure, tested; its flare when it blocks, D84) and its meshes, shown by `PlayerView` |
 | `render/shrine-view.js` | Backup shrine look (D97): floor tile, rune, glow, motes and rings, flare on use, `SHRINE_FX` (layout and timing pure, tested) |
 | `render/spikes.js` | The spiked object shape (D82): pyramids on a core cube inside the cell, as face triangles and outline segments, `SPIKES` tuning; pure, tested |
-| `render/switch-view.js` | Switch and locked-exit looks (`SWITCH_FX`): target and plate with their square bull's-eye, the lock's panel with one light per switch and an access lock's Roman numeral (D101); `TargetView`, `PlateView`, `LockView` (marks pure, tested) |
+| `render/switch-view.js` | Switch and locked-exit looks (`SWITCH_FX`): target and plate with their square bull's-eye (a timed one's outer square dashed, blinking as it counts down: `switchLight()`, D140), the lock's panel with one light per linked switch and an access lock's Roman numeral (D101); `TargetView`, `PlateView`, `LockView` (marks pure, tested) |
+| `render/gate-view.js` | Gate look (`GATE_FX`, D140): a white barred block with a light per switch on top, sinking to open, a dashed outline while open; `GateView` (marks pure, tested) |
 | `render/viewport.js` | Letterbox, buffer size and 1080p-relative sizing math (pure, tested) |
 | `render/virus.js` | Virus model (D78): sharp tipped cube, orbiting bits, glide, charge pose, pop pixels, `VIRUS` tuning; `VIRUS_MODEL` |
 | `render/walls.js` | Back walls with doorways and dark tunnels behind them, front edges with gaps, arrow shape for front exits (pure, tested) |

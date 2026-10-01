@@ -28,13 +28,17 @@ numbers and playtest lessons). Read the checklist before drafting.
   and pickup ids share one namespace per room. Start from `$schema` and
   `schemaVersion` as in the examples.
 - Exits: `{ id, side: -x|+x|-z|+z, at, width 2, y 0, height 2 }`, plus
-  optional `locked` (opens while every switch in the room is on; needs >= 1
+  optional `locked` (opens while its switches are all on: `switches`, a
+  list of target/plate ids, or every switch in the room; needs >= 1
   switch), `access` (level 1-15), `hidden` (wall until Scan). Connections
   live in `data/world.json` (`"room.exit"` pairs, `positions` on the map
   grid; neighbours sit one cell apart, the side must match the direction).
 - Types come from `data/defs.json`: blocks `block hazard void fake collapsing
-  collapsing_regrow`; objects `crate* plate target core platform
-  spiked_platform screen data_pillar memory_stack`; platforms need a `path`;
+  collapsing_regrow`; objects `crate* plate target plate_timed
+  target_timed gate bridge core platform spiked_platform screen
+  data_pillar memory_stack`; platforms need a `path`; gates and platforms
+  take `switches` (D140: a gate opens, a bridge appears, a platform runs
+  while they are all on; a gate without them takes every switch);
   screens may name a `text` id in `data/lore.json`; pickups by their defs id
   (`disk_*`, `fragment_N`, `secret_N`, `buff_*`, `upgrade_*`, `refill_*`).
 - Enemies: `{ id, template, at, path? }` only. No overrides, no path speed

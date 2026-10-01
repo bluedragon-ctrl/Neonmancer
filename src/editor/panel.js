@@ -99,6 +99,21 @@ function numberInput({ min, step, placeholder = '' }) {
   return Object.assign(el('input'), { type: 'number', min: String(min), step: String(step), placeholder });
 }
 
+/** A text field for switch ids (D140). */
+function switchesInput(title) {
+  return Object.assign(el('input'), { type: 'text', title, spellcheck: false });
+}
+
+/**
+ * Switch ids as typed (D140): split at spaces and commas, blanks and
+ * repeats dropped.
+ * @param {string} text
+ * @returns {string[]}
+ */
+export function switchIds(text) {
+  return [...new Set(text.split(/[\s,]+/).filter(Boolean))];
+}
+
 /** A number field's value, or undefined when blank. */
 function numberValue(input) {
   return Number.isFinite(input.valueAsNumber) ? input.valueAsNumber : undefined;
@@ -262,7 +277,11 @@ export class EditorPanel {
     this.objectSelect = select(Object.entries(objectTypes).map(([id, type]) => [id, `${id} (${type.kind})`]));
     this.objectSelect.addEventListener('change', () => on.objectType(this.objectSelect.value));
     this.objectRows = el('div', 'editor-group');
-    this.objectRows.append(this.row('Object', this.objectSelect), this.textGroup());
+    // A picked gate or platform: the switches that power it (D140).
+    this.objectSwitches = switchesInput('Ids of the switches (targets, plates) that power it, by spaces or commas');
+    this.objectSwitches.addEventListener('change', () => on.itemSwitches(switchIds(this.objectSwitches.value)));
+    this.objectSwitchesRow = this.row('Switches', this.objectSwitches);
+    this.objectRows.append(this.row('Object', this.objectSelect), this.objectSwitchesRow, this.textGroup());
     return [this.blockRows, this.objectRows];
   }
 
@@ -358,10 +377,14 @@ export class EditorPanel {
     this.exitLink.addEventListener('change', () => on.exit('link', this.exitLink.value || null));
     this.exitIdRow = this.row('Id', this.exitId);
     this.exitLinkRow = this.row('Leads to', this.exitLink);
-    // Locked (D75): open only while every switch in the room is on.
-    this.exitLocked = Object.assign(el('input'), { type: 'checkbox', title: 'Open only while every switch (target, plate) in the room is on' });
+    // Locked (D75): open only while its switches are on (D140), by default every switch in the room.
+    this.exitLocked = Object.assign(el('input'), { type: 'checkbox', title: 'Open only while its switches (targets, plates) are all on' });
     this.exitLocked.addEventListener('change', () => on.exit('locked', this.exitLocked.checked));
     this.exitLockedRow = this.row('Locked', this.exitLocked);
+    this.exitSwitches = switchesInput('Ids of the switches that open it, by spaces or commas; empty: every switch in the room');
+    this.exitSwitches.placeholder = 'every switch';
+    this.exitSwitches.addEventListener('change', () => on.exit('switches', switchIds(this.exitSwitches.value)));
+    this.exitSwitchesRow = this.row('Switches', this.exitSwitches);
     this.exitAccess = numberInput({ min: 0, step: 1 });
     this.exitAccess.title = 'Access level it asks for (D101): closed until the core raised his level this high; 0 for none';
     this.exitAccess.addEventListener('change', () => on.exit('access', numberValue(this.exitAccess) ?? 0));
@@ -379,6 +402,7 @@ export class EditorPanel {
       this.row('Height', this.exitHeight),
       this.exitLinkRow,
       this.exitLockedRow,
+      this.exitSwitchesRow,
       this.exitAccessRow,
       this.exitHiddenRow,
     );
@@ -457,6 +481,7 @@ export class EditorPanel {
    * @param {string} state.tool
    * @param {string} state.blockType the Block tool's type
    * @param {string} state.objectType
+   * @param {{ kind: string, switches: string[] }|null} [state.links] the picked gate or platform and its switches (D140), or null
    * @param {{ id: string|null, template: string, drop: string|null, drops: string[] }} state.enemy the picked enemy's template
    *   (with its id and, a boss, its drop and the room's permanent pickups it may drop), or new enemies'
    * @param {object|null} state.pathItem the platform or enemy whose path is edited
@@ -472,7 +497,7 @@ export class EditorPanel {
    * @param {string} state.status a line about the last action
    * @param {boolean} state.unsaved there are unsaved edits (any room, or world.json)
    */
-  show({ edit, rooms, tool, blockType, objectType, enemy, pathItem, pathItemIsEnemy, screen, exit, layer, cut, errors, status, unsaved }) {
+  show({ edit, rooms, tool, blockType, objectType, links = null, enemy, pathItem, pathItemIsEnemy, screen, exit, layer, cut, errors, status, unsaved }) {
     const data = edit.data;
     const changed = edit.dirty || edit.linksChanged;
     this.roomLabel.textContent = `${data.id}${changed ? ' • unsaved' : unsaved ? ' • other rooms unsaved' : ''}`;
@@ -486,6 +511,12 @@ export class EditorPanel {
     this.blockSelect.value = blockType;
     this.objectRows.hidden = tool !== 'object';
     this.objectSelect.value = objectType;
+    // A picked gate or platform: its switches (D140).
+    this.objectSwitchesRow.hidden = !links;
+    if (links) {
+      this.objectSwitches.placeholder = links.kind === 'gate' ? 'every switch' : 'none: always runs';
+      if (document.activeElement !== this.objectSwitches) this.objectSwitches.value = links.switches.join(' ');
+    }
     this.showScreen(screen);
 
     this.enemyRows.hidden = tool !== 'enemy';
@@ -518,6 +549,8 @@ export class EditorPanel {
 
     this.exitIdRow.hidden = this.exitLinkRow.hidden = this.exitAtRow.hidden = this.exitYRow.hidden = this.exitLockedRow.hidden = this.exitAccessRow.hidden = this.exitHiddenRow.hidden = !exit.id;
     this.exitLocked.checked = !!exit.locked;
+    this.exitSwitchesRow.hidden = !(exit.id && exit.locked);
+    if (document.activeElement !== this.exitSwitches) this.exitSwitches.value = (exit.switches ?? []).join(' ');
     this.exitHidden.checked = !!exit.hidden;
     this.setNumber(this.exitAccess, exit.access ?? 0);
     this.setNumber(this.exitAt, exit.at);
