@@ -25,12 +25,13 @@ export function boxCells(lo, hi) {
 
 /**
  * What a cell holds, as one string (pure): the type, and a switch gate's
- * switches after a "#" ("gate#p1,p2").
+ * switches after a "#" ("gate#p1,p2"), sorted, so the same switches in
+ * another order are the same key.
  * @param {string} type
  * @param {string[]} [switches]
  */
 export function boxKey(type, switches) {
-  return switches?.length > 0 ? `${type}#${switches.join(',')}` : type;
+  return switches?.length > 0 ? `${type}#${[...switches].sort().join(',')}` : type;
 }
 
 /**

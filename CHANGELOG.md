@@ -35,6 +35,13 @@ docs/decisions.md).
   Alt+click with the Block tool copies a block's type and switches.
 
 ### Changed
+- Room editor Switch tool: the first click on a gate or exit on every
+  switch links it to just the picked switch (it used to unlink it, and
+  could unlock a locked exit); deleting a switch takes it out of every
+  link; a gate's switch ids are sorted, so the same switches in another
+  order merge into one box.
+- Room design checklist and the level-review subagent: check the race
+  of a timed switch by hand (the reachability checker ignores timing).
 - Switch gates are white glass boxes, and a switched-off one is not
   shown in play, only in the room editor (D142).
 - Gate blocks (D141): collapsing blocks and the new gates are one block

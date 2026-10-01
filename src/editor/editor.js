@@ -843,7 +843,7 @@ export class Editor {
     }
     if (here?.kind === 'block' && isSwitchGate(this.blockTypes[here.type])) {
       let list;
-      this.change(() => (list = edit.toggleGateLink(cell, picked, all)) !== null);
+      this.change(() => (list = edit.toggleGateLink(cell, picked)) !== null);
       return done(`this ${here.type}`, list, 'it opens on every switch');
     }
     if (here?.kind === 'object' && this.objectTypes[here.item.type]?.kind === 'platform') {
@@ -855,7 +855,7 @@ export class Editor {
     const exit = side && edit.exitAt(side, cell);
     if (exit) {
       let list;
-      this.change(() => !!(list = edit.toggleExitLink(exit.id, picked, all)));
+      this.change(() => !!(list = edit.toggleExitLink(exit.id, picked)));
       return done(`exit ${exit.id}`, list, 'it is no longer locked');
     }
     this.status = 'Click a switch gate, a platform or an exit (on its layer).';

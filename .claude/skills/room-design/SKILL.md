@@ -59,6 +59,9 @@ numbers and playtest lessons). Read the checklist before drafting.
   3-high ledge needs height 5.
 - Walk 4.5 u/s (~13 ticks per cell); a push ~28 ticks; collapsing block goes
   30 ticks after a step. Never make him stand still on one.
+- Timed switch: its timer is the run from it to the far side of what it
+  powers (~0.22 s a cell, ~0.57 s a jump) plus about a second. The checker
+  doesn't check timing; work it out by hand.
 
 ## Design rules
 1. **Readable** from the front corner: tall blocks against back walls, steps
