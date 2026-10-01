@@ -19,6 +19,10 @@ bosses that drop loot, tooling) (D104, D105).
   notes and PR summary now say so.
 
 ### Added
+- Design skills (D132): `.claude/skills/room-design` and `enemy-design`,
+  and the read-only `level-review` subagent (`.claude/agents/`) that runs
+  `validate:data` and `check:reach` and reviews a room against the room
+  design checklist.
 - Reachability checker (D131): `npm run check:reach` searches every
   room with jump height, the double jump, crates (pushed, pulled, cut and
   pasted) and the spells found so far, and the world as a fixpoint of

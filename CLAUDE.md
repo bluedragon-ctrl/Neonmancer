@@ -439,11 +439,13 @@ not critical.
   `--rooms` lists what each exit and pickup needs. Used by CI, the
   world map tool, and design skills/subagents. Knows nothing of enemies
   or timing.
-- **Claude Code skills and subagents** (Phase 4+, once schemas are
-  stable): room design and enemy design skills (schema, rules, annotated
-  examples); room-drafting and level-review subagents. They start from the
-  room design checklist in docs/design.md; check new rooms against it
-  until then.
+- **Claude Code skills and subagents** (D132, `.claude/`): the
+  `room-design` and `enemy-design` skills (schema, rules, tuning numbers,
+  annotated examples) and the read-only `level-review` subagent (runs
+  validation and the reachability checker, reads a room against the
+  checklist). Use them when drafting or reviewing rooms and enemies; keep
+  them in step with the schemas and the checklist in docs/design.md. A
+  room-drafting subagent comes with Phase 5's content steps.
 
 ---
 

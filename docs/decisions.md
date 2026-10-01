@@ -1140,3 +1140,20 @@ physics replay would be exact but slow and brittle against tuning. The
 fixpoint gives the order for free and the per-target ability sets feed
 the room design skill and the review subagent (4.2).
 
+### D132 — 2026-10-01 — Design skills and the level-review subagent live in `.claude/`
+Step 4.2 adds `.claude/skills/room-design` (format, coordinates, types,
+tuning numbers, design rules, the check loop with `validate:data` and
+`check:reach`, annotated example rooms, the authored-room rules of D90),
+`.claude/skills/enemy-design` (template axes, charged-attack rules, the
+D119 color rules, placing enemies) and `.claude/agents/level-review.md`,
+a read-only subagent that runs the checks and walks a room against the
+room design checklist, reporting blockers, problems and notes. The
+skills point to the schemas, `docs/design.md` and the checklist rather
+than copying them, and repeat only the numbers a draft needs. A
+room-drafting subagent is left for Phase 5's content steps, when the
+Lattice plan (4.3) says what to draft.
+**Why:** 25-30 Lattice rooms will be drafted and checked by Claude
+sessions that start cold; the rules were spread over CLAUDE.md, design.md
+and the schemas. One entry point per task, with the checker in the loop,
+makes drafts consistent and keeps review cheap. Pointers instead of
+copies keep a single source of truth.
