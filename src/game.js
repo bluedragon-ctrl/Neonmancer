@@ -193,8 +193,6 @@ export class Game {
       const bit = pickupBit(data, this.content.spells);
       return new Pickup(data, bit, bit !== null && this.progress.has(bit));
     });
-    /** Is it a boss room (D135)? Its locked exits wait for the boss, even once it stays away. */
-    this.bossRoom = this.room.enemies.some((enemy) => enemy.boss);
     /**
      * The room's enemies (entities/enemy.js), dead ones included until the
      * room resets. A boss whose drop is found already stays away (D104).
@@ -208,7 +206,7 @@ export class Game {
     if (this.boss) this.pickups.find((pickup) => pickup.data.id === this.boss.dropId)?.hold();
     /** Bolts in flight, the wizard's Zaps and enemies' shots (entities/bolt.js); a room starts without any. */
     this.bolts = [];
-    /** Locked exits (D75), open while every switch is on (or the boss is beaten); closed ones are solid (Grid.setOpening()). */
+    /** Locked exits (D75), open while every switch is on; closed ones are solid (Grid.setOpening()). */
     this.locks = createLocks(this);
     this.player.enter(pos ?? this.room.spawn, this.room.reset);
     /** Is he on the backup shrine? Stepping onto it uses it (touchShrine()). */

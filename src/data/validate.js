@@ -331,7 +331,7 @@ function validateRoom(file, room, { objectTypes, pickupTypes, blockTypes, enemyT
   validatePickups(checks, pickupTypes);
   validateBosses(checks, enemyTemplates, pickupTypes);
   validateExitPassage(checks, exits, exitFits);
-  validateLocks(checks, exits, objectTypes, enemyTemplates);
+  validateLocks(checks, exits, objectTypes);
 
   // Spawn and reset (D39). reset defaults to spawn (buildRoom does the
   // same), so it only needs its own check when a room gives it explicitly.
@@ -640,16 +640,11 @@ function validatePlate({ room, report, filled, plates }, path, [x, y, z]) {
   else plates.set(cellKey([x, z]), path);
 }
 
-/**
- * A locked exit (D75) opens when every switch in the room is on, so the
- * room needs one; in a boss room, when the boss is beaten (D135).
- */
-function validateLocks({ room, report }, exits, objectTypes, enemyTemplates) {
+/** A locked exit (D75) opens when every switch in the room is on, so the room needs one. */
+function validateLocks({ room, report }, exits, objectTypes) {
   const switches = (room.objects ?? []).filter((object) => SWITCH_KINDS.includes(objectTypes[object.type]?.kind));
-  // In a boss room the boss locks them instead (D135).
-  const boss = (room.enemies ?? []).some((enemy) => enemyTemplates[enemy.template]?.boss);
   exits.forEach((exit, i) => {
-    if (exit.locked && switches.length === 0 && !boss) report(`exits[${i}].locked`, 'a locked exit needs a switch in the room (a target or a plate) or a boss');
+    if (exit.locked && switches.length === 0) report(`exits[${i}].locked`, 'a locked exit needs a switch in the room (a target or a plate)');
   });
 }
 

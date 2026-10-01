@@ -54,14 +54,13 @@ export function updateSwitches(game) {
 
 /**
  * Should a locked exit be open: revealed if hidden (D128), every switch on
- * (a switch lock; in a boss room, the boss beaten or away, D135) and his
- * access level high enough (an access lock), or the wizard came in
+ * (a switch lock) and his access level high enough (an access lock), or the wizard came in
  * through it?
  */
 function lockWanted(game, { exit }) {
   if (exit.id === game.entryExit) return true;
   if (game.hidden.exits.includes(exit)) return false;
-  const switched = !exit.locked || (game.bossRoom ? !game.boss?.alive : game.switches.every((object) => object.on));
+  const switched = !exit.locked || game.switches.every((object) => object.on);
   return switched && game.progress.accessLevel >= (exit.access ?? 0);
 }
 

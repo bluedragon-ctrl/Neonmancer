@@ -1246,9 +1246,10 @@ Built in step 4.5, from D104 and D134.
   lets it fall into its own cell (a banner and a terminal line), and
   once its bit is found the boss is left out of the room. One boss a
   room, no shrine with it.
-- **Locks:** in a boss room, locked exits wait for the boss to be beaten
-  (or be away), not for switches, so an arena's plates serve the fight.
-  The reachability checker takes them as open.
+- **Open doors:** a boss never locks its arena's doors: the wizard may
+  retreat through any exit at any time, and the room resets when he comes
+  back anyway. A locked exit in a boss room follows the usual switch
+  rules (D75).
 - **Look:** a taller body draws its model bigger (at most 1.6 times, so
   it keeps within its cell); `render/boss-mark.js` puts the three gold
   rings round any boss, drawn in while plate armor is shut, spread and
@@ -1259,6 +1260,6 @@ Built in step 4.5, from D104 and D134.
 **Why:** the bosses differ by data, not code: the phase overrides reuse
 the existing movements and attacks, so boss 1 and 2 need only teleport
 and plate armor besides. The drop stays at an authored cell, so the
-reachability checker and the room designer see where it falls.
-Locks on the boss rather than switches let an arena use plates for the
-fight.
+reachability checker and the room designer see where it falls. Open
+doors (the author's call at review) keep a fight escapable; the room
+reset makes retreating cost the fight, nothing more.

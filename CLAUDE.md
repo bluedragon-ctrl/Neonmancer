@@ -228,7 +228,7 @@ and some exits and pickups wait for a spell or buff found later
   it is found (D104). A template's `boss` block: phases by integrity
   that change how it fights (teleports too), plate armor, a boss bar,
   three gold rings round its normal body; never paused or pulled; one a
-  room, no shrine, its room's locked exits wait for it (D134, D135)
+  room, no shrine; its arena's doors never lock (D134, D135)
 - Home Lattice's own enemies are the default cyberspace four: bug,
   virus, sentinel and cron (the tower) (D108), plus the peaceful glowbug,
   in tiers (D121); each other biome gets its own roster, reviewed one

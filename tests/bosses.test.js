@@ -9,7 +9,6 @@ import { Game } from '../src/game.js';
 import { BOSS_MARK, bodyScale, bossMarkSize, teleportLook } from '../src/render/boss-mark.js';
 import { dropHeight } from '../src/render/pickup-view.js';
 import { BOSS_BAR_LINGER, bossBarState } from '../src/ui/boss-bar.js';
-import { analyzeRoom } from '../src/world/reach.js';
 import { buildRoom } from '../src/world/room.js';
 import { loadGameData } from '../src/data/load.js';
 import { BUG, dataFiles, eventTypes, gameData, idle, roomFile } from './helpers.js';
@@ -54,13 +53,13 @@ const GATEKEEPER = {
 
 const TEMPLATES = { bug: BUG, warden: WARDEN, gatekeeper: GATEKEEPER };
 
-/** The arena: 8×4×8, a boss in the middle holding fragment 0, a locked exit east to a hall. */
+/** The arena: 8×4×8, a boss in the middle holding fragment 0, an open exit east to a hall. */
 function arena({ boss = { id: 'boss', template: 'warden', at: [4, 0, 4], drop: 'frag' }, objects = [], blocks = [], ...props } = {}) {
   return dataFiles({
     rooms: [
       roomFile('arena', {
         spawn: [0.5, 0, 0.5],
-        exits: [{ id: 'east', side: '+x', at: 3, locked: true }],
+        exits: [{ id: 'east', side: '+x', at: 3 }],
         enemies: [boss],
         pickups: [{ id: 'frag', type: 'fragment_0', at: [2, 0, 6] }],
         objects,
@@ -155,12 +154,11 @@ test('validation: a boss is hostile, its phases start at 1 and go down; only a b
   assert.match(validateData(files).join('\n'), /only a boss takes more/);
 });
 
-test('a room gives its boss the pickup it drops; the reachability checker takes a boss room\'s locked exit as open', () => {
+test('a room gives its boss the pickup it drops', () => {
   const content = loadGameData(arena());
   const room = buildRoom(content.rooms.get('arena'), content);
   assert.equal(room.enemies[0].drop, 'frag');
   assert.equal(room.enemies[0].boss.phases.length, 2);
-  assert.equal(analyzeRoom(room, { abilities: [], starts: [[0, 0, 0]] }).exits.east, true);
 });
 
 // ---- the fight
@@ -274,18 +272,16 @@ test('a tall boss stands two cubes high, its eyes and mark as far up', () => {
 
 // ---- the drop and the defeated bit (D104)
 
-test('a boss holds its drop; beaten, it lets it fall, opens its locked exits, and stays away once it is found', () => {
+test('a boss holds its drop; beaten, it lets it fall, and stays away once it is found', () => {
   const game = gameIn(arena());
   const { boss } = game;
   const pickup = game.pickups.find((one) => one.data.id === 'frag');
   assert.equal(pickup.state, 'held');
   assert.equal(pickup.takeable, false);
-  assert.equal(game.locks[0].open, false, 'its exit waits for it');
 
   hitDown(game, 0);
   const events = run(game, 1);
   assert.ok(eventTypes(events).includes('drop'));
-  assert.ok(eventTypes(events).includes('unlock'));
   assert.equal(pickup.state, 'idle');
   assert.equal(pickup.takeable, false, 'still falling');
   run(game, PICKUP.dropTicks);
@@ -299,7 +295,6 @@ test('a boss holds its drop; beaten, it lets it fall, opens its locked exits, an
   game.enterRoom('arena');
   assert.equal(game.boss, null);
   assert.equal(game.enemies.length, 0);
-  assert.equal(game.locks[0].open, true);
   assert.equal(game.pickups[0].state, 'ghost');
 });
 
@@ -318,10 +313,12 @@ test('a boss\'s drop falls into its cell and rests there', () => {
   assert.equal(dropHeight(1000), 0);
 });
 
-test('a room without a boss keeps its locks on its switches', () => {
-  const game = new Game(gameData({ rooms: [roomFile('alpha')] }));
-  assert.equal(game.bossRoom, false);
-  assert.equal(game.boss, null);
+test('an arena never locks its doors: a locked exit there still needs a switch, like anywhere (D135)', () => {
+  const files = arena();
+  files['rooms/arena.json'].exits[0].locked = true;
+  assert.match(validateData(files).join('\n'), /a locked exit needs a switch in the room/);
+  const game = gameIn(arena());
+  assert.deepEqual(game.locks, [], 'its doors are open while the boss lives');
 });
 
 test('the room editor gives a boss its drop; a template that is no boss takes it away', async () => {
