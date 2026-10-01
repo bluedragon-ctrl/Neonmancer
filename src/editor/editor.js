@@ -31,6 +31,8 @@ import { downloadFile, saveFiles } from './save.js';
 import { newText, pickedScreen, setScreenText, textUsers, updateText } from './texts.js';
 import { WorldEdit, linkChoices } from './world-edit.js';
 import { pickupBit } from '../world/progress.js';
+import { SWITCH_KINDS } from '../entities/switch.js';
+import { linkList, linkables, pickedLinkable, setEvery, setLink, switchClick } from './switch-tool.js';
 
 /** Tools a mouse drag paints with; the others act on the cell clicked only. */
 const PAINT_TOOLS = new Set(['block', 'hole', 'object']);
@@ -86,14 +88,23 @@ export class Editor {
     /** Pickup types (D71): placed with the Object tool too, into the room's pickups. */
     this.pickupTypes = game.content.pickupTypes;
     this.objectTypes = { ...game.content.objectTypes, ...this.pickupTypes };
-    this.objectType = Object.keys(this.objectTypes)[0];
+    /** Switch types (targets, plates, D140): only the Switch tool places them. */
+    this.switchTypes = Object.fromEntries(Object.entries(this.objectTypes).filter(([, type]) => SWITCH_KINDS.includes(type.kind)));
+    this.switchType = Object.keys(this.switchTypes)[0];
+    /** What the Object tool places: every object and pickup type but the switches. */
+    const placeable = Object.fromEntries(Object.entries(this.objectTypes).filter(([id]) => !this.switchTypes[id]));
+    this.objectType = Object.keys(placeable)[0];
     this.enemyTemplates = game.content.enemyTemplates;
     /** Template of new enemies (an enemy is all its template, D119). */
     this.enemyTemplate = Object.keys(this.enemyTemplates)[0];
     /** Shape of new exits. */
     this.exitShape = { width: 2, height: 2 };
-    /** @type {{ kind: 'item'|'exit', id: string } | null} the picked object, enemy or exit */
+    /** @type {{ kind: 'item'|'exit'|'gate', id?: string, cell?: number[] } | null} the picked object, enemy, exit or switch gate (a cell of it) */
     this.selected = null;
+    /** Shift held at the last mouse event: the Switch tool picks another thing only with it. */
+    this.shift = false;
+    /** The key of the link checklist row under the mouse (its link lights up), or null. */
+    this.linkHover = null;
     this.layer = 0;
     /** Hide blocks, objects and enemies above the layer. */
     this.cut = true;
@@ -120,7 +131,8 @@ export class Editor {
     renderer.scene.add(this.overlay.group);
     this.panel = new EditorPanel(renderer.stage, {
       blockTypes: this.blockTypes,
-      objectTypes: this.objectTypes,
+      objectTypes: placeable,
+      switchTypes: this.switchTypes,
       enemyTemplates: this.enemyTemplates,
       biomes: game.content.biomes,
       canSave,
@@ -135,6 +147,16 @@ export class Editor {
         objectType: (id) => {
           this.objectType = id;
           this.refresh();
+        },
+        switchType: (id) => {
+          this.switchType = id;
+          this.refresh();
+        },
+        link: (key, on) => this.tickLink(key, on),
+        linkEvery: (on) => this.tickLink(null, on),
+        linkHover: (key) => {
+          this.linkHover = key;
+          this.updateLinks();
         },
         enemyTemplate: (id) => this.setEnemyTemplate(id),
         enemyDrop: (id) => this.setEnemyDrop(id),
@@ -363,11 +385,20 @@ export class Editor {
 
   // --- Picked things -----------------------------------------------------
 
-  /** Pick an object, enemy or exit (null: none); one that is gone is dropped. */
+  /**
+   * Pick an object, enemy, exit or (the Switch tool) a switch gate by one
+   * of its cells (null: none); one that is gone is dropped.
+   */
   select(selected) {
-    const gone = selected?.kind === 'item' ? !this.edit.item(selected.id) : selected?.kind === 'exit' && !this.edit.exits.some((e) => e.id === selected.id);
+    let gone = selected?.kind === 'item' ? !this.edit.item(selected.id) : selected?.kind === 'exit' && !this.edit.exits.some((e) => e.id === selected.id);
+    let cells = null;
+    if (selected?.kind === 'gate') {
+      cells = pickedLinkable(linkables(this.edit, this.linkTypes), selected)?.cells ?? null;
+      gone = !cells;
+    }
     this.selected = gone ? null : selected;
-    this.overlay.setMarks(this.edit.data, this.selected);
+    this.overlay.setMarks(this.edit.data, this.selected, cells);
+    this.updateCursor();
     this.refresh();
   }
 
@@ -607,6 +638,8 @@ export class Editor {
       blockType: this.blockType,
       blockSwitches: switchGate(this.blockTypes[this.blockType]) ? this.blockSwitches : null,
       objectType: this.objectType,
+      switchType: this.switchType,
+      linkList: this.linkListState(),
       links: this.linksState(),
       switchInfo: this.switchState(),
       enemy: {
@@ -661,15 +694,29 @@ export class Editor {
    * of what is picked (a switch, a platform, a locked exit); null: none.
    */
   focusLinks() {
+    const row = this.linkHover && this.hoveredRowLinks(this.linkHover);
+    if (row) return row;
     const flat = FLOOR_TOOLS.has(this.tool);
     const hovered = this.hover && !flat ? linksAt(this.linkData, this.linkTypes, this.hover) : null;
     if (hovered) return hovered;
     const item = this.selectedItem;
     if (item) return linksAt(this.linkData, this.linkTypes, item.at);
+    if (this.selected?.kind === 'gate') return linksAt(this.linkData, this.linkTypes, this.selected.cell);
     const exit = this.selectedExit;
     if (!exit?.locked) return null;
     const thing = poweredThings(this.linkData, this.linkTypes).find((one) => one.kind === 'exit' && one.id === exit.id);
     return thing ? { switches: switchesOf(thing, roomSwitches(this.linkData, this.objectTypes)), powered: [thing] } : null;
+  }
+
+  /** The links of a checklist row under the mouse: the picked switch and that thing, or the picked thing and that switch. */
+  hoveredRowLinks(key) {
+    const { things, switches, picked } = this.linkState();
+    if (picked.switch) {
+      const thing = things.find((t) => t.key === key);
+      return thing ? { switches: [picked.switch], powered: [thing] } : null;
+    }
+    const zwitch = picked.thing && switches.find((object) => object.id === key);
+    return zwitch ? { switches: [zwitch], powered: [picked.thing] } : null;
   }
 
   /** Redraw the switch links when what they show changed. */
@@ -788,9 +835,12 @@ export class Editor {
     // The layer or the tool (holes and the shrine are on the floor) may have changed under a still mouse.
     if (this.pointer && !this.stroke) this.hover = this.pick(this.pointer);
     const flat = FLOOR_TOOLS.has(this.tool);
-    this.overlay.setCursor(this.hover, { flat, erase: this.stroke === 'erase' });
+    // The Switch tool says what a click does: its cursor in a color of its own (D142).
+    const click = this.hover && this.tool === 'switch' && !this.stroke ? this.switchClick(this.hover) : null;
+    this.overlay.setCursor(this.hover, { flat, erase: this.stroke === 'erase', tone: click?.action });
     const links = this.hover && !flat ? linksAt(this.linkData, this.linkTypes, this.hover) : null;
-    this.panel.setHover(this.hover && `${this.edit.describe(this.hover, { tile: flat })}${links ? ` · ${links.text}` : ''}`);
+    const said = click ? ` · click: ${click.text}` : links ? ` · ${links.text}` : '';
+    this.panel.setHover(this.hover && `${this.edit.describe(this.hover, { tile: flat })}${said}`);
     this.updateLinks();
   }
 
@@ -817,65 +867,99 @@ export class Editor {
   }
 
   /**
-   * Switch tool (D140, D141): pick a switch, then link it to (or unlink it
-   * from) the switch gates, platforms and exits clicked; right click drops it.
+   * Switch tool (D140, D142): the only tool that places switches; what a
+   * left click does is worked out in switch-tool.js (switchClick()), and
+   * the cursor and the hover line say it before. Right click erases a
+   * switch, elsewhere drops the pick.
    * @param {number[]} cell
    * @param {boolean} place left button
    */
   useSwitch(cell, place) {
-    if (!place) return this.select(null);
     const { edit } = this;
-    const all = roomSwitches(this.linkData, this.objectTypes).map((object) => object.id);
     const here = edit.at(cell);
-    const picked = this.switchState()?.id;
-    const done = (what, list, empty) => {
-      this.status = list.includes(picked) ? `${picked} now powers ${what}.` : `${picked} no longer powers ${what}${list.length === 0 ? `: ${empty}` : ''}.`;
-      this.refresh();
-    };
-    if (here?.kind === 'object' && all.includes(here.item.id)) {
-      this.select({ kind: 'item', id: here.item.id });
-      this.status = `${here.item.id} picked.`;
+    if (!place) {
+      const isSwitch = here?.kind === 'object' && roomSwitches({ objects: [here.item] }, this.objectTypes).length > 0;
+      if (isSwitch) {
+        this.change(() => edit.erase(cell));
+        this.status = `${here.item.id} erased.`;
+        return this.select(this.selected);
+      }
+      return this.select(null);
+    }
+    const click = this.switchClick(cell);
+    if (click.action === 'place') {
+      this.change(() => edit.placeObject(cell, this.switchType));
+      const placed = edit.at(cell);
+      if (placed?.kind !== 'object') return;
+      this.status = `${placed.item.id} placed and picked: tick what it powers below, or click it in the room.`;
+      return this.select({ kind: 'item', id: placed.item.id });
+    }
+    if (click.action === 'pick') {
+      this.status = `${click.text.replace(/^pick /, '')} picked.`;
+      return this.select(click.pick);
+    }
+    if (click.action === 'none') {
+      this.status = `${click.text[0].toUpperCase()}${click.text.slice(1)}.`;
       return this.refresh();
     }
-    if (!picked) {
-      this.status = 'Pick a switch first (a target or a plate).';
-      return this.refresh();
-    }
-    if (here?.kind === 'block' && isSwitchGate(this.blockTypes[here.type])) {
-      let list;
-      this.change(() => (list = edit.toggleGateLink(cell, picked)) !== null);
-      return done(`this ${here.type}`, list, 'it opens on every switch');
-    }
-    if (here?.kind === 'object' && this.objectTypes[here.item.type]?.kind === 'platform') {
-      let list;
-      this.change(() => !!(list = edit.togglePlatformLink(here.item.id, picked)));
-      return done(here.item.id, list, 'it always runs');
-    }
+    const { thing, switchId } = click;
+    this.change(() => {
+      if (thing.kind === 'gate') return edit.toggleGateLink(thing.cells[0], switchId) !== null;
+      if (thing.kind === 'platform') return !!edit.togglePlatformLink(thing.id, switchId);
+      return !!edit.toggleExitLink(thing.id, switchId);
+    });
+    this.status = `${click.text[0].toUpperCase()}${click.text.slice(1)}: done.`;
+    this.select(this.selected);
+  }
+
+  /** What a left click of the Switch tool on `cell` would do (switch-tool.js). */
+  switchClick(cell) {
     const side = this.exitSide(cell);
-    const exit = side && edit.exitAt(side, cell);
-    if (exit) {
-      let list;
-      this.change(() => !!(list = edit.toggleExitLink(exit.id, picked)));
-      return done(`exit ${exit.id}`, list, 'it is no longer locked');
+    const exit = (side && this.edit.exitAt(side, cell)) || null;
+    return switchClick(this.edit, this.linkTypes, { cell, exit, selected: this.selected, shift: this.shift, switchType: this.switchType });
+  }
+
+  /** The Switch tool's linkable things, the room's switches and what of them is picked. */
+  linkState() {
+    const things = linkables(this.edit, this.linkTypes);
+    const switches = roomSwitches(this.edit.data, this.objectTypes);
+    const item = this.selectedItem;
+    const picked = { switch: item && switches.includes(item) ? item : null, thing: pickedLinkable(things, this.selected) };
+    return { things, switches, picked };
+  }
+
+  /** The panel's link checklist (switch-tool.js), in the Switch tool or for a switch the Object tool picked. */
+  linkListState() {
+    if (this.tool !== 'switch' && !this.switchState()) return null;
+    const { things, switches, picked } = this.linkState();
+    return linkList(things, switches, picked);
+  }
+
+  /**
+   * A checklist tick: link or unlink a row (a thing for a picked switch, a
+   * switch for a picked thing), or (`key` null) put the picked thing on
+   * every switch or name them.
+   * @param {string|null} key
+   * @param {boolean} on
+   */
+  tickLink(key, on) {
+    const { things, switches, picked } = this.linkState();
+    const all = switches.map((object) => object.id);
+    if (picked.switch) {
+      const thing = things.find((t) => t.key === key);
+      if (thing) this.change(() => setLink(this.edit, thing, picked.switch.id, on, all));
+    } else if (picked.thing) {
+      if (key === null) this.change(() => setEvery(this.edit, picked.thing, on, all));
+      else this.change(() => setLink(this.edit, picked.thing, key, on, all));
     }
-    this.status = 'Click a switch gate, a platform or an exit (on its layer).';
-    this.refresh();
+    this.select(this.selected);
   }
 
   useObject(cell, place) {
     const { edit } = this;
     if (!place) return this.change(() => edit.erase(cell));
     const type = this.objectTypes[this.objectType];
-    if (this.pickupTypes[this.objectType]) return this.change(() => edit.placePickup(cell, this.objectType));
-    // A switch or a platform there is picked, never replaced (its links,
-    // D140, show in the panel and over the room); erase it to put another.
     const before = edit.at(cell);
-    const kind = before?.kind === 'object' && this.objectTypes[before.item.type]?.kind;
-    if (kind && ['target', 'plate', 'platform'].includes(kind)) {
-      this.select({ kind: 'item', id: before.item.id });
-      this.status = `${before.item.id} picked.`;
-      return this.refresh();
-    }
     // A decoration of this type there is picked (a screen's text is set in
     // the panel, D118); clicking the picked one turns it to face the other way (D117).
     if (type?.kind === 'deco' && before?.kind === 'object' && before.item.type === this.objectType) {
@@ -889,6 +973,22 @@ export class Editor {
       this.status = `${id} faces ${edit.item(id)?.overrides?.face ?? '+z'}.`;
       return this.refresh();
     }
+    // Nothing is ever overwritten (D142): an object, enemy or pickup there
+    // is picked (a switch or a platform shows its links), a block named;
+    // erase it (right click) to put something else there.
+    if (before?.kind === 'block') {
+      this.status = `A ${before.type} block is there: erase it first to place ${this.objectType}.`;
+      return this.refresh();
+    }
+    if (before) {
+      if (this.selected?.id === before.item.id && before.item.type !== this.objectType) {
+        this.status = `${before.item.id} is there: erase it first (right click) to place ${this.objectType}.`;
+        return this.refresh();
+      }
+      this.status = `${before.item.id} picked.`;
+      return this.select({ kind: 'item', id: before.item.id });
+    }
+    if (this.pickupTypes[this.objectType]) return this.change(() => edit.placePickup(cell, this.objectType));
     this.change(() => edit.placeObject(cell, this.objectType));
     const here = edit.at(cell);
     if (here?.kind !== 'object') return;
@@ -972,6 +1072,7 @@ export class Editor {
       if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
       const cell = this.pick(e);
       if (!cell) return;
+      this.shift = e.shiftKey;
       // Alt+click with the Block tool takes a block's type and switches.
       if (this.tool === 'block' && e.altKey && e.button === 0) return this.eyedrop(cell);
       canvas.setPointerCapture(e.pointerId);
@@ -984,6 +1085,7 @@ export class Editor {
     canvas.addEventListener('pointermove', (e) => {
       if (!this.active) return;
       this.pointer = { clientX: e.clientX, clientY: e.clientY };
+      this.shift = e.shiftKey;
       this.hover = this.pick(e);
       this.updateCursor();
       // Painting: each new cell the stroke crosses.
@@ -1022,8 +1124,16 @@ export class Editor {
 
   /** The editor's own keys, and a warning before leaving with unsaved edits. */
   listenKeys() {
+    // Shift changes what a Switch tool click does (it picks another thing): say so at once.
+    const shift = (e) => {
+      if (!this.active || e.key !== 'Shift' || this.shift === (e.type === 'keydown')) return;
+      this.shift = e.type === 'keydown';
+      this.updateCursor();
+    };
+    window.addEventListener('keyup', shift);
     window.addEventListener('keydown', (e) => {
       if (!this.active) return;
+      shift(e);
       if (isTextField(e.target)) {
         // Ctrl+S saves from a field too (committing it first), not the browser's Save Page.
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {

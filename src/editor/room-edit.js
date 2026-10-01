@@ -602,15 +602,39 @@ export class RoomEdit {
    * @returns {string[]|null} its switches now, or null if no gate is there
    */
   toggleGateLink(cell, id) {
-    const key = this.blocks.get(cell);
-    if (!key) return null;
-    const { type, switches } = boxFields(key);
+    const switches = this.gateSwitches(cell);
+    if (switches === undefined) return null;
     const next = switches ? toggled(switches, id) : [id];
-    this.edit(() => {
-      for (const c of this.joined(cell, key)) this.blocks.set(c, boxKey(type, next));
+    this.setGateSwitches(cell, next);
+    return next;
+  }
+
+  /**
+   * The switches of the gate block in `cell`: their ids, null (every switch
+   * in the room), or undefined when no block is there.
+   * @param {number[]} cell
+   */
+  gateSwitches(cell) {
+    const key = this.blocks.get(cell);
+    return key ? (boxFields(key).switches ?? null) : undefined;
+  }
+
+  /**
+   * Give the gate in `cell`, and every gate cell joined to it with the same
+   * type and switches, the switches `ids` (none: every switch in the room).
+   * @param {number[]} cell
+   * @param {string[]} ids
+   * @returns {boolean} whether anything changed
+   */
+  setGateSwitches(cell, ids) {
+    const key = this.blocks.get(cell);
+    if (!key) return false;
+    const next = boxKey(boxFields(key).type, ids);
+    if (next === key) return false;
+    return this.edit(() => {
+      for (const c of this.joined(cell, key)) this.blocks.set(c, next);
       return true;
     });
-    return next;
   }
 
   /** The cells joined to `cell` (through faces) holding the same block key. */

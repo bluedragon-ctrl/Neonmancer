@@ -1887,12 +1887,14 @@ list switches to another room; New room makes an empty one (D57).
 - **Hole** works on floor tiles, whatever the layer: place makes a hole,
   erase fills it in.
 - **Object** places the type picked in the panel (its fields show only
-  while this tool is picked), with the id `<type>_<n>`. Placing on an
-  object of the same type leaves it as it is (a platform keeps its path),
-  except a decoration, which turns to face the other seen side (D117). A new platform is picked, ready for its path.
-  A click on a switch or a platform picks it instead of replacing it
-  (D142): a picked platform shows its **Switches** field, a picked switch
-  what it powers and, a timed one, its **Timer** (blank: its type's).
+  while this tool is picked; switches are not in its list, the Switch
+  tool places them), with the id `<type>_<n>`, only in a free cell: it
+  never overwrites (D142). A click on an object, enemy or pickup picks it
+  (a decoration of the type picked turns to face the other seen side when
+  clicked again, D117); a block or something of another type there says
+  to erase it first. A new platform is picked, ready for its path. A
+  picked platform shows its **Switches** field, a picked switch what it
+  powers and, a timed one, its **Timer** (blank: its type's).
   Erasing removes an object or enemy standing in the cell.
 - **Enemy** places an enemy of the template picked in the panel (a line
   under it says what the template does: `bug · patrol · touch · hostile
@@ -1915,16 +1917,32 @@ list switches to another room; New room makes an empty one (D57).
   (platforms only: an enemy walks at its template's) and the pause at the
   ends, or clears the path. Every path shows as a dashed line; the
   picked one is white, with its points marked.
-- **Switch** (D142) links switches to what they power. A click on a
-  target or plate picks it (the panel says what it powers; a timed one's
-  timer can be changed); then a click on a switch gate, a platform or an
-  exit links it to the picked switch, or unlinks it if it was linked. A
-  gate click takes the whole gate: every cell joined to it with the same
-  type and switches (a wall). A gate or exit on every switch (no list)
-  is linked to just the picked switch by the first click; an exit linked
-  to its first switch becomes locked, one with its last switch unlinked
-  is no longer locked; a gate with its last unlinked is on every switch
-  again; a platform with none always runs. Right click drops the switch.
+- **Switch** (D142) places switches and links them to what they power,
+  from either side (logic in `src/editor/switch-tool.js`). Its panel
+  lists the switch types (targets, plates, timed ones).
+  - With nothing picked, a click on a free cell places a switch of the
+    type picked there and picks it; a click on a switch, a switch gate, a
+    platform or an exit picks it. A right click on a switch erases it,
+    elsewhere drops the pick (so does Esc).
+  - A picked switch: the panel ticks everything it can power (every exit,
+    gate and platform; a timed switch's timer can be changed). A picked
+    gate, platform or exit: the panel ticks the room's switches, a gate
+    or exit also "every switch in the room" (no list; unticked, the list
+    names them all, ready to untick some). Hovering a row lights that
+    link up in the room.
+  - In the room, with a switch picked a click on a gate, platform or exit
+    links or unlinks it; with one of those picked, a click on a switch
+    does. With something picked a click never places a switch, and picks
+    another thing only with Shift.
+  - Before a click, the hover line says what it will do (`click: link
+    gate ×4 at 5,0,6 to timer_plate`) and the cursor's color says it too:
+    white place, cyan pick, green link, red unlink, gray nothing.
+  - A gate is the whole gate: every cell joined to it with the same type
+    and switches (a wall). A click on a gate or exit on every switch (no
+    list) links it to just the picked switch; an exit linked to its first
+    switch becomes locked, one with its last switch unlinked is no longer
+    locked; a gate with its last unlinked is on every switch again; a
+    platform with none always runs.
   Deleting a switch unlinks it the same way from everything it powered.
   A gate's switch ids are kept sorted, so the same switches in any order
   merge into one box.
