@@ -204,7 +204,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `tools/room-save.js` | Dev only: checks edited rooms, `world.json` and `defs.json` with the rest of `data/` and writes them; deletes rooms the world map removed |
 | `tools/run-tests.js` | `npm test`: runs `node --test` on an explicit list of `tests/*.test.js` (works on Node 20 and 22+, Windows and Linux) |
 | `tools/showcase.html`, `tools/showcase.js` | Asset showcase page: every look on a turntable with the real renderer (also deployed) |
-| `tools/check-reach.js` | Dev only: `npm run check:reach` for CI: the reachability checker (`--rooms`, `--json`) |
+| `tools/check-reach.js` | Dev only: `npm run check:reach` for CI: the reachability checker (`<room>`, `--with`, `--from`, `--rooms`, `--json`) |
 | `tools/validate-data.js` | Dev only: `npm run validate:data` for CI |
 | `tools/vite-plugin-data.js` | Dev only: runs the check in the dev server and fails the build on errors |
 | `tools/world-map.bat` | Windows: double-click to start the dev server on the world map tool (`dev.bat map`) |

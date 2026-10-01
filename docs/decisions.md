@@ -1118,7 +1118,11 @@ the rounds are the order the world opens in. A pickup, an exit or a room
 that stays out of reach is an error (exit code 1); rooms not joined to
 the start, the world holding fewer fragments than the core asks for, a
 cut-off crate search, and a room whose way back is missing (arrived on a
-ledge) are warnings. `--rooms` lists what each exit and pickup needs:
+ledge) are warnings. One room at a time (no need to check them all
+while designing): `check-reach.js <room>` reports only that room, with
+what each exit and pickup needs (the world is still searched to know what
+he has by then); `--with a,b` skips the world and takes the abilities
+given, from the spawn point or `--from <exit>`. `--rooms` lists what each exit and pickup needs:
 the smallest sets of one or two abilities from what he finds in the
 world, measured from the way he first came in. The world map tool shows
 the errors and warnings under CHECKS.

@@ -435,7 +435,8 @@ not critical.
   D131): searches every room's grid with jump height, the double jump,
   crates (pushed, pulled, pasted) and the spells found so far, and the
   world as a fixpoint, flagging exits, pickups and rooms that stay out of
-  reach; `--rooms` lists what each exit and pickup needs. Used by CI, the
+  reach; `<room>` checks one room (`--with` abilities, `--from` an exit),
+  `--rooms` lists what each exit and pickup needs. Used by CI, the
   world map tool, and design skills/subagents. Knows nothing of enemies
   or timing.
 - **Claude Code skills and subagents** (Phase 4+, once schemas are

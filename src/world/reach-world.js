@@ -158,7 +158,7 @@ export function analyzeWorld(content, { needs = true } = {}) {
   }
   if (needs) {
     for (const id of entered) {
-      const found = findNeeds(rooms.get(id), state.get(id), have, tuning);
+      const found = findNeeds(rooms.get(id), [...state.get(id).entries.values()][0].cells, ABILITIES.filter((a) => have.has(a)), tuning);
       for (const target of targets) if (target.room === id && target.needs) target.needs = found.get(`${target.kind}:${target.id}`) ?? [];
     }
   }
@@ -191,15 +191,13 @@ function connectedRooms(start, rooms, links) {
 }
 
 /**
- * The smallest ability sets (up to NEEDS_SIZE) with which each exit and
- * pickup of a room is reachable, from where he first arrives. An empty list:
- * it needs more than that ("several").
+ * The smallest ability sets (up to NEEDS_SIZE) from `pool` with which each
+ * exit and pickup of a room is reachable from `starts`. An empty list: it
+ * needs more than that ("several"). Measured from where he first arrives:
+ * arriving later through another exit means he has been across already.
  * @returns {Map<string, string[][]>} by "pickup:<id>" or "exit:<id>"
  */
-function findNeeds(room, { entries }, have, tuning) {
-  // Measured from the way he first came in: arriving later through another exit means he has been across already.
-  const starts = [...entries.values()][0].cells;
-  const pool = ABILITIES.filter((a) => have.has(a));
+function findNeeds(room, starts, pool, tuning) {
   const keys = [...room.pickups.map((p) => `pickup:${p.id}`), ...room.exits.map((e) => `exit:${e.id}`)];
   const found = new Map(keys.map((key) => [key, []]));
   for (let size = 0; size <= NEEDS_SIZE; size++) {
@@ -212,7 +210,43 @@ function findNeeds(room, { entries }, have, tuning) {
         if (kind === 'pickup' ? reach.pickups.has(id) : reach.exits[id]) found.get(key).push(set);
       }
     }
-    // A target that something smaller opened stays at that size.
   }
   return found;
+}
+
+/**
+ * One room on its own (D131), without searching the world: what the wizard
+ * reaches in it with the abilities given, from the spawn point or, with
+ * `from`, the arrival cells of that exit. For designing a room; the world-level check says
+ * which abilities he really has by the time he gets there.
+ * @param {object} content loaded game data
+ * @param {string} id room id
+ * @param {{ abilities?: string[], needs?: boolean, from?: string|null }} [options]
+ * @returns {{ errors: string[], warnings: string[], targets: WorldReach['targets'] }}
+ */
+export function analyzeRoomAlone(content, id, { abilities = [], needs = true, from = null } = {}) {
+  const data = content.rooms.get(id);
+  if (!data) throw new Error(`no room "${id}"`);
+  const room = buildRoom(data, content);
+  const tuning = { scanRange: content.spells.scan?.range, blinkRange: content.spells.blink?.range };
+  const spawn = [Math.floor(room.spawn[0]), Math.round(room.spawn[1]), Math.floor(room.spawn[2])];
+  if (from && !room.exits.some((exit) => exit.id === from)) throw new Error(`room "${id}" has no exit "${from}"`);
+  const starts = from ? arrivalCells(room, from) : [spawn];
+  const reach = analyzeRoom(room, { abilities, starts, tuning });
+  const errors = [];
+  const warnings = [];
+  if (reach.truncated) warnings.push(`${id}: crate search stopped at ${reach.configs} configurations; the verdict may miss a solution`);
+  const found = needs ? findNeeds(room, starts, abilities.filter((a) => ABILITIES.includes(a)), tuning) : new Map();
+  const targets = [];
+  for (const pickup of room.pickups) {
+    const ok = reach.pickups.has(pickup.id);
+    if (!ok) errors.push(`${id}: pickup "${pickup.id}" at [${pickup.at}] can't be reached`);
+    targets.push({ room: id, kind: 'pickup', id: pickup.id, needs: ok ? found.get(`pickup:${pickup.id}`) ?? [[]] : null });
+  }
+  for (const exit of room.exits) {
+    const ok = reach.exits[exit.id];
+    if (!ok) errors.push(`${id}: exit "${exit.id}" can't be reached`);
+    targets.push({ room: id, kind: 'exit', id: exit.id, needs: ok ? found.get(`exit:${exit.id}`) ?? [[]] : null, ...(exit.access && { access: exit.access }) });
+  }
+  return { errors, warnings, targets };
 }

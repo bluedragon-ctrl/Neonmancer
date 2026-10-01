@@ -49,3 +49,38 @@ export function formatReach(report, { rooms = false, json = false } = {}) {
   lines.push(report.errors.length > 0 ? `${report.errors.length} reachability problem(s).` : 'Everything is reachable.');
   return lines.join('\n');
 }
+
+/**
+ * The part of a world report that concerns one room: its problems and
+ * warnings (messages starting with "<id>:"), its targets, and the round
+ * he first enters it in.
+ * @param {import('./reach-world.js').WorldReach} report
+ * @param {string} id
+ */
+export function roomOfReport(report, id) {
+  const mine = (message) => message.startsWith(`${id}:`);
+  const round = report.rounds.find((r) => r.rooms.includes(id));
+  return {
+    round: round?.round ?? null,
+    errors: report.errors.filter(mine),
+    warnings: report.warnings.filter(mine),
+    targets: report.targets.filter((t) => t.room === id),
+  };
+}
+
+/**
+ * One room as text: the needs of each exit and pickup, then its problems.
+ * @param {string} id
+ * @param {{ round?: number|null, errors: string[], warnings: string[], targets: object[] }} part roomOfReport() or analyzeRoomAlone()
+ * @param {string} [note] what the verdict assumes, printed first
+ */
+export function formatRoom(id, { round = null, errors, warnings, targets }, note) {
+  const lines = [note ?? (round ? `${id}: first entered in round ${round} of the world's order.` : `${id}: never entered.`)];
+  for (const { kind, id: target, needs, access } of targets) {
+    lines.push(`  ${kind} ${target}: ${describeNeeds(needs)}${access ? `, access ${access}` : ''}`);
+  }
+  for (const warning of warnings) lines.push(`warning: ${warning}`);
+  for (const error of errors) lines.push(`error: ${error}`);
+  lines.push(errors.length > 0 ? `${errors.length} reachability problem(s) in ${id}.` : `${id}: everything in it is reachable.`);
+  return lines.join('\n');
+}

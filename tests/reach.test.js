@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { OPPOSITE_SIDE } from '../src/data/room-data.js';
 import { buildRoom } from '../src/world/room.js';
 import { analyzeRoom, arrivalCells } from '../src/world/reach.js';
-import { analyzeWorld } from '../src/world/reach-world.js';
-import { describeNeeds, formatReach } from '../src/world/reach-report.js';
+import { analyzeRoomAlone, analyzeWorld } from '../src/world/reach-world.js';
+import { describeNeeds, formatReach, formatRoom, roomOfReport } from '../src/world/reach-report.js';
 import { LIFT, gameData, roomFile } from './helpers.js';
 
 /** Object types the tests use besides the crate. */
@@ -219,4 +219,33 @@ test('describeNeeds', () => {
   assert.equal(describeNeeds(null), 'never');
   assert.equal(describeNeeds([]), 'several');
   assert.equal(describeNeeds([['warp'], ['blink', 'pull']]), 'warp or blink + pull');
+});
+
+/** a (with the double jump) → b (a two-high wall before its east exit). */
+function wallWorld() {
+  return row([
+    roomFile('a', { exits: [EAST], pickups: [pickup('jump', [3, 0, 1], 'upgrade_double_jump')] }),
+    roomFile('b', { exits: [WEST, EAST], blocks: [{ at: [4, 0, 0], to: [4, 1, 7] }] }),
+    roomFile('c', { exits: [WEST] }),
+  ]);
+}
+
+test('one room of the world report: its targets, round and messages', () => {
+  const part = roomOfReport(analyzeWorld(wallWorld()), 'b');
+  assert.equal(part.round, 2);
+  assert.deepEqual(part.errors, []);
+  assert.equal(describeNeeds(part.targets.find((t) => t.id === 'east').needs), 'double_jump');
+  assert.match(formatRoom('b', part), /^b: first entered in round 2[^]*exit east: double_jump[^]*b: everything in it is reachable\.$/);
+});
+
+test('one room on its own: with the abilities given, from the spawn or an exit', () => {
+  const content = wallWorld();
+  const east = (options) => analyzeRoomAlone(content, 'b', options).targets.find((t) => t.id === 'east');
+  // from the spawn point at x 1 the east exit is behind the wall
+  assert.equal(east({ abilities: [] }).needs, null);
+  assert.equal(describeNeeds(east({ abilities: ['double_jump'] }).needs), 'double_jump');
+  assert.equal(describeNeeds(east({ abilities: [], from: 'east' }).needs), 'free');
+  assert.equal(analyzeRoomAlone(content, 'b').errors.length, 1);
+  assert.throws(() => analyzeRoomAlone(content, 'b', { from: 'nope' }), /no exit "nope"/);
+  assert.throws(() => analyzeRoomAlone(content, 'nope'), /no room "nope"/);
 });
