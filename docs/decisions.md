@@ -1288,3 +1288,18 @@ test arena `boss_plates` (now "Gatekeeper Arena"; test room, D90). The
 Lattice placement is Phase 5.
 **Why:** the lure-over-plates fight was settled in D134; this gives it a
 name and the "harder than boss one" the plan asks for.
+
+### D138 — 2026-10-01 — The audio engine
+Step 5.1: `src/audio/` plays music through Howler (looping, crossfades
+of 1.5 s) and sound effects as ZzFX recipes or files, all named in
+`data/audio.json` (schema `audio.schema.json`, optional file). Slider
+steps 0–10 map to gain squared. A sound named like a game event plays on
+that event, so the effects pass is data only. A name with no entry, a
+missing file or a load error is a silent stub with one console warning.
+Only ZzFX's generator is vendored (`audio/zzfx.js`, MIT): the npm
+package creates an AudioContext on import and plays by itself, which
+neither tests nor a click-to-start browser allow. The context is made on
+the first key or click.
+**Why:** the game must never wait for assets (tracks come in 5.3), and
+tests need the engine without a browser, so the browser pieces are
+injected.

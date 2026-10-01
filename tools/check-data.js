@@ -17,6 +17,7 @@ export function schemaFor(file) {
     'world.json': 'world.schema.json',
     'strings.json': 'strings.schema.json',
     'lore.json': 'lore.schema.json',
+    'audio.json': 'audio.schema.json',
   }[file];
 }
 

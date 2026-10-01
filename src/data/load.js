@@ -19,6 +19,7 @@ export class DataError extends Error {
  * @param {Record<string, any>} files parsed JSON keyed by path relative to data/
  * @returns {{ score: { bit: number, secret: number, accessLevel: number }, objectTypes: object, blockTypes: object, enemyTemplates: object, spells: object, pickupTypes: object, biomes: object, world: object, strings: Record<string, string>,
  *   lore: Record<string, { title?: string, lines: string[] }>,
+ *   audio: { music: object, sounds: object },
  *   rooms: Map<string, object>,
  *   links: Map<string, { room: string, exit: string }> }} `links` maps "room.exit" to the exit
  *   it is connected to (both ways round)
@@ -46,6 +47,8 @@ export function loadGameData(files) {
     strings: files['strings.json'].strings,
     // Screen texts (D118).
     lore: files['lore.json']?.texts ?? {},
+    // Music and sound effects (D138); the file is optional.
+    audio: { music: files['audio.json']?.music ?? {}, sounds: files['audio.json']?.sounds ?? {} },
     rooms,
     links: linkMap(files['world.json'].connections),
   };

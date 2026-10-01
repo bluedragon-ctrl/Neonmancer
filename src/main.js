@@ -1,10 +1,12 @@
 // Entry point: load and validate the game data, show the title screen over
 // the start room (or load the access key in the URL hash), run the loop.
 // Any startup problem shows the error screen instead.
+import { Howl } from 'howler';
+import { AudioEngine } from './audio/audio.js';
 import { DT, FixedLoop } from './core/loop.js';
 import { Input } from './core/input.js';
 import { say } from './core/messages.js';
-import { DATA_FILES, DEV_SERVER, SCHEMA_ERRORS, onDataSaved } from './data/bundle.js';
+import { DATA_FILES, DEV_SERVER, SCHEMA_ERRORS, audioUrl, onDataSaved } from './data/bundle.js';
 import { DataError, loadGameData } from './data/load.js';
 import { DebugOverlay } from './debug/overlay.js';
 import { DebugReadout } from './debug/readout.js';
@@ -83,8 +85,12 @@ function boot() {
 
   // The title screen first; the world map tool's links go straight in,
   // and so does a link with an access key (#KEY, D105).
-  // Volumes and visual settings: stubs, stored but not applied yet (D109).
+  // Volumes (D138) drive the audio engine; the visual settings are still
+  // stored only (D109). Browsers start audio only after a key or click.
   const settings = Settings.load();
+  const audio = new AudioEngine(content.audio, { Howl, createContext: () => new AudioContext(), urlOf: audioUrl });
+  audio.applySettings(settings);
+  for (const type of ['keydown', 'pointerdown']) window.addEventListener(type, () => audio.unlock(), { once: true });
   const devLink = Boolean(devRoom || (DEV_SERVER && params.has('edit')));
   const linked = devLink ? null : hashKey(location.hash);
   const linkedSave = linked && readSave(content, linked);
@@ -96,7 +102,10 @@ function boot() {
 
   /** A menu command (ui/menus.js): a new game, a save, a load, a copy, back to the title, or a setting changed. */
   function run(command) {
-    if (command === 'settings') settings.save();
+    if (command === 'settings') {
+      settings.save();
+      audio.applySettings(settings);
+    }
     if (command === 'start') newGame();
     // The title shows the start room behind it again.
     if (command === 'quit') newGame({ quiet: true });
@@ -254,6 +263,7 @@ function boot() {
     }
     const events = game.update(input);
     if (events.some((event) => event.type === 'room')) showRoom();
+    audio.playEvents(events);
     showEvents(events, { game, roomScene, hud, debug });
     readout.countTick();
   }

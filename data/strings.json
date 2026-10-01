@@ -118,7 +118,7 @@
     "menu.effects": "SCREEN EFFECTS",
     "menu.heading.options": "OPTIONS",
     "menu.heading.visuals": "VISUALS",
-    "menu.optionsText": "No music or sound yet: the volumes are kept for when they arrive.",
+    "menu.optionsText": "Volume of the music and of the sound effects.",
     "menu.visualsText": "Not applied yet: kept for the quality settings to come.",
     "menu.helpAdjust": "↑ ↓ CHOOSE    ◄ ► ADJUST    ESC BACK",
     "setting.quality.auto": "AUTO",
