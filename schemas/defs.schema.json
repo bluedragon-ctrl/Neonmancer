@@ -429,7 +429,7 @@
           "type": "object",
           "required": ["phases"],
           "additionalProperties": false,
-          "description": "Makes it a boss (D104, D134, D135): three gold rings round its body (render/boss-mark.js), a boss bar on the HUD once it is awake (it saw the wizard or was hit), never frozen by Pause nor dragged by Pull. In a room it drops a permanent pickup (room enemy \"drop\") and stays away once that is found; the room has no shrine; its locked exits wait for it to be beaten, not for switches. It must be hostile.",
+          "description": "Makes it a boss (D104, D134, D135): three gold rings round its body (render/boss-mark.js), a boss bar on the HUD once it is awake (it saw the wizard or was hit), never frozen by Pause nor dragged by Pull. In a room it drops a permanent pickup (room enemy \"drop\") and stays away once that is found; the room has no shrine, and its doors stay open (he may retreat). It must be hostile.",
           "properties": {
             "armor": {
               "enum": ["none", "plate"],

@@ -106,7 +106,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/scan-fx.js`, `render/scan-view.js` | Scan (D128): the wave's square clipped to the floor, its fading, a hidden exit's slab (pure, tested); the wave and the derez of what it revealed (`ScanView`, in `RoomScene`, which rebuilds the room view after a reveal) |
 | `render/compile-fx.js`, `render/compile-view.js` | Compile (D125): the crate's grow-in and blinking (pure, tested); the bits' stream and the aim marker (`CompileView`, shown by `PlayerView`); `PushableView` draws the crate |
 | `render/collapse-fx.js` | Collapsing-block look: shake, regrow, `COLLAPSE_FX` tuning (pure, tested) |
-| `render/boss-mark.js` | The boss mark (D134, D135): three gold rings round any boss sized to its height (shut while plate armor is), `teleportLook()`, `bodyScale()` for taller bodies |
+| `render/boss-mark.js` | The boss mark (D134, D135): three gold rings round any boss sized to its height (shut while plate armor is), plate armor's shell (`createArmorShell()`), `teleportLook()`, `bodyScale()` for taller bodies |
 | `render/core-view.js` | The core's reactor look (D101): crystal, pedestal, one orbit ring per access level, `CORE_FX` |
 | `render/crawler.js` | Crawler model (D83): six-legged spider, tripod gait (`crawlerFoot()`, `placeLimb()`), crouch and pawing, `CRAWLER` tuning; `CRAWLER_MODEL` |
 | `render/cron.js` | Cron model (D83), the tower's look: hex pedestal, bell, a dial holding the grid axes with four emitters where a cross's bolts leave, sweeping hand, slam, `CRON` tuning; `CRON_MODEL` |

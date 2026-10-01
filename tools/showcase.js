@@ -55,7 +55,7 @@ import { createCard } from '../src/render/card.js';
 import { createChip } from '../src/render/chip.js';
 import { createSecret } from '../src/render/secret.js';
 import { createCore } from '../src/render/core-view.js';
-import { bodyScale, createBossMark, teleportLook } from '../src/render/boss-mark.js';
+import { bodyScale, createArmorShell, createBossMark, teleportLook } from '../src/render/boss-mark.js';
 import { dropHeight } from '../src/render/pickup-view.js';
 import { createFragment } from '../src/render/fragment.js';
 import { DISK, createDisk, diskMotion, poseDisk } from '../src/render/disk.js';
@@ -225,7 +225,9 @@ const ALL_ASSETS = [
   // Bosses (D134, D135): the boss mark, three gold rings round a normal
   // body, sized to its height. A bug boss calm, then awake, teleporting
   // (squeezed to a line and back); a virus two cubes high whose plate
-  // armor shuts (rings drawn in) and opens (rings spread, spinning fast);
+  // armor shuts (a white dashed shell round it, flashing as a hit glances
+  // off, rings drawn in) and opens (the shell lifts away, the rings spread
+  // and spin fast);
   // a boss's drop falling into its cell once it is beaten.
   { label: 'boss-bug', group: 'bosses', build: buildBossBug },
   { label: 'boss-tall', group: 'bosses', span: 3.5, build: buildBossTall },
@@ -1652,12 +1654,16 @@ function buildBossTall() {
   const virus = createVirus('#ff7a3d');
   virus.scale.setScalar(scale);
   const ring = createBossMark(TALL_BOSS);
-  const asset = new Group().add(virus, ring);
+  const shell = createArmorShell(TALL_BOSS);
+  const asset = new Group().add(virus, ring, shell);
   const mark = addMark(asset, VIRUS.markHeight * scale);
   asset.userData.update = (dt, time) => {
     animateVirus(virus, { state: 'walk', time, alert: alertAt(time) });
     mark(alertAt(time), time);
-    ring.userData.update(dt, { armored: time % 4 < 2 });
+    // Shut for 2 s (a hit glancing off at 1 s), then open on a plate for 2 s.
+    const armored = time % 4 < 2;
+    ring.userData.update(dt, { armored });
+    shell.userData.update(dt, { shut: armored, hit: time % 4 >= 1 ? (time % 4) - 1 : null });
   };
   return asset;
 }

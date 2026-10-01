@@ -14,7 +14,7 @@ import {
   Vector3,
 } from 'three';
 import { BOSS, ENEMY } from '../entities/enemy.js';
-import { bodyScale, createBossMark, teleportLook } from './boss-mark.js';
+import { bodyScale, createArmorShell, createBossMark, teleportLook } from './boss-mark.js';
 import { PLAYER } from '../entities/player.js';
 import { createAlertMark, placeAlertMark } from './alert-mark.js';
 import { BUG_MODEL } from './bug.js';
@@ -520,6 +520,9 @@ export class EnemyView {
     /** A boss's three gold rings (D134), or null. */
     this.bossMark = enemy.boss ? createBossMark(enemy.size[1]) : null;
     if (this.bossMark) this.group.add(this.bossMark);
+    /** Plate armor's shell (D135), or null. */
+    this.shell = enemy.boss?.armor === 'plate' ? createArmorShell(enemy.size[1]) : null;
+    if (this.shell) this.group.add(this.shell);
     /** Its discharge lightning (world space), if it has that attack (in its phase, D135). */
     this.discharge = null;
     this.phase = null;
@@ -568,6 +571,7 @@ export class EnemyView {
       this.model.visible = false;
       this.mark.visible = false;
       if (this.bossMark) this.bossMark.visible = false;
+      if (this.shell) this.shell.visible = false;
       if (this.cage) this.cage.visible = false;
       if (this.discharge) this.discharge.visible = false;
       // Popped in a pit: the burst comes out at the floor. Once it is over
@@ -597,6 +601,13 @@ export class EnemyView {
       this.bossMark.position.set(...feet);
       this.bossMark.scale.set(warp.width, warp.height, warp.width);
       this.bossMark.userData.update(dt, { armored: enemy.boss.armor === 'plate' ? !enemy.exposed : null });
+    }
+    if (this.shell) {
+      this.shell.position.set(...feet);
+      // A hit that glanced off flashes it (hitTicks counts those too).
+      const hit = !enemy.exposed && enemy.hitTicks !== null ? (enemy.hitTicks + alpha) / 60 : null;
+      this.shell.userData.update(dt, { shut: !enemy.exposed, hit });
+      if (!warp.visible) this.shell.visible = false;
     }
     const after = enemy.sees || enemy.behavior.chasing ? 1 : 0;
     this.alert += Math.sign(after - this.alert) * Math.min(Math.abs(after - this.alert), dt * ALERT_RATE);

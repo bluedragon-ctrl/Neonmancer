@@ -45,8 +45,8 @@ table, roster, AI rules). Prefer the monster editor
   plate; give its arena plates it will walk over (a chaser follows him).
 - In a room: `{ id, template, at, drop }`, `drop` the id of a permanent
   pickup of the room (it falls there when the boss is beaten; once found,
-  the boss stays away). One boss a room, no shrine; the room's locked
-  exits open when it is beaten. Prototypes: `proto_warden`,
+  the boss stays away). One boss a room, no shrine; arena doors stay
+  open (he may retreat). Prototypes: `proto_warden`,
   `proto_gatekeeper` in the test arenas `boss_arena`, `boss_plates`.
 
 ## Color rules (D119, D99, D121)

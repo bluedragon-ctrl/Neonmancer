@@ -7,8 +7,8 @@
   "size": [12, 4, 12],
   "spawn": [2.5, 0, 1],
   "exits": [
-    { "id": "north", "side": "-z", "at": 2, "locked": true },
-    { "id": "east", "side": "+x", "at": 5, "locked": true }
+    { "id": "north", "side": "-z", "at": 2 },
+    { "id": "east", "side": "+x", "at": 5 }
   ],
   "blocks": [
     { "at": [3, 0, 4], "to": [3, 1, 5] },

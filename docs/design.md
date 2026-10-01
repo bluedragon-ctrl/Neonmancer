@@ -2128,15 +2128,16 @@ Settled:
 - Boss engine (D135): a template's `boss` block holds its phases (each
   from a share of its integrity, changing any fighting value, `teleport`
   among them) and its `armor` (`none`, or `plate`: hurt only on a floor
-  plate); `height` makes a body up to two cubes high in one cell. A boss
+  plate; a white dashed shell round it flashes when a hit glances off
+  and lifts away while it stands on a plate); `height` makes a body up to two cubes high in one cell. A boss
   wakes when it sees the wizard or is hit: its bar shows (top middle,
   name from `boss.<template>` in strings.json, ticks where later phases
   start). It teleports to a free cell of its floor at least 3 units from
   him, one that sees him if it can (seeded, so it plays the same each
   time). The room names its `drop`, a permanent pickup it holds unseen;
-  beaten, the pickup falls into its cell and the room's locked exits
-  open (in a boss room they wait for the boss, not switches); once the
-  bit is found the boss stays away. Test arenas: `boss_arena` and
+  beaten, the pickup falls into its cell; once the bit is found the boss
+  stays away. A boss never locks its arena's doors: the wizard may
+  retreat at any time (the room resets when he comes back). Test arenas: `boss_arena` and
   `boss_plates` off Build Yard, with the prototypes `proto_warden` and
   `proto_gatekeeper`.
 
