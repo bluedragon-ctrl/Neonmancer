@@ -13,7 +13,11 @@ docs/decisions.md).
   effects as files or ZzFX recipes), Howler music with looping and
   crossfades, the Options music and sound sliders wired, game events play
   the sound named like them, a missing file is a silent stub. Two
-  placeholder effects (`pickup`, `hurt`) to hear it; the real pass is 5.2.
+  placeholder effects (`pickup`, `hurt`) to hear it.
+- Sound effects pass (5.2, D139): symbolic ZzFX effects for jump, land,
+  pushes, hits, derezz bubble pops, electric spell zaps, pickups, doors,
+  switches, alerts and the menus; `type:detail` sounds per spell, pickup
+  kind and death cause.
 
 ## [0.4.0] - 2026-10-01
 

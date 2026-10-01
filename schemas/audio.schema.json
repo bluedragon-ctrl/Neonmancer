@@ -26,8 +26,8 @@
     },
     "sounds": {
       "type": "object",
-      "description": "Sound id → sound effect.",
-      "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
+      "description": "Sound id → sound effect. A name \"type:detail\" (\"cast:zap\", \"pickup:disk\", \"die:void\") plays on that event when its spell, pickup kind or cause matches, else the plain \"type\" does (D139).",
+      "propertyNames": { "pattern": "^[a-z][a-z0-9_]*(:[a-z][a-z0-9_]*)?$" },
       "additionalProperties": {
         "type": "object",
         "additionalProperties": false,
@@ -40,7 +40,8 @@
             "description": "ZzFX recipe: volume, randomness, frequency, attack, sustain, release, shape, shapeCurve, slide, deltaSlide, pitchJump, pitchJumpTime, repeatTime, noise, modulation, bitCrush, delay, sustainVolume, decay, tremolo, filter. null takes the default."
           },
           "file": { "type": "string", "pattern": "^[A-Za-z0-9_\\-./]+\\.(mp3|ogg|wav|m4a|webm)$", "description": "Path under assets/audio/." },
-          "volume": { "type": "number", "exclusiveMinimum": 0, "maximum": 1, "description": "Level before the sound slider (default 1)." }
+          "volume": { "type": "number", "exclusiveMinimum": 0, "maximum": 1, "description": "Level before the sound slider (default 1)." },
+          "loop": { "type": "boolean", "description": "A ZzFX recipe that repeats seamlessly while the game keeps it on (AudioEngine.setLoop, e.g. the shield's hum); make it a whole number of cycles." }
         }
       }
     }

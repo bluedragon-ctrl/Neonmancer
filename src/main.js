@@ -95,6 +95,7 @@ function boot() {
   const linked = devLink ? null : hashKey(location.hash);
   const linkedSave = linked && readSave(content, linked);
   const flow = new MenuFlow(devLink || linkedSave?.ok ? 'playing' : 'title', settings);
+  flow.onSound = (name) => audio.sfx(name);
   flow.canContinue = readSave(content, storedKey() ?? '').ok;
   if (linkedSave && !linkedSave.ok) flow.notice = 'key.error.link';
   // A key pasted into the address bar of this page changes only the hash: load it afresh.
@@ -243,6 +244,10 @@ function boot() {
     if (blurred && !hud.winShown) flow.pause();
     blurred = false;
     run(flow.update(input));
+    // The shield and firewall hum while they are up and the game is not held.
+    const shield = flow.playing && !hud.winShown ? game.player.shield?.spell : null;
+    audio.setLoop('hum_shield', shield === 'shield');
+    audio.setLoop('hum_firewall', shield === 'firewall');
     if (!wasPlaying || !flow.playing) {
       readout.countTick();
       return;

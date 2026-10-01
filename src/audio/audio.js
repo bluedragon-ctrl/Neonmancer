@@ -14,6 +14,12 @@ import { ZZFX_RATE, zzfxSamples } from './zzfx.js';
 /** Seconds a track takes to fade in or out when music changes. */
 export const MUSIC_FADE = 1.5;
 
+/** Seconds before the same sound effect may play again. */
+const MIN_GAP = 0.06;
+
+/** Time constant in seconds of a loop's fade in and out. */
+const LOOP_FADE = 0.04;
+
 export class AudioEngine {
   /**
    * @param {typeof NO_AUDIO} audio the contents of audio.json
@@ -39,6 +45,10 @@ export class AudioEngine {
     this.wanted = null;
     /** @type {Map<string, any>} sound effect files already loaded, by name */
     this.fileSounds = new Map();
+    /** @type {Map<string, { source: any, gain: any }>} looping sounds running (setLoop) */
+    this.loops = new Map();
+    /** @type {Map<string, number>} context time each sound last played */
+    this.lastPlayed = new Map();
     /** Names already warned about. */
     this.warned = new Set();
   }
@@ -82,17 +92,68 @@ export class AudioEngine {
   sfx(name) {
     const sound = lookup(this.audio, 'sounds', name);
     if (!sound || stepGain(this.volume.sound) === 0) return false;
+    // The same sound at most every 60 ms, so a crowd of monsters is not a buzz.
+    const now = this.context?.currentTime;
+    if (now !== undefined) {
+      if (now - (this.lastPlayed.get(name) ?? -1) < MIN_GAP) return false;
+      this.lastPlayed.set(name, now);
+    }
     if (sound.zzfx) return this.playRecipe(sound.zzfx, sound.volume);
     return this.playFile(name, sound);
   }
 
   /**
+   * Keep a looping ZzFX sound (a sound with "loop": true, like the
+   * shield's hum) running or stopped; fades in and out so it never
+   * clicks. Safe to call every tick with the same state.
+   * @param {string} name a key of audio.json "sounds"
+   * @param {boolean} on
+   */
+  setLoop(name, on) {
+    const running = this.loops.get(name);
+    if (!on) {
+      if (running) this.stopLoop(name, running);
+      return;
+    }
+    if (running || !this.context) return;
+    const sound = lookup(this.audio, 'sounds', name);
+    if (!sound?.zzfx) return;
+    const samples = zzfxSamples(sound.zzfx);
+    const buffer = this.context.createBuffer(1, samples.length, ZZFX_RATE);
+    buffer.getChannelData(0).set(samples);
+    const source = this.context.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+    // Skip the first few samples (the recipe's attack) when it wraps round.
+    source.loopStart = 32 / ZZFX_RATE;
+    const gain = this.context.createGain();
+    gain.gain.value = 0;
+    gain.gain.setTargetAtTime?.(sound.volume, this.context.currentTime, LOOP_FADE);
+    source.connect(gain);
+    gain.connect(this.soundGain);
+    source.start();
+    this.loops.set(name, { source, gain });
+  }
+
+  /** Fade a running loop out and release it. */
+  stopLoop(name, { source, gain }) {
+    this.loops.delete(name);
+    gain.gain.setTargetAtTime?.(0, this.context.currentTime, LOOP_FADE);
+    source.stop?.(this.context.currentTime + LOOP_FADE * 8);
+  }
+
+  /**
    * Play the sound named like each game event (an event "pickup" plays
-   * the sound "pickup", if there is one).
-   * @param {{ type: string }[]} events
+   * the sound "pickup", if there is one). A sound named "type:detail"
+   * wins over the plain one: the detail is the spell ("cast:zap"), the
+   * kind of pickup ("pickup:disk") or the way something died ("die:void").
+   * @param {{ type: string, spell?: string, cause?: string, enemy?: { data?: { attack?: string } }, pickup?: { data?: { kind?: string } } }[]} events
    */
   playEvents(events) {
-    for (const event of events) this.sfx(event.type);
+    for (const event of events) {
+      const detail = event.spell ?? event.pickup?.data?.kind ?? event.cause ?? event.enemy?.data?.attack;
+      if (!(detail && this.sfx(`${event.type}:${detail}`))) this.sfx(event.type);
+    }
   }
 
   /**

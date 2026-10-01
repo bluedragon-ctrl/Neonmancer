@@ -224,7 +224,7 @@ instead be a ZzFX recipe). `main.js` makes one `AudioEngine`, applies the
 Options sliders on every `settings` command, unlocks the Web Audio context
 on the first key or click, and passes each tick's game events to
 `playEvents()`: an event plays the sound named like it (`pickup`, `hurt`,
-`die`...), so the effects pass (5.2) is data only. Music is switched with
+`die`...), so the effects pass (5.2, D139) is data only; a sound named `type:detail` (spell, pickup kind, death cause) wins over the plain one, and menus play `ui_*` sounds through `MenuFlow.onSound`. Music is switched with
 `playMusic(name)` (crossfade) and `stopMusic()`; room and boss mapping
 comes with 5.3.
 
