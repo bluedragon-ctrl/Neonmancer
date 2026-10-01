@@ -1157,3 +1157,21 @@ sessions that start cold; the rules were spread over CLAUDE.md, design.md
 and the schemas. One entry point per task, with the checker in the loop,
 makes drafts consistent and keeps review cheap. Pointers instead of
 copies keep a single source of truth.
+
+### D133 — 2026-10-01 — Home Lattice plan: a web around the core, as a draft
+Step 4.3 settles the paper design in [lattice-plan.md](lattice-plan.md):
+about 30 rooms (25 normal, 5 Outer Buffer secrets), a new start with a
+four-room tutorial (the old test rooms and Boot Sector go to the dev wing),
+an Atrium hub, four wings (Shield, Pause, Scan, Fork; Zap in the
+tutorial), the core behind boss 2 with Level 1 locks to the double jump
+vault and the two teaser sectors. 16 fragments in normal rooms, none
+behind Level 1 or boss 2; two secret rooms hold extra fragments (18 in
+all). Boss 1 drops a fragment, boss 2 an energy buff. Pull, Compile,
+Blink, Warp, Cut & Paste and Firewall stay out of the Lattice; the double
+jump is the Level 1 reward. Some secrets need tools the Lattice does not
+give and wait for a return visit (D67).
+The whole list is a proposal: rooms, exits and fragments change during
+the author's room review and design.
+**Why:** a hub with cross-linked wings gives branching and backtracking
+instead of a line, keeps the first playtest to five simple spells, and
+lets the drafting steps (5.5 to 5.9) start from an agreed list.

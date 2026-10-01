@@ -2014,7 +2014,7 @@ author, recorded as decisions before the code lands. Every step also
 The phases were re-cut around a playtest of Home Lattice. The rules of
 "Finished phases" apply to every step: one branch, one PR against `main`,
 CI green, showcase, test room, unit tests, docs. Code steps name their
-branch; design steps end in decisions before any code. **Next step: 4.3.**
+branch; design steps end in decisions before any code. **Next step: 4.4.**
 
 ### Phase 4 (v0.4) steps: tools and bosses
 
@@ -2026,7 +2026,7 @@ checker (D131); 4.2 the design skills and the level-review subagent (D132).
 |---|---|---|
 | 4.1 (done, D131) | `feat/reachability-checker` | `tools/check-reach.js`: searches each room's grid with jump height (and the double jump), pushable crates, and the spells the wizard has, flagging unreachable exits and pickups; works out which abilities each exit and pickup needs and checks the world can be finished in some order (D67). Runs in CI and the validate script; the editor and world map tool show its verdict. Open: how deep it searches pushables and spells. |
 | 4.2 (done, D132) | `feat/design-skills` | The room design skill (schema, rules, the checklist above, annotated examples), an enemy design skill (templates, D119 colors), and the level-review subagent (runs the checker, reads the room against the checklist). |
-| 4.3 | `docs/lattice-plan` | Paper design of Home Lattice, no rooms yet: about 25-30 rooms on the world map, the tutorial cluster by the start and the core, where each spell and upgrade sits, the 16 fragments for Level 1 plus a few extra in secret or optional rooms, the two boss arenas, the Level 1 exits to Glitchmire and Frostbyte Wastes, the Outer Buffer secret cluster, and what the wizard needs at each point. Ends in a room list the author approves. |
+| 4.3 (done, D133) | `docs/lattice-plan` | Paper design of Home Lattice, no rooms yet: about 25-30 rooms on the world map, the tutorial cluster by the start and the core, where each spell and upgrade sits, the 16 fragments for Level 1 plus a few extra in secret or optional rooms, the two boss arenas, the Level 1 exits to Glitchmire and Frostbyte Wastes, the Outer Buffer secret cluster, and what the wizard needs at each point. Ends in a room list the author approves: [lattice-plan.md](lattice-plan.md). |
 | 4.4 | `docs/warden-design` | Settle the Warden design with the author: body size (multi-cell collision and claims), phases or attack patterns, boss integrity bar, weak points, arena rules (shrines stay out, D104), the looks of the two bosses (showcase first). Recorded as decisions. |
 | 4.5 | `feat/warden-engine` | Multi-cell bodies, phases and attack patterns as data in `defs.json`, the boss bar on the HUD, the drop and the "defeated" bit (D104), a test arena. |
 | 4.6 | `feat/boss-one` | The first boss: the arena and fight, dropping a fragment. |
