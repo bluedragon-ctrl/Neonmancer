@@ -1183,8 +1183,13 @@ Step 4.4 settles the two Lattice bosses with the author.
   are. Boss 1 has the bug body, ringed by three gold circles like the
   core's; boss 2 is a bigger virus two cubes high (it cannot be jumped,
   only gone round). Snake-like segmented bosses are an idea for later.
-  These are boss looks of their own; the Warden knight look (D107) stays
-  for ordinary combat rooms.
+  The Warden knight look (D107) stays for ordinary combat rooms.
+- **Boss mark:** three gold rings round a body is how a boss is told
+  apart. It is a mark, not a look: any template gets it from a `boss`
+  block (its look stays as it is, so later bosses reuse a normal body, a
+  virus, a worm, a wyrm, in its own color), and one small render helper
+  (`render/boss-mark.js`, sized to the body's height) draws it for every
+  boss, the showcase included. Boss 2 carries it too.
 - **Damage:** the HUD shows a boss bar while a boss is awake. Pause never
   freezes a boss (`pausable` false). Boss 1 can always be hit but has
   high integrity; no visor. Boss 2 is armored (below).

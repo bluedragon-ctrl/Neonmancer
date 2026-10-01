@@ -2111,7 +2111,9 @@ Settled:
   while that pickup's bit is found, the Warden is left out of its room
   and counts as defeated. Data checks refuse a Warden without such a drop,
   and a drop that is a refill. Shrines stay out of boss rooms.
-- Boss design (D134): bodies stay one cell on the floor, one or two
+- Boss design (D134): three gold rings round any normal body mark a
+  boss (one render helper, `render/boss-mark.js`; the body keeps its
+  look). Bodies stay one cell on the floor, one or two
   cubes high (no multi-cell claims); a boss bar on the HUD; Pause never
   freezes a boss. Boss 1 (the bug body ringed by three gold circles,
   high integrity, always hittable, drops fragment 7) shoots aimed bolts
