@@ -1540,7 +1540,8 @@ What to check when building or reviewing a room, beyond what validation
 catches (validation: bounds, overlaps, exits, spawn and reset points). It
 collects problems found in playtests; the room design skill and the level
 review subagent planned for Phase 4 (CLAUDE.md §9) start from it, and the
-reachability checker will automate the reach and timing checks. Numbers
+reachability checker (`npm run check:reach`, D131) automates the reach
+checks (not timing: collapsing blocks, platform waits, enemies). Numbers
 come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
 `COLLAPSING`); update them here when those change.
 
@@ -2013,17 +2014,18 @@ author, recorded as decisions before the code lands. Every step also
 The phases were re-cut around a playtest of Home Lattice. The rules of
 "Finished phases" apply to every step: one branch, one PR against `main`,
 CI green, showcase, test room, unit tests, docs. Code steps name their
-branch; design steps end in decisions before any code. **Next step: 4.1.**
+branch; design steps end in decisions before any code. **Next step: 4.3.**
 
 ### Phase 4 (v0.4) steps: tools and bosses
 
 Done (4a and the spells): access keys, title and pause menu, saving and
-loading, map screen; Pull, Compile, Scan, Fork.
+loading, map screen; Pull, Compile, Scan, Fork; 4.1 the reachability
+checker (D131); 4.2 the design skills and the level-review subagent (D132).
 
 | # | Branch | Delivers |
 |---|---|---|
-| 4.1 | `feat/reachability-checker` | `tools/check-reach.js`: searches each room's grid with jump height (and the double jump), pushable crates, and the spells the wizard has, flagging unreachable exits and pickups; works out which abilities each exit and pickup needs and checks the world can be finished in some order (D67). Runs in CI and the validate script; the editor and world map tool show its verdict. Open: how deep it searches pushables and spells. |
-| 4.2 | `feat/design-skills` | The room design skill (schema, rules, the checklist above, annotated examples), an enemy design skill (templates, D119 colors), and the level-review subagent (runs the checker, reads the room against the checklist). |
+| 4.1 (done, D131) | `feat/reachability-checker` | `tools/check-reach.js`: searches each room's grid with jump height (and the double jump), pushable crates, and the spells the wizard has, flagging unreachable exits and pickups; works out which abilities each exit and pickup needs and checks the world can be finished in some order (D67). Runs in CI and the validate script; the editor and world map tool show its verdict. Open: how deep it searches pushables and spells. |
+| 4.2 (done, D132) | `feat/design-skills` | The room design skill (schema, rules, the checklist above, annotated examples), an enemy design skill (templates, D119 colors), and the level-review subagent (runs the checker, reads the room against the checklist). |
 | 4.3 | `docs/lattice-plan` | Paper design of Home Lattice, no rooms yet: about 25-30 rooms on the world map, the tutorial cluster by the start and the core, where each spell and upgrade sits, the 16 fragments for Level 1 plus a few extra in secret or optional rooms, the two boss arenas, the Level 1 exits to Glitchmire and Frostbyte Wastes, the Outer Buffer secret cluster, and what the wizard needs at each point. Ends in a room list the author approves. |
 | 4.4 | `docs/warden-design` | Settle the Warden design with the author: body size (multi-cell collision and claims), phases or attack patterns, boss integrity bar, weak points, arena rules (shrines stay out, D104), the looks of the two bosses (showcase first). Recorded as decisions. |
 | 4.5 | `feat/warden-engine` | Multi-cell bodies, phases and attack patterns as data in `defs.json`, the boss bar on the HUD, the drop and the "defeated" bit (D104), a test arena. |
@@ -2094,7 +2096,8 @@ title screen and pause menu (done, D109); saving and loading
 **Phase 4b — spells, bosses, tooling:** the roster's new spells, one
 step each (D88, D89): Pull (done, D124), Compile (done, D125), Scan
 (done, D128: fake blocks, hidden exits), Fork (done, D129: a decoy that holds plates and draws enemies);
-Firewall Wardens; reachability checker; design skills and subagents.
+Firewall Wardens; design skills and subagents. Reachability checker
+(done, D131).
 Biome enemy rosters moved to Phase 6 (D130).
 
 Settled:
@@ -2124,9 +2127,6 @@ Open so far:
 - Wardens: size (a body wider than one cell needs multi-cell collision and
   claims), phases or attack patterns, a boss integrity bar, weak points,
   how many.
-- How deep the reachability checker searches pushables and spells; it
-  works out which abilities each exit and pickup needs and checks that
-  the world can be finished in some order (D67).
 - Proposal, to be discussed and confirmed: small rewards for secrets
   found, visual first. Each follows from the secret count, like the
   access level from fragments, so no new save bits and nothing more in

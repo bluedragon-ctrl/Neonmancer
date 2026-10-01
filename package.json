@@ -9,7 +9,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node tools/run-tests.js",
-    "validate:data": "node tools/validate-data.js"
+    "validate:data": "node tools/validate-data.js",
+    "check:reach": "node tools/check-reach.js"
   },
   "engines": {
     "node": ">=22"

@@ -17,4 +17,5 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run validate:data
+      - run: npm run check:reach
       - run: npm run build

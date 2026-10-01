@@ -19,6 +19,18 @@ bosses that drop loot, tooling) (D104, D105).
   notes and PR summary now say so.
 
 ### Added
+- Design skills (D132): `.claude/skills/room-design` and `enemy-design`,
+  and the read-only `level-review` subagent (`.claude/agents/`) that runs
+  `validate:data` and `check:reach` and reviews a room against the room
+  design checklist.
+- Reachability checker (D131): `npm run check:reach` searches every
+  room with jump height, the double jump, crates (pushed, pulled, cut and
+  pasted) and the spells found so far, and the world as a fixpoint of
+  abilities, access level and rooms. It prints the order the world opens
+  in and fails on an exit, pickup or room that stays out of reach;
+  `<room>` checks one room (`--with` abilities, `--from` an exit),
+  `--rooms` lists what each one needs. Runs in CI and the deploy; the
+  world map tool shows its problems and warnings under CHECKS.
 - Spell help texts in `data/lore.json` (`help_zap`, `help_shield`,
   `help_firewall`, `help_pause`, `help_blink`, `help_warp`,
   `help_cut_paste`, `help_compile`, `help_scan`, `help_pull`): a screen

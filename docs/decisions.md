@@ -1097,3 +1097,63 @@ is worth more than six half-built ones. The Outer Buffer's lonely dark
 suits hidden rooms; Phantom's ghosts suit a late fight sector. The
 checker and review tools come first because 30 rooms cannot be checked by
 hand.
+
+
+### D131 — 2026-10-01 — The reachability checker: cells, crates as a puzzle, abilities as a fixpoint
+`npm run check:reach` (`tools/check-reach.js`, in CI and the deploy) searches
+every room as whole cells and the world as a fixpoint. A room: standing
+cells (two free cells above, a floor under), walking, stepping off ledges,
+a jump up one block or over a one-tile gap, and with abilities more: the
+double jump (up two, over two tiles), Blink (3 cells ahead), Warp (to the
+first stop), Compile (a step up, or a plugged hole), Pull, Cut & Paste, a
+scan (fake blocks and hidden exits), Zap (targets), Fork or Compile (a
+plate). Crates are searched as a puzzle: every position they can be
+pushed, pulled or pasted into is a configuration with its own flood, up
+to 500; the search stops as soon as everything in the room is reached.
+The world: from the start room with nothing, every entered room is
+searched with what he has, the pickups found add abilities (disks,
+upgrades), fragments and the core raise the access level, the exits
+reached open the rooms beyond, round after round until nothing changes;
+the rounds are the order the world opens in. A pickup, an exit or a room
+that stays out of reach is an error (exit code 1); rooms not joined to
+the start, the world holding fewer fragments than the core asks for, a
+cut-off crate search, and a room whose way back is missing (arrived on a
+ledge) are warnings. One room at a time (no need to check them all
+while designing): `check-reach.js <room>` reports only that room, with
+what each exit and pickup needs (the world is still searched to know what
+he has by then); `--with a,b` skips the world and takes the abilities
+given, from the spawn point or `--from <exit>`. `--rooms` lists what each exit and pickup needs:
+the smallest sets of one or two abilities from what he finds in the
+world, measured from the way he first came in. The world map tool shows
+the errors and warnings under CHECKS.
+Left out on purpose: enemies and their fire, timing (collapsing blocks,
+platforms' waits, spell durations), energy, which way he faces. Moving
+platforms count as floor along their whole path, a scan reaches every
+fake block, and Compile crates last as long as needed. So the verdict errs
+towards "reachable": unreachable is a real problem, reachable is not a
+promise (playtests and the design checklist still apply).
+**Why:** 30 rooms cannot be checked by hand (D130), and the unclear part
+of D67 is the order: an exit that waits for a spell must have the spell
+somewhere he can get first. Plain cells and a bounded crate search are
+simple to read and test, and fast (the whole world in under a second); a
+physics replay would be exact but slow and brittle against tuning. The
+fixpoint gives the order for free and the per-target ability sets feed
+the room design skill and the review subagent (4.2).
+
+### D132 — 2026-10-01 — Design skills and the level-review subagent live in `.claude/`
+Step 4.2 adds `.claude/skills/room-design` (format, coordinates, types,
+tuning numbers, design rules, the check loop with `validate:data` and
+`check:reach`, annotated example rooms, the authored-room rules of D90),
+`.claude/skills/enemy-design` (template axes, charged-attack rules, the
+D119 color rules, placing enemies) and `.claude/agents/level-review.md`,
+a read-only subagent that runs the checks and walks a room against the
+room design checklist, reporting blockers, problems and notes. The
+skills point to the schemas, `docs/design.md` and the checklist rather
+than copying them, and repeat only the numbers a draft needs. A
+room-drafting subagent is left for Phase 5's content steps, when the
+Lattice plan (4.3) says what to draft.
+**Why:** 25-30 Lattice rooms will be drafted and checked by Claude
+sessions that start cold; the rules were spread over CLAUDE.md, design.md
+and the schemas. One entry point per task, with the checker in the loop,
+makes drafts consistent and keeps review cheap. Pointers instead of
+copies keep a single source of truth.
