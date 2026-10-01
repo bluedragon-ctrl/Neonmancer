@@ -194,18 +194,21 @@ the ones it gives:
 | `hazard` | hazard, danger red | `damage: 1` |
 | `void` | void, black mist with gray wisps (D99) | `lethal: true` |
 | `fake` | plain (room color) | `fake: true`: a scan derezzes it (D128, see Scan) |
-| `collapsing` | kind `collapsing`, room color, dashed edges, faces barely tinted (D98, D99) | gives way (see Collapsing blocks) |
+| `collapsing` | kind `gate`, `trigger: step`; room color, dashed edges, faces barely tinted (D98, D99) | gives way (see Gate blocks) |
 | `collapsing_regrow` | extends `collapsing` | `regrow: 3` |
+| `gate` | kind `gate` (switch trigger), white, bars on its seen sides (D140) | solid until its switches are on (see Gate blocks) |
+| `bridge` | extends `gate` | `inverted: true`: there only while its switches are on |
 
 - **Static types** have a `look` (`plain`, `hazard`, `void`) and live in
   the room grid: each cell holds its type's code, and the rules ask about
   properties, never names: a cell with `damage` hurts on touch, a
   `lethal` one kills whoever lands on it. A plain type may have its own
   `color`; without one it takes the room color.
-- **Types with a `kind`** (`collapsing`) are written and painted like
+- **Types with a `kind`** (`gate`, D141) are written and painted like
   blocks, but each cell becomes a room object of that kind when the room
-  is built (id `<type>@x,y,z`); `regrow`, `color` and the object look
-  (`edges`, `mark`, `faces`, `tint`) are on the type.
+  is built (id `<type>@x,y,z`, with its entry's `switches`); `trigger`,
+  `inverted`, `regrow`, `color` and the object look (`edges`, `mark`,
+  `faces`, `tint`) are on the type.
 - A new type that only combines existing properties and looks is data
   only (e.g. `"hazard_hot": { "extends": "hazard", "damage": 2 }`); a new
   property (bounce, slippery, conveyor...) or look is code.
@@ -219,8 +222,8 @@ the ones it gives:
   themselves, and a line they share with plain blocks is drawn once, by
   them alone (a lethal type also over a hurting one), so there is always a
   seam in the danger's color where it starts, with no plain edge showing
-  around it. Collapsing blocks keep an outline around every
-  cell, since each one gives way on its own.
+  around it. Gate blocks keep an outline around every
+  cell, since each one goes on its own.
 
 ## Hazard and void blocks
 
@@ -308,35 +311,54 @@ follows a path given on the room object.
   `src/render/rails.js`; review in the asset showcase
   (`/tools/showcase.html?asset=platform,platforms,spiked_platform,spiked-platforms`).
 
-## Collapsing blocks
+## Gate blocks
 
-Block types with `kind: collapsing` (D47, D60): painted in rooms like any
-block (a box of them is one entry), each cell runs as its own room object
-(D40), a 1×1×1 block in the room color (D99), with thin dashed edges and
-barely tinted faces, that gives way under the wizard.
+Blocks that come and go (D140, D141): block types with `kind: gate`,
+painted in rooms like any block (a box of them is one entry), each cell
+running as its own room object (D40). What makes one go is its type's
+`trigger`; everything else is shared:
 
-- **Trigger:** only the wizard standing on it (grounded, feet on its top,
-  any part of his footprint over it). Walking into its side, jumping past
-  it or a crate resting on it does nothing; a dead wizard doesn't trigger
-  it either.
-- **Shake, then gone:** it shakes for 0.5 s, harder towards the end, then
-  derezzes (D126), and is gone: whatever
-  stood on it falls (the wizard, crates). Once shaking it goes even if he
-  steps off. Running across a row of them is safe; stopping is not.
-- **Regrow** (optional, `regrow` seconds on the block type, e.g.
-  `collapsing_regrow`: 3): that long
-  after vanishing it grows back from its center, but only once nothing is
-  in its cell (the wizard or a crate standing there makes it wait).
-  Without `regrow` it stays gone until the room resets.
-- **Over a hole:** a collapsing block may stand in a hole tile (a bridge
-  that gives way); when it goes, the wizard drops into the pit and a crate
-  plugs it.
-- Validation: `regrow` only on block types with a kind; spawn and reset
-  points don't count a collapsing block as holding the wizard up over a
-  hole.
-- Tuning: `COLLAPSING` in `src/entities/collapsing.js`, the look is
-  `COLLAPSE_FX` in `src/render/collapse-fx.js`; review in the asset
-  showcase (`/tools/showcase.html?asset=collapsing,collapsing-cycle`).
+- **Gone** it is no body at all: whatever stood on it falls (the wizard,
+  crates, enemies), and things pass through its cell.
+- **Coming back** it never traps anything: while the wizard, his decoy,
+  a crate or an enemy is in its cell it waits, and comes back once the
+  cell is clear.
+- **Look, one language:** going, the block sinks into its cell's floor;
+  gone, a dim dashed outline shows where it will rise again (only if it
+  will); coming back, it rises.
+- **Over a hole:** a gate block may stand in a hole tile (a bridge over
+  a pit, a trapdoor); when it goes, the wizard drops into the pit and a
+  crate plugs it. Spawn and reset points don't count one as holding the
+  wizard up over a hole.
+
+The two triggers:
+
+- **Switch** (`trigger: switch`, the default; types `gate` and `bridge`):
+  white, a mechanism (D99), with three bars across each seen side and,
+  on the top of a stack, one light per switch that powers it (lit for
+  each one on). Solid until its switches are all on: its block entry's
+  `switches` (ids of the room's targets and plates; one entry, one set)
+  or every switch in the room. `inverted` (a bridge) is the other way
+  round. Event: `gate` (`open` true or false). See Switches and locked
+  exits.
+- **Step** (`trigger: step`; types `collapsing`, `collapsing_regrow`, the
+  collapsing block of D47): the room color, thin dashed edges, barely
+  tinted faces. Only the wizard standing on it (grounded, feet on its
+  top, any part of his footprint over it) sets it off: walking into its
+  side, jumping past it, a crate resting on it or a dead wizard does
+  nothing. It rattles for 0.5 s, harder towards the end, then sinks; once
+  rattling it goes even if he steps off. Running across a row of them is
+  safe; stopping is not. With `regrow` (seconds, e.g.
+  `collapsing_regrow`: 3) it comes back that long after it went; without
+  it stays gone until the room resets. Events: `shake`, `collapse`,
+  `regrow`.
+- Validation: `trigger`, `inverted` and `regrow` only on gate block
+  types; `inverted` only with the switch trigger, `regrow` only with the
+  step trigger; `switches` only on switch gate entries, naming switches
+  of the room; a switch gate needs a switch in its room.
+- Tuning: `GATE` in `src/entities/gate.js` (the shake time), the look is
+  `GATE_FX` in `src/render/gate-view.js`; review in the asset showcase
+  (`?asset=gates,collapsing-cycle`).
 
 ## Enemies
 
@@ -1419,9 +1441,12 @@ Hints and lore (D118). A screen room object may name a text:
 
 ## Switches and locked exits
 
-Switches unlock a room's exits (D69, D75). Two object types in
-`defs.json`, placed in `objects` like crates; their state resets with the
-room.
+Switches power what is linked to them (D69, D75, D140): locked exits,
+gates and platforms. Each of those is powered while all its switches are
+on: the ones its `switches` list names (ids of targets and plates in the
+room), or, without a list, every switch in the room (so rooms made
+before D140 work as they did). Switch types in `defs.json` are placed in
+`objects` like crates; their state resets with the room.
 
 - **Target** (`target`, kind `target`): a fixed 1×1×1 block. A Zap bolt
   stops at it and switches it on; the next one switches it off again. It
@@ -1433,8 +1458,26 @@ room.
   footprint over the tile and its feet on the floor (jumping over it
   doesn't count). It is no body: things move over it as over the floor,
   and a crate may start on it.
-- **Locked exit** (`"locked": true` on an exit): solid, like the room's
-  edge, until every switch in the room is on; then it opens (`> ACCESS
+- **Timed switches** (D140; `target_timed` 5 s, `plate_timed` 3 s; a
+  type's `timer`, which a room object may override, 0.5–30 s): on for
+  that long, then off by themselves. A timed target counts from the bolt
+  that switched it on, and another bolt starts the time again (it never
+  switches a timed target off). A timed plate is on while pressed and
+  counts from the moment nothing stands on it. While it counts down it
+  blinks, ever faster, and ticks (`tick` events: every second, twice a
+  second in the last two). Its bull's-eye has a dashed outer square.
+- **Gate** (block type `gate`, a switch gate block, D140, D141): solid
+  until its switches (its block entry's `switches`) are all on; then it
+  sinks into its cell and is no body at all until a switch goes off. A
+  **bridge** (`bridge`, `"inverted": true`) is the other way round:
+  there only while its switches are all on. Neither ever closes on
+  anything in its cell. See Gate blocks.
+- **Powered platform** (a platform with `switches`, D140): runs only
+  while they are all on, and stops where it is when one goes off;
+  without `switches` a platform always runs.
+- **Locked exit** (`"locked": true` on an exit, its switches in
+  `"switches"` or every switch in the room): solid, like the room's
+  edge, until those switches are all on; then it opens (`> ACCESS
   GRANTED: EXIT UNLOCKED`). When a switch goes off it closes again, but
   never on the wizard: while he stands in the opening it waits. The exit
   he came in through stays open for him while he is in the room, even
@@ -1453,19 +1496,37 @@ room.
   outside its corners and a glow spills onto the floor round it, so it
   shows round a crate standing on it. A locked exit is a dark panel
   that sinks into the threshold, on back doorways and front exits alike
-  (front exits had four retracting bars until D101). It carries one small bull's-eye light per switch in the room, lit
-  for each switch that is on. The exit's stream shows once it is open.
-- Events: `switch` (a switch went on or off), `unlock` and `lock` (a
-  locked exit opened or closed).
+  (front exits had four retracting bars until D101). It carries one small bull's-eye light per switch linked to it, lit
+  for each one that is on. The exit's stream shows once it is open. A
+  gate is a white block with three bars across each seen side and one
+  light per linked switch on top; it sinks into its floor to open, and
+  open it leaves a dim dashed outline where it will rise again. A bridge
+  looks the same.
+- Events: `switch` (a switch went on or off), `tick` (a timed one
+  counting down), `gate` (a gate opened or closed), `unlock` and `lock`
+  (a locked exit opened or closed).
 - Validation: a plate lies on the floor, inside the room, not in a block
-  and not over a hole; a locked exit needs a switch in its room.
+  and not over a hole; a locked exit and a gate need a switch in their
+  room; a `switches` list names targets and plates of the room, and only
+  locked exits, switch gate block entries and platforms take one; only
+  switch types have a `timer`.
 - Room design: a plate the wizard can reach next to the locked exit is
   no puzzle, since the exit closes as soon as he steps off; give him
   something that stays (a crate) or something that comes and goes (a
-  patrolling enemy resting on it, a timing puzzle). Access locks (D101,
-  see Fragments and access) reuse the locked exit.
-- Tuning: the look is `SWITCH_FX` in `src/render/switch-view.js`;
-  showcase `?asset=switches`.
+  patrolling enemy resting on it, a timing puzzle: a timed plate). Access locks (D101,
+  see Fragments and access) reuse the locked exit. With links, one room
+  can chain steps (a target opens a gate, behind it a plate runs a lift
+  to the exit) and two switches can do different things; keep each link
+  readable: a switch in view of what it powers, the lights on locks and
+  gates counting its switches. A timed switch's time is the run from it
+  to what it powers plus about a second: the walk is ~0.22 s a cell.
+- Reachability (D131): a powered thing counts when its switches can all
+  be on at once (a timed plate also under the wizard himself); a gate
+  that can be both open and closed counts as both, floor never in the
+  way. Timing is not checked: a timed switch counts as on for good.
+- Tuning: the look is `SWITCH_FX` in `src/render/switch-view.js` and
+  `GATE_FX` in `src/render/gate-view.js`; showcase `?asset=switches`
+  (timed switches: `?asset=timed-switches`, gates: `?asset=gates`).
 
 ## Rooms and exits
 
@@ -1526,6 +1587,7 @@ the world map tool shows the connections and flags any room further out.
 | `scheduler` | Outer Buffer, 10×10 | a cron, a worm, a crawler; the Firewall disk; a shrine |
 | `room_1` | 12×12 | an empty hub for the Phase 3 spell rooms |
 | `fast_path` | Frostbyte Wastes, 12×12 | Blink and Warp disks, pits to cross; the recharge buff |
+| `switch_works` | Home Lattice, 12×12, 5 high, south of Fast Path | linked switches (D140, D141): a timed plate opening a gate door in a wall, a timed target raising a bridge over a pit, a crate for a plate that runs a lift to an energy refill on a ledge |
 | `clipboard` | Abyssal Buffer, 12×12 | Cut & Paste: crates to cut and paste as steps and bridges, a bug to freeze and move |
 | `tractor_bay` | Home Lattice, 12×12, east of Cache Hall | Pull: two crates across a moat to pull into it as a bridge, a bug patrolling behind a trench to pull in; the Pull disk, an energy refill |
 | `build_yard` | Home Lattice, 12×12, east of Tractor Bay | Compile: a two-wide trench to plug crate by crate, a ledge two high to climb with a compiled step; the Compile disk, an energy refill on the ledge |
@@ -2326,14 +2388,17 @@ Example room:
   touch it.
 - `exits` — `side` is `-x`, `+x`, `-z` or `+z`; `at` is the first cell along
   that side; `width` (default 2), `y` floor level (default 0), `height`
-  (default 2); `locked` (switches, D75), `access` (a level, D101).
+  (default 2); `locked` (switches, D75) with optional `switches` (the
+  ids that open it, D140), `access` (a level, D101).
 - `blocks` — anonymous static geometry; `to` fills a box (inclusive);
-  `type` is a block type from `defs.json` `blocks` (default `block`).
+  `type` is a block type from `defs.json` `blocks` (default `block`); a
+  switch gate's entry may name its `switches` (D141).
 - `holes` — floor tiles `[x, z]` that are pits; `to` fills a rectangle.
 - `shrine` — the backup shrine's floor tile (D97).
 - `objects` — typed things with stable ids; `overrides` replace type
   defaults. Platforms also take a `path`:
   `{ "points": [[6, 0, 1]], "mode": "pingpong", "speed": 2, "pause": 0.8 }`.
+  Platforms take `switches`, the ids of the switches that run them (D140).
 - `enemies` — `{ "id", "template", "at", "path" }` (see Enemies); an enemy's path has no `speed` (D119).
 - `pickups` — `{ "id", "type", "at" }` (see Pickups and progress).
   Ids are unique among objects, enemies and pickups.

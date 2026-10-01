@@ -3,7 +3,9 @@
  * cell. Entries nobody touched are kept as they were, in their order, so a
  * saved room's diff shows only what changed; an entry with an edited cell
  * falls apart into loose cells, and loose cells are merged into as few
- * boxes as a greedy pass finds when the list is written back.
+ * boxes as a greedy pass finds when the list is written back. A gate
+ * block's `switches` (D140, D141) are part of what a cell holds: cells
+ * merge only with cells of the same type and switches.
  */
 import { cellKey } from '../data/room-data.js';
 
@@ -21,6 +23,26 @@ export function boxCells(lo, hi) {
   return cells;
 }
 
+/**
+ * What a cell holds, as one string (pure): the type, and a switch gate's
+ * switches after a "#" ("gate#p1,p2").
+ * @param {string} type
+ * @param {string[]} [switches]
+ */
+export function boxKey(type, switches) {
+  return switches?.length > 0 ? `${type}#${switches.join(',')}` : type;
+}
+
+/**
+ * A boxKey() taken apart (pure).
+ * @param {string} key
+ * @returns {{ type: string, switches: string[]|null }}
+ */
+export function boxFields(key) {
+  const [type, links] = key.split('#');
+  return { type, switches: links ? links.split(',') : null };
+}
+
 export class Boxes {
   /**
    * @param {{ at: number[], to?: number[], type?: string }[]} entries from room data
@@ -35,14 +57,14 @@ export class Boxes {
     /** Untouched entries: { entry, type, keys }. */
     this.entries = entries.map((entry) => ({
       entry: structuredClone(entry),
-      type: entry.type ?? defaultType,
+      type: boxKey(entry.type ?? defaultType, entry.switches),
       keys: new Set(boxCells(entry.at, entry.to ?? entry.at).map(cellKey)),
     }));
     /** Loose cells: key → { cell, type }. */
     this.loose = new Map();
   }
 
-  /** Type at a cell (a block type id such as "block" or "hazard", or "hole"), or null. */
+  /** Type at a cell (a block type id such as "block" or "hazard", or "hole"; a boxKey() with a gate's switches), or null. */
   get(cell) {
     const key = cellKey(cell);
     if (this.loose.has(key)) return this.loose.get(key).type;
@@ -123,10 +145,12 @@ export class Boxes {
         }
       }
       for (const c of boxCells(cell, hi)) used.add(cellKey(c));
+      const fields = boxFields(type);
       out.push({
-        ...(type !== this.defaultType && { type }),
+        ...(fields.type !== this.defaultType && { type: fields.type }),
         at: [...cell],
         ...(hi.some((v, axis) => v !== cell[axis]) && { to: hi }),
+        ...(fields.switches && { switches: fields.switches }),
       });
     }
     return out;

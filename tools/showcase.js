@@ -17,10 +17,9 @@ import { OBJECT_STYLE_DEFAULTS, resolveBlockTypes, resolveEnemyTemplates, withEn
 import { VIEW_HEIGHT, frameRoom } from '../src/render/camera.js';
 import { JUMP_SPEED, PLAYER } from '../src/entities/player.js';
 import { PLAYER_HITBOX } from '../src/core/rules.js';
-import { COLLAPSING } from '../src/entities/collapsing.js';
+import { GATE } from '../src/entities/gate.js';
 import { PUSHABLE } from '../src/entities/pushable.js';
 import {
-  CollapsingView,
   ENEMY_MODELS,
   createDropShadow,
   createRails,
@@ -69,7 +68,8 @@ import { createPauseCage, placePauseCage } from '../src/render/pause-view.js';
 import { warpFlash } from '../src/render/warp-fx.js';
 import { createWarpTrail, dashPose, placeWarpTrail } from '../src/render/warp-view.js';
 import { createHoleView } from '../src/render/hole-view.js';
-import { createLock, createPlate, createTarget } from '../src/render/switch-view.js';
+import { createLock, createPlate, createTarget, switchLight } from '../src/render/switch-view.js';
+import { GateView, createGate } from '../src/render/gate-view.js';
 import { SWITCH_KINDS } from '../src/entities/switch.js';
 import { FRAGMENT_COLOR } from '../src/entities/pickup.js';
 import { CLIP_FX, marqueeLook, pasteGrow } from '../src/render/clip-fx.js';
@@ -330,6 +330,11 @@ const ALL_ASSETS = [
   { label: 'target', group: 'switches', span: 5, spin: false, build: buildTargetZap },
   { label: 'plate', group: 'switches', span: 4, spin: false, build: buildPlate },
   { label: 'locks-in-room', group: 'switches', span: 5.5, spin: false, build: buildLocks },
+  // Timed switches (D140): a target and a plate switched on, blinking ever
+  // faster as their time runs out, then off; a gate and a bridge on one
+  // plate: the gate sinks as the bridge rises, and back.
+  { label: 'timed-switches', group: 'switches', span: 4, spin: false, build: buildTimedSwitches },
+  { label: 'gates', group: 'switches', span: 4.5, spin: false, build: buildGates },
   // Cut & Paste (D87): the wizard cuts the crate in front
   // of him (a marquee snaps on, it streams into his hands as pixels), holds
   // it, and pastes it back (the pixels stream into a marquee, it grows in);
@@ -548,6 +553,48 @@ function buildLocks() {
     }
     target.userData.update(dt);
     plate.userData.update(dt);
+  };
+  return asset;
+}
+
+/** A timed target and a timed plate (D140): on, counting down 3 s with a quickening blink, off. */
+function buildTimedSwitches() {
+  const target = createTarget(SWITCH_COLOR, { timed: true });
+  target.position.set(-1.5, 0, -0.5);
+  const plate = createPlate(SWITCH_COLOR, { timed: true });
+  plate.position.set(0.5, 0, -0.5);
+  const asset = new Group().add(target, plate);
+  const timer = 3;
+  let time = 0;
+  asset.userData.update = (dt) => {
+    time = (time + dt) % 5;
+    const on = time > 0.5 && time < 0.5 + timer;
+    const countdown = on ? 1 - (time - 0.5) / timer : null;
+    target.userData.set(switchLight(on, countdown, time), { hit: Math.abs(time - 0.5) < dt });
+    plate.userData.set(switchLight(on, countdown, time));
+    target.userData.update(dt);
+    plate.userData.update(dt);
+  };
+  return asset;
+}
+
+/** A gate and a bridge (D140) on one plate: pressed, the gate sinks and the bridge rises. */
+function buildGates() {
+  const plate = createPlate(SWITCH_COLOR);
+  plate.position.set(-2, 0, -0.5);
+  const gate = createGate(SWITCH_COLOR, { lights: 1 });
+  gate.position.set(-0.5, 0, -0.5);
+  const bridge = createGate(SWITCH_COLOR, { lights: 1, closed: false });
+  bridge.position.set(1, 0, -0.5);
+  const asset = new Group().add(plate, gate, bridge);
+  let time = 0;
+  asset.userData.update = (dt) => {
+    time = (time + dt) % 6;
+    const on = time > 1 && time < 4;
+    plate.userData.set(on);
+    gate.userData.set({ closed: !on, lit: Number(on) });
+    bridge.userData.set({ closed: on, lit: Number(on) });
+    for (const view of [plate, gate, bridge]) view.userData.update(dt);
   };
   return asset;
 }
@@ -2222,17 +2269,18 @@ function buildSpikedPlatforms() {
 }
 
 /**
- * A row of three collapsing blocks going through their states in a loop,
- * one after the other like a bridge giving way under a runner: standing
- * still, shaking, breaking into pixels, and after a while growing back.
+ * A row of three collapsing blocks (step gates, D141) going through their
+ * states in a loop, one after the other like a bridge giving way under a
+ * runner: standing still, shaking, sinking (a dashed outline left, as
+ * they grow back), and after a while rising again.
  */
 function buildCollapsingCycle() {
-  const object = { ...OBJECT_STYLE_DEFAULTS, color: PALETTE.amber, ...BLOCK_TYPES.collapsing };
+  const object = { ...OBJECT_STYLE_DEFAULTS, color: PALETTE.amber, ...BLOCK_TYPES.collapsing_regrow };
   const solidTicks = 40;
   const goneTicks = 60;
-  const loop = solidTicks + COLLAPSING.shakeTicks + goneTicks;
-  const blocks = [0, 1, 2].map((i) => ({ object, pos: [i - 1.5, 0, -0.5], state: 'solid', timer: 0, regrown: false }));
-  const views = blocks.map((block) => new CollapsingView(null, block));
+  const loop = solidTicks + GATE.shakeTicks + goneTicks;
+  const blocks = [0, 1, 2].map((i) => ({ object, trigger: 'step', returns: true, pos: [i - 1.5, 0, -0.5], state: 'solid', timer: 0 }));
+  const views = blocks.map((block) => new GateView(null, block));
   const asset = new Group().add(...views.map((view) => view.group));
   let tick = 0;
   asset.userData.update = (dt) => {
@@ -2242,11 +2290,11 @@ function buildCollapsingCycle() {
       const t = (tick - i * 12 + loop) % loop;
       const whole = Math.floor(t);
       // Solid from the start of the loop: it just grew back.
-      if (whole < solidTicks) Object.assign(block, { state: 'solid', timer: whole, regrown: true });
-      else if (whole < solidTicks + COLLAPSING.shakeTicks) Object.assign(block, { state: 'shake', timer: whole - solidTicks });
-      else Object.assign(block, { state: 'gone', timer: whole - solidTicks - COLLAPSING.shakeTicks });
+      if (whole < solidTicks) Object.assign(block, { state: 'solid', timer: whole });
+      else if (whole < solidTicks + GATE.shakeTicks) Object.assign(block, { state: 'shake', timer: whole - solidTicks });
+      else Object.assign(block, { state: 'gone', timer: whole - solidTicks - GATE.shakeTicks });
     });
-    for (const view of views) view.sync(0);
+    for (const view of views) view.sync(0, dt);
   };
   return asset;
 }

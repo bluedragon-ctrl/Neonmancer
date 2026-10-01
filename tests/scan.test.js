@@ -151,7 +151,7 @@ test('data: a pickup may lie inside a fake block, not inside a plain one; "fake"
   const room = (type) => roomFile('alpha', { blocks: [{ type, at: [3, 0, 3] }], pickups: [{ id: 'p', type: 'refill_energy', at: [3, 0, 3] }] });
   assert.deepEqual(validateData(dataFiles({ rooms: [room('fake')] })), []);
   assert.match(validateData(dataFiles({ rooms: [room('block')] })).join('\n'), /pickups\[0\].*filled by blocks\[0\]/);
-  const blocks = { block: { look: 'plain' }, sinking: { kind: 'collapsing', fake: true } };
+  const blocks = { block: { look: 'plain' }, sinking: { kind: 'gate', trigger: 'step', fake: true } };
   assert.match(validateData(dataFiles({ rooms: [roomFile('alpha')], blocks })).join('\n'), /fake: only for static blocks/);
 });
 

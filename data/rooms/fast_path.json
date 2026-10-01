@@ -6,7 +6,10 @@
   "biome": "frostbyte_wastes",
   "size": [12, 4, 12],
   "spawn": [6, 0, 10.5],
-  "exits": [{ "id": "north", "side": "-z", "at": 9 }],
+  "exits": [
+    { "id": "north", "side": "-z", "at": 9 },
+    { "id": "south", "side": "+z", "at": 5 }
+  ],
   "blocks": [{ "at": [10, 0, 5], "to": [10, 1, 5] }],
   "holes": [
     { "at": [0, 7], "to": [11, 8] },

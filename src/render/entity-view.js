@@ -33,7 +33,6 @@ import { OVERCLOCK_MODEL } from './overclock.js';
 import { PIXIE_MODEL } from './pixie.js';
 import { VIRUS_MODEL } from './virus.js';
 import { hitJolt } from './break-fx.js';
-import { collapseLook } from './collapse-fx.js';
 import { BLOCK_BODY, DEREZ } from './derez-fx.js';
 import { compileLook } from './compile-fx.js';
 import { CompileView } from './compile-view.js';
@@ -429,35 +428,6 @@ export class PlatformView {
     const { platform } = this;
     const pos = lerpPosition(platform.prev, platform.pos, alpha);
     this.block.position.set(pos[0], pos[1], pos[2]);
-  }
-}
-
-export class CollapsingView {
-  /**
-   * @param {import('../game.js').Game} game
-   * @param {import('../entities/collapsing.js').Collapsing} block (or anything
-   *   with its `pos`, `state`, `timer`, `regrown` and `object`, as in the showcase)
-   */
-  constructor(game, block) {
-    this.block = block;
-    // The object view is built centered on the origin, so it can shrink
-    // around its center while it grows back.
-    this.view = createObjectView({ ...block.object, at: [0, 0, 0] });
-    this.view.position.set(-0.5, -0.5, -0.5);
-    this.center = new Group().add(this.view);
-    this.pixels = createDerez(BLOCK_BODY, [block.object.color, 0xffffff]);
-    this.group = new Group().add(this.center, this.pixels);
-  }
-
-  /** @param {number} alpha interpolation factor 0..1 between the last two ticks */
-  sync(alpha) {
-    const { block } = this;
-    const [x, y, z] = block.pos;
-    const look = collapseLook(block, alpha);
-    this.center.visible = look.visible;
-    this.center.position.set(x + 0.5 + look.offset[0], y + 0.5 + look.offset[1], z + 0.5 + look.offset[2]);
-    this.center.scale.setScalar(look.scale);
-    placeDerez(this.pixels, block.state === 'gone' ? block.timer + alpha : null, feetOf(block.pos));
   }
 }
 

@@ -1,8 +1,10 @@
 /**
- * Switches and the locked exits they open (D69, D75), exits locked
+ * Switches and what they power (D69, D75, D140): locked exits, gates and
+ * platforms, each powered while every switch linked to it is on (its own
+ * `switches` list of ids, or every switch in the room); exits locked
  * behind an access level (D101), and hidden exits a scan reveals (D128),
- * solid wall until then. Functions of the
- * Game (game.js); they change its state and report through game.emit().
+ * solid wall until then. Functions of the Game (game.js); they change its
+ * state and report through game.emit().
  */
 import { say } from './core/messages.js';
 import { exitCells } from './data/room-data.js';
@@ -21,11 +23,36 @@ export function createLocks(game) {
 }
 
 /**
- * Plates follow what stands on them (a crate, an enemy, the wizard, his decoy, D129);
- * targets were switched by bolts already. Then the locked exits follow
- * the switches and his access level (raised at the core, D101): open while every one is on (reported as 'unlock', with a
- * terminal line), closed again ('lock') once one goes off, but never on
- * the wizard: while he stands in the opening it waits (D75).
+ * The switches linked to something: those named in `ids`, or every switch
+ * in the room.
+ * @param {import('./game.js').Game} game
+ * @param {string[]|null} [ids]
+ */
+export function linkedSwitches(game, ids) {
+  return ids ? game.switches.filter((object) => ids.includes(object.id)) : game.switches;
+}
+
+/**
+ * Is something linked to `ids` powered: its switches all on (and at least one)?
+ * @param {import('./game.js').Game} game
+ * @param {string[]|null} [ids]
+ */
+export function powered(game, ids) {
+  const linked = linkedSwitches(game, ids);
+  return linked.length > 0 && linked.every((object) => object.on);
+}
+
+/**
+ * Plates follow what stands on them (a crate, an enemy, the wizard, his
+ * decoy, D129); targets were switched by bolts already, and timed ones
+ * counted down with the objects (D140). A timed switch counting down
+ * ticks ('tick', every second, twice as often in its last two). Then
+ * gates and platforms follow their switches (D140): a gate opens or
+ * closes ('gate'), a platform runs or stops. Then the locked exits
+ * follow their switches and his access level (raised at the core, D101):
+ * open while every one is on (reported as 'unlock', with a terminal
+ * line), closed again ('lock') once one goes off, but never on the
+ * wizard: while he stands in the opening it waits (D75).
  * @param {import('./game.js').Game} game
  */
 export function updateSwitches(game) {
@@ -37,10 +64,21 @@ export function updateSwitches(game) {
     ...(player.dead ? [] : [player.box()]),
     ...(game.decoy?.active ? [game.decoy.box()] : []),
   ];
-  for (const plate of game.switches) {
-    if (plate.kind !== 'plate') continue;
-    if (plate.press(plate.pressedBy(boxes))) game.emit('switch', { object: plate });
+  for (const object of game.switches) {
+    if (object.kind === 'plate' && object.press(object.pressedBy(boxes))) game.emit('switch', { object });
+    const left = object.countdown === null ? 0 : object.left;
+    if (left > 0 && left % (left <= 120 ? 30 : 60) === 0) game.emit('tick', { object });
   }
+
+  let changed = false;
+  for (const object of game.objects) {
+    if (object.kind === 'gate' && object.trigger === 'switch') {
+      const event = object.power(powered(game, object.switches), [...game.bodies, ...(game.decoy?.active ? [game.decoy] : [])]);
+      if (event) game.emit('gate', { object, open: event === 'open' });
+      changed ||= event !== null;
+    } else if (object.kind === 'platform' && object.switches) object.powered = powered(game, object.switches);
+  }
+  if (changed) game.refreshBodies();
   let unlocked = false;
   for (const lock of game.locks) {
     const open = lockWanted(game, lock);
@@ -60,7 +98,7 @@ export function updateSwitches(game) {
 function lockWanted(game, { exit }) {
   if (exit.id === game.entryExit) return true;
   if (game.hidden.exits.includes(exit)) return false;
-  const switched = !exit.locked || game.switches.every((object) => object.on);
+  const switched = !exit.locked || powered(game, exit.switches);
   return switched && game.progress.accessLevel >= (exit.access ?? 0);
 }
 
@@ -100,9 +138,11 @@ export function exitOpen(game, exit) {
 }
 
 /**
- * How many of the room's switches are on (the lights on its locked exits).
+ * How many of the switches linked to `ids` (every switch in the room by
+ * default) are on: the lights on a locked exit.
  * @param {import('./game.js').Game} game
+ * @param {string[]|null} [ids]
  */
-export function switchesOn(game) {
-  return game.switches.filter((object) => object.on).length;
+export function switchesOn(game, ids) {
+  return linkedSwitches(game, ids).filter((object) => object.on).length;
 }

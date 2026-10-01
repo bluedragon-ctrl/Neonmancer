@@ -18,9 +18,17 @@
  * what needs two things at once (a locked exit open and the way to it)
  * is judged inside one configuration.
  *
+ * Switches (D140): a locked exit or a gate is powered in a configuration
+ * when its switches can all be on: a target with Zap, a plate with a crate
+ * on it or a spell that puts a body there, a timed plate also under the
+ * wizard himself (he runs on while it counts down). A gate that can be
+ * both closed and open there counts as both: never in the way, and floor
+ * to stand on.
+ *
  * What it knows nothing about, on purpose: enemies and their fire (combat
  * is a different check), timing (collapsing blocks, platforms waiting,
- * spell durations), energy, and which way he faces. Moving platforms
+ * spell durations, how long a timed switch stays on), energy, and which
+ * way he faces. Moving platforms
  * count as floor along their whole path and crates compiled by a spell
  * last as long as needed. So it errs towards "reachable": a verdict of
  * unreachable is a real problem, a verdict of reachable is not a promise.
@@ -96,17 +104,24 @@ class RoomModel {
     this.bodies = new Set();
     /** Cell indices a moving platform passes: floor to stand on, never in the way (optimistic). */
     this.floors = new Set();
-    this.plates = [];
-    this.targets = [];
+    /** The room's switches: targets and plates. */
+    this.switches = [];
+    /** Gates (D140): cell index, inverted (a bridge) and the switch ids that power it (null: all). */
+    this.gates = [];
+    /** Gate cells closed in the configuration searched now (setGates()). */
+    this.gateSolid = new Set();
+    /** Gate cells that can be closed or open there: floor, never in the way. */
+    this.gateFloor = new Set();
     this.core = null;
     this.crates = [];
     for (const object of room.objects) {
       const [x, y, z] = object.at;
       if (object.kind === 'pushable') this.crates.push(this.index(x, y, z));
       else if (object.kind === 'platform') for (const [px, py, pz] of pathCells(object.at, object.path)) this.floors.add(this.index(px, py, pz));
-      else if (object.kind === 'plate') this.plates.push({ at: object.at, id: object.id });
+      else if (object.kind === 'plate') this.switches.push(object);
+      else if (object.kind === 'gate' && (object.trigger ?? 'switch') === 'switch') this.gates.push({ index: this.index(x, y, z), inverted: !!object.inverted, switches: object.switches ?? null });
       else if (object.kind === 'target') {
-        this.targets.push(object);
+        this.switches.push(object);
         this.bodies.add(this.index(x, y, z));
       } else if (object.kind === 'core') {
         this.core = object;
@@ -115,7 +130,7 @@ class RoomModel {
         const [sx, sy, sz] = DECO_LOOKS[object.look]?.size ?? [1, 1, 1];
         for (let dx = 0; dx < sx; dx++)
           for (let dy = 0; dy < sy; dy++) for (let dz = 0; dz < sz; dz++) this.bodies.add(this.index(x + dx, y + dy, z + dz));
-      } else if (object.kind === 'collapsing') this.bodies.add(this.index(x, y, z));
+      } else if (object.kind === 'gate') this.bodies.add(this.index(x, y, z)); // a step gate (collapsing block): timing is not checked
     }
   }
 
@@ -136,7 +151,8 @@ class RoomModel {
   blocked(x, y, z, cfg) {
     if (y < 0 || !this.grid.isInside(x, z)) return true;
     if (y >= this.h) return false;
-    return this.grid.isSolid(x, y, z) || this.bodies.has(this.index(x, y, z)) || cfg.crateSet.has(this.index(x, y, z));
+    const i = this.index(x, y, z);
+    return this.grid.isSolid(x, y, z) || this.bodies.has(i) || this.gateSolid.has(i) || cfg.crateSet.has(i);
   }
 
   /**
@@ -151,7 +167,7 @@ class RoomModel {
       return type.damage > 0 || type.lethal ? 'bad' : 'solid';
     }
     const index = this.index(x, y - 1, z);
-    if (this.bodies.has(index) || cfg.crateSet.has(index) || this.floors.has(index)) return 'solid';
+    if (this.bodies.has(index) || cfg.crateSet.has(index) || this.floors.has(index) || this.gateSolid.has(index) || this.gateFloor.has(index)) return 'solid';
     return 'air';
   }
 
@@ -340,22 +356,62 @@ class RoomModel {
     return out;
   }
 
+  /** The switches linked to `ids` (D140), or every switch in the room. */
+  linked(ids) {
+    return ids ? this.switches.filter((object) => ids.includes(object.id)) : this.switches;
+  }
+
   /**
-   * Which switches are on in a configuration: a plate by a crate on it (or
-   * a spell that puts a body there), a target by a Zap bolt.
-   * @returns {boolean} every switch of the room is on
+   * Can the switches `ids` (every switch of the room by default) all be on
+   * at once in a configuration: a plate by a crate on it (or a spell that
+   * puts a body there, or the wizard on a timed one), a target by a Zap bolt?
+   * @param {string[]|null} ids
    */
-  switchesOn(cfg, stands) {
+  canPower(ids, cfg, stands) {
     const { abilities } = this;
-    if (this.targets.length > 0 && !abilities.has('zap')) return false;
-    for (const { at } of this.plates) {
-      const [x, y, z] = at;
+    const linked = this.linked(ids);
+    if (linked.length === 0) return false;
+    for (const object of linked) {
+      if (object.kind === 'target') {
+        if (!abilities.has('zap')) return false;
+        continue;
+      }
+      const [x, y, z] = object.at;
       if (cfg.crateSet.has(this.index(x, y, z))) continue;
+      if (object.timer && stands.has(this.index(x, y, z))) continue;
       const beside = DIRS.some(([dx, dz]) => stands.has(this.index(x - dx, y, z - dz)));
       const placed = (abilities.has('fork') || abilities.has('compile') || (abilities.has('cut_paste') && cfg.crates.length > 0)) && beside;
       if (!placed) return false;
     }
     return true;
+  }
+
+  /** Are the switches `ids` all on whatever he does: plates under crates (targets he can always switch off). */
+  forcedOn(ids, cfg) {
+    const linked = this.linked(ids);
+    return linked.length > 0 && linked.every((object) => object.kind === 'plate' && cfg.crateSet.has(this.index(...object.at)));
+  }
+
+  /**
+   * Work out the gates for a configuration (D140): closed, open, or either
+   * (floor that is never in the way).
+   * @returns {boolean} whether any changed
+   */
+  setGates(cfg, stands) {
+    const solid = new Set();
+    const floor = new Set();
+    for (const gate of this.gates) {
+      const on = this.canPower(gate.switches, cfg, stands);
+      const off = !this.forcedOn(gate.switches, cfg);
+      const [closed, open] = gate.inverted ? [on, off] : [off, on];
+      if (closed && open) floor.add(gate.index);
+      else if (closed) solid.add(gate.index);
+    }
+    const same = (a, b) => a.size === b.size && [...a].every((i) => b.has(i));
+    const changed = !same(solid, this.gateSolid) || !same(floor, this.gateFloor);
+    this.gateSolid = solid;
+    this.gateFloor = floor;
+    return changed;
   }
 }
 
@@ -409,7 +465,10 @@ export function analyzeRoom(room, { abilities, starts, tuning }) {
   while (todo.length > 0) {
     const cfg = todo.pop();
     reach.configs++;
-    const stands = model.flood(starts, cfg);
+    // Gates follow what he can switch from where he stands, which can open more of the room (D140).
+    model.setGates(cfg, new Set());
+    let stands = model.flood(starts, cfg);
+    for (let round = 0; round < 4 && model.setGates(cfg, stands); round++) stands = model.flood(starts, cfg);
     if (reach.configs === 1 && stands.size === 0) reach.deadStart = true;
     for (const s of stands) union.add(s);
     collect(model, cfg, stands, reach);
@@ -455,11 +514,10 @@ function collect(model, cfg, stands, reach) {
     const [x, y, z] = model.core.at;
     reach.core = DIRS.some(([dx, dz]) => [-1, 0, 1].some((dy) => standAt(x + dx, y + dy, z + dz)));
   }
-  // Exits: stand in the opening; locked ones need every switch on in this configuration.
-  const switched = model.switchesOn(cfg, stands);
+  // Exits: stand in the opening; locked ones need their switches on in this configuration.
   for (const exit of room.exits) {
     if (reach.exits[exit.id]) continue;
-    if (exit.locked && !switched) continue;
+    if (exit.locked && !model.canPower(exit.switches ?? null, cfg, stands)) continue;
     if (exit.hidden && !(abilities.has('scan') && scanReaches(model, stands, exit))) continue;
     if (arrivalCells(room, exit.id).some(([x, y, z]) => standAt(x, y, z))) reach.exits[exit.id] = true;
   }

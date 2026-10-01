@@ -168,8 +168,8 @@ function glassCore(mark, at, style) {
   return new Group().add(core, marks);
 }
 
-/** Outline width by object kind, where it differs: collapsing blocks look fragile. */
-const EDGE_WIDTH = { collapsing: 1.5 };
+/** Outline width by object kind, where it differs: step gates (collapsing blocks) look fragile. */
+const EDGE_WIDTH = { gate: 1.5 };
 
 /**
  * View of one typed object: a single cell drawn in the object's style

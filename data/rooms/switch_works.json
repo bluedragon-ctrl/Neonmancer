@@ -1,0 +1,32 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "switch_works",
+  "name": "Switch Works",
+  "biome": "home_lattice",
+  "size": [12, 5, 12],
+  "spawn": [5.5, 0, 1.5],
+  "exits": [{ "id": "north", "side": "-z", "at": 5 }],
+  "blocks": [
+    { "at": [0, 0, 6], "to": [4, 1, 6] },
+    { "at": [7, 0, 6], "to": [11, 1, 6] },
+    { "at": [0, 0, 10], "to": [2, 2, 11] },
+    { "type": "gate", "at": [5, 0, 6], "to": [6, 1, 6], "switches": ["timer_plate"] },
+    { "type": "bridge", "at": [5, 0, 8], "to": [5, 0, 9], "switches": ["beacon"] }
+  ],
+  "holes": [{ "at": [0, 8], "to": [11, 9] }],
+  "objects": [
+    { "id": "timer_plate", "type": "plate_timed", "at": [2, 0, 2] },
+    { "id": "beacon", "type": "target_timed", "at": [10, 0, 7] },
+    { "id": "lift_plate", "type": "plate", "at": [8, 0, 11] },
+    { "id": "crate", "type": "crate", "at": [9, 0, 11] },
+    {
+      "id": "lift",
+      "type": "platform",
+      "at": [3, 0, 11],
+      "path": { "points": [[3, 2, 11]], "pause": 1 },
+      "switches": ["lift_plate"]
+    }
+  ],
+  "pickups": [{ "id": "energy", "type": "refill_energy", "at": [1, 3, 11] }]
+}

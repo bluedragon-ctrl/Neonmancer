@@ -5,7 +5,7 @@
  * Bits in the spell's gold stream from the wizard's hands into the cell in
  * front of him (the stream every spell shares, stream-fx.js, D127) while
  * the crate grows in there with a flicker, as a collapsing block
- * recompiles (collapse-fx.js). Before it derezzes the crate blinks, faster
+ * comes back. Before it derezzes the crate blinks, faster
  * at the end, then derezzes like anything else (derez-fx.js). While the
  * spell is selected, a dim marquee marks the cell a cast would fill (the
  * aim marker).

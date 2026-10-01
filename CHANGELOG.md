@@ -18,6 +18,23 @@ docs/decisions.md).
   pushes, hits, derezz bubble pops, electric spell zaps, pickups, doors,
   switches, alerts and the menus; `type:detail` sounds per spell, pickup
   kind and death cause.
+- Linked and timed switches (D140): locked exits, the new gates and
+  bridges, and platforms name the switches that power them (`switches`;
+  without it every switch in the room, as before). Timed targets and
+  plates (`target_timed`, `plate_timed`, a type's `timer`) go off by
+  themselves, blinking and ticking as they count down. Gates sink to
+  open; bridges rise; a platform with switches runs only while powered.
+  Room editor "Switches" field, reachability checker, showcase
+  (`?asset=gates`, `?asset=timed-switches`), sounds `gate` and `tick`,
+  and the test room `switch_works` south of Fast Path.
+
+### Changed
+- Gate blocks (D141): collapsing blocks and the new gates are one block
+  kind, `gate`, with a `trigger`: `switch` (gates, bridges) or `step`
+  (collapsing blocks, `regrow` as before). Gates are block types placed
+  as boxes, a box's `switches` linking all its cells. Both sink into the
+  floor to go and leave a dashed outline while they will come back; a
+  collapsing block no longer derezzes.
 
 ## [0.4.0] - 2026-10-01
 

@@ -9,7 +9,7 @@
 import { MAX_ROOM_FOOTPRINT, ROOM_HEIGHT } from '../core/rules.js';
 import { DATA_SCHEMA_VERSION } from '../core/version.js';
 import { DECO_FACES, EXIT_DEFAULTS, sideLength, withExitDefaults } from '../data/room-data.js';
-import { Boxes } from './boxes.js';
+import { Boxes, boxFields, boxKey } from './boxes.js';
 import { formatJson } from './format-json.js';
 import { idProblem } from './ids.js';
 
@@ -198,8 +198,10 @@ export class RoomEdit {
       const item = (this.data[key] ?? []).find((other) => sameCell(other.at, cell));
       if (item) return { kind, item };
     }
-    const type = this.blocks.get(cell);
-    return type ? { kind: 'block', type } : null;
+    const key = this.blocks.get(cell);
+    if (!key) return null;
+    const { type, switches } = boxFields(key);
+    return { kind: 'block', type, ...(switches && { switches }) };
   }
 
   /**
@@ -245,15 +247,17 @@ export class RoomEdit {
    * Put a block of `type` in a cell, replacing whatever was there.
    * @param {number[]} cell
    * @param {string} type block type id (defs.json "blocks", D60)
+   * @param {string[]} [switches] a switch gate's switches (D140, D141); none: every switch in the room
    * @returns {boolean} whether anything changed
    */
-  placeBlock(cell, type) {
+  placeBlock(cell, type, switches = []) {
     if (!this.inside(cell)) return false;
+    const key = boxKey(type, switches);
     return this.edit(() => {
       const here = this.at(cell);
-      if (here?.kind === 'block' && here.type === type) return false;
+      if (here?.kind === 'block' && boxKey(here.type, here.switches) === key) return false;
       this.remove(cell);
-      return this.blocks.set(cell, type);
+      return this.blocks.set(cell, key);
     });
   }
 
@@ -588,6 +592,16 @@ export class RoomEdit {
   }
 
   /**
+   * Link a platform to switches of the room (D140): their ids, or none
+   * (it always runs).
+   * @param {string} id
+   * @param {string[]} switches
+   */
+  setSwitches(id, switches) {
+    return this.updateItem(id, { switches: switches.length > 0 ? switches : undefined });
+  }
+
+  /**
    * Turn a decoration (D117) to face the other seen side: +z (the default,
    * no override written) and +x take turns.
    * @param {string} id
@@ -658,11 +672,12 @@ export class RoomEdit {
 
   /**
    * Change an exit's id, position along its side (`at`), width, height,
-   * floor level, whether it is locked (D75), the access level it asks for
-   * (D101, 0 for none) or whether it is hidden until a scan (D128); its
-   * connection follows a new id.
+   * floor level, whether it is locked (D75) and by which switches (D140,
+   * none: every switch), the access level it asks for (D101, 0 for none)
+   * or whether it is hidden until a scan (D128); its connection follows a
+   * new id.
    * @param {string} id
-   * @param {{ id?: string, at?: number, width?: number, height?: number, y?: number, locked?: boolean, access?: number, hidden?: boolean }} fields
+   * @param {{ id?: string, at?: number, width?: number, height?: number, y?: number, locked?: boolean, switches?: string[], access?: number, hidden?: boolean }} fields
    * @returns {boolean} whether anything changed
    */
   updateExit(id, fields) {
@@ -740,12 +755,14 @@ function withFields(item, fields) {
 }
 
 /** An exit as written in a room file: the schema's key order, defaults left out. */
-export function exitFields({ id, side, at, width, y, height, locked, access, hidden }) {
+export function exitFields({ id, side, at, width, y, height, locked, switches, access, hidden }) {
   const exit = { id, side, at };
   if (width !== EXIT_DEFAULTS.width) exit.width = width;
   if (y !== EXIT_DEFAULTS.y) exit.y = y;
   if (height !== EXIT_DEFAULTS.height) exit.height = height;
   if (locked) exit.locked = true;
+  // Only a locked exit is opened by switches (D140).
+  if (locked && switches?.length > 0) exit.switches = [...switches];
   if (access) exit.access = access;
   if (hidden) exit.hidden = true;
   return exit;
