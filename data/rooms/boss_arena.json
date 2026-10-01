@@ -2,7 +2,7 @@
   "$schema": "../../schemas/room.schema.json",
   "schemaVersion": 1,
   "id": "boss_arena",
-  "name": "Boss Arena",
+  "name": "Null Pointer Arena",
   "biome": "home_lattice",
   "size": [12, 4, 12],
   "spawn": [2.5, 0, 1],
@@ -17,6 +17,6 @@
     { "at": [9, 0, 8], "to": [9, 1, 9] },
     { "at": [1, 0, 8], "to": [2, 1, 8] }
   ],
-  "enemies": [{ "id": "warden", "template": "proto_warden", "at": [6, 0, 4], "drop": "fragment_7" }],
+  "enemies": [{ "id": "warden", "template": "null_pointer", "at": [6, 0, 4], "drop": "fragment_7" }],
   "pickups": [{ "id": "fragment_7", "type": "fragment_7", "at": [6, 0, 6] }]
 }

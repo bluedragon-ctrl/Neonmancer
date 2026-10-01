@@ -1268,3 +1268,23 @@ and plate armor besides. The drop stays at an authored cell, so the
 reachability checker and the room designer see where it falls. Open
 doors (the author's call at review) keep a fight escapable; the room
 reset makes retreating cost the fight, nothing more.
+
+### D136 — 2026-10-01 — Boss one is Null Pointer
+Step 4.6 turns the prototype `proto_warden` into the first boss: template
+`null_pointer` (the bug body with the boss mark, pink, 24 integrity, aimed
+bolts, three phases that fire and teleport faster), named NULL POINTER on
+the boss bar (`boss.null_pointer`), dropping fragment 7 in the test arena
+`boss_arena` (now "Null Pointer Arena"; test room, D90). Values stay as
+tuned in D135; the Lattice room placement is Phase 5.
+**Why:** the fight already matched D134; what was missing was its identity.
+
+### D137 — 2026-10-01 — Boss two is the Gatekeeper
+Step 4.7 turns `proto_gatekeeper` into the second boss: template
+`gatekeeper` (a virus 1.6 high, plate armor, chases and winds up a
+surround burst), named THE GATEKEEPER on the boss bar. Harder than the
+prototype: 16 integrity and a third phase at 30% (faster windup and
+chase). It drops the +10 energy buff (`buff_energy_2`, D133, D134) in the
+test arena `boss_plates` (now "Gatekeeper Arena"; test room, D90). The
+Lattice placement is Phase 5.
+**Why:** the lure-over-plates fight was settled in D134; this gives it a
+name and the "harder than boss one" the plan asks for.

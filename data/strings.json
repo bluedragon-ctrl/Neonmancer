@@ -71,6 +71,8 @@
     "msg.unlocked": "> ACCESS GRANTED: EXIT UNLOCKED",
     "msg.scanFound": "> SCAN: HIDDEN DATA FOUND",
     "msg.fragmentFound": "> FRAGMENT {found}/{total} GET!",
+    "boss.null_pointer": "NULL POINTER",
+    "boss.gatekeeper": "THE GATEKEEPER",
     "msg.bossDefeated": "> {boss} TERMINATED. IT DROPPED SOMETHING!",
     "msg.access": "> CORE: ACCESS LEVEL {level} GRANTED",
     "msg.coreAccess": "> CORE: {found}/{needed} FRAGMENTS FOR ACCESS LEVEL {level}",

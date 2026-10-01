@@ -5,17 +5,15 @@ zapped into the Grid, a neon digital kingdom where magic and code are the same
 thing. Explore rooms, solve block puzzles, fight corrupted programs with spells
 and collect key fragments to reboot the Grid.
 
-> Status: early development. Phase 3 (v0.3.0, spells and pickups) is
-> done: the wizard finds data disks for seven spells (Zap, Shield,
-> Firewall, Pause, Blink, Warp, Cut & Paste) and three upgrades (Zap+,
-> Shield+, the double jump), buff chips, secrets and the 64 key
-> fragments; switches and access levels lock exits; viruses, sentinels,
-> worms, crawlers and towers join the bugs; backups and backup shrines,
-> a score from what he has found, and the central core that raises his
-> access level and, with every fragment, reboots the Grid. Fifteen test
-> rooms, with a world map tool for the developer. Next: Phase 4
-> (Wardens, more spells, saves, the map, tooling); the title screen and
-> pause menu are in.
+> Status: early development. Phase 4 (v0.4.0, saves, guardians and
+> tooling) is done: access keys, the title screen and pause menu, saving
+> and loading, a map screen; the spells Pull, Compile, Scan and Fork on
+> top of Phase 3's seven spells, three upgrades, buffs, secrets and the
+> 64 key fragments; two bosses (Null Pointer and the Gatekeeper) with a
+> boss bar; a reachability checker, design skills and a level-review
+> subagent. The rooms are still test rooms, with a world map tool for the
+> developer. Next: Phase 5, the Home Lattice playtest (sound, about 25-30
+> real rooms, onboarding).
 > Latest `main` build: https://bluedragon-ctrl.github.io/Neonmancer/
 
 ## Requirements
@@ -77,7 +75,7 @@ and map changes as one pull request.
 
 ## Versioning
 
-MAJOR.MINOR.PATCH: MINOR is the phase (0.3 = Phase 3), PATCH counts the
+MAJOR.MINOR.PATCH: MINOR is the phase (0.4 = Phase 4), PATCH counts the
 pull requests merged since that phase's release, computed at build time;
 1.0.0 will be the first full release. See CLAUDE.md §10 and D42.
 
