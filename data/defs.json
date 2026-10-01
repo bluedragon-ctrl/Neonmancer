@@ -218,14 +218,14 @@
         ]
       }
     },
-    "proto_gatekeeper": {
+    "gatekeeper": {
       "look": "virus",
       "movement": "chase",
       "attack": "burst",
       "hostility": "hostile",
       "aggroRange": 16,
       "memory": 10,
-      "integrity": 12,
+      "integrity": 16,
       "damage": 2,
       "speed": 1.5,
       "chaseSpeed": 2,
@@ -236,7 +236,14 @@
       "attackRange": 1.6,
       "attackCharge": 2.2,
       "attackCooldown": 1.5,
-      "boss": { "armor": "plate", "phases": [{ "from": 1 }, { "from": 0.5, "attackCharge": 1.8, "chaseSpeed": 2.5 }] }
+      "boss": {
+        "armor": "plate",
+        "phases": [
+          { "from": 1 },
+          { "from": 0.6, "attackCharge": 1.8, "chaseSpeed": 2.5 },
+          { "from": 0.3, "attackCharge": 1.4, "attackCooldown": 1.1, "chaseSpeed": 2.8 }
+        ]
+      }
     }
   },
   "spells": {

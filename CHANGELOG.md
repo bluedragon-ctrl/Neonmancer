@@ -19,6 +19,10 @@ bosses that drop loot, tooling) (D104, D105).
   notes and PR summary now say so.
 
 ### Added
+- Boss two, the Gatekeeper (D137, step 4.7): the `proto_gatekeeper`
+  prototype becomes the second boss, harder (16 integrity, three phases),
+  named on the boss bar; it drops the +10 energy buff in the test arena
+  `boss_plates` (renamed Gatekeeper Arena).
 - Boss one, Null Pointer (D136, step 4.6): the `proto_warden` prototype
   becomes the first boss, with its name on the boss bar; it drops
   fragment 7 in the test arena `boss_arena` (renamed Null Pointer Arena).

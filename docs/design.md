@@ -2016,7 +2016,7 @@ author, recorded as decisions before the code lands. Every step also
 The phases were re-cut around a playtest of Home Lattice. The rules of
 "Finished phases" apply to every step: one branch, one PR against `main`,
 CI green, showcase, test room, unit tests, docs. Code steps name their
-branch; design steps end in decisions before any code. **Next step: 4.7.**
+branch; design steps end in decisions before any code. **Next step: 4.8.**
 
 ### Phase 4 (v0.4) steps: tools and bosses
 
@@ -2032,7 +2032,7 @@ checker (D131); 4.2 the design skills and the level-review subagent (D132).
 | 4.4 (done, D134) | `docs/warden-design` | Settle the Warden design with the author: body size (multi-cell collision and claims), phases or attack patterns, boss integrity bar, weak points, arena rules (shrines stay out, D104), the looks of the two bosses (showcase first). Recorded as decisions. |
 | 4.5 (done, D135) | `feat/warden-engine` | One-cell bodies (D134) up to two cubes high, phases and attack patterns as data in `defs.json`, the boss bar on the HUD, the drop and the "defeated" bit (D104), a test arena. |
 | 4.6 (done, D136) | `feat/boss-one` | The first boss: the arena and fight, dropping a fragment. |
-| 4.7 | `feat/boss-two` | The second boss, harder, dropping an upgrade (which one is settled in 4.4). |
+| 4.7 (done, D137) | `feat/boss-two` | The second boss, harder, dropping an upgrade (which one is settled in 4.4). |
 | 4.8 | `chore/release-0.4.0` | Docs pass, CHANGELOG, tag `v0.4.0` and GitHub Release (CLAUDE.md section 10). |
 
 Bosses are built in test arenas (D90) and placed in the Lattice in
@@ -2139,7 +2139,7 @@ Settled:
   stays away. A boss never locks its arena's doors: the wizard may
   retreat at any time (the room resets when he comes back). Test arenas: `boss_arena` and
   `boss_plates` off Build Yard, with the prototypes `null_pointer` and
-  `proto_gatekeeper`.
+  `gatekeeper`.
 
 - A key whose room cell holds no room (the room moved on the world map
   since) still loads what he has and starts him in the start room.

@@ -128,6 +128,18 @@ test('boss one, Null Pointer: a bolt-shooting bug that teleports faster each pha
   assert.equal(room.shrine, undefined, 'no shrine with a boss (D104)');
 });
 
+test('boss two, the Gatekeeper: a tall armored chaser, harder than boss one, drops the energy buff (D137)', () => {
+  const enemies = JSON.parse(readFileSync('data/defs.json', 'utf8')).enemies;
+  const gate = enemies.gatekeeper;
+  const room = JSON.parse(readFileSync('data/rooms/boss_plates.json', 'utf8'));
+  assert.equal(JSON.parse(readFileSync('data/strings.json', 'utf8')).strings['boss.gatekeeper'], 'THE GATEKEEPER');
+  assert.equal(gate.boss.armor, 'plate');
+  assert.equal(gate.height, 1.6);
+  assert.ok(gate.integrity > enemies.null_pointer.integrity * 0.5 && gate.boss.phases.length >= 3);
+  assert.deepEqual(room.enemies.map((e) => [e.template, e.drop]), [['gatekeeper', 'buff_energy_2']]);
+  assert.ok(room.objects.filter((o) => o.type === 'plate').length >= 2, 'plates to lure it over');
+});
+
 test('validation: a boss drops a permanent pickup of its room, and only a boss drops one', () => {
   const errors = (files) => validateData(files).join('\n');
   assert.match(errors(arena({ boss: { id: 'boss', template: 'warden', at: [4, 0, 4] } })), /a boss drops a permanent pickup/);
