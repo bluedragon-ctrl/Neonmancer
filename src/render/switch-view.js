@@ -4,12 +4,17 @@
  * read as switches by shape and not only by color; switched on, the inner
  * square fills with light.
  *
- * - Target: a fixed block (plain crate look: solid edges, dark faces) with
- *   the bull's-eye on every face; a Zap switches it on or off.
- * - Plate: a floor tile, flush like a hole, with a dashed outline and the
- *   bull's-eye; pressed, the outline turns solid, brackets light up just
- *   outside its corners and a glow spills onto the floor round it, so it
- *   shows round a crate standing on it.
+ * Both are white frosted glass like the switch gates (GLASS.gate, D116):
+ * white is a mechanism (D99), and what switches and what is switched
+ * share one material. Switched on, the glass glows brighter.
+ *
+ * - Target: a fixed glass block with solid edges and the bull's-eye on
+ *   the faces the camera sees (top, +x, +z; the glass would show the
+ *   hidden ones through); a Zap switches it on or off.
+ * - Plate: a floor tile, a thin glass slab flush with the floor, with a
+ *   dashed outline and the bull's-eye on top; pressed, the outline turns
+ *   solid, brackets light up just outside its corners and a glow spills
+ *   onto the floor round it, so it shows round a crate standing on it.
  * - Lock: the barrier across a locked exit, on back doorways and front
  *   exits alike: a dark panel that sinks into the threshold. It carries
  *   one small bull's-eye light per switch linked to it (D140), lit when that many
@@ -23,7 +28,6 @@
  */
 import {
   AdditiveBlending,
-  BoxGeometry,
   BufferGeometry,
   Color,
   DoubleSide,
@@ -34,7 +38,8 @@ import {
   PlaneGeometry,
 } from 'three';
 import { blockEdges } from './edges.js';
-import { PALETTE, faceMaterial, lineMaterial, neonLines, shadedFaces, shared } from './neon.js';
+import { GLASS, glassBox } from './glass.js';
+import { lineMaterial, neonLines, shadedFaces } from './neon.js';
 import { FRAGMENT_COLOR } from '../entities/pickup.js';
 import { linkedSwitches, switchesOn } from '../switches.js';
 
@@ -50,13 +55,22 @@ export const SWITCH_FX = {
   inner: 0.36,
   /** Glow of the filled inner square when on. */
   fill: 1.6,
-  /** Share of the color in a target's faces when on. */
-  tint: 0.25,
+  /**
+   * The glass of a target or plate: its tint off (dark, clearly unlit) and
+   * on (bright), what a hit's flash adds, and the brightness of its edges
+   * and marks while off (on: `on` below).
+   */
+  glassOff: 0.06,
+  glassOn: 0.7,
+  glassFlash: 0.5,
+  bodyOff: 0.4,
+  /** Plate: height of its glass slab. */
+  slab: 0.03,
   /** White flash and jolt on a bolt hit, seconds. */
   flash: 0.1,
   jolt: 0.06,
-  /** Plate: lines float this far above the floor; the glow reaches this far out; bracket arm length. */
-  lift: 0.012,
+  /** Plate: lines float this far above its slab; the glow reaches this far out; bracket arm length. */
+  lift: 0.008,
   spill: 0.35,
   spillBrightness: 0.45,
   bracket: 0.3,
@@ -89,11 +103,7 @@ export const SWITCH_FX = {
   blinkDip: 0.25,
 };
 
-const FACE = new Color(PALETTE.face);
 const WHITE = new Color(0xffffff);
-
-/** Unit cube with its corner at the origin. */
-const UNIT_BOX = shared(new BoxGeometry(1, 1, 1).translate(0.5, 0.5, 0.5));
 
 /** Square outline in 2D from (a, a) to (b, b), as four segments. */
 function square2d(a, b) {
@@ -106,17 +116,18 @@ function square2d(a, b) {
 }
 
 /**
- * The bull's-eye (outer and inner square) on every face of the unit cube
- * (pure, tested).
+ * The bull's-eye (outer and inner square) on the faces of the unit cube
+ * (pure, tested): every face, or only the ones the camera sees.
+ * @param {{ seen?: boolean }} [options] seen: top, +x and +z only (D115)
  * @returns {{ outer: number[][][], inner: number[][][] }} segments
  */
-export function targetMarks() {
+export function targetMarks({ seen = false } = {}) {
   const onFaces = (segments2d) => {
     const segments = [];
     for (let axis = 0; axis < 3; axis++) {
       const u = (axis + 1) % 3;
       const v = (axis + 2) % 3;
-      for (const side of [0, 1]) {
+      for (const side of seen ? [1] : [0, 1]) {
         const p = ([pu, pv]) => {
           const q = [0, 0, 0];
           q[axis] = side;
@@ -154,18 +165,15 @@ export function plateMarks(y) {
   };
 }
 
-/** A filled square on every face of the unit cube, just outside it. */
+/** A filled square on the seen faces of the unit cube (top, +x, +z), just outside it. */
 function faceFills(margin, material) {
   const group = new Group();
   const size = 1 - 2 * margin;
   const out = 0.004;
   const place = [
     [[1 + out, 0.5, 0.5], [0, Math.PI / 2, 0]],
-    [[-out, 0.5, 0.5], [0, -Math.PI / 2, 0]],
     [[0.5, 1 + out, 0.5], [-Math.PI / 2, 0, 0]],
-    [[0.5, -out, 0.5], [Math.PI / 2, 0, 0]],
     [[0.5, 0.5, 1 + out], [0, 0, 0]],
-    [[0.5, 0.5, -out], [0, Math.PI, 0]],
   ];
   const geometry = new PlaneGeometry(size, size);
   for (const [pos, rot] of place) {
@@ -227,6 +235,12 @@ class Ease {
 /** Line brightness for an on-ness of 0..1. */
 const brightness = (t) => SWITCH_FX.off + (SWITCH_FX.on - SWITCH_FX.off) * t;
 
+/** Line brightness of a switch's own edges and marks: darker off than lock lights. */
+const bodyBrightness = (t) => SWITCH_FX.bodyOff + (SWITCH_FX.on - SWITCH_FX.bodyOff) * t;
+
+/** Glass tint of a switch for an on-ness of 0..1. */
+const glassTint = (t) => SWITCH_FX.glassOff + (SWITCH_FX.glassOn - SWITCH_FX.glassOff) * t;
+
 /**
  * How lit a switch is (0..1, pure): on or off, and while a timed one
  * counts down (D140) blinking, faster as `countdown` (share of its time
@@ -261,13 +275,14 @@ export function createTarget(color, { timed = false } = {}) {
   body.add(inner);
   group.add(body);
 
-  const faces = [0, 1, 2].map(() => faceMaterial());
-  inner.add(new Mesh(UNIT_BOX, [faces[1], faces[1], faces[0], faces[0], faces[2], faces[2]]));
+  const glass = glassBox([0, 0, 0], [1, 1, 1], base, GLASS.gate);
+  inner.add(glass);
+  const tint = glass.material.uniforms.uTint;
   const edgeMat = lineMaterial({ color: base, width: 2.5 });
   const markMat = lineMaterial({ color: base, width: 1.8 });
   const outerMat = timed ? lineMaterial({ color: base, width: 1.8, dashed: true }) : markMat;
   const fillMat = glowMaterial(base);
-  const marks = targetMarks();
+  const marks = targetMarks({ seen: true });
   for (const line of [neonLines(blockEdges([[0, 0, 0]]), edgeMat), neonLines(marks.outer, outerMat), neonLines(marks.inner, markMat)]) {
     line.renderOrder = 2;
     inner.add(line);
@@ -286,12 +301,12 @@ export function createTarget(color, { timed = false } = {}) {
     flash = Math.max(0, flash - dt);
     const f = flash / SWITCH_FX.flash;
     const lit = (b) => color_.copy(base).lerp(WHITE, f).multiplyScalar(b + f * 1.5);
-    edgeMat.color.copy(lit(brightness(t)));
-    markMat.color.copy(lit(brightness(t)));
+    edgeMat.color.copy(lit(bodyBrightness(t)));
+    markMat.color.copy(lit(bodyBrightness(t)));
     outerMat.color.copy(markMat.color);
     fillMat.opacity = t;
     fillMat.color.copy(base).multiplyScalar(SWITCH_FX.fill);
-    [1, 0.6, 0.4].forEach((share, i) => faces[i].color.copy(FACE).lerp(base, SWITCH_FX.tint * t * share).lerp(WHITE, f * 0.3 * share));
+    tint.value = glassTint(t) + SWITCH_FX.glassFlash * f;
     body.scale.setScalar(1 + SWITCH_FX.jolt * f);
   };
   group.userData.update(0);
@@ -307,7 +322,10 @@ export function createTarget(color, { timed = false } = {}) {
 export function createPlate(color, { timed = false } = {}) {
   const base = new Color(color);
   const group = new Group();
-  const y = SWITCH_FX.lift;
+  const slab = glassBox([0, 0, 0], [1, SWITCH_FX.slab, 1], base, GLASS.gate);
+  const slabTint = slab.material.uniforms.uTint;
+  group.add(slab);
+  const y = SWITCH_FX.slab + SWITCH_FX.lift;
   const marks = plateMarks(y);
   const line = (segments, material) => {
     const lines = neonLines(segments, material);
@@ -326,9 +344,9 @@ export function createPlate(color, { timed = false } = {}) {
   const fillMat = glowMaterial(base);
   const fill = new Mesh(new PlaneGeometry(1 - 2 * SWITCH_FX.inner, 1 - 2 * SWITCH_FX.inner), fillMat);
   fill.rotation.x = -Math.PI / 2;
-  fill.position.set(0.5, y / 2, 0.5);
+  fill.position.set(0.5, y, 0.5);
   const spillMat = new MeshBasicMaterial({ vertexColors: true, blending: AdditiveBlending, transparent: true, depthWrite: false });
-  group.add(fill, floorSpill(SWITCH_FX.spill, y / 2, spillMat));
+  group.add(fill, floorSpill(SWITCH_FX.spill, SWITCH_FX.lift, spillMat));
 
   const on = new Ease();
   group.userData.set = (pressed) => {
@@ -336,13 +354,14 @@ export function createPlate(color, { timed = false } = {}) {
   };
   group.userData.update = (dt) => {
     const t = on.step(dt);
-    tileMat.color.copy(base).multiplyScalar(brightness(t));
-    markMat.color.copy(base).multiplyScalar(brightness(t));
+    tileMat.color.copy(base).multiplyScalar(bodyBrightness(t));
+    markMat.color.copy(base).multiplyScalar(bodyBrightness(t));
     outerMat.color.copy(markMat.color);
     bracketMat.color.copy(base).multiplyScalar(SWITCH_FX.on * t);
     fillMat.opacity = t;
     fillMat.color.copy(base).multiplyScalar(SWITCH_FX.fill);
     spillMat.color.copy(base).multiplyScalar(SWITCH_FX.spillBrightness * t);
+    slabTint.value = glassTint(t);
     // Pressed, the dashed outline turns solid.
     if (tileMat.dashed !== t < 0.5) {
       tileMat.dashed = t < 0.5;
