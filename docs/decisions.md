@@ -1315,5 +1315,6 @@ for an event whose spell, pickup kind or death cause matches (`cast:zap`,
 `pickup:disk`, `die:void`), else the plain `type` does. Menus report UI
 sounds (`ui_move`, `ui_open`, `ui_back`, `ui_choose`, `ui_adjust`,
 `ui_deny`) through `MenuFlow.onSound`.
+Appearing (respawn, regrow, paste, compile, fork) is the reverse of the pop: a swoop that falls while the sound swells. Spells are clean "pew" tones, not noise. A sound with `"loop": true` runs while the game keeps it on (`AudioEngine.setLoop`, main.js): the shield and firewall hum while they are up.
 **Why:** one coherent sound identity that fits the neon-hologram world;
 recipes stay data, so the author can retune them without code.

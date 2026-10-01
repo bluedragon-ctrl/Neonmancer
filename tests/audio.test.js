@@ -200,7 +200,7 @@ test('effects: every sound of audio.json is a game event (or detail of one) or a
   const game = readFileSync(new URL('../src/game.js', import.meta.url), 'utf8');
   const typedef = game.match(/@property \{('[^}]+)\} type/)[1].match(/[a-z]+/g);
   for (const name of Object.keys(real.sounds)) {
-    if (name.startsWith('ui_')) continue;
+    if (name.startsWith('ui_') || name.startsWith('hum_')) continue;
     assert.ok(typedef.includes(name.split(':')[0]), `sound "${name}" matches no game event`);
   }
 });
@@ -214,4 +214,20 @@ test('ui: the menu flow reports a sound for moving, opening, going back and choo
   flow.back();
   flow.choose();
   assert.deepEqual(heard.slice(0, 3), ['ui_move', 'ui_open', 'ui_back']);
+});
+
+test('loops: setLoop starts a looping sound once and stops it again; quiet without a context', () => {
+  const audio = { music: {}, sounds: { hum: { zzfx: [1, 0, 110, 0, 0.1, 0], loop: true } } };
+  const { sound, log } = engine(audio);
+  sound.setLoop('hum', true);
+  assert.equal(sound.loops.size, 0);
+  sound.unlock();
+  sound.setLoop('hum', true);
+  sound.setLoop('hum', true);
+  assert.equal(log.sources, 1);
+  assert.equal(sound.loops.size, 1);
+  assert.equal(sound.loops.get('hum').source.loop, true);
+  sound.setLoop('hum', false);
+  sound.setLoop('hum', false);
+  assert.equal(sound.loops.size, 0);
 });

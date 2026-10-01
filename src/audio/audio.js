@@ -14,6 +14,9 @@ import { ZZFX_RATE, zzfxSamples } from './zzfx.js';
 /** Seconds a track takes to fade in or out when music changes. */
 export const MUSIC_FADE = 1.5;
 
+/** Time constant in seconds of a loop's fade in and out. */
+const LOOP_FADE = 0.04;
+
 export class AudioEngine {
   /**
    * @param {typeof NO_AUDIO} audio the contents of audio.json
@@ -39,6 +42,8 @@ export class AudioEngine {
     this.wanted = null;
     /** @type {Map<string, any>} sound effect files already loaded, by name */
     this.fileSounds = new Map();
+    /** @type {Map<string, { source: any, gain: any }>} looping sounds running (setLoop) */
+    this.loops = new Map();
     /** Names already warned about. */
     this.warned = new Set();
   }
@@ -84,6 +89,46 @@ export class AudioEngine {
     if (!sound || stepGain(this.volume.sound) === 0) return false;
     if (sound.zzfx) return this.playRecipe(sound.zzfx, sound.volume);
     return this.playFile(name, sound);
+  }
+
+  /**
+   * Keep a looping ZzFX sound (a sound with "loop": true, like the
+   * shield's hum) running or stopped; fades in and out so it never
+   * clicks. Safe to call every tick with the same state.
+   * @param {string} name a key of audio.json "sounds"
+   * @param {boolean} on
+   */
+  setLoop(name, on) {
+    const running = this.loops.get(name);
+    if (!on) {
+      if (running) this.stopLoop(name, running);
+      return;
+    }
+    if (running || !this.context) return;
+    const sound = lookup(this.audio, 'sounds', name);
+    if (!sound?.zzfx) return;
+    const samples = zzfxSamples(sound.zzfx);
+    const buffer = this.context.createBuffer(1, samples.length, ZZFX_RATE);
+    buffer.getChannelData(0).set(samples);
+    const source = this.context.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+    // Skip the first few samples (the recipe's attack) when it wraps round.
+    source.loopStart = 32 / ZZFX_RATE;
+    const gain = this.context.createGain();
+    gain.gain.value = 0;
+    gain.gain.setTargetAtTime?.(sound.volume, this.context.currentTime, LOOP_FADE);
+    source.connect(gain);
+    gain.connect(this.soundGain);
+    source.start();
+    this.loops.set(name, { source, gain });
+  }
+
+  /** Fade a running loop out and release it. */
+  stopLoop(name, { source, gain }) {
+    this.loops.delete(name);
+    gain.gain.setTargetAtTime?.(0, this.context.currentTime, LOOP_FADE);
+    source.stop?.(this.context.currentTime + LOOP_FADE * 8);
   }
 
   /**
