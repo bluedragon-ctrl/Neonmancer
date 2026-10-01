@@ -1877,10 +1877,22 @@ list switches to another room; New room makes an empty one (D57).
 | Ctrl+Z, Ctrl+Y (Ctrl+Shift+Z) | Undo, redo |
 | Ctrl+S | Save (dev server) / export (build), from a panel field too |
 
+A click hits what is seen (`src/editor/pick.js`): with the Block, Object,
+Enemy and Switch tools, a block, object, enemy or pickup drawn on the
+current layer (or above it, with **hide above** off) is hit through its
+top or side, so a click on the top of a crate is the crate, never the
+floor cell behind it. A plate is thin, a decoration as tall as its look.
+Things below the layer never win: the ray meets the layer first, so a
+click on the top of a block one layer down is the free cell above it, on
+this layer. Elsewhere a click is the layer's cell under the mouse. The
+Path tool hits objects and enemies only (its points go on the layer);
+the Exit, Spawn and Reset tools work on the layer, Hole and Shrine on the
+floor.
+
 - **Block** puts a block of the type picked in the panel's type list (every
   block type in `defs.json`, with what it does: `hazard (hurts 1)`,
   `collapsing_regrow (collapsing, regrows 3 s)`, `bridge (switch gate,
-  inverted)`) in the cell of the current layer, replacing whatever is
+  inverted)`) in the cell clicked (see above), replacing whatever is
   there; erasing empties the cell (D60). For a switch gate the panel has
   a **Switches** field: the ids the gates placed take (blank: every
   switch). Cells merge into boxes only with the same type and switches.

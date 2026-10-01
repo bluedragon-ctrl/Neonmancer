@@ -35,6 +35,10 @@ docs/decisions.md).
   Alt+click with the Block tool copies a block's type and switches.
 
 ### Changed
+- Room editor: a click hits what is seen. With the Block, Object, Enemy
+  and Switch tools, a block or item drawn on the layer is hit through its
+  top or side, not the floor cell behind it; the top of a block one layer
+  down is still the cell above it. The Path tool hits objects and enemies.
 - Room editor Switch tool: the first click on a gate or exit on every
   switch links it to just the picked switch (it used to unlink it, and
   could unlock a locked exit); deleting a switch takes it out of every
