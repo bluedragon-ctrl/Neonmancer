@@ -19,9 +19,10 @@ bosses that drop loot, tooling) (D104, D105).
   notes and PR summary now say so.
 
 ### Added
-- Warden design (D134): one-cell bosses one or two cubes high, hurt
-  only through a glowing visor, a boss bar on the HUD; boss 1 shoots and
-  teleports, boss 2 is a big virus lured onto an overload plate.
+- Boss design (D134): one-cell bosses one or two cubes high with a boss
+  bar; boss 1 (bug body, three gold rings) shoots and teleports, boss 2
+  (a big virus) chases and winds up a surround burst, and is hurt only
+  on an overload plate.
 - Design skills (D132): `.claude/skills/room-design` and `enemy-design`,
   and the read-only `level-review` subagent (`.claude/agents/`) that runs
   `validate:data` and `check:reach` and reviews a room against the room

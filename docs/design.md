@@ -2111,17 +2111,16 @@ Settled:
   while that pickup's bit is found, the Warden is left out of its room
   and counts as defeated. Data checks refuse a Warden without such a drop,
   and a drop that is a refill. Shrines stay out of boss rooms.
-- Warden design (D134): bodies stay one cell on the floor, one or two
-  cubes high (no multi-cell claims). A boss is hurt only through its
-  visor, which glows while open; a boss bar with a tick per phase shows
-  its integrity on the HUD; Pause never freezes it. Boss 1 (the Warden,
-  drops fragment 7) shoots aimed bolts and teleports about its arena, so
-  he must take cover (bolt-stopping blocks) and retarget; its visor is
-  open after a volley and after a teleport. Boss 2 (the Gatekeeper, a
-  virus two cubes high, drops the energy buff) is immune until it stands
-  on an overload plate of its arena, lured by walking it there or by a
-  Fork decoy beside the plate; a later phase adds a burst, so waiting
-  beside the plate costs. Engine in 4.5, bosses in 4.6 and 4.7.
+- Boss design (D134): bodies stay one cell on the floor, one or two
+  cubes high (no multi-cell claims); a boss bar on the HUD; Pause never
+  freezes a boss. Boss 1 (the bug body ringed by three gold circles,
+  high integrity, always hittable, drops fragment 7) shoots aimed bolts
+  and teleports about its arena, so he must take cover (bolt-stopping
+  blocks) and retarget. Boss 2 (the Gatekeeper, a virus two cubes high,
+  drops the energy buff) chases him and, next to him, winds up a charged
+  surround burst; it is immune until it stands on an overload plate of
+  its arena, which he leads it over (a Fork decoy can hold it there).
+  Engine in 4.5, bosses in 4.6 and 4.7.
 
 - A key whose room cell holds no room (the room moved on the world map
   since) still loads what he has and starts him in the start room.
