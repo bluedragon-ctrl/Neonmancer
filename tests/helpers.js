@@ -128,14 +128,20 @@ export const PICKUPS = {
 /** Score values (D100), as in defs.json. */
 export const SCORE = { bit: 50, secret: 200, accessLevel: 500 };
 
-/** Block types, as in defs.json (D60): plain, hazard, void, fake (D128), collapsing and a variant that grows back after 3 s. */
+/**
+ * Block types, as in defs.json (D60): plain, hazard, void, fake (D128),
+ * gates (D141): collapsing (a step gate) and a variant that grows back
+ * after 3 s, a switch gate and a bridge.
+ */
 export const BLOCK_TYPES = {
   block: { look: 'plain' },
   hazard: { look: 'hazard', color: '#ff3b30', damage: 1 },
   void: { look: 'void', color: '#8a5cff', lethal: true },
   fake: { look: 'plain', fake: true },
-  collapsing: { kind: 'collapsing' },
+  collapsing: { kind: 'gate', trigger: 'step' },
   collapsing_regrow: { extends: 'collapsing', regrow: 3 },
+  gate: { kind: 'gate', color: '#eef3ff' },
+  bridge: { extends: 'gate', inverted: true },
 };
 
 /**

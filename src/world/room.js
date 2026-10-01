@@ -7,7 +7,8 @@ import { OBJECT_STYLE_DEFAULTS, blockCells, holeTiles, withEnemyDefaults, withEx
 
 /**
  * The room's block cells by type (D60): static types go into the grid;
- * each cell of a type with a kind (collapsing) becomes a room object.
+ * each cell of a type with a kind (a gate, D141) becomes a room object,
+ * with the switches of its entry.
  * @returns {{ blocks: Record<string, number[][]>, objects: object[] }}
  */
 function blocksByType(data, blockTypes, roomColor) {
@@ -24,7 +25,8 @@ function blocksByType(data, blockTypes, roomColor) {
     // without a color it is room structure and takes the room color (D99).
     const { id: _, static: __, extends: ___, ...values } = type;
     const look = { ...OBJECT_STYLE_DEFAULTS, color: roomColor, ...values };
-    for (const at of cells) objects.push({ id: `${type.id}@${at.join(',')}`, type: type.id, at, ...look });
+    const switches = block.switches && { switches: [...block.switches] };
+    for (const at of cells) objects.push({ id: `${type.id}@${at.join(',')}`, type: type.id, at, ...look, ...switches });
   }
   return { blocks, objects };
 }

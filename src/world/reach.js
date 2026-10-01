@@ -119,7 +119,7 @@ class RoomModel {
       if (object.kind === 'pushable') this.crates.push(this.index(x, y, z));
       else if (object.kind === 'platform') for (const [px, py, pz] of pathCells(object.at, object.path)) this.floors.add(this.index(px, py, pz));
       else if (object.kind === 'plate') this.switches.push(object);
-      else if (object.kind === 'gate') this.gates.push({ index: this.index(x, y, z), inverted: !!object.inverted, switches: object.switches ?? null });
+      else if (object.kind === 'gate' && (object.trigger ?? 'switch') === 'switch') this.gates.push({ index: this.index(x, y, z), inverted: !!object.inverted, switches: object.switches ?? null });
       else if (object.kind === 'target') {
         this.switches.push(object);
         this.bodies.add(this.index(x, y, z));
@@ -130,7 +130,7 @@ class RoomModel {
         const [sx, sy, sz] = DECO_LOOKS[object.look]?.size ?? [1, 1, 1];
         for (let dx = 0; dx < sx; dx++)
           for (let dy = 0; dy < sy; dy++) for (let dz = 0; dz < sz; dz++) this.bodies.add(this.index(x + dx, y + dy, z + dz));
-      } else if (object.kind === 'collapsing') this.bodies.add(this.index(x, y, z));
+      } else if (object.kind === 'gate') this.bodies.add(this.index(x, y, z)); // a step gate (collapsing block): timing is not checked
     }
   }
 

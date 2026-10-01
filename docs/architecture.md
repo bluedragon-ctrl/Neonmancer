@@ -81,7 +81,6 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `entities/pull.js` | What Pull reaches (D124): `pullTarget()`, the first crate or enemy in line the way he aims within the spell's range (pure, tested); `Pushable.push()` and `Enemy.pull()` move it a cell towards him |
 | `entities/decoy.js` | Fork's decoy (D129): a non-solid hologram of the wizard: `Decoy` (falls, counts down, derezzes; a plate and enemies read its `box()`), `DECOY` |
 | `entities/scan.js` | Scan (D128): the wave's reach (`scanReach()`, square to a cell or an exit, `cellReach()`, `exitReach()`), what a room hides (`hiddenThings()`: fake block cells, hidden exits) and revealing what the wave reaches each tick (`updateScan(game)`) |
-| `entities/collapsing.js` | Collapsing block: solid → shake (the wizard stood on it) → gone → optional regrow once its cell is clear (D47) |
 | `entities/core.js` | The central core (D101): a fixed 1×2×1 body that takes the fragments; touching it is `Game.touchCore()` (pure) |
 | `entities/enemy.js` | Enemy body: steps cell by cell where its movement behavior leads (never into a hole or onto void, never into a cell another enemy is walking into), turns back when blocked, falls (mid-step too), rides platforms, pops in holes and on void; hostility, provoke, bounce state (D48); seeing the wizard, the "!", the charged attack's charge and cooldown (D78); `alarm()` when anything hits it (D81) and `route()`, a shortest walk to a column (D80); `freeze()` by Pause (D85): still, harmless and solid until it thaws; a boss (D135): `height`, phases (`updatePhase()`), waking, teleports (`teleportCell()`, `BOSS`), plate armor (`exposed`), its `dropId` |
 | `entities/kinds.js` | Object kind → logic class (`OBJECT_KINDS`); the room's objects are built from it |
@@ -90,7 +89,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `entities/player.js` | Movement, jump, gravity, turning, pushing, integrity, invulnerability after a hit, death (hole or damage), respawn; one wizard for the whole game |
 | `entities/pushable.js` | Rest → slide → fall → land / plug-a-hole state machine; destructible ones break (`hit()` → `broken`); a compiled crate (D125, `lifetime`) derezzes when its time is up (`expire()`, a plugged hole opens again) |
 | `entities/switch.js` | Switches (D75): `Target` (a fixed body a bolt switches over) and `Plate` (a floor tile, no body, on while something stands on it); a type's `timer` makes either go off by itself (D140, `countdown`); `SWITCH_KINDS` (pure, tested) |
-| `entities/gate.js` | Gates (D140): `Gate`, a fixed block solid until powered (an inverted one, a bridge, only while powered) that never closes on a body (`power()`, pure, tested) |
+| `entities/gate.js` | Gate blocks (D140, D141): `Gate`, a block that comes and goes by its `trigger`: switch (solid until powered, `power()`; an inverted one, a bridge, only while powered) or step (a collapsing block: solid → shake → gone → optional regrow); it never comes back on a body (pure, tested) |
 | `entities/warp.js` | Where Blink and Warp take the wizard (D86): `warpTarget()` sweeps his box along his aim through open space, stops at blocks, objects and the room's side, lands short of enemies, reports the enemies passed (pure, tested) |
 | `ai/behaviors.js` | Movement behaviors by name (`BEHAVIORS`: `patrol`, `stationary`, `chase`), as enemy templates refer to them |
 | `ai/chase.js` | Chase (D78, D80): calm → chase → search → return, greedy steps towards the wizard, routes (round walls) to where it last saw him and home, searches when his Zap hits it, patrols while calm if it has a path (pure, tested) |
@@ -109,7 +108,6 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/decoy-view.js`, `render/fork-view.js` | Fork (D129): the decoy's hologram model and its grow-in, blink and derez (`createDecoyModel()`, `placeDecoyModel()`, `DecoyView` in `RoomScene`); the spell's bits and aim marker (`ForkView`, in `PlayerView`) |
 | `render/scan-fx.js`, `render/scan-view.js` | Scan (D128): the wave's square clipped to the floor, its fading, a hidden exit's slab (pure, tested); the wave and the derez of what it revealed (`ScanView`, in `RoomScene`, which rebuilds the room view after a reveal) |
 | `render/compile-fx.js`, `render/compile-view.js` | Compile (D125): the crate's grow-in and blinking (pure, tested); the bits' stream and the aim marker (`CompileView`, shown by `PlayerView`); `PushableView` draws the crate |
-| `render/collapse-fx.js` | Collapsing-block look: shake, regrow, `COLLAPSE_FX` tuning (pure, tested) |
 | `render/boss-mark.js` | The boss mark (D134, D135): three gold rings round any boss sized to its height (shut while plate armor is), plate armor's shell (`createArmorShell()`), `teleportLook()`, `bodyScale()` for taller bodies |
 | `render/core-view.js` | The core's reactor look (D101): crystal, pedestal, one orbit ring per access level, `CORE_FX` |
 | `render/crawler.js` | Crawler model (D83): six-legged spider, tripod gait (`crawlerFoot()`, `placeLimb()`), crouch and pawing, `CRAWLER` tuning; `CRAWLER_MODEL` |
@@ -119,7 +117,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/disk.js`, `render/refill.js` | Pickup looks: the data disk (bit grid showing the spell's slot, ghost, pick-up and its derez body; motion pure, tested) and the refills |
 | `render/edges.js` | Visible block edges from grid occupancy; several plain types as one mass, each edge to a type (`groupedBlockEdges()`, D64); merging unit segments into runs (pure, tested) |
 | `render/enemy-look.js` | What every enemy model shares (D80): mood colors (`MOODS`, `eyeMood()`, `setMood()`), the eye geometry and glow (pure parts tested); each look's `derez` body is in its own module |
-| `render/entity-view.js` | Player (with the cast flare), pushable, platform, collapsing-block and enemy views (enemy bodies by `look`: `ENEMY_MODELS`; spell-hit flash and glitch, charge glow, "!" and discharge), glowing drop shadows, platform guide lines |
+| `render/entity-view.js` | Player (with the cast flare), pushable, platform and enemy views (enemy bodies by `look`: `ENEMY_MODELS`; spell-hit flash and glitch, charge glow, "!" and discharge), glowing drop shadows, platform guide lines |
 | `render/exit-layout.js` | Exit effect layout and timing, `EXIT_FX` tuning (pure, tested) |
 | `render/exit-view.js` | Exit effect in the destination color: dashed stream into doorway tunnels, arrows gliding out of front exits |
 | `render/firewall-fx.js`, `render/firewall-view.js` | Firewall's ring of flames (D84): the segments (pure, tested; timing is the Shield's) and its meshes, shown by `PlayerView` |
@@ -158,7 +156,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/shrine-view.js` | Backup shrine look (D97): floor tile, rune, glow, motes and rings, flare on use, `SHRINE_FX` (layout and timing pure, tested) |
 | `render/spikes.js` | The spiked object shape (D82): pyramids on a core cube inside the cell, as face triangles and outline segments, `SPIKES` tuning; pure, tested |
 | `render/switch-view.js` | Switch and locked-exit looks (`SWITCH_FX`): target and plate with their square bull's-eye (a timed one's outer square dashed, blinking as it counts down: `switchLight()`, D140), the lock's panel with one light per linked switch and an access lock's Roman numeral (D101); `TargetView`, `PlateView`, `LockView` (marks pure, tested) |
-| `render/gate-view.js` | Gate look (`GATE_FX`, D140): a white barred block with a light per switch on top, sinking to open, a dashed outline while open; `GateView` (marks pure, tested) |
+| `render/gate-view.js` | Gate block look (`GATE_FX`, D140, D141): a switch gate is a white barred block with a light per switch on top of a stack, a step gate its type's look with a rattle (`gateShake()`); both sink to go and leave a dashed outline if they come back; `GateView` (pure parts tested) |
 | `render/viewport.js` | Letterbox, buffer size and 1080p-relative sizing math (pure, tested) |
 | `render/virus.js` | Virus model (D78): sharp tipped cube, orbiting bits, glide, charge pose, pop pixels, `VIRUS` tuning; `VIRUS_MODEL` |
 | `render/walls.js` | Back walls with doorways and dark tunnels behind them, front edges with gaps, arrow shape for front exits (pure, tested) |
@@ -313,15 +311,16 @@ A spiked platform (D82) is the same class with a `damage` from its type:
 blocks, touching one (`touchesBox()`) calls `Game.hurt()` with the object,
 whose view flares (`RoomScene.flareObject()`).
 
-Collapsing blocks (D47) are room objects that never move but can vanish.
-Each tick one checks whether the wizard stands on it (alive, grounded, feet
-on its top, footprints overlapping); then it shakes for `shakeTicks` and
-vanishes. While gone its `solid` is false, and the game leaves it out of
-`Game.solids` (the objects others collide with) and `Game.bodies` (those
-plus the wizard): `refreshBodies()` rebuilds both right after a `collapse`
-or `regrow` event, inside the objects loop, so a crate resting on it falls
-in the same tick. A block with a regrow time grows back once the time is
-up and no body overlaps its cell.
+Gate blocks (D140, D141) are room objects that never move but can go.
+A step gate (a collapsing block, D47) checks each tick whether the wizard
+stands on it (alive, grounded, feet on its top, footprints overlapping);
+then it shakes for `shakeTicks` and goes. A switch gate is powered by
+`updateSwitches()` (`power()`). While gone its `solid` is false, and the
+game leaves it out of `Game.solids` (the objects others collide with) and
+`Game.bodies` (those plus the wizard): `refreshBodies()` rebuilds both
+right after a `collapse` or `regrow` event, inside the objects loop, so a
+crate resting on it falls in the same tick, and after a gate opened or
+closed. Either comes back only once no body overlaps its cell.
 
 Enemies (D48) are not room objects: `Game.enemies` holds them, built from
 the room's `enemies` (their template's fields from `defs.json`; a room

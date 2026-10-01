@@ -12,8 +12,6 @@
     "plate": { "kind": "plate", "color": "#eef3ff", "edges": "dashed" },
     "target_timed": { "kind": "target", "color": "#eef3ff", "timer": 5 },
     "plate_timed": { "kind": "plate", "color": "#eef3ff", "edges": "dashed", "timer": 3 },
-    "gate": { "kind": "gate", "color": "#eef3ff" },
-    "bridge": { "kind": "gate", "color": "#eef3ff", "inverted": true },
     "platform": { "kind": "platform", "color": "#00f0ff", "mark": "brackets", "faces": "tinted" },
     "spiked_platform": { "kind": "platform", "color": "#ff2a3a", "shape": "spiked", "damage": 1 },
     "data_pillar": { "kind": "deco", "look": "data_pillar" },
@@ -398,7 +396,9 @@
     "hazard": { "look": "hazard", "color": "#ff2a3a", "damage": 1 },
     "void": { "look": "void", "color": "#9aa0b0", "lethal": true },
     "fake": { "look": "plain", "fake": true },
-    "collapsing": { "kind": "collapsing", "edges": "dashed", "faces": "tinted", "tint": 0.05 },
-    "collapsing_regrow": { "extends": "collapsing", "regrow": 3 }
+    "collapsing": { "kind": "gate", "trigger": "step", "edges": "dashed", "faces": "tinted", "tint": 0.05 },
+    "collapsing_regrow": { "extends": "collapsing", "regrow": 3 },
+    "gate": { "kind": "gate", "color": "#eef3ff" },
+    "bridge": { "extends": "gate", "inverted": true }
   }
 }

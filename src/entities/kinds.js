@@ -8,9 +8,8 @@
  * body others collide with) and `update(game)`, returning an event type or
  * null. Optional: `push(dir, game)` for objects the wizard can push;
  * `solid`, false while the object is not there to collide with (a
- * collapsed block): the game then leaves it out of `solids` and `bodies`.
+ * gate that is gone, D141): the game then leaves it out of `solids` and `bodies`.
  */
-import { Collapsing } from './collapsing.js';
 import { Core } from './core.js';
 import { Deco } from './deco.js';
 import { Gate } from './gate.js';
@@ -21,7 +20,6 @@ import { Plate, Target } from './switch.js';
 export const OBJECT_KINDS = {
   pushable: Pushable,
   platform: Platform,
-  collapsing: Collapsing,
   target: Target,
   plate: Plate,
   core: Core,

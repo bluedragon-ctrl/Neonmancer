@@ -9,7 +9,7 @@
 import { MAX_ROOM_FOOTPRINT, ROOM_HEIGHT } from '../core/rules.js';
 import { DATA_SCHEMA_VERSION } from '../core/version.js';
 import { DECO_FACES, EXIT_DEFAULTS, sideLength, withExitDefaults } from '../data/room-data.js';
-import { Boxes } from './boxes.js';
+import { Boxes, boxFields, boxKey } from './boxes.js';
 import { formatJson } from './format-json.js';
 import { idProblem } from './ids.js';
 
@@ -198,8 +198,10 @@ export class RoomEdit {
       const item = (this.data[key] ?? []).find((other) => sameCell(other.at, cell));
       if (item) return { kind, item };
     }
-    const type = this.blocks.get(cell);
-    return type ? { kind: 'block', type } : null;
+    const key = this.blocks.get(cell);
+    if (!key) return null;
+    const { type, switches } = boxFields(key);
+    return { kind: 'block', type, ...(switches && { switches }) };
   }
 
   /**
@@ -245,15 +247,17 @@ export class RoomEdit {
    * Put a block of `type` in a cell, replacing whatever was there.
    * @param {number[]} cell
    * @param {string} type block type id (defs.json "blocks", D60)
+   * @param {string[]} [switches] a switch gate's switches (D140, D141); none: every switch in the room
    * @returns {boolean} whether anything changed
    */
-  placeBlock(cell, type) {
+  placeBlock(cell, type, switches = []) {
     if (!this.inside(cell)) return false;
+    const key = boxKey(type, switches);
     return this.edit(() => {
       const here = this.at(cell);
-      if (here?.kind === 'block' && here.type === type) return false;
+      if (here?.kind === 'block' && boxKey(here.type, here.switches) === key) return false;
       this.remove(cell);
-      return this.blocks.set(cell, type);
+      return this.blocks.set(cell, key);
     });
   }
 
@@ -588,8 +592,8 @@ export class RoomEdit {
   }
 
   /**
-   * Link a gate or platform to switches of the room (D140): their ids, or
-   * none (a gate then takes every switch, a platform always runs).
+   * Link a platform to switches of the room (D140): their ids, or none
+   * (it always runs).
    * @param {string} id
    * @param {string[]} switches
    */

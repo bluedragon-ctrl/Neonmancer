@@ -65,11 +65,16 @@ const HINTS = {
 
 /**
  * A block type in a few words for the type list: what it does
- * (`hurts 1`, `lethal`, `collapsing, regrows 3 s`) or its look.
- * @param {{ look?: string, kind?: string, damage?: number, lethal?: boolean, regrow?: number }} type
+ * (`hurts 1`, `lethal`, `collapsing, regrows 3 s`, `switch gate,
+ * inverted`) or its look.
+ * @param {{ look?: string, kind?: string, trigger?: string, inverted?: boolean, damage?: number, lethal?: boolean, regrow?: number }} type
  */
 export function blockTypeText(type) {
-  if (type.kind) return type.regrow ? `${type.kind}, regrows ${type.regrow} s` : type.kind;
+  if (type.kind === 'gate') {
+    if (type.trigger === 'step') return type.regrow ? `collapsing, regrows ${type.regrow} s` : 'collapsing';
+    return type.inverted ? 'switch gate, inverted' : 'switch gate';
+  }
+  if (type.kind) return type.kind;
   const does = [type.damage && `hurts ${type.damage}`, type.lethal && 'lethal'].filter(Boolean);
   return does.join(', ') || type.look;
 }
@@ -273,11 +278,16 @@ export class EditorPanel {
     this.blockSelect = select(Object.entries(blockTypes).map(([id, type]) => [id, `${id} (${blockTypeText(type)})`]));
     this.blockSelect.addEventListener('change', () => on.blockType(this.blockSelect.value));
     this.blockRows = el('div', 'editor-group');
-    this.blockRows.append(this.row('Type', this.blockSelect));
+    // A switch gate's switches (D140, D141): the gate cells placed get them.
+    this.blockSwitches = switchesInput('Ids of the switches (targets, plates) that power the gates placed, by spaces or commas; empty: every switch in the room');
+    this.blockSwitches.placeholder = 'every switch';
+    this.blockSwitches.addEventListener('change', () => on.blockSwitches(switchIds(this.blockSwitches.value)));
+    this.blockSwitchesRow = this.row('Switches', this.blockSwitches);
+    this.blockRows.append(this.row('Type', this.blockSelect), this.blockSwitchesRow);
     this.objectSelect = select(Object.entries(objectTypes).map(([id, type]) => [id, `${id} (${type.kind})`]));
     this.objectSelect.addEventListener('change', () => on.objectType(this.objectSelect.value));
     this.objectRows = el('div', 'editor-group');
-    // A picked gate or platform: the switches that power it (D140).
+    // A picked platform: the switches that run it (D140).
     this.objectSwitches = switchesInput('Ids of the switches (targets, plates) that power it, by spaces or commas');
     this.objectSwitches.addEventListener('change', () => on.itemSwitches(switchIds(this.objectSwitches.value)));
     this.objectSwitchesRow = this.row('Switches', this.objectSwitches);
@@ -480,8 +490,9 @@ export class EditorPanel {
    * @param {string[]} state.rooms ids of every room, to pick from
    * @param {string} state.tool
    * @param {string} state.blockType the Block tool's type
+   * @param {string[]|null} [state.blockSwitches] the switches of the switch gates it places (D141), or null: not a switch gate
    * @param {string} state.objectType
-   * @param {{ kind: string, switches: string[] }|null} [state.links] the picked gate or platform and its switches (D140), or null
+   * @param {{ kind: string, switches: string[] }|null} [state.links] the picked platform and its switches (D140), or null
    * @param {{ id: string|null, template: string, drop: string|null, drops: string[] }} state.enemy the picked enemy's template
    *   (with its id and, a boss, its drop and the room's permanent pickups it may drop), or new enemies'
    * @param {object|null} state.pathItem the platform or enemy whose path is edited
@@ -497,7 +508,7 @@ export class EditorPanel {
    * @param {string} state.status a line about the last action
    * @param {boolean} state.unsaved there are unsaved edits (any room, or world.json)
    */
-  show({ edit, rooms, tool, blockType, objectType, links = null, enemy, pathItem, pathItemIsEnemy, screen, exit, layer, cut, errors, status, unsaved }) {
+  show({ edit, rooms, tool, blockType, blockSwitches = null, objectType, links = null, enemy, pathItem, pathItemIsEnemy, screen, exit, layer, cut, errors, status, unsaved }) {
     const data = edit.data;
     const changed = edit.dirty || edit.linksChanged;
     this.roomLabel.textContent = `${data.id}${changed ? ' • unsaved' : unsaved ? ' • other rooms unsaved' : ''}`;
@@ -509,12 +520,14 @@ export class EditorPanel {
 
     this.blockRows.hidden = tool !== 'block';
     this.blockSelect.value = blockType;
+    this.blockSwitchesRow.hidden = !blockSwitches;
+    if (blockSwitches && document.activeElement !== this.blockSwitches) this.blockSwitches.value = blockSwitches.join(' ');
     this.objectRows.hidden = tool !== 'object';
     this.objectSelect.value = objectType;
-    // A picked gate or platform: its switches (D140).
+    // A picked platform: its switches (D140).
     this.objectSwitchesRow.hidden = !links;
     if (links) {
-      this.objectSwitches.placeholder = links.kind === 'gate' ? 'every switch' : 'none: always runs';
+      this.objectSwitches.placeholder = 'none: always runs';
       if (document.activeElement !== this.objectSwitches) this.objectSwitches.value = links.switches.join(' ');
     }
     this.showScreen(screen);

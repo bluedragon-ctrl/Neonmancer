@@ -1,18 +1,26 @@
 /**
- * Gates and bridges (D140): a white mechanism block (D99) with bars across
- * the two sides the camera sees (D115) and a small bull's-eye light on top
- * per switch that powers it, lit for each one on (like a lock's lights).
- * Opening, the block sinks into its cell's floor; open, a dim dashed
- * outline shows where it will rise again. A bridge looks the same: it is
- * a gate the other way round.
+ * Gate blocks (D140, D141), one look language for both triggers: going,
+ * the block sinks into its cell's floor; gone, a dim dashed outline shows
+ * where it will rise again (only if it will); coming back, it rises.
  *
- * `userData.set({ closed, lit })` and `userData.update(dt)`; states ease in.
- * Reviewed in the asset showcase (`?asset=switches`).
+ * - Switch gates and bridges: a white mechanism block (D99) with bars
+ *   across the two sides the camera sees (D115) and a small bull's-eye
+ *   light on top of a stack per switch that powers it, lit for each one
+ *   on (like a lock's lights). A bridge looks the same.
+ * - Step gates (collapsing blocks, D47): the block type's own look
+ *   (room color, dashed edges, tinted faces); stood on, it rattles harder
+ *   and harder (gateShake()) before it sinks.
+ *
+ * `userData.set({ closed, lit, shake, outline })` and `userData.update(dt)`;
+ * states ease in. Reviewed in the asset showcase (`?asset=gates`,
+ * `?asset=collapsing-cycle`).
  */
 import { BoxGeometry, Color, DoubleSide, Group, Mesh, MeshBasicMaterial, PlaneGeometry } from 'three';
 import { blockEdges } from './edges.js';
 import { faceMaterial, lineMaterial, neonLines, shared, PALETTE } from './neon.js';
+import { createObjectView } from './room-view.js';
 import { SWITCH_FX } from './switch-view.js';
+import { GATE } from '../entities/gate.js';
 import { linkedSwitches } from '../switches.js';
 
 /** Tuning (units, seconds, brightness). */
@@ -30,7 +38,25 @@ export const GATE_FX = {
   /** Top lights: half size of the outer square, gap between lights. */
   light: 0.07,
   lightGap: 0.2,
+  /** A step gate's sideways rattle at the start and at the end of its shaking. */
+  shakeFrom: 0.015,
+  shakeTo: 0.07,
 };
+
+/**
+ * A step gate's rattle this frame (pure, tested): [x, 0, z] off its cell,
+ * growing while it shakes; none in any other state.
+ * @param {{ state: string, timer: number }} gate see entities/gate.js
+ * @param {number} alpha interpolation factor 0..1 between the last two ticks
+ */
+export function gateShake({ state, timer }, alpha) {
+  if (state !== 'shake') return [0, 0, 0];
+  // Two out-of-step wobbles, so it rattles rather than swings.
+  const tick = timer + alpha;
+  const t = Math.min(tick / GATE.shakeTicks, 1);
+  const amount = GATE_FX.shakeFrom + (GATE_FX.shakeTo - GATE_FX.shakeFrom) * t;
+  return [amount * Math.sin(tick * 2.1), 0, amount * Math.sin(tick * 2.9 + 1)];
+}
 
 const UNIT_BOX = shared(new BoxGeometry(1, 1, 1).translate(0.5, 0.5, 0.5));
 const FACE = new Color(PALETTE.face);
@@ -65,23 +91,31 @@ function ease(value, target, dt, time) {
 }
 
 /**
- * A gate, its lower corner at the origin.
+ * A gate block, its lower corner at the origin.
  * @param {number|string} color
- * @param {{ lights?: number, closed?: boolean }} [options] switches that power it (one light each); closed to start with
+ * @param {object} [options]
+ * @param {object|null} [options.style] a step gate's object style (edges, faces, tint...); null: a switch gate's barred look
+ * @param {number} [options.lights] switches that power it (one light each on top)
+ * @param {boolean} [options.closed] solid to start with
  */
-export function createGate(color, { lights = 0, closed = true } = {}) {
+export function createGate(color, { style = null, lights = 0, closed = true } = {}) {
   const base = new Color(color);
   const group = new Group();
-  // The block, scaled down from its foot as it sinks.
+  // The block, scaled down from its foot as it sinks; `shaker` rattles it.
+  const shaker = new Group();
   const body = new Group();
-  group.add(body);
+  shaker.add(body);
+  group.add(shaker);
   const faces = [faceMaterial(), faceMaterial(), faceMaterial()];
-  body.add(new Mesh(UNIT_BOX, [faces[1], faces[1], faces[0], faces[0], faces[2], faces[2]]));
   const edgeMat = lineMaterial({ color: base, width: 2.5 });
   const barMat = lineMaterial({ color: base, width: 1.8 });
-  for (const line of [neonLines(blockEdges([[0, 0, 0]]), edgeMat), neonLines(gateBars(), barMat)]) {
-    line.renderOrder = 2;
-    body.add(line);
+  if (style) body.add(createObjectView({ ...style, color, at: [0, 0, 0] }));
+  else {
+    body.add(new Mesh(UNIT_BOX, [faces[1], faces[1], faces[0], faces[0], faces[2], faces[2]]));
+    for (const line of [neonLines(blockEdges([[0, 0, 0]]), edgeMat), neonLines(gateBars(), barMat)]) {
+      line.renderOrder = 2;
+      body.add(line);
+    }
   }
   // The lights on top: an outline square each, filling with light when its switch is on.
   const { light: s } = GATE_FX;
@@ -116,9 +150,12 @@ export function createGate(color, { lights = 0, closed = true } = {}) {
 
   let shut = closed ? 1 : 0;
   let shutTarget = shut;
-  group.userData.set = ({ closed: isClosed = true, lit = 0 } = {}) => {
+  let outlined = true;
+  group.userData.set = ({ closed: isClosed = true, lit = 0, shake = [0, 0, 0], outline = true } = {}) => {
     shutTarget = isClosed ? 1 : 0;
     fills.forEach((fill, i) => (fill.target = i < lit ? 1 : 0));
+    shaker.position.set(...shake);
+    outlined = outline;
   };
   group.userData.update = (dt) => {
     shut = ease(shut, shutTarget, dt, GATE_FX.move);
@@ -135,33 +172,51 @@ export function createGate(color, { lights = 0, closed = true } = {}) {
       fill.material.color.copy(base).multiplyScalar(SWITCH_FX.fill);
     }
     ghostMat.color.copy(base).multiplyScalar(GATE_FX.ghost * (1 - eased));
-    ghost.visible = eased < 0.99;
+    ghost.visible = outlined && eased < 0.99;
     group.userData.closedness = eased;
   };
   group.userData.update(0);
   return group;
 }
 
-/** A gate or bridge in the room (entities/gate.js). */
+/**
+ * Does a switch gate show its lights: on the top of a stack only (no
+ * switch gate right above it), so a wall of gates isn't covered in them.
+ * @param {{ pos: number[] }} gate
+ * @param {{ kind: string, trigger?: string, pos: number[] }[]} objects the room's objects
+ */
+export function showsLights(gate, objects) {
+  const [x, y, z] = gate.pos;
+  return !objects.some((o) => o.kind === 'gate' && o.trigger === 'switch' && o.pos[0] === x && o.pos[1] === y + 1 && o.pos[2] === z);
+}
+
+/** A gate block in the room (entities/gate.js): a switch gate, a bridge or a step gate. */
 export class GateView {
   /**
-   * @param {import('../game.js').Game} game
-   * @param {import('../entities/gate.js').Gate} gate
+   * @param {import('../game.js').Game|null} game null in the showcase (no lights)
+   * @param {import('../entities/gate.js').Gate} gate (or anything with its `trigger`, `state`, `timer`, `returns`, `pos` and `object`)
    */
   constructor(game, gate) {
-    this.game = game;
     this.gate = gate;
-    this.linked = linkedSwitches(game, gate.switches);
-    this.group = createGate(gate.object.color, { lights: this.linked.length, closed: gate.closed });
+    const switched = gate.trigger === 'switch';
+    this.linked = switched && game && showsLights(gate, game.objects) ? linkedSwitches(game, gate.switches) : [];
+    const { object } = gate;
+    this.group = createGate(object.color, { style: switched ? null : { ...object, kind: 'gate' }, lights: this.linked.length, closed: gate.state !== 'gone' });
     this.group.position.set(...gate.pos);
   }
 
   /**
-   * @param {number} alpha unused: it never moves
+   * @param {number} alpha interpolation factor 0..1 between the last two ticks
    * @param {number} [dt] seconds since the last frame
    */
   sync(alpha, dt = 0) {
-    this.group.userData.set({ closed: this.gate.closed, lit: this.linked.filter((object) => object.on).length });
+    const { gate } = this;
+    this.group.userData.set({
+      closed: gate.state !== 'gone',
+      lit: this.linked.filter((object) => object.on).length,
+      shake: gateShake(gate, alpha),
+      outline: gate.returns,
+    });
     this.group.userData.update(dt);
   }
 }

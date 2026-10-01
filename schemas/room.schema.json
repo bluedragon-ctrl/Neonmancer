@@ -119,12 +119,16 @@
         "type": {
           "$ref": "common.schema.json#/$defs/id",
           "default": "block",
-          "description": "A block type in defs.json \"blocks\" (D60): e.g. block (plain), hazard (hurts on touch), void (kills when landed on), collapsing (gives way under the wizard)."
+          "description": "A block type in defs.json \"blocks\" (D60): e.g. block (plain), hazard (hurts on touch), void (kills when landed on), collapsing (gives way under the wizard), gate and bridge (switched, D140)."
         },
         "at": { "$ref": "common.schema.json#/$defs/cell" },
         "to": {
           "$ref": "common.schema.json#/$defs/cell",
           "description": "Optional opposite corner; fills the box from at to to (inclusive)."
+        },
+        "switches": {
+          "$ref": "#/$defs/switches",
+          "description": "Switch gates only (D140, D141): the ids of the switches that power every cell of it; without, every switch in the room. A gate is gone (a bridge there) while they are all on."
         }
       }
     },
@@ -162,7 +166,7 @@
         },
         "switches": {
           "$ref": "#/$defs/switches",
-          "description": "Gates and platforms only (D140): the ids of the switches that power it. A gate opens (a bridge appears) while they are all on, by default every switch in the room; a platform with switches runs only while they are all on and stops where it is when one goes off (without, it always runs)."
+          "description": "Platforms only (D140): the ids of the switches that run it; it runs only while they are all on and stops where it is when one goes off (without, it always runs)."
         }
       }
     },

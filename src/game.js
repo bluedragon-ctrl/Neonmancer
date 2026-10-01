@@ -167,7 +167,7 @@ export class Game {
     this.room = buildRoom(this.content.rooms.get(id), this.content);
     this.map.visit(id);
     this.grid = new Grid(this.room);
-    /** The room's objects (pushables, platforms, collapsing blocks), by kind (entities/kinds.js). */
+    /** The room's objects (pushables, platforms, gate blocks: switched and collapsing, D141), by kind (entities/kinds.js). */
     this.objects = this.room.objects.map(createObject);
     /** The objects in update order, lowest first; re-sorted in place every tick. */
     this.updateOrder = [...this.objects];

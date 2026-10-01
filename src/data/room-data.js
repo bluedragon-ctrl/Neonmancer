@@ -294,7 +294,7 @@ export function templateChain(templates, id) {
  * Block types (D60) with variants filled in from their base type: each
  * gets its `id`, the base's values, then its own. `static` tells blocks
  * that live in the room grid (a look) from those that run as room objects
- * (a kind, e.g. collapsing).
+ * (a kind: a gate, collapsing ones too, D141).
  * @param {Record<string, object>} types defs.json `blocks`
  * @returns {Record<string, { id: string, static: boolean, look?: string, kind?: string, color?: string, damage?: number, lethal?: boolean, regrow?: number }>}
  */
@@ -310,7 +310,7 @@ export function resolveBlockTypes(types) {
 
 /** Values only static block types take, and only object kinds take (D60). */
 export const STATIC_BLOCK_VALUES = ['look', 'damage', 'lethal', 'fake'];
-export const KIND_BLOCK_VALUES = ['kind', 'regrow', 'edges', 'mark', 'faces', 'tint'];
+export const KIND_BLOCK_VALUES = ['kind', 'trigger', 'inverted', 'regrow', 'edges', 'mark', 'faces', 'tint'];
 
 /**
  * Every floor tile a hole entry covers: just `at`, or the rectangle from

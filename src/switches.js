@@ -72,7 +72,7 @@ export function updateSwitches(game) {
 
   let changed = false;
   for (const object of game.objects) {
-    if (object.kind === 'gate') {
+    if (object.kind === 'gate' && object.trigger === 'switch') {
       const event = object.power(powered(game, object.switches), [...game.bodies, ...(game.decoy?.active ? [game.decoy] : [])]);
       if (event) game.emit('gate', { object, open: event === 'open' });
       changed ||= event !== null;

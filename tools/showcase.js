@@ -17,10 +17,9 @@ import { OBJECT_STYLE_DEFAULTS, resolveBlockTypes, resolveEnemyTemplates, withEn
 import { VIEW_HEIGHT, frameRoom } from '../src/render/camera.js';
 import { JUMP_SPEED, PLAYER } from '../src/entities/player.js';
 import { PLAYER_HITBOX } from '../src/core/rules.js';
-import { COLLAPSING } from '../src/entities/collapsing.js';
+import { GATE } from '../src/entities/gate.js';
 import { PUSHABLE } from '../src/entities/pushable.js';
 import {
-  CollapsingView,
   ENEMY_MODELS,
   createDropShadow,
   createRails,
@@ -70,7 +69,7 @@ import { warpFlash } from '../src/render/warp-fx.js';
 import { createWarpTrail, dashPose, placeWarpTrail } from '../src/render/warp-view.js';
 import { createHoleView } from '../src/render/hole-view.js';
 import { createLock, createPlate, createTarget, switchLight } from '../src/render/switch-view.js';
-import { createGate } from '../src/render/gate-view.js';
+import { GateView, createGate } from '../src/render/gate-view.js';
 import { SWITCH_KINDS } from '../src/entities/switch.js';
 import { FRAGMENT_COLOR } from '../src/entities/pickup.js';
 import { CLIP_FX, marqueeLook, pasteGrow } from '../src/render/clip-fx.js';
@@ -2270,17 +2269,18 @@ function buildSpikedPlatforms() {
 }
 
 /**
- * A row of three collapsing blocks going through their states in a loop,
- * one after the other like a bridge giving way under a runner: standing
- * still, shaking, breaking into pixels, and after a while growing back.
+ * A row of three collapsing blocks (step gates, D141) going through their
+ * states in a loop, one after the other like a bridge giving way under a
+ * runner: standing still, shaking, sinking (a dashed outline left, as
+ * they grow back), and after a while rising again.
  */
 function buildCollapsingCycle() {
-  const object = { ...OBJECT_STYLE_DEFAULTS, color: PALETTE.amber, ...BLOCK_TYPES.collapsing };
+  const object = { ...OBJECT_STYLE_DEFAULTS, color: PALETTE.amber, ...BLOCK_TYPES.collapsing_regrow };
   const solidTicks = 40;
   const goneTicks = 60;
-  const loop = solidTicks + COLLAPSING.shakeTicks + goneTicks;
-  const blocks = [0, 1, 2].map((i) => ({ object, pos: [i - 1.5, 0, -0.5], state: 'solid', timer: 0, regrown: false }));
-  const views = blocks.map((block) => new CollapsingView(null, block));
+  const loop = solidTicks + GATE.shakeTicks + goneTicks;
+  const blocks = [0, 1, 2].map((i) => ({ object, trigger: 'step', returns: true, pos: [i - 1.5, 0, -0.5], state: 'solid', timer: 0 }));
+  const views = blocks.map((block) => new GateView(null, block));
   const asset = new Group().add(...views.map((view) => view.group));
   let tick = 0;
   asset.userData.update = (dt) => {
@@ -2290,11 +2290,11 @@ function buildCollapsingCycle() {
       const t = (tick - i * 12 + loop) % loop;
       const whole = Math.floor(t);
       // Solid from the start of the loop: it just grew back.
-      if (whole < solidTicks) Object.assign(block, { state: 'solid', timer: whole, regrown: true });
-      else if (whole < solidTicks + COLLAPSING.shakeTicks) Object.assign(block, { state: 'shake', timer: whole - solidTicks });
-      else Object.assign(block, { state: 'gone', timer: whole - solidTicks - COLLAPSING.shakeTicks });
+      if (whole < solidTicks) Object.assign(block, { state: 'solid', timer: whole });
+      else if (whole < solidTicks + GATE.shakeTicks) Object.assign(block, { state: 'shake', timer: whole - solidTicks });
+      else Object.assign(block, { state: 'gone', timer: whole - solidTicks - GATE.shakeTicks });
     });
-    for (const view of views) view.sync(0);
+    for (const view of views) view.sync(0, dt);
   };
   return asset;
 }

@@ -321,12 +321,21 @@
           "description": "Static blocks: plain (dark faces, neon edges), hazard (red pixels switching on and off, flares when it hurts) or void (black mist with gray wisps sinking inside it, D99). Looks are built into the engine (src/render/block-fx.js)."
         },
         "kind": {
-          "enum": ["collapsing"],
-          "description": "Blocks that change: each cell becomes a room object of this kind (src/entities/kinds.js). collapsing: shakes when the wizard stands on it, then vanishes (D47)."
+          "enum": ["gate"],
+          "description": "Blocks that change: each cell becomes a room object of this kind (src/entities/kinds.js). gate (D140, D141): a block that comes and goes, by its \"trigger\"."
+        },
+        "trigger": {
+          "enum": ["switch", "step"],
+          "default": "switch",
+          "description": "Gate blocks: what makes it go. switch: solid until its switches are all on (the room block entry's \"switches\", by default every switch in the room), gone while they are; step: a collapsing block (D47), it shakes when the wizard stands on it, then it is gone (back after \"regrow\" seconds, if given). Either way it comes back only once its cell is clear."
+        },
+        "inverted": {
+          "type": "boolean",
+          "description": "Switch gates only: a bridge, there only while its switches are all on, gone otherwise."
         },
         "color": {
           "$ref": "common.schema.json#/$defs/color",
-          "description": "Edges (and lit pixels or grains). Without a color, plain and collapsing blocks take the room color (structure, D99)."
+          "description": "Edges (and lit pixels or grains). Without a color, plain blocks and gates take the room color (structure, D99); switch gates are white (a mechanism)."
         },
         "damage": { "type": "integer", "minimum": 1, "description": "Static blocks: integrity the wizard loses when he touches it (stands on it or walks into it)." },
         "lethal": { "type": "boolean", "description": "Static blocks: landing on top kills the wizard and enemies instantly; touching a side is safe." },
@@ -335,7 +344,7 @@
           "type": "number",
           "exclusiveMinimum": 0,
           "maximum": 60,
-          "description": "Collapsing blocks: seconds after vanishing until the block grows back (once its cell is clear). Without it the block stays gone until the room resets."
+          "description": "Step gates (collapsing blocks) only: seconds after it goes until it comes back (once its cell is clear). Without it the block stays gone until the room resets."
         },
         "edges": { "$ref": "#/$defs/objectType/properties/edges" },
         "mark": { "$ref": "#/$defs/objectType/properties/mark" },
@@ -486,8 +495,8 @@
       "$comment": "A decoration has a look and no color, every other kind a color and no look: checked in src/data/validate.js.",
       "properties": {
         "kind": {
-          "enum": ["pushable", "platform", "target", "plate", "core", "deco", "gate"],
-          "description": "Which engine behavior the object uses. pushable: the wizard pushes it; platform: follows its path (room data \"path\") carrying the wizard and pushables (with \"damage\" it hurts him instead, a spiked platform, D82); target: a fixed block a Zap switches on and off; plate: a floor tile (y 0) that is on while a crate, an enemy or the wizard stands on it. Targets and plates are switches: they power the room's locked exits, gates and platforms that link them (room data \"switches\", by default every switch in the room), each powered while all its switches are on (D75, D140); their look is fixed (render/switch-view.js), only the color comes from here. gate: a fixed block that switches power (D140): solid until its switches are all on, then open; with \"inverted\" (a bridge) the other way round, there only while they are on; it never closes on anything in its cell. core: the central core (D101), a fixed block that takes the key fragments: touching it raises the wizard's access level to what his fragments earn (world.json \"fragments\"), and with all of them the Grid reboots; at most one in the world. deco: a decoration (D117), a fixed body as big as its \"look\" that does nothing; it has no color of its own and takes the room's. Collapsing blocks are block types (\"blocks\", D60)."
+          "enum": ["pushable", "platform", "target", "plate", "core", "deco"],
+          "description": "Which engine behavior the object uses. pushable: the wizard pushes it; platform: follows its path (room data \"path\") carrying the wizard and pushables (with \"damage\" it hurts him instead, a spiked platform, D82); target: a fixed block a Zap switches on and off; plate: a floor tile (y 0) that is on while a crate, an enemy or the wizard stands on it. Targets and plates are switches: they power the room's locked exits, gate blocks and platforms that link them (room data \"switches\", by default every switch in the room), each powered while all its switches are on (D75, D140); their look is fixed (render/switch-view.js), only the color comes from here. Gates are block types (\"blocks\", D141). core: the central core (D101), a fixed block that takes the key fragments: touching it raises the wizard's access level to what his fragments earn (world.json \"fragments\"), and with all of them the Grid reboots; at most one in the world. deco: a decoration (D117), a fixed body as big as its \"look\" that does nothing; it has no color of its own and takes the room's. Collapsing blocks are block types (\"blocks\", D60)."
         },
         "look": {
           "enum": ["data_pillar", "screen", "memory_stack"],
@@ -538,10 +547,6 @@
           "minimum": 0.5,
           "maximum": 30,
           "description": "Targets and plates only: a timed switch (D140), on for this many seconds and then off by itself. A target counts from the bolt that switched it on (another bolt starts the time again), a plate from the moment nothing stands on it. Drawn with a dashed outer square; it blinks while it counts down."
-        },
-        "inverted": {
-          "type": "boolean",
-          "description": "Gates only (D140): a bridge, there only while its switches are all on, open otherwise."
         }
       }
     }

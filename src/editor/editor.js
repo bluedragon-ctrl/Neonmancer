@@ -42,6 +42,11 @@ const toolKey = (id) => TOOLS.find((tool) => tool.id === id).key;
 /** Hint after placing something that can't do without a path yet. */
 const NEEDS_PATH = (id) => `${id} needs a path: pick the Path tool (${toolKey('path')}) and click cells.`;
 
+/** Is a block type a switch gate (D140, D141), which takes switches? */
+function switchGate(type) {
+  return type?.kind === 'gate' && (type.trigger ?? 'switch') === 'switch';
+}
+
 export class Editor {
   /**
    * @param {object} options
@@ -74,6 +79,8 @@ export class Editor {
     this.tool = 'block';
     /** Block type the Block tool places (defs.json "blocks", D60). */
     this.blockType = 'block';
+    /** Switches of the switch gates the Block tool places (D140, D141); none: every switch in the room. */
+    this.blockSwitches = [];
     this.blockTypes = game.content.blockTypes;
     /** Pickup types (D71): placed with the Object tool too, into the room's pickups. */
     this.pickupTypes = game.content.pickupTypes;
@@ -131,6 +138,10 @@ export class Editor {
         enemyTemplate: (id) => this.setEnemyTemplate(id),
         enemyDrop: (id) => this.setEnemyDrop(id),
         screenText: (id) => setScreenText(this, id),
+        blockSwitches: (ids) => {
+          this.blockSwitches = ids;
+          this.refresh();
+        },
         itemSwitches: (ids) => this.selectedItem && this.change(() => this.edit.setSwitches(this.selectedItem.id, ids)),
         newText: (id, text) => newText(this, id, text),
         updateText: (text) => updateText(this, text),
@@ -591,6 +602,7 @@ export class Editor {
       rooms: this.roomIds(),
       tool: this.tool,
       blockType: this.blockType,
+      blockSwitches: switchGate(this.blockTypes[this.blockType]) ? this.blockSwitches : null,
       objectType: this.objectType,
       links: this.linksState(),
       enemy: {
@@ -618,11 +630,10 @@ export class Editor {
     });
   }
 
-  /** The picked gate or platform for the panel (D140): its kind and switches; or null. */
+  /** The picked platform for the panel (D140): its switches; or null. */
   linksState() {
     const item = this.selectedItem;
-    const kind = item && this.objectTypes[item.type]?.kind;
-    return kind === 'gate' || kind === 'platform' ? { kind, switches: item.switches ?? [] } : null;
+    return item && this.objectTypes[item.type]?.kind === 'platform' ? { kind: 'platform', switches: item.switches ?? [] } : null;
   }
 
   /** The picked screen for the panel (D118): its id, its text and who shows that, and every text; or null. */
@@ -722,7 +733,7 @@ export class Editor {
     const place = mode === 'place';
     const [x, y, z] = cell;
     const point = [x + 0.5, y, z + 0.5];
-    if (tool === 'block') this.change(() => (place ? edit.placeBlock(cell, this.blockType) : edit.erase(cell)));
+    if (tool === 'block') this.change(() => (place ? edit.placeBlock(cell, this.blockType, this.blockSwitches) : edit.erase(cell)));
     else if (tool === 'hole') this.change(() => edit.setHole([x, z], place));
     else if (tool === 'object') this.useObject(cell, place);
     else if (tool === 'enemy') this.useEnemy(cell, place);

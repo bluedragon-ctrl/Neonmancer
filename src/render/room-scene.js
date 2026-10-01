@@ -8,7 +8,7 @@
  */
 import { Group } from 'three';
 import { frameRoom } from './camera.js';
-import { CollapsingView, EnemyView, PlatformView, PushableView } from './entity-view.js';
+import { EnemyView, PlatformView, PushableView } from './entity-view.js';
 import { ExitView } from './exit-view.js';
 import { createFloor } from './floor.js';
 import { createHoleView } from './hole-view.js';
@@ -34,7 +34,6 @@ import { ZapView } from './zap-view.js';
 export const OBJECT_VIEWS = {
   pushable: PushableView,
   platform: PlatformView,
-  collapsing: CollapsingView,
   target: TargetView,
   plate: PlateView,
   core: CoreView,

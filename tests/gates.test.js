@@ -9,7 +9,7 @@ import { exitOpen, powered, switchesOn } from '../src/switches.js';
 import { buildRoom } from '../src/world/room.js';
 import { analyzeRoom } from '../src/world/reach.js';
 import { Progress, saveBit } from '../src/world/progress.js';
-import { CRATE, LIFT, dataFiles, eventTypes, gameData, idle, roomFile } from './helpers.js';
+import { BLOCK_TYPES, CRATE, LIFT, dataFiles, eventTypes, gameData, idle, roomFile } from './helpers.js';
 
 /** Switch, gate and platform types as in defs.json (D140). */
 const TYPES = {
@@ -19,18 +19,20 @@ const TYPES = {
   plate: { kind: 'plate', color: '#eef3ff', edges: 'dashed' },
   target_timed: { kind: 'target', color: '#eef3ff', timer: 1 },
   plate_timed: { kind: 'plate', color: '#eef3ff', edges: 'dashed', timer: 0.5 },
-  gate: { kind: 'gate', color: '#eef3ff' },
-  bridge: { kind: 'gate', color: '#eef3ff', inverted: true },
 };
 
 /** Fake input pressing cast this tick. */
 const cast = { down: (a) => a === 'cast', pressed: (a) => a === 'cast' };
 
-/** Room alpha (8×4×8) with `objects` and `exits`, joined to beta through its east exit if it has one. */
-function files({ objects = [], exits = [] } = {}) {
+/**
+ * Room alpha (8×4×8) with `objects`, `blocks` (gates are block types,
+ * BLOCK_TYPES, D141) and `exits`, joined to beta through its east exit if
+ * it has one.
+ */
+function files({ objects = [], blocks = [], exits = [] } = {}) {
   const east = exits.some((exit) => exit.id === 'east');
   return dataFiles({
-    rooms: [roomFile('alpha', { exits, objects }), roomFile('beta', { spawn: [1, 0, 4], exits: east ? [{ id: 'west', side: '-x', at: 3 }] : [] })],
+    rooms: [roomFile('alpha', { exits, objects, blocks }), roomFile('beta', { spawn: [1, 0, 4], exits: east ? [{ id: 'west', side: '-x', at: 3 }] : [] })],
     objects: TYPES,
     connections: east ? [['alpha.east', 'beta.west']] : [],
   });
@@ -48,6 +50,8 @@ function run(game, inp, ticks) {
 }
 
 const byId = (game, id) => game.objects.find((object) => object.id === id);
+/** The gate block in the cell [x, y, z] (its id is its type and cell, D60). */
+const gateAt = (game, type, cell) => byId(game, `${type}@${cell.join(',')}`);
 
 /** Zap the target at x = 3 from x = 0.5 along +x, and let the bolt arrive. */
 function zap(game) {
@@ -72,8 +76,8 @@ test('a locked exit with its own switches opens on those, whatever the others do
 });
 
 test('a gate is solid until its switches are on, then open; it never closes on the wizard', () => {
-  const game = gameWith({ objects: [{ id: 'p', type: 'plate', at: [2, 0, 2] }, { id: 'g', type: 'gate', at: [4, 0, 4] }, { id: 'c', type: 'crate', at: [6, 0, 6] }] });
-  const gate = byId(game, 'g');
+  const game = gameWith({ objects: [{ id: 'p', type: 'plate', at: [2, 0, 2] }, { id: 'c', type: 'crate', at: [6, 0, 6] }], blocks: [{ type: 'gate', at: [4, 0, 4] }] });
+  const gate = gateAt(game, 'gate', [4, 0, 4]);
   game.update(idle);
   assert.equal(gate.solid, true);
   assert.ok(game.solids.includes(gate));
@@ -93,8 +97,9 @@ test('a gate is solid until its switches are on, then open; it never closes on t
 });
 
 test('a bridge is there only while its switches are on', () => {
-  const game = gameWith({ objects: [{ id: 't', type: 'target', at: [3, 0, 3] }, { id: 'b', type: 'bridge', at: [5, 0, 5], switches: ['t'] }] });
-  const bridge = byId(game, 'b');
+  const game = gameWith({ objects: [{ id: 't', type: 'target', at: [3, 0, 3] }], blocks: [{ type: 'bridge', at: [5, 0, 5], to: [5, 0, 6], switches: ['t'] }] });
+  const bridge = gateAt(game, 'bridge', [5, 0, 5]);
+  assert.deepEqual(gateAt(game, 'bridge', [5, 0, 6]).switches, ['t'], 'every cell of the box takes its switches');
   game.update(idle);
   assert.equal(bridge.solid, false);
   zap(game);
@@ -149,61 +154,53 @@ test('a timed plate stays on for its time after nothing stands on it', () => {
   assert.equal(plate.on, false, 'off after half a second');
 });
 
-test('switch data: links name switches of the room, and only exits, gates and platforms take them', () => {
+test('switch data: links name switches of the room, and only exits, switch gates and platforms take them', () => {
   const errorsOf = (options) => validateData(files(options));
   const plate = { id: 'p', type: 'plate', at: [2, 0, 2] };
-  assert.deepEqual(errorsOf({ objects: [plate, { id: 'g', type: 'gate', at: [4, 0, 4], switches: ['p'] }] }), []);
-  assert.match(errorsOf({ objects: [plate, { id: 'g', type: 'gate', at: [4, 0, 4], switches: ['x'] }] })[0], /objects\[1\]\.switches: "x" is no switch/);
-  assert.match(errorsOf({ objects: [{ id: 'g', type: 'gate', at: [4, 0, 4] }] })[0], /a gate needs a switch/);
-  assert.match(errorsOf({ objects: [plate, { id: 'c', type: 'crate', at: [4, 0, 4], switches: ['p'] }] })[0], /only gates and platforms/);
+  assert.deepEqual(errorsOf({ objects: [plate], blocks: [{ type: 'gate', at: [4, 0, 4], to: [4, 1, 4], switches: ['p'] }] }), []);
+  assert.match(errorsOf({ objects: [plate], blocks: [{ type: 'gate', at: [4, 0, 4], switches: ['x'] }] })[0], /blocks\[0\]\.switches: "x" is no switch/);
+  assert.match(errorsOf({ blocks: [{ type: 'gate', at: [4, 0, 4] }] })[0], /a gate needs a switch/);
+  assert.deepEqual(errorsOf({ blocks: [{ type: 'collapsing', at: [4, 0, 4] }] }), [], 'a step gate needs none');
+  assert.match(errorsOf({ objects: [plate], blocks: [{ type: 'collapsing', at: [4, 0, 4], switches: ['p'] }] })[0], /only switch gates are powered/);
+  assert.match(errorsOf({ objects: [plate, { id: 'c', type: 'crate', at: [4, 0, 4], switches: ['p'] }] })[0], /only platforms \(and gate blocks\)/);
   assert.match(errorsOf({ objects: [plate], exits: [{ id: 'east', side: '+x', at: 3, switches: ['p'] }] })[0], /only a locked exit takes switches/);
   assert.deepEqual(errorsOf({ objects: [{ ...plate, type: 'plate_timed', overrides: { timer: 8 } }] }), []);
   assert.match(errorsOf({ objects: [{ ...plate, overrides: { timer: 8 } }] })[0], /"timer" is not a property/);
   const data = files({});
   data['defs.json'].objects.crate_timed = { ...CRATE, timer: 2 };
-  data['defs.json'].objects.target_inverted = { kind: 'target', color: '#eef3ff', inverted: true };
   const errors = validateData(data);
   assert.ok(errors.some((e) => /crate_timed\.timer: only switches/.test(e)));
-  assert.ok(errors.some((e) => /target_inverted\.inverted: only gates/.test(e)));
 });
 
-/** Reach of room r (12×4×8) with a wall of gates across x = 5 and a pickup beyond. */
-function reachGate(objects, abilities = []) {
-  const content = gameData({ rooms: [roomFile('r', { size: [12, 4, 8], objects, pickups: [{ id: 'far', type: 'refill_energy', at: [10, 0, 4] }] })], objects: TYPES });
+/** Can he reach a pickup at [10, 0, 4] in room r (12×4×8) with these objects, blocks and holes? */
+function reachFar({ objects, blocks, holes = [] }, abilities = []) {
+  const content = gameData({ rooms: [roomFile('r', { size: [12, 4, 8], objects, blocks, holes, pickups: [{ id: 'far', type: 'refill_energy', at: [10, 0, 4] }] })], objects: TYPES });
   const room = buildRoom(content.rooms.get('r'), content);
   return analyzeRoom(room, { abilities, starts: [[1, 0, 1]], tuning: { scanRange: 6, blinkRange: 3 } }).pickups.has('far');
 }
 
-/** A wall of gates of `type` across the room at x = 5, `height` high. */
-function gateWall(type, height = 4, switches) {
-  const out = [];
-  for (let z = 0; z < 8; z++) for (let y = 0; y < height; y++) out.push({ id: `g${z}_${y}`, type, at: [5, y, z], ...(switches && { switches }) });
-  return out;
-}
+/** A wall of gates across the room at x = 5, 4 high (one box, D141). */
+const gateWall = (switches) => ({ type: 'gate', at: [5, 0, 0], to: [5, 3, 7], ...(switches && { switches }) });
 
 test('reach: a gate wall opens to a target with Zap, to a plate with a crate on it, and to a timed plate', () => {
   const target = { id: 't', type: 'target', at: [2, 0, 5] };
-  assert.equal(reachGate([target, ...gateWall('gate')]), false);
-  assert.equal(reachGate([target, ...gateWall('gate')], ['zap']), true);
+  assert.equal(reachFar({ objects: [target], blocks: [gateWall()] }), false);
+  assert.equal(reachFar({ objects: [target], blocks: [gateWall()] }, ['zap']), true);
   const plate = { id: 'p', type: 'plate', at: [2, 0, 4] };
-  assert.equal(reachGate([plate, ...gateWall('gate')]), false, 'he can\'t stand on the plate and pass at once');
-  assert.equal(reachGate([plate, { id: 'c', type: 'crate', at: [3, 0, 4] }, ...gateWall('gate')]), true, 'a crate pushed onto it');
-  assert.equal(reachGate([{ ...plate, type: 'plate_timed' }, ...gateWall('gate')]), true, 'he runs while it counts down');
+  assert.equal(reachFar({ objects: [plate], blocks: [gateWall()] }), false, 'he can\'t stand on the plate and pass at once');
+  assert.equal(reachFar({ objects: [plate, { id: 'c', type: 'crate', at: [3, 0, 4] }], blocks: [gateWall()] }), true, 'a crate pushed onto it');
+  assert.equal(reachFar({ objects: [{ ...plate, type: 'plate_timed' }], blocks: [gateWall()] }), true, 'he runs while it counts down');
   // A gate linked to another switch than the one he can work stays shut.
-  assert.equal(reachGate([target, { id: 'q', type: 'plate', at: [2, 0, 2] }, ...gateWall('gate', 4, ['q'])], ['zap']), false);
+  assert.equal(reachFar({ objects: [target, { id: 'q', type: 'plate', at: [2, 0, 2] }], blocks: [gateWall(['q'])] }, ['zap']), false);
 });
 
-test('reach: a bridge over a pit appears with its switch', () => {
-  const content = (objects) => gameData({ rooms: [roomFile('r', { size: [12, 4, 8], holes: [{ at: [4, 0], to: [6, 7] }], objects, pickups: [{ id: 'far', type: 'refill_energy', at: [10, 0, 4] }] })], objects: TYPES });
-  const bridges = [];
-  for (let x = 4; x <= 6; x++) bridges.push({ id: `b${x}`, type: 'bridge', at: [x, 0, 4] });
-  const reachFar = (objects, abilities) => {
-    const data = content(objects);
-    return analyzeRoom(buildRoom(data.rooms.get('r'), data), { abilities, starts: [[1, 0, 1]], tuning: { scanRange: 6, blinkRange: 3 } }).pickups.has('far');
-  };
+test('reach: a bridge over a pit appears with its switch; a collapsing bridge counts as floor', () => {
+  const holes = [{ at: [4, 0], to: [6, 7] }];
   const target = { id: 't', type: 'target', at: [2, 0, 6] };
-  assert.equal(reachFar([target, ...bridges], []), false);
-  assert.equal(reachFar([target, ...bridges], ['zap']), true);
+  const bridge = { type: 'bridge', at: [4, 0, 4], to: [6, 0, 4] };
+  assert.equal(reachFar({ objects: [target], blocks: [bridge], holes }), false);
+  assert.equal(reachFar({ objects: [target], blocks: [bridge], holes }, ['zap']), true);
+  assert.equal(reachFar({ blocks: [{ ...bridge, type: 'collapsing' }], holes }), true, 'no timing: it holds');
 });
 
 test('gate and timed switch looks: bars on the seen faces, lights in a row, a blink that speeds up', () => {
@@ -233,15 +230,28 @@ test('gate and timed switch looks: bars on the seen faces, lights in a row, a bl
   assert.ok(changes(0.05) > changes(1), 'faster near the end');
 });
 
-test('room editor: switch links on a gate and a locked exit, typed as ids', async () => {
+test('room editor: switch links on gate blocks, a platform and a locked exit, typed as ids', async () => {
   const { RoomEdit, exitFields } = await import('../src/editor/room-edit.js');
   const { switchIds } = await import('../src/editor/panel.js');
   assert.deepEqual(switchIds(' p, q  p,'), ['p', 'q']);
-  const edit = new RoomEdit(roomFile('alpha', { objects: [{ id: 'p', type: 'plate', at: [2, 0, 2] }, { id: 'g', type: 'gate', at: [4, 0, 4] }] }));
-  assert.equal(edit.setSwitches('g', ['p']), true);
-  assert.deepEqual(edit.item('g').switches, ['p']);
-  edit.setSwitches('g', []);
-  assert.equal('switches' in edit.item('g'), false, 'none: every switch');
+  const lift = { id: 'l', type: 'platform', at: [6, 0, 6], path: { points: [[6, 0, 2]] } };
+  const edit = new RoomEdit(roomFile('alpha', { objects: [{ id: 'p', type: 'plate', at: [2, 0, 2] }, lift], blocks: [{ type: 'gate', at: [4, 0, 1], switches: ['p'] }] }));
+  assert.deepEqual(edit.at([4, 0, 1]), { kind: 'block', type: 'gate', switches: ['p'] });
+  // Gate cells with the same switches merge into one box; other switches make their own.
+  edit.placeBlock([4, 0, 2], 'gate', ['p']);
+  edit.placeBlock([4, 0, 3], 'gate');
+  edit.placeBlock([4, 0, 4], 'block');
+  assert.deepEqual(edit.toData().blocks, [
+    { type: 'gate', at: [4, 0, 1], switches: ['p'] },
+    { type: 'gate', at: [4, 0, 2], switches: ['p'] },
+    { type: 'gate', at: [4, 0, 3] },
+    { at: [4, 0, 4] },
+  ]);
+  assert.equal(edit.placeBlock([4, 0, 2], 'gate', ['p']), false, 'already that');
+  assert.equal(edit.setSwitches('l', ['p']), true);
+  assert.deepEqual(edit.item('l').switches, ['p']);
+  edit.setSwitches('l', []);
+  assert.equal('switches' in edit.item('l'), false, 'none: it always runs');
   assert.deepEqual(exitFields({ id: 'e', side: '+x', at: 3, width: 2, y: 0, height: 2, locked: true, switches: ['p'] }).switches, ['p']);
   assert.equal(exitFields({ id: 'e', side: '+x', at: 3, width: 2, y: 0, height: 2, switches: ['p'] }).switches, undefined, 'only a locked exit');
 });

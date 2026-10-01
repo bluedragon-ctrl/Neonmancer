@@ -28,6 +28,14 @@ docs/decisions.md).
   (`?asset=gates`, `?asset=timed-switches`), sounds `gate` and `tick`,
   and the test room `switch_works` south of Fast Path.
 
+### Changed
+- Gate blocks (D141): collapsing blocks and the new gates are one block
+  kind, `gate`, with a `trigger`: `switch` (gates, bridges) or `step`
+  (collapsing blocks, `regrow` as before). Gates are block types placed
+  as boxes, a box's `switches` linking all its cells. Both sink into the
+  floor to go and leave a dashed outline while they will come back; a
+  collapsing block no longer derezzes.
+
 ## [0.4.0] - 2026-10-01
 
 Phase 4: saves, map, four new spells, the reachability checker, design

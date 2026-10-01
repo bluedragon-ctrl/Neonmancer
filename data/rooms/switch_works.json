@@ -10,18 +10,14 @@
   "blocks": [
     { "at": [0, 0, 6], "to": [4, 1, 6] },
     { "at": [7, 0, 6], "to": [11, 1, 6] },
-    { "at": [0, 0, 10], "to": [2, 2, 11] }
+    { "at": [0, 0, 10], "to": [2, 2, 11] },
+    { "type": "gate", "at": [5, 0, 6], "to": [6, 1, 6], "switches": ["timer_plate"] },
+    { "type": "bridge", "at": [5, 0, 8], "to": [5, 0, 9], "switches": ["beacon"] }
   ],
   "holes": [{ "at": [0, 8], "to": [11, 9] }],
   "objects": [
     { "id": "timer_plate", "type": "plate_timed", "at": [2, 0, 2] },
-    { "id": "door_1", "type": "gate", "at": [5, 0, 6], "switches": ["timer_plate"] },
-    { "id": "door_2", "type": "gate", "at": [6, 0, 6], "switches": ["timer_plate"] },
-    { "id": "door_3", "type": "gate", "at": [5, 1, 6], "switches": ["timer_plate"] },
-    { "id": "door_4", "type": "gate", "at": [6, 1, 6], "switches": ["timer_plate"] },
     { "id": "beacon", "type": "target_timed", "at": [10, 0, 7] },
-    { "id": "bridge_1", "type": "bridge", "at": [5, 0, 8], "switches": ["beacon"] },
-    { "id": "bridge_2", "type": "bridge", "at": [5, 0, 9], "switches": ["beacon"] },
     { "id": "lift_plate", "type": "plate", "at": [8, 0, 11] },
     { "id": "crate", "type": "crate", "at": [9, 0, 11] },
     {

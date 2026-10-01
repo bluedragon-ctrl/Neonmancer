@@ -105,10 +105,12 @@ mobile/touch support, backend or accounts.
 
 ### Objects and blocks
 - Types: static, pushable, moving (paths or up/down cycles; player rides
-  them; spiked ones hurt on touch, D82), collapsing (vanish after being stepped on, optional respawn),
-  hazard (deals damage), void (instant death when the player falls onto it),
-  fake (a plain-looking block that a scan derezzes, D128), gate and bridge
-  (switched by power, D140).
+  them; spiked ones hurt on touch, D82), hazard (deals damage), void
+  (instant death when the player falls onto it), fake (a plain-looking
+  block that a scan derezzes, D128), and gate blocks that come and go
+  (D140, D141): a gate or bridge switched by power, or a collapsing block
+  that goes after being stepped on (optional regrow); all sink to go and
+  never come back on anything in their cell.
 - Decorations (kind `deco`, D117): fixed bodies that dress a room and do
   nothing, in the room's color, facing +z or +x: the data pillar
   (1×3×1, always 3 high), the screen (1×1×1) and the memory stack
@@ -354,7 +356,7 @@ they stay for the run.
 The engine is generic; all content lives in data.
 
 - `data/defs.json` — object types (kind, style, damage for spiked
-  platforms, a decoration's look, a switch's timer, an inverted gate), block types (look or kind, color,
+  platforms, a decoration's look, a switch's timer), block types (look or kind, color, a gate's trigger,
   properties such as damage and lethal; variants `extend` a base, D60),
   enemy templates (look, movement, attack,
   hostility, aggro range, integrity, damage, speeds, bounce, solid, color,

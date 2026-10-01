@@ -86,9 +86,8 @@ export function validateData(files) {
     if (type.damage !== undefined && type.kind !== 'platform') {
       report('defs.json', `objects.${id}.damage`, `only platforms can hurt, not a ${type.kind}`);
     }
-    // Only switches are timed and only gates turn into bridges (D140).
+    // Only switches are timed (D140).
     if (type.timer !== undefined && !SWITCH_KINDS.includes(type.kind)) report('defs.json', `objects.${id}.timer`, `only switches (targets and plates) are timed, not a ${type.kind}`);
-    if (type.inverted !== undefined && type.kind !== 'gate') report('defs.json', `objects.${id}.inverted`, `only gates are inverted, not a ${type.kind}`);
     // Only a decoration has a look (D117); every other kind needs a color.
     if (type.kind === 'deco' && !DECO_LOOKS[type.look]) report('defs.json', `objects.${id}.look`, `a decoration needs a look: ${Object.keys(DECO_LOOKS).join(', ')}`);
     if (type.kind !== 'deco' && type.look !== undefined) report('defs.json', `objects.${id}.look`, `only decorations have a look, not a ${type.kind}`);
@@ -276,6 +275,10 @@ function validateBlockTypes(blocks, report) {
     else if (type.kind !== undefined) {
       const wrong = STATIC_BLOCK_VALUES.filter((key) => key in own);
       if (wrong.length > 0) report('defs.json', path, `${wrong.join(', ')}: only for static blocks (with a "look"), not a ${type.kind} block`);
+      // A bridge is a switch gate; only a step gate (a collapsing block) grows back (D141).
+      const trigger = type.trigger ?? 'switch';
+      if (type.inverted && trigger !== 'switch') report('defs.json', `${path}.inverted`, 'only switch gates are inverted, not a step gate');
+      if (type.regrow !== undefined && trigger !== 'step') report('defs.json', `${path}.regrow`, 'only step gates (collapsing blocks) grow back; a switch gate comes back with its switches');
     } else {
       const wrong = KIND_BLOCK_VALUES.filter((key) => key in own);
       if (wrong.length > 0) report('defs.json', path, `${wrong.join(', ')}: only for blocks with a "kind", not a static block`);
@@ -315,7 +318,7 @@ function validateRoom(file, room, { objectTypes, pickupTypes, blockTypes, enemyT
     blockTypes: new Map(),
     /** "x,y,z" → path of the platform whose path sweeps it */
     pathCells: new Map(),
-    /** "x,y,z" of every collapsing block and gate (D140): floor that may go */
+    /** "x,y,z" of every gate block (D140, D141): floor that may go */
     collapsing: new Set(),
     /** "x,y,z" of every fake block (D128): a pickup may lie inside one */
     fake: new Set(),
@@ -334,7 +337,7 @@ function validateRoom(file, room, { objectTypes, pickupTypes, blockTypes, enemyT
   validatePickups(checks, pickupTypes);
   validateBosses(checks, enemyTemplates, pickupTypes);
   validateExitPassage(checks, exits, exitFits);
-  validateLocks(checks, exits, objectTypes);
+  validateLocks(checks, exits, objectTypes, blockTypes);
 
   // Spawn and reset (D39). reset defaults to spawn (buildRoom does the
   // same), so it only needs its own check when a room gives it explicitly.
@@ -406,8 +409,8 @@ function validateBlocks(checks, blockTypes) {
     for (const cell of blockCells(block)) {
       if (!fillCell(checks, cell, path)) break;
       if (type.damage || type.lethal) checks.blockTypes.set(cellKey(cell), type);
-      // Collapsing blocks (D47) give way: they don't hold up the player or a hole.
-      if (type.kind === 'collapsing') checks.collapsing.add(cellKey(cell));
+      // Gates (collapsing blocks too, D141) go: they don't hold up the player or a hole.
+      if (type.kind === 'gate') checks.collapsing.add(cellKey(cell));
       if (type.fake) checks.fake.add(cellKey(cell));
     }
   });
@@ -432,8 +435,6 @@ function validateObjects(checks, objectTypes, texts) {
     // A plate is a floor tile, no body (D75): things may stand on it.
     if (type?.kind === 'plate') return validatePlate(checks, path, object.at);
     const inside = fillCell(checks, object.at, path);
-    // A gate opens (D140): like a collapsing block it may stand in a hole (a trapdoor, a bridge).
-    if (type?.kind === 'gate') checks.collapsing.add(cellKey(object.at));
     // The core stands 2 high (D101), a decoration as high as its look
     // (D117): the cells above are theirs too.
     const look = DECO_LOOKS[object.overrides?.look ?? type?.look];
@@ -444,8 +445,8 @@ function validateObjects(checks, objectTypes, texts) {
     if (type?.kind === 'platform' && !object.path) report(path, 'a platform needs a "path"');
     if (type && type.kind !== 'platform' && object.path) report(`${path}.path`, `only platforms follow a path, not "${object.type}"`);
     if (type?.kind === 'platform' && object.path && inside) validatePath(checks, `${path}.path`, object);
-    // Switches power gates and platforms, no other object (D140).
-    if (type && object.switches && type.kind !== 'gate' && type.kind !== 'platform') report(`${path}.switches`, `only gates and platforms are powered by switches, not "${object.type}"`);
+    // Switches run platforms, no other object (gates are blocks, D140, D141).
+    if (type && object.switches && type.kind !== 'platform') report(`${path}.switches`, `only platforms (and gate blocks) are powered by switches, not "${object.type}"`);
   });
 }
 
@@ -649,12 +650,12 @@ function validatePlate({ room, report, filled, plates }, path, [x, y, z]) {
 }
 
 /**
- * A locked exit (D75) and a gate (D140) open when their switches are all
- * on (by default every switch in the room), so the room needs one; a
- * "switches" list names switches of this room, and only a locked exit
- * takes one.
+ * A locked exit (D75) and a switch gate (D140, D141) open when their
+ * switches are all on (by default every switch in the room), so the room
+ * needs one; a "switches" list names switches of this room, and only
+ * locked exits, switch gate blocks and platforms take one.
  */
-function validateLocks({ room, report }, exits, objectTypes) {
+function validateLocks({ room, report }, exits, objectTypes, blockTypes) {
   const switches = new Set((room.objects ?? []).filter((object) => SWITCH_KINDS.includes(objectTypes[object.type]?.kind)).map((object) => object.id));
   const links = (path, ids) => {
     for (const id of ids ?? []) if (!switches.has(id)) report(path, `"${id}" is no switch (a target or a plate) of this room`);
@@ -665,13 +666,18 @@ function validateLocks({ room, report }, exits, objectTypes) {
     links(`exits[${i}].switches`, exit.switches);
   });
   (room.objects ?? []).forEach((object, i) => {
-    const kind = objectTypes[object.type]?.kind;
-    if (kind === 'gate' && switches.size === 0) report(`objects[${i}]`, 'a gate needs a switch in the room (a target or a plate)');
-    if (kind === 'gate' || kind === 'platform') links(`objects[${i}].switches`, object.switches);
+    if (objectTypes[object.type]?.kind === 'platform') links(`objects[${i}].switches`, object.switches);
+  });
+  (room.blocks ?? []).forEach((block, i) => {
+    const type = blockTypes[block.type ?? 'block'];
+    const switched = type?.kind === 'gate' && (type.trigger ?? 'switch') === 'switch';
+    if (switched && switches.size === 0) report(`blocks[${i}]`, 'a gate needs a switch in the room (a target or a plate)');
+    if (block.switches && type && !switched) report(`blocks[${i}].switches`, `only switch gates are powered by switches, not "${block.type ?? 'block'}"`);
+    if (switched) links(`blocks[${i}].switches`, block.switches);
   });
 }
 
-/** Holes: floor tiles inside the room, nothing standing in them but platforms, collapsing blocks and gates. */
+/** Holes: floor tiles inside the room, nothing standing in them but platforms and gate blocks (collapsing ones too). */
 function validateHoles({ room, report, filled, holes, pathCells, collapsing, plates }) {
   const [w, , d] = room.size;
   (room.holes ?? []).forEach((hole, i) => {
@@ -681,7 +687,7 @@ function validateHoles({ room, report, filled, holes, pathCells, collapsing, pla
       const tile = cellText([x, z]);
       const key = cellKey([x, z]);
       // A platform may start over a hole (it carries the wizard across), and
-      // a collapsing block or a gate may stand in one (a bridge that gives way).
+      // a gate block may stand in one (a collapsing bridge, a switched bridge or trapdoor).
       const floor = cellKey([x, 0, z]);
       const under = !pathCells.has(floor) && !collapsing.has(floor) && filled.get(floor);
       let problem = null;

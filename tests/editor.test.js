@@ -663,6 +663,8 @@ test('blockTypeText: what a block type does, for the Block tool\'s type list', (
   assert.equal(blockTypeText(types.void), 'lethal');
   assert.equal(blockTypeText(types.collapsing), 'collapsing');
   assert.equal(blockTypeText(types.collapsing_regrow), 'collapsing, regrows 3 s');
+  assert.equal(blockTypeText(types.gate), 'switch gate');
+  assert.equal(blockTypeText(types.bridge), 'switch gate, inverted');
 });
 
 
