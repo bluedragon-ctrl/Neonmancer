@@ -95,6 +95,7 @@ function boot() {
   const linked = devLink ? null : hashKey(location.hash);
   const linkedSave = linked && readSave(content, linked);
   const flow = new MenuFlow(devLink || linkedSave?.ok ? 'playing' : 'title', settings);
+  flow.onSound = (name) => audio.sfx(name);
   flow.canContinue = readSave(content, storedKey() ?? '').ok;
   if (linkedSave && !linkedSave.ok) flow.notice = 'key.error.link';
   // A key pasted into the address bar of this page changes only the hash: load it afresh.

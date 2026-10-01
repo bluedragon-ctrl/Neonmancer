@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { AudioEngine } from '../src/audio/audio.js';
 import { lookup, stepGain } from '../src/audio/audio-data.js';
 import { zzfxSamples } from '../src/audio/zzfx.js';
@@ -8,6 +9,7 @@ import { loadGameData } from '../src/data/load.js';
 import { checkFiles, readSchemas } from '../tools/check-data.js';
 import { dataFiles, roomFile } from './helpers.js';
 import { Settings } from '../src/ui/settings.js';
+import { MenuFlow } from '../src/ui/menus.js';
 
 const AUDIO = {
   music: { lattice: { file: 'lattice.mp3', volume: 0.5 }, boss: { file: 'boss.mp3' }, gone: { file: 'gone.mp3' } },
@@ -161,7 +163,7 @@ test('applySettings reads the music and sound sliders', () => {
 });
 
 test('audio.json: the real file is valid and loads; a game without one has no audio', () => {
-  const schemas = readSchemas(new URL('..', import.meta.url).pathname);
+  const schemas = readSchemas(fileURLToPath(new URL('..', import.meta.url)));
   const real = JSON.parse(readFileSync(new URL('../data/audio.json', import.meta.url), 'utf8'));
   const files = dataFiles({ rooms: [roomFile('alpha', { name: 'Alpha' })], connections: [] });
   assert.deepEqual(loadGameData(files).audio, { music: {}, sounds: {} });
@@ -170,4 +172,46 @@ test('audio.json: the real file is valid and loads; a game without one has no au
   assert.deepEqual(Object.keys(loadGameData(files).audio.sounds), Object.keys(real.sounds));
   files['audio.json'] = { schemaVersion: 1, sounds: { both: { file: 'a.wav', zzfx: [1] } }, music: { bad: { file: 'x.txt' } } };
   assert.ok(checkFiles(files, schemas).length >= 2);
+});
+
+test('effects: "type:detail" sounds win over the plain one (spell, pickup kind, death cause)', () => {
+  const audio = { music: {}, sounds: { cast: { zzfx: [1] }, 'cast:zap': { zzfx: [1] }, 'pickup:disk': { zzfx: [1] }, pickup: { zzfx: [1] } } };
+  const { sound, log } = engine(audio);
+  sound.unlock();
+  const played = [];
+  const sfx = sound.sfx.bind(sound);
+  sound.sfx = (name) => {
+    const started = sfx(name);
+    if (started) played.push(name);
+    return started;
+  };
+  sound.playEvents([
+    { type: 'cast', spell: 'zap' },
+    { type: 'cast', spell: 'pause' },
+    { type: 'pickup', pickup: { data: { kind: 'disk' } } },
+    { type: 'pickup', pickup: { data: { kind: 'refill' } } },
+  ]);
+  assert.deepEqual(played, ['cast:zap', 'cast', 'pickup:disk', 'pickup']);
+  assert.equal(log.sources, 4);
+});
+
+test('effects: every sound of audio.json is a game event (or detail of one) or a UI sound', () => {
+  const real = JSON.parse(readFileSync(new URL('../data/audio.json', import.meta.url), 'utf8'));
+  const game = readFileSync(new URL('../src/game.js', import.meta.url), 'utf8');
+  const typedef = game.match(/@property \{('[^}]+)\} type/)[1].match(/[a-z]+/g);
+  for (const name of Object.keys(real.sounds)) {
+    if (name.startsWith('ui_')) continue;
+    assert.ok(typedef.includes(name.split(':')[0]), `sound "${name}" matches no game event`);
+  }
+});
+
+test('ui: the menu flow reports a sound for moving, opening, going back and choosing', () => {
+  const flow = new MenuFlow('title', new Settings());
+  const heard = [];
+  flow.onSound = (name) => heard.push(name);
+  flow.move(1);
+  flow.open('options');
+  flow.back();
+  flow.choose();
+  assert.deepEqual(heard.slice(0, 3), ['ui_move', 'ui_open', 'ui_back']);
 });

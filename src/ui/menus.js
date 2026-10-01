@@ -62,6 +62,8 @@ export class MenuFlow {
     this.key = null;
     /** Is a save stored (localStorage)? The title offers Continue then. */
     this.canContinue = false;
+    /** @type {(name: string) => void} Called with a UI sound name (ui_move, ui_open, ui_back, ui_choose, ui_adjust, ui_deny); main.js plays it (D139). */
+    this.onSound = () => {};
     if (screen === 'title') this.open('title');
   }
 
@@ -99,6 +101,7 @@ export class MenuFlow {
   open(id) {
     this.stack.push({ id, selected: 0 });
     this.notice = null;
+    this.onSound('ui_open');
   }
 
   /** The pause menu, over the running game (Esc / P, or the window lost focus). */
@@ -111,6 +114,7 @@ export class MenuFlow {
     this.notice = null;
     if (this.stack.length === 1 && this.onTitle) return;
     this.stack.pop();
+    this.onSound('ui_back');
   }
 
   /**
@@ -124,6 +128,7 @@ export class MenuFlow {
     if (count === 0) return;
     menu.selected = (menu.selected + step + count) % count;
     this.notice = null;
+    this.onSound('ui_move');
   }
 
   /** @param {number} index an item of the top menu (a mouse hover) */
@@ -132,6 +137,7 @@ export class MenuFlow {
     if (!menu || index < 0 || index >= this.items(menu.id).length || index === menu.selected) return;
     menu.selected = index;
     this.notice = null;
+    this.onSound('ui_move');
   }
 
   /**
@@ -143,7 +149,9 @@ export class MenuFlow {
   adjust(step, wrap = false) {
     const item = this.item;
     if (!item || !isSetting(item)) return null;
-    return this.settings.step(item, step, wrap) ? 'settings' : null;
+    if (!this.settings.step(item, step, wrap)) return null;
+    this.onSound('ui_adjust');
+    return 'settings';
   }
 
   /**
@@ -151,6 +159,14 @@ export class MenuFlow {
    * @returns {MenuCommand | null} what main.js has to do, if anything
    */
   choose() {
+    const command = this.pick();
+    // Submenus and back play their own sounds, a setting its adjust sound.
+    if (command && command !== 'settings') this.onSound('ui_choose');
+    return command;
+  }
+
+  /** The choice itself, see choose(). @returns {MenuCommand | null} */
+  pick() {
     const item = this.item;
     if (!item) return null;
     // Enter on a setting steps it forward, round and round.
@@ -176,6 +192,7 @@ export class MenuFlow {
       case 'copyLink':
         if (this.key) return item;
         this.notice = 'menu.saveFirst';
+        this.onSound('ui_deny');
         return null;
       case 'quitYes':
         this.stack = [];
@@ -214,6 +231,7 @@ export class MenuFlow {
    */
   refused(error) {
     this.notice = `key.error.${error}`;
+    this.onSound('ui_deny');
   }
 
   /**

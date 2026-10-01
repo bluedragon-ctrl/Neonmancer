@@ -26,8 +26,8 @@
     },
     "sounds": {
       "type": "object",
-      "description": "Sound id → sound effect.",
-      "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
+      "description": "Sound id → sound effect. A name \"type:detail\" (\"cast:zap\", \"pickup:disk\", \"die:void\") plays on that event when its spell, pickup kind or cause matches, else the plain \"type\" does (D139).",
+      "propertyNames": { "pattern": "^[a-z][a-z0-9_]*(:[a-z][a-z0-9_]*)?$" },
       "additionalProperties": {
         "type": "object",
         "additionalProperties": false,
