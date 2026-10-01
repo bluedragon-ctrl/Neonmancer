@@ -28,7 +28,15 @@ docs/decisions.md).
   (`?asset=gates`, `?asset=timed-switches`), sounds `gate` and `tick`,
   and the test room `switch_works` south of Fast Path.
 
+- Room editor Switch tool (D142, key 0): pick a switch, click gates,
+  platforms and exits to link or unlink them; hovering a switch, gate,
+  platform or locked exit names and draws its links; the Object tool
+  picks switches and platforms (a timed switch's timer is editable);
+  Alt+click with the Block tool copies a block's type and switches.
+
 ### Changed
+- Switch gates are white glass boxes, and a switched-off one is not
+  shown in play, only in the room editor (D142).
 - Gate blocks (D141): collapsing blocks and the new gates are one block
   kind, `gate`, with a `trigger`: `switch` (gates, bridges) or `step`
   (collapsing blocks, `regrow` as before). Gates are block types placed

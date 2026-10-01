@@ -431,7 +431,9 @@ not critical.
   and object look on a turntable with the real renderer. Add every new
   visual asset (monsters, pickups) to it.
 - **Room editor** (in-game, Phase 2): place blocks, enemies and pickups
-  with the mouse, preview in the real neon look, export room JSON.
+  with the mouse, preview in the real neon look, export room JSON. The
+  Switch tool links switches to gates, platforms and exits; hovering
+  shows any thing's switch links (D142).
 - **World map tool** (`tools/world-map.html`, D66, D77): every room on a
   map grid with its connections; move, add and remove rooms and
   connections; flags rooms out of reach; opens a room in the room editor;

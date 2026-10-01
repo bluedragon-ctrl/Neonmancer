@@ -1359,3 +1359,22 @@ its switch lights only on the top of a stack.
 **Why:** two near-identical mechanics in two places (an object kind and
 a block kind) with different looks and rules would drift apart; no room
 used collapsing blocks, so the author asked to replace them fully.
+
+### D142 — 2026-10-01 — Switch links in the editor; switch gates are white glass
+Switch links were hard to see and edit: a placed switch couldn't be
+picked, a gate block not at all. The room editor gets a **Switch** tool
+(key 0): pick a target or plate, then click switch gates (a whole joined
+wall at once), platforms and exits to link or unlink them; linking an
+exit locks it, unlinking its last switch unlocks it. Hovering anything
+linked names its links in the hover line and draws them over the room
+(gold boxes, dashed lines); the picked thing's links show otherwise. The
+Object tool picks a switch or platform instead of replacing it, and the
+panel shows what a switch powers and its timer (overridable). Alt+click
+with the Block tool takes a block's type and switches. Switch gates look
+like white frosted glass boxes (`GLASS.gate`) without the bars, and a
+switched-off one is not drawn in play at all, only as a dashed outline
+in the editor; a collapsing block that will grow back keeps its outline
+in play.
+**Why:** the author asked for a tool for working with switches, for
+gates to read as white glass, and for gates that are off to stay
+invisible in play.

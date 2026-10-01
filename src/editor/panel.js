@@ -23,6 +23,7 @@ export const TOOLS = [
   { id: 'spawn', label: 'Spawn', key: '7' },
   { id: 'reset', label: 'Reset', key: '8' },
   { id: 'shrine', label: 'Shrine', key: '9' },
+  { id: 'switch', label: 'Switch', key: '0' },
 ];
 
 /**
@@ -50,8 +51,10 @@ export function templateText(template) {
 
 const HELP = [
   'Left click: place / pick · Right click: erase',
-  `Wheel or PgUp/PgDn: layer · ${TOOLS[0].key}–${TOOLS.at(-1).key}: tool`,
+  `Wheel or PgUp/PgDn: layer · ${TOOLS.map((tool) => tool.key).join(' ')}: tool`,
   'Esc: drop the selection · Del: remove it',
+  'Switch tool: pick a switch, click gates, platforms, exits to link · Alt+click (Block tool): copy a block',
+  'Hover a switch, gate or locked exit: its links light up',
   'Ctrl+Z / Ctrl+Y: undo / redo · Ctrl+S: save',
   'F2: play the room · F3: debug',
 ];
@@ -61,6 +64,10 @@ const HINTS = {
   enemy: ['New enemies are of this template. Click an enemy to pick it.', (id) => `${id} picked: a template picked here is its new one, and new enemies'.`],
   path: ['Click a platform or an enemy to pick it.', (id) => `Path of ${id}: click cells to add points, right click takes the last one off.`],
   exit: ['Click an edge cell to open an exit there, or an exit to pick it.', (id) => `Editing exit ${id}.`],
+  switch: [
+    'Click a target or plate to pick it.',
+    (id) => `${id} picked: click gates, platforms and exits to link or unlink them; right click drops it.`,
+  ],
 };
 
 /**
@@ -292,7 +299,23 @@ export class EditorPanel {
     this.objectSwitches.addEventListener('change', () => on.itemSwitches(switchIds(this.objectSwitches.value)));
     this.objectSwitchesRow = this.row('Switches', this.objectSwitches);
     this.objectRows.append(this.row('Object', this.objectSelect), this.objectSwitchesRow, this.textGroup());
-    return [this.blockRows, this.objectRows];
+    return [this.blockRows, this.objectRows, this.switchGroup()];
+  }
+
+  /**
+   * Fields of the Switch tool (D140), also shown for a switch the Object
+   * tool picked: what the picked switch powers, and a timed one's time.
+   */
+  switchGroup() {
+    const { on } = this;
+    this.switchRows = this.group('switch');
+    this.switchPowers = el('div', 'editor-hint');
+    this.switchTimer = numberInput({ min: 0.5, step: 0.5 });
+    this.switchTimer.title = "Seconds it stays on (D140); blank: its type's";
+    this.switchTimer.addEventListener('change', () => on.switchTimer(numberValue(this.switchTimer) ?? null));
+    this.switchTimerRow = this.row('Timer (s)', this.switchTimer);
+    this.switchRows.append(this.switchPowers, this.switchTimerRow);
+    return this.switchRows;
   }
 
   /**
@@ -493,6 +516,8 @@ export class EditorPanel {
    * @param {string[]|null} [state.blockSwitches] the switches of the switch gates it places (D141), or null: not a switch gate
    * @param {string} state.objectType
    * @param {{ kind: string, switches: string[] }|null} [state.links] the picked platform and its switches (D140), or null
+   * @param {{ id: string, powers: string[], timer: number|null, typeTimer: number|null }|null} [state.switchInfo]
+   *   the picked switch (D140): what it powers, its time and its type's (null: not timed), or null
    * @param {{ id: string|null, template: string, drop: string|null, drops: string[] }} state.enemy the picked enemy's template
    *   (with its id and, a boss, its drop and the room's permanent pickups it may drop), or new enemies'
    * @param {object|null} state.pathItem the platform or enemy whose path is edited
@@ -508,7 +533,7 @@ export class EditorPanel {
    * @param {string} state.status a line about the last action
    * @param {boolean} state.unsaved there are unsaved edits (any room, or world.json)
    */
-  show({ edit, rooms, tool, blockType, blockSwitches = null, objectType, links = null, enemy, pathItem, pathItemIsEnemy, screen, exit, layer, cut, errors, status, unsaved }) {
+  show({ edit, rooms, tool, blockType, blockSwitches = null, objectType, links = null, switchInfo = null, enemy, pathItem, pathItemIsEnemy, screen, exit, layer, cut, errors, status, unsaved }) {
     const data = edit.data;
     const changed = edit.dirty || edit.linksChanged;
     this.roomLabel.textContent = `${data.id}${changed ? ' • unsaved' : unsaved ? ' • other rooms unsaved' : ''}`;
@@ -530,12 +555,21 @@ export class EditorPanel {
       this.objectSwitches.placeholder = 'none: always runs';
       if (document.activeElement !== this.objectSwitches) this.objectSwitches.value = links.switches.join(' ');
     }
+    this.switchRows.hidden = !(tool === 'switch' || (tool === 'object' && switchInfo));
+    this.hints.switch.hidden = tool !== 'switch';
+    this.switchPowers.hidden = !switchInfo;
+    this.switchTimerRow.hidden = !switchInfo || switchInfo.typeTimer === null;
+    if (switchInfo) {
+      this.switchPowers.textContent = `${switchInfo.id} powers ${switchInfo.powers.join(', ') || 'nothing yet'}.`;
+      this.switchTimer.placeholder = String(switchInfo.typeTimer ?? '');
+      if (document.activeElement !== this.switchTimer) this.switchTimer.value = switchInfo.timer !== switchInfo.typeTimer ? String(switchInfo.timer) : '';
+    }
     this.showScreen(screen);
 
     this.enemyRows.hidden = tool !== 'enemy';
     this.pathRows.hidden = tool !== 'path';
     this.exitRows.hidden = tool !== 'exit';
-    const picked = { enemy: enemy.id, path: pathItem?.id, exit: exit.id };
+    const picked = { enemy: enemy.id, path: pathItem?.id, exit: exit.id, switch: switchInfo?.id };
     for (const [key, [idle, busy]] of Object.entries(HINTS)) this.hints[key].textContent = picked[key] ? busy(picked[key]) : idle;
 
     this.enemyTemplate.value = enemy.template;

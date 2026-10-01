@@ -115,8 +115,10 @@ export class RoomScene {
    *   room too (its data changed in the room editor)
    * @param {number|null} [options.cutAbove] leave out blocks, objects and
    *   enemies above this height layer (the room editor's layer), or null
+   * @param {boolean} [options.editing] shown in the room editor (switched-off gates show their outline, D141)
    */
-  show(game, { rebuild = false, cutAbove = null } = {}) {
+  show(game, { rebuild = false, cutAbove = null, editing = false } = {}) {
+    this.editing = editing;
     const { room } = game;
     const { renderer } = this;
     this.game = game;
@@ -126,7 +128,7 @@ export class RoomScene {
     // A spiked platform's flare goes with its old view.
     if (this.flare?.object) this.flare = null;
     const shown = (thing) => cutAbove === null || Math.floor(thing.pos[1]) <= cutAbove;
-    this.objectViews = game.objects.filter(shown).map((object) => new OBJECT_VIEWS[object.kind](game, object));
+    this.objectViews = game.objects.filter(shown).map((object) => new OBJECT_VIEWS[object.kind](game, object, { editing }));
     this.enemyViews = game.enemies.filter(shown).map((enemy) => new EnemyView(game, enemy));
     this.pickupViews = game.pickups.filter((pickup) => cutAbove === null || pickup.data.at[1] <= cutAbove).map((pickup) => new PickupView(game, pickup));
     this.zapView = new ZapView(game);
@@ -288,7 +290,7 @@ export class RoomScene {
       if (i >= 0) this.leaving.push(...list.splice(i, 1));
       return;
     }
-    const view = object ? new OBJECT_VIEWS[object.kind](this.game, object) : new EnemyView(this.game, enemy);
+    const view = object ? new OBJECT_VIEWS[object.kind](this.game, object, { editing: this.editing }) : new EnemyView(this.game, enemy);
     list.push(view);
     this.objectGroup.add(view.group);
   }
@@ -299,7 +301,7 @@ export class RoomScene {
    * @param {import('../game.js').GameEvent} event 'compile'
    */
   addCompiled({ object }) {
-    const view = new OBJECT_VIEWS[object.kind](this.game, object);
+    const view = new OBJECT_VIEWS[object.kind](this.game, object, { editing: this.editing });
     this.objectViews.push(view);
     this.objectGroup.add(view.group);
   }

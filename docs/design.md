@@ -324,8 +324,9 @@ running as its own room object (D40). What makes one go is its type's
   a crate or an enemy is in its cell it waits, and comes back once the
   cell is clear.
 - **Look, one language:** going, the block sinks into its cell's floor;
-  gone, a dim dashed outline shows where it will rise again (only if it
-  will); coming back, it rises.
+  coming back, it rises. Gone, a collapsing block that will come back
+  leaves a dim dashed outline; a switch gate leaves nothing in play, only
+  in the room editor (D142).
 - **Over a hole:** a gate block may stand in a hole tile (a bridge over
   a pit, a trapdoor); when it goes, the wizard drops into the pit and a
   crate plugs it. Spawn and reset points don't count one as holding the
@@ -334,9 +335,11 @@ running as its own room object (D40). What makes one go is its type's
 The two triggers:
 
 - **Switch** (`trigger: switch`, the default; types `gate` and `bridge`):
-  white, a mechanism (D99), with three bars across each seen side and,
-  on the top of a stack, one light per switch that powers it (lit for
-  each one on). Solid until its switches are all on: its block entry's
+  a white glass box (white is a mechanism, D99; `glassBox()` with
+  `GLASS.gate`, D116) with neon edges and, on the top of a stack, one
+  light per switch that powers it (lit for each one on). Gone, it is
+  not drawn at all in play (D142); the room editor shows its dashed
+  outline. Solid until its switches are all on: its block entry's
   `switches` (ids of the room's targets and plates; one entry, one set)
   or every switch in the room. `inverted` (a bridge) is the other way
   round. Event: `gate` (`open` true or false). See Switches and locked
@@ -1858,7 +1861,8 @@ list switches to another room; New room makes an empty one (D57).
 | Left click / drag | Place or pick with the current tool (a drag paints blocks, holes and objects; one undo step) |
 | Right click / drag | Erase with the current tool |
 | Mouse wheel, PgUp / PgDn | Height layer up / down (a grid shows it; with **hide above**, on by default, blocks, objects and enemies above it aren't drawn) |
-| 1–9 | Tool: Block, Hole, Object, Enemy, Path, Exit, Spawn, Reset, Shrine |
+| 1–9, 0 | Tool: Block, Hole, Object, Enemy, Path, Exit, Spawn, Reset, Shrine, Switch |
+| Alt + left click | Block tool: take the type and switches of the block clicked (an eyedropper, D142) |
 | Esc | Drop the picked enemy, platform or exit |
 | Delete, Backspace | Remove the picked object, enemy or exit |
 | Ctrl+Z, Ctrl+Y (Ctrl+Shift+Z) | Undo, redo |
@@ -1866,14 +1870,20 @@ list switches to another room; New room makes an empty one (D57).
 
 - **Block** puts a block of the type picked in the panel's type list (every
   block type in `defs.json`, with what it does: `hazard (hurts 1)`,
-  `collapsing_regrow (collapsing, regrows 3 s)`) in the cell of the current
-  layer, replacing whatever is there; erasing empties the cell (D60).
+  `collapsing_regrow (collapsing, regrows 3 s)`, `bridge (switch gate,
+  inverted)`) in the cell of the current layer, replacing whatever is
+  there; erasing empties the cell (D60). For a switch gate the panel has
+  a **Switches** field: the ids the gates placed take (blank: every
+  switch). Cells merge into boxes only with the same type and switches.
 - **Hole** works on floor tiles, whatever the layer: place makes a hole,
   erase fills it in.
 - **Object** places the type picked in the panel (its fields show only
   while this tool is picked), with the id `<type>_<n>`. Placing on an
   object of the same type leaves it as it is (a platform keeps its path),
   except a decoration, which turns to face the other seen side (D117). A new platform is picked, ready for its path.
+  A click on a switch or a platform picks it instead of replacing it
+  (D142): a picked platform shows its **Switches** field, a picked switch
+  what it powers and, a timed one, its **Timer** (blank: its type's).
   Erasing removes an object or enemy standing in the cell.
 - **Enemy** places an enemy of the template picked in the panel (a line
   under it says what the template does: `bug · patrol · touch · hostile
@@ -1896,6 +1906,23 @@ list switches to another room; New room makes an empty one (D57).
   (platforms only: an enemy walks at its template's) and the pause at the
   ends, or clears the path. Every path shows as a dashed line; the
   picked one is white, with its points marked.
+- **Switch** (D142) links switches to what they power. A click on a
+  target or plate picks it (the panel says what it powers; a timed one's
+  timer can be changed); then a click on a switch gate, a platform or an
+  exit links it to the picked switch, or unlinks it if it was linked. A
+  gate click takes the whole gate: every cell joined to it with the same
+  type and switches (a wall). A gate or exit on every switch (no list)
+  gets the others listed when one is unlinked; an exit linked to its
+  first switch becomes locked, one with its last switch unlinked is no
+  longer locked; a gate with its last unlinked is on every switch again;
+  a platform with none always runs. Right click drops the switch.
+- **Links show everywhere** (D142): hovering a switch, a switch gate, a
+  platform with switches or a locked exit names its links in the hover
+  line (`powers gate ×4, exit east`, `opens on timer_plate`) and draws
+  them over the room: gold boxes round the switches and what they power,
+  dashed lines between. With nothing hovered, the picked thing's links
+  show. In the editor a switched-off gate shows as a dashed outline; in
+  play it is not drawn at all.
 - **Exit** opens an exit in the edge cell clicked (in a corner, in the
   wall nearer the mouse), at the layer's height, with the panel's width
   and height, id after the side (`north`, `east_2`...). A click on an exit
