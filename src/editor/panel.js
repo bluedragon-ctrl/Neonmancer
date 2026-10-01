@@ -53,7 +53,7 @@ const HELP = [
   'Left click: place / pick · Right click: erase',
   `Wheel or PgUp/PgDn: layer · ${TOOLS.map((tool) => tool.key).join(' ')}: tool`,
   'Esc: drop the selection · Del: remove it',
-  'Switch tool: place or pick a switch, click gates, platforms, exits to link · Alt+click (Block tool): copy a block',
+  'Switch tool: place or pick a switch (or a gate, platform, exit), tick or click its links · Alt+click (Block tool): copy a block',
   'Hover a switch, gate or locked exit: its links light up',
   'Ctrl+Z / Ctrl+Y: undo / redo · Ctrl+S: save',
   'F2: play the room · F3: debug',
@@ -65,8 +65,8 @@ const HINTS = {
   path: ['Click a platform or an enemy to pick it.', (id) => `Path of ${id}: click cells to add points, right click takes the last one off.`],
   exit: ['Click an edge cell to open an exit there, or an exit to pick it.', (id) => `Editing exit ${id}.`],
   switch: [
-    'Click a free cell to place a switch of this type, or a switch to pick it; right click erases one.',
-    (id) => `${id} picked: click gates, platforms and exits to link or unlink them; right click elsewhere drops it.`,
+    'Click a free cell to place a switch of this type; click a switch, gate, platform or exit to pick it. Right click erases a switch.',
+    (id) => `${id} picked: tick its links below, or click them in the room. Shift+click picks another; Esc drops it.`,
   ],
 };
 
@@ -315,13 +315,44 @@ export class EditorPanel {
     this.switchSelect = select(Object.entries(switchTypes).map(([id, type]) => [id, `${id} (${type.kind}${timed(type)})`]));
     this.switchSelect.addEventListener('change', () => on.switchType(this.switchSelect.value));
     this.switchTypeRow = this.row('Type', this.switchSelect);
-    this.switchPowers = el('div', 'editor-hint');
+    this.linkBox = el('div', 'editor-links');
+    this.linkKey = '';
     this.switchTimer = numberInput({ min: 0.5, step: 0.5 });
     this.switchTimer.title = "Seconds it stays on (D140); blank: its type's";
     this.switchTimer.addEventListener('change', () => on.switchTimer(numberValue(this.switchTimer) ?? null));
     this.switchTimerRow = this.row('Timer (s)', this.switchTimer);
-    this.switchRows.append(this.switchTypeRow, this.switchPowers, this.switchTimerRow);
+    this.switchRows.append(this.switchTypeRow, this.linkBox, this.switchTimerRow);
     return this.switchRows;
+  }
+
+  /**
+   * The link checklist (D142): what the picked switch powers, or the
+   * switches of the picked gate, platform or exit; rebuilt only when it
+   * changed, so a row under the mouse stays.
+   * @param {ReturnType<import('./switch-tool.js').linkList>} list
+   */
+  showLinks(list) {
+    const key = JSON.stringify(list);
+    if (key === this.linkKey) return;
+    this.linkKey = key;
+    this.linkBox.hidden = !list;
+    if (!list) return this.linkBox.replaceChildren();
+    const { on } = this;
+    const check = (text, checked, disabled, change, hover) => {
+      const input = Object.assign(el('input'), { type: 'checkbox', checked, disabled });
+      input.addEventListener('change', () => change(input.checked));
+      const label = el('label', 'editor-check editor-link-row');
+      label.append(input, ` ${text}`);
+      if (hover) {
+        label.addEventListener('mouseenter', () => on.linkHover(hover));
+        label.addEventListener('mouseleave', () => on.linkHover(null));
+      }
+      return label;
+    };
+    const rows = [el('div', 'editor-hint', list.title)];
+    if (list.every !== null) rows.push(check('every switch in the room', list.every, false, (checked) => on.linkEvery(checked)));
+    for (const row of list.rows) rows.push(check(row.label, row.checked, row.disabled, (checked) => on.link(row.key, checked), row.key));
+    this.linkBox.replaceChildren(...rows);
   }
 
   /**
@@ -522,6 +553,7 @@ export class EditorPanel {
    * @param {string[]|null} [state.blockSwitches] the switches of the switch gates it places (D141), or null: not a switch gate
    * @param {string} state.objectType
    * @param {string} state.switchType type of the switches the Switch tool places
+   * @param {ReturnType<import('./switch-tool.js').linkList>} [state.linkList] the link checklist, or null
    * @param {{ kind: string, switches: string[] }|null} [state.links] the picked platform and its switches (D140), or null
    * @param {{ id: string, powers: string[], timer: number|null, typeTimer: number|null }|null} [state.switchInfo]
    *   the picked switch (D140): what it powers, its time and its type's (null: not timed), or null
@@ -540,7 +572,7 @@ export class EditorPanel {
    * @param {string} state.status a line about the last action
    * @param {boolean} state.unsaved there are unsaved edits (any room, or world.json)
    */
-  show({ edit, rooms, tool, blockType, blockSwitches = null, objectType, switchType, links = null, switchInfo = null, enemy, pathItem, pathItemIsEnemy, screen, exit, layer, cut, errors, status, unsaved }) {
+  show({ edit, rooms, tool, blockType, blockSwitches = null, objectType, switchType, linkList = null, links = null, switchInfo = null, enemy, pathItem, pathItemIsEnemy, screen, exit, layer, cut, errors, status, unsaved }) {
     const data = edit.data;
     const changed = edit.dirty || edit.linksChanged;
     this.roomLabel.textContent = `${data.id}${changed ? ' • unsaved' : unsaved ? ' • other rooms unsaved' : ''}`;
@@ -566,10 +598,9 @@ export class EditorPanel {
     this.hints.switch.hidden = tool !== 'switch';
     this.switchTypeRow.hidden = tool !== 'switch';
     this.switchSelect.value = switchType;
-    this.switchPowers.hidden = !switchInfo;
+    this.showLinks(linkList);
     this.switchTimerRow.hidden = !switchInfo || switchInfo.typeTimer === null;
     if (switchInfo) {
-      this.switchPowers.textContent = `${switchInfo.id} powers ${switchInfo.powers.join(', ') || 'nothing yet'}.`;
       this.switchTimer.placeholder = String(switchInfo.typeTimer ?? '');
       if (document.activeElement !== this.switchTimer) this.switchTimer.value = switchInfo.timer !== switchInfo.typeTimer ? String(switchInfo.timer) : '';
     }
@@ -578,7 +609,7 @@ export class EditorPanel {
     this.enemyRows.hidden = tool !== 'enemy';
     this.pathRows.hidden = tool !== 'path';
     this.exitRows.hidden = tool !== 'exit';
-    const picked = { enemy: enemy.id, path: pathItem?.id, exit: exit.id, switch: switchInfo?.id };
+    const picked = { enemy: enemy.id, path: pathItem?.id, exit: exit.id, switch: switchInfo?.id ?? linkList?.picked };
     for (const [key, [idle, busy]] of Object.entries(HINTS)) this.hints[key].textContent = picked[key] ? busy(picked[key]) : idle;
 
     this.enemyTemplate.value = enemy.template;

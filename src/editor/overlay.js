@@ -17,8 +17,11 @@ import { PALETTE, disposeTree, lineMaterial, neonLines } from '../render/neon.js
 export const EDITOR_LOOK = {
   grid: { color: 0x6a86a8, width: 1, brightness: 0.8 },
   border: { color: PALETTE.cyan, width: 2, brightness: 1 },
-  /** Cursor colors by tool; erasing is red. */
-  cursor: { place: 0xffffff, erase: PALETTE.danger, width: 2.5, brightness: 1.4 },
+  /**
+   * Cursor colors; erasing is red. The Switch tool's (D142) tells what a
+   * click does: place white, pick cyan, link green, unlink red, nothing gray.
+   */
+  cursor: { place: 0xffffff, erase: PALETTE.danger, pick: PALETTE.cyan, link: 0x5cff7a, unlink: PALETTE.danger, none: 0x5a6070, width: 2.5, brightness: 1.4 },
   spawn: { color: PALETTE.cyan, width: 2 },
   reset: { color: PALETTE.magenta, width: 2 },
   /**
@@ -132,22 +135,25 @@ export class EditorOverlay {
    * @param {object} [options]
    * @param {boolean} [options.flat] a floor tile (holes), drawn flat at y
    * @param {boolean} [options.erase] the red erase look
+   * @param {'place'|'pick'|'link'|'unlink'|'none'} [options.tone] what a Switch tool click does
    */
-  setCursor(cell, { flat = false, erase = false } = {}) {
+  setCursor(cell, { flat = false, erase = false, tone } = {}) {
     this.cube.visible = !!cell && !flat;
     this.tile.visible = !!cell && flat;
     if (!cell) return;
     (flat ? this.tile : this.cube).position.set(cell[0], cell[1] + (flat ? 0.004 : 0), cell[2]);
-    this.cursorMaterial.color.set(erase ? EDITOR_LOOK.cursor.erase : EDITOR_LOOK.cursor.place).multiplyScalar(EDITOR_LOOK.cursor.brightness);
+    const { cursor } = EDITOR_LOOK;
+    this.cursorMaterial.color.set(erase ? cursor.erase : (cursor[tone] ?? cursor.place)).multiplyScalar(cursor.brightness);
   }
 
   /**
    * Draw the paths of the room's platforms and enemies (through the middle
    * of the cells they pass) and a box around the selected thing.
    * @param {object} room room data
-   * @param {{ kind: 'item'|'exit', id: string } | null} selected
+   * @param {{ kind: 'item'|'exit'|'gate', id?: string } | null} selected
+   * @param {number[][]|null} [cells] a picked switch gate's cells
    */
-  setMarks(room, selected) {
+  setMarks(room, selected, cells = null) {
     this.group.remove(this.marks);
     disposeTree(this.marks);
     this.marks = new Group();
@@ -173,6 +179,7 @@ export class EditorOverlay {
       const hi = [0, 1, 2].map((axis) => Math.max(...inside.map((cell) => cell[axis])) + 1);
       lines.selected.push(...boxSegments(lo, hi));
     }
+    for (const cell of cells ?? []) lines.selected.push(...boxSegments(cell, cell.map((v) => v + 1)));
     for (const [key, segments] of Object.entries(lines)) {
       if (segments.length > 0) this.marks.add(onTop(neonLines(segments, lineMaterial(EDITOR_LOOK[key]))));
     }

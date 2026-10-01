@@ -44,6 +44,14 @@ docs/decisions.md).
   with the Switch tool, from its own type list: a click on a free cell
   places one and picks it, a right click erases one. The Object tool's
   list no longer has them (it still picks a placed switch).
+- Room editor Switch tool links from either side, mostly from the panel:
+  a picked switch ticks the gates, platforms and exits it powers, a
+  picked gate, platform or exit ticks its switches (or every switch in
+  the room); hovering a row lights the link up. With something picked a
+  click never places a switch, and picks another thing only with Shift;
+  the hover line and the cursor's color say what a click will do.
+- Room editor Object tool never overwrites: a click on an object, enemy
+  or pickup picks it; a block or another type there wants erasing first.
 - Room design checklist and the level-review subagent: check the race
   of a timed switch by hand (the reachability checker ignores timing).
 - Switch gates are white glass boxes, and a switched-off one is not

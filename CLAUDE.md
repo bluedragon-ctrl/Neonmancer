@@ -433,8 +433,8 @@ not critical.
 - **Room editor** (in-game, Phase 2): place blocks, enemies and pickups
   with the mouse, preview in the real neon look, export room JSON. The
   Switch tool places switches (the Object tool does not) and links them
-  to gates, platforms and exits; hovering
-  shows any thing's switch links (D142).
+  to gates, platforms and exits, from either side, with checklists in the
+  panel; hovering shows any thing's switch links (D142).
 - **World map tool** (`tools/world-map.html`, D66, D77): every room on a
   map grid with its connections; move, add and remove rooms and
   connections; flags rooms out of reach; opens a room in the room editor;
