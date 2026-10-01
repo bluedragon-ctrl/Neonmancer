@@ -32,12 +32,19 @@ import { newText, pickedScreen, setScreenText, textUsers, updateText } from './t
 import { WorldEdit, linkChoices } from './world-edit.js';
 import { pickupBit } from '../world/progress.js';
 import { SWITCH_KINDS } from '../entities/switch.js';
+import { hitBoxes, pickCell } from './pick.js';
 import { linkList, linkables, pickedLinkable, setEvery, setLink, switchClick } from './switch-tool.js';
 
 /** Tools a mouse drag paints with; the others act on the cell clicked only. */
 const PAINT_TOOLS = new Set(['block', 'hole', 'object']);
 /** Tools that work on floor tiles (y 0) whatever the layer. */
 const FLOOR_TOOLS = new Set(['hole', 'shrine']);
+/**
+ * Tools whose clicks hit what is seen (pick.js): blocks and items; the
+ * Path tool items only (its points go on the layer). The others work on
+ * the layer's plane (exits, the spawn and reset points) or the floor.
+ */
+const HIT_TOOLS = { block: true, object: true, enemy: true, switch: true, path: false };
 
 /** The key that picks a tool. */
 const toolKey = (id) => TOOLS.find((tool) => tool.id === id).key;
@@ -801,9 +808,10 @@ export class Editor {
   // --- Mouse and keys ---------------------------------------------------
 
   /**
-   * The cell of the current layer under the mouse (floor tile for the Hole
-   * and Shrine tools: y 0), or null outside the room. Keeps where the ray met the layer
-   * in `this.hit`.
+   * The cell under the mouse: for most tools what is seen there, a block
+   * or an item drawn on this layer (pick.js), else the cell of the
+   * current layer (floor tile for the Hole and Shrine tools: y 0); null
+   * outside the room. Keeps where the ray met it in `this.hit`.
    * @param {PointerEvent|WheelEvent} event
    * @returns {number[]|null} [x, y, z]
    */
@@ -812,8 +820,15 @@ export class Editor {
     const ndc = new Vector2(((event.clientX - rect.left) / rect.width) * 2 - 1, -((event.clientY - rect.top) / rect.height) * 2 + 1);
     this.raycaster.setFromCamera(ndc, this.renderer.camera);
     const y = FLOOR_TOOLS.has(this.tool) ? 0 : this.layer;
-    if (!this.raycaster.ray.intersectPlane(new Plane(new Vector3(0, 1, 0), -y), this.hit)) return null;
     const [w, , d] = this.edit.size;
+    if (this.tool in HIT_TOOLS) {
+      const { origin, direction } = this.raycaster.ray;
+      const boxes = hitBoxes(this.edit, this.objectTypes, { cutAbove: this.cutLayer, blocks: HIT_TOOLS[this.tool] });
+      const hit = pickCell(origin.toArray(), direction.toArray(), boxes, y);
+      if (!hit) return null;
+      this.hit.fromArray(hit.point);
+      if (hit.cell) return [...hit.cell];
+    } else if (!this.raycaster.ray.intersectPlane(new Plane(new Vector3(0, 1, 0), -y), this.hit)) return null;
     const x = Math.floor(this.hit.x);
     const z = Math.floor(this.hit.z);
     return x >= 0 && z >= 0 && x < w && z < d ? [x, y, z] : null;
