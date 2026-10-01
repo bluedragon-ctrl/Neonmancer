@@ -25,6 +25,7 @@ import { formatJson } from './format-json.js';
 import { idProblem } from './ids.js';
 import { EditorOverlay } from './overlay.js';
 import { EditorPanel, TOOLS } from './panel.js';
+import { isSwitchGate, linksAt, poweredBy, poweredThings, roomSwitches, switchTimer, switchesOf } from './links.js';
 import { RoomEdit, newRoom, resizeText, roomIdProblem, sizeProblem } from './room-edit.js';
 import { downloadFile, saveFiles } from './save.js';
 import { newText, pickedScreen, setScreenText, textUsers, updateText } from './texts.js';
@@ -142,6 +143,7 @@ export class Editor {
           this.blockSwitches = ids;
           this.refresh();
         },
+        switchTimer: (seconds) => this.selectedItem && this.change(() => this.edit.setTimer(this.selectedItem.id, seconds)),
         itemSwitches: (ids) => this.selectedItem && this.change(() => this.edit.setSwitches(this.selectedItem.id, ids)),
         newText: (id, text) => newText(this, id, text),
         updateText: (text) => updateText(this, text),
@@ -307,7 +309,7 @@ export class Editor {
     this.game.content.links = linkMap(this.world.connections);
     try {
       this.game.enterRoom(data.id);
-      this.onRoom({ cutAbove: this.cutLayer });
+      this.onRoom({ cutAbove: this.cutLayer, editing: true });
     } catch (err) {
       // Data the game can't build yet (it is invalid anyway): keep the last view.
       this.errors.unshift(`preview failed: ${err.message}`);
@@ -347,7 +349,7 @@ export class Editor {
 
   /** Draw the room again, cut at the layer (a rebuild due anyway does it). */
   showCut() {
-    if (this.active && !this.stale && this.game.room.id === this.edit.id) this.onRoom({ cutAbove: this.cutLayer });
+    if (this.active && !this.stale && this.game.room.id === this.edit.id) this.onRoom({ cutAbove: this.cutLayer, editing: true });
   }
 
   /** @param {number[]} size [x, y, z] as typed in the panel */
@@ -594,6 +596,7 @@ export class Editor {
 
   refresh() {
     if (!this.active) return;
+    this.updateLinks();
     const enemy = this.selectedEnemy;
     const exit = this.selectedExit;
     const pathItem = this.pathItem;
@@ -605,6 +608,7 @@ export class Editor {
       blockSwitches: switchGate(this.blockTypes[this.blockType]) ? this.blockSwitches : null,
       objectType: this.objectType,
       links: this.linksState(),
+      switchInfo: this.switchState(),
       enemy: {
         id: enemy?.id ?? null,
         template: enemy?.template ?? this.enemyTemplate,
@@ -628,6 +632,71 @@ export class Editor {
       status: this.status,
       unsaved: this.unsaved,
     });
+  }
+
+  /** The room as it stands now, for links.js: its blocks written back from the editor's boxes. */
+  get linkData() {
+    return this.edit.toData();
+  }
+
+  /** Block and object types, as links.js wants them. */
+  get linkTypes() {
+    return { objectTypes: this.objectTypes, blockTypes: this.blockTypes };
+  }
+
+  /**
+   * The picked switch for the panel (D140): what it powers and its timer
+   * (its type's or its own); or null.
+   */
+  switchState() {
+    const item = this.selectedItem;
+    if (!item || !roomSwitches({ objects: [item] }, this.objectTypes).length) return null;
+    const powers = poweredBy(poweredThings(this.linkData, this.linkTypes), item.id);
+    const typeTimer = this.objectTypes[item.type]?.timer ?? null;
+    return { id: item.id, powers: powers.map((thing) => thing.label), timer: switchTimer(item, this.objectTypes), typeTimer };
+  }
+
+  /**
+   * The switch links to draw (D140): those of what is under the mouse, else
+   * of what is picked (a switch, a platform, a locked exit); null: none.
+   */
+  focusLinks() {
+    const flat = FLOOR_TOOLS.has(this.tool);
+    const hovered = this.hover && !flat ? linksAt(this.linkData, this.linkTypes, this.hover) : null;
+    if (hovered) return hovered;
+    const item = this.selectedItem;
+    if (item) return linksAt(this.linkData, this.linkTypes, item.at);
+    const exit = this.selectedExit;
+    if (!exit?.locked) return null;
+    const thing = poweredThings(this.linkData, this.linkTypes).find((one) => one.kind === 'exit' && one.id === exit.id);
+    return thing ? { switches: switchesOf(thing, roomSwitches(this.linkData, this.objectTypes)), powered: [thing] } : null;
+  }
+
+  /** Redraw the switch links when what they show changed. */
+  updateLinks() {
+    const links = this.focusLinks();
+    const key = links ? JSON.stringify([links.switches.map((s) => s.at), links.powered.map((p) => p.cells)]) : '';
+    if (key === this.linksKey) return;
+    this.linksKey = key;
+    this.overlay.setLinks(links);
+  }
+
+  /**
+   * Alt+click with the Block tool: take the type of the block in a cell,
+   * and a switch gate's switches (D141), to paint more like it.
+   * @param {number[]} cell
+   */
+  eyedrop(cell) {
+    const here = this.edit.at(cell);
+    if (here?.kind !== 'block') {
+      this.status = 'Alt+click a block to take its type and switches.';
+      return this.refresh();
+    }
+    this.blockType = here.type;
+    this.blockSwitches = here.switches ?? [];
+    const links = linksAt(this.linkData, this.linkTypes, cell);
+    this.status = `Painting ${here.type}${links ? `: ${links.text}` : ''}.`;
+    this.refresh();
   }
 
   /** The picked platform for the panel (D140): its switches; or null. */
@@ -720,7 +789,9 @@ export class Editor {
     if (this.pointer && !this.stroke) this.hover = this.pick(this.pointer);
     const flat = FLOOR_TOOLS.has(this.tool);
     this.overlay.setCursor(this.hover, { flat, erase: this.stroke === 'erase' });
-    this.panel.setHover(this.hover && this.edit.describe(this.hover, { tile: flat }));
+    const links = this.hover && !flat ? linksAt(this.linkData, this.linkTypes, this.hover) : null;
+    this.panel.setHover(this.hover && `${this.edit.describe(this.hover, { tile: flat })}${links ? ` · ${links.text}` : ''}`);
+    this.updateLinks();
   }
 
   /**
@@ -742,6 +813,53 @@ export class Editor {
     else if (tool === 'spawn') this.change(() => place && edit.setPoint('spawn', point));
     else if (tool === 'reset') this.change(() => edit.setPoint('reset', place ? point : null));
     else if (tool === 'shrine') this.change(() => edit.setShrine(place ? [x, z] : null));
+    else if (tool === 'switch') this.useSwitch(cell, place);
+  }
+
+  /**
+   * Switch tool (D140, D141): pick a switch, then link it to (or unlink it
+   * from) the switch gates, platforms and exits clicked; right click drops it.
+   * @param {number[]} cell
+   * @param {boolean} place left button
+   */
+  useSwitch(cell, place) {
+    if (!place) return this.select(null);
+    const { edit } = this;
+    const all = roomSwitches(this.linkData, this.objectTypes).map((object) => object.id);
+    const here = edit.at(cell);
+    const picked = this.switchState()?.id;
+    const done = (what, list, empty) => {
+      this.status = list.includes(picked) ? `${picked} now powers ${what}.` : `${picked} no longer powers ${what}${list.length === 0 ? `: ${empty}` : ''}.`;
+      this.refresh();
+    };
+    if (here?.kind === 'object' && all.includes(here.item.id)) {
+      this.select({ kind: 'item', id: here.item.id });
+      this.status = `${here.item.id} picked.`;
+      return this.refresh();
+    }
+    if (!picked) {
+      this.status = 'Pick a switch first (a target or a plate).';
+      return this.refresh();
+    }
+    if (here?.kind === 'block' && isSwitchGate(this.blockTypes[here.type])) {
+      let list;
+      this.change(() => (list = edit.toggleGateLink(cell, picked, all)) !== null);
+      return done(`this ${here.type}`, list, 'it opens on every switch');
+    }
+    if (here?.kind === 'object' && this.objectTypes[here.item.type]?.kind === 'platform') {
+      let list;
+      this.change(() => !!(list = edit.togglePlatformLink(here.item.id, picked)));
+      return done(here.item.id, list, 'it always runs');
+    }
+    const side = this.exitSide(cell);
+    const exit = side && edit.exitAt(side, cell);
+    if (exit) {
+      let list;
+      this.change(() => !!(list = edit.toggleExitLink(exit.id, picked, all)));
+      return done(`exit ${exit.id}`, list, 'it is no longer locked');
+    }
+    this.status = 'Click a switch gate, a platform or an exit (on its layer).';
+    this.refresh();
   }
 
   useObject(cell, place) {
@@ -749,9 +867,17 @@ export class Editor {
     if (!place) return this.change(() => edit.erase(cell));
     const type = this.objectTypes[this.objectType];
     if (this.pickupTypes[this.objectType]) return this.change(() => edit.placePickup(cell, this.objectType));
+    // A switch or a platform there is picked, never replaced (its links,
+    // D140, show in the panel and over the room); erase it to put another.
+    const before = edit.at(cell);
+    const kind = before?.kind === 'object' && this.objectTypes[before.item.type]?.kind;
+    if (kind && ['target', 'plate', 'platform'].includes(kind)) {
+      this.select({ kind: 'item', id: before.item.id });
+      this.status = `${before.item.id} picked.`;
+      return this.refresh();
+    }
     // A decoration of this type there is picked (a screen's text is set in
     // the panel, D118); clicking the picked one turns it to face the other way (D117).
-    const before = edit.at(cell);
     if (type?.kind === 'deco' && before?.kind === 'object' && before.item.type === this.objectType) {
       const { id } = before.item;
       if (this.selected?.id !== id) {
@@ -846,6 +972,8 @@ export class Editor {
       if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
       const cell = this.pick(e);
       if (!cell) return;
+      // Alt+click with the Block tool takes a block's type and switches.
+      if (this.tool === 'block' && e.altKey && e.button === 0) return this.eyedrop(cell);
       canvas.setPointerCapture(e.pointerId);
       this.stroke = e.button === 0 ? 'place' : 'erase';
       this.strokeCell = cell.join();

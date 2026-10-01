@@ -1,10 +1,12 @@
 /**
  * Gate blocks (D140, D141), one look language for both triggers: going,
- * the block sinks into its cell's floor; gone, a dim dashed outline shows
- * where it will rise again (only if it will); coming back, it rises.
+ * the block sinks into its cell's floor; coming back, it rises. Gone, a
+ * dim dashed outline shows where it will rise again: for a collapsing
+ * block that will, in play and in the room editor; for a switch gate only
+ * in the room editor (in play a switched-off block is not shown at all).
  *
- * - Switch gates and bridges: a white mechanism block (D99) with bars
- *   across the two sides the camera sees (D115) and a small bull's-eye
+ * - Switch gates and bridges: a white glass box (D99 white is a mechanism;
+ *   glassBox() with GLASS.gate, D116) with neon edges and a small bull's-eye
  *   light on top of a stack per switch that powers it, lit for each one
  *   on (like a lock's lights). A bridge looks the same.
  * - Step gates (collapsing blocks, D47): the block type's own look
@@ -15,9 +17,10 @@
  * states ease in. Reviewed in the asset showcase (`?asset=gates`,
  * `?asset=collapsing-cycle`).
  */
-import { BoxGeometry, Color, DoubleSide, Group, Mesh, MeshBasicMaterial, PlaneGeometry } from 'three';
+import { Color, DoubleSide, Group, Mesh, MeshBasicMaterial, PlaneGeometry } from 'three';
 import { blockEdges } from './edges.js';
-import { faceMaterial, lineMaterial, neonLines, shared, PALETTE } from './neon.js';
+import { glassBox, GLASS } from './glass.js';
+import { lineMaterial, neonLines } from './neon.js';
 import { createObjectView } from './room-view.js';
 import { SWITCH_FX } from './switch-view.js';
 import { GATE } from '../entities/gate.js';
@@ -31,10 +34,6 @@ export const GATE_FX = {
   edges: 1.6,
   /** Brightness of the dashed outline while open. */
   ghost: 0.45,
-  /** Heights of the bars across a side face. */
-  bars: [0.3, 0.5, 0.7],
-  /** How far the bars stay in from the face's edges. */
-  inset: 0.15,
   /** Top lights: half size of the outer square, gap between lights. */
   light: 0.07,
   lightGap: 0.2,
@@ -58,22 +57,6 @@ export function gateShake({ state, timer }, alpha) {
   return [amount * Math.sin(tick * 2.1), 0, amount * Math.sin(tick * 2.9 + 1)];
 }
 
-const UNIT_BOX = shared(new BoxGeometry(1, 1, 1).translate(0.5, 0.5, 0.5));
-const FACE = new Color(PALETTE.face);
-
-/**
- * The bars on the +x and +z faces of the unit cube (pure, tested).
- * @returns {number[][][]} segments
- */
-export function gateBars() {
-  const { bars, inset } = GATE_FX;
-  const segments = [];
-  for (const h of bars) {
-    segments.push([[1, h, inset], [1, h, 1 - inset]]);
-    segments.push([[inset, h, 1], [1 - inset, h, 1]]);
-  }
-  return segments;
-}
 
 /**
  * Centers [x, z] of the lights on a gate's top, a row along x (pure, tested).
@@ -94,7 +77,7 @@ function ease(value, target, dt, time) {
  * A gate block, its lower corner at the origin.
  * @param {number|string} color
  * @param {object} [options]
- * @param {object|null} [options.style] a step gate's object style (edges, faces, tint...); null: a switch gate's barred look
+ * @param {object|null} [options.style] a step gate's object style (edges, faces, tint...); null: a switch gate's white glass
  * @param {number} [options.lights] switches that power it (one light each on top)
  * @param {boolean} [options.closed] solid to start with
  */
@@ -106,16 +89,13 @@ export function createGate(color, { style = null, lights = 0, closed = true } = 
   const body = new Group();
   shaker.add(body);
   group.add(shaker);
-  const faces = [faceMaterial(), faceMaterial(), faceMaterial()];
   const edgeMat = lineMaterial({ color: base, width: 2.5 });
-  const barMat = lineMaterial({ color: base, width: 1.8 });
   if (style) body.add(createObjectView({ ...style, color, at: [0, 0, 0] }));
   else {
-    body.add(new Mesh(UNIT_BOX, [faces[1], faces[1], faces[0], faces[0], faces[2], faces[2]]));
-    for (const line of [neonLines(blockEdges([[0, 0, 0]]), edgeMat), neonLines(gateBars(), barMat)]) {
-      line.renderOrder = 2;
-      body.add(line);
-    }
+    body.add(glassBox([0, 0, 0], [1, 1, 1], base, GLASS.gate));
+    const edges = neonLines(blockEdges([[0, 0, 0]]), edgeMat);
+    edges.renderOrder = 2;
+    body.add(edges);
   }
   // The lights on top: an outline square each, filling with light when its switch is on.
   const { light: s } = GATE_FX;
@@ -163,9 +143,7 @@ export function createGate(color, { style = null, lights = 0, closed = true } = 
     body.scale.y = Math.max(0.001, eased);
     body.visible = eased > 0.01;
     edgeMat.color.copy(base).multiplyScalar(GATE_FX.edges);
-    barMat.color.copy(base).multiplyScalar(GATE_FX.edges);
     lightMat.color.copy(base).multiplyScalar(SWITCH_FX.off);
-    [1, 0.6, 0.4].forEach((share, i) => faces[i].color.copy(FACE).lerp(base, 0.12 * share));
     for (const fill of fills) {
       fill.value = ease(fill.value, fill.target, dt, SWITCH_FX.ease);
       fill.material.opacity = fill.value;
@@ -195,9 +173,12 @@ export class GateView {
   /**
    * @param {import('../game.js').Game|null} game null in the showcase (no lights)
    * @param {import('../entities/gate.js').Gate} gate (or anything with its `trigger`, `state`, `timer`, `returns`, `pos` and `object`)
+   * @param {{ editing?: boolean }} [options] shown in the room editor
    */
-  constructor(game, gate) {
+  constructor(game, gate, { editing = false } = {}) {
     this.gate = gate;
+    /** In the room editor a gone switch gate shows its outline; in play it is not shown at all. */
+    this.editing = editing;
     const switched = gate.trigger === 'switch';
     this.linked = switched && game && showsLights(gate, game.objects) ? linkedSwitches(game, gate.switches) : [];
     const { object } = gate;
@@ -215,7 +196,7 @@ export class GateView {
       closed: gate.state !== 'gone',
       lit: this.linked.filter((object) => object.on).length,
       shake: gateShake(gate, alpha),
-      outline: gate.returns,
+      outline: gate.trigger === 'switch' ? this.editing : gate.returns,
     });
     this.group.userData.update(dt);
   }

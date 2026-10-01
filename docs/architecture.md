@@ -156,7 +156,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/shrine-view.js` | Backup shrine look (D97): floor tile, rune, glow, motes and rings, flare on use, `SHRINE_FX` (layout and timing pure, tested) |
 | `render/spikes.js` | The spiked object shape (D82): pyramids on a core cube inside the cell, as face triangles and outline segments, `SPIKES` tuning; pure, tested |
 | `render/switch-view.js` | Switch and locked-exit looks (`SWITCH_FX`): target and plate with their square bull's-eye (a timed one's outer square dashed, blinking as it counts down: `switchLight()`, D140), the lock's panel with one light per linked switch and an access lock's Roman numeral (D101); `TargetView`, `PlateView`, `LockView` (marks pure, tested) |
-| `render/gate-view.js` | Gate block look (`GATE_FX`, D140, D141): a switch gate is a white barred block with a light per switch on top of a stack, a step gate its type's look with a rattle (`gateShake()`); both sink to go and leave a dashed outline if they come back; `GateView` (pure parts tested) |
+| `render/gate-view.js` | Gate block look (`GATE_FX`, D140–D142): a switch gate is a white glass box with a light per switch on top of a stack (gone: hidden in play, an outline in the editor), a step gate its type's look with a rattle (`gateShake()`); both sink to go and leave a dashed outline if they come back; `GateView` (pure parts tested) |
 | `render/viewport.js` | Letterbox, buffer size and 1080p-relative sizing math (pure, tested) |
 | `render/virus.js` | Virus model (D78): sharp tipped cube, orbiting bits, glide, charge pose, pop pixels, `VIRUS` tuning; `VIRUS_MODEL` |
 | `render/walls.js` | Back walls with doorways and dark tunnels behind them, front edges with gaps, arrow shape for front exits (pure, tested) |
@@ -190,9 +190,10 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `editor/format-json.js` | JSON in the data files' hand-written style (pure, tested against every data file) |
 | `editor/ids.js` | `ID_PATTERN` and `idProblem()`: why a new room, exit, template or text id won't do (pure, tested) |
 | `editor/map-edit.js` | The world as the world map tool edits it (D77): `MapEdit` moves, adds and removes rooms, connects rooms with an exit in the middle of each facing wall (`addExit()`), removes connections with both exits (`disconnectExit()`), removes one exit (`removeExit()`, D102) and reuses loose ones (`looseExit()`), undo, rolling back the last save (`rollbackPoint()`, `rollBack()`, D103), and what a save sends (`changes()`) (pure, tested) |
-| `editor/overlay.js` | Editor gizmos: layer grid, cursor, spawn and reset markers, paths, the picked thing's box, `EDITOR_LOOK` |
+| `editor/overlay.js` | Editor gizmos: layer grid, cursor, spawn and reset markers, paths, the picked thing's box, switch links (`linkSegments()`, D142), `EDITOR_LOOK` |
+| `editor/links.js` | Switch links in edited room data (D142), both ways: `poweredThings()`, `poweredBy()`, `switchesOf()`, `linksAt()` (a cell's links in words and things to draw) (pure, tested) |
 | `editor/panel.js` | Editor side panel (DOM): room list, tools and their fields, layer, room settings, actions, errors |
-| `editor/room-edit.js` | One room being edited: place/erase edits, enemies, paths, exits and their connections, spawn/reset, name, biome, size (with a report), undo/redo (with the step's screen text changes), dirty state, cell descriptions; `newRoom()`, `roomIdProblem()`, `sizeProblem()` (pure, tested) |
+| `editor/room-edit.js` | One room being edited: place/erase edits, enemies, paths, exits and their connections, spawn/reset, name, biome, size (with a report), undo/redo (with the step's screen text changes), dirty state, cell descriptions, switch link toggles (`toggleGateLink()`, `togglePlatformLink()`, `toggleExitLink()`, D142) and a switch's timer; `newRoom()`, `roomIdProblem()`, `sizeProblem()` (pure, tested) |
 | `editor/save.js` | Posting edited files to the dev server; downloading them in a build |
 | `editor/lore-edit.js` | `lore.json` being edited (D118): texts added and changed, checked against the limits; a step's text changes applied again for undo/redo (pure, tested) |
 | `editor/texts.js` | The editor's screen text actions (D118): pick the picked screen's text, add a new one for it, change one; which screens show a text |

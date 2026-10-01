@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { loadGameData } from '../src/data/load.js';
 import { validateData } from '../src/data/validate.js';
 import { Game } from '../src/game.js';
-import { gateBars, gateLightSpots } from '../src/render/gate-view.js';
+import { gateLightSpots } from '../src/render/gate-view.js';
 import { SWITCH_FX, switchLight } from '../src/render/switch-view.js';
 import { exitOpen, powered, switchesOn } from '../src/switches.js';
 import { buildRoom } from '../src/world/room.js';
@@ -203,8 +203,7 @@ test('reach: a bridge over a pit appears with its switch; a collapsing bridge co
   assert.equal(reachFar({ blocks: [{ ...bridge, type: 'collapsing' }], holes }), true, 'no timing: it holds');
 });
 
-test('gate and timed switch looks: bars on the seen faces, lights in a row, a blink that speeds up', () => {
-  for (const [a, b] of gateBars()) assert.ok((a[0] === 1 && b[0] === 1) || (a[2] === 1 && b[2] === 1), 'on +x or +z');
+test('gate and timed switch looks: lights in a row, a blink that speeds up', () => {
   assert.deepEqual(gateLightSpots(1), [[0.5, 0.5]]);
   assert.equal(gateLightSpots(3).length, 3);
   assert.equal(switchLight(false, null, 0), 0);
@@ -254,4 +253,71 @@ test('room editor: switch links on gate blocks, a platform and a locked exit, ty
   assert.equal('switches' in edit.item('l'), false, 'none: it always runs');
   assert.deepEqual(exitFields({ id: 'e', side: '+x', at: 3, width: 2, y: 0, height: 2, locked: true, switches: ['p'] }).switches, ['p']);
   assert.equal(exitFields({ id: 'e', side: '+x', at: 3, width: 2, y: 0, height: 2, switches: ['p'] }).switches, undefined, 'only a locked exit');
+});
+
+test('editor links: a switch names what it powers; a gate, platform or locked exit its switches', async () => {
+  const { linksAt, poweredThings } = await import('../src/editor/links.js');
+  const { linkSegments } = await import('../src/editor/overlay.js');
+  const { resolveBlockTypes } = await import('../src/data/room-data.js');
+  const types = { objectTypes: TYPES, blockTypes: resolveBlockTypes(BLOCK_TYPES) };
+  const room = roomFile('alpha', {
+    exits: [{ id: 'east', side: '+x', at: 3, locked: true, switches: ['t'] }],
+    blocks: [{ type: 'gate', at: [4, 0, 1], to: [4, 1, 1], switches: ['p'] }, { type: 'bridge', at: [5, 0, 5] }, { type: 'collapsing', at: [6, 0, 6] }],
+    objects: [
+      { id: 'p', type: 'plate', at: [2, 0, 2] },
+      { id: 't', type: 'target_timed', at: [3, 0, 3] },
+      { id: 'l', type: 'platform', at: [1, 0, 6], path: { points: [[1, 0, 4]] }, switches: ['p', 't'] },
+    ],
+  });
+  assert.deepEqual(poweredThings(room, types).map((thing) => thing.label), ['exit east', 'gate ×2', 'bridge ×1', 'l']);
+  assert.equal(linksAt(room, types, [2, 0, 2]).text, 'powers gate ×2, bridge ×1, l');
+  assert.equal(linksAt(room, types, [3, 0, 3]).text, 'powers exit east, bridge ×1, l');
+  assert.equal(linksAt(room, types, [4, 1, 1]).text, 'opens on p');
+  assert.equal(linksAt(room, types, [5, 0, 5]).text, 'opens on every switch (p, t)');
+  assert.equal(linksAt(room, types, [1, 0, 6]).text, 'runs on p, t');
+  assert.equal(linksAt(room, types, [7, 1, 3]).text, 'opens on t', 'the exit opening');
+  assert.equal(linksAt(room, types, [6, 0, 6]), null, 'a collapsing block has no links');
+  assert.equal(linksAt(room, types, [0, 0, 0]), null);
+  // Drawn: a box per switch and per powered thing, a line from each switch to each.
+  const { boxes, lines } = linkSegments(linksAt(room, types, [2, 0, 2]));
+  assert.equal(boxes.length, 12 * 4);
+  assert.equal(lines.length, 3);
+  assert.deepEqual(lines[0], [[2.5, 0.5, 2.5], [4.5, 1, 1.5]]);
+});
+
+test('room editor: a timed switch takes its own time, blank goes back to its type\'s', async () => {
+  const { RoomEdit } = await import('../src/editor/room-edit.js');
+  const edit = new RoomEdit(roomFile('alpha', { objects: [{ id: 't', type: 'target_timed', at: [3, 0, 3] }] }));
+  assert.equal(edit.setTimer('t', 2.5), true);
+  assert.deepEqual(edit.item('t').overrides, { timer: 2.5 });
+  edit.setTimer('t', null);
+  assert.equal('overrides' in edit.item('t'), false);
+});
+
+test('Switch tool edits: link and unlink a gate wall, a platform and an exit', async () => {
+  const { RoomEdit } = await import('../src/editor/room-edit.js');
+  const lift = { id: 'l', type: 'platform', at: [6, 0, 6], path: { points: [[6, 0, 2]] } };
+  const edit = new RoomEdit(
+    roomFile('alpha', {
+      exits: [{ id: 'east', side: '+x', at: 3 }],
+      objects: [{ id: 'p', type: 'plate', at: [2, 0, 2] }, { id: 'q', type: 'plate', at: [3, 0, 2] }, lift],
+      blocks: [{ type: 'gate', at: [4, 0, 1], to: [4, 1, 3] }, { type: 'gate', at: [5, 0, 6] }],
+    }),
+  );
+  const all = ['p', 'q'];
+  // A gate on every switch: unlinking p lists the rest, for the whole wall (not the gate apart from it).
+  assert.deepEqual(edit.toggleGateLink([4, 0, 2], 'p', all), ['q']);
+  assert.deepEqual(edit.toData().blocks, [{ type: 'gate', at: [5, 0, 6] }, { type: 'gate', at: [4, 0, 1], to: [4, 1, 3], switches: ['q'] }]);
+  assert.deepEqual(edit.toggleGateLink([4, 1, 3], 'p', all), ['q', 'p']);
+  assert.equal(edit.toggleGateLink([0, 0, 0], 'p', all), null, 'no gate there');
+  assert.deepEqual(edit.togglePlatformLink('l', 'p'), ['p']);
+  assert.deepEqual(edit.togglePlatformLink('l', 'p'), []);
+  assert.equal('switches' in edit.item('l'), false, 'none: it always runs');
+  // An exit: linking locks it; unlinking the last switch unlocks it.
+  assert.deepEqual(edit.toggleExitLink('east', 'q', all), ['q']);
+  assert.deepEqual(edit.exits[0], { id: 'east', side: '+x', at: 3, locked: true, switches: ['q'] });
+  edit.toggleExitLink('east', 'q', all);
+  assert.deepEqual(edit.exits[0], { id: 'east', side: '+x', at: 3 });
+  edit.undo();
+  assert.equal(edit.exits[0].locked, true, 'each toggle is an undo step');
 });

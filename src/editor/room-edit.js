@@ -592,6 +592,87 @@ export class RoomEdit {
   }
 
   /**
+   * Switch tool (D140, D141): link switch `id` to the switch gate in `cell`
+   * and every gate cell joined to it with the same type and switches (a
+   * wall of them is one thing), or unlink it. A gate with no list is
+   * linked to every switch (`all`); unlinking one of them lists the rest;
+   * unlinking the last one leaves it on every switch again.
+   * @param {number[]} cell
+   * @param {string} id
+   * @param {string[]} all ids of every switch in the room
+   * @returns {string[]|null} its switches now, or null if no gate is there
+   */
+  toggleGateLink(cell, id, all) {
+    const key = this.blocks.get(cell);
+    if (!key) return null;
+    const { type, switches } = boxFields(key);
+    const next = toggled(switches ?? all, id);
+    this.edit(() => {
+      for (const c of this.joined(cell, key)) this.blocks.set(c, boxKey(type, next));
+      return true;
+    });
+    return next;
+  }
+
+  /** The cells joined to `cell` (through faces) holding the same block key. */
+  joined(cell, key) {
+    const out = [];
+    const seen = new Set([cell.join()]);
+    const todo = [cell];
+    while (todo.length > 0) {
+      const c = todo.pop();
+      out.push(c);
+      for (const axis of [0, 1, 2]) {
+        for (const step of [-1, 1]) {
+          const n = [...c];
+          n[axis] += step;
+          if (seen.has(n.join()) || !this.inside(n) || this.blocks.get(n) !== key) continue;
+          seen.add(n.join());
+          todo.push(n);
+        }
+      }
+    }
+    return out;
+  }
+
+  /**
+   * Switch tool: link switch `id` to a platform, or unlink it (none left:
+   * it always runs).
+   * @returns {string[]} its switches now
+   */
+  togglePlatformLink(itemId, id) {
+    const next = toggled(this.item(itemId)?.switches ?? [], id);
+    this.setSwitches(itemId, next);
+    return next;
+  }
+
+  /**
+   * Switch tool: link switch `id` to an exit, locking it, or unlink it; an
+   * exit locked by every switch (`all`) lists the rest; none left, it is
+   * no longer locked.
+   * @returns {string[]} its switches now
+   */
+  toggleExitLink(exitId, id, all) {
+    const exit = this.exits.find((e) => e.id === exitId);
+    const next = toggled(exit.locked ? (exit.switches ?? all) : [], id);
+    this.updateExit(exitId, next.length > 0 ? { locked: true, switches: next } : { locked: false, switches: undefined });
+    return next;
+  }
+
+  /**
+   * A timed switch's own time (D140), overriding its type's, or back to the
+   * type's (null).
+   * @param {string} id
+   * @param {number|null} seconds
+   */
+  setTimer(id, seconds) {
+    const item = this.item(id);
+    if (!item) return false;
+    const overrides = withFields(item.overrides ?? {}, { timer: seconds ?? undefined });
+    return this.updateItem(id, { overrides: Object.keys(overrides).length > 0 ? overrides : undefined });
+  }
+
+  /**
    * Link a platform to switches of the room (D140): their ids, or none
    * (it always runs).
    * @param {string} id
@@ -739,6 +820,11 @@ export class RoomEdit {
     while (ids.has(`${type}_${n}`)) n++;
     return `${type}_${n}`;
   }
+}
+
+/** `list` with `id` taken out if it is in, put in (at the end) if not. */
+function toggled(list, id) {
+  return list.includes(id) ? list.filter((one) => one !== id) : [...list, id];
 }
 
 /**

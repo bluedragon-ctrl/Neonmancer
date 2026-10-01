@@ -51,6 +51,8 @@ export const GLASS = {
    * so they hide less of what's behind.
    */
   deco: { alpha: 0.4 },
+  /** Switch gates (D140, D141): white frosted glass, milkier and a little clearer than a crate. */
+  gate: { alpha: 0.55, tint: 0.3, milk: 0.5 },
 };
 
 // Local position in the unit cell (the geometry runs 0..1) and the face normal.

@@ -2,7 +2,8 @@
  * What the room editor draws over the room (D56, D57): the grid of the
  * height layer being edited, the cursor on the cell under the mouse,
  * markers for the start (spawn) and respawn (reset) points, the paths of
- * platforms and enemies, and a box around what is selected. Neon lines like the
+ * platforms and enemies, a box around what is selected, and switch links
+ * (D140: the switches and what they power, joined by lines). Neon lines like the
  * room, so they glow and scale the same; the cursor and markers are drawn
  * through blocks, so they never get lost behind one.
  */
@@ -26,7 +27,34 @@ export const EDITOR_LOOK = {
    */
   path: { color: 0x9fb4d0, width: 2, brightness: 0.9, dashed: true },
   selected: { color: 0xffffff, width: 2.5, brightness: 1.2, dashed: true },
+  /** Switch links (D140): boxes round the switches and what they power, lines between. */
+  link: { color: 0xffe23a, width: 2, brightness: 1.3 },
+  linkLine: { color: 0xffe23a, width: 1.5, brightness: 0.9, dashed: true },
 };
+
+/**
+ * Segments for switch links (pure, tested): a flat box round each switch
+ * (a plate is a tile, a target a cube; both shown as their cell's floor
+ * square raised a little) and a box round each powered thing's cells,
+ * and a line from each switch to each powered thing.
+ * @param {{ switches: { at: number[] }[], powered: { cells: number[][] }[] }} links (editor/links.js)
+ * @returns {{ boxes: number[][][], lines: number[][][] }}
+ */
+export function linkSegments({ switches, powered }) {
+  const boxes = [];
+  const lines = [];
+  const bounds = (cells) => [[0, 1, 2].map((axis) => Math.min(...cells.map((c) => c[axis]))), [0, 1, 2].map((axis) => Math.max(...cells.map((c) => c[axis])) + 1)];
+  const middle = ([lo, hi]) => lo.map((v, axis) => (v + hi[axis]) / 2);
+  for (const { at } of switches) boxes.push(...boxSegments(at, at.map((v) => v + 1)));
+  for (const { cells } of powered) {
+    if (cells.length > 0) boxes.push(...boxSegments(...bounds(cells)));
+  }
+  for (const { at } of switches) {
+    const from = at.map((v) => v + 0.5);
+    for (const { cells } of powered) if (cells.length > 0) lines.push([from, middle(bounds(cells))]);
+  }
+  return { boxes, lines };
+}
 
 /** Half the size of a path point's cross. */
 const POINT_MARK = 0.18;
@@ -148,6 +176,24 @@ export class EditorOverlay {
     for (const [key, segments] of Object.entries(lines)) {
       if (segments.length > 0) this.marks.add(onTop(neonLines(segments, lineMaterial(EDITOR_LOOK[key]))));
     }
+  }
+
+  /**
+   * Show switch links (D140), or none (null): see linkSegments().
+   * @param {{ switches: { at: number[] }[], powered: { cells: number[][] }[] }|null} links
+   */
+  setLinks(links) {
+    if (this.links) {
+      this.group.remove(this.links);
+      disposeTree(this.links);
+      this.links = null;
+    }
+    if (!links) return;
+    const { boxes, lines } = linkSegments(links);
+    this.links = new Group();
+    if (boxes.length > 0) this.links.add(onTop(neonLines(boxes, lineMaterial(EDITOR_LOOK.link))));
+    if (lines.length > 0) this.links.add(onTop(neonLines(lines, lineMaterial(EDITOR_LOOK.linkLine))));
+    this.group.add(this.links);
   }
 
   /**
