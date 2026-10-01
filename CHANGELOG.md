@@ -8,6 +8,13 @@ docs/decisions.md).
 
 ## [Unreleased]
 
+### Added
+- Audio engine (5.1, D138): `data/audio.json` (music tracks, sound
+  effects as files or ZzFX recipes), Howler music with looping and
+  crossfades, the Options music and sound sliders wired, game events play
+  the sound named like them, a missing file is a silent stub. Two
+  placeholder effects (`pickup`, `hurt`) to hear it; the real pass is 5.2.
+
 ## [0.4.0] - 2026-10-01
 
 Phase 4: saves, map, four new spells, the reachability checker, design

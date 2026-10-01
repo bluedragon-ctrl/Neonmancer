@@ -49,6 +49,9 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `core/loop.js` | Fixed 60 Hz timestep, step clamp, interpolation alpha |
 | `core/messages.js` | `say(key, values)` terminal messages, `showText(lines)` screen texts (D118) and `announce(key, values, options)` banners from any module, queued until the HUD takes them |
 | `data/colors.js` | How far apart two colors look (OKLab, `colorGap()`), enemy templates too alike (`templateColorClashes()`, D119) and a free color for a new one (`freeColor()`, D120) (pure, tested) |
+| `audio/audio.js` | `AudioEngine` (D138): Howler music with crossfades, ZzFX and file sound effects, volumes from the Options sliders; the browser pieces are injected, a missing name or file is a silent stub with one warning (tested with fakes) |
+| `audio/audio-data.js` | `stepGain()` (slider step → gain) and `lookup()` of a named sound or track in `audio.json` (pure, tested) |
+| `audio/zzfx.js` | `zzfxSamples()`: the ZzFX generator (MIT) without the npm package's auto-playing context (pure, tested) |
 | `data/lore.js` | Screen texts (D118): `LORE_LIMITS`, `LORE_REACH`, the looks that show a text, `loreLines()` (what the terminal prints) and `loreProblem()` (pure, tested) |
 | `core/random.js` | Seeded dice for game logic (`seededRandom()`, `stringSeed()`): a boss's teleports play the same each time (D135) |
 | `core/rules.js` | Shared rule constants (player hitbox, max room footprint) |
@@ -175,7 +178,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `ui/map-screen.js` | The map screen (D112): the run's map in SVG, isometric like the game, fitted to the rooms shown |
 | `ui/menu-screen.js` | Title screen and pause menu on screen: logo (and its scramble after Start), heading, items with setting values, controls table; mouse hover, click and ◄ ► |
 | `ui/saves.js` | Access keys in the browser (D105): the URL hash, localStorage (the last save, for Continue), the clipboard with a fallback |
-| `ui/settings.js` | Player settings (D109): volumes and visual stubs, steps, localStorage (pure, tested) |
+| `ui/settings.js` | Player settings (D109): volumes (read by the audio engine, D138) and visual stubs, steps, localStorage (pure, tested) |
 | `ui/boot-screen.js` | The room compiling after Start (D110): a canvas covering the room, cleared tile by tile along its grid, outlines flashing |
 | `ui/hud.js` | DOM overlay: integrity bar, backup pips, energy bar, boss bar, spell tag and Cut & Paste clipboard slot, score, fragments and the boot key, room banner, terminal messages, end screen, fullscreen hint |
 | `ui/terminal.js` | Terminal message queue (typing, hold, fade; a screen's text as a block of its own, D118) and banner timing (pure, tested) |
@@ -212,6 +215,18 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `tools/vite-plugin-data.js` | Dev only: runs the check in the dev server and fails the build on errors |
 | `tools/world-map.bat` | Windows: double-click to start the dev server on the world map tool (`dev.bat map`) |
 | `tools/world-map.html`, `tools/world-map.js`, `tools/world-map.css` | World map tool (D66, D70, D77, D102, D103): every room on the map grid with its connections and checks; move, add and delete rooms, connect rooms, delete connections and exits, then save; undo, also of the last save; click to open a room in the editor; F3 opens the pickup report. Dev server only, not built |
+
+## Audio
+
+`data/audio.json` names music tracks and sound effects (files under
+`assets/audio/`, resolved by `audioUrl()` in `data/bundle.js`; a sound may
+instead be a ZzFX recipe). `main.js` makes one `AudioEngine`, applies the
+Options sliders on every `settings` command, unlocks the Web Audio context
+on the first key or click, and passes each tick's game events to
+`playEvents()`: an event plays the sound named like it (`pickup`, `hurt`,
+`die`...), so the effects pass (5.2) is data only. Music is switched with
+`playMusic(name)` (crossfade) and `stopMusic()`; room and boss mapping
+comes with 5.3.
 
 ## Input
 

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "audio.schema.json",
+  "title": "Audio (data/audio.json)",
+  "description": "Named music tracks and sound effects (D138). Files lie under assets/audio/; a name with a missing file is a silent stub. A sound is a ZzFX recipe or a file; one named like a game event (\"pickup\", \"hurt\", \"die\"...) plays on that event.",
+  "type": "object",
+  "required": ["schemaVersion"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "$ref": "common.schema.json#/$defs/schemaVersion" },
+    "music": {
+      "type": "object",
+      "description": "Track id → track. Looping music; tracks are trimmed for seamless loops.",
+      "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
+      "additionalProperties": {
+        "type": "object",
+        "required": ["file"],
+        "additionalProperties": false,
+        "properties": {
+          "file": { "type": "string", "pattern": "^[A-Za-z0-9_\\-./]+\\.(mp3|ogg|wav|m4a|webm)$", "description": "Path under assets/audio/." },
+          "volume": { "type": "number", "exclusiveMinimum": 0, "maximum": 1, "description": "Level of this track before the music slider (default 1)." },
+          "loop": { "type": "boolean", "description": "Default true." }
+        }
+      }
+    },
+    "sounds": {
+      "type": "object",
+      "description": "Sound id → sound effect.",
+      "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "oneOf": [{ "required": ["zzfx"], "properties": { "zzfx": true } }, { "required": ["file"], "properties": { "file": true } }],
+        "properties": {
+          "zzfx": {
+            "type": "array",
+            "maxItems": 21,
+            "items": { "type": ["number", "null"] },
+            "description": "ZzFX recipe: volume, randomness, frequency, attack, sustain, release, shape, shapeCurve, slide, deltaSlide, pitchJump, pitchJumpTime, repeatTime, noise, modulation, bitCrush, delay, sustainVolume, decay, tremolo, filter. null takes the default."
+          },
+          "file": { "type": "string", "pattern": "^[A-Za-z0-9_\\-./]+\\.(mp3|ogg|wav|m4a|webm)$", "description": "Path under assets/audio/." },
+          "volume": { "type": "number", "exclusiveMinimum": 0, "maximum": 1, "description": "Level before the sound slider (default 1)." }
+        }
+      }
+    }
+  }
+}

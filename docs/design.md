@@ -2016,7 +2016,7 @@ author, recorded as decisions before the code lands. Every step also
 The phases were re-cut around a playtest of Home Lattice. The rules of
 "Finished phases" apply to every step: one branch, one PR against `main`,
 CI green, showcase, test room, unit tests, docs. Code steps name their
-branch; design steps end in decisions before any code. **Next: Phase 5 (5.1).**
+branch; design steps end in decisions before any code. **Next: Phase 5 (5.2).**
 
 ### Phase 4 (v0.4) steps: tools and bosses
 
@@ -2045,7 +2045,7 @@ tracks.
 
 | # | Branch | Delivers |
 |---|---|---|
-| 5.1 | `feat/audio-engine` | `data/audio.json` (named events to files), Howler music with looping and crossfades, ZzFX effects, the Options sliders wired, a stub when a file is missing. |
+| 5.1 (done, D138) | `feat/audio-engine` | `data/audio.json` (named events to files), Howler music with looping and crossfades, ZzFX effects, the Options sliders wired, a stub when a file is missing. |
 | 5.2 | `feat/sfx-pass` | Effects for the existing events: jump, land, zap and every spell, hits, pickups, the install animation, death and derez, doors, switches, UI, enemy alerts. |
 | 5.3 | `feat/music` | The author's tracks trimmed for seamless loops: Lattice, boss, title; room and biome mapping, a boss switch and a crossfade back. |
 | 5.4 | `refactor/dev-wing` | The old test rooms move to a dev-only wing (kept, D45, never deleted): reachable in the dev server and debug mode, absent from the player world. Boot Sector's role settled. |

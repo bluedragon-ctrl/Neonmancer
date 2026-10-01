@@ -36,3 +36,15 @@ export function onDataSaved(callback) {
  * @type {string[]}
  */
 export const SCHEMA_ERRORS = schemaErrors;
+
+const audioFiles = import.meta.glob('../../assets/audio/**/*.{mp3,ogg,wav,m4a,webm}', { eager: true, query: '?url', import: 'default' });
+
+/**
+ * URL of an audio file by its path under assets/audio/ (as audio.json
+ * names it), or undefined if there is no such file (D138).
+ * @param {string} file
+ * @returns {string | undefined}
+ */
+export function audioUrl(file) {
+  return audioFiles[`../../assets/audio/${file}`];
+}
