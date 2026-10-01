@@ -195,7 +195,7 @@
       "solid": false,
       "color": "#ff9a5a"
     },
-    "proto_warden": {
+    "null_pointer": {
       "look": "bug",
       "movement": "stationary",
       "attack": "bolt",

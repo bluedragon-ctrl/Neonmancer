@@ -19,6 +19,9 @@ bosses that drop loot, tooling) (D104, D105).
   notes and PR summary now say so.
 
 ### Added
+- Boss one, Null Pointer (D136, step 4.6): the `proto_warden` prototype
+  becomes the first boss, with its name on the boss bar; it drops
+  fragment 7 in the test arena `boss_arena` (renamed Null Pointer Arena).
 - Boss engine (D135): a `boss` block in an enemy template (phases by
   integrity share that change how it fights, teleports, plate armor),
   `height` for bodies up to two cubes high (plate armor shows as a white

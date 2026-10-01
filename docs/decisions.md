@@ -1268,3 +1268,12 @@ and plate armor besides. The drop stays at an authored cell, so the
 reachability checker and the room designer see where it falls. Open
 doors (the author's call at review) keep a fight escapable; the room
 reset makes retreating cost the fight, nothing more.
+
+### D136 — 2026-10-01 — Boss one is Null Pointer
+Step 4.6 turns the prototype `proto_warden` into the first boss: template
+`null_pointer` (the bug body with the boss mark, pink, 24 integrity, aimed
+bolts, three phases that fire and teleport faster), named NULL POINTER on
+the boss bar (`boss.null_pointer`), dropping fragment 7 in the test arena
+`boss_arena` (now "Null Pointer Arena"; test room, D90). Values stay as
+tuned in D135; the Lattice room placement is Phase 5.
+**Why:** the fight already matched D134; what was missing was its identity.
