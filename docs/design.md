@@ -1636,6 +1636,12 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
   crate off a collapsing bridge).
 - Platforms: check the wait at the ends (`pause`) is long enough to get on
   and off, and that a squeeze always leaves a way out.
+- Timed switches (D140): the reachability checker counts them as on for
+  good, so check the race by hand. Count the cells from where the switch
+  goes on (the plate he steps off; for a target, the cell he zaps from,
+  the bolt is near instant) to the far side of what it powers, ~13 ticks
+  a cell plus ~34 per jump and ~28 per push on the way; the timer should
+  be that plus about a second (60 ticks), not less and not much more.
 
 **Readability**
 - The camera looks from the front corner (+x, +z). Tall blocks near the
@@ -1912,10 +1918,13 @@ list switches to another room; New room makes an empty one (D57).
   exit links it to the picked switch, or unlinks it if it was linked. A
   gate click takes the whole gate: every cell joined to it with the same
   type and switches (a wall). A gate or exit on every switch (no list)
-  gets the others listed when one is unlinked; an exit linked to its
-  first switch becomes locked, one with its last switch unlinked is no
-  longer locked; a gate with its last unlinked is on every switch again;
-  a platform with none always runs. Right click drops the switch.
+  is linked to just the picked switch by the first click; an exit linked
+  to its first switch becomes locked, one with its last switch unlinked
+  is no longer locked; a gate with its last unlinked is on every switch
+  again; a platform with none always runs. Right click drops the switch.
+  Deleting a switch unlinks it the same way from everything it powered.
+  A gate's switch ids are kept sorted, so the same switches in any order
+  merge into one box.
 - **Links show everywhere** (D142): hovering a switch, a switch gate, a
   platform with switches or a locked exit names its links in the hover
   line (`powers gate ×4, exit east`, `opens on timer_plate`) and draws

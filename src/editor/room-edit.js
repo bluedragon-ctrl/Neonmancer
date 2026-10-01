@@ -594,19 +594,18 @@ export class RoomEdit {
   /**
    * Switch tool (D140, D141): link switch `id` to the switch gate in `cell`
    * and every gate cell joined to it with the same type and switches (a
-   * wall of them is one thing), or unlink it. A gate with no list is
-   * linked to every switch (`all`); unlinking one of them lists the rest;
-   * unlinking the last one leaves it on every switch again.
+   * wall of them is one thing), or unlink it. A gate with no list (every
+   * switch) gets just `id`; unlinking the last one leaves it on every
+   * switch again.
    * @param {number[]} cell
    * @param {string} id
-   * @param {string[]} all ids of every switch in the room
    * @returns {string[]|null} its switches now, or null if no gate is there
    */
-  toggleGateLink(cell, id, all) {
+  toggleGateLink(cell, id) {
     const key = this.blocks.get(cell);
     if (!key) return null;
     const { type, switches } = boxFields(key);
-    const next = toggled(switches ?? all, id);
+    const next = switches ? toggled(switches, id) : [id];
     this.edit(() => {
       for (const c of this.joined(cell, key)) this.blocks.set(c, boxKey(type, next));
       return true;
@@ -648,13 +647,13 @@ export class RoomEdit {
 
   /**
    * Switch tool: link switch `id` to an exit, locking it, or unlink it; an
-   * exit locked by every switch (`all`) lists the rest; none left, it is
+   * exit locked by every switch (no list) gets just `id`; none left, it is
    * no longer locked.
    * @returns {string[]} its switches now
    */
-  toggleExitLink(exitId, id, all) {
+  toggleExitLink(exitId, id) {
     const exit = this.exits.find((e) => e.id === exitId);
-    const next = toggled(exit.locked ? (exit.switches ?? all) : [], id);
+    const next = exit.locked && exit.switches ? toggled(exit.switches, id) : [id];
     this.updateExit(exitId, next.length > 0 ? { locked: true, switches: next } : { locked: false, switches: undefined });
     return next;
   }
@@ -810,7 +809,34 @@ export class RoomEdit {
     if (here.kind === 'block') return this.blocks.set(cell, null);
     const key = LIST_OF[here.kind];
     this.data[key] = this.data[key].filter((item) => item !== here.item);
+    if (key === 'objects') this.unlinkSwitch(here.item.id);
     return true;
+  }
+
+  /**
+   * A switch `id` is gone (D140): take it out of every `switches` list.
+   * An exit left with none is no longer locked, a gate with none opens on
+   * every switch, a platform with none always runs (as when the Switch
+   * tool unlinks the last one).
+   * @param {string} id
+   */
+  unlinkSwitch(id) {
+    const without = (list) => list.filter((one) => one !== id);
+    if (this.data.exits) this.data.exits = this.exits.map((exit) => {
+      if (!exit.switches?.includes(id)) return exit;
+      const rest = without(exit.switches);
+      return exitFields({ ...withExitDefaults(exit), locked: rest.length > 0, switches: rest });
+    });
+    for (const { cell, type: key } of this.blocks.cells()) {
+      const { type, switches } = boxFields(key);
+      if (switches?.includes(id)) this.blocks.set(cell, boxKey(type, without(switches)));
+    }
+    for (const object of this.data.objects ?? []) {
+      if (!object.switches?.includes(id)) continue;
+      const rest = without(object.switches);
+      if (rest.length > 0) object.switches = rest;
+      else delete object.switches;
+    }
   }
 
   /** `type_1`, `type_2`...: the first id no object, enemy or pickup of the room has. */

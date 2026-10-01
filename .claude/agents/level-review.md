@@ -25,7 +25,12 @@ For each room:
      launches <= 2 high.
    - **Timing**: collapsing blocks never under a stop (push, wait, lining
      up); platform pauses long enough; `reset` safe (not collapsing, not
-     in a platform path).
+     in a platform path). Timed switches (a type or override with
+     `timer`): the checker counts them as on for good, so work out the
+     race by hand per the checklist (cells from the switch to the far
+     side of the gate, bridge or exit it powers, ~0.22 s a cell, plus
+     jumps and pushes) and compare it with the timer: shorter is a
+     BLOCKER, less than ~1 s to spare a PROBLEM.
    - **Readability**: tall blocks vs the +x/+z camera, each mechanic
      visible from the entrance, gates look like gates.
    - **Spells and backtracking** (D67): what each exit/pickup needs, that

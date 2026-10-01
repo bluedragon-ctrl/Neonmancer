@@ -304,20 +304,61 @@ test('Switch tool edits: link and unlink a gate wall, a platform and an exit', a
       blocks: [{ type: 'gate', at: [4, 0, 1], to: [4, 1, 3] }, { type: 'gate', at: [5, 0, 6] }],
     }),
   );
-  const all = ['p', 'q'];
-  // A gate on every switch: unlinking p lists the rest, for the whole wall (not the gate apart from it).
-  assert.deepEqual(edit.toggleGateLink([4, 0, 2], 'p', all), ['q']);
-  assert.deepEqual(edit.toData().blocks, [{ type: 'gate', at: [5, 0, 6] }, { type: 'gate', at: [4, 0, 1], to: [4, 1, 3], switches: ['q'] }]);
-  assert.deepEqual(edit.toggleGateLink([4, 1, 3], 'p', all), ['q', 'p']);
-  assert.equal(edit.toggleGateLink([0, 0, 0], 'p', all), null, 'no gate there');
+  // A gate on every switch: the first click links just p, for the whole wall (not the gate apart from it).
+  assert.deepEqual(edit.toggleGateLink([4, 0, 2], 'p'), ['p']);
+  assert.deepEqual(edit.toData().blocks, [{ type: 'gate', at: [5, 0, 6] }, { type: 'gate', at: [4, 0, 1], to: [4, 1, 3], switches: ['p'] }]);
+  assert.deepEqual(edit.toggleGateLink([4, 1, 3], 'q'), ['p', 'q']);
+  assert.deepEqual(edit.toggleGateLink([4, 1, 3], 'p'), ['q']);
+  // Unlinking the last one leaves it on every switch again.
+  assert.deepEqual(edit.toggleGateLink([4, 0, 1], 'q'), []);
+  assert.equal('switches' in edit.toData().blocks.find((block) => block.to), false);
+  assert.equal(edit.toggleGateLink([0, 0, 0], 'p'), null, 'no gate there');
   assert.deepEqual(edit.togglePlatformLink('l', 'p'), ['p']);
   assert.deepEqual(edit.togglePlatformLink('l', 'p'), []);
   assert.equal('switches' in edit.item('l'), false, 'none: it always runs');
   // An exit: linking locks it; unlinking the last switch unlocks it.
-  assert.deepEqual(edit.toggleExitLink('east', 'q', all), ['q']);
+  assert.deepEqual(edit.toggleExitLink('east', 'q'), ['q']);
   assert.deepEqual(edit.exits[0], { id: 'east', side: '+x', at: 3, locked: true, switches: ['q'] });
-  edit.toggleExitLink('east', 'q', all);
+  edit.toggleExitLink('east', 'q');
   assert.deepEqual(edit.exits[0], { id: 'east', side: '+x', at: 3 });
   edit.undo();
   assert.equal(edit.exits[0].locked, true, 'each toggle is an undo step');
+});
+
+test('Switch tool: an exit locked by every switch gets just the picked one, never unlocks on the first click', async () => {
+  const { RoomEdit } = await import('../src/editor/room-edit.js');
+  const edit = new RoomEdit(
+    roomFile('alpha', { exits: [{ id: 'east', side: '+x', at: 3, locked: true }], objects: [{ id: 'p', type: 'plate', at: [2, 0, 2] }] }),
+  );
+  assert.deepEqual(edit.toggleExitLink('east', 'p'), ['p']);
+  assert.deepEqual(edit.exits[0], { id: 'east', side: '+x', at: 3, locked: true, switches: ['p'] });
+});
+
+test('Room editor: deleting a switch takes it out of every link', async () => {
+  const { RoomEdit } = await import('../src/editor/room-edit.js');
+  const lift = { id: 'l', type: 'platform', at: [6, 0, 6], path: { points: [[6, 0, 2]] } };
+  const edit = new RoomEdit(
+    roomFile('alpha', {
+      exits: [{ id: 'east', side: '+x', at: 3, locked: true, switches: ['p'] }, { id: 'west', side: '-x', at: 3, locked: true, switches: ['p', 'q'] }],
+      objects: [{ id: 'p', type: 'plate', at: [2, 0, 2] }, { id: 'q', type: 'plate', at: [3, 0, 2] }, { ...lift, switches: ['p'] }],
+      blocks: [{ type: 'gate', at: [4, 0, 1], to: [4, 1, 3], switches: ['p', 'q'] }, { type: 'gate', at: [5, 0, 6], switches: ['p'] }],
+    }),
+  );
+  assert.equal(edit.erase([2, 0, 2]), true);
+  const data = edit.toData();
+  assert.deepEqual(data.exits, [{ id: 'east', side: '+x', at: 3 }, { id: 'west', side: '-x', at: 3, locked: true, switches: ['q'] }]);
+  assert.equal('switches' in edit.item('l'), false, 'its platform always runs');
+  assert.deepEqual(data.blocks, [{ type: 'gate', at: [4, 0, 1], to: [4, 1, 3], switches: ['q'] }, { type: 'gate', at: [5, 0, 6] }]);
+  edit.undo();
+  assert.deepEqual(edit.exits[0].switches, ['p'], 'one undo step brings the links back');
+});
+
+test('Gate cells with the same switches in another order are one box', async () => {
+  const { RoomEdit } = await import('../src/editor/room-edit.js');
+  const edit = new RoomEdit(
+    roomFile('alpha', { objects: [{ id: 'p', type: 'plate', at: [2, 0, 2] }, { id: 'q', type: 'plate', at: [3, 0, 2] }] }),
+  );
+  edit.placeBlock([4, 0, 1], 'gate', ['p', 'q']);
+  edit.placeBlock([4, 0, 2], 'gate', ['q', 'p']);
+  assert.deepEqual(edit.toData().blocks, [{ type: 'gate', at: [4, 0, 1], to: [4, 0, 2], switches: ['p', 'q'] }]);
 });
