@@ -1,7 +1,8 @@
-# Home Lattice plan (step 4.3, DRAFT)
+# Home Lattice plan (step 4.3)
 
-Paper design of the Playtest 1 world: no room files yet. Room names are
-working titles; map cells and sizes are settled when each batch is drafted
+Paper design of the Playtest 1 world: no room files yet. Everything here (rooms, exits, fragments,
+secrets) is a proposal and a draft: it changes during the author's room
+review and design. Room names are working titles; map cells and sizes are settled when each batch is drafted
 (5.5 to 5.9). The author approves the room list below before any room is
 made, and it ends as decisions in `docs/decisions.md`.
 
@@ -29,7 +30,7 @@ rooms for Glitchmire and Frostbyte come on top (5.8).
 ```
               [Vault]  double jump, Level 1 lock
  Frostbyte~ [  CORE  ] ~Glitchmire      Level 1 locks
-              [Gatekeeper]   boss 2 (drops Zap+ or Shield+)
+              [Gatekeeper]   boss 2 (drops an energy buff)
    [Scan wing]     |     [Fork wing]    both end at the Gatekeeper
    [Shield wing]-[ATRIUM]-[Pause wing]  Pause wing holds boss 1
                    |
@@ -66,7 +67,7 @@ joins the Scan and Fork wings as a shortcut.
 | 19 | `twin_plates` | 12x12 | Two plates, one decoy; fragment 12 |
 | 20 | `guard_loop` | 12x12 | Viruses to draw away; fragment 13 |
 | 21 | `split_vault` | 12x8 | A lock held by a decoy; fragments 14 and 15 |
-| 22 | `gatekeeper` | 16x16 | Boss 2, drops Zap+ or Shield+; doors west, east, north |
+| 22 | `gatekeeper` | 16x16 | Boss 2, drops an energy buff; doors west, east, north |
 | 23 | `core` | 16x16 | The central core, no fragment; Level 1 locks east and west and north (vault) |
 | 24 | `dj_vault` | 8x8 | The double jump, behind the Level 1 lock |
 | 25 | `junction` | 8x8 | Off `drift_bay`, a small loop back to the Scan wing; fragment 16 |
@@ -80,10 +81,10 @@ Fragments: 16 in normal rooms (4, 5, 7, 8, 9, 11, 12, 13, 15, 16, 17, 19,
 20, 21 twice, 25), none behind Level 1 or boss 2. A first count, to be
 rebalanced when the wings are drafted.
 
-## Open points
+## Decided at approval
 
-- The room count shifts by a few as the wings are drafted.
-- Do the secrets carry extra fragments? Proposed: two of the five do, so
-  the Lattice holds 18.
-- Which upgrade boss 2 drops: Zap+ or Shield+.
-- `junction` (25) may be dropped, and a fragment moved, to keep to 30.
+- Two of the five secret rooms carry an extra fragment (`buffer_2` and
+  `buffer_3`): the Lattice holds 18.
+- Boss 2 drops an energy buff (+10 energy chip, D93), not a spell upgrade.
+- `junction` stays for now; the core is entered only through the Gatekeeper.
+- The room count may shift by a few as the wings are drafted.
