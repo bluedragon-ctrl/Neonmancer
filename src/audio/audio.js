@@ -14,6 +14,9 @@ import { ZZFX_RATE, zzfxSamples } from './zzfx.js';
 /** Seconds a track takes to fade in or out when music changes. */
 export const MUSIC_FADE = 1.5;
 
+/** Seconds before the same sound effect may play again. */
+const MIN_GAP = 0.06;
+
 /** Time constant in seconds of a loop's fade in and out. */
 const LOOP_FADE = 0.04;
 
@@ -44,6 +47,8 @@ export class AudioEngine {
     this.fileSounds = new Map();
     /** @type {Map<string, { source: any, gain: any }>} looping sounds running (setLoop) */
     this.loops = new Map();
+    /** @type {Map<string, number>} context time each sound last played */
+    this.lastPlayed = new Map();
     /** Names already warned about. */
     this.warned = new Set();
   }
@@ -87,6 +92,12 @@ export class AudioEngine {
   sfx(name) {
     const sound = lookup(this.audio, 'sounds', name);
     if (!sound || stepGain(this.volume.sound) === 0) return false;
+    // The same sound at most every 60 ms, so a crowd of monsters is not a buzz.
+    const now = this.context?.currentTime;
+    if (now !== undefined) {
+      if (now - (this.lastPlayed.get(name) ?? -1) < MIN_GAP) return false;
+      this.lastPlayed.set(name, now);
+    }
     if (sound.zzfx) return this.playRecipe(sound.zzfx, sound.volume);
     return this.playFile(name, sound);
   }
