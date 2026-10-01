@@ -234,9 +234,9 @@
       "color": "#d9ff5c",
       "height": 1.6,
       "attackRange": 1.6,
-      "attackCharge": 1.2,
+      "attackCharge": 2.2,
       "attackCooldown": 1.5,
-      "boss": { "armor": "plate", "phases": [{ "from": 1 }, { "from": 0.5, "attackCharge": 0.8, "chaseSpeed": 2.5 }] }
+      "boss": { "armor": "plate", "phases": [{ "from": 1 }, { "from": 0.5, "attackCharge": 1.8, "chaseSpeed": 2.5 }] }
     }
   },
   "spells": {
