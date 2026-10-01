@@ -147,11 +147,11 @@ export class AudioEngine {
    * the sound "pickup", if there is one). A sound named "type:detail"
    * wins over the plain one: the detail is the spell ("cast:zap"), the
    * kind of pickup ("pickup:disk") or the way something died ("die:void").
-   * @param {{ type: string, spell?: string, cause?: string, pickup?: { data?: { kind?: string } } }[]} events
+   * @param {{ type: string, spell?: string, cause?: string, enemy?: { data?: { attack?: string } }, pickup?: { data?: { kind?: string } } }[]} events
    */
   playEvents(events) {
     for (const event of events) {
-      const detail = event.spell ?? event.pickup?.data?.kind ?? event.cause;
+      const detail = event.spell ?? event.pickup?.data?.kind ?? event.cause ?? event.enemy?.data?.attack;
       if (!(detail && this.sfx(`${event.type}:${detail}`))) this.sfx(event.type);
     }
   }
