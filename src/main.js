@@ -21,6 +21,7 @@ import { RoomScene } from './render/room-scene.js';
 import { showErrorScreen } from './ui/error-screen.js';
 import { toggleFullscreen, wantsFullscreenHint } from './ui/fullscreen.js';
 import { BootScreen } from './ui/boot-screen.js';
+import { bossBarState } from './ui/boss-bar.js';
 import { Hud } from './ui/hud.js';
 import { MapScreen } from './ui/map-screen.js';
 import { MenuScreen } from './ui/menu-screen.js';
@@ -335,6 +336,7 @@ function syncHud(hud, game, renderer, dt) {
   hud.setEnergy(player.energy, player.maxEnergy, player.spell !== null);
   hud.setSpell(player.spell, player.spells.length, player.spell && game.spellNameKey(player.spell));
   hud.setClipboard(player.spell === 'cut_paste', player.clipboard);
+  hud.setBoss(bossBarState(game));
   hud.setScore(game.score, game.completion);
   hud.setFragments(game.fragmentSlots(), game.fragmentRules.required, game.progress.accessLevel);
   hud.setMovementMode(game.movementMode);

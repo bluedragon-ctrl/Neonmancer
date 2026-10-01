@@ -1216,3 +1216,49 @@ Step 4.4 settles the two Lattice bosses with the author.
 reachability checker as they are, and let two different boss ideas (cover
 and retargeting; luring) carry the fights, one per boss, rather than one
 big engine step. A visor and a bar make the fight readable.
+
+### D135 — 2026-10-01 — The boss engine: a boss block, phases, drops
+Built in step 4.5, from D104 and D134.
+- **Template:** a `boss` block in an enemy template makes it a boss:
+  `phases`, each starting once its integrity is down to a share
+  (`from`; the first has 1) and changing any of the template's fighting
+  values (movement, attack, speeds, ranges, charge, cooldown, bolts,
+  damage) plus `teleport` (seconds between jumps); `armor` `none` or
+  `plate`. `height` (any template, 0.6 by default, up to 1.9) makes a
+  taller hitbox in the same one cell; above 1 the cell above must be
+  free. A boss is hostile, may take more than 15 integrity, is never
+  frozen by Pause nor dragged by Pull. Validation checks each phase as
+  the enemy it makes.
+- **Awake:** a boss wakes when it first sees the wizard or is hit, and
+  stays awake: its bar shows (top middle: name from `strings.json`
+  `boss.<template>`, integrity in its color, a tick per later phase,
+  dimmed while plate armor is shut; it lingers 1.5 s once beaten), and
+  its teleport clock runs.
+- **Teleport:** half a second: it narrows to a line, jumps to a free,
+  safe cell of the floor it stands on at least 3 units from the wizard
+  and his decoy, preferring a cell that sees him, picked by its own
+  seeded dice (so a room plays the same each time), and comes back.
+- **Plate armor:** spells, discharges and bolts glance off ('armor')
+  unless it stands on a floor plate (any plate object); it does not
+  stop plates working.
+- **Drop and defeated bit (D104):** a room gives its boss the id of one
+  of its permanent pickups (`drop`). The boss holds it unseen; beaten, it
+  lets it fall into its own cell (a banner and a terminal line), and
+  once its bit is found the boss is left out of the room. One boss a
+  room, no shrine with it.
+- **Locks:** in a boss room, locked exits wait for the boss to be beaten
+  (or be away), not for switches, so an arena's plates serve the fight.
+  The reachability checker takes them as open.
+- **Look:** a taller body draws its model bigger (at most 1.6 times, so
+  it keeps within its cell); `render/boss-mark.js` puts the three gold
+  rings round any boss, drawn in while plate armor is shut, spread and
+  spinning when it opens. A teleport squeezes body and rings.
+- **Test arenas:** `boss_arena` (a prototype of boss 1, `proto_warden`)
+  and `boss_plates` (of boss 2, `proto_gatekeeper`), test rooms off
+  Build Yard (D90); 4.6 and 4.7 turn the prototypes into the bosses.
+**Why:** the bosses differ by data, not code: the phase overrides reuse
+the existing movements and attacks, so boss 1 and 2 need only teleport
+and plate armor besides. The drop stays at an authored cell, so the
+reachability checker and the room designer see where it falls.
+Locks on the boss rather than switches let an arena use plates for the
+fight.

@@ -31,6 +31,12 @@
  * Frozen by Pause (D85), it stops where it is, even mid-step, sees nothing,
  * attacks nothing and hurts nothing, and is solid (a platform, the D51
  * rules) until it thaws; it still falls, rides platforms and takes hits.
+ * A boss (a template with a `boss` block, D134, D135) is never frozen nor
+ * pulled; it wakes when it first sees the wizard or is hit, and stays
+ * awake. Its phases change its values as its integrity drops (bossPhases()
+ * in data/room-data.js); one may teleport it to another cell now and then
+ * (teleport()); plate armor turns hits away unless it stands on a floor
+ * plate (`exposed`, set every tick by updateArmor() in combat.js).
  *
  * It only starts a step from a whole cell (so on a platform, only at a
  * stop). The wizard walks through it, unless it is solid: then it blocks
@@ -43,7 +49,8 @@
  */
 import { DT } from '../core/loop.js';
 import { BEHAVIORS } from '../ai/behaviors.js';
-import { CHARGED_ATTACKS, DISCHARGES } from '../data/room-data.js';
+import { CHARGED_ATTACKS, DISCHARGES, bossPhases } from '../data/room-data.js';
+import { seededRandom, stringSeed } from '../core/random.js';
 import { boxCenter, lineOfSight, reach } from '../ai/sight.js';
 import { REST_EPS, moveAxis, overlapsBox, overlapsSolid, restsOn, shoveClear, surfaceBelow } from '../physics/collision.js';
 
@@ -67,6 +74,16 @@ export const ENEMY = {
   pullSpeed: 3,
 };
 
+/** Boss tuning (D135; units, ticks). */
+export const BOSS = {
+  /** Ticks a teleport takes: it flickers out, jumps half way through, flickers in. */
+  teleportTicks: 30,
+  /** It never teleports nearer the wizard (or his decoy) than this. */
+  teleportClear: 3,
+  /** Ticks it waits before trying again when there was no cell to teleport to. */
+  teleportRetry: 30,
+};
+
 /** A step this close to done counts as done. */
 const SNAP = 1e-9;
 
@@ -83,10 +100,29 @@ export class Enemy {
    * @param {object} enemy runtime room enemy (id, template, at, path, behavior, speed, damage...)
    */
   constructor(enemy) {
-    this.data = enemy;
+    /** Its values (template, filled in) in each phase; one phase unless it is a boss (D135). */
+    this.phases = enemy.boss ? bossPhases(enemy) : [enemy];
+    /** The phase it is in (an index into phases); a boss's goes up as its integrity drops (updatePhase()). */
+    this.phase = 0;
+    /** Its values now: its template's (filled in), changed by its phase. */
+    this.data = this.phases[0];
     this.id = enemy.id;
     this.template = enemy.template;
-    this.size = ENEMY.size;
+    /** The boss block of its template (D135), or null. */
+    this.boss = enemy.boss ?? null;
+    /** The id of the room pickup a boss holds until it is beaten (D104), or null. */
+    this.dropId = enemy.drop ?? null;
+    /** A boss is awake from when it first sees the wizard or is hit: its bar shows, it teleports. */
+    this.awake = false;
+    /** Plate armor (D135): does it stand on a plate, its armor open? Set by updateArmor() in combat.js. */
+    this.exposed = !this.boss || this.boss.armor !== 'plate';
+    /** A teleport under way: { tick, to } (the cell it jumps to), or null; see teleport(). */
+    this.warp = null;
+    /** Ticks until a teleport is due (while awake, in a phase that teleports). */
+    this.teleportClock = 0;
+    /** Its own dice, for where it teleports: the same every time the room resets. */
+    this.random = seededRandom(stringSeed(enemy.id));
+    this.size = [ENEMY.size[0], enemy.height ?? ENEMY.size[1], ENEMY.size[2]];
     /** Lower corner of its cell [x, y, z]; whole cells except while walking, falling or riding. */
     this.pos = [...enemy.at];
     /** Position at the previous tick, for render interpolation. */
@@ -120,8 +156,9 @@ export class Enemy {
     /** Charged attack: ticks since it started charging (null: not attacking), ticks until it may again. */
     this.attackTick = null;
     this.cooldown = 0;
-    this.chargeTicks = Math.max(1, Math.round(enemy.attackCharge / DT));
-    this.cooldownTicks = Math.round(enemy.attackCooldown / DT);
+    this.chargeTicks = 0;
+    this.cooldownTicks = 0;
+    this.timeAttack();
     /** An arc's aim, fixed when it starts charging: { dir, end } (aimDischarge() in combat.js). */
     this.aim = null;
     /** Where the last arc stopped (discharge() in combat.js). */
@@ -159,6 +196,51 @@ export class Enemy {
     return this.state !== 'dead';
   }
 
+  /** The ticks of its charged attack and of its teleports, from its values now. */
+  timeAttack() {
+    this.chargeTicks = Math.max(1, Math.round(this.data.attackCharge / DT));
+    this.cooldownTicks = Math.round(this.data.attackCooldown / DT);
+    this.teleportTicks = this.data.teleport ? Math.round(this.data.teleport / DT) : 0;
+  }
+
+  /** Its integrity at its fullest (its template's). */
+  get maxIntegrity() {
+    return this.phases[0].integrity;
+  }
+
+  /**
+   * A boss moves on to the phase its integrity has come down to (D135):
+   * its values change, a new movement starts afresh, an attack it was
+   * charging is cut off (it cools down first) and its teleport clock
+   * starts over.
+   * @returns {boolean} whether a new phase started
+   */
+  updatePhase() {
+    const share = this.integrity / this.maxIntegrity;
+    let phase = this.phase;
+    while (phase + 1 < this.phases.length && share <= this.boss.phases[phase + 1].from) phase++;
+    if (phase === this.phase) return false;
+    const { movement } = this.data;
+    this.phase = phase;
+    this.data = this.phases[phase];
+    this.speed = this.data.speed;
+    if (this.data.movement !== movement) this.behavior = new BEHAVIORS[this.data.movement](this.data.at, this.data.path, this.data);
+    if (this.attackTick !== null) this.endAttack();
+    this.timeAttack();
+    this.teleportClock = this.teleportTicks;
+    return true;
+  }
+
+  /**
+   * A boss wakes (D135): its bar shows from now on, and its teleport
+   * clock starts. Once only.
+   */
+  wake() {
+    if (!this.boss || this.awake) return;
+    this.awake = true;
+    this.teleportClock = this.teleportTicks;
+  }
+
   /** Does it block the wizard (and carry and shove him)? Solid ones, and frozen ones (D85). */
   get solid() {
     return this.alive && (this.data.solid || this.frozen !== null);
@@ -191,7 +273,7 @@ export class Enemy {
   freeze(ticks) {
     if (!this.alive) return null;
     this.provoke();
-    if (!this.data.pausable) return null;
+    if (!this.data.pausable || this.boss) return null;
     if (this.attackTick !== null) this.endAttack();
     this.frozen = { tick: 0, ticks };
     this.sees = false;
@@ -206,13 +288,14 @@ export class Enemy {
    * floor there is its end. Frozen or not, it slides there at
    * ENEMY.pullSpeed and does nothing else until it arrives; an attack it
    * was charging is cut off. A block, the room's side or a body (the
-   * wizard too) in that cell, or another enemy walking into it, holds it.
+   * wizard too) in that cell, or another enemy walking into it, holds it;
+   * a boss doesn't budge (D135).
    * @param {number[]} dir [dx, dz]
    * @param {import('../game.js').Game} game grid, obstacles, liveEnemies and player
    * @returns {boolean} whether it moves
    */
   pull([dx, dz], game) {
-    if (!this.alive || this.state === 'fall') return false;
+    if (!this.alive || this.state === 'fall' || this.boss || this.warp) return false;
     const base = this.state === 'walk' ? (this.walked < 0.5 ? this.from : this.target) : this.pos;
     if (!Number.isInteger(base[0]) || !Number.isInteger(base[2])) return false; // riding a platform between stops
     const [x, y, z] = [base[0], this.pos[1], base[2]];
@@ -260,6 +343,7 @@ export class Enemy {
    */
   alarm(player) {
     if (!this.hostile || player.dead) return false;
+    this.wake();
     this.lastSeen = [Math.floor(player.pos[0]), Math.floor(player.pos[2])];
     this.faceTowards(player.pos);
     this.behavior.alarm?.();
@@ -276,7 +360,12 @@ export class Enemy {
   /** Its eyes: where it looks from and its attacks leave from. */
   middle() {
     const [x, y, z] = this.pos;
-    return [x + 0.5, y + ENEMY.eyeHeight, z + 0.5];
+    return [x + 0.5, y + this.eyeHeight, z + 0.5];
+  }
+
+  /** Height of its eyes above its feet: as far up its body as a small one's (ENEMY.eyeHeight). */
+  get eyeHeight() {
+    return (ENEMY.eyeHeight * this.size[1]) / ENEMY.size[1];
   }
 
   /**
@@ -312,6 +401,7 @@ export class Enemy {
       }
     }
     this.behavior.update?.(this);
+    if (this.sees) this.wake();
     if (!this.sees || saw) return false;
     this.alert = 0;
     return true;
@@ -330,7 +420,7 @@ export class Enemy {
 
   /** Will it attack as soon as it stands still: he is in range and it is ready? */
   get readyToAttack() {
-    return this.inRange && this.cooldown === 0 && this.attackTick === null;
+    return this.inRange && this.cooldown === 0 && this.attackTick === null && this.warp === null;
   }
 
   /**
@@ -374,14 +464,19 @@ export class Enemy {
 
   /**
    * A spell, a discharge or a bolt hits it: it is provoked and loses
-   * `damage` integrity; losing the last pops it.
+   * `damage` integrity; losing the last pops it. A boss in plate armor
+   * off a plate shrugs it off ('armor', D135).
    * @param {number} damage
    * @param {'zap'|'discharge'|'bolt'|'firewall'|'blink'} cause
-   * @returns {'hit'|'pop'|null} event (null if it was dead already)
+   * @returns {'hit'|'pop'|'armor'|null} event (null if it was dead already)
    */
   hit(damage, cause) {
     if (!this.alive) return null;
     this.provoke();
+    if (!this.exposed) {
+      this.hitTicks = 0;
+      return 'armor';
+    }
     this.integrity = Math.max(0, this.integrity - damage);
     this.hitTicks = 0;
     return this.integrity === 0 ? this.die(cause) : 'hit';
@@ -400,7 +495,7 @@ export class Enemy {
   /**
    * One fixed tick.
    * @param {import('../game.js').Game} game grid and `obstacles` (solid objects and live enemies)
-   * @returns {'pop'|'land'|'thaw'|null} event
+   * @returns {'pop'|'land'|'thaw'|'teleport'|null} event
    */
   update(game) {
     this.savePrevious();
@@ -408,6 +503,7 @@ export class Enemy {
       this.timer++;
       return null;
     }
+    if (this.warp) return this.teleport(game);
     if (this.bounced !== null) this.bounced++;
     if (this.hitTicks !== null) this.hitTicks++;
     if (this.frozen && ++this.frozen.tick >= this.frozen.ticks) {
@@ -429,6 +525,7 @@ export class Enemy {
     if (this.startFalling(game)) return this.fall(game);
     if (this.onLethal(game.grid)) return this.die('void');
     if (this.frozen || this.attackTick !== null || this.readyToAttack) return null;
+    if (this.teleportDue(game)) return null;
     if (this.wait > 0) {
       this.wait--;
       return null;
@@ -458,6 +555,77 @@ export class Enemy {
     this.target = target;
     this.walked = 0;
     return this.walk(game); // no standing still between cells
+  }
+
+  /**
+   * A boss whose phase teleports (D135), awake and at rest on a whole
+   * cell: once its clock runs out it starts a teleport to a cell picked by
+   * teleportCell() (or, with none, tries again a little later).
+   * @returns {boolean} whether a teleport started
+   */
+  teleportDue(game) {
+    if (!this.awake || this.teleportTicks === 0 || !this.pos.every(Number.isInteger)) return false;
+    if (--this.teleportClock > 0) return false;
+    const to = this.teleportCell(game);
+    if (!to) {
+      this.teleportClock = BOSS.teleportRetry;
+      return false;
+    }
+    this.warp = { tick: 0, to, from: null };
+    return true;
+  }
+
+  /**
+   * Where a boss teleports to (D135): a whole cell of the floor it stands
+   * on (its height), free and safe, nobody walking into it, at least
+   * BOSS.teleportClear from the wizard and his decoy. Of those, one from
+   * which it sees the wizard if there is any (so he must find new cover),
+   * picked by its own dice.
+   * @param {import('../game.js').Game} game
+   * @returns {number[]|null} the cell [x, y, z]
+   */
+  teleportCell(game) {
+    const { grid, player, decoy, sightBlockers } = game;
+    const [cx, y, cz] = this.pos;
+    const [w, , d] = grid.size;
+    const away = [player.dead ? null : player, decoy?.active ? decoy : null].filter(Boolean).map((body) => body.box());
+    const free = [];
+    const seeing = [];
+    for (let x = 0; x < w; x++) {
+      for (let z = 0; z < d; z++) {
+        if (x === cx && z === cz) continue;
+        const cell = [x, y, z];
+        if (this.landing(cell, game) !== y || this.claimed(cell, game)) continue;
+        const eyes = [x + 0.5, y + this.eyeHeight, z + 0.5];
+        if (away.some((box) => reach(eyes, box) < BOSS.teleportClear)) continue;
+        free.push(cell);
+        if (!player.dead && lineOfSight(eyes, boxCenter(player.box()), grid, sightBlockers)) seeing.push(cell);
+      }
+    }
+    const cells = seeing.length > 0 ? seeing : free;
+    return cells.length > 0 ? cells[Math.floor(this.random() * cells.length)] : null;
+  }
+
+  /**
+   * A teleport under way: it flickers out, and half way through it jumps
+   * to its cell ('teleport', with `warp.from` where it was; no
+   * interpolated slide across the room), facing the wizard, then flickers
+   * in, its clock wound up again.
+   */
+  teleport(game) {
+    const { warp } = this;
+    warp.tick++;
+    if (warp.tick === BOSS.teleportTicks / 2) {
+      warp.from = [...this.pos];
+      for (let i = 0; i < 3; i++) this.pos[i] = this.prev[i] = warp.to[i];
+      if (!game.player.dead) this.faceTowards(this.aimAt(game).pos);
+      return 'teleport';
+    }
+    if (warp.tick >= BOSS.teleportTicks) {
+      this.warp = null;
+      this.teleportClock = this.teleportTicks;
+    }
+    return null;
   }
 
   /**
@@ -550,6 +718,7 @@ export class Enemy {
     this.state = 'dead';
     this.frozen = null;
     this.pulled = null;
+    this.warp = null;
     this.deathCause = cause;
     this.timer = 0;
     this.sees = false;

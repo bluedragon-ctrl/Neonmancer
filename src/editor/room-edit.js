@@ -473,17 +473,18 @@ export class RoomEdit {
 
   /**
    * Give an enemy another template; its id follows the template (idFor()),
-   * and a stationary one loses its path.
+   * a stationary one loses its path and one that is no boss its drop.
    * @param {string} id
    * @param {string} template enemy template id (defs.json "enemies")
    * @param {boolean} walksPath it may have a path with these settings (not stationary)
+   * @param {boolean} [boss] the template is a boss's (D135): it keeps its drop
    * @returns {string|null} its id afterwards, or null if nothing changed
    */
-  setEnemy(id, template, walksPath) {
+  setEnemy(id, template, walksPath, boss = false) {
     const enemy = this.item(id);
     if (!enemy) return null;
     const next = this.idFor(enemy, enemy.template, template);
-    const fields = { id: next, template, path: walksPath ? enemy.path : undefined };
+    const fields = { id: next, template, path: walksPath ? enemy.path : undefined, drop: boss ? enemy.drop : undefined };
     return this.updateItem(id, fields) ? next : null;
   }
 
@@ -571,6 +572,17 @@ export class RoomEdit {
    * @param {string|null} text
    * @returns {boolean} whether anything changed
    */
+  /**
+   * The pickup a boss drops (D104, D135): a pickup id of the room, or null
+   * for none (validation asks for one).
+   * @param {string} id the boss
+   * @param {string|null} drop
+   * @returns {boolean} whether anything changed
+   */
+  setDrop(id, drop) {
+    return this.updateItem(id, { drop: drop ?? undefined });
+  }
+
   setText(id, text) {
     return this.updateItem(id, { text: text ?? undefined });
   }

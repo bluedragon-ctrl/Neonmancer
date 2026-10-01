@@ -13,7 +13,8 @@ import {
   ShaderMaterial,
   Vector3,
 } from 'three';
-import { ENEMY } from '../entities/enemy.js';
+import { BOSS, ENEMY } from '../entities/enemy.js';
+import { bodyScale, createBossMark, teleportLook } from './boss-mark.js';
 import { PLAYER } from '../entities/player.js';
 import { createAlertMark, placeAlertMark } from './alert-mark.js';
 import { BUG_MODEL } from './bug.js';
@@ -503,19 +504,26 @@ export class EnemyView {
   constructor(game, enemy) {
     this.game = game;
     this.enemy = enemy;
-    const { look, color, attack, attackColor, attackRange } = enemy.data;
+    const { look, color } = enemy.data;
     this.kind = ENEMY_MODELS[look];
     if (!this.kind) throw new Error(`No enemy look "${look}" (ENEMY_MODELS)`);
     this.model = this.kind.create(color);
+    /** A taller body (D134) is its model drawn as much bigger. */
+    this.scale = bodyScale(enemy.size[1]);
+    this.model.scale.setScalar(this.scale);
     this.pixels = createDerez(this.kind.derez, [color, 0xffffff]);
     this.mood = null;
     /** The "!" over it while it has noticed the wizard (any enemy). */
     this.mark = createAlertMark();
     this.markHolder = new Group().add(this.mark);
     this.group = new Group().add(this.model, this.pixels, this.markHolder);
-    /** Its discharge lightning (world space), if it has that attack. */
-    this.discharge = enemy.discharges ? createDischarge({ color: attackColor, shape: attack, range: attackRange }) : null;
-    if (this.discharge) this.group.add(this.discharge);
+    /** A boss's three gold rings (D134), or null. */
+    this.bossMark = enemy.boss ? createBossMark(enemy.size[1]) : null;
+    if (this.bossMark) this.group.add(this.bossMark);
+    /** Its discharge lightning (world space), if it has that attack (in its phase, D135). */
+    this.discharge = null;
+    this.phase = null;
+    this.setPhase();
     /** Its own offset into the glitch rhythm of damaged enemies, so they don't glitch in step. */
     this.seed = game.enemies.indexOf(enemy);
     /** Angle the model faces now; it turns towards the enemy's facing. */
@@ -526,6 +534,17 @@ export class EnemyView {
     this.alert = 0;
     /** The cage round it while Pause freezes it (D85), made on its first freeze. */
     this.cage = null;
+  }
+
+  /** Its discharge for the attack of the phase it is in (a boss's phase may change it, D135). */
+  setPhase() {
+    const { enemy } = this;
+    if (enemy.phase === this.phase) return;
+    this.phase = enemy.phase;
+    if (this.discharge) this.group.remove(this.discharge);
+    const { attack, attackColor, attackRange } = enemy.data;
+    this.discharge = enemy.discharges ? createDischarge({ color: attackColor, shape: attack, range: attackRange }) : null;
+    if (this.discharge) this.group.add(this.discharge);
   }
 
   /** The cage for a freeze, made on first use. */
@@ -548,6 +567,7 @@ export class EnemyView {
     if (enemy.state === 'dead') {
       this.model.visible = false;
       this.mark.visible = false;
+      if (this.bossMark) this.bossMark.visible = false;
       if (this.cage) this.cage.visible = false;
       if (this.discharge) this.discharge.visible = false;
       // Popped in a pit: the burst comes out at the floor. Once it is over
@@ -567,6 +587,17 @@ export class EnemyView {
     }
     this.model.position.set(...feet);
     this.model.rotation.y = this.angle;
+    this.setPhase();
+    // A boss's teleport (D135) squeezes it to a line and back; its rings go with it.
+    const warp = teleportLook(enemy.warp ? enemy.warp.tick + alpha : null, BOSS.teleportTicks);
+    this.model.visible = warp.visible;
+    this.model.scale.set(this.scale * warp.width, this.scale * warp.height, this.scale * warp.width);
+    if (this.bossMark) {
+      this.bossMark.visible = warp.visible;
+      this.bossMark.position.set(...feet);
+      this.bossMark.scale.set(warp.width, warp.height, warp.width);
+      this.bossMark.userData.update(dt, { armored: enemy.boss.armor === 'plate' ? !enemy.exposed : null });
+    }
     const after = enemy.sees || enemy.behavior.chasing ? 1 : 0;
     this.alert += Math.sign(after - this.alert) * Math.min(Math.abs(after - this.alert), dt * ALERT_RATE);
 
@@ -599,7 +630,7 @@ export class EnemyView {
     flash.color.value.set(tinted ? this.game.content.spells.pause.color : white ? 0xffffff : PALETTE.cyan);
 
     this.markHolder.position.set(...feet);
-    placeAlertMark(this.mark, enemy.alerted && !frozen ? 1 : 0, this.time, kind.markHeight);
+    placeAlertMark(this.mark, enemy.alerted && !frozen ? 1 : 0, this.time, kind.markHeight * this.scale);
     if (this.discharge) this.placeDischarge(feet, attack);
 
     const mood = eyeMood(enemy);
@@ -616,7 +647,7 @@ export class EnemyView {
    */
   placeDischarge(feet, attack) {
     const { enemy, kind } = this;
-    const eyes = [feet[0], feet[1] + ENEMY.eyeHeight, feet[2]];
+    const eyes = [feet[0], feet[1] + enemy.eyeHeight, feet[2]];
     if (enemy.data.attack !== 'arc') {
       placeDischarge(this.discharge, attack, enemy.chargeTicks, eyes);
       return;

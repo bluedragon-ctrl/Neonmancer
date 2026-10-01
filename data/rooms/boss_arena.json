@@ -1,0 +1,22 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "boss_arena",
+  "name": "Boss Arena",
+  "biome": "home_lattice",
+  "size": [12, 4, 12],
+  "spawn": [2.5, 0, 1],
+  "exits": [
+    { "id": "north", "side": "-z", "at": 2, "locked": true },
+    { "id": "east", "side": "+x", "at": 5, "locked": true }
+  ],
+  "blocks": [
+    { "at": [3, 0, 4], "to": [3, 1, 5] },
+    { "at": [8, 0, 2], "to": [8, 1, 3] },
+    { "at": [5, 0, 8], "to": [6, 1, 8] },
+    { "at": [9, 0, 8], "to": [9, 1, 9] },
+    { "at": [1, 0, 8], "to": [2, 1, 8] }
+  ],
+  "enemies": [{ "id": "warden", "template": "proto_warden", "at": [6, 0, 4], "drop": "fragment_7" }],
+  "pickups": [{ "id": "fragment_7", "type": "fragment_7", "at": [6, 0, 6] }]
+}

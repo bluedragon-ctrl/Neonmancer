@@ -42,7 +42,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `main.js` | Bootstrap: load and validate data, build systems, route input (menus first), start the loop, error screen |
 | `game.js` | Owns game state; fixed-order `update()` returning typed events; room switching; `reset()` starts over in place (a new game) |
 | `spells.js` | What each spell does once cast (`SPELL_EFFECTS`): `castSpell(game)`, Blink and Warp, Cut & Paste, Pull, Compile, Scan, Fork |
-| `combat.js` | Bolts, enemies' charged attacks, bouncing off, touching and burning enemies; every hit on an enemy (`hitEnemy(game, …)`, `pauseEnemy(game, …)`) |
+| `combat.js` | Bolts, enemies' charged attacks, bouncing off, touching and burning enemies; every hit on an enemy (`hitEnemy(game, …)`, `pauseEnemy(game, …)`), a boss's next phase, plate armor (`updateArmor()`) |
 | `switches.js` | Plates and the locked exits they open (D75), hidden exits a scan opens (D128, `revealExit()`): `updateSwitches(game)`, `exitOpen()`, `switchesOn()` |
 | `core/bindings.js` | Default key → action map (the only place raw key codes appear) |
 | `core/input.js` | Raw keys → action states once per tick |
@@ -50,6 +50,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `core/messages.js` | `say(key, values)` terminal messages, `showText(lines)` screen texts (D118) and `announce(key, values, options)` banners from any module, queued until the HUD takes them |
 | `data/colors.js` | How far apart two colors look (OKLab, `colorGap()`), enemy templates too alike (`templateColorClashes()`, D119) and a free color for a new one (`freeColor()`, D120) (pure, tested) |
 | `data/lore.js` | Screen texts (D118): `LORE_LIMITS`, `LORE_REACH`, the looks that show a text, `loreLines()` (what the terminal prints) and `loreProblem()` (pure, tested) |
+| `core/random.js` | Seeded dice for game logic (`seededRandom()`, `stringSeed()`): a boss's teleports play the same each time (D135) |
 | `core/rules.js` | Shared rule constants (player hitbox, max room footprint) |
 | `core/version.js` | Game and data-schema version numbers (the game's patch number comes from `tools/game-version.js`, D42) |
 | `data/bundle.js` | The only Vite-specific module: bundles `data/**/*.json`, imports dev schema errors, `DEV_SERVER` flag |
@@ -79,7 +80,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `entities/scan.js` | Scan (D128): the wave's reach (`scanReach()`, square to a cell or an exit, `cellReach()`, `exitReach()`), what a room hides (`hiddenThings()`: fake block cells, hidden exits) and revealing what the wave reaches each tick (`updateScan(game)`) |
 | `entities/collapsing.js` | Collapsing block: solid → shake (the wizard stood on it) → gone → optional regrow once its cell is clear (D47) |
 | `entities/core.js` | The central core (D101): a fixed 1×2×1 body that takes the fragments; touching it is `Game.touchCore()` (pure) |
-| `entities/enemy.js` | Enemy body: steps cell by cell where its movement behavior leads (never into a hole or onto void, never into a cell another enemy is walking into), turns back when blocked, falls (mid-step too), rides platforms, pops in holes and on void; hostility, provoke, bounce state (D48); seeing the wizard, the "!", the charged attack's charge and cooldown (D78); `alarm()` when anything hits it (D81) and `route()`, a shortest walk to a column (D80); `freeze()` by Pause (D85): still, harmless and solid until it thaws |
+| `entities/enemy.js` | Enemy body: steps cell by cell where its movement behavior leads (never into a hole or onto void, never into a cell another enemy is walking into), turns back when blocked, falls (mid-step too), rides platforms, pops in holes and on void; hostility, provoke, bounce state (D48); seeing the wizard, the "!", the charged attack's charge and cooldown (D78); `alarm()` when anything hits it (D81) and `route()`, a shortest walk to a column (D80); `freeze()` by Pause (D85): still, harmless and solid until it thaws; a boss (D135): `height`, phases (`updatePhase()`), waking, teleports (`teleportCell()`, `BOSS`), plate armor (`exposed`), its `dropId` |
 | `entities/kinds.js` | Object kind → logic class (`OBJECT_KINDS`); the room's objects are built from it |
 | `entities/pickup.js` | A pickup in a room: its box, save bit, state (idle, ghost, taken) and pick-up ticks (pure, tested) |
 | `entities/platform.js` | Moving platform: follows its path, carries riders, waits when blocked, shoves or squeezes the wizard (D46); a spiked one hurts on touch (D82) |
@@ -105,6 +106,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/scan-fx.js`, `render/scan-view.js` | Scan (D128): the wave's square clipped to the floor, its fading, a hidden exit's slab (pure, tested); the wave and the derez of what it revealed (`ScanView`, in `RoomScene`, which rebuilds the room view after a reveal) |
 | `render/compile-fx.js`, `render/compile-view.js` | Compile (D125): the crate's grow-in and blinking (pure, tested); the bits' stream and the aim marker (`CompileView`, shown by `PlayerView`); `PushableView` draws the crate |
 | `render/collapse-fx.js` | Collapsing-block look: shake, regrow, `COLLAPSE_FX` tuning (pure, tested) |
+| `render/boss-mark.js` | The boss mark (D134, D135): three gold rings round any boss sized to its height (shut while plate armor is), `teleportLook()`, `bodyScale()` for taller bodies |
 | `render/core-view.js` | The core's reactor look (D101): crystal, pedestal, one orbit ring per access level, `CORE_FX` |
 | `render/crawler.js` | Crawler model (D83): six-legged spider, tripod gait (`crawlerFoot()`, `placeLimb()`), crouch and pawing, `CRAWLER` tuning; `CRAWLER_MODEL` |
 | `render/cron.js` | Cron model (D83), the tower's look: hex pedestal, bell, a dial holding the grid axes with four emitters where a cross's bolts leave, sweeping hand, slam, `CRON` tuning; `CRON_MODEL` |
@@ -165,6 +167,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/zap-fx.js` | Zap look: trail zigzags, bolt flicker, cast flare, sparks, enemy hit flash and damaged glitch, `ZAP_FX` tuning (pure, tested) |
 | `render/zap-view.js` | Zap meshes: bolt, cast flare, sparks, in the Zap's cyan or an enemy bolt's color; `ZapView` keeps a room's bolts and sparks (pooled by color) |
 | `ui/clip-icon.js` | SVG icons of what the clipboard holds (D87): a crate's cube, an enemy, caged while frozen (pure, tested) |
+| `ui/boss-bar.js` | The boss bar (D135): `bossBarState(game)` (name, share, phase ticks, armor) and the DOM bar, top middle while a boss is awake |
 | `ui/energy-bar.js` | Energy bar: one segment per cast filling as it recharges; flashes on a denied cast |
 | `ui/error-screen.js` | Startup error screen listing every data problem |
 | `ui/fullscreen.js` | Fullscreen toggle and when to suggest it (below 1080 physical pixels; tested) |
@@ -174,7 +177,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `ui/saves.js` | Access keys in the browser (D105): the URL hash, localStorage (the last save, for Continue), the clipboard with a fallback |
 | `ui/settings.js` | Player settings (D109): volumes and visual stubs, steps, localStorage (pure, tested) |
 | `ui/boot-screen.js` | The room compiling after Start (D110): a canvas covering the room, cleared tile by tile along its grid, outlines flashing |
-| `ui/hud.js` | DOM overlay: integrity bar, backup pips, energy bar, spell tag and Cut & Paste clipboard slot, score, fragments and the boot key, room banner, terminal messages, end screen, fullscreen hint |
+| `ui/hud.js` | DOM overlay: integrity bar, backup pips, energy bar, boss bar, spell tag and Cut & Paste clipboard slot, score, fragments and the boot key, room banner, terminal messages, end screen, fullscreen hint |
 | `ui/terminal.js` | Terminal message queue (typing, hold, fade; a screen's text as a block of its own, D118) and banner timing (pure, tested) |
 | `ui/text.js` | String lookup with `{name}` values; scrambled "decoding" text for the banner (pure, tested) |
 | `editor/boxes.js` | `blocks`/`holes` entries edited cell by cell: untouched entries kept, loose cells merged greedily into boxes (pure, tested) |

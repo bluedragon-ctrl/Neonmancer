@@ -1,0 +1,17 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "boss_plates",
+  "name": "Plate Arena",
+  "biome": "home_lattice",
+  "size": [12, 4, 12],
+  "spawn": [0.5, 0, 6],
+  "exits": [{ "id": "west", "side": "-x", "at": 5 }],
+  "objects": [
+    { "id": "plate_1", "type": "plate", "at": [3, 0, 2] },
+    { "id": "plate_2", "type": "plate", "at": [8, 0, 9] },
+    { "id": "plate_3", "type": "plate", "at": [8, 0, 2] }
+  ],
+  "enemies": [{ "id": "gatekeeper", "template": "proto_gatekeeper", "at": [9, 0, 6], "drop": "buff_energy_2" }],
+  "pickups": [{ "id": "buff_energy_2", "type": "buff_energy_2", "at": [6, 0, 6] }]
+}

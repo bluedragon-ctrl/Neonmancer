@@ -72,13 +72,15 @@ export function buildRoom(data, { objectTypes, blockTypes, enemyTemplates = {}, 
       // A screen's text id (lore.json, D118).
       ...(object.text && { text: object.text }),
     })).concat(fromBlocks.objects),
-    /** Enemies: their template's values (look, movement, attack, speed...; D119) with this enemy's id, cell and path. */
+    /** Enemies: their template's values (look, movement, attack, speed...; D119) with this enemy's id, cell, path and a boss's drop. */
     enemies: (data.enemies ?? []).map((enemy) => ({
       ...withEnemyDefaults(structuredClone(enemyTemplates[enemy.template])),
       id: enemy.id,
       template: enemy.template,
       at: [...enemy.at],
       ...(enemy.path && { path: structuredClone(enemy.path) }),
+      // A boss's drop: the id of the pickup it holds (D104).
+      ...(enemy.drop && { drop: enemy.drop }),
     })),
     /** Pickups (D71): type values (kind, spell or stat and amount) with this pickup's id and cell. */
     pickups: (data.pickups ?? []).map((pickup) => ({

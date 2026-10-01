@@ -98,6 +98,8 @@ class RoomModel {
     this.floors = new Set();
     this.plates = [];
     this.targets = [];
+    /** A boss room (D135): its locked exits wait for the boss, not for switches. */
+    this.bossRoom = room.enemies.some((enemy) => enemy.boss);
     this.core = null;
     this.crates = [];
     for (const object of room.objects) {
@@ -455,8 +457,10 @@ function collect(model, cfg, stands, reach) {
     const [x, y, z] = model.core.at;
     reach.core = DIRS.some(([dx, dz]) => [-1, 0, 1].some((dy) => standAt(x + dx, y + dy, z + dz)));
   }
-  // Exits: stand in the opening; locked ones need every switch on in this configuration.
-  const switched = model.switchesOn(cfg, stands);
+  // Exits: stand in the opening; locked ones need every switch on in this
+  // configuration, or in a boss room the boss beaten (D135; taken as done:
+  // the checker knows nothing of enemies).
+  const switched = model.bossRoom || model.switchesOn(cfg, stands);
   for (const exit of room.exits) {
     if (reach.exits[exit.id]) continue;
     if (exit.locked && !switched) continue;

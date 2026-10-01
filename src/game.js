@@ -4,7 +4,7 @@
  */
 import { DT } from './core/loop.js';
 import { announce, say, showText } from './core/messages.js';
-import { bounceOffEnemies, burnEnemies, touchEnemies, updateAttacks, updateBolts, updateFrozen } from './combat.js';
+import { bounceOffEnemies, burnEnemies, touchEnemies, updateArmor, updateAttacks, updateBolts, updateFrozen } from './combat.js';
 import { LORE_REACH, loreLines } from './data/lore.js';
 import { isBackSide, sideAxes, withExitDefaults } from './data/room-data.js';
 import { Enemy } from './entities/enemy.js';
@@ -43,7 +43,7 @@ export const TRANSITION = {
  * Something that happened, for views, the HUD and (later) sound. Returned
  * by Game.update() for the tick it happened in.
  * @typedef {object} GameEvent
- * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'|'warp'|'fizzle'|'cut'|'paste'|'pull'|'compile'|'fork'|'expire'|'scan'|'reveal'|'airjump'|'reflect'|'shrine'|'crash'|'access'|'win'|'read'} type
+ * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'|'warp'|'fizzle'|'cut'|'paste'|'pull'|'compile'|'fork'|'expire'|'scan'|'reveal'|'airjump'|'reflect'|'shrine'|'crash'|'access'|'win'|'read'|'armor'|'exposed'|'armored'|'phase'|'teleport'|'drop'} type
  * @property {string} [spell] the spell cast, failed, fizzled (nowhere to
  *   go, energy kept) or selected (cast, deny, fizzle, spell); the teleport (warp)
  * @property {number[]} [from] where a Blink or Warp started (warp)
@@ -188,17 +188,28 @@ export class Game {
     this.decoy = null;
     /** How many things scans revealed since the room was built (the room view rebuilds after one). */
     this.reveals = 0;
-    /** Locked exits (D75), open while every switch is on; closed ones are solid (Grid.setOpening()). */
-    this.locks = createLocks(this);
-    /** The room's enemies (entities/enemy.js), dead ones included until the room resets. */
-    this.enemies = this.room.enemies.map((enemy) => new Enemy(enemy));
-    /** Bolts in flight, the wizard's Zaps and enemies' shots (entities/bolt.js); a room starts without any. */
-    this.bolts = [];
     /** The room's pickups (entities/pickup.js): found permanent ones as ghosts, refills back again. */
     this.pickups = this.room.pickups.map((data) => {
       const bit = pickupBit(data, this.content.spells);
       return new Pickup(data, bit, bit !== null && this.progress.has(bit));
     });
+    /** Is it a boss room (D135)? Its locked exits wait for the boss, even once it stays away. */
+    this.bossRoom = this.room.enemies.some((enemy) => enemy.boss);
+    /**
+     * The room's enemies (entities/enemy.js), dead ones included until the
+     * room resets. A boss whose drop is found already stays away (D104).
+     */
+    this.enemies = this.room.enemies
+      .filter((enemy) => !enemy.boss || this.pickups.find((pickup) => pickup.data.id === enemy.drop)?.state !== 'ghost')
+      .map((enemy) => new Enemy(enemy));
+    /** The room's boss (D135), while it is here (a beaten one too, until the room resets), or null. */
+    this.boss = this.enemies.find((enemy) => enemy.boss) ?? null;
+    // It holds its drop until it is beaten.
+    if (this.boss) this.pickups.find((pickup) => pickup.data.id === this.boss.dropId)?.hold();
+    /** Bolts in flight, the wizard's Zaps and enemies' shots (entities/bolt.js); a room starts without any. */
+    this.bolts = [];
+    /** Locked exits (D75), open while every switch is on (or the boss is beaten); closed ones are solid (Grid.setOpening()). */
+    this.locks = createLocks(this);
     this.player.enter(pos ?? this.room.spawn, this.room.reset);
     /** Is he on the backup shrine? Stepping onto it uses it (touchShrine()). */
     this.onShrine = false;
@@ -455,8 +466,8 @@ export class Game {
 
   /**
    * One fixed tick: player → exits → his cast → his push → objects →
-   * enemies (seeing, moving) → bolts → enemy attacks → bouncing off
-   * enemies → enemy contact → events.
+   * enemies (seeing, moving) → boss armor → bolts → enemy attacks →
+   * bouncing off enemies → enemy contact → a beaten boss's drop → events.
    * Walking out through an exit starts a transition: fade out (frozen
    * world), load the next room, fade in (running).
    * @param {import('./core/input.js').Input} input
@@ -535,6 +546,7 @@ export class Game {
       if (event) this.emit(event, { enemy });
       if (event === 'pop' || event === 'thaw') this.refreshBodies();
     }
+    updateArmor(this);
     // Bolts after enemies, so they hit enemies where those are now.
     updateBolts(this);
     updateFrozen(this);
@@ -542,12 +554,39 @@ export class Game {
     const bounced = bounceOffEnemies(this);
     touchEnemies(this, bounced);
     burnEnemies(this);
+    this.defeatBoss();
     this.takePickups();
     this.touchShrine();
     this.touchCore();
     this.readScreens();
     updateSwitches(this);
     return this.takeEvents();
+  }
+
+  /**
+   * The boss is beaten (D104): it lets its drop fall ('drop'), and a
+   * banner and a terminal line say so. Once, whatever popped it (a spell,
+   * or the ground going from under it).
+   */
+  defeatBoss() {
+    const { boss } = this;
+    if (!boss || boss.alive) return;
+    const pickup = this.pickups.find((one) => one.data.id === boss.dropId);
+    if (pickup?.state !== 'held') return;
+    pickup.release();
+    const name = this.bossName(boss);
+    announce('banner.bossDefeated', { boss: name }, { sub: 'banner.bossDefeatedSub', color: boss.data.color });
+    say('msg.bossDefeated', { boss: name });
+    this.emit('drop', { enemy: boss, pickup });
+  }
+
+  /**
+   * A boss's name (strings.json "boss.<template>"), or its template id in
+   * capitals.
+   * @param {Enemy} boss
+   */
+  bossName(boss) {
+    return this.content.strings[`boss.${boss.template}`] ?? boss.template.toUpperCase().replaceAll('_', ' ');
   }
 
   /**
@@ -576,7 +615,7 @@ export class Game {
     if (player.dead) return;
     const box = player.box();
     for (const pickup of this.pickups) {
-      if (pickup.state !== 'idle' || !overlapsBox(box, pickup.box())) continue;
+      if (!pickup.takeable || !overlapsBox(box, pickup.box())) continue;
       if (!this.use(pickup.data, pickup.bit)) continue;
       pickup.take();
       this.emit('pickup', { pickup });

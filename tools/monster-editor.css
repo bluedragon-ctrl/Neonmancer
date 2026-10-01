@@ -54,6 +54,7 @@
 }
 
 .me-panel input,
+.me-panel textarea,
 .me-panel select {
   box-sizing: border-box;
   min-width: 0;
@@ -65,6 +66,7 @@
 }
 
 .me-panel input:focus,
+.me-panel textarea:focus,
 .me-panel select:focus {
   outline: 1px solid var(--cyan);
 }
@@ -221,4 +223,15 @@ button.action:disabled {
 .used {
   font-size: 12px;
   color: var(--dim);
+}
+
+/* A boss block (D135), edited as JSON. */
+.me-panel textarea.json {
+  font-family: inherit;
+  font-size: 12px;
+  resize: vertical;
+}
+
+.me-panel textarea.json.bad {
+  border-color: #ff2a3a;
 }

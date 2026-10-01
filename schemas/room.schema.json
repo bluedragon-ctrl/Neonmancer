@@ -179,6 +179,10 @@
         "path": {
           "$ref": "#/$defs/path",
           "description": "Patrol path: level (legs along x or z at the height of \"at\"); only x and z count once it walks, so it keeps to it after falling off a ledge. No \"speed\": it walks at its template's (D119). Without a path it stays put."
+        },
+        "drop": {
+          "$ref": "common.schema.json#/$defs/id",
+          "description": "Bosses only, and every boss has one (D104, D135): the id of a pickup of this room, a permanent one (no refill), that it holds until it is beaten; then the pickup shows in its cell. While its save bit is found, the boss is left out of the room."
         }
       }
     },

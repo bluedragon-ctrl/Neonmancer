@@ -186,6 +186,21 @@ function control(key, value, set) {
     el.addEventListener('change', () => set(options.find((option) => String(option) === el.value)));
     return el;
   }
+  // A block of its own (a boss's, D135): edited as JSON; text that doesn't parse is kept out.
+  if (prop.type === 'object') {
+    const el = html('textarea', 'json', undefined, { rows: '8', spellcheck: 'false', placeholder: '{ "phases": [{ "from": 1 }] }' });
+    el.value = value === undefined ? '' : JSON.stringify(value, null, 2);
+    el.addEventListener('change', () => {
+      const text = el.value.trim();
+      if (!text) return set(undefined);
+      try {
+        set(JSON.parse(text));
+      } catch {
+        el.classList.add('bad');
+      }
+    });
+    return el;
+  }
   if (prop.$ref?.endsWith('/color')) {
     const pair = html('div', 'color-pair');
     const text = html('input', '', undefined, { type: 'text', value: value ?? '', placeholder: '#rrggbb' });

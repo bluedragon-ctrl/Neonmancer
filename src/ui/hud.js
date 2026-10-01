@@ -1,7 +1,7 @@
 /**
  * The HUD: a DOM overlay on the stage with the integrity bar, the backups
  * under it, the energy bar with the selected spell under it (and the
- * Cut & Paste clipboard), the score and completion under the title (D100),
+ * Cut & Paste clipboard), a boss's bar (D135), the score and completion under the title (D100),
  * the key fragments and access level under them, the end-of-game screen
  * (D101), the room name banner, terminal messages and the fullscreen
  * hint. It only shows state;
@@ -12,6 +12,7 @@
  */
 import { takeAnnouncements, takeMessages } from '../core/messages.js';
 import { GAME_VERSION } from '../core/version.js';
+import { BossBar } from './boss-bar.js';
 import { clipIcon } from './clip-icon.js';
 import { EnergyBar } from './energy-bar.js';
 import { HINT_SECONDS } from './fullscreen.js';
@@ -127,6 +128,8 @@ export class Hud {
     this.done = null;
     this.movementMode = null;
     this.energy = new EnergyBar(root, this.text('hud.energy'));
+    /** The boss bar (D135), up while a boss is awake. */
+    this.bossBar = new BossBar(root);
     root.insertAdjacentHTML('beforeend', '<div class="hud-spell"><span class="hud-spell-name"></span><span class="hud-clip" hidden></span><span class="hud-spell-key"></span></div>');
     this.spellBox = find('.hud-spell');
     this.spellName = find('.hud-spell-name');
@@ -244,6 +247,14 @@ export class Hud {
     this.spellBox.classList.remove('switched');
     void this.spellBox.offsetWidth; // restart the animation
     this.spellBox.classList.add('switched');
+  }
+
+  /**
+   * The boss bar (D135): bossBarState(), or null to take it down.
+   * @param {ReturnType<typeof import('./boss-bar.js').bossBarState>} state
+   */
+  setBoss(state) {
+    this.bossBar.set(state);
   }
 
   /**

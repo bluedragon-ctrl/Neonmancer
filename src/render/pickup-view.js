@@ -4,7 +4,8 @@
  * temporary one's (a refill's or an access pass's) pick-up effect and its
  * derez, then nothing; any other
  * goes at once, as the install animation on the wizard takes it over
- * (install-view.js, D73).
+ * (install-view.js, D73). A boss's drop (D104) is hidden while the boss
+ * holds it, then falls into its cell.
  */
 import { Group } from 'three';
 import { DISK, diskMotion, poseDisk } from './disk.js';
@@ -12,6 +13,23 @@ import { createDerez, placeDerez } from './pixels.js';
 import { hash } from './hash.js';
 import { createPickupModel } from './pickup-model.js';
 import { refillMotion } from './refill.js';
+import { PICKUP } from '../entities/pickup.js';
+
+/**
+ * How far above its place a boss's drop (D104) is `ticks` after the boss
+ * was beaten: it falls in from DROP_FROM up, bouncing once, and rests.
+ * @param {number} ticks
+ */
+export function dropHeight(ticks) {
+  const t = ticks / PICKUP.dropTicks;
+  if (t >= 1) return 0;
+  if (t < 0.6) return DROP_FROM * (1 - (t / 0.6) ** 2);
+  const bounce = (t - 0.6) / 0.4;
+  return DROP_FROM * 0.15 * Math.sin(bounce * Math.PI);
+}
+
+/** Units above its cell a boss's drop starts falling from. */
+const DROP_FROM = 1.5;
 
 export class PickupView {
   /**
@@ -39,15 +57,14 @@ export class PickupView {
    */
   sync(alpha, dt) {
     this.time += dt;
-    const { state, takenTicks } = this.pickup;
-    if (!this.temporary && takenTicks !== null) {
-      this.group.visible = false;
-      return;
-    }
+    const { state, takenTicks, droppedTicks } = this.pickup;
+    // A boss holds it unseen until it is beaten (D104).
+    this.group.visible = state !== 'held' && (this.temporary || takenTicks === null);
+    if (!this.group.visible) return;
     const collected = takenTicks === null ? undefined : takenTicks + alpha;
     const motion = diskMotion({ time: this.time, ghost: state === 'ghost', collected });
     const pose = this.refill ? refillMotion(motion) : motion;
-    poseDisk(this.model, pose);
+    poseDisk(this.model, droppedTicks === null ? pose : { ...pose, y: pose.y + dropHeight(droppedTicks + alpha) });
     const { x, z } = this.model.position;
     placeDerez(this.pixels, collected === undefined ? null : collected - DISK.collect.riseTicks, [x, this.model.position.y + pose.y, z]);
   }

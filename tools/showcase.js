@@ -46,7 +46,7 @@ import { VIRUS, VIRUS_MIDDLE, animateVirus, createVirus } from '../src/render/vi
 import { SENTINEL, SENTINEL_MODEL, animateSentinel, createSentinel } from '../src/render/sentinel.js';
 import { DISCHARGE, chargeGlow, createDischarge, dischargeLook, placeDischarge } from '../src/render/discharge.js';
 import { createAlertMark, placeAlertMark } from '../src/render/alert-mark.js';
-import { ENEMY } from '../src/entities/enemy.js';
+import { BOSS, ENEMY } from '../src/entities/enemy.js';
 import { BOLT } from '../src/entities/bolt.js';
 import { ZAP_FX, damagedGlitch, enemyHitLook } from '../src/render/zap-fx.js';
 import { createBolt, createCastFlare, createSparks, placeBolt, placeCastFlare, placeSparks } from '../src/render/zap-view.js';
@@ -55,6 +55,8 @@ import { createCard } from '../src/render/card.js';
 import { createChip } from '../src/render/chip.js';
 import { createSecret } from '../src/render/secret.js';
 import { createCore } from '../src/render/core-view.js';
+import { bodyScale, createBossMark, teleportLook } from '../src/render/boss-mark.js';
+import { dropHeight } from '../src/render/pickup-view.js';
 import { createFragment } from '../src/render/fragment.js';
 import { DISK, createDisk, diskMotion, poseDisk } from '../src/render/disk.js';
 import { createRefill, refillMotion } from '../src/render/refill.js';
@@ -220,6 +222,14 @@ const ALL_ASSETS = [
     { label: `${label}-pop`, group: 'concept-pops', build: () => buildConceptPop(model, color) },
   ]),
   { label: 'wyrm-colors', span: 6, build: buildWyrmColors },
+  // Bosses (D134, D135): the boss mark, three gold rings round a normal
+  // body, sized to its height. A bug boss calm, then awake, teleporting
+  // (squeezed to a line and back); a virus two cubes high whose plate
+  // armor shuts (rings drawn in) and opens (rings spread, spinning fast);
+  // a boss's drop falling into its cell once it is beaten.
+  { label: 'boss-bug', group: 'bosses', build: buildBossBug },
+  { label: 'boss-tall', group: 'bosses', span: 3.5, build: buildBossTall },
+  { label: 'boss-drop', group: 'bosses', spin: false, build: buildBossDrop },
   // Zap: the bolt close up, two hits on a bug (the second pops
   // it), and rapid fire at a crate until the energy bar runs dry.
   { label: 'zap-bolt', group: 'zap', build: buildZapBolt },
@@ -1608,6 +1618,57 @@ function buildConcept(model, color, { attack: shape, speed, chaseSpeed = speed }
     showGlow(enemy, attack, charge);
     mark(alert, time);
     if (discharge) placeDischarge(discharge, attack === null ? null : Math.floor(attack), charge, [0, ENEMY.eyeHeight, 0]);
+  };
+  return asset;
+}
+
+/** A bug with the boss mark, calm then awake; every 3 s it teleports (in place). */
+function buildBossBug() {
+  const { color } = defs.enemies.bug;
+  const bug = createBug(color);
+  const ring = createBossMark(ENEMY.size[1]);
+  const asset = new Group().add(bug, ring);
+  const mark = addMark(asset, BUG_MODEL.markHeight);
+  asset.userData.update = (dt, time) => {
+    animateBug(bug, { state: 'rest', time, alert: alertAt(time) });
+    mark(alertAt(time), time);
+    const tick = (time % 3) * 60;
+    const warp = teleportLook(tick < BOSS.teleportTicks ? tick : null, BOSS.teleportTicks);
+    for (const part of [bug, ring]) {
+      part.visible = warp.visible;
+      part.scale.set(warp.width, warp.height, warp.width);
+    }
+    ring.userData.update(dt, { armored: null });
+  };
+  return asset;
+}
+
+/** Height of the tall boss demo: two cubes high (D134). */
+const TALL_BOSS = 1.6;
+
+/** A virus two cubes high with the boss mark; its plate armor shuts and opens every 2 s. */
+function buildBossTall() {
+  const scale = bodyScale(TALL_BOSS);
+  const virus = createVirus('#ff7a3d');
+  virus.scale.setScalar(scale);
+  const ring = createBossMark(TALL_BOSS);
+  const asset = new Group().add(virus, ring);
+  const mark = addMark(asset, VIRUS.markHeight * scale);
+  asset.userData.update = (dt, time) => {
+    animateVirus(virus, { state: 'walk', time, alert: alertAt(time) });
+    mark(alertAt(time), time);
+    ring.userData.update(dt, { armored: time % 4 < 2 });
+  };
+  return asset;
+}
+
+/** A fragment, a boss's drop, falling into its cell every 3 s (PickupView). */
+function buildBossDrop() {
+  const fragment = createFragment({ slot: 7 });
+  const asset = new Group().add(fragment);
+  asset.userData.update = (dt, time) => {
+    const motion = diskMotion({ time });
+    poseDisk(fragment, { ...motion, y: motion.y + dropHeight((time % 3) * 60) });
   };
   return asset;
 }

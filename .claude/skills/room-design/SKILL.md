@@ -39,6 +39,10 @@ numbers and playtest lessons). Read the checklist before drafting.
   (`disk_*`, `fragment_N`, `secret_N`, `buff_*`, `upgrade_*`, `refill_*`).
 - Enemies: `{ id, template, at, path? }` only. No overrides, no path speed
   (D119). A patroller needs a path of level legs; a chaser may have one.
+  A boss (template with a `boss` block) also has `drop`: the id of a
+  permanent pickup in the room, where it falls once the boss is beaten
+  (D104, D135). One boss a room, no `shrine`; in a boss room `locked`
+  exits open when the boss is beaten (no switch needed).
 - A permanent pickup is one save bit, the item not the place (D71): don't
   place the same fragment twice by accident (the world map F3 report lists
   duplicates).

@@ -63,7 +63,8 @@ export function updateBolts(game) {
 /**
  * An enemy takes a hit, from the wizard's spell or another enemy's
  * discharge or bolt: 'hit' or, with its last integrity, 'pop' (then
- * Game.refreshBodies()). Any hit that leaves it hostile alarms it (D80, D81):
+ * Game.refreshBodies()); a boss's plate armor may turn it away ('armor'),
+ * and a hit may start a boss's next phase ('phase', D135). Any hit that leaves it hostile alarms it (D80, D81):
  * the wizard gets the blame, so it turns to him ('alert').
  * @param {import('./game.js').Game} game
  * @param {Enemy} enemy
@@ -74,8 +75,28 @@ export function hitEnemy(game, enemy, damage, cause) {
   const event = enemy.hit(damage, cause);
   if (!event) return;
   game.emit(event, { enemy });
-  if (event === 'pop') game.refreshBodies();
-  else if (enemy.alarm(game.player)) game.emit('alert', { enemy });
+  if (event === 'pop') {
+    game.refreshBodies();
+    return;
+  }
+  if (event === 'hit' && enemy.updatePhase()) game.emit('phase', { enemy });
+  if (enemy.alarm(game.player)) game.emit('alert', { enemy });
+}
+
+/**
+ * Plate armor (D135): a boss's armor is open while it stands on a floor
+ * plate ('exposed'), shut again once it steps off ('armored').
+ * @param {import('./game.js').Game} game
+ */
+export function updateArmor(game) {
+  for (const enemy of game.liveEnemies) {
+    if (enemy.boss?.armor !== 'plate') continue;
+    const box = [enemy.box()];
+    const exposed = game.switches.some((object) => object.kind === 'plate' && object.pressedBy(box));
+    if (exposed === enemy.exposed) continue;
+    enemy.exposed = exposed;
+    game.emit(exposed ? 'exposed' : 'armored', { enemy });
+  }
 }
 
 /**

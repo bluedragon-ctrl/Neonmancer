@@ -29,6 +29,25 @@ table, roster, AI rules). Prefer the monster editor
   sentinel keeps 5 away; warden 8 integrity, `pausable: false`.
 - `bounce` makes a trampoline top (2 blocks up, harmless); `solid` makes a
   platform (golem). Both change how a room's geometry works: say so.
+- `height` (default 0.6, up to 1.9) makes a taller body in one cell; above
+  1 it can't be jumped over and needs the cell above it free.
+
+## Bosses (D104, D134, D135)
+- A `boss` block makes a template a boss: hostile, never paused or
+  pulled, may take more than 15 integrity, gets the three gold rings and
+  a boss bar (name: `boss.<template>` in `data/strings.json`).
+- `phases`: `[{ "from": 1, ... }, { "from": 0.5, ... }]`, each changing
+  fighting values (movement, attack, speeds, ranges, charge, cooldown,
+  bolts, damage) and `teleport` (seconds between jumps to a free cell of
+  its floor, away from the wizard). Each phase must be valid on its own
+  (a chaser phase needs aggro, charged attacks aggro >= range).
+- `armor: "plate"`: every hit glances off unless it stands on a floor
+  plate; give its arena plates it will walk over (a chaser follows him).
+- In a room: `{ id, template, at, drop }`, `drop` the id of a permanent
+  pickup of the room (it falls there when the boss is beaten; once found,
+  the boss stays away). One boss a room, no shrine; the room's locked
+  exits open when it is beaten. Prototypes: `proto_warden`,
+  `proto_gatekeeper` in the test arenas `boss_arena`, `boss_plates`.
 
 ## Color rules (D119, D99, D121)
 - Every template has a color of its own, >= 0.09 apart in OKLab from every
