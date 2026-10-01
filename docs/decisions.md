@@ -1097,3 +1097,42 @@ is worth more than six half-built ones. The Outer Buffer's lonely dark
 suits hidden rooms; Phantom's ghosts suit a late fight sector. The
 checker and review tools come first because 30 rooms cannot be checked by
 hand.
+
+
+### D131 — 2026-10-01 — The reachability checker: cells, crates as a puzzle, abilities as a fixpoint
+`npm run check:reach` (`tools/check-reach.js`, in CI and the deploy) searches
+every room as whole cells and the world as a fixpoint. A room: standing
+cells (two free cells above, a floor under), walking, stepping off ledges,
+a jump up one block or over a one-tile gap, and with abilities more: the
+double jump (up two, over two tiles), Blink (3 cells ahead), Warp (to the
+first stop), Compile (a step up, or a plugged hole), Pull, Cut & Paste, a
+scan (fake blocks and hidden exits), Zap (targets), Fork or Compile (a
+plate). Crates are searched as a puzzle: every position they can be
+pushed, pulled or pasted into is a configuration with its own flood, up
+to 500; the search stops as soon as everything in the room is reached.
+The world: from the start room with nothing, every entered room is
+searched with what he has, the pickups found add abilities (disks,
+upgrades), fragments and the core raise the access level, the exits
+reached open the rooms beyond, round after round until nothing changes;
+the rounds are the order the world opens in. A pickup, an exit or a room
+that stays out of reach is an error (exit code 1); rooms not joined to
+the start, the world holding fewer fragments than the core asks for, a
+cut-off crate search, and a room whose way back is missing (arrived on a
+ledge) are warnings. `--rooms` lists what each exit and pickup needs:
+the smallest sets of one or two abilities from what he finds in the
+world, measured from the way he first came in. The world map tool shows
+the errors and warnings under CHECKS.
+Left out on purpose: enemies and their fire, timing (collapsing blocks,
+platforms' waits, spell durations), energy, which way he faces. Moving
+platforms count as floor along their whole path, a scan reaches every
+fake block, and Compile crates last as long as needed. So the verdict errs
+towards "reachable": unreachable is a real problem, reachable is not a
+promise (playtests and the design checklist still apply).
+**Why:** 30 rooms cannot be checked by hand (D130), and the unclear part
+of D67 is the order: an exit that waits for a spell must have the spell
+somewhere he can get first. Plain cells and a bounded crate search are
+simple to read and test, and fast (the whole world in under a second); a
+physics replay would be exact but slow and brittle against tuning. The
+fixpoint gives the order for free and the per-target ability sets feed
+the room design skill and the review subagent (4.2).
+

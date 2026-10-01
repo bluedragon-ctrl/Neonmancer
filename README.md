@@ -30,6 +30,7 @@ npm install
 npm run dev            # dev server with hot reload
 npm test               # unit tests (Node's built-in test runner)
 npm run validate:data  # check data/ against schemas/ and the game rules
+npm run check:reach    # can the wizard reach every exit and pickup, and in what order?
 npm run build          # production build into dist/
 npm run preview        # serve the production build locally
 ```

@@ -431,9 +431,13 @@ not critical.
   schema with where each value comes from, a live preview with the
   game's models, variants in colors of their own, rename (rooms follow),
   delete. Dev server only; the room editor only picks templates.
-- **Reachability checker** (Phase 4): script that searches the grid with
-  jump height, pushable objects and available spells to flag unsolvable
-  rooms. Used by CI, the editor, and design skills/subagents.
+- **Reachability checker** (`tools/check-reach.js`, `npm run check:reach`,
+  D131): searches every room's grid with jump height, the double jump,
+  crates (pushed, pulled, pasted) and the spells found so far, and the
+  world as a fixpoint, flagging exits, pickups and rooms that stay out of
+  reach; `--rooms` lists what each exit and pickup needs. Used by CI, the
+  world map tool, and design skills/subagents. Knows nothing of enemies
+  or timing.
 - **Claude Code skills and subagents** (Phase 4+, once schemas are
   stable): room design and enemy design skills (schema, rules, annotated
   examples); room-drafting and level-review subagents. They start from the
@@ -511,8 +515,8 @@ Step plan for Phases 4 to 7: docs/design.md, Step plan (D130).
 **Phase 4 (v0.4) — Saves, guardians, tooling** (D105, re-cut D130)
 - 4a — done: access keys, title screen and pause menu, saving and
   loading, map screen.
-- 4b — the four new spells are done (D124, D125, D128, D129). Left:
-  the reachability checker (in CI), the room design skill and the
+- 4b — the four new spells (D124, D125, D128, D129) and the reachability
+  checker (D131, in CI) are done. Left: the room design skill and the
   level-review subagent, the paper design of Home Lattice (D130), and the
   Firewall Wardens (D104): settle the design (size, phases, boss bar),
   build the engine, then the two Lattice bosses. Phase 4 closes as

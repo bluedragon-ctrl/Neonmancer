@@ -23,12 +23,14 @@
 import './world-map.css';
 import { DATA_FILES, DEV_SERVER, SCHEMA_ERRORS } from '../src/data/bundle.js';
 import { sideLength, withExitDefaults } from '../src/data/room-data.js';
+import { loadGameData } from '../src/data/load.js';
 import { validateData } from '../src/data/validate.js';
 import { MapEdit } from '../src/editor/map-edit.js';
 import { DATA_SAVED_EVENT, saveFiles } from '../src/editor/save.js';
 import { BUFF_COLORS, SECRET_COLOR } from '../src/entities/pickup.js';
 import { TEST_ROOM_REACH, mapKey, mapWarnings, roomDistances } from '../src/world/map.js';
 import { pickupReport } from '../src/world/pickup-report.js';
+import { analyzeWorld } from '../src/world/reach-world.js';
 import { SAVE_BLOCKS } from '../src/world/progress.js';
 
 /** Map units per grid cell, and a room node's size in them. */
@@ -135,6 +137,23 @@ function dataErrors() {
   if (SCHEMA_ERRORS.length > 0) return SCHEMA_ERRORS;
   return validateData(edit.dataFiles());
 }
+
+/**
+ * Reachability of the data as edited (D131): problems and warnings from the
+ * checker, or none while the data is invalid (the checks above say why).
+ */
+function reachReport() {
+  if (dataErrors().length > 0) return { errors: [], warnings: [] };
+  try {
+    const { errors, warnings } = analyzeWorld(loadGameData(edit.dataFiles()), { needs: false });
+    return { errors, warnings };
+  } catch (error) {
+    return { errors: [`reachability check failed: ${error.message}`], warnings: [] };
+  }
+}
+
+/** The room a reachability message starts with ("room_id: ..."), if it is one. */
+const roomOf = (message) => message.match(/^([a-z0-9_]+):/)?.[1];
 
 /** Rooms with unsaved changes: moved, new, or with exits added or removed. */
 function unsavedRooms() {
@@ -368,6 +387,7 @@ function drawPanel() {
   if (state.tool === 'connect' && state.linkFrom) panelEl.append(html('div', 'tool-help', `From ${state.linkFrom}: click the room to connect it to (Esc cancels).`));
 
   const errors = dataErrors();
+  const rooms = edit.rooms;
   const distances = roomDistances(world.start, world.connections);
   const { unreachable, far } = mapWarnings(world, edit.rooms.keys(), authoredRooms());
 
@@ -378,7 +398,11 @@ function drawPanel() {
     list.append(roomItem(id, 'warn', `${id}: ${distance} rooms from ${world.start}; test rooms stay within ${TEST_ROOM_REACH} (D49)`));
   }
   for (const error of errors) list.append(html('li', 'error', error));
-  if (list.children.length === 0) list.append(html('li', 'fine', `All ${distances.size} rooms reachable, test rooms within ${TEST_ROOM_REACH} of the start.`));
+  const reach = reachReport();
+  const reachItem = (className, message) => (rooms.has(roomOf(message)) ? roomItem(roomOf(message), className, message) : html('li', className, message));
+  for (const error of reach.errors) list.append(reachItem('error', error));
+  for (const warning of reach.warnings) list.append(reachItem('warn', warning));
+  if (list.children.length === 0) list.append(html('li', 'fine', `All ${distances.size} rooms reachable on the map and by the wizard's abilities, test rooms within ${TEST_ROOM_REACH} of the start.`));
   panelEl.append(list);
 
   const reportButton = html('button', '', 'F3 Pickup report');
