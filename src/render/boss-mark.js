@@ -3,7 +3,8 @@
  * slowly round a boss's body, like the core's (core-view.js). A mark, not
  * a look: any enemy body gets it from its template's `boss` block, sized to
  * its height. Plate armor (D135) draws the rings in tight round it while
- * shut; open, they spread out and spin fast. A teleport squeezes the body
+ * shut; open, they spread out and spin fast. Its shell (createArmorShell())
+ * shows the armor itself. A teleport squeezes the body
  * and its rings to a line and back (teleportLook()). Showcase
  * `?asset=bosses`.
  */
@@ -96,4 +97,62 @@ export function createBossMark(height) {
   };
   group.userData.update(0);
   return group;
+}
+
+/** Plate armor's shell (D135): tuning (units, seconds). */
+export const ARMOR_SHELL = {
+  /** Width round the body and headroom over it. */
+  width: 0.82,
+  over: 0.12,
+  /** How fast it opens and shuts (per second); how far it lifts and grows open. */
+  rate: 5,
+  lift: 0.5,
+  grow: 0.35,
+  /** Line brightness, and on a glancing hit (a white flash of `flash` seconds). */
+  brightness: 1.2,
+  hit: 3,
+  flash: 0.25,
+};
+
+/**
+ * Plate armor's shell round a body `height` units high, its feet at the
+ * origin: a white dashed box, the floor plates' own look (a mechanism,
+ * D99), so the two read as one. Shut, it holds round the body and flashes
+ * when a hit glances off; open (on a plate), it lifts, grows and fades.
+ * `userData.update(dt, { shut, hit })`: `hit` seconds since a glancing
+ * hit, or null.
+ * @param {number} height
+ */
+export function createArmorShell(height) {
+  const w = ARMOR_SHELL.width / 2;
+  const h = height + ARMOR_SHELL.over;
+  const c = (i) => [i & 1 ? w : -w, i & 2 ? h : 0, i & 4 ? w : -w];
+  const pairs = [[0, 1], [2, 3], [4, 5], [6, 7], [0, 2], [1, 3], [4, 6], [5, 7], [0, 4], [1, 5], [2, 6], [3, 7]];
+  const material = lineMaterial({ color: 0xffffff, width: 2, dashed: true });
+  const lines = neonLines(pairs.map(([a, b]) => [c(a), c(b)]), material);
+  const group = new Group().add(lines);
+  const state = { open: 0 };
+  const white = new Color(0xffffff);
+  group.userData.update = (dt, { shut = true, hit = null } = {}) => {
+    const want = shut ? 0 : 1;
+    state.open += Math.sign(want - state.open) * Math.min(Math.abs(want - state.open), dt * ARMOR_SHELL.rate);
+    const { lift, grow } = armorShellLook(state.open);
+    lines.position.y = lift;
+    lines.scale.setScalar(grow);
+    const flash = hit !== null && hit < ARMOR_SHELL.flash ? 1 - hit / ARMOR_SHELL.flash : 0;
+    const level = (ARMOR_SHELL.brightness + (ARMOR_SHELL.hit - ARMOR_SHELL.brightness) * flash) * (1 - state.open);
+    material.color.copy(white).multiplyScalar(level);
+    group.visible = state.open < 0.99;
+  };
+  group.userData.update(0);
+  return group;
+}
+
+/**
+ * How far open plate armor's shell is drawn at `open` (0 shut, 1 open;
+ * pure): how high it has lifted, how much it has grown.
+ * @param {number} open
+ */
+export function armorShellLook(open) {
+  return { lift: ARMOR_SHELL.lift * open, grow: 1 + ARMOR_SHELL.grow * open };
 }

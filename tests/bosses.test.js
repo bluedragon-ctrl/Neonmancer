@@ -6,7 +6,7 @@ import { validateData } from '../src/data/validate.js';
 import { BOSS, ENEMY } from '../src/entities/enemy.js';
 import { PICKUP } from '../src/entities/pickup.js';
 import { Game } from '../src/game.js';
-import { BOSS_MARK, bodyScale, bossMarkSize, teleportLook } from '../src/render/boss-mark.js';
+import { ARMOR_SHELL, BOSS_MARK, armorShellLook, bodyScale, bossMarkSize, teleportLook } from '../src/render/boss-mark.js';
 import { dropHeight } from '../src/render/pickup-view.js';
 import { BOSS_BAR_LINGER, bossBarState } from '../src/ui/boss-bar.js';
 import { buildRoom } from '../src/world/room.js';
@@ -268,6 +268,11 @@ test('a tall boss stands two cubes high, its eyes and mark as far up', () => {
   assert.ok(bossMarkSize(1.6).radius > bossMarkSize(0.6).radius);
   assert.equal(bodyScale(0.6), 1);
   assert.equal(bodyScale(1.6), BOSS_MARK.maxScale, 'kept within its cell');
+});
+
+test('plate armor shows as a shell round the boss: it holds shut, and lifts and grows away as it opens', () => {
+  assert.deepEqual(armorShellLook(0), { lift: 0, grow: 1 });
+  assert.deepEqual(armorShellLook(1), { lift: ARMOR_SHELL.lift, grow: 1 + ARMOR_SHELL.grow });
 });
 
 // ---- the drop and the defeated bit (D104)

@@ -1253,7 +1253,12 @@ Built in step 4.5, from D104 and D134.
 - **Look:** a taller body draws its model bigger (at most 1.6 times, so
   it keeps within its cell); `render/boss-mark.js` puts the three gold
   rings round any boss, drawn in while plate armor is shut, spread and
-  spinning when it opens. A teleport squeezes body and rings.
+  spinning when it opens. Plate armor shows as a shell round the body:
+  a white dashed box, the plates' own look (a mechanism, D99), that
+  flashes when a hit glances off and lifts away when the boss steps on
+  a plate (from review: the vulnerable moment must be plain to see; the
+  plates themselves stay as they are). A teleport squeezes body and
+  rings.
 - **Test arenas:** `boss_arena` (a prototype of boss 1, `proto_warden`)
   and `boss_plates` (of boss 2, `proto_gatekeeper`), test rooms off
   Build Yard (D90); 4.6 and 4.7 turn the prototypes into the bosses.
