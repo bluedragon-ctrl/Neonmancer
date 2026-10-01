@@ -2016,7 +2016,7 @@ author, recorded as decisions before the code lands. Every step also
 The phases were re-cut around a playtest of Home Lattice. The rules of
 "Finished phases" apply to every step: one branch, one PR against `main`,
 CI green, showcase, test room, unit tests, docs. Code steps name their
-branch; design steps end in decisions before any code. **Next step: 4.8.**
+branch; design steps end in decisions before any code. **Next: Phase 5 (5.1).**
 
 ### Phase 4 (v0.4) steps: tools and bosses
 
@@ -2033,7 +2033,7 @@ checker (D131); 4.2 the design skills and the level-review subagent (D132).
 | 4.5 (done, D135) | `feat/warden-engine` | One-cell bodies (D134) up to two cubes high, phases and attack patterns as data in `defs.json`, the boss bar on the HUD, the drop and the "defeated" bit (D104), a test arena. |
 | 4.6 (done, D136) | `feat/boss-one` | The first boss: the arena and fight, dropping a fragment. |
 | 4.7 (done, D137) | `feat/boss-two` | The second boss, harder, dropping an upgrade (which one is settled in 4.4). |
-| 4.8 | `chore/release-0.4.0` | Docs pass, CHANGELOG, tag `v0.4.0` and GitHub Release (CLAUDE.md section 10). |
+| 4.8 (done) | `chore/release-0.4.0` | Docs pass, CHANGELOG, tag `v0.4.0` and GitHub Release (CLAUDE.md section 10). |
 
 Bosses are built in test arenas (D90) and placed in the Lattice in
 Phase 5.

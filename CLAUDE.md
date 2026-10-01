@@ -514,20 +514,18 @@ not critical.
 ## 11. Phases
 
 Done: Phase 1 (v0.1.0, foundations), Phase 2 (v0.2.0, hazards, combat,
-editor), Phase 3 (v0.3.0, spells and pickups); see CHANGELOG.md.
+editor), Phase 3 (v0.3.0, spells and pickups), Phase 4 (v0.4.0, saves,
+guardians, tooling); see CHANGELOG.md.
 
 Step plan for Phases 4 to 7: docs/design.md, Step plan (D130).
 
-**Phase 4 (v0.4) — Saves, guardians, tooling** (D105, re-cut D130)
-- 4a — done: access keys, title screen and pause menu, saving and
-  loading, map screen.
-- 4b — the four new spells (D124, D125, D128, D129) and the reachability
-  checker (D131, in CI) are done. Left: the room design skill and the
-  level-review subagent, the paper design of Home Lattice (D130), and the
-  Firewall Wardens (D104, design settled D134: one-cell bodies up to
-  two cubes high, a boss bar; engine built D135): the two Lattice bosses. Phase 4 closes as
-  v0.4.0 after the bosses. Biome rosters and the secrets ladder move to
-  Phase 6.
+**Phase 4 (v0.4) — Saves, guardians, tooling** (D105, re-cut D130) —
+done, v0.4.0: access keys, title and pause menu, saving, the map screen;
+the spells Pull, Compile, Scan and Fork; the reachability checker, design
+skills and level-review subagent; the paper design of Home Lattice
+(docs/lattice-plan.md); the boss engine and the two bosses, Null Pointer
+and the Gatekeeper (D134–D137). Biome rosters and the secrets ladder move
+to Phase 6.
 
 **Phase 5 (v0.5) — Home Lattice playtest** (D130): finish one good,
 sounding Home Lattice and ship it to testers.

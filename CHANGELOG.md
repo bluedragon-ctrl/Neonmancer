@@ -8,6 +8,11 @@ docs/decisions.md).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-01
+
+Phase 4: saves, map, four new spells, the reachability checker, design
+skills, the boss engine and the two Lattice bosses (D104–D137).
+
 Phase 4 splits into 4a (saves and UI) and 4b (spells, Firewall Wardens as
 bosses that drop loot, tooling) (D104, D105).
 
@@ -381,7 +386,8 @@ Phase 1 — Foundations.
   rooms, allocation-free ticks (about 1.7× faster logic), render builders
   and validation split into focused parts; Phase 2 groundwork (D40, D41).
 
-[Unreleased]: https://github.com/bluedragon-ctrl/Neonmancer/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/bluedragon-ctrl/Neonmancer/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/bluedragon-ctrl/Neonmancer/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/bluedragon-ctrl/Neonmancer/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/bluedragon-ctrl/Neonmancer/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/bluedragon-ctrl/Neonmancer/releases/tag/v0.1.0
