@@ -31,6 +31,7 @@ import { downloadFile, saveFiles } from './save.js';
 import { newText, pickedScreen, setScreenText, textUsers, updateText } from './texts.js';
 import { WorldEdit, linkChoices } from './world-edit.js';
 import { pickupBit } from '../world/progress.js';
+import { SWITCH_KINDS } from '../entities/switch.js';
 
 /** Tools a mouse drag paints with; the others act on the cell clicked only. */
 const PAINT_TOOLS = new Set(['block', 'hole', 'object']);
@@ -86,7 +87,12 @@ export class Editor {
     /** Pickup types (D71): placed with the Object tool too, into the room's pickups. */
     this.pickupTypes = game.content.pickupTypes;
     this.objectTypes = { ...game.content.objectTypes, ...this.pickupTypes };
-    this.objectType = Object.keys(this.objectTypes)[0];
+    /** Switch types (targets, plates, D140): only the Switch tool places them. */
+    this.switchTypes = Object.fromEntries(Object.entries(this.objectTypes).filter(([, type]) => SWITCH_KINDS.includes(type.kind)));
+    this.switchType = Object.keys(this.switchTypes)[0];
+    /** What the Object tool places: every object and pickup type but the switches. */
+    const placeable = Object.fromEntries(Object.entries(this.objectTypes).filter(([id]) => !this.switchTypes[id]));
+    this.objectType = Object.keys(placeable)[0];
     this.enemyTemplates = game.content.enemyTemplates;
     /** Template of new enemies (an enemy is all its template, D119). */
     this.enemyTemplate = Object.keys(this.enemyTemplates)[0];
@@ -120,7 +126,8 @@ export class Editor {
     renderer.scene.add(this.overlay.group);
     this.panel = new EditorPanel(renderer.stage, {
       blockTypes: this.blockTypes,
-      objectTypes: this.objectTypes,
+      objectTypes: placeable,
+      switchTypes: this.switchTypes,
       enemyTemplates: this.enemyTemplates,
       biomes: game.content.biomes,
       canSave,
@@ -134,6 +141,10 @@ export class Editor {
         },
         objectType: (id) => {
           this.objectType = id;
+          this.refresh();
+        },
+        switchType: (id) => {
+          this.switchType = id;
           this.refresh();
         },
         enemyTemplate: (id) => this.setEnemyTemplate(id),
@@ -607,6 +618,7 @@ export class Editor {
       blockType: this.blockType,
       blockSwitches: switchGate(this.blockTypes[this.blockType]) ? this.blockSwitches : null,
       objectType: this.objectType,
+      switchType: this.switchType,
       links: this.linksState(),
       switchInfo: this.switchState(),
       enemy: {
@@ -817,16 +829,22 @@ export class Editor {
   }
 
   /**
-   * Switch tool (D140, D141): pick a switch, then link it to (or unlink it
-   * from) the switch gates, platforms and exits clicked; right click drops it.
+   * Switch tool (D140, D141): the only tool that places switches. Click a
+   * free cell to place one of the chosen type (picked at once), or a switch
+   * to pick it; then link it to (or unlink it from) the switch gates,
+   * platforms and exits clicked. Right click erases a switch, elsewhere
+   * drops the pick.
    * @param {number[]} cell
    * @param {boolean} place left button
    */
   useSwitch(cell, place) {
-    if (!place) return this.select(null);
     const { edit } = this;
     const all = roomSwitches(this.linkData, this.objectTypes).map((object) => object.id);
     const here = edit.at(cell);
+    if (!place) {
+      if (here?.kind === 'object' && all.includes(here.item.id)) return this.change(() => edit.erase(cell));
+      return this.select(null);
+    }
     const picked = this.switchState()?.id;
     const done = (what, list, empty) => {
       this.status = list.includes(picked) ? `${picked} now powers ${what}.` : `${picked} no longer powers ${what}${list.length === 0 ? `: ${empty}` : ''}.`;
@@ -837,8 +855,18 @@ export class Editor {
       this.status = `${here.item.id} picked.`;
       return this.refresh();
     }
+    const side = this.exitSide(cell);
+    const exit = side && edit.exitAt(side, cell);
+    if (!here && !exit) {
+      this.change(() => edit.placeObject(cell, this.switchType));
+      const placed = edit.at(cell);
+      if (placed?.kind !== 'object') return;
+      this.select({ kind: 'item', id: placed.item.id });
+      this.status = `${placed.item.id} placed and picked: click gates, platforms and exits to link it.`;
+      return this.refresh();
+    }
     if (!picked) {
-      this.status = 'Pick a switch first (a target or a plate).';
+      this.status = 'Pick a switch first (a target or a plate), or click a free cell to place one.';
       return this.refresh();
     }
     if (here?.kind === 'block' && isSwitchGate(this.blockTypes[here.type])) {
@@ -851,8 +879,6 @@ export class Editor {
       this.change(() => !!(list = edit.togglePlatformLink(here.item.id, picked)));
       return done(here.item.id, list, 'it always runs');
     }
-    const side = this.exitSide(cell);
-    const exit = side && edit.exitAt(side, cell);
     if (exit) {
       let list;
       this.change(() => !!(list = edit.toggleExitLink(exit.id, picked)));

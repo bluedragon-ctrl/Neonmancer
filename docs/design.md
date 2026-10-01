@@ -1887,7 +1887,8 @@ list switches to another room; New room makes an empty one (D57).
 - **Hole** works on floor tiles, whatever the layer: place makes a hole,
   erase fills it in.
 - **Object** places the type picked in the panel (its fields show only
-  while this tool is picked), with the id `<type>_<n>`. Placing on an
+  while this tool is picked; switches are not in its list, the Switch
+  tool places them), with the id `<type>_<n>`. Placing on an
   object of the same type leaves it as it is (a platform keeps its path),
   except a decoration, which turns to face the other seen side (D117). A new platform is picked, ready for its path.
   A click on a switch or a platform picks it instead of replacing it
@@ -1915,7 +1916,10 @@ list switches to another room; New room makes an empty one (D57).
   (platforms only: an enemy walks at its template's) and the pause at the
   ends, or clears the path. Every path shows as a dashed line; the
   picked one is white, with its points marked.
-- **Switch** (D142) links switches to what they power. A click on a
+- **Switch** (D142) places switches and links them to what they power.
+  Its panel lists the switch types (targets, plates, timed ones); a click
+  on a free cell places one of the type picked there and picks it, a
+  right click on a switch erases it. A click on a
   target or plate picks it (the panel says what it powers; a timed one's
   timer can be changed); then a click on a switch gate, a platform or an
   exit links it to the picked switch, or unlinks it if it was linked. A
@@ -1924,7 +1928,8 @@ list switches to another room; New room makes an empty one (D57).
   is linked to just the picked switch by the first click; an exit linked
   to its first switch becomes locked, one with its last switch unlinked
   is no longer locked; a gate with its last unlinked is on every switch
-  again; a platform with none always runs. Right click drops the switch.
+  again; a platform with none always runs. Right click elsewhere drops
+  the switch.
   Deleting a switch unlinks it the same way from everything it powered.
   A gate's switch ids are kept sorted, so the same switches in any order
   merge into one box.

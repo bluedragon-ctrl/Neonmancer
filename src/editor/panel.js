@@ -53,7 +53,7 @@ const HELP = [
   'Left click: place / pick · Right click: erase',
   `Wheel or PgUp/PgDn: layer · ${TOOLS.map((tool) => tool.key).join(' ')}: tool`,
   'Esc: drop the selection · Del: remove it',
-  'Switch tool: pick a switch, click gates, platforms, exits to link · Alt+click (Block tool): copy a block',
+  'Switch tool: place or pick a switch, click gates, platforms, exits to link · Alt+click (Block tool): copy a block',
   'Hover a switch, gate or locked exit: its links light up',
   'Ctrl+Z / Ctrl+Y: undo / redo · Ctrl+S: save',
   'F2: play the room · F3: debug',
@@ -65,8 +65,8 @@ const HINTS = {
   path: ['Click a platform or an enemy to pick it.', (id) => `Path of ${id}: click cells to add points, right click takes the last one off.`],
   exit: ['Click an edge cell to open an exit there, or an exit to pick it.', (id) => `Editing exit ${id}.`],
   switch: [
-    'Click a target or plate to pick it.',
-    (id) => `${id} picked: click gates, platforms and exits to link or unlink them; right click drops it.`,
+    'Click a free cell to place a switch of this type, or a switch to pick it; right click erases one.',
+    (id) => `${id} picked: click gates, platforms and exits to link or unlink them; right click elsewhere drops it.`,
   ],
 };
 
@@ -155,17 +155,18 @@ export class EditorPanel {
    * @param {HTMLElement} root the stage (the panel scales with --u)
    * @param {object} options
    * @param {Record<string, { look?: string, kind?: string }>} options.blockTypes block types the Block tool places (resolved, D60)
-   * @param {Record<string, { kind: string, color: string }>} options.objectTypes object types that can be placed
+   * @param {Record<string, { kind: string, color: string }>} options.objectTypes object types the Object tool places
+   * @param {Record<string, { kind: string, timer?: number }>} options.switchTypes switch types (targets, plates) the Switch tool places
    * @param {Record<string, object>} options.enemyTemplates enemy templates (defs.json, filled in)
    * @param {Record<string, { name: string }>} options.biomes
    * @param {boolean} options.canSave the dev server can save; a build only exports
-   * @param {Record<string, Function>} options.on callbacks: room(id), newRoom(id), tool(id), blockType(id), objectType(id),
+   * @param {Record<string, Function>} options.on callbacks: room(id), newRoom(id), tool(id), blockType(id), objectType(id), switchType(id),
    *   enemyTemplate(id),
    *   screenText(id|null), newText(id, text), updateText(text),
    *   path(field, value), clearPath(), exit(field, value), layer(step), cut(on), discard(), error(text), name(text),
    *   authored(on), biome(id), size([x, y, z]), undo(), redo(), save(), revert()
    */
-  constructor(root, { blockTypes, objectTypes, enemyTemplates, biomes, canSave, on }) {
+  constructor(root, { blockTypes, objectTypes, switchTypes, enemyTemplates, biomes, canSave, on }) {
     this.canSave = canSave;
     this.on = on;
     this.hints = {};
@@ -190,7 +191,7 @@ export class EditorPanel {
       this.layerRow(),
       this.hoverLine,
       this.toolRow(),
-      ...this.typeGroups(blockTypes, objectTypes),
+      ...this.typeGroups(blockTypes, objectTypes, switchTypes),
       this.enemyGroup(enemyTemplates),
       this.pathGroup(),
       this.exitGroup(),
@@ -280,7 +281,7 @@ export class EditorPanel {
   }
 
   /** Fields of the Block and Object tools, shown only while picked. */
-  typeGroups(blockTypes, objectTypes) {
+  typeGroups(blockTypes, objectTypes, switchTypes) {
     const { on } = this;
     this.blockSelect = select(Object.entries(blockTypes).map(([id, type]) => [id, `${id} (${blockTypeText(type)})`]));
     this.blockSelect.addEventListener('change', () => on.blockType(this.blockSelect.value));
@@ -299,22 +300,27 @@ export class EditorPanel {
     this.objectSwitches.addEventListener('change', () => on.itemSwitches(switchIds(this.objectSwitches.value)));
     this.objectSwitchesRow = this.row('Switches', this.objectSwitches);
     this.objectRows.append(this.row('Object', this.objectSelect), this.objectSwitchesRow, this.textGroup());
-    return [this.blockRows, this.objectRows, this.switchGroup()];
+    return [this.blockRows, this.objectRows, this.switchGroup(switchTypes)];
   }
 
   /**
-   * Fields of the Switch tool (D140), also shown for a switch the Object
-   * tool picked: what the picked switch powers, and a timed one's time.
+   * Fields of the Switch tool (D140): the type of new switches (only this
+   * tool places them), and what the picked switch powers and a timed one's
+   * time, shown too for a switch the Object tool picked.
    */
-  switchGroup() {
+  switchGroup(switchTypes) {
     const { on } = this;
     this.switchRows = this.group('switch');
+    const timed = (type) => (type.timer ? `, ${type.timer} s` : '');
+    this.switchSelect = select(Object.entries(switchTypes).map(([id, type]) => [id, `${id} (${type.kind}${timed(type)})`]));
+    this.switchSelect.addEventListener('change', () => on.switchType(this.switchSelect.value));
+    this.switchTypeRow = this.row('Type', this.switchSelect);
     this.switchPowers = el('div', 'editor-hint');
     this.switchTimer = numberInput({ min: 0.5, step: 0.5 });
     this.switchTimer.title = "Seconds it stays on (D140); blank: its type's";
     this.switchTimer.addEventListener('change', () => on.switchTimer(numberValue(this.switchTimer) ?? null));
     this.switchTimerRow = this.row('Timer (s)', this.switchTimer);
-    this.switchRows.append(this.switchPowers, this.switchTimerRow);
+    this.switchRows.append(this.switchTypeRow, this.switchPowers, this.switchTimerRow);
     return this.switchRows;
   }
 
@@ -515,6 +521,7 @@ export class EditorPanel {
    * @param {string} state.blockType the Block tool's type
    * @param {string[]|null} [state.blockSwitches] the switches of the switch gates it places (D141), or null: not a switch gate
    * @param {string} state.objectType
+   * @param {string} state.switchType type of the switches the Switch tool places
    * @param {{ kind: string, switches: string[] }|null} [state.links] the picked platform and its switches (D140), or null
    * @param {{ id: string, powers: string[], timer: number|null, typeTimer: number|null }|null} [state.switchInfo]
    *   the picked switch (D140): what it powers, its time and its type's (null: not timed), or null
@@ -533,7 +540,7 @@ export class EditorPanel {
    * @param {string} state.status a line about the last action
    * @param {boolean} state.unsaved there are unsaved edits (any room, or world.json)
    */
-  show({ edit, rooms, tool, blockType, blockSwitches = null, objectType, links = null, switchInfo = null, enemy, pathItem, pathItemIsEnemy, screen, exit, layer, cut, errors, status, unsaved }) {
+  show({ edit, rooms, tool, blockType, blockSwitches = null, objectType, switchType, links = null, switchInfo = null, enemy, pathItem, pathItemIsEnemy, screen, exit, layer, cut, errors, status, unsaved }) {
     const data = edit.data;
     const changed = edit.dirty || edit.linksChanged;
     this.roomLabel.textContent = `${data.id}${changed ? ' • unsaved' : unsaved ? ' • other rooms unsaved' : ''}`;
@@ -557,6 +564,8 @@ export class EditorPanel {
     }
     this.switchRows.hidden = !(tool === 'switch' || (tool === 'object' && switchInfo));
     this.hints.switch.hidden = tool !== 'switch';
+    this.switchTypeRow.hidden = tool !== 'switch';
+    this.switchSelect.value = switchType;
     this.switchPowers.hidden = !switchInfo;
     this.switchTimerRow.hidden = !switchInfo || switchInfo.typeTimer === null;
     if (switchInfo) {

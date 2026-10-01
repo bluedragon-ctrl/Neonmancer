@@ -40,6 +40,10 @@ docs/decisions.md).
   could unlock a locked exit); deleting a switch takes it out of every
   link; a gate's switch ids are sorted, so the same switches in another
   order merge into one box.
+- Room editor: switches (targets, plates, timed ones) are placed only
+  with the Switch tool, from its own type list: a click on a free cell
+  places one and picks it, a right click erases one. The Object tool's
+  list no longer has them (it still picks a placed switch).
 - Room design checklist and the level-review subagent: check the race
   of a timed switch by hand (the reachability checker ignores timing).
 - Switch gates are white glass boxes, and a switched-off one is not
