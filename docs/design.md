@@ -1492,10 +1492,13 @@ before D140 work as they did). Switch types in `defs.json` are placed in
 - **Look** (D75, after two showcase rounds): white (`#eef3ff`, the
   type's `color`). Both switches carry a square bull's-eye, a small square
   inside a bigger one, so they read as switches by shape, not only by
-  color. Off, its lines are dim; on, they brighten and the inner square
-  fills with light. A target has the bull's-eye on every face and a
-  plain crate's outline; a hit flashes and jolts it. A plate has a dashed
-  tile outline; pressed, the outline turns solid, brackets light up just
+  color. Both are white frosted glass like the switch gates (D143,
+  `GLASS.gate`): off, the glass is dark and the lines dim; on, the glass
+  glows bright, the lines brighten and the inner square fills with light
+  (`SWITCH_FX` `glassOff`, `glassOn`, `bodyOff`). A target is a glass
+  block with the bull's-eye on its seen faces (top, +x, +z; the glass
+  would show hidden ones through); a hit flashes and jolts it. A plate
+  is a thin glass tile with a dashed outline; pressed, the outline turns solid, brackets light up just
   outside its corners and a glow spills onto the floor round it, so it
   shows round a crate standing on it. A locked exit is a dark panel
   that sinks into the threshold, on back doorways and front exits alike

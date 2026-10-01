@@ -44,6 +44,9 @@ docs/decisions.md).
   of a timed switch by hand (the reachability checker ignores timing).
 - Switch gates are white glass boxes, and a switched-off one is not
   shown in play, only in the room editor (D142).
+- Targets and plates are white frosted glass like the gates (D143):
+  dark glass while off, bright while on; a target's bull's-eye only on
+  its seen faces, a plate a thin glass tile.
 - Gate blocks (D141): collapsing blocks and the new gates are one block
   kind, `gate`, with a `trigger`: `switch` (gates, bridges) or `step`
   (collapsing blocks, `regrow` as before). Gates are block types placed

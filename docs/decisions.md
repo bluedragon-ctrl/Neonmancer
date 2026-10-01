@@ -1378,3 +1378,15 @@ in play.
 **Why:** the author asked for a tool for working with switches, for
 gates to read as white glass, and for gates that are off to stay
 invisible in play.
+
+### D143 — 2026-10-01 — Switches are white glass
+Targets and plates are built with `glassBox()` and `GLASS.gate`, like
+the switch gates: a target is a glass block, a plate a thin glass tile
+flush with the floor. Off, the glass is dark (tint 0.06) and the lines
+dim; on, it glows bright (tint 0.7). A target's bull's-eye is drawn only
+on the faces the camera sees (top, +x, +z), since glass shows the
+hidden faces through. Lock panels stay dark: they are no switches.
+**Why:** the author asked for every switch to be white glass, so what
+switches and what is switched share one material (white is a mechanism,
+D99); a first version with the gates' brightness made on and off too
+alike, so off is darker.
