@@ -521,8 +521,8 @@ Step plan for Phases 4 to 7: docs/design.md, Step plan (D130).
 - 4b — the four new spells (D124, D125, D128, D129) and the reachability
   checker (D131, in CI) are done. Left: the room design skill and the
   level-review subagent, the paper design of Home Lattice (D130), and the
-  Firewall Wardens (D104): settle the design (size, phases, boss bar),
-  build the engine, then the two Lattice bosses. Phase 4 closes as
+  Firewall Wardens (D104, design settled D134: one-cell bodies, a visor
+  to hit, a boss bar): build the engine, then the two Lattice bosses. Phase 4 closes as
   v0.4.0 after the bosses. Biome rosters and the secrets ladder move to
   Phase 6.
 

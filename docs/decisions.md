@@ -1175,3 +1175,44 @@ the author's room review and design.
 **Why:** a hub with cross-linked wings gives branching and backtracking
 instead of a line, keeps the first playtest to five simple spells, and
 lets the drafting steps (5.5 to 5.9) start from an agreed list.
+
+### D134 — 2026-10-01 — Bosses: one cell, a boss bar, one pattern each
+Step 4.4 settles the two Lattice bosses with the author.
+- **Body:** one cell on the floor, one or two cubes high; no multi-cell
+  bodies, no multi-cell claims, so pathfinding and collision stay as they
+  are. Boss 1 has the bug body, ringed by three gold circles like the
+  core's; boss 2 is a bigger virus two cubes high (it cannot be jumped,
+  only gone round). Snake-like segmented bosses are an idea for later.
+  The Warden knight look (D107) stays for ordinary combat rooms.
+- **Boss mark:** three gold rings round a body is how a boss is told
+  apart. It is a mark, not a look: any template gets it from a `boss`
+  block (its look stays as it is, so later bosses reuse a normal body, a
+  virus, a worm, a wyrm, in its own color), and one small render helper
+  (`render/boss-mark.js`, sized to the body's height) draws it for every
+  boss, the showcase included. Boss 2 carries it too.
+- **Damage:** the HUD shows a boss bar while a boss is awake. Pause never
+  freezes a boss (`pausable` false). Boss 1 can always be hit but has
+  high integrity; no visor. Boss 2 is armored (below).
+- **Boss 1 (drops fragment 7):** shoots aimed bolts at the wizard and
+  from time to time teleports to another cell of its arena, which forces
+  him to take cover and retarget. The arena has blocks that stop bolts
+  (cover) and no shrine (D104). It shoots faster and teleports more
+  often as its integrity drops.
+- **Boss 2, the Gatekeeper (drops the +10 energy buff, D133):** it walks
+  straight at the wizard's position (or a Fork decoy's, D129); next to
+  him it winds up a charged, strong surround attack (a burst all round),
+  with a long windup he can step out of. It is immune to every spell
+  except while it stands on an overload plate of its arena (a held floor
+  plate, D75), where its armor opens; he leads it over a plate by
+  walking, and a decoy beside a plate holds it there. Because it chases
+  him, no pulling or special luring is needed. Later phases wind up
+  faster. It needs no Fork, so reaching the Gatekeeper through the Scan
+  wing first is not a dead end.
+- **Engine (4.5):** a `boss` block in a template: the bar, phases by
+  integrity thresholds with an attack pattern each (bolt, teleport,
+  chase, charged burst), a "vulnerable only on a plate" mode; `size`
+  height for a taller hitbox. Nothing else about the grid changes.
+**Why:** one-cell bodies keep the grid claims, enemy pathing and the
+reachability checker as they are, and let two different boss ideas (cover
+and retargeting; luring) carry the fights, one per boss, rather than one
+big engine step. A visor and a bar make the fight readable.
