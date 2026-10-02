@@ -308,6 +308,23 @@ export class Enemy {
     return true;
   }
 
+  /** Can the wizard push it: a frozen one, as a block (a boss never freezes, D135)? */
+  get pushable() {
+    return this.alive && this.frozen !== null && !this.boss;
+  }
+
+  /**
+   * The wizard pushes a frozen enemy a cell along `dir`, like a crate but
+   * slid the way Pull drags it (pull()): over anything, so a hole or a lethal
+   * floor there is its end. It stays frozen on the way.
+   * @param {number[]} dir [dx, dz]
+   * @param {import('../game.js').Game} game
+   * @returns {boolean} whether it moves
+   */
+  push(dir, game) {
+    return this.pushable && !this.pulled && this.pull(dir, game);
+  }
+
   /** Slide from where it is to the cell `target`, at the pull's speed. */
   pullTo(target) {
     this.state = 'walk';

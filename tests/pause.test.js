@@ -118,8 +118,11 @@ test('an enemy frozen round the wizard lets him out, then turns solid for him', 
   assert.ok(game.player.pos[0] > 4.2, `walked out: ${game.player.pos}`);
   assert.equal(bug.passable, false);
   assert.ok(game.solids.includes(bug));
-  run(game, 30, hold('up'));
-  assert.ok(game.player.pos[0] >= 3 + 0.8 + 0.3 - 1e-6, `blocked on the way back: ${game.player.pos}`);
+  // Walking back into it, he pushes it a cell (frozen enemies can be pushed).
+  run(game, 90, hold('up'));
+  assert.ok(bug.pos[0] < 3, 'pushed along, cell by cell');
+  assert.ok(game.solids.includes(bug), 'still solid for him');
+  assert.ok(bug.frozen);
 });
 
 test('a frozen enemy still takes hits: Zap pops it', () => {

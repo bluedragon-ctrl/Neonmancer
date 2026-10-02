@@ -534,7 +534,10 @@ export class Game {
 
     // (Not an object he has just cut away.)
     const intent = player.pushIntent;
-    if (intent && this.objects.includes(intent.body) && intent.body.push(intent.dir, this)) this.emit('push', { object: intent.body });
+    // A frozen enemy can be pushed too.
+    if (intent && (this.objects.includes(intent.body) || this.liveEnemies.includes(intent.body)) && intent.body.push(intent.dir, this)) {
+      this.emit('push', intent.body instanceof Enemy ? { enemy: intent.body } : { object: intent.body });
+    }
 
     // Lower objects first, so a stack settles in one tick.
     this.updateOrder.sort((a, b) => a.pos[1] - b.pos[1]);

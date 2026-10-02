@@ -1550,3 +1550,15 @@ nothing and a permanent chip; refills only restore, boosts give a short taste
 of power or a bit of fun. Limiting functional ones to the room keeps them from
 trivialising later rooms, and cosmetic ones outlast deaths so they stay fun
 until a real setback.
+
+### D154 — 2026-10-02 — Frozen enemies can be pushed
+
+Walking into a frozen enemy pushes it one cell, again and again while he
+keeps walking, the way it moves when Pull drags it (`Enemy.pull()`): over
+anything, so a hole or a lethal floor there is its end and it pops. It stays
+frozen on the way. Only the top of a stack moves (nothing is checked on top
+of an enemy yet), a boss never freezes, so none is pushed. Not frozen: still
+solid (D51) or not, never pushed.
+**Why:** a frozen enemy is already a platform (D85) and can be cut and pulled;
+pushing completes it as a block that blocks, carries and moves, for puzzles
+(a frozen bug as a bridge stone, or into a pit to get rid of it).

@@ -577,7 +577,8 @@ export class Player {
    * @param {number[]} [dir] [dx, dz] walking direction
    */
   trackPush(hit, dir) {
-    const body = hit && typeof hit === 'object' && hit.push ? hit : null;
+    // (An enemy is pushable only while frozen.)
+    const body = hit && typeof hit === 'object' && hit.push && hit.pushable !== false ? hit : null;
     if (!body || !this.grounded || !this.linedUp(body, dir)) {
       this.pushTarget = null;
       this.pushTicks = 0;

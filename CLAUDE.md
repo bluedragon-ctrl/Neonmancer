@@ -137,7 +137,8 @@ mobile/touch support, backend or accounts.
   be pushed (only the top of a stack moves).
 - No basic carry action: the wizard can only push objects until he
   unlocks the Cut & Paste spell.
-- Frozen enemies can be stood on. Active enemies can't, except bouncy ones
+- Frozen enemies can be stood on and pushed one cell at a time (D154).
+  Active enemies can't, except bouncy ones
   (landing on top bounces the wizard up 2 blocks, harmlessly, D48) and
   solid ones, which block, carry and shove him like platforms (D51).
 
@@ -188,7 +189,7 @@ bit on its disk (D71).
 - **Firewall** — a ring of flames like the Shield that also blocks touch
   and burns enemies touching it (D84)
 - **Pause** — a bolt that freezes an enemy for a while; frozen enemies
-  are harmless solid platforms, still hittable (D85)
+  are harmless solid platforms, still hittable (D85), and can be pushed
 - **Blink** — a super-speed dash up to 3 units forward through open
   space, over gaps and hazards; it hits enemies it passes through, and
   hurts the wizard if a wall cuts it short (D86)
