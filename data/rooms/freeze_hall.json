@@ -1,0 +1,15 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "freeze_hall",
+  "name": "Freeze Hall",
+  "biome": "home_lattice",
+  "size": [12, 4, 12],
+  "spawn": [4.5, 0, 1.5],
+  "exits": [{ "id": "north", "side": "-z", "at": 4 }],
+  "objects": [
+    { "id": "screen_pause", "type": "screen", "at": [1, 0, 3], "text": "tut_pause", "overrides": { "face": "+x" } }
+  ],
+  "enemies": [{ "id": "patrol", "template": "bug", "at": [1, 0, 6], "path": { "points": [[10, 0, 6]], "pause": 0.6 } }],
+  "pickups": [{ "id": "disk_pause", "type": "disk_pause", "at": [9, 0, 10] }]
+}

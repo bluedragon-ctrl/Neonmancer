@@ -44,7 +44,9 @@
     ["boot_up.east", "first_steps.west"],
     ["first_steps.east", "zap_port.west"],
     ["zap_port.north", "first_light.south"],
-    ["zap_port.east", "atrium.west"]
+    ["zap_port.east", "atrium.west"],
+    ["atrium.north", "shield_hall.south"],
+    ["atrium.south", "freeze_hall.north"]
   ],
   "positions": {
     "boot_sector": [-1, -1],
@@ -69,6 +71,8 @@
     "first_steps": [6, 0],
     "zap_port": [7, 0],
     "first_light": [7, -1],
-    "atrium": [8, 0]
+    "atrium": [8, 0],
+    "shield_hall": [8, -1],
+    "freeze_hall": [8, 1]
   }
 }

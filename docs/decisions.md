@@ -1496,3 +1496,16 @@ the game is called NEONMANCER. A small step ahead of Phase 5's bigger visual
 pass; the rule of D99 stays (the pushable color is its own), only the color
 moves. Lime stays for the energy bar and buffs, and both are kept clear of
 by new template colors (`AVOID_COLORS`). The tutorial's crate screen says so.
+
+### D151 — 2026-10-02 — The Atrium hub and its two disk halls (5.6a)
+
+The Atrium gets its north and south doors and a backup shrine, plus a
+second screen naming the wings. North leads to `shield_hall` (the Shield
+disk behind a cover wall, a sentinel guarding it), south to `freeze_hall`
+(the Pause disk across a bug's patrol). Both halls are dead ends until the
+wings follow (5.6b, 5.6c); every exit is connected. New screen texts
+`tut_wings`, `tut_shield`, `tut_pause`. Rooms are unflagged; the author
+refines them and may flag the Atrium authored (D90).
+**Why:** the hub must have all its exits before the author takes it over,
+and each disk hall teaches its spell (hide from a ranged attack, freeze a
+patroller) before the wing that needs it.

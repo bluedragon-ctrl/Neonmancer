@@ -9,6 +9,8 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
+- The Atrium hub (5.6a, D151): north and south doors, a backup shrine, and
+  the two disk halls `shield_hall` (Shield) and `freeze_hall` (Pause).
 - The Lattice tutorial (5.5, D148): the new start `boot_up`, `first_steps`,
   `zap_port`, `first_light` and a small `atrium`, with hint screens; the
   old test start joins the dev wing.
