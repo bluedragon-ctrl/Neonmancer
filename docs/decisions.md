@@ -1569,3 +1569,18 @@ recompile at the room entrance too), not only at a crash, and with a reload.
 The trail's pixels are all the wizard's magenta (D98) and half the size.
 **Why:** a cosmetic that outlasts every death made the reward too cheap to
 lose; magenta and small keep the trail a tidy accent, not glitter.
+
+### D155 — 2026-10-02 — A frozen enemy is a whole cell
+
+While frozen, an enemy's collision box is the whole cell, at least a block
+high (1×1×1; a taller template keeps its height), instead of its small body
+(0.6). It is a block to stand on and climb from like a crate: a frozen bug
+pushed against a two-block wall lifts the wizard to 1.0, and his jump clears
+the wall (1.0 + 1.2 > 2.0). It also blocks more of the way, and bolts hit the
+larger box. The Pause cage now shows the full cell, so the box is visible.
+The unfrozen box and the model are unchanged.
+**Why:** players expect to use a frozen enemy as a block to cross an
+obstacle (a 0.6 box could not carry a jump over a two-block wall); it makes
+frozen enemies usable in puzzles together with pushing (D154). Shield Hall's
+two-block wall can now be crossed with a frozen enemy once Pause is found,
+which suits the maze's backtracking (D67).

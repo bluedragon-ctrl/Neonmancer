@@ -96,8 +96,10 @@ export class DebugOverlay {
     for (let i = objects.length; i < this.objectBoxes.length; i++) this.objectBoxes[i].visible = false;
     enemies.forEach((enemy, i) => {
       this.enemyBoxes[i].visible = enemy.alive;
-      const corner = enemyBox(lerpPosition(enemy.prev, enemy.pos, alpha), enemy.size).map(([min]) => min);
-      place(this.enemyBoxes[i], corner, enemy.size);
+      // A frozen enemy's box is a whole cell (D155).
+      const size = enemy.frozen ? [1, Math.max(1, enemy.size[1]), 1] : enemy.size;
+      const corner = enemyBox(lerpPosition(enemy.prev, enemy.pos, alpha), size).map(([min]) => min);
+      place(this.enemyBoxes[i], corner, size);
     });
     while (this.boltBoxes.length < bolts.length) {
       this.boltBoxes.push(box(materials.enemy));

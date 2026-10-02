@@ -53,3 +53,28 @@ test('a frozen enemy is pushed one cell at a time, and not into a block', () => 
   assert.ok(other.push([1, 0], free));
   assert.equal(other.push([1, 0], free), false, 'one push at a time');
 });
+
+test('a frozen enemy is a whole cell: a block to stand on, and to climb a two-block wall from (D155)', () => {
+  const game = gameWith({ blocks: [{ at: [1, 0, 1], to: [5, 1, 1] }], spawn: [4.5, 0, 7.5], enemies: [{ id: 'b', template: 'still', at: [3, 0, 3] }] });
+  const [bug] = game.enemies;
+  assert.ok(Math.abs(bug.box()[0][1] - bug.box()[0][0] - 0.6) < 1e-9, 'a small box while it moves');
+  pauseEnemy(game, bug, 6000);
+  assert.deepEqual(bug.box(), [[3, 4], [0, 1], [3, 4]]);
+
+  // Push it to the wall (the Right action is −z), stand on it, jump up onto the wall.
+  const up = { down: (a) => a === 'right', pressed: () => false };
+  game.player.place([3.5, 0, 5.5]);
+  for (let i = 0; i < 90; i++) game.update(up);
+  assert.equal(bug.pos[2], 2, 'against the wall');
+  game.player.place([3.5, 1.2, 2.5]);
+  for (let i = 0; i < 20 && !game.player.grounded; i++) game.update(idle);
+  assert.equal(game.player.pos[1], 1, 'standing on its top');
+  const jump = { down: (a) => a === 'right', pressed: (a) => a === 'jump' };
+  game.update(jump);
+  let onWall = false;
+  for (let i = 0; i < 60; i++) {
+    game.update(up);
+    if (game.player.grounded && game.player.pos[1] === 2) onWall = true;
+  }
+  assert.ok(onWall, 'up on the two-block wall');
+});

@@ -9,6 +9,8 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
+- A frozen enemy is a whole cell (D155): a 1×1×1 block to stand on and
+  jump from, and the Pause cage shows it.
 - Frozen enemies can be pushed (D154): walking into one slides it a cell
   at a time, like Pull drags it; over a hole it pops.
 - Boosts (D152): temporary pickups for simple secrets. Overdrive, Patch and

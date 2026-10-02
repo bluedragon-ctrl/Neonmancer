@@ -28,8 +28,8 @@ const press = (action) => ({ down: (a) => a === action, pressed: (a) => a === ac
  * A game in one 8×4×8 room with the given enemies; the wizard knows Zap
  * and Pause, stands at `pos` and aims along +x.
  */
-function gameWith(enemies, pos = [1.5, 0, 3.5]) {
-  const game = new Game(gameData({ rooms: [roomFile('alpha', { enemies, spawn: [0.5, 0, 7.5] })], enemies: TEMPLATES }), {
+function gameWith(enemies, pos = [1.5, 0, 3.5], extra = {}) {
+  const game = new Game(gameData({ rooms: [roomFile('alpha', { enemies, spawn: [0.5, 0, 7.5], ...extra })], enemies: TEMPLATES }), {
     progress: new Progress([0, 3].map((slot) => saveBit('spells', slot))),
   });
   game.player.place(pos);
@@ -92,18 +92,19 @@ test('a frozen enemy stops mid-step and walks on once it thaws', () => {
 });
 
 test('the wizard bumps into a frozen enemy and stands on it, unhurt; a frozen bouncy one does not bounce', () => {
-  const game = gameWith([{ id: 'b', template: 'sitter', at: [4, 0, 3] }]);
+  // (A block behind it, so that walking on can't push it along.)
+  const game = gameWith([{ id: 'b', template: 'sitter', at: [4, 0, 3] }], undefined, { blocks: [{ at: [5, 0, 3] }] });
   freeze(game);
   const events = run(game, 40, hold('down'));
   assert.ok(!eventTypes(events).includes('hurt'));
-  assert.ok(game.player.pos[0] <= 4.2 - 0.3 + 1e-6, `blocked at its side: ${game.player.pos}`);
+  assert.ok(game.player.pos[0] <= 4 - 0.3 + 1e-6, `blocked at its side: ${game.player.pos}`);
 
   const hop = gameWith([{ id: 'h', template: 'hopper', at: [4, 0, 3] }]);
   freeze(hop);
   hop.player.place([4.5, 1.2, 3.5]);
   const landed = run(hop, 30);
   assert.ok(!eventTypes(landed).includes('bounce'));
-  assert.ok(Math.abs(hop.player.pos[1] - 0.6) < 1e-6, `stands on it: ${hop.player.pos}`);
+  assert.ok(Math.abs(hop.player.pos[1] - 1) < 1e-6, `stands on it: ${hop.player.pos}`);
   assert.ok(!eventTypes(landed).includes('hurt'));
 });
 
@@ -115,7 +116,7 @@ test('an enemy frozen round the wizard lets him out, then turns solid for him', 
   assert.ok(bug.passable);
   assert.ok(!game.solids.includes(bug), 'not solid for him while he is inside');
   run(game, 30, hold('down'));
-  assert.ok(game.player.pos[0] > 4.2, `walked out: ${game.player.pos}`);
+  assert.ok(game.player.pos[0] > 4.3, `walked out: ${game.player.pos}`);
   assert.equal(bug.passable, false);
   assert.ok(game.solids.includes(bug));
   // Walking back into it, he pushes it a cell (frozen enemies can be pushed).

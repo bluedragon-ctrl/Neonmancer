@@ -504,9 +504,13 @@ export class Enemy {
     for (let i = 0; i < 3; i++) this.prev[i] = this.pos[i];
   }
 
-  /** Collision box [[minX, maxX], [minY, maxY], [minZ, maxZ]]. */
+  /**
+   * Collision box [[minX, maxX], [minY, maxY], [minZ, maxZ]]. A frozen enemy
+   * is a whole cell (D155), at least a block high: a block to stand on, climb
+   * from and push, as a crate is.
+   */
   box() {
-    return enemyBox(this.pos, this.size);
+    return this.frozen ? enemyBox(this.pos, [1, Math.max(1, this.size[1]), 1]) : enemyBox(this.pos, this.size);
   }
 
   /**
