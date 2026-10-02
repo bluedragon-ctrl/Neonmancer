@@ -1477,3 +1477,14 @@ until 5.8 puts the core in the Lattice (the test core sits in the dev
 wing).
 **Why:** the world needs a real first minute, and the old test cluster
 must not gate CI once it is no longer the start.
+
+### D149 — 2026-10-02 — Lattice steps: hub first, then small wings
+Step 5.6 is cut into 5.6a to 5.6h of two or three rooms (docs/design.md).
+5.6a builds the central area first: the Atrium with all its doors (west
+tutorial, north Shield wing, south Pause wing) and the two disk halls that
+open the wings, so the hub is complete and the author can refine and flag
+it. The wings follow in pairs of rooms; the Gatekeeper is 5.7. The map
+orientation of the plan's drawing is in lattice-plan.md.
+**Why:** an exit must be connected, and an authored room cannot get new
+exits (D90); finishing the hub with its neighbours first lets the author
+take it over, and small steps keep each PR reviewable and playable.

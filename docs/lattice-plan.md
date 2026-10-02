@@ -42,6 +42,18 @@ through the deep end of the Scan wing or the Fork wing, so the wings must
 be crossed. Once boss 2 is beaten (it stays away, D104), the Gatekeeper
 joins the Scan and Fork wings as a shortcut.
 
+## Map orientation (D149)
+
+The drawing above is schematic. On the world map the tutorial runs west to
+east and the hub sits at its end: `boot_up` (5,0), `first_steps`,
+`zap_port`, then the Atrium (8,0). Turned to match: the Shield wing lies
+north of the Atrium, the Pause wing south, the Scan wing beyond the Shield
+wing and the Fork wing beyond the Pause wing, both ending at the Gatekeeper
+east of the Atrium, and the core past it. The Atrium has no east door.
+A door to a wing that does not exist yet waits for that wing's step (every
+exit must be connected), so rooms with such a door stay unflagged until
+then. Steps and room order: docs/design.md, Phase 5.
+
 ## Room list
 
 | # | Room | Size | What it is |
