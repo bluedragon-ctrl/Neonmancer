@@ -299,6 +299,8 @@ export class Game {
     const { player } = this;
     const cause = player.deathCause;
     say(DEATH_MESSAGES[cause]);
+    // Any death takes the cosmetic boosts (D152).
+    player.looks.clear();
     this.crashing = player.backups === 0;
     if (this.crashing) say('msg.noBackups');
     else player.backups--;
@@ -321,8 +323,6 @@ export class Game {
     this.transition = { phase: 'in', tick: 0 };
     if (shrine) this.useShrine();
     else this.refill();
-    // The reboot wipes the cosmetic boosts too (D152).
-    this.player.looks.clear();
     say('msg.crash');
     announce('banner.crash', {}, { sub: 'banner.crashSub', subValues: { room: this.room.name }, color: CRASH_COLOR });
     this.emit('crash');

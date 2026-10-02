@@ -193,7 +193,7 @@ export class Player {
     this.fork = null;
     /** Functional boosts running (D152), effect → ticks left; the Game clears them when a room is built. */
     this.boosts = {};
-    /** Cosmetic boosts he has (D152), effect ids; kept through deaths and rooms, lost on a crash (Game.crash()) or a new game. */
+    /** Cosmetic boosts he has (D152), effect ids; kept through rooms, lost at any death (Game.died()) or a new game. */
     this.looks = new Set();
     this.enter(pos, resetPoint);
   }

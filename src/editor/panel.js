@@ -149,7 +149,7 @@ export function objectTypeText(type) {
     case 'refill':
       return `refills ${type.amount} ${type.stat}`;
     case 'boost':
-      return type.seconds ? `${type.effect} for ${type.seconds} s, till the room resets` : `${type.effect}, till a crash`;
+      return type.seconds ? `${type.effect} for ${type.seconds} s, till the room resets` : `${type.effect}, till his next death`;
     case 'fragment':
     case 'secret':
       return `slot ${type.slot}`;

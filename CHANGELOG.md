@@ -13,7 +13,7 @@ docs/decisions.md).
   at a time, like Pull drags it; over a hole it pops.
 - Boosts (D152): temporary pickups for simple secrets. Overdrive, Patch and
   Overclock last until the room resets; the Sparkle trail and Rainbow hat
-  until a crash or a reload. Nothing is saved or scored.
+  until his next death or a reload. Nothing is saved or scored.
 - The Atrium hub (5.6a, D151): north and south doors, a backup shrine, and
   the two disk halls `shield_hall` (Shield) and `freeze_hall` (Pause).
 - The Lattice tutorial (5.5, D148): the new start `boot_up`, `first_steps`,

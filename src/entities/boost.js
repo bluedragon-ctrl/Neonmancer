@@ -2,7 +2,7 @@
  * Boosts (D152): small temporary rewards for simple secrets, in two kinds.
  * A functional one helps for a while and is lost when the room resets
  * (leaving it, dying); a cosmetic one only dresses the wizard and lasts until
- * a crash or a reload. Neither is saved or scored. Pure data and helpers.
+ * a death or a reload. Neither is saved or scored. Pure data and helpers.
  */
 import { DT } from '../core/loop.js';
 

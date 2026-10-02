@@ -59,13 +59,13 @@ export function sparkleStep(pixels, dt, pos, state) {
 export function sparklePixels(pixels) {
   return pixels.map(({ x, y, z, vx, vz, age }) => ({
     offset: [x + vx * age, y + SPARKLE.rise * age, z + vz * age],
-    scale: 1.6 * (1 - age / SPARKLE.life),
+    scale: 0.8 * (1 - age / SPARKLE.life),
   }));
 }
 
 export class SparkleTrail {
   constructor() {
-    this.mesh = createPixelBurst(SPARKLE.count, DEREZ.pixelSize, [BOOST.colors.sparkle, 0x00f0ff, 0xffffff]);
+    this.mesh = createPixelBurst(SPARKLE.count, DEREZ.pixelSize, [BOOST.colors.sparkle]);
     this.pixels = [];
     this.state = { carry: 0, serial: 0 };
   }

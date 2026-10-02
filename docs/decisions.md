@@ -1562,3 +1562,10 @@ solid (D51) or not, never pushed.
 **Why:** a frozen enemy is already a platform (D85) and can be cut and pulled;
 pushing completes it as a block that blocks, carries and moves, for puzzles
 (a frozen bug as a bridge stone, or into a pit to get rid of it).
+### D153 — 2026-10-02 — Cosmetic boosts go with any death; smaller magenta sparkles
+
+Amends D152: the Sparkle trail and Rainbow hat are lost at any death (a
+recompile at the room entrance too), not only at a crash, and with a reload.
+The trail's pixels are all the wizard's magenta (D98) and half the size.
+**Why:** a cosmetic that outlasts every death made the reward too cheap to
+lose; magenta and small keep the trail a tidy accent, not glitter.
