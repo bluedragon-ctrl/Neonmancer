@@ -9,6 +9,8 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
+- Frozen enemies can be pushed (D154): walking into one slides it a cell
+  at a time, like Pull drags it; over a hole it pops.
 - Boosts (D152): temporary pickups for simple secrets. Overdrive, Patch and
   Overclock last until the room resets; the Sparkle trail and Rainbow hat
   until his next death or a reload. Nothing is saved or scored.
