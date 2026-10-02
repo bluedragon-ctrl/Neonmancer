@@ -369,6 +369,7 @@ The engine is generic; all content lives in data.
   objects (switch links, D140), enemies, pickups, a backup shrine tile; only overrides of type defaults;
   `"authored": true` marks the author's real game rooms (D90, §10)
 - `data/world.json` — room connections, room positions on the world map,
+  the dev wing (`dev`: test rooms only the dev server shows, D147),
   start room, the fragments the core needs and the access thresholds
   (D101); fragments lie in the rooms' pickups, the core is a room object
 - `data/strings.json` — all UI text

@@ -44,7 +44,8 @@ function boot() {
   // Schema errors (dev server only) come first: the later checks assume
   // well-formed data.
   if (SCHEMA_ERRORS.length > 0) throw new DataError(SCHEMA_ERRORS);
-  const content = loadGameData(DATA_FILES);
+  // The dev wing (D147) is for the dev server only.
+  const content = loadGameData(DATA_FILES, { dev: DEV_SERVER });
   const params = new URLSearchParams(location.search);
   // Dev server only (never for players, D67): ?room=<id> starts in that
   // room and ?edit opens the room editor on it (the world map tool's links).

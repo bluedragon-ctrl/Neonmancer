@@ -2156,7 +2156,7 @@ author, recorded as decisions before the code lands. Every step also
 The phases were re-cut around a playtest of Home Lattice. The rules of
 "Finished phases" apply to every step: one branch, one PR against `main`,
 CI green, showcase, test room, unit tests, docs. Code steps name their
-branch; design steps end in decisions before any code. **Next: Phase 5 (5.3).**
+branch; design steps end in decisions before any code. **Next: Phase 5 (5.5; 5.3 music moves after it, D147).**
 
 ### Phase 4 (v0.4) steps: tools and bosses
 
@@ -2181,14 +2181,14 @@ Phase 5.
 ### Phase 5 (v0.5) steps: Home Lattice playtest
 
 Sound steps can run beside the content steps; 5.3 waits for the author's
-tracks.
+tracks and is done after 5.5 (D147).
 
 | # | Branch | Delivers |
 |---|---|---|
 | 5.1 (done, D138) | `feat/audio-engine` | `data/audio.json` (named events to files), Howler music with looping and crossfades, ZzFX effects, the Options sliders wired, a stub when a file is missing. |
 | 5.2 (done, D139) | `feat/sfx-pass` | Effects for the existing events: jump, land, zap and every spell, hits, pickups, the install animation, death and derez, doors, switches, UI, enemy alerts. |
 | 5.3 | `feat/music` | The author's tracks trimmed for seamless loops: Lattice, boss, title; room and biome mapping, a boss switch and a crossfade back. |
-| 5.4 | `refactor/dev-wing` | The old test rooms move to a dev-only wing (kept, D45, never deleted): reachable in the dev server and debug mode, absent from the player world. Boot Sector's role settled. |
+| 5.4 (done, D147) | `refactor/dev-wing` | The old test rooms move to a dev-only wing (kept, D45, never deleted): a `dev` list in world.json, shown by the dev server and absent from builds for players. Boot Sector stays the start until 5.5. |
 | 5.5 | `feat/lattice-tutorial` | The first rooms from the plan: start, movement, pushing, the first disk, the first fragment; screens with hints (D118). |
 | 5.6 | `feat/lattice-spells` | The middle batch: the spell and upgrade rooms and their puzzles and combat rooms. |
 | 5.7 | `feat/lattice-fragments` | The fragment rooms and optional side rooms (the extra fragments), the two boss arenas placed. |
