@@ -682,8 +682,8 @@ enemies).
   (15 s, 50% faster on the ground; the air speed stays), `boost_patch`
   (30 s, absorbs the next hit, a gold ring round him) and `boost_overclock`
   (10 s, spells cost no energy); running ones show as tags under the spell
-  tag. Cosmetic, no `seconds`, kept through deaths and rooms, lost on a
-  crash or a reload: `boost_sparkle` (pixels fall off his feet while he
+  tag. Cosmetic, no `seconds`, kept through rooms, lost at the next
+  death or a reload: `boost_sparkle` (pixels fall off his feet while he
   walks) and `boost_rainbow` (hat bands cycling the hues); one already worn
   is left lying. Not saved, not scored, ignored by the reachability
   checker. `BOOST` in `src/entities/boost.js`, `BOOST_VOXELS` in

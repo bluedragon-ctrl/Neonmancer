@@ -118,22 +118,24 @@ test('overclock: spells cost no energy, and without it they do', () => {
   assert.ok(eventTypes(game.update(cast)).includes('deny'));
 });
 
-test('cosmetic boosts last through deaths and rooms, are taken once, and a crash wipes them', () => {
+test('cosmetic boosts last through rooms and are taken once; any death wipes them', () => {
   const game = take('boost_sparkle');
   assert.ok(game.player.looks.has('sparkle'));
   assert.deepEqual(game.player.boosts, {});
 
-  // Lying again after a room reset, but he has it: it stays lying.
-  dieAndRecompile(game);
-  assert.ok(game.player.looks.has('sparkle'), 'a death does not take it');
+  // Left lying while he has it, also in a room built again.
+  game.enterRoom('alpha');
+  assert.ok(game.player.looks.has('sparkle'), 'a room change keeps it');
   assert.equal(game.pickups[0].state, 'idle');
   assert.ok(!stepOnto(game, [4, 0, 4]).includes('pickup'), 'left lying while he has it');
 
-  // The reboot after the last backup.
-  game.player.backups = 0;
+  // Any death takes it, with backups left or not.
   dieAndRecompile(game);
   assert.equal(game.player.looks.size, 0);
   assert.ok(stepOnto(game, [4, 0, 4]).includes('boost'), 'he can take it again');
+  game.player.backups = 0;
+  dieAndRecompile(game);
+  assert.equal(game.player.looks.size, 0);
 });
 
 test('boost types: functional ones need seconds, cosmetic ones have none', () => {
