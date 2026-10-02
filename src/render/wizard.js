@@ -28,6 +28,9 @@ export const WIZARD = {
   bands: { y: 0.09, gap: 0.085, out: 0.012 },
 };
 
+/** Bands of the rainbow hat boost (D152), above the access bands. */
+const RAINBOW_BANDS = 3;
+
 /** Round parts use this many segments, so outlines stay smooth. */
 const SEGMENTS = 32;
 
@@ -140,5 +143,25 @@ export function createWizard({ body = PALETTE.magenta, head = PALETTE.cyan, hat 
     return ring;
   });
   group.userData.setAccess = (level) => rings.forEach((ring, i) => (ring.visible = i < level));
+
+  // The rainbow hat (D152): three bands above the access ones, each its own hue, cycling.
+  const rainbow = hatBands(bands + RAINBOW_BANDS)
+    .slice(bands)
+    .map(({ y, r }) => {
+      const material = lineMaterial({ color: 0xffffff, width: 2.6, brightness: 1 });
+      const n = 28;
+      const point = (i) => [Math.cos((i / n) * 2 * Math.PI) * r, y, Math.sin((i / n) * 2 * Math.PI) * r];
+      const ring = neonLines(Array.from({ length: n }, (_, i) => [point(i), point(i + 1)]), material);
+      ring.visible = false;
+      hatGroup.add(ring);
+      return ring;
+    });
+  /** Show the rainbow bands at `time` seconds (they cycle the hues), or hide them with null. */
+  group.userData.setRainbow = (time) => {
+    rainbow.forEach((ring, i) => {
+      ring.visible = time !== null;
+      if (time !== null) ring.material.color.setHSL((time * 0.4 + i / RAINBOW_BANDS) % 1, 1, 0.55).multiplyScalar(1.8);
+    });
+  };
   return group;
 }

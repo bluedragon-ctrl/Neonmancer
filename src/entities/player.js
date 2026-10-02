@@ -10,6 +10,7 @@
  */
 import { DT } from '../core/loop.js';
 import { PLAYER_HITBOX } from '../core/rules.js';
+import { BOOST } from './boost.js';
 import { bodyBox, moveAxis } from '../physics/collision.js';
 
 /** Tuning values (units, seconds, ticks). */
@@ -190,6 +191,10 @@ export class Player {
     this.scan = null;
     /** The last fork (D129) while its bits fly, or null: { cell, tick }, tick counting up to PLAYER.forkTicks. */
     this.fork = null;
+    /** Functional boosts running (D152), effect → ticks left; the Game clears them when a room is built. */
+    this.boosts = {};
+    /** Cosmetic boosts he has (D152), effect ids; kept through deaths and rooms, lost on a crash (Game.crash()) or a new game. */
+    this.looks = new Set();
     this.enter(pos, resetPoint);
   }
 
@@ -260,6 +265,12 @@ export class Player {
    */
   hurt(amount) {
     if (this.dead || this.invulnerable > 0 || amount <= 0) return 0;
+    // A patch (D152) takes the hit instead: gone, and he is safe for a moment.
+    if (this.boosts.patch > 0) {
+      delete this.boosts.patch;
+      this.invulnerable = PLAYER.invulnerableTicks;
+      return 0;
+    }
     const lost = Math.min(amount, this.integrity);
     this.integrity -= lost;
     this.invulnerable = PLAYER.invulnerableTicks;
@@ -461,6 +472,7 @@ export class Player {
     if (this.cooldown > 0) this.cooldown--;
     if (this.castTicks !== null) this.castTicks++;
     this.rechargeEnergy();
+    for (const effect of Object.keys(this.boosts)) if (--this.boosts[effect] <= 0) delete this.boosts[effect];
     if (this.shield && ++this.shield.tick >= this.shield.ticks) this.shield = null;
     if (this.install && ++this.install.tick > PLAYER.installTicks) this.install = null;
     if (this.warp && ++this.warp.tick > PLAYER.warpTicks) this.warp = null;
@@ -483,7 +495,8 @@ export class Player {
     }
     this.moving = dx !== 0 || dz !== 0;
     if (this.moving) {
-      const speed = this.grounded ? PLAYER.speed : PLAYER.speed * PLAYER.airSpeed;
+      // Overdrive (D152) speeds him up on the ground only, so a jump never carries further.
+      const speed = this.grounded ? PLAYER.speed * (this.boosts.overdrive > 0 ? BOOST.overdriveSpeed : 1) : PLAYER.speed * PLAYER.airSpeed;
       const step = (speed * DT) / Math.hypot(dx, dz);
       const hitX = moveAxis(this.pos, this.size, 0, dx * step, grid, bodies, this);
       const hitZ = moveAxis(this.pos, this.size, 2, dz * step, grid, bodies, this);

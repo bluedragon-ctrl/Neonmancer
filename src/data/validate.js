@@ -12,6 +12,7 @@
  */
 import { DATA_SCHEMA_VERSION } from '../core/version.js';
 import { MAX_ROOM_FOOTPRINT, MAX_SAVED_INTEGRITY, PLAYER_HITBOX } from '../core/rules.js';
+import { BOOST_EFFECTS } from '../entities/boost.js';
 import { PLAYER } from '../entities/player.js';
 import {
   CHARGED_ATTACKS,
@@ -236,6 +237,12 @@ function validateSpellsAndPickups(spells, pickupTypes, objectTypes, report) {
     if (type.kind === 'fragment') {
       if (fragmentSlots.has(type.slot)) report('defs.json', `pickups.${id}.slot`, `fragment slot ${type.slot} is taken by "${fragmentSlots.get(type.slot)}"`);
       else fragmentSlots.set(type.slot, id);
+    }
+    // A functional boost runs for some seconds, a cosmetic one has none (D152).
+    if (type.kind === 'boost') {
+      const functional = BOOST_EFFECTS[type.effect]?.functional;
+      if (functional && type.seconds === undefined) report('defs.json', `pickups.${id}.seconds`, `${type.effect} is a functional boost: it needs "seconds"`);
+      if (functional === false && type.seconds !== undefined) report('defs.json', `pickups.${id}.seconds`, `${type.effect} is cosmetic: it lasts until a crash or a reload, with no "seconds"`);
     }
     if (type.kind !== 'buff') continue;
     if (buffSlots.has(type.slot)) report('defs.json', `pickups.${id}.slot`, `buff slot ${type.slot} is taken by "${buffSlots.get(type.slot)}"`);

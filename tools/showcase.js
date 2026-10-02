@@ -58,6 +58,7 @@ import { bodyScale, createArmorShell, createBossMark, teleportLook } from '../sr
 import { dropHeight } from '../src/render/pickup-view.js';
 import { createFragment } from '../src/render/fragment.js';
 import { DISK, createDisk, diskMotion, poseDisk } from '../src/render/disk.js';
+import { BOOST_VOXELS, createBoost } from '../src/render/boost.js';
 import { createRefill, refillMotion } from '../src/render/refill.js';
 import { INSTALL_FX } from '../src/render/install-fx.js';
 import { createInstall, placeInstall } from '../src/render/install-view.js';
@@ -285,6 +286,7 @@ const ALL_ASSETS = [
   { label: 'refill-integrity', group: 'refills', spin: false, build: () => buildRefill('integrity') },
   { label: 'refill-energy', group: 'refills', spin: false, build: () => buildRefill('energy') },
   { label: 'refill-collect', group: 'refills', spin: false, build: buildRefillCollect },
+  ...Object.keys(BOOST_VOXELS).map((effect) => ({ label: `boost-${effect}`, group: 'refills', spin: false, build: () => buildBoost(effect) })),
   { label: 'pickups-in-room', group: 'refills', span: 5.5, spin: false, build: buildPickupsInRoom },
   // The access pass (for testing): a gold card, its lit bit the level it grants.
   { label: 'access-pass', group: 'refills', spin: false, build: () => buildCard({ color: FRAGMENT_COLOR, slot: defs.pickups.access_pass_3.level }) },
@@ -982,6 +984,14 @@ function buildRefill(stat) {
   const refill = createRefill(stat);
   const asset = new Group().add(refill);
   asset.userData.update = (dt, time) => poseDisk(refill, refillMotion(diskMotion({ time })));
+  return asset;
+}
+
+/** A boost (D152) idling. */
+function buildBoost(effect) {
+  const boost = createBoost(effect);
+  const asset = new Group().add(boost);
+  asset.userData.update = (dt, time) => poseDisk(boost, refillMotion(diskMotion({ time })));
   return asset;
 }
 

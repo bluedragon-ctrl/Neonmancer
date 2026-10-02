@@ -111,6 +111,7 @@ const OBJECT_GROUPS = [
   ['Upgrades', 'upgrade'],
   ['Buffs', 'buff'],
   ['Refills', 'refill'],
+  ['Boosts', 'boost'],
   ['Fragments', 'fragment'],
   ['Secrets', 'secret'],
   ['Test', 'access'],
@@ -147,6 +148,8 @@ export function objectTypeText(type) {
       return type.stat === 'recharge' ? 'faster recharge' : `+${type.amount} ${type.stat}`;
     case 'refill':
       return `refills ${type.amount} ${type.stat}`;
+    case 'boost':
+      return type.seconds ? `${type.effect} for ${type.seconds} s, till the room resets` : `${type.effect}, till a crash`;
     case 'fragment':
     case 'secret':
       return `slot ${type.slot}`;

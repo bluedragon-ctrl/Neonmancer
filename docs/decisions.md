@@ -1509,3 +1509,27 @@ refines them and may flag the Atrium authored (D90).
 **Why:** the hub must have all its exits before the author takes it over,
 and each disk hall teaches its spell (hide from a ranged attack, freeze a
 patroller) before the wing that needs it.
+
+### D152 — 2026-10-02 — Boosts: small temporary rewards for simple secrets
+
+A new temporary pickup kind, `boost` (small voxel figures, no save bit, no
+score), for secrets that don't deserve a permanent item. Five effects, built
+into the engine, one pickup type each in `defs.json`:
+- Functional, with `seconds`, ended when the room resets (leaving it, or a
+  death, which rebuilds it): **Overdrive** walks 50% faster on the ground (the
+  air speed stays, so a jump never carries further, D36); **Patch** absorbs
+  the next hit (30 s, a gold ring round him); **Overclock** makes spells cost
+  no energy (10 s). Running ones show as tags under the spell tag.
+- Cosmetic, no `seconds`, kept through deaths and rooms, lost on a crash (the
+  reboot on a shrine) or a reload: **Sparkle trail** (pixels fall off his feet
+  while he walks), **Rainbow hat** (three hat bands cycling the hues). One
+  already worn is left lying.
+Not saved, not scored, not part of the reachability checker (it knows nothing
+of them; none of them opens an area). Shapes: an arrowhead, a square ring, a
+lightning step, an X and an arch; colors: cyan moves, gold is a patch, lime is
+energy, magenta is the wizard (D99).
+**Why:** a simple secret (a side nook, a pushed crate) needs a reward between
+nothing and a permanent chip; refills only restore, boosts give a short taste
+of power or a bit of fun. Limiting functional ones to the room keeps them from
+trivialising later rooms, and cosmetic ones outlast deaths so they stay fun
+until a real setback.

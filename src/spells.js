@@ -59,7 +59,8 @@ export function castSpell(game) {
   if (!id) return;
   const spell = game.content.spells[id];
   // Pasting costs its own (D87): nothing by default.
-  const cost = player.clipboard && spell.pasteCost !== undefined ? spell.pasteCost : spell.cost;
+  // Overclock (D152): spells cost nothing.
+  const cost = player.boosts.overclock > 0 ? 0 : player.clipboard && spell.pasteCost !== undefined ? spell.pasteCost : spell.cost;
   const result = player.cast(cost, Math.round(spell.cooldown / DT));
   if (result === 'cast' && SPELL_EFFECTS[id](game, spell) === false) {
     player.refund(cost);

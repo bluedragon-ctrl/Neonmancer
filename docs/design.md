@@ -675,6 +675,19 @@ enemies).
   is full. No save bit: it comes back when the room resets (entering it,
   or dying in it). Terminal lines `> INTEGRITY RESTORED` and `> ENERGY
   RECHARGED`.
+- **Temporary: boosts (D152).** Small rewards for simple secrets, kind
+  `boost`, one pickup type per `effect`, a voxel figure each (an arrowhead,
+  a square ring, a lightning step, an X, an arch). Functional, with
+  `seconds`, ended when the room resets (leaving it, or a death): `boost_overdrive`
+  (15 s, 50% faster on the ground; the air speed stays), `boost_patch`
+  (30 s, absorbs the next hit, a gold ring round him) and `boost_overclock`
+  (10 s, spells cost no energy); running ones show as tags under the spell
+  tag. Cosmetic, no `seconds`, kept through deaths and rooms, lost on a
+  crash or a reload: `boost_sparkle` (pixels fall off his feet while he
+  walks) and `boost_rainbow` (hat bands cycling the hues); one already worn
+  is left lying. Not saved, not scored, ignored by the reachability
+  checker. `BOOST` in `src/entities/boost.js`, `BOOST_VOXELS` in
+  `src/render/boost.js`; showcase `?asset=refills`.
 - **Temporary: access pass (for testing, D113).** `access_pass_3` (kind
   `access`, `level` 1–15) raises the wizard's access level to its level
   at once, as the core would (D101): access locks open, the hat gets its

@@ -52,6 +52,8 @@ import { createCastFlare, placeCastFlare } from './zap-view.js';
 import { createInstall, placeInstall } from './install-view.js';
 import { createPickupModel } from './pickup-model.js';
 import { createShield, placeShield } from './shield-view.js';
+import { SparkleTrail } from './sparkle-fx.js';
+import { BOOST } from '../entities/boost.js';
 import { createFirewall, placeFirewall } from './firewall-view.js';
 import { PAUSE_FX, pauseLook } from './pause-fx.js';
 import { createPauseCage, placePauseCage } from './pause-view.js';
@@ -173,6 +175,10 @@ export class PlayerView {
     /** The double jump's kick-off rings (D95). */
     this.jumpRings = createJumpRings();
     this.group.add(this.wizard, this.shadow, this.pixels, this.flare, this.jumpRings);
+    /** The boosts' looks (D152): the sparkle trail, and the patch's ring (a gold Shield look) made when first taken. */
+    this.sparkle = new SparkleTrail();
+    this.patchRing = null;
+    this.group.add(this.sparkle.mesh);
     /** Install animations by spell id, made when first needed (D73). */
     this.installs = new Map();
     /** The Shield and Firewall rings by spell id, made when first cast. */
@@ -281,6 +287,18 @@ export class PlayerView {
       const sinceBlock = shield.blockedAt === null ? null : shield.tick - shield.blockedAt + alpha;
       place(this.ringView(ring), pos, shield.tick + alpha, shield.ticks, sinceBlock);
     }
+    // Boosts (D152): the rainbow hat, the sparkle trail and the patch's ring.
+    const { looks, boosts } = player;
+    this.wizard.userData.setRainbow(looks.has('rainbow') && !player.dead ? this.time : null);
+    this.sparkle.sync(dt, looks.has('sparkle') && player.moving && !player.dead ? pos : null);
+    if (boosts.patch > 0 && !player.dead) {
+      if (!this.patchRing) {
+        this.patchRing = createShield(BOOST.colors.patch);
+        this.group.add(this.patchRing);
+      }
+      const tick = this.time * 60;
+      placeShield(this.patchRing, pos, tick, tick + boosts.patch);
+    } else if (this.patchRing) this.patchRing.visible = false;
     // Cut & Paste: its effect wherever he goes, and its aim marker (D87).
     const clipSpell = this.game.content.spells.cut_paste;
     if (!this.clip && clipSpell && player.spells.includes('cut_paste')) {

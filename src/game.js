@@ -7,6 +7,7 @@ import { announce, say, showText } from './core/messages.js';
 import { bounceOffEnemies, burnEnemies, touchEnemies, updateArmor, updateAttacks, updateBolts, updateFrozen } from './combat.js';
 import { LORE_REACH, loreLines } from './data/lore.js';
 import { isBackSide, sideAxes, withExitDefaults } from './data/room-data.js';
+import { BOOST_EFFECTS, boostTicks } from './entities/boost.js';
 import { Enemy } from './entities/enemy.js';
 import { createObject } from './entities/kinds.js';
 import { BUFF_COLORS, FRAGMENT_COLOR, Pickup, SECRET_COLOR } from './entities/pickup.js';
@@ -211,6 +212,8 @@ export class Game {
     /** Locked exits (D75), open while their switches are all on (D140); closed ones are solid (Grid.setOpening()). */
     this.locks = createLocks(this);
     this.player.enter(pos ?? this.room.spawn, this.room.reset);
+    // Functional boosts end with the room (D152); cosmetic ones stay.
+    this.player.boosts = {};
     /** Is he on the backup shrine? Stepping onto it uses it (touchShrine()). */
     this.onShrine = false;
     this.refreshBodies();
@@ -276,7 +279,13 @@ export class Game {
    */
   hurt(amount = 1, { cell, enemy, object } = {}) {
     if (this.invincible) return;
+    const patched = this.player.boosts.patch > 0;
     const lost = this.player.hurt(amount);
+    // A patch took the hit (D152).
+    if (patched && !(this.player.boosts.patch > 0)) {
+      say('msg.patchUsed');
+      this.emit('patch');
+    }
     if (lost > 0) this.emit('hurt', { amount: lost, ...(cell && { cell }), ...(enemy && { enemy }), ...(object && { object }) });
     if (this.player.dead) this.died();
   }
@@ -312,6 +321,8 @@ export class Game {
     this.transition = { phase: 'in', tick: 0 };
     if (shrine) this.useShrine();
     else this.refill();
+    // The reboot wipes the cosmetic boosts too (D152).
+    this.player.looks.clear();
     say('msg.crash');
     announce('banner.crash', {}, { sub: 'banner.crashSub', subValues: { room: this.room.name }, color: CRASH_COLOR });
     this.emit('crash');
@@ -651,11 +662,34 @@ export class Game {
       this.emit('access', { level: data.level });
       return true;
     }
+    if (data.kind === 'boost') return this.useBoost(data);
     // A refill: integrity or energy, up to his maximum.
     const max = data.stat === 'integrity' ? player.maxIntegrity : player.maxEnergy;
     if (player[data.stat] >= max) return false;
     player[data.stat] = Math.min(max, player[data.stat] + data.amount);
     say(data.stat === 'integrity' ? 'msg.refillIntegrity' : 'msg.refillEnergy');
+    return true;
+  }
+
+  /**
+   * A boost (D152): a functional one runs for its seconds (taking it again
+   * starts over) until the room resets; a cosmetic one stays until a crash
+   * or a reload, and is left lying while he has it. Reported as 'boost'.
+   * @param {object} data the pickup: effect and, for a functional one, seconds
+   * @returns {boolean} whether he took it
+   */
+  useBoost({ effect, seconds }) {
+    const { player } = this;
+    const name = this.content.strings[`boost.${effect}`] ?? effect.toUpperCase();
+    if (BOOST_EFFECTS[effect].functional) {
+      player.boosts[effect] = boostTicks(seconds);
+      say('msg.boostOn', { boost: name, seconds });
+    } else {
+      if (player.looks.has(effect)) return false;
+      player.looks.add(effect);
+      say('msg.boostLook', { boost: name });
+    }
+    this.emit('boost', { effect });
     return true;
   }
 

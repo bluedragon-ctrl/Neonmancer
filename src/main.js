@@ -352,6 +352,7 @@ function syncHud(hud, game, renderer, dt) {
   hud.setEnergy(player.energy, player.maxEnergy, player.spell !== null);
   hud.setSpell(player.spell, player.spells.length, player.spell && game.spellNameKey(player.spell));
   hud.setClipboard(player.spell === 'cut_paste', player.clipboard);
+  hud.setBoosts(player.boosts);
   hud.setBoss(bossBarState(game));
   hud.setScore(game.score, game.completion);
   hud.setFragments(game.fragmentSlots(), game.fragmentRules.required, game.progress.accessLevel);
