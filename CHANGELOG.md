@@ -35,6 +35,10 @@ docs/decisions.md).
   Alt+click with the Block tool copies a block's type and switches.
 
 ### Changed
+- Gate block types (D144): a bridge is `"start": "gone"` (was
+  `"inverted": true`). The room editor's Block tool lists block types in
+  groups (Static, Switch gates, Collapsing (step) gates), each saying
+  what it does.
 - Room editor: a click hits what is seen. With the Block, Object, Enemy
   and Switch tools, a block or item drawn on the layer is hit through its
   top or side, not the floor cell behind it; the top of a block one layer

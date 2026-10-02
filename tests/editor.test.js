@@ -15,7 +15,7 @@ import { cutRoom } from '../src/render/room-scene.js';
 import { validateData } from '../src/data/validate.js';
 import { loadGameData } from '../src/data/load.js';
 import { resolveBlockTypes, resolveEnemyTemplates, templateChain } from '../src/data/room-data.js';
-import { blockTypeText, templateText } from '../src/editor/panel.js';
+import { blockTypeGroups, blockTypeText, templateText } from '../src/editor/panel.js';
 import { buildRoom } from '../src/world/room.js';
 import { checkSchemas, readSchemas } from '../tools/check-data.js';
 import { refuseSaveRequest, saveEdits } from '../tools/room-save.js';
@@ -661,10 +661,21 @@ test('blockTypeText: what a block type does, for the Block tool\'s type list', (
   assert.equal(blockTypeText(types.block), 'plain');
   assert.equal(blockTypeText(types.hot), 'hurts 2');
   assert.equal(blockTypeText(types.void), 'lethal');
-  assert.equal(blockTypeText(types.collapsing), 'collapsing');
-  assert.equal(blockTypeText(types.collapsing_regrow), 'collapsing, regrows 3 s');
-  assert.equal(blockTypeText(types.gate), 'switch gate');
-  assert.equal(blockTypeText(types.bridge), 'switch gate, inverted');
+  assert.equal(blockTypeText(types.fake), 'a scan derezzes it');
+  assert.equal(blockTypeText(types.collapsing), 'collapses');
+  assert.equal(blockTypeText(types.collapsing_regrow), 'collapses, back in 3 s');
+  assert.equal(blockTypeText(types.gate), 'solid, gone while powered');
+  assert.equal(blockTypeText(types.bridge), 'gone, there while powered');
+});
+
+test('blockTypeGroups: the Block tool\'s types, static blocks first, then gates by trigger (D141)', () => {
+  const groups = blockTypeGroups(resolveBlockTypes(BLOCK_TYPES));
+  const ids = Object.fromEntries(groups.map(([label, options]) => [label, options.map(([id]) => id)]));
+  assert.deepEqual(Object.keys(ids), ['Static', 'Switch gates', 'Collapsing (step) gates']);
+  assert.deepEqual(ids['Switch gates'], ['gate', 'bridge']);
+  assert.deepEqual(ids['Collapsing (step) gates'], ['collapsing', 'collapsing_regrow']);
+  assert.ok(!ids.Static.includes('gate'));
+  assert.deepEqual(blockTypeGroups({ block: { look: 'plain' } }).map(([label]) => label), ['Static'], 'empty groups are left out');
 });
 
 

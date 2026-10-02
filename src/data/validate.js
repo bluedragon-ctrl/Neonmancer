@@ -277,7 +277,7 @@ function validateBlockTypes(blocks, report) {
       if (wrong.length > 0) report('defs.json', path, `${wrong.join(', ')}: only for static blocks (with a "look"), not a ${type.kind} block`);
       // A bridge is a switch gate; only a step gate (a collapsing block) grows back (D141).
       const trigger = type.trigger ?? 'switch';
-      if (type.inverted && trigger !== 'switch') report('defs.json', `${path}.inverted`, 'only switch gates are inverted, not a step gate');
+      if (type.start === 'gone' && trigger !== 'switch') report('defs.json', `${path}.start`, 'only switch gates start gone (a bridge); a step gate starts solid');
       if (type.regrow !== undefined && trigger !== 'step') report('defs.json', `${path}.regrow`, 'only step gates (collapsing blocks) grow back; a switch gate comes back with its switches');
     } else {
       const wrong = KIND_BLOCK_VALUES.filter((key) => key in own);

@@ -125,7 +125,7 @@ mobile/touch support, backend or accounts.
   switch in the room) and is powered while they are all on (D140). A
   locked exit opens then, never closes on the wizard, and stays open for
   him if he came in through it (D69, D75). A gate (a white block) opens,
-  a bridge (an inverted gate) appears, neither closing on anything in
+  a bridge (a gate that starts gone) appears, neither closing on anything in
   its cell; a platform with switches runs only while powered. An access lock
   opens once his access level is high enough (D101). A hidden exit is
   wall until a scan reveals it (D128).

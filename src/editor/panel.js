@@ -72,18 +72,33 @@ const HINTS = {
 
 /**
  * A block type in a few words for the type list: what it does
- * (`hurts 1`, `lethal`, `collapsing, regrows 3 s`, `switch gate,
- * inverted`) or its look.
- * @param {{ look?: string, kind?: string, trigger?: string, inverted?: boolean, damage?: number, lethal?: boolean, regrow?: number }} type
+ * (`hurts 1`, `lethal`, `collapses, back in 3 s`, `solid, gone while
+ * powered`) or its look.
+ * @param {{ look?: string, kind?: string, trigger?: string, start?: string, damage?: number, lethal?: boolean, fake?: boolean, regrow?: number }} type
  */
 export function blockTypeText(type) {
   if (type.kind === 'gate') {
-    if (type.trigger === 'step') return type.regrow ? `collapsing, regrows ${type.regrow} s` : 'collapsing';
-    return type.inverted ? 'switch gate, inverted' : 'switch gate';
+    if (type.trigger === 'step') return type.regrow ? `collapses, back in ${type.regrow} s` : 'collapses';
+    return type.start === 'gone' ? 'gone, there while powered' : 'solid, gone while powered';
   }
   if (type.kind) return type.kind;
-  const does = [type.damage && `hurts ${type.damage}`, type.lethal && 'lethal'].filter(Boolean);
+  const does = [type.damage && `hurts ${type.damage}`, type.lethal && 'lethal', type.fake && 'a scan derezzes it'].filter(Boolean);
   return does.join(', ') || type.look;
+}
+
+/**
+ * The Block tool's type list in groups (D141): static blocks, then the
+ * gate blocks that come and go, by their trigger.
+ * @param {Record<string, { kind?: string, trigger?: string }>} types resolved block types
+ * @returns {[string, [string, string][]][]} [group label, [id, label] options]
+ */
+export function blockTypeGroups(types) {
+  const groups = { Static: [], 'Switch gates': [], 'Collapsing (step) gates': [] };
+  for (const [id, type] of Object.entries(types)) {
+    const group = type.kind !== 'gate' ? 'Static' : type.trigger === 'step' ? 'Collapsing (step) gates' : 'Switch gates';
+    groups[group].push([id, `${id} (${blockTypeText(type)})`]);
+  }
+  return Object.entries(groups).filter(([, options]) => options.length > 0);
 }
 
 /** An element with a class and optional text. */
@@ -103,6 +118,17 @@ function option(value, label) {
 function select(options) {
   const node = el('select');
   node.append(...options.map(([value, label]) => option(value, label)));
+  return node;
+}
+
+/** A select of options in labeled groups: [label, [value, label][]] each. */
+function groupedSelect(groups) {
+  const node = el('select');
+  for (const [label, options] of groups) {
+    const group = Object.assign(el('optgroup'), { label });
+    group.append(...options.map(([value, text]) => option(value, text)));
+    node.append(group);
+  }
   return node;
 }
 
@@ -283,7 +309,7 @@ export class EditorPanel {
   /** Fields of the Block and Object tools, shown only while picked. */
   typeGroups(blockTypes, objectTypes, switchTypes) {
     const { on } = this;
-    this.blockSelect = select(Object.entries(blockTypes).map(([id, type]) => [id, `${id} (${blockTypeText(type)})`]));
+    this.blockSelect = groupedSelect(blockTypeGroups(blockTypes));
     this.blockSelect.addEventListener('change', () => on.blockType(this.blockSelect.value));
     this.blockRows = el('div', 'editor-group');
     // A switch gate's switches (D140, D141): the gate cells placed get them.

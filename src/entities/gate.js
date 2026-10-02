@@ -6,8 +6,8 @@
  * - "switch" (a gate): solid until its switches are all on, then gone
  *   until one goes off. Which switches: the `switches` of its room block
  *   entry (ids of the room's targets and plates), or every switch in the
- *   room. An `inverted` one (a bridge) is the other way round: there
- *   only while they are all on. The game powers it (power(),
+ *   room. One that starts gone (`start: "gone"`, a bridge) is the other
+ *   way round: there only while they are all on. The game powers it (power(),
  *   updateSwitches() in switches.js).
  * - "step" (a collapsing block, D47): the wizard standing on it makes it
  *   shake, then it is gone; with `regrow` it comes back that many seconds
@@ -31,7 +31,7 @@ export const GATE = {
 
 export class Gate {
   /**
-   * @param {object} object runtime room object (id, type, at, trigger, inverted, regrow, switches, style...)
+   * @param {object} object runtime room object (id, type, at, trigger, start, regrow, switches, style...)
    */
   constructor(object) {
     this.object = object;
@@ -43,14 +43,14 @@ export class Gate {
     this.prev = [...this.pos];
     /** 'switch' (powered by switches) or 'step' (gives way under the wizard). */
     this.trigger = object.trigger ?? 'switch';
-    /** A bridge: there only while powered (switch gates only). */
-    this.inverted = !!object.inverted;
+    /** Its state while unpowered: 'solid' (a gate) or 'gone' (a bridge, there only while powered; switch gates only). */
+    this.start = object.start ?? 'solid';
     /** Ids of the switches that power it, or null for every switch in the room (switch gates only). */
     this.switches = object.switches ?? null;
     /** Ticks from going to coming back (step blocks with `regrow`), or null if it stays gone. */
     this.regrowTicks = object.regrow === undefined ? null : Math.round(object.regrow * 60);
-    /** 'solid' | 'shake' | 'gone'. Every switch starts off, so a gate starts solid and a bridge gone. */
-    this.state = this.inverted ? 'gone' : 'solid';
+    /** 'solid' | 'shake' | 'gone'. Every switch starts off, so it starts in its `start` state. */
+    this.state = this.start;
     /** Ticks spent in the current state. */
     this.timer = 0;
   }
@@ -118,7 +118,7 @@ export class Gate {
    */
   power(powered, bodies) {
     if (this.trigger !== 'switch') return null;
-    const solid = this.inverted ? powered : !powered;
+    const solid = (this.start === 'solid') !== powered;
     if (solid === this.solid) return null;
     if (solid && !this.clear(bodies)) return null;
     this.enter(solid ? 'solid' : 'gone');

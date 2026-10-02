@@ -329,9 +329,10 @@
           "default": "switch",
           "description": "Gate blocks: what makes it go. switch: solid until its switches are all on (the room block entry's \"switches\", by default every switch in the room), gone while they are; step: a collapsing block (D47), it shakes when the wizard stands on it, then it is gone (back after \"regrow\" seconds, if given). Either way it comes back only once its cell is clear."
         },
-        "inverted": {
-          "type": "boolean",
-          "description": "Switch gates only: a bridge, there only while its switches are all on, gone otherwise."
+        "start": {
+          "enum": ["solid", "gone"],
+          "default": "solid",
+          "description": "Switch gates only: its state while its switches are off (every switch starts off, so also its state when the room starts). solid: a gate, gone while they are all on; gone: a bridge, there only while they are all on."
         },
         "color": {
           "$ref": "common.schema.json#/$defs/color",

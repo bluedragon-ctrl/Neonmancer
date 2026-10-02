@@ -474,7 +474,7 @@ test('block types: a look or a kind, and only the values that go with it', () =>
   blockError({ color: '#ffffff' }, 'needs a "look"');
   blockError({ look: 'plain', kind: 'gate', color: '#ffffff' }, 'both a "look" and a "kind"');
   blockError({ kind: 'gate', color: '#ffffff', damage: 1 }, 'damage: only for static blocks');
-  blockError({ kind: 'gate', trigger: 'step', inverted: true }, 'inverted: only switch gates are inverted');
+  blockError({ kind: 'gate', trigger: 'step', start: 'gone' }, 'start: only switch gates start gone');
   blockError({ kind: 'gate', regrow: 2 }, 'regrow: only step gates');
   blockError({ look: 'plain', regrow: 2 }, 'regrow: only for blocks with a "kind"');
   blockError({ extends: 'lava' }, 'unknown block type "lava"');

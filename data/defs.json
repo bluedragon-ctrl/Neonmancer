@@ -399,6 +399,6 @@
     "collapsing": { "kind": "gate", "trigger": "step", "edges": "dashed", "faces": "tinted", "tint": 0.05 },
     "collapsing_regrow": { "extends": "collapsing", "regrow": 3 },
     "gate": { "kind": "gate", "color": "#eef3ff" },
-    "bridge": { "extends": "gate", "inverted": true }
+    "bridge": { "extends": "gate", "start": "gone" }
   }
 }
