@@ -883,7 +883,7 @@ function buildAccessLocks() {
     time = (time + dt) % 7;
     const level = time > 4.5 ? 2 : time > 2 ? 1 : 0;
     for (const [i, lock] of locks.entries()) {
-      lock.userData.set({ open: level >= exits[i].access });
+      lock.userData.set({ open: level >= exits[i].access, accessOk: level >= exits[i].access });
       lock.userData.update(dt);
       flows[i].group.visible = lock.userData.openness > 0.5;
       flows[i].update(dt);
