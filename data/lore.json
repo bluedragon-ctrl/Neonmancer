@@ -187,7 +187,7 @@
     "tut_push": {
       "title": "MEMDUMP // CRATE.DAT",
       "lines": [
-        "CRATE: MOVABLE ALLOCATION. LIME. 1X1X1.",
+        "CRATE: MOVABLE ALLOCATION. NEON GREEN. 1X1X1.",
         "FORCE ON A FACE: IT SLIDES ONE CELL.",
         "NULL SECTOR IN FLOOR TABLE, 2 CELLS WIDE.",
         "FILL WITH ALLOCATIONS. 2 CRATES ON FILE.",

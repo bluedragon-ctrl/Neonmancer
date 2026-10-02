@@ -38,6 +38,7 @@ docs/decisions.md).
   Alt+click with the Block tool copies a block's type and switches.
 
 ### Changed
+- Crates are neon green instead of lime (D150); the tutorial screen says so.
 - The dev wing (5.4, D147): `world.json` `dev` lists the test rooms that
   only the dev server shows; a build for players leaves them out and walls
   up exits that led into them. Boot Sector, `room_1` and `room_2` stay in

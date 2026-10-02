@@ -268,7 +268,7 @@ Color rules (D99), for objects and blocks: red hurts or is about to
 (hazards, spiked platforms, hostile eyes: one red, `#ff2a3a`); the room
 color is structure (plain and collapsing blocks); black is a pit (holes,
 void blocks as black mist); white is a mechanism (plates, targets, locks);
-cyan moves (platforms); magenta is the wizard (D98); lime is pushable
+cyan moves (platforms); magenta is the wizard (D98); neon green is pushable
 (crates). Room colors stay clear of them (`tests/colors.test.js`).
 Monsters and spell effects are not bound by them yet.
 Behaviors below are ideas for Phase 5; for now biomes are look only.

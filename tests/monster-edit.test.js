@@ -140,7 +140,7 @@ test('freeColor picks a bright color far from the ones taken', () => {
   assert.ok(oklab(color)[0] >= MIN_TEMPLATE_LIGHTNESS);
   for (const other of [...taken, ...AVOID_COLORS]) assert.ok(colorGap(color, other) >= MIN_TEMPLATE_COLOR_GAP, `${color} vs ${other}`);
   const hex = (n) => `#${n.toString(16).padStart(6, '0')}`;
-  assert.deepEqual(AVOID_COLORS, [PALETTE.magenta, PALETTE.danger, PALETTE.lime, PALETTE.cyan].map(hex), 'the colors with a meaning, as in PALETTE');
+  assert.deepEqual(AVOID_COLORS, [PALETTE.magenta, PALETTE.danger, PALETTE.lime, PALETTE.neonGreen, PALETTE.cyan].map(hex), 'the colors with a meaning, as in PALETTE');
   assert.equal(hsvHex(0, 1, 1), '#ff0000');
   assert.equal(hsvHex(120, 1, 1), '#00ff00');
 });

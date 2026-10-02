@@ -987,7 +987,7 @@ and enemies, closer.
 - **Aim marker:** while Pull is selected (alive, no transition, no beam
   running), a dim marquee marks what a pull would take; nothing shows
   without a target that has somewhere to go.
-- **Color:** a pale mint, not the crate's lime nor the bug's green, so the
+- **Color:** a pale mint, not the crate's neon green nor the bug's green, so the
   beam reads on both.
 - Tuning: `defs.json` `spells.pull` (cost, cooldown, range, color); the
   look is `PULL_FX` in `src/render/pull-fx.js` with
@@ -1021,7 +1021,7 @@ step up, or a hole plugged to walk over.
   room reset clears them.
 - **Look:** bits in the spell's gold stream from his hands into the cell
   (18 ticks; the stream, D127) while the crate grows in with a flicker; the blinking and the pixels
-  of its end as above. The crate is lime, like every crate (D99): the
+  of its end as above. The crate is neon green, like every crate (D99): the
   gold is the spell's.
 - **Aim marker:** while Compile is selected (alive, no transition), a dim
   gold marquee marks the cell a cast would fill; nothing shows without a
@@ -1699,7 +1699,7 @@ Phase 5.
 
 Room colors keep clear of the colors objects and blocks carry (the color
 rules, D99): danger red (hazards, spiked platforms), white (plates,
-targets, locks), cyan (platforms), magenta (the wizard), lime (crates);
+targets, locks), cyan (platforms), magenta (the wizard), neon green (crates);
 void blocks are black mist and collapsing blocks take the room color.
 `tests/colors.test.js` checks every biome against them: a hue gap of at
 least 20° between saturated colors, and no near-white room color.
