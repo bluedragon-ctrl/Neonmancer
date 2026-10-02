@@ -6,10 +6,16 @@
   "biome": "home_lattice",
   "size": [12, 4, 12],
   "spawn": [1.5, 0, 6.5],
-  "exits": [{ "id": "west", "side": "-x", "at": 5 }],
+  "exits": [
+    { "id": "west", "side": "-x", "at": 5 },
+    { "id": "north", "side": "-z", "at": 4 },
+    { "id": "south", "side": "+z", "at": 4 }
+  ],
   "blocks": [{ "at": [9, 0, 0], "to": [11, 1, 1] }],
+  "shrine": [9, 9],
   "objects": [
     { "id": "screen_atrium", "type": "screen", "at": [2, 0, 9], "text": "tut_atrium", "overrides": { "face": "+z" } },
+    { "id": "screen_wings", "type": "screen", "at": [6, 0, 10], "text": "tut_wings", "overrides": { "face": "+z" } },
     { "id": "crate_step", "type": "crate", "at": [3, 0, 1] }
   ],
   "pickups": [{ "id": "fragment_2", "type": "fragment_2", "at": [10, 2, 0] }]

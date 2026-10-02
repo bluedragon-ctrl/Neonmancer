@@ -1,0 +1,19 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "shield_hall",
+  "name": "Shield Hall",
+  "biome": "home_lattice",
+  "size": [12, 4, 12],
+  "spawn": [4.5, 0, 10.5],
+  "exits": [{ "id": "south", "side": "+z", "at": 4 }],
+  "blocks": [
+    { "at": [1, 0, 5], "to": [5, 1, 5] },
+    { "at": [1, 0, 1], "to": [1, 1, 3] }
+  ],
+  "objects": [
+    { "id": "screen_shield", "type": "screen", "at": [7, 0, 10], "text": "tut_shield", "overrides": { "face": "+z" } }
+  ],
+  "enemies": [{ "id": "guard", "template": "sentinel", "at": [8, 0, 3] }],
+  "pickups": [{ "id": "disk_shield", "type": "disk_shield", "at": [3, 0, 3] }]
+}
