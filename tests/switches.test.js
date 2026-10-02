@@ -22,7 +22,7 @@ const cast = { down: (a) => a === 'cast', pressed: (a) => a === 'cast' };
  * Two rooms: alpha (8×4×8, its east exit locked, with `objects` and
  * `enemies`) and beta, joined alpha.east ↔ beta.west.
  */
-function files({ objects = [], enemies = [], exit = { id: 'east', side: '+x', at: 3, locked: true } } = {}) {
+function files({ objects = [], enemies = [], exit = { id: 'east', side: '+x', at: 3, requires: [{ switch: '*' }] } } = {}) {
   return dataFiles({
     rooms: [
       roomFile('alpha', { exits: [exit], objects, enemies }),
@@ -162,7 +162,7 @@ test('switch data: plates lie on the floor and on no hole; a locked exit needs a
   assert.match(underBlock[0], /is filled by blocks\[0\]/);
   const noSwitch = errorsOf({});
   assert.equal(noSwitch.length, 1);
-  assert.match(noSwitch[0], /exits\[0\]\.locked: a locked exit needs a switch/);
+  assert.match(noSwitch[0], /exits\[0\]\.requires: a switch lock needs a switch/);
 });
 
 test("switch looks: the bull's-eye on every face of a target and on a plate's tile", () => {

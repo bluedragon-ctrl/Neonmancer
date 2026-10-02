@@ -23,7 +23,7 @@ const TYPES = { objectTypes: OBJECT_TYPES, blockTypes: resolveBlockTypes(BLOCK_T
 function room() {
   return new RoomEdit(
     roomFile('alpha', {
-      exits: [{ id: 'east', side: '+x', at: 3, locked: true, switches: ['q'] }, { id: 'west', side: '-x', at: 3 }],
+      exits: [{ id: 'east', side: '+x', at: 3, requires: [{ switch: 'q' }] }, { id: 'west', side: '-x', at: 3 }],
       objects: [
         { id: 'p', type: 'plate', at: [2, 0, 2] },
         { id: 'q', type: 'plate', at: [3, 0, 2] },
@@ -126,12 +126,12 @@ test('Switch tool checklist ticks: link, unlink, every switch and back', () => {
   assert.deepEqual(thing('gate:4,0,1').switches, ['p', 'q']);
   // Ticking a switch on an exit not locked locks it; the last unticked unlocks it.
   setLink(edit, thing('exit:west'), 'p', true, all);
-  assert.deepEqual(edit.exits[1], { id: 'west', side: '-x', at: 3, locked: true, switches: ['p'] });
+  assert.deepEqual(edit.exits[1], { id: 'west', side: '-x', at: 3, requires: [{ switch: 'p' }] });
   setLink(edit, thing('exit:west'), 'p', false, all);
   assert.deepEqual(edit.exits[1], { id: 'west', side: '-x', at: 3 });
   // Every switch on an exit: locked, no list.
   setEvery(edit, thing('exit:west'), true, all);
-  assert.deepEqual(edit.exits[1], { id: 'west', side: '-x', at: 3, locked: true });
+  assert.deepEqual(edit.exits[1], { id: 'west', side: '-x', at: 3, requires: [{ switch: '*' }] });
   // A platform: ticked switches run it, none left it always runs.
   setLink(edit, thing('platform:l'), 'q', true, all);
   assert.deepEqual(edit.item('l').switches, ['q']);

@@ -33,9 +33,10 @@ const same = (a, b) => a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
  */
 export function linkables(edit, { objectTypes, blockTypes }) {
   const out = [];
-  for (const exit of edit.exits) {
+  for (const raw of edit.exits) {
+    const exit = withExitDefaults(raw);
     const switches = exit.locked ? (exit.switches ?? null) : [];
-    out.push({ kind: 'exit', key: `exit:${exit.id}`, id: exit.id, label: `exit ${exit.id}`, switches, cells: exitCells(withExitDefaults(exit), edit.size).inside });
+    out.push({ kind: 'exit', key: `exit:${exit.id}`, id: exit.id, label: `exit ${exit.id}`, switches, cells: exitCells(exit, edit.size).inside });
   }
   const seen = new Set();
   for (const { cell, type: key } of edit.blocks.cells()) {

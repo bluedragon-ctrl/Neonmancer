@@ -136,7 +136,7 @@ test('a hidden exit out of reach stays wall; the one he came in through is open 
 });
 
 test('a hidden exit that is locked too is a lock once revealed', () => {
-  const game = gameWith({ exits: [{ ...HIDDEN, access: 1 }] }, [9, 0, 5]);
+  const game = gameWith({ exits: [{ ...HIDDEN, requires: [{ access: 1 }] }] }, [9, 0, 5]);
   cast(game);
   run(game, SCAN.spreadTicks);
   assert.deepEqual(game.hidden.exits, []);

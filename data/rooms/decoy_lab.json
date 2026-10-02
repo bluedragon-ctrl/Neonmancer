@@ -8,7 +8,7 @@
   "spawn": [6.5, 0, 10.5],
   "exits": [
     { "id": "south", "side": "+z", "at": 7 },
-    { "id": "north", "side": "-z", "at": 7, "locked": true }
+    { "id": "north", "side": "-z", "at": 7, "requires": [{ "switch": "*" }] }
   ],
   "blocks": [
     { "at": [4, 0, 4] },

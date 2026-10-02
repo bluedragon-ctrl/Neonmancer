@@ -1496,3 +1496,21 @@ the game is called NEONMANCER. A small step ahead of Phase 5's bigger visual
 pass; the rule of D99 stays (the pushable color is its own), only the color
 moves. Lime stays for the energy bar and buffs, and both are kept clear of
 by new template colors (`AVOID_COLORS`). The tutorial's crate screen says so.
+
+### D151 — 2026-10-02 — One `requires` list for locked doors
+
+Switch locks and access locks become one system. An exit's `locked`,
+`switches` and `access` fields are replaced by `requires`, a list of
+conditions that must all hold: `{ "switch": id }` (one per switch),
+`{ "switch": "*" }` (every switch in the room) and `{ "access": level }`.
+`withExitDefaults()` expands the list into the old fields for the game, the
+reachability checker and the renderer; the editor writes it back
+(`exitFields()`). The look follows: a white glass pane (like the switch
+gates), lights red until their switch is on and then green, and the access
+level as a small numeral in the top corner, red until his level is enough,
+then green. Hidden exits (D128) stay a flag of their own.
+**Why:** both were one idea, a door waiting for a condition, with two
+vocabularies in data, editor and look; one list is easier to read and to
+extend (a later condition needs one new entry kind). It rewrote the north
+exits of the authored Boot Sector and `room_1` (`"locked": true` to
+`"requires": [{ "switch": "*" }]`), with the author's OK.
