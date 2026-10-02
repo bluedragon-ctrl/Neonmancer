@@ -218,7 +218,7 @@
       "type": "object",
       "required": ["kind"],
       "properties": {
-        "kind": { "enum": ["disk", "refill", "access", "buff", "upgrade", "secret", "fragment"], "description": "disk: teaches a spell (permanent); refill: restores integrity or energy (temporary); access: a test pass that raises the access level at once, as the core would (temporary, for testing access locks); buff: makes the wizard stronger for good (permanent); upgrade: improves a spell or his jump for good (permanent, D95); secret: a hidden gem worth extra score (permanent, D100); fragment: a key fragment, counted by the core for access levels and the end of the game (permanent, D101)." }
+        "kind": { "enum": ["disk", "refill", "boost", "access", "buff", "upgrade", "secret", "fragment"], "description": "disk: teaches a spell (permanent); refill: restores integrity or energy (temporary); boost: a small reward for a simple secret (temporary, D152): a functional one lasts until the room resets, a cosmetic one until a crash or a reload; access: a test pass that raises the access level at once, as the core would (temporary, for testing access locks); buff: makes the wizard stronger for good (permanent); upgrade: improves a spell or his jump for good (permanent, D95); secret: a hidden gem worth extra score (permanent, D100); fragment: a key fragment, counted by the core for access levels and the end of the game (permanent, D101)." }
       },
       "allOf": [
         {
@@ -241,6 +241,18 @@
               "kind": true,
               "stat": { "enum": ["integrity", "energy"], "description": "What it restores (its look and color follow)." },
               "amount": { "type": "integer", "minimum": 1, "maximum": 99, "description": "How much, up to the wizard's maximum. A refill is left lying while that stat is full." }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "boost" } } },
+          "then": {
+            "required": ["effect"],
+            "additionalProperties": false,
+            "properties": {
+              "kind": true,
+              "effect": { "enum": ["overdrive", "patch", "overclock", "sparkle", "rainbow"], "description": "Built into the engine (D152). Functional, with `seconds`, cleared when the room resets (leaving it, dying): overdrive, walks 50% faster; patch, absorbs the next hit; overclock, spells cost no energy. Cosmetic, no `seconds`, kept until a crash or a reload: sparkle, a trail of pixels behind him; rainbow, hat bands cycling the hues." },
+              "seconds": { "type": "integer", "minimum": 1, "maximum": 120, "description": "How long a functional boost lasts, if the room doesn't reset first. A cosmetic one has none." }
             }
           }
         },

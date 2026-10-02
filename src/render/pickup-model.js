@@ -5,6 +5,7 @@
  * gold card, its lit bit the level it grants). The room view and the
  * install animation both build them here.
  */
+import { createBoost } from './boost.js';
 import { createCard } from './card.js';
 import { createChip } from './chip.js';
 import { createDisk } from './disk.js';
@@ -21,6 +22,7 @@ import { FRAGMENT_COLOR } from '../entities/pickup.js';
  */
 export function createPickupModel(content, data, ghost = false) {
   if (data.kind === 'refill') return createRefill(data.stat);
+  if (data.kind === 'boost') return createBoost(data.effect);
   if (data.kind === 'access') return createCard({ color: FRAGMENT_COLOR, slot: data.level });
   if (data.kind === 'buff') return createChip({ stat: data.stat, slot: data.slot, ghost });
   if (data.kind === 'upgrade') return createCard({ color: data.color, slot: data.slot, ghost });

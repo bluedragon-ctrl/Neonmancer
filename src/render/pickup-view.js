@@ -39,7 +39,8 @@ export class PickupView {
   constructor(game, pickup) {
     this.pickup = pickup;
     const { data } = pickup;
-    this.refill = data.kind === 'refill';
+    // Refills and boosts (D152) are small, and hover lower than a disk.
+    this.refill = data.kind === 'refill' || data.kind === 'boost';
     /** No save bit (a refill or an access pass): it plays its own pick-up effect. */
     this.temporary = pickup.bit === null;
     this.model = createPickupModel(game.content, data, pickup.state === 'ghost');

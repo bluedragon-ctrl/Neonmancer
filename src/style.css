@@ -217,6 +217,28 @@ body {
   color: var(--lime);
 }
 
+/* Running boosts (D152): a slanted tag each, in the boost's color, under the spell tag. */
+.hud-boosts {
+  position: absolute;
+  top: calc(250 * var(--u));
+  left: calc(44 * var(--u));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(6 * var(--u));
+}
+
+.hud-boost {
+  font-weight: 700;
+  font-size: calc(16 * var(--u));
+  letter-spacing: 0.12em;
+  padding: calc(2 * var(--u)) calc(10 * var(--u));
+  border: calc(2 * var(--u)) solid currentColor;
+  transform: skewX(-18deg);
+  text-shadow: 0 0 calc(6 * var(--u)) currentColor;
+  box-shadow: 0 0 calc(6 * var(--u)) currentColor;
+}
+
 /* No spell yet (before the first data disk). */
 .hud-spell[hidden] {
   display: none;

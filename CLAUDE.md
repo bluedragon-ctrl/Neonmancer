@@ -163,7 +163,11 @@ mobile/touch support, backend or accounts.
   (spells, upgrades, buffs, fragments, secrets) is one save bit, found or
   not; a bit is the item, not a place, so the same item may lie in
   several rooms (D71). A found one shows grayed out on revisits (D67).
-  Temporary pickups (refills) are not saved and come back with the room.
+  Temporary pickups (refills, boosts) are not saved and come back with the
+  room. Boosts (D152) reward simple secrets: Overdrive (faster on the
+  ground), Patch (absorbs a hit) and Overclock (free spells) end when the
+  room resets; the Sparkle trail and Rainbow hat stay until a crash or a
+  reload.
   Death resets the wizard to his base state, so a detour for a refill
   can be worth it.
 

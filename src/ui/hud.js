@@ -1,7 +1,7 @@
 /**
  * The HUD: a DOM overlay on the stage with the integrity bar, the backups
  * under it, the energy bar with the selected spell under it (and the
- * Cut & Paste clipboard), a boss's bar (D135), the score and completion under the title (D100),
+ * Cut & Paste clipboard) and the running boosts (D152), a boss's bar (D135), the score and completion under the title (D100),
  * the key fragments and access level under them, the end-of-game screen
  * (D101), the room name banner, terminal messages and the fullscreen
  * hint. It only shows state;
@@ -10,7 +10,9 @@
  * messages and banners arrive through say() and announce()
  * (core/messages.js) from any module.
  */
+import { DT } from '../core/loop.js';
 import { takeAnnouncements, takeMessages } from '../core/messages.js';
+import { BOOST } from '../entities/boost.js';
 import { GAME_VERSION } from '../core/version.js';
 import { BossBar } from './boss-bar.js';
 import { clipIcon } from './clip-icon.js';
@@ -131,6 +133,11 @@ export class Hud {
     /** The boss bar (D135), up while a boss is awake. */
     this.bossBar = new BossBar(root);
     root.insertAdjacentHTML('beforeend', '<div class="hud-spell"><span class="hud-spell-name"></span><span class="hud-clip" hidden></span><span class="hud-spell-key"></span></div>');
+    // Running functional boosts (D152), under the spell tag.
+    root.insertAdjacentHTML('beforeend', '<div class="hud-boosts"></div>');
+    this.boostBox = find('.hud-boosts');
+    /** What the boost tags show (their markup key), so they are only rewritten when it changes. */
+    this.boostsShown = '';
     this.spellBox = find('.hud-spell');
     this.spellName = find('.hud-spell-name');
     this.spellKey = find('.hud-spell-key');
@@ -247,6 +254,27 @@ export class Hud {
     this.spellBox.classList.remove('switched');
     void this.spellBox.offsetWidth; // restart the animation
     this.spellBox.classList.add('switched');
+  }
+
+  /**
+   * The functional boosts running (D152), one tag each under the spell tag:
+   * its name and the seconds left, in its color.
+   * @param {Record<string, number>} boosts effect → ticks left (Player.boosts)
+   */
+  setBoosts(boosts) {
+    const tags = Object.entries(boosts).map(([effect, ticks]) => [effect, Math.ceil(ticks * DT)]);
+    const key = tags.map(([effect, seconds]) => `${effect}:${seconds}`).join(' ');
+    if (key === this.boostsShown) return;
+    this.boostsShown = key;
+    this.boostBox.replaceChildren(
+      ...tags.map(([effect, seconds]) => {
+        const tag = document.createElement('div');
+        tag.className = 'hud-boost';
+        tag.style.color = BOOST.colors[effect];
+        tag.textContent = `${this.text(`boost.${effect}`)} ${seconds}`;
+        return tag;
+      }),
+    );
   }
 
   /**
