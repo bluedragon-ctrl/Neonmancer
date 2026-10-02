@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/world.schema.json",
   "schemaVersion": 1,
-  "start": "boot_sector",
+  "start": "boot_up",
   "dev": [
     "cache_hall",
     "fault_line",
@@ -17,7 +17,10 @@
     "secret_cache",
     "boss_arena",
     "boss_plates",
-    "switch_works"
+    "switch_works",
+    "boot_sector",
+    "room_1",
+    "room_2"
   ],
   "fragments": { "required": 64, "access": [16, 32, 48] },
   "connections": [
@@ -37,7 +40,11 @@
     ["hidden_layer.north", "secret_cache.south"],
     ["build_yard.south", "boss_arena.north"],
     ["boss_arena.east", "boss_plates.west"],
-    ["fast_path.south", "switch_works.north"]
+    ["fast_path.south", "switch_works.north"],
+    ["boot_up.east", "first_steps.west"],
+    ["first_steps.east", "zap_port.west"],
+    ["zap_port.north", "first_light.south"],
+    ["zap_port.east", "atrium.west"]
   ],
   "positions": {
     "boot_sector": [-1, -1],
@@ -57,6 +64,11 @@
     "secret_cache": [3, -2],
     "boss_arena": [2, 0],
     "boss_plates": [3, 0],
-    "switch_works": [0, 1]
+    "switch_works": [0, 1],
+    "boot_up": [5, 0],
+    "first_steps": [6, 0],
+    "zap_port": [7, 0],
+    "first_light": [7, -1],
+    "atrium": [8, 0]
   }
 }

@@ -1,0 +1,20 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "zap_port",
+  "name": "Zap Port",
+  "biome": "home_lattice",
+  "size": [12, 4, 12],
+  "spawn": [1.5, 0, 6.5],
+  "exits": [
+    { "id": "west", "side": "-x", "at": 5 },
+    { "id": "east", "side": "+x", "at": 5 },
+    { "id": "north", "side": "-z", "at": 2, "locked": true }
+  ],
+  "objects": [
+    { "id": "screen_zap", "type": "screen", "at": [2, 0, 9], "text": "tut_zap", "overrides": { "face": "+z" } },
+    { "id": "target_door", "type": "target", "at": [8, 0, 0] }
+  ],
+  "enemies": [{ "id": "patrol", "template": "bug", "at": [5, 0, 3], "path": { "points": [[10, 0, 3]], "pause": 0.8 } }],
+  "pickups": [{ "id": "disk_zap", "type": "disk_zap", "at": [3, 0, 7] }]
+}

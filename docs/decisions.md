@@ -1460,3 +1460,20 @@ which still waits for the tracks.
 (D45) and stay; a list in the world file hides them without moving
 authored rooms or touching their files, and the same data serves the
 dev-only editor and world map tool.
+
+### D148 — 2026-10-02 — The Lattice tutorial: the real start
+Step 5.5. Five unflagged rooms (D90) in `data/rooms/`: `boot_up` (8x8,
+the start: a one-block ledge, a backup shrine, a screen with the
+controls), `first_steps` (a two-wide hole and two crates: pushing in two
+directions), `zap_port` (the Zap disk, a bug, a target that powers the
+north door), `first_light` (fragment 1, the fragments screen) and a
+small `atrium` (a crate as a step to a 2-high ledge with fragment 2; its
+other doors wait for 5.6). Map cells x 5 to 8, east of the old test
+rooms. `world.json` starts at `boot_up`; Boot Sector, `room_1` and
+`room_2` join the dev wing (the flag lives in world.json, their files are
+untouched). New screen texts `tut_*` in `lore.json`. The reachability
+checker's core check now counts only rooms joined to the start, a warning
+until 5.8 puts the core in the Lattice (the test core sits in the dev
+wing).
+**Why:** the world needs a real first minute, and the old test cluster
+must not gate CI once it is no longer the start.

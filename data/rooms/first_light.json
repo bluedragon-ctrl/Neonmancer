@@ -1,0 +1,20 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "first_light",
+  "name": "First Light",
+  "biome": "home_lattice",
+  "size": [8, 4, 8],
+  "spawn": [2.5, 0, 6.5],
+  "exits": [{ "id": "south", "side": "+z", "at": 2 }],
+  "objects": [
+    {
+      "id": "screen_fragment",
+      "type": "screen",
+      "at": [1, 0, 3],
+      "text": "help_fragments",
+      "overrides": { "face": "+z" }
+    }
+  ],
+  "pickups": [{ "id": "fragment_1", "type": "fragment_1", "at": [5, 0, 3] }]
+}

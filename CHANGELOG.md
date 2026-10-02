@@ -9,6 +9,9 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
+- The Lattice tutorial (5.5, D148): the new start `boot_up`, `first_steps`,
+  `zap_port`, `first_light` and a small `atrium`, with hint screens; the
+  old test start joins the dev wing.
 - Audio engine (5.1, D138): `data/audio.json` (music tracks, sound
   effects as files or ZzFX recipes), Howler music with looping and
   crossfades, the Options music and sound sliders wired, game events play

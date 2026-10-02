@@ -167,7 +167,7 @@ export function analyzeWorld(content, { needs = true } = {}) {
   const total = new Set([...rooms.values()].flatMap((room) => room.pickups.filter((p) => p.kind === 'fragment').map((p) => p.type))).size;
   if (total < required) warnings.push(`the world holds ${total} of the ${required} key fragments the core asks for, so it can't be finished yet`);
   else if (fragments.size < required) errors.push(`only ${fragments.size} of the ${required} key fragments can be reached`);
-  if (![...rooms.values()].some((room) => room.objects.some((o) => o.kind === 'core'))) warnings.push('no core in any room');
+  if (![...rooms].some(([id, room]) => connected.has(id) && room.objects.some((o) => o.kind === 'core'))) warnings.push('no core in the rooms joined to the start');
   else if (!coreReached) errors.push('the core can\'t be reached');
 
   return { rooms: state, rounds, abilities: [...have], access, fragments, coreReached, targets, errors, warnings };

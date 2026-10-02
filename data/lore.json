@@ -170,23 +170,49 @@
     },
     "access_1": {
       "title": "ACCESS DENIED",
-      "lines": [
-        "THIS SECTOR NEEDS ACCESS LEVEL I.",
-        "BRING 16 FRAGMENTS TO THE CORE."
-      ]
+      "lines": ["THIS SECTOR NEEDS ACCESS LEVEL I.", "BRING 16 FRAGMENTS TO THE CORE."]
     },
     "access_2": {
       "title": "ACCESS DENIED",
-      "lines": [
-        "THIS SECTOR NEEDS ACCESS LEVEL II.",
-        "BRING 32 FRAGMENTS TO THE CORE."
-      ]
+      "lines": ["THIS SECTOR NEEDS ACCESS LEVEL II.", "BRING 32 FRAGMENTS TO THE CORE."]
     },
     "access_3": {
       "title": "ACCESS DENIED",
+      "lines": ["THIS SECTOR NEEDS ACCESS LEVEL III.", "BRING 48 FRAGMENTS TO THE CORE."]
+    },
+    "tut_move": {
+      "title": "SYSLOG 0x02",
       "lines": [
-        "THIS SECTOR NEEDS ACCESS LEVEL III.",
-        "BRING 48 FRAGMENTS TO THE CORE."
+        "WELCOME, WIZARD. THIS IS THE GRID.",
+        "MOVE: WASD OR ARROWS. JUMP: SPACE.",
+        "HOP THE LEDGE: A JUMP CLEARS ONE BLOCK.",
+        "FALL, GET HIT, CRASH? THE SHRINE BACKS YOU UP."
+      ]
+    },
+    "tut_push": {
+      "title": "HELP PUSH.EXE",
+      "lines": [
+        "LIME CRATES CAN BE PUSHED. WALK INTO ONE.",
+        "A CRATE PUSHED INTO A HOLE FILLS IT.",
+        "THE GAP IS TWO WIDE: YOU NEED BOTH CRATES.",
+        "STUCK? STEP IN THE HOLE. THE ROOM RESETS."
+      ]
+    },
+    "tut_zap": {
+      "title": "SYSLOG 0x03",
+      "lines": [
+        "A DATA DISK HOLDS A PROGRAM. WALK OVER IT.",
+        "CAST WITH E. SWITCH PROGRAMS WITH TAB / Q.",
+        "WHITE TARGETS FLIP WHEN SHOT. THE NORTH DOOR",
+        "WAITS ON ONE. MIND THE BUG."
+      ]
+    },
+    "tut_atrium": {
+      "title": "SYSLOG 0x04",
+      "lines": [
+        "ATRIUM: THE HUB OF THE HOME LATTICE.",
+        "CRATES ARE STEPS TOO. PUSH ONE TO A LEDGE,",
+        "JUMP ON IT, THEN JUMP AGAIN."
       ]
     }
   }
