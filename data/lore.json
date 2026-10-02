@@ -139,13 +139,12 @@
       ]
     },
     "help_fragments": {
-      "title": "HELP FRAGMENT.DAT",
+      "title": "FRAGMENT.DAT // BOOT KEY",
       "lines": [
-        "GOLD TILES ARE KEY FRAGMENTS.",
-        "64 OF THEM MAKE THE 8X8 BOOT KEY.",
-        "EACH ONE FILLS A MODULE ON YOUR HUD.",
-        "FOUND IS FOUND: THEY SURVIVE ANY CRASH.",
-        "CARRY THEM TO THE CORE TO USE THEM."
+        "GOLD TILE: 1 OF 64 MODULES OF THE BOOT KEY.",
+        "KEY GRID IS 8X8. HUD MAPS EACH SHARD ON PICKUP.",
+        "RECOVERED SHARDS PERSIST ACROSS CRASHES.",
+        "DELIVER TO CORE TO RAISE ACCESS LEVEL."
       ]
     },
     "help_core": {
@@ -181,38 +180,40 @@
       "lines": ["THIS SECTOR NEEDS ACCESS LEVEL III.", "BRING 48 FRAGMENTS TO THE CORE."]
     },
     "tut_move": {
-      "title": "SYSLOG 0x02",
+      "title": "BOOT.LOG // 0x02",
       "lines": [
-        "WELCOME, WIZARD. THIS IS THE GRID.",
-        "MOVE: WASD OR ARROWS. JUMP: SPACE.",
-        "HOP THE LEDGE: A JUMP CLEARS ONE BLOCK.",
-        "FALL, GET HIT, CRASH? THE SHRINE BACKS YOU UP."
+        "KERNEL SPAWNED USER PROCESS: WIZARD.EXE",
+        "INPUT DRIVERS: WASD, ARROWS, SPACE (JUMP).",
+        "STEP LIMIT: ONE BLOCK. TALLER IS A WALL.",
+        "UNHANDLED EXCEPTION: RESTORE FROM SHRINE."
       ]
     },
     "tut_push": {
-      "title": "HELP PUSH.EXE",
+      "title": "MEMDUMP // CRATE.DAT",
       "lines": [
-        "LIME CRATES CAN BE PUSHED. WALK INTO ONE.",
-        "A CRATE PUSHED INTO A HOLE FILLS IT.",
-        "THE GAP IS TWO WIDE: YOU NEED BOTH CRATES.",
-        "STUCK? STEP IN THE HOLE. THE ROOM RESETS."
+        "CRATE: MOVABLE ALLOCATION. LIME. 1X1X1.",
+        "FORCE ON A FACE: IT SLIDES ONE CELL.",
+        "NULL SECTOR IN FLOOR TABLE, 2 CELLS WIDE.",
+        "FILL WITH ALLOCATIONS. 2 CRATES ON FILE.",
+        "FALL INTO NULL: PROCESS RESTARTED."
       ]
     },
     "tut_zap": {
-      "title": "SYSLOG 0x03",
+      "title": "PORTMAP // ZAP.EXE",
       "lines": [
-        "A DATA DISK HOLDS A PROGRAM. WALK OVER IT.",
-        "CAST WITH E. SWITCH PROGRAMS WITH TAB / Q.",
-        "WHITE TARGETS FLIP WHEN SHOT. THE NORTH DOOR",
-        "WAITS ON ONE. MIND THE BUG."
+        "DATA DISK ON HOST: ZAP.EXE. INSTALLS ON CONTACT.",
+        "INVOKE: E. CYCLE LOADED PROGRAMS: TAB / Q.",
+        "TARGET NODES TOGGLE ON BOLT IMPACT.",
+        "NORTH DOOR: POWERED BY ONE TARGET NODE.",
+        "BUG.PROC PATROLS THE PORT. BITE: -1 INTEGRITY."
       ]
     },
     "tut_atrium": {
-      "title": "SYSLOG 0x04",
+      "title": "DIR // /HOME/LATTICE/ATRIUM",
       "lines": [
-        "ATRIUM: THE HUB OF THE HOME LATTICE.",
-        "CRATES ARE STEPS TOO. PUSH ONE TO A LEDGE,",
-        "JUMP ON IT, THEN JUMP AGAIN."
+        "HUB NODE. WINGS MOUNT HERE AS ACCESS GROWS.",
+        "ALLOCATIONS ARE STRUCTURE: A CRATE IS A STEP.",
+        "STEP LIMIT 1 + CRATE 1 = REACHABLE HEIGHT 2."
       ]
     }
   }
