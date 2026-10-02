@@ -1440,3 +1440,23 @@ report (F3, `world/pickup-report.js`).
 rooms; seeing what is placed while placing avoids a slot placed twice
 by mistake (allowed, D71, but rarely meant) or one forgotten, without
 switching to the world map tool.
+
+### D147 — 2026-10-02 — The dev wing: a list in world.json, hidden from players
+Step 5.4. `world.json` has a `dev` list of room ids. The dev server, the
+tests and the tools see the whole world; a build for players
+(`loadGameData(files, { dev: false })`, `main.js`) leaves the dev rooms
+out, with their connections and map positions, and an exit of a player
+room that led into one is dropped, so it is plain wall. Validation runs
+on the whole world first; the start room may not be in the wing. Nothing
+is moved or deleted, and no room file changes (D45, D90). For now the
+wing holds every test room except Boot Sector, `room_1` and `room_2`:
+Boot Sector is authored and the start until 5.5 gives the game a new
+start, and its neighbours cannot be hidden without sealing its exits.
+Boot Sector's role: the player start until 5.5, then it joins the wing
+(the author's OK needed to edit it, D90, but the flag is in world.json,
+not the room). Step order: 5.5 (the tutorial) comes before 5.3 (music),
+which still waits for the tracks.
+**Why:** the test rooms are the only place to try a mechanic in isolation
+(D45) and stay; a list in the world file hides them without moving
+authored rooms or touching their files, and the same data serves the
+dev-only editor and world map tool.

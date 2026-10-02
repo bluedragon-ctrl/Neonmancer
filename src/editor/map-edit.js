@@ -267,6 +267,7 @@ export class MapEdit {
       for (const exit of this.rooms.get(id).exits ?? []) this.disconnectExit(`${id}.${exit.id}`);
       this.rooms.delete(id);
       delete this.positions[id];
+      if (this.world.dev) this.world.dev = this.world.dev.filter((room) => room !== id);
       return true;
     });
     return null;

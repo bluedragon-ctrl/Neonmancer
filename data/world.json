@@ -2,6 +2,23 @@
   "$schema": "../schemas/world.schema.json",
   "schemaVersion": 1,
   "start": "boot_sector",
+  "dev": [
+    "cache_hall",
+    "fault_line",
+    "transit_bus",
+    "quarantine",
+    "scheduler",
+    "fast_path",
+    "tractor_bay",
+    "build_yard",
+    "hidden_layer",
+    "decoy_lab",
+    "decoy_vault",
+    "secret_cache",
+    "boss_arena",
+    "boss_plates",
+    "switch_works"
+  ],
   "fragments": { "required": 64, "access": [16, 32, 48] },
   "connections": [
     ["boot_sector.east", "cache_hall.west"],

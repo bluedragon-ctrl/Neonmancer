@@ -807,6 +807,10 @@ function validatePlayerPoint({ room, report, filled, holes, blockTypes, collapsi
 function validateWorld(world, rooms, report) {
   const file = 'world.json';
   if (!rooms.has(world.start)) report(file, 'start', `unknown room "${world.start}"`);
+  (world.dev ?? []).forEach((id, i) => {
+    if (!rooms.has(id)) report(file, `dev[${i}]`, `unknown room "${id}"`);
+    else if (id === world.start) report(file, `dev[${i}]`, `the start room "${id}" can't be in the dev wing`);
+  });
 
   /** "room.exit" → exit, for every exit in every room */
   const exits = new Map();

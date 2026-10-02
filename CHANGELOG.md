@@ -35,6 +35,10 @@ docs/decisions.md).
   Alt+click with the Block tool copies a block's type and switches.
 
 ### Changed
+- The dev wing (5.4, D147): `world.json` `dev` lists the test rooms that
+  only the dev server shows; a build for players leaves them out and walls
+  up exits that led into them. Boot Sector, `room_1` and `room_2` stay in
+  the player world until the new start (5.5).
 - Room editor Object tool (D146): its type list is in groups (crates,
   platforms, decorations, core, then pickups by kind), each type saying
   what it does, each permanent pickup where it lies in the world
