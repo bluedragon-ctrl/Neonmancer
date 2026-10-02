@@ -35,6 +35,10 @@ docs/decisions.md).
   Alt+click with the Block tool copies a block's type and switches.
 
 ### Changed
+- Room editor Object tool (D146): its type list is in groups (crates,
+  platforms, decorations, core, then pickups by kind), each type saying
+  what it does, each permanent pickup where it lies in the world
+  (`not placed`, `in room_1`).
 - Object types may `extend` a base type (D145), like block types: the
   crate variants and timed switches list only what they change.
 - Gate block types (D144): a bridge is `"start": "gone"` (was

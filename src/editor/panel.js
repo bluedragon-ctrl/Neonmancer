@@ -101,6 +101,100 @@ export function blockTypeGroups(types) {
   return Object.entries(groups).filter(([, options]) => options.length > 0);
 }
 
+/** The Object tool's list in groups: objects by kind, then pickups by kind (D146). */
+const OBJECT_GROUPS = [
+  ['Crates', 'pushable'],
+  ['Platforms', 'platform'],
+  ['Decorations', 'deco'],
+  ['Core', 'core'],
+  ['Spells', 'disk'],
+  ['Upgrades', 'upgrade'],
+  ['Buffs', 'buff'],
+  ['Refills', 'refill'],
+  ['Fragments', 'fragment'],
+  ['Secrets', 'secret'],
+  ['Test', 'access'],
+];
+
+/**
+ * An object or pickup type in a few words for the Object tool's list
+ * (D146): what it does (`breaks after 1 hit`, `hurts 1`, `spell zap`,
+ * `+10 energy`) rather than only its kind.
+ * @param {object} type a resolved object type or a pickup type
+ */
+export function objectTypeText(type) {
+  const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+  switch (type.kind) {
+    case 'pushable': {
+      const does = [
+        type.integrity !== undefined && `breaks after ${plural(type.integrity, 'hit')}`,
+        type.edges === 'dashed' && 'dashed edges',
+        type.mark && type.mark !== 'none' && `${type.mark} mark`,
+      ].filter(Boolean);
+      return does.join(', ') || 'plain';
+    }
+    case 'platform':
+      return type.damage ? `spiked, hurts ${type.damage}` : 'rides its path';
+    case 'deco':
+      return 'decoration';
+    case 'core':
+      return 'the central core';
+    case 'disk':
+      return `spell ${type.spell}`;
+    case 'upgrade':
+      return type.spell ? `upgrade of ${type.spell}` : 'upgrade';
+    case 'buff':
+      return type.stat === 'recharge' ? 'faster recharge' : `+${type.amount} ${type.stat}`;
+    case 'refill':
+      return `refills ${type.amount} ${type.stat}`;
+    case 'fragment':
+    case 'secret':
+      return `slot ${type.slot}`;
+    case 'access':
+      return `access level ${type.level}`;
+    default:
+      return type.kind;
+  }
+}
+
+/**
+ * Where a permanent pickup lies (D71, D146): `not placed`, or the rooms
+ * (`in boot_sector`, `in a ×2, b`): placing one twice is allowed but
+ * rarely meant.
+ * @param {string[]} rooms the room of each place, one per place
+ */
+export function placesText(rooms) {
+  if (rooms.length === 0) return 'not placed';
+  const counts = new Map();
+  for (const room of rooms) counts.set(room, (counts.get(room) ?? 0) + 1);
+  return `in ${[...counts].map(([room, n]) => (n > 1 ? `${room} ×${n}` : room)).join(', ')}`;
+}
+
+/**
+ * The Object tool's list (D146): groups of [id, label], objects first,
+ * then pickups, each label saying what the type does and, for a
+ * permanent pickup, where it lies.
+ * @param {Record<string, object>} types object and pickup types the tool places
+ * @param {Map<string, string[]>|null} [places] permanent pickup type → its rooms (placesText)
+ * @returns {[string, [string, string][]][]} [group label, [id, label] options]
+ */
+export function objectTypeGroups(types, places = null) {
+  const groups = new Map(OBJECT_GROUPS.map(([label]) => [label, []]));
+  const groupOf = new Map(OBJECT_GROUPS.map(([label, kind]) => [kind, label]));
+  for (const [id, type] of Object.entries(types)) {
+    const label = groupOf.get(type.kind) ?? 'Other';
+    if (!groups.has(label)) groups.set(label, []);
+    groups.get(label).push([id, objectOptionText(id, type, places)]);
+  }
+  return [...groups].filter(([, options]) => options.length > 0);
+}
+
+/** One Object tool option: `id (what it does · where it lies)`. */
+function objectOptionText(id, type, places) {
+  const where = places?.has(id) ? placesText(places.get(id)) : null;
+  return `${id} (${[objectTypeText(type), where].filter(Boolean).join(' · ')})`;
+}
+
 /** An element with a class and optional text. */
 function el(tag, className, text) {
   const node = document.createElement(tag);
@@ -318,7 +412,8 @@ export class EditorPanel {
     this.blockSwitches.addEventListener('change', () => on.blockSwitches(switchIds(this.blockSwitches.value)));
     this.blockSwitchesRow = this.row('Switches', this.blockSwitches);
     this.blockRows.append(this.row('Type', this.blockSelect), this.blockSwitchesRow);
-    this.objectSelect = select(Object.entries(objectTypes).map(([id, type]) => [id, `${id} (${type.kind})`]));
+    this.objectTypes = objectTypes;
+    this.objectSelect = groupedSelect(objectTypeGroups(objectTypes));
     this.objectSelect.addEventListener('change', () => on.objectType(this.objectSelect.value));
     this.objectRows = el('div', 'editor-group');
     // A picked platform: the switches that run it (D140).
@@ -570,6 +665,18 @@ export class EditorPanel {
   }
 
   /**
+   * The Object tool's labels with where each permanent pickup lies now
+   * (D146); only labels that changed are rewritten, so an open list stays.
+   * @param {Map<string, string[]>} places permanent pickup type → its rooms
+   */
+  showObjectPlaces(places) {
+    for (const option of this.objectSelect.options) {
+      const text = objectOptionText(option.value, this.objectTypes[option.value], places);
+      if (option.textContent !== text) option.textContent = text;
+    }
+  }
+
+  /**
    * Show the editor's state.
    * @param {object} state
    * @param {import('./room-edit.js').RoomEdit} state.edit the room
@@ -578,6 +685,7 @@ export class EditorPanel {
    * @param {string} state.blockType the Block tool's type
    * @param {string[]|null} [state.blockSwitches] the switches of the switch gates it places (D141), or null: not a switch gate
    * @param {string} state.objectType
+   * @param {Map<string, string[]>|null} [state.objectPlaces] where each permanent pickup lies (D146), or null: not shown now
    * @param {string} state.switchType type of the switches the Switch tool places
    * @param {ReturnType<import('./switch-tool.js').linkList>} [state.linkList] the link checklist, or null
    * @param {{ kind: string, switches: string[] }|null} [state.links] the picked platform and its switches (D140), or null
@@ -598,7 +706,7 @@ export class EditorPanel {
    * @param {string} state.status a line about the last action
    * @param {boolean} state.unsaved there are unsaved edits (any room, or world.json)
    */
-  show({ edit, rooms, tool, blockType, blockSwitches = null, objectType, switchType, linkList = null, links = null, switchInfo = null, enemy, pathItem, pathItemIsEnemy, screen, exit, layer, cut, errors, status, unsaved }) {
+  show({ edit, rooms, tool, blockType, blockSwitches = null, objectType, objectPlaces = null, switchType, linkList = null, links = null, switchInfo = null, enemy, pathItem, pathItemIsEnemy, screen, exit, layer, cut, errors, status, unsaved }) {
     const data = edit.data;
     const changed = edit.dirty || edit.linksChanged;
     this.roomLabel.textContent = `${data.id}${changed ? ' • unsaved' : unsaved ? ' • other rooms unsaved' : ''}`;
@@ -614,6 +722,7 @@ export class EditorPanel {
     if (blockSwitches && document.activeElement !== this.blockSwitches) this.blockSwitches.value = blockSwitches.join(' ');
     this.objectRows.hidden = tool !== 'object';
     this.objectSelect.value = objectType;
+    if (objectPlaces) this.showObjectPlaces(objectPlaces);
     // A picked platform: its switches (D140).
     this.objectSwitchesRow.hidden = !links;
     if (links) {

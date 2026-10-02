@@ -1908,7 +1908,14 @@ floor.
   clicked again, D117); a block or something of another type there says
   to erase it first. A new platform is picked, ready for its path. A
   picked platform shows its **Switches** field, a picked switch what it
-  powers and, a timed one, its **Timer** (blank: its type's).
+  powers and, a timed one, its **Timer** (blank: its type's). Its type
+  list is in groups (D146): Crates, Platforms, Decorations, Core, then
+  the pickups: Spells, Upgrades, Buffs, Refills, Fragments, Secrets,
+  Test; each type says what it does (`crate_cross (breaks after 1 hit)`,
+  `buff_energy_2 (+10 energy)`), and a permanent pickup where it lies in
+  the world, unsaved edits included (`fragment_3 (slot 3 · not placed)`,
+  `disk_zap (spell zap · in room_1)`, `in a ×2` placed twice), like the
+  world map's pickup report (F3).
   Erasing removes an object or enemy standing in the cell.
 - **Enemy** places an enemy of the template picked in the panel (a line
   under it says what the template does: `bug · patrol · touch · hostile

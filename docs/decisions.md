@@ -1425,3 +1425,18 @@ shares almost nothing with `platform`.
 the timed switches their base's values, so changing the crate color
 meant four edits that could drift apart. One level and a fixed kind keep
 a variant readable on its own, as for block types.
+
+### D146 — 2026-10-02 — The Object tool's list in groups, with where pickups lie
+The room editor's Object tool listed about 120 types flat, each with only
+its kind (four crates all "pushable", 64 fragments burying the rest). It
+now lists them in groups like the Block tool (D144): Crates, Platforms,
+Decorations, Core, then the pickups: Spells, Upgrades, Buffs, Refills,
+Fragments, Secrets, Test. Each type says what it does (`breaks after 1
+hit`, `spiked, hurts 1`, `spell zap`, `+10 energy`), and each permanent
+pickup where it lies in the world now, unsaved edits included (`not
+placed`, `in room_1`, `in a ×2`), worked out like the world map's pickup
+report (F3, `world/pickup-report.js`).
+**Why:** Home Lattice needs 16 or more fragments placed over about 30
+rooms; seeing what is placed while placing avoids a slot placed twice
+by mistake (allowed, D71, but rarely meant) or one forgotten, without
+switching to the world map tool.
