@@ -2156,7 +2156,7 @@ author, recorded as decisions before the code lands. Every step also
 The phases were re-cut around a playtest of Home Lattice. The rules of
 "Finished phases" apply to every step: one branch, one PR against `main`,
 CI green, showcase, test room, unit tests, docs. Code steps name their
-branch; design steps end in decisions before any code. **Next: Phase 5 (5.6; 5.3 music waits for the tracks, D147).**
+branch; design steps end in decisions before any code. **Next: Phase 5 (5.6a; 5.3 music waits for the tracks, D147).**
 
 ### Phase 4 (v0.4) steps: tools and bosses
 
@@ -2190,8 +2190,15 @@ tracks and is done after 5.5 (D147).
 | 5.3 | `feat/music` | The author's tracks trimmed for seamless loops: Lattice, boss, title; room and biome mapping, a boss switch and a crossfade back. |
 | 5.4 (done, D147) | `refactor/dev-wing` | The old test rooms move to a dev-only wing (kept, D45, never deleted): a `dev` list in world.json, shown by the dev server and absent from builds for players. Boot Sector stays the start until 5.5. |
 | 5.5 (done, D148) | `feat/lattice-tutorial` | The first rooms from the plan: start, movement, pushing, the first disk, the first fragment; screens with hints (D118). |
-| 5.6 | `feat/lattice-spells` | The middle batch: the spell and upgrade rooms and their puzzles and combat rooms. |
-| 5.7 | `feat/lattice-fragments` | The fragment rooms and optional side rooms (the extra fragments), the two boss arenas placed. |
+| 5.6a | `feat/lattice-atrium` | The central area first: the Atrium finished as the hub (doors west to the tutorial, north to the Shield wing, south to the Pause wing; a backup shrine, screens), plus the two wing entrances that hold the disks: `shield_hall` (Shield) and `freeze_hall` (Pause). The hub then has all its exits, so the author can refine and flag it (D90). |
+| 5.6b | `feat/lattice-shield-wing` | `bolt_gallery` (fragment 3), `relay_loft` (fragment 4) and `ledger_cell` (fragment 5). |
+| 5.6c | `feat/lattice-pause-wing` | `cold_stairs` (fragment 6): frozen enemies as steps. |
+| 5.6d | `feat/lattice-boss-one` | `warden_pit` (boss 1, drops fragment 7) and `idle_cache` (fragment 8), placed from the test arena. |
+| 5.6e | `feat/lattice-scan-wing-1` | The Scan wing, first half: `scan_lab` (Scan disk) and `mirror_stacks` (fragment 9); the door from `relay_loft` is added. |
+| 5.6f | `feat/lattice-scan-wing-2` | `ghost_exit` (fragment 10), `drift_bay` (fragment 11) and `junction` (fragment 16). |
+| 5.6g | `feat/lattice-fork-wing-1` | The Fork wing, first half: `fork_lab` (Fork disk) and `twin_plates` (fragment 12); the door from `cold_stairs` is added. |
+| 5.6h | `feat/lattice-fork-wing-2` | `guard_loop` (fragment 13) and `split_vault` (fragments 14 and 15). |
+| 5.7 | `feat/lattice-gatekeeper` | The Gatekeeper arena (boss 2, drops the energy buff) joining the Scan and Fork wings, with the way on to the core. |
 | 5.8 | `feat/lattice-core-gates` | The core, the Level 1 access locks and the teaser rooms beyond them: a few look-only rooms each for Glitchmire and Frostbyte Wastes (looks in the showcase first). |
 | 5.9 | `feat/outer-buffer-secrets` | The Outer Buffer look (floor, starfield, color re-picked) and the secret cluster, reached by Scan and similar tricks. |
 | 5.10 | `feat/lattice-visual-pass` | Optional: the Lattice's data flows and glass panels (D121). |
@@ -2200,7 +2207,8 @@ tracks and is done after 5.5 (D147).
 | 5.13 | `chore/balance-pass` | Difficulty, energy, backups and shrines across the Lattice from full playthroughs. |
 | 5.14 | `chore/release-0.5.0` | Docs pass, tag `v0.5.0`, the GitHub Release: **Playtest 1**. |
 
-Every Lattice batch goes through the reachability checker and the
+The Lattice steps (5.6a to 5.7) are small, two or three rooms each, and the
+hub comes before the wings (D149). Every Lattice batch goes through the reachability checker and the
 review subagent. Rooms are drafted unflagged; the author refines them in
 the editor and flags them authored (D90).
 
