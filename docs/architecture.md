@@ -58,7 +58,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `core/version.js` | Game and data-schema version numbers (the game's patch number comes from `tools/game-version.js`, D42) |
 | `data/bundle.js` | The only Vite-specific module: bundles `data/**/*.json`, imports dev schema errors, `DEV_SERVER` flag |
 | `data/load.js` | Validate the data files and build the content tables; throws `DataError` |
-| `data/room-data.js` | Shared reading of room data: block boxes → cells, block types with variants filled in (`resolveBlockTypes()`, D60), exit defaults, sides, exit cells |
+| `data/room-data.js` | Shared reading of room data: block boxes → cells, block and object types with variants filled in (`resolveBlockTypes()`, D60; `resolveObjectTypes()`, D145), exit defaults, sides, exit cells |
 | `data/validate.js` | Semantic checks and readable error messages (Ajv schema pass is dev/CI) |
 | `world/boot-key.js` | The boot key (D101): the 8×8 code whose modules are the 64 fragments (`BOOT_KEY`) |
 | `world/exits.js` | Which exit the wizard left through; where he arrives in the connected room |
@@ -89,7 +89,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `entities/player.js` | Movement, jump, gravity, turning, pushing, integrity, invulnerability after a hit, death (hole or damage), respawn; one wizard for the whole game |
 | `entities/pushable.js` | Rest → slide → fall → land / plug-a-hole state machine; destructible ones break (`hit()` → `broken`); a compiled crate (D125, `lifetime`) derezzes when its time is up (`expire()`, a plugged hole opens again) |
 | `entities/switch.js` | Switches (D75): `Target` (a fixed body a bolt switches over) and `Plate` (a floor tile, no body, on while something stands on it); a type's `timer` makes either go off by itself (D140, `countdown`); `SWITCH_KINDS` (pure, tested) |
-| `entities/gate.js` | Gate blocks (D140, D141): `Gate`, a block that comes and goes by its `trigger`: switch (solid until powered, `power()`; an inverted one, a bridge, only while powered) or step (a collapsing block: solid → shake → gone → optional regrow); it never comes back on a body (pure, tested) |
+| `entities/gate.js` | Gate blocks (D140, D141): `Gate`, a block that comes and goes by its `trigger`: switch (solid until powered, `power()`; one with `start: "gone"`, a bridge, only while powered) or step (a collapsing block: solid → shake → gone → optional regrow); it never comes back on a body (pure, tested) |
 | `entities/warp.js` | Where Blink and Warp take the wizard (D86): `warpTarget()` sweeps his box along his aim through open space, stops at blocks, objects and the room's side, lands short of enemies, reports the enemies passed (pure, tested) |
 | `ai/behaviors.js` | Movement behaviors by name (`BEHAVIORS`: `patrol`, `stationary`, `chase`), as enemy templates refer to them |
 | `ai/chase.js` | Chase (D78, D80): calm → chase → search → return, greedy steps towards the wizard, routes (round walls) to where it last saw him and home, searches when his Zap hits it, patrols while calm if it has a path (pure, tested) |
@@ -194,7 +194,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `editor/links.js` | Switch links in edited room data (D142), both ways: `poweredThings()`, `poweredBy()`, `switchesOf()`, `linksAt()` (a cell's links in words and things to draw) (pure, tested) |
 | `editor/switch-tool.js` | The Switch tool (D142): what a click does (`switchClick()`: place, pick, link, unlink or nothing, said before), everything switches can power (`linkables()`), the panel's link checklists from either side (`linkList()`, `setLink()`, `setEvery()`) (pure, tested) |
 | `editor/pick.js` | Mouse picking that hits what is seen: `hitBoxes()` (the drawn blocks and items, cut above the layer), `rayBox()`, `firstHit()`, `pickCell()` (the nearest box before the layer's plane) (pure, tested) |
-| `editor/panel.js` | Editor side panel (DOM): room list, tools and their fields, layer, room settings, actions, errors |
+| `editor/panel.js` | Editor side panel (DOM): room list, tools and their fields (block and object type lists in groups, saying what each type does and where a permanent pickup lies, D144, D146), layer, room settings, actions, errors |
 | `editor/room-edit.js` | One room being edited: place/erase edits, enemies, paths, exits and their connections, spawn/reset, name, biome, size (with a report), undo/redo (with the step's screen text changes), dirty state, cell descriptions, switch link toggles (`toggleGateLink()`, `togglePlatformLink()`, `toggleExitLink()`, D142) and a switch's timer; `newRoom()`, `roomIdProblem()`, `sizeProblem()` (pure, tested) |
 | `editor/save.js` | Posting edited files to the dev server; downloading them in a build |
 | `editor/lore-edit.js` | `lore.json` being edited (D118): texts added and changed, checked against the limits; a step's text changes applied again for undo/redo (pure, tested) |

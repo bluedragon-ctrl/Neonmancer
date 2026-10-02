@@ -141,7 +141,7 @@ export const BLOCK_TYPES = {
   collapsing: { kind: 'gate', trigger: 'step' },
   collapsing_regrow: { extends: 'collapsing', regrow: 3 },
   gate: { kind: 'gate', color: '#eef3ff' },
-  bridge: { extends: 'gate', inverted: true },
+  bridge: { extends: 'gate', start: 'gone' },
 };
 
 /**

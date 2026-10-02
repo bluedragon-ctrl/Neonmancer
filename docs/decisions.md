@@ -1390,3 +1390,53 @@ hidden faces through. Lock panels stay dark: they are no switches.
 switches and what is switched share one material (white is a mechanism,
 D99); a first version with the gates' brightness made on and off too
 alike, so off is darker.
+
+### D144 — 2026-10-02 — Gate blocks keep types; a bridge starts gone
+Gate blocks stay block types in `defs.json`, not values set per block in
+a room: a room entry gives a gate only its cells and `switches`. The
+switch gate's `inverted` becomes `start` (`solid`, the default, or
+`gone`, a bridge): its state while its switches are off, so the room
+starts with it. The room editor's Block tool lists the types in groups
+(Static, Switch gates, Collapsing (step) gates), each saying what it
+does.
+**Why:** the author asked whether gates, bridges and collapsing blocks
+could be one block with a default state and a regrow time set in the
+editor. The engine already runs them as one kind (D141); the trigger
+(switches or the wizard's step) stays the real difference. Values per
+block would let blocks that look alike behave differently (the player
+reads behavior from the look, D99), add combinations without rules
+(a step gate that starts gone can never trigger), split merged walls
+into more boxes and scatter tuning over room files; a new variant stays
+one line in `defs.json`. `start` names the state plainly where
+`inverted` did not. No room file used `inverted`; only `defs.json`
+changes.
+
+### D145 — 2026-10-02 — Object types have variants (`extends`)
+An object type in `defs.json` may `extend` a base object type and list
+only the values it changes, like block types (D60): one level (a variant
+never extends a variant) and it keeps the base's kind. The loader fills
+variants in (`resolveObjectTypes()`), so rooms, the game and the editor
+see complete types. The crate variants (`crate_plain`, `crate_cross`,
+`crate_dashed`) extend `crate` (setting `mark: none` where they had no
+mark) and the timed switches extend `target` and `plate`; resolved, every
+type is the same as before. `spiked_platform` stays its own base: it
+shares almost nothing with `platform`.
+**Why:** the crates repeated their kind, color and faces four times and
+the timed switches their base's values, so changing the crate color
+meant four edits that could drift apart. One level and a fixed kind keep
+a variant readable on its own, as for block types.
+
+### D146 — 2026-10-02 — The Object tool's list in groups, with where pickups lie
+The room editor's Object tool listed about 120 types flat, each with only
+its kind (four crates all "pushable", 64 fragments burying the rest). It
+now lists them in groups like the Block tool (D144): Crates, Platforms,
+Decorations, Core, then the pickups: Spells, Upgrades, Buffs, Refills,
+Fragments, Secrets, Test. Each type says what it does (`breaks after 1
+hit`, `spiked, hurts 1`, `spell zap`, `+10 energy`), and each permanent
+pickup where it lies in the world now, unsaved edits included (`not
+placed`, `in room_1`, `in a ×2`), worked out like the world map's pickup
+report (F3, `world/pickup-report.js`).
+**Why:** Home Lattice needs 16 or more fragments placed over about 30
+rooms; seeing what is placed while placing avoids a slot placed twice
+by mistake (allowed, D71, but rarely meant) or one forgotten, without
+switching to the world map tool.

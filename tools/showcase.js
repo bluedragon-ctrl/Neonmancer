@@ -13,7 +13,7 @@
 import { Group, Vector3 } from 'three';
 import defs from '../data/defs.json';
 import strings from '../data/strings.json';
-import { OBJECT_STYLE_DEFAULTS, resolveBlockTypes, resolveEnemyTemplates, withEnemyDefaults, withExitDefaults } from '../src/data/room-data.js';
+import { OBJECT_STYLE_DEFAULTS, resolveBlockTypes, resolveEnemyTemplates, resolveObjectTypes, withEnemyDefaults, withExitDefaults } from '../src/data/room-data.js';
 import { VIEW_HEIGHT, frameRoom } from '../src/render/camera.js';
 import { JUMP_SPEED, PLAYER } from '../src/entities/player.js';
 import { PLAYER_HITBOX } from '../src/core/rules.js';
@@ -98,6 +98,8 @@ import biomes from '../data/biomes.json';
 
 /** Block types with variants filled in (D60). */
 const BLOCK_TYPES = resolveBlockTypes(defs.blocks);
+/** Object types with their variants filled in (D145). */
+const OBJECT_TYPES = resolveObjectTypes(defs.objects);
 
 /** Units between two assets (the default span of an asset). */
 const SPACING = 3;
@@ -147,7 +149,7 @@ const ALL_ASSETS = [
   // a data core, or empty thinner glass in a destructible one, D99);
   // switches have their own looks (below), and so have the core (D101) and
   // decorations (D117).
-  ...Object.entries(defs.objects).filter(([, props]) => !SWITCH_KINDS.includes(props.kind) && props.kind !== 'core' && props.kind !== 'deco').map(([type, props]) => ({
+  ...Object.entries(OBJECT_TYPES).filter(([, props]) => !SWITCH_KINDS.includes(props.kind) && props.kind !== 'core' && props.kind !== 'deco').map(([type, props]) => ({
     label: type,
     build: () => {
       const view = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...props, at: [0, 0, 0] });
@@ -450,7 +452,7 @@ function buildShrine() {
 }
 
 /** Switch color, from defs.json. */
-const SWITCH_COLOR = defs.objects.target.color;
+const SWITCH_COLOR = OBJECT_TYPES.target.color;
 
 /** The wizard zapping a target on and off. */
 function buildTargetZap() {
@@ -487,7 +489,7 @@ function buildPlate() {
   const asset = new Group();
   const plate = createPlate(SWITCH_COLOR);
   plate.position.set(-0.5, 0, -0.5);
-  const crate = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...defs.objects.crate, at: [0, 0, 0] });
+  const crate = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...OBJECT_TYPES.crate, at: [0, 0, 0] });
   const wizard = createWizard();
   wizard.rotation.y = Math.PI / 2;
   asset.add(plate, crate, wizard);
@@ -778,7 +780,7 @@ function buildWarp(spell) {
 /** For scale: a disk on the floor and one on a block, the wizard and a crate beside them, in a 4×4 room corner. */
 function buildDiskInRoom() {
   const room = new Group().add(createRoomView({ size: [4, 3, 4], blocks: { block: [[3, 0, 1]] }, blockTypes: BLOCK_TYPES, color: PALETTE.amber }));
-  const crate = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...defs.objects.crate, at: [0, 0, 2] });
+  const crate = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...OBJECT_TYPES.crate, at: [0, 0, 2] });
   const wizard = createWizard();
   wizard.position.set(1.5, 0, 2.5);
   wizard.rotation.y = Math.PI / 4;
@@ -853,7 +855,7 @@ function coreStage(time) {
 
 /** The core, stepping through the levels. */
 function buildCore() {
-  const core = createCore({ color: defs.objects.core.color });
+  const core = createCore({ color: OBJECT_TYPES.core.color });
   core.position.set(-0.5, 0, -0.5);
   const asset = new Group().add(core);
   let level = -1;
@@ -1076,7 +1078,7 @@ function buildDiskCollect() {
 function buildXray() {
   const cells = [[1, 0, 3], [2, 0, 3], [1, 1, 3], [2, 1, 3]];
   const room = new Group().add(createRoomView({ size: [4, 3, 4], blocks: { block: cells }, blockTypes: BLOCK_TYPES, color: PALETTE.amber }));
-  const crate = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...defs.objects.crate, at: [0, 0, 3] });
+  const crate = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...OBJECT_TYPES.crate, at: [0, 0, 3] });
   const wizard = createWizard();
   addXray(wizard);
   const motion = new WizardMotion(wizard);
@@ -1107,7 +1109,7 @@ function buildXray() {
 function buildZapBreak() {
   const asset = new Group();
   const zapper = new Zapper(asset, -1.8, 0.8);
-  const props = defs.objects.crate_cross;
+  const props = OBJECT_TYPES.crate_cross;
   const crate = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...props, at: [0, 0, 0] });
   crate.position.set(0.8, 0, -0.5);
   const pixels = createDerez(BLOCK_BODY, [props.color, 0xffffff]);
@@ -1258,7 +1260,7 @@ const ENEMY_HALF = 0.3;
 function buildZapCrate() {
   const asset = new Group();
   const zapper = new Zapper(asset, -1.8, 0.8);
-  const crate = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...defs.objects.crate, at: [0, 0, 0] });
+  const crate = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...OBJECT_TYPES.crate, at: [0, 0, 0] });
   crate.position.set(0.8, 0, -0.5);
   asset.add(crate);
 
@@ -1536,7 +1538,7 @@ function buildBoltRicochet() {
   wizard.position.set(-1.5, 0, -2);
   wizard.rotation.y = Math.PI / 2;
   // A crate with its −x face at x = 1, z from −1 to 0.
-  const crate = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...defs.objects.crate, at: [1, 0, -1] });
+  const crate = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...OBJECT_TYPES.crate, at: [1, 0, -1] });
   const asset = new Group().add(virus, wizard, crate);
   const eyes = [virus.position.x, ENEMY.eyeHeight, virus.position.z];
   const bounce = [1 - BOLT.size / 2, ENEMY.eyeHeight, -0.5];
@@ -1964,7 +1966,7 @@ function buildWizardJump() {
 function buildWizardPush() {
   const wizard = createWizard();
   const motion = new WizardMotion(wizard);
-  const crate = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...defs.objects.crate, at: [0, 0, 0] });
+  const crate = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...OBJECT_TYPES.crate, at: [0, 0, 0] });
   const asset = new Group().add(wizard, crate);
   // Pushing along −x, away from the camera, so the crate never hides him.
   const half = PLAYER_HITBOX[0] / 2;
@@ -2039,7 +2041,7 @@ function buildWizardHole() {
 }
 
 function buildStream() {
-  const lime = defs.objects.crate.color;
+  const lime = OBJECT_TYPES.crate.color;
   const gold = defs.spells.compile.color;
   const warp = defs.spells.warp.color;
   const crate = (x) => ({ at: [x, 0, 0], body: BLOCK_BODY });
@@ -2063,7 +2065,7 @@ function buildStream() {
 }
 
 function buildDerez() {
-  const crate = defs.objects.crate;
+  const crate = OBJECT_TYPES.crate;
   const bug = defs.enemies.bug.color;
   const sentinel = defs.enemies.sentinel.color;
   const disk = createDisk();
@@ -2157,7 +2159,7 @@ function buildGlassInRoom() {
     createActiveBlockView([[0, 0, 2], [0, 0, 3]], 'hazard', BLOCK_TYPES.hazard.color, null, { glass: true }),
     createActiveBlockView([[3, 0, 0], [3, 0, 1]], 'void', BLOCK_TYPES.void.color),
   );
-  const glass = { ...OBJECT_STYLE_DEFAULTS, ...defs.objects.crate };
+  const glass = { ...OBJECT_STYLE_DEFAULTS, ...OBJECT_TYPES.crate };
   for (const at of [[1, 0, 3], [1, 1, 3], [2, 0, 3]]) room.add(createObjectView({ ...glass, at }));
   room.add(createObjectView({ ...glass, faces: 'tinted', at: [3, 0, 3] }));
   const wizard = createWizard();
@@ -2208,8 +2210,8 @@ function buildBlocksInRoom() {
  */
 function buildPlatforms() {
   const size = [4, 3, 4];
-  const color = defs.objects.platform.color;
-  const style = { ...OBJECT_STYLE_DEFAULTS, ...defs.objects.platform, at: [0, 0, 0] };
+  const color = OBJECT_TYPES.platform.color;
+  const style = { ...OBJECT_STYLE_DEFAULTS, ...OBJECT_TYPES.platform, at: [0, 0, 0] };
   const paths = [
     buildTrack([0, 0, 1], { points: [[2, 0, 1], [2, 0, 3]], pause: 0.6 }),
     buildTrack([3, 0, 0], { points: [[3, 1, 0]], speed: 1.2, pause: 0.8 }),
@@ -2240,7 +2242,7 @@ function buildPlatforms() {
  */
 function buildSpikedPlatforms() {
   const size = [4, 3, 4];
-  const props = defs.objects.spiked_platform;
+  const props = OBJECT_TYPES.spiked_platform;
   const style = { ...OBJECT_STYLE_DEFAULTS, ...props, at: [0, 0, 0] };
   const paths = [
     buildTrack([1, 0, 1], { points: [[1, 1, 1]], speed: 2.5, pause: 0.4 }),
@@ -2407,10 +2409,10 @@ function buildCutPaste(kind) {
   wizard.rotation.y = Math.PI / 2;
   const flare = createCastFlare();
   const crate = kind === 'crate';
-  const thingColor = crate ? defs.objects.crate.color : defs.enemies.bug.color;
+  const thingColor = crate ? OBJECT_TYPES.crate.color : defs.enemies.bug.color;
   const thing = new Group();
   if (crate) {
-    const view = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...defs.objects.crate, at: [0, 0, 0] });
+    const view = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...OBJECT_TYPES.crate, at: [0, 0, 0] });
     view.position.set(-0.5, 0, -0.5);
     thing.add(view);
   } else {
@@ -2483,7 +2485,7 @@ function buildPull(kind) {
   const thing = new Group();
   let bug = null;
   if (crate) {
-    const view = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...defs.objects.crate, at: [0, 0, 0] });
+    const view = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...OBJECT_TYPES.crate, at: [0, 0, 0] });
     view.position.set(-0.5, 0, -0.5);
     thing.add(view);
   } else {
@@ -2527,7 +2529,7 @@ function buildPull(kind) {
  */
 function buildCompile() {
   const { color, object } = defs.spells.compile;
-  const type = { ...OBJECT_STYLE_DEFAULTS, ...defs.objects[object] };
+  const type = { ...OBJECT_STYLE_DEFAULTS, ...OBJECT_TYPES[object] };
   const at = [-1, 0, 0];
   const cell = [-0.5, 0, -0.5];
   const wizard = createWizard();
@@ -2651,7 +2653,7 @@ function buildScan() {
 /** The HUD's clipboard slot (D87): empty, holding a crate, holding a frozen bug. */
 function buildClipHud() {
   const pause = defs.spells.pause.color;
-  const held = [null, { kind: 'object', data: defs.objects.crate }, { kind: 'enemy', data: defs.enemies.bug, frozen: {} }];
+  const held = [null, { kind: 'object', data: OBJECT_TYPES.crate }, { kind: 'enemy', data: defs.enemies.bug, frozen: {} }];
   const tags = held.map(
     (thing, i) =>
       `<div class="hud-spell" style="top:calc(${182 + i * 52} * var(--u))"><span class="hud-spell-name">${strings.strings['spell.cut_paste']}</span><span class="hud-clip">${clipIcon(thing, pause)}</span></div>`,

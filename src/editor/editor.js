@@ -30,6 +30,7 @@ import { RoomEdit, newRoom, resizeText, roomIdProblem, sizeProblem } from './roo
 import { downloadFile, saveFiles } from './save.js';
 import { newText, pickedScreen, setScreenText, textUsers, updateText } from './texts.js';
 import { WorldEdit, linkChoices } from './world-edit.js';
+import { pickupReport } from '../world/pickup-report.js';
 import { pickupBit } from '../world/progress.js';
 import { SWITCH_KINDS } from '../entities/switch.js';
 import { hitBoxes, pickCell } from './pick.js';
@@ -291,6 +292,19 @@ export class Editor {
   /** Ids of every room, new ones included. */
   roomIds() {
     return [...new Set([...this.game.content.rooms.keys(), ...this.sessions.keys()])];
+  }
+
+  /**
+   * The rooms each permanent pickup type lies in (D71, D146), edits not yet
+   * saved included: the Object tool's list shows them.
+   * @returns {Map<string, string[]>} pickup type → the room of each place
+   */
+  pickupPlaces() {
+    const rooms = this.roomIds().map((id) => [id, this.roomData(id) ?? {}]);
+    const { items } = pickupReport(this.pickupTypes, this.game.content.spells, rooms);
+    const places = new Map();
+    for (const item of items) for (const type of item.types) places.set(type, item.places.map((place) => place.room));
+    return places;
   }
 
   /** A room's data as edited so far. */
@@ -645,6 +659,7 @@ export class Editor {
       blockType: this.blockType,
       blockSwitches: switchGate(this.blockTypes[this.blockType]) ? this.blockSwitches : null,
       objectType: this.objectType,
+      objectPlaces: this.tool === 'object' ? this.pickupPlaces() : null,
       switchType: this.switchType,
       linkList: this.linkListState(),
       links: this.linksState(),

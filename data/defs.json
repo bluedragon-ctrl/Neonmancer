@@ -4,14 +4,14 @@
   "score": { "bit": 50, "secret": 200, "accessLevel": 500 },
   "objects": {
     "crate": { "kind": "pushable", "color": "#b6ff3c", "mark": "bits", "faces": "glass" },
-    "crate_plain": { "kind": "pushable", "color": "#b6ff3c", "faces": "glass" },
-    "crate_cross": { "kind": "pushable", "color": "#b6ff3c", "faces": "glass", "integrity": 1 },
-    "crate_dashed": { "kind": "pushable", "color": "#b6ff3c", "edges": "dashed", "faces": "glass" },
+    "crate_plain": { "extends": "crate", "mark": "none" },
+    "crate_cross": { "extends": "crate", "mark": "none", "integrity": 1 },
+    "crate_dashed": { "extends": "crate", "mark": "none", "edges": "dashed" },
     "target": { "kind": "target", "color": "#eef3ff" },
     "core": { "kind": "core", "color": "#eef3ff" },
     "plate": { "kind": "plate", "color": "#eef3ff", "edges": "dashed" },
-    "target_timed": { "kind": "target", "color": "#eef3ff", "timer": 5 },
-    "plate_timed": { "kind": "plate", "color": "#eef3ff", "edges": "dashed", "timer": 3 },
+    "target_timed": { "extends": "target", "timer": 5 },
+    "plate_timed": { "extends": "plate", "timer": 3 },
     "platform": { "kind": "platform", "color": "#00f0ff", "mark": "brackets", "faces": "tinted" },
     "spiked_platform": { "kind": "platform", "color": "#ff2a3a", "shape": "spiked", "damage": 1 },
     "data_pillar": { "kind": "deco", "look": "data_pillar" },
@@ -399,6 +399,6 @@
     "collapsing": { "kind": "gate", "trigger": "step", "edges": "dashed", "faces": "tinted", "tint": 0.05 },
     "collapsing_regrow": { "extends": "collapsing", "regrow": 3 },
     "gate": { "kind": "gate", "color": "#eef3ff" },
-    "bridge": { "extends": "gate", "inverted": true }
+    "bridge": { "extends": "gate", "start": "gone" }
   }
 }

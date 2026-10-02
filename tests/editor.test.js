@@ -15,7 +15,7 @@ import { cutRoom } from '../src/render/room-scene.js';
 import { validateData } from '../src/data/validate.js';
 import { loadGameData } from '../src/data/load.js';
 import { resolveBlockTypes, resolveEnemyTemplates, templateChain } from '../src/data/room-data.js';
-import { blockTypeText, templateText } from '../src/editor/panel.js';
+import { blockTypeGroups, blockTypeText, objectTypeGroups, objectTypeText, placesText, templateText } from '../src/editor/panel.js';
 import { buildRoom } from '../src/world/room.js';
 import { checkSchemas, readSchemas } from '../tools/check-data.js';
 import { refuseSaveRequest, saveEdits } from '../tools/room-save.js';
@@ -661,12 +661,68 @@ test('blockTypeText: what a block type does, for the Block tool\'s type list', (
   assert.equal(blockTypeText(types.block), 'plain');
   assert.equal(blockTypeText(types.hot), 'hurts 2');
   assert.equal(blockTypeText(types.void), 'lethal');
-  assert.equal(blockTypeText(types.collapsing), 'collapsing');
-  assert.equal(blockTypeText(types.collapsing_regrow), 'collapsing, regrows 3 s');
-  assert.equal(blockTypeText(types.gate), 'switch gate');
-  assert.equal(blockTypeText(types.bridge), 'switch gate, inverted');
+  assert.equal(blockTypeText(types.fake), 'a scan derezzes it');
+  assert.equal(blockTypeText(types.collapsing), 'collapses');
+  assert.equal(blockTypeText(types.collapsing_regrow), 'collapses, back in 3 s');
+  assert.equal(blockTypeText(types.gate), 'solid, gone while powered');
+  assert.equal(blockTypeText(types.bridge), 'gone, there while powered');
 });
 
+test('blockTypeGroups: the Block tool\'s types, static blocks first, then gates by trigger (D141)', () => {
+  const groups = blockTypeGroups(resolveBlockTypes(BLOCK_TYPES));
+  const ids = Object.fromEntries(groups.map(([label, options]) => [label, options.map(([id]) => id)]));
+  assert.deepEqual(Object.keys(ids), ['Static', 'Switch gates', 'Collapsing (step) gates']);
+  assert.deepEqual(ids['Switch gates'], ['gate', 'bridge']);
+  assert.deepEqual(ids['Collapsing (step) gates'], ['collapsing', 'collapsing_regrow']);
+  assert.ok(!ids.Static.includes('gate'));
+  assert.deepEqual(blockTypeGroups({ block: { look: 'plain' } }).map(([label]) => label), ['Static'], 'empty groups are left out');
+});
+
+
+test('objectTypeText: what an object or pickup type does, for the Object tool\'s list (D146)', () => {
+  const crate = { kind: 'pushable', color: '#b6ff3c', mark: 'bits' };
+  assert.equal(objectTypeText(crate), 'bits mark');
+  assert.equal(objectTypeText({ ...crate, mark: 'none' }), 'plain');
+  assert.equal(objectTypeText({ ...crate, mark: 'none', integrity: 1 }), 'breaks after 1 hit');
+  assert.equal(objectTypeText({ ...crate, mark: 'none', integrity: 2, edges: 'dashed' }), 'breaks after 2 hits, dashed edges');
+  assert.equal(objectTypeText({ kind: 'platform' }), 'rides its path');
+  assert.equal(objectTypeText({ kind: 'platform', damage: 1 }), 'spiked, hurts 1');
+  assert.equal(objectTypeText({ kind: 'disk', spell: 'zap' }), 'spell zap');
+  assert.equal(objectTypeText({ kind: 'upgrade', upgrade: 'double_jump', slot: 2 }), 'upgrade');
+  assert.equal(objectTypeText({ kind: 'upgrade', upgrade: 'zap_plus', slot: 0, spell: 'zap' }), 'upgrade of zap');
+  assert.equal(objectTypeText({ kind: 'buff', slot: 4, stat: 'energy', amount: 10 }), '+10 energy');
+  assert.equal(objectTypeText({ kind: 'buff', slot: 9, stat: 'recharge', amount: 4 }), 'faster recharge');
+  assert.equal(objectTypeText({ kind: 'refill', stat: 'integrity', amount: 3 }), 'refills 3 integrity');
+  assert.equal(objectTypeText({ kind: 'fragment', slot: 12 }), 'slot 12');
+  assert.equal(objectTypeText({ kind: 'access', level: 3 }), 'access level 3');
+});
+
+test('placesText: where a permanent pickup lies, a room placed twice counted (D146)', () => {
+  assert.equal(placesText([]), 'not placed');
+  assert.equal(placesText(['boot']), 'in boot');
+  assert.equal(placesText(['a', 'b', 'a']), 'in a ×2, b');
+});
+
+test('objectTypeGroups: objects then pickups by kind, labels with where pickups lie (D146)', () => {
+  const types = {
+    crate: { kind: 'pushable', color: '#b6ff3c' },
+    disk_zap: { kind: 'disk', spell: 'zap' },
+    lift: { kind: 'platform', color: '#00f0ff' },
+    fragment_0: { kind: 'fragment', slot: 0 },
+    fragment_1: { kind: 'fragment', slot: 1 },
+    refill_energy: { kind: 'refill', stat: 'energy', amount: 30 },
+  };
+  const places = new Map([['disk_zap', ['boot']], ['fragment_0', []], ['fragment_1', ['a', 'b']]]);
+  const groups = objectTypeGroups(types, places);
+  assert.deepEqual(groups.map(([label]) => label), ['Crates', 'Platforms', 'Spells', 'Refills', 'Fragments']);
+  const labels = Object.fromEntries(groups.flatMap(([, options]) => options));
+  assert.equal(labels.crate, 'crate (plain)');
+  assert.equal(labels.disk_zap, 'disk_zap (spell zap · in boot)');
+  assert.equal(labels.fragment_0, 'fragment_0 (slot 0 · not placed)');
+  assert.equal(labels.fragment_1, 'fragment_1 (slot 1 · in a, b)');
+  assert.equal(labels.refill_energy, 'refill_energy (refills 30 energy)', 'refills are not permanent: no places');
+  assert.equal(objectTypeGroups(types)[2][1][0][1], 'disk_zap (spell zap)', 'without places, only what it does');
+});
 
 test('templateText: what an enemy template does, for the Enemy tool (D119)', () => {
   assert.equal(templateText(BUG), 'bug · patrol · touch · hostile · 2 hits · speed 3 · bouncy');

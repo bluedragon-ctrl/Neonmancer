@@ -106,7 +106,7 @@ class RoomModel {
     this.floors = new Set();
     /** The room's switches: targets and plates. */
     this.switches = [];
-    /** Gates (D140): cell index, inverted (a bridge) and the switch ids that power it (null: all). */
+    /** Gates (D140): cell index, startsGone (a bridge) and the switch ids that power it (null: all). */
     this.gates = [];
     /** Gate cells closed in the configuration searched now (setGates()). */
     this.gateSolid = new Set();
@@ -119,7 +119,7 @@ class RoomModel {
       if (object.kind === 'pushable') this.crates.push(this.index(x, y, z));
       else if (object.kind === 'platform') for (const [px, py, pz] of pathCells(object.at, object.path)) this.floors.add(this.index(px, py, pz));
       else if (object.kind === 'plate') this.switches.push(object);
-      else if (object.kind === 'gate' && (object.trigger ?? 'switch') === 'switch') this.gates.push({ index: this.index(x, y, z), inverted: !!object.inverted, switches: object.switches ?? null });
+      else if (object.kind === 'gate' && (object.trigger ?? 'switch') === 'switch') this.gates.push({ index: this.index(x, y, z), startsGone: object.start === 'gone', switches: object.switches ?? null });
       else if (object.kind === 'target') {
         this.switches.push(object);
         this.bodies.add(this.index(x, y, z));
@@ -403,7 +403,7 @@ class RoomModel {
     for (const gate of this.gates) {
       const on = this.canPower(gate.switches, cfg, stands);
       const off = !this.forcedOn(gate.switches, cfg);
-      const [closed, open] = gate.inverted ? [on, off] : [off, on];
+      const [closed, open] = gate.startsGone ? [on, off] : [off, on];
       if (closed && open) floor.add(gate.index);
       else if (closed) solid.add(gate.index);
     }

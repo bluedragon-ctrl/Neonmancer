@@ -2,7 +2,7 @@
  * Turn the raw data files into the game's content tables, after validating
  * them. Plain logic (no Vite features), so tests can call it with fixtures.
  */
-import { resolveBlockTypes, resolveEnemyTemplates } from './room-data.js';
+import { resolveBlockTypes, resolveEnemyTemplates, resolveObjectTypes } from './room-data.js';
 import { validateData } from './validate.js';
 
 /** Thrown when the game data is invalid; `errors` lists every problem. */
@@ -35,7 +35,7 @@ export function loadGameData(files) {
 
   return {
     score: files['defs.json'].score,
-    objectTypes: files['defs.json'].objects,
+    objectTypes: resolveObjectTypes(files['defs.json'].objects),
     // Variants filled in from their base types (D60).
     blockTypes: resolveBlockTypes(files['defs.json'].blocks),
     // Enemy templates filled in from the ones they extend (D58, D79).

@@ -197,7 +197,7 @@ the ones it gives:
 | `collapsing` | kind `gate`, `trigger: step`; room color, dashed edges, faces barely tinted (D98, D99) | gives way (see Gate blocks) |
 | `collapsing_regrow` | extends `collapsing` | `regrow: 3` |
 | `gate` | kind `gate` (switch trigger), white, bars on its seen sides (D140) | solid until its switches are on (see Gate blocks) |
-| `bridge` | extends `gate` | `inverted: true`: there only while its switches are on |
+| `bridge` | extends `gate` | `start: gone`: there only while its switches are on (D144) |
 
 - **Static types** have a `look` (`plain`, `hazard`, `void`) and live in
   the room grid: each cell holds its type's code, and the rules ask about
@@ -207,7 +207,7 @@ the ones it gives:
 - **Types with a `kind`** (`gate`, D141) are written and painted like
   blocks, but each cell becomes a room object of that kind when the room
   is built (id `<type>@x,y,z`, with its entry's `switches`); `trigger`,
-  `inverted`, `regrow`, `color` and the object look (`edges`, `mark`,
+  `start`, `regrow`, `color` and the object look (`edges`, `mark`,
   `faces`, `tint`) are on the type.
 - A new type that only combines existing properties and looks is data
   only (e.g. `"hazard_hot": { "extends": "hazard", "damage": 2 }`); a new
@@ -341,8 +341,9 @@ The two triggers:
   not drawn at all in play (D142); the room editor shows its dashed
   outline. Solid until its switches are all on: its block entry's
   `switches` (ids of the room's targets and plates; one entry, one set)
-  or every switch in the room. `inverted` (a bridge) is the other way
-  round. Event: `gate` (`open` true or false). See Switches and locked
+  or every switch in the room. `start` is its state while unpowered
+  (D144): `solid` (the default, a gate) or `gone` (a bridge, the other way
+  round). Event: `gate` (`open` true or false). See Switches and locked
   exits.
 - **Step** (`trigger: step`; types `collapsing`, `collapsing_regrow`, the
   collapsing block of D47): the room color, thin dashed edges, barely
@@ -355,8 +356,8 @@ The two triggers:
   `collapsing_regrow`: 3) it comes back that long after it went; without
   it stays gone until the room resets. Events: `shake`, `collapse`,
   `regrow`.
-- Validation: `trigger`, `inverted` and `regrow` only on gate block
-  types; `inverted` only with the switch trigger, `regrow` only with the
+- Validation: `trigger`, `start` and `regrow` only on gate block
+  types; `start: gone` only with the switch trigger, `regrow` only with the
   step trigger; `switches` only on switch gate entries, naming switches
   of the room; a switch gate needs a switch in its room.
 - Tuning: `GATE` in `src/entities/gate.js` (the shake time), the look is
@@ -1472,7 +1473,7 @@ before D140 work as they did). Switch types in `defs.json` are placed in
 - **Gate** (block type `gate`, a switch gate block, D140, D141): solid
   until its switches (its block entry's `switches`) are all on; then it
   sinks into its cell and is no body at all until a switch goes off. A
-  **bridge** (`bridge`, `"inverted": true`) is the other way round:
+  **bridge** (`bridge`, `"start": "gone"`) is the other way round:
   there only while its switches are all on. Neither ever closes on
   anything in its cell. See Gate blocks.
 - **Powered platform** (a platform with `switches`, D140): runs only
@@ -1890,9 +1891,10 @@ the Exit, Spawn and Reset tools work on the layer, Hole and Shrine on the
 floor.
 
 - **Block** puts a block of the type picked in the panel's type list (every
-  block type in `defs.json`, with what it does: `hazard (hurts 1)`,
-  `collapsing_regrow (collapsing, regrows 3 s)`, `bridge (switch gate,
-  inverted)`) in the cell clicked (see above), replacing whatever is
+  block type in `defs.json`, in groups: Static, Switch gates, Collapsing
+  (step) gates (D144), each with what it does: `hazard (hurts 1)`,
+  `collapsing_regrow (collapses, back in 3 s)`, `bridge (gone, there
+  while powered)`) in the cell clicked (see above), replacing whatever is
   there; erasing empties the cell (D60). For a switch gate the panel has
   a **Switches** field: the ids the gates placed take (blank: every
   switch). Cells merge into boxes only with the same type and switches.
@@ -1906,7 +1908,14 @@ floor.
   clicked again, D117); a block or something of another type there says
   to erase it first. A new platform is picked, ready for its path. A
   picked platform shows its **Switches** field, a picked switch what it
-  powers and, a timed one, its **Timer** (blank: its type's).
+  powers and, a timed one, its **Timer** (blank: its type's). Its type
+  list is in groups (D146): Crates, Platforms, Decorations, Core, then
+  the pickups: Spells, Upgrades, Buffs, Refills, Fragments, Secrets,
+  Test; each type says what it does (`crate_cross (breaks after 1 hit)`,
+  `buff_energy_2 (+10 energy)`), and a permanent pickup where it lies in
+  the world, unsaved edits included (`fragment_3 (slot 3 · not placed)`,
+  `disk_zap (spell zap · in room_1)`, `in a ×2` placed twice), like the
+  world map's pickup report (F3).
   Erasing removes an object or enemy standing in the cell.
 - **Enemy** places an enemy of the template picked in the panel (a line
   under it says what the template does: `bug · patrol · touch · hostile
@@ -2415,7 +2424,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 | File | Contents |
 |---|---|
 | `data/rooms/<id>.json` | One room (id = file name) |
-| `data/defs.json` | `objects`: object types and their defaults (crates, platforms, switches, the core); `enemies`: enemy templates, each complete or `extend`ing another (D58, D79); `spells`: tuning and color per spell; `pickups`: disks, buff chips, upgrade cards, fragments, secrets and refills; `blocks`: block types (D60); `score`: points per kind of pickup (D100). Each is described in its section above. |
+| `data/defs.json` | `objects`: object types and their defaults (crates, platforms, switches, the core); a variant `extend`s a base type and lists only what it changes, one level, keeping its kind (D145, e.g. `target_timed`: `{ "extends": "target", "timer": 5 }`); `enemies`: enemy templates, each complete or `extend`ing another (D58, D79); `spells`: tuning and color per spell; `pickups`: disks, buff chips, upgrade cards, fragments, secrets and refills; `blocks`: block types (D60); `score`: points per kind of pickup (D100). Each is described in its section above. |
 | `data/biomes.json` | Biome name and room color, optional `look` for the surroundings (see Biomes) |
 | `data/world.json` | Start room, exit connections, every room's cell on the world map (`positions`, D66) and the key fragments (`fragments`: how many the core needs, the access thresholds, D101) |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |

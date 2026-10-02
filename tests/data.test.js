@@ -464,6 +464,41 @@ test('block types: a variant takes its base type\'s values and replaces its own 
   assert.deepEqual(buildRoom(content.rooms.get('alpha'), content).blocks.hazard_hot, [[1, 0, 6]]);
 });
 
+test('object types: a variant takes its base type\'s values and replaces its own (D145)', () => {
+  const files = validFiles();
+  files['defs.json'].objects.crate_dashed = { extends: 'crate', edges: 'dashed', integrity: 1 };
+  files['rooms/alpha.json'].objects.push({ id: 'c1', type: 'crate_dashed', at: [1, 0, 6] });
+  assert.deepEqual(checkFiles(files, schemas), []);
+  const content = loadGameData(files);
+  assert.deepEqual(content.objectTypes.crate_dashed, { kind: 'pushable', color: '#b6ff3c', edges: 'dashed', integrity: 1 });
+  const object = buildRoom(content.rooms.get('alpha'), content).objects.find((o) => o.id === 'c1');
+  assert.equal(object.kind, 'pushable');
+  assert.equal(object.edges, 'dashed');
+});
+
+test('object types: a variant extends a known base, never another variant, and keeps its kind', () => {
+  const objectError = (type, ...pieces) =>
+    assertError(
+      errorsAfter((f) => (f['defs.json'].objects.odd = type)),
+      'defs.json › objects.odd',
+      ...pieces,
+    );
+  objectError({ extends: 'box' }, 'unknown object type "box"');
+  objectError({ extends: 'crate', kind: 'platform' }, 'keeps its base\'s kind (pushable)');
+  assertError(
+    errorsAfter((f) => {
+      f['defs.json'].objects.crate_plain = { extends: 'crate', mark: 'none' };
+      f['defs.json'].objects.odd = { extends: 'crate_plain' };
+    }),
+    'objects.odd.extends',
+    'is a variant itself',
+  );
+  // Filled in, a variant is checked like any type: a crate can't hurt.
+  objectError({ extends: 'crate', damage: 1 }, 'only platforms can hurt');
+  const errors = errorsAfter((f) => (f['defs.json'].objects.odd = { color: '#ffffff' }));
+  assert.ok(errors.some((e) => e.includes('objects.odd') && e.includes("required property 'kind'")), 'a base type needs a kind');
+});
+
 test('block types: a look or a kind, and only the values that go with it', () => {
   const blockError = (type, ...pieces) =>
     assertError(
@@ -474,7 +509,7 @@ test('block types: a look or a kind, and only the values that go with it', () =>
   blockError({ color: '#ffffff' }, 'needs a "look"');
   blockError({ look: 'plain', kind: 'gate', color: '#ffffff' }, 'both a "look" and a "kind"');
   blockError({ kind: 'gate', color: '#ffffff', damage: 1 }, 'damage: only for static blocks');
-  blockError({ kind: 'gate', trigger: 'step', inverted: true }, 'inverted: only switch gates are inverted');
+  blockError({ kind: 'gate', trigger: 'step', start: 'gone' }, 'start: only switch gates start gone');
   blockError({ kind: 'gate', regrow: 2 }, 'regrow: only step gates');
   blockError({ look: 'plain', regrow: 2 }, 'regrow: only for blocks with a "kind"');
   blockError({ extends: 'lava' }, 'unknown block type "lava"');

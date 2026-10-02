@@ -308,9 +308,24 @@ export function resolveBlockTypes(types) {
   return out;
 }
 
+/**
+ * Object types (D145) with variants filled in from their base type: the
+ * base's values, then the variant's own (one level, like block types).
+ * @param {Record<string, object>} types defs.json `objects`
+ * @returns {Record<string, { kind: string, color?: string }>}
+ */
+export function resolveObjectTypes(types) {
+  const out = {};
+  for (const [id, { extends: base, ...own }] of Object.entries(types)) {
+    const { extends: _, ...baseValues } = (base && types[base]) || {};
+    out[id] = { ...baseValues, ...own };
+  }
+  return out;
+}
+
 /** Values only static block types take, and only object kinds take (D60). */
 export const STATIC_BLOCK_VALUES = ['look', 'damage', 'lethal', 'fake'];
-export const KIND_BLOCK_VALUES = ['kind', 'trigger', 'inverted', 'regrow', 'edges', 'mark', 'faces', 'tint'];
+export const KIND_BLOCK_VALUES = ['kind', 'trigger', 'start', 'regrow', 'edges', 'mark', 'faces', 'tint'];
 
 /**
  * Every floor tile a hole entry covers: just `at`, or the rectangle from

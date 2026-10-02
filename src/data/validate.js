@@ -28,6 +28,7 @@ import {
   holeTiles,
   sideLength,
   resolveBlockTypes,
+  resolveObjectTypes,
   resolveEnemyTemplates,
   templateChain,
   withEnemyDefaults,
@@ -77,9 +78,10 @@ export function validateData(files) {
     }
   }
 
+  const objectTypes = validateObjectVariants(files['defs.json'].objects ?? {}, report);
   // Only pushables break (entities/pushable.js) and only platforms hurt
   // (D82); on another kind these would do nothing.
-  for (const [id, type] of Object.entries(files['defs.json'].objects ?? {})) {
+  for (const [id, type] of Object.entries(objectTypes)) {
     if (type.integrity !== undefined && type.kind !== 'pushable') {
       report('defs.json', `objects.${id}.integrity`, `only pushable objects can be destroyed, not a ${type.kind}`);
     }
@@ -100,9 +102,9 @@ export function validateData(files) {
   const blocks = files['defs.json'].blocks ?? {};
   validateBlockTypes(blocks, report);
   const pickupTypes = files['defs.json'].pickups ?? {};
-  validateSpellsAndPickups(files['defs.json'].spells ?? {}, pickupTypes, files['defs.json'].objects ?? {}, report);
+  validateSpellsAndPickups(files['defs.json'].spells ?? {}, pickupTypes, objectTypes, report);
   const context = {
-    objectTypes: files['defs.json'].objects ?? {},
+    objectTypes,
     pickupTypes,
     blockTypes: resolveBlockTypes(blocks),
     enemyTemplates: resolveEnemyTemplates(enemies),
@@ -249,6 +251,27 @@ function validateSpellsAndPickups(spells, pickupTypes, objectTypes, report) {
 }
 
 /**
+ * Object type variants (D145): a variant extends a base type (one without
+ * "extends") and takes its values; filled in, it needs a kind like any
+ * other. Broken variants are left out of what it returns.
+ * @returns {Record<string, object>} the object types resolved
+ */
+function validateObjectVariants(objects, report) {
+  const resolved = resolveObjectTypes(objects);
+  for (const [id, own] of Object.entries(objects)) {
+    const path = `objects.${id}`;
+    if (own.extends === undefined) continue;
+    const base = objects[own.extends];
+    if (!base) report('defs.json', `${path}.extends`, `unknown object type "${own.extends}"`);
+    else if (base.extends !== undefined) report('defs.json', `${path}.extends`, `"${own.extends}" is a variant itself; extend its base "${base.extends}"`);
+    else if (own.kind !== undefined && own.kind !== base.kind) report('defs.json', `${path}.kind`, `a variant keeps its base's kind (${base.kind})`);
+    else continue;
+    delete resolved[id];
+  }
+  return resolved;
+}
+
+/**
  * Block types (D60): a variant extends a base type; filled in, each has a
  * look (static, in the grid) or a kind (runs as room objects), never both,
  * and only the values that go with it. `block`, the default type of room
@@ -277,7 +300,7 @@ function validateBlockTypes(blocks, report) {
       if (wrong.length > 0) report('defs.json', path, `${wrong.join(', ')}: only for static blocks (with a "look"), not a ${type.kind} block`);
       // A bridge is a switch gate; only a step gate (a collapsing block) grows back (D141).
       const trigger = type.trigger ?? 'switch';
-      if (type.inverted && trigger !== 'switch') report('defs.json', `${path}.inverted`, 'only switch gates are inverted, not a step gate');
+      if (type.start === 'gone' && trigger !== 'switch') report('defs.json', `${path}.start`, 'only switch gates start gone (a bridge); a step gate starts solid');
       if (type.regrow !== undefined && trigger !== 'step') report('defs.json', `${path}.regrow`, 'only step gates (collapsing blocks) grow back; a switch gate comes back with its switches');
     } else {
       const wrong = KIND_BLOCK_VALUES.filter((key) => key in own);

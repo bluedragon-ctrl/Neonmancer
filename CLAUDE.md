@@ -125,7 +125,7 @@ mobile/touch support, backend or accounts.
   switch in the room) and is powered while they are all on (D140). A
   locked exit opens then, never closes on the wizard, and stays open for
   him if he came in through it (D69, D75). A gate (a white block) opens,
-  a bridge (an inverted gate) appears, neither closing on anything in
+  a bridge (a gate that starts gone) appears, neither closing on anything in
   its cell; a platform with switches runs only while powered. An access lock
   opens once his access level is high enough (D101). A hidden exit is
   wall until a scan reveals it (D128).
@@ -356,7 +356,8 @@ they stay for the run.
 The engine is generic; all content lives in data.
 
 - `data/defs.json` — object types (kind, style, damage for spiked
-  platforms, a decoration's look, a switch's timer), block types (look or kind, color, a gate's trigger,
+  platforms, a decoration's look, a switch's timer; variants `extend` a
+  base, D145), block types (look or kind, color, a gate's trigger,
   properties such as damage and lethal; variants `extend` a base, D60),
   enemy templates (look, movement, attack,
   hostility, aggro range, integrity, damage, speeds, bounce, solid, color,
