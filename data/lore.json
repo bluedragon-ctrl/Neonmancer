@@ -211,6 +211,33 @@
         "ALLOCATIONS ARE STRUCTURE: A CRATE IS A STEP.",
         "STEP LIMIT 1 + CRATE 1 = REACHABLE HEIGHT 2."
       ]
+    },
+    "tut_wings": {
+      "title": "MOUNT // WINGS",
+      "lines": [
+        "NORTH: SHIELD HALL. SOUTH: FREEZE HALL.",
+        "EACH HALL HOLDS ONE DATA DISK.",
+        "WEST DOOR: BACK TO THE PORT.",
+        "BACKUP SHRINE ON THIS NODE: REFILLS EVERYTHING."
+      ]
+    },
+    "tut_shield": {
+      "title": "HALL // SHIELD.EXE",
+      "lines": [
+        "SENTINEL.PROC GUARDS THIS HALL. LONG AIMED ARC.",
+        "COVER BLOCKS BREAK ITS LINE OF SIGHT.",
+        "SHIELD.EXE ON HOST: BLOCKS RANGED ATTACKS.",
+        "DISK IS BEHIND THE WALL. MIND THE ARC."
+      ]
+    },
+    "tut_pause": {
+      "title": "HALL // PAUSE.EXE",
+      "lines": [
+        "BUG.PROC PATROLS THE FLOOR. BITE: -1 INTEGRITY.",
+        "PAUSE.EXE ON HOST: FREEZES ONE PROCESS.",
+        "A FROZEN PROCESS IS HARMLESS AND SOLID.",
+        "DISK IS ON THE FAR SIDE OF THE PATROL."
+      ]
     }
   }
 }
