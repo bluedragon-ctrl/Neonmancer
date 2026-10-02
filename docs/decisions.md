@@ -1488,3 +1488,11 @@ orientation of the plan's drawing is in lattice-plan.md.
 **Why:** an exit must be connected, and an authored room cannot get new
 exits (D90); finishing the hub with its neighbours first lets the author
 take it over, and small steps keep each PR reviewable and playable.
+
+### D150 — 2026-10-02 — Crates are neon green
+
+Pushable crates change from lime (`#b6ff3c`) to neon green (`#39ff14`), as
+the game is called NEONMANCER. A small step ahead of Phase 5's bigger visual
+pass; the rule of D99 stays (the pushable color is its own), only the color
+moves. Lime stays for the energy bar and buffs, and both are kept clear of
+by new template colors (`AVOID_COLORS`). The tutorial's crate screen says so.

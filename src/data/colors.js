@@ -41,10 +41,10 @@ export function colorGap(a, b) {
 
 /**
  * Colors a new template keeps clear of, besides the other templates': the
- * ones with a meaning (D99): the wizard's magenta, the danger red, lime
+ * ones with a meaning (D99): the wizard's magenta, the danger red, lime and neon green
  * (pushable) and cyan (moving), as in render/neon.js PALETTE.
  */
-export const AVOID_COLORS = ['#ff2bd6', '#ff2a3a', '#b6ff3c', '#00f0ff'];
+export const AVOID_COLORS = ['#ff2bd6', '#ff2a3a', '#b6ff3c', '#39ff14', '#00f0ff'];
 
 /** Least OKLab lightness of a color picked for a new template: bright enough to glow on the dark void. */
 export const MIN_TEMPLATE_LIGHTNESS = 0.68;
