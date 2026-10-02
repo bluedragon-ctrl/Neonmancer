@@ -45,9 +45,10 @@ export function roomSwitches(data, objectTypes) {
  */
 export function poweredThings(data, { objectTypes, blockTypes }) {
   const out = [];
-  for (const exit of data.exits ?? []) {
+  for (const raw of data.exits ?? []) {
+    const exit = withExitDefaults(raw);
     if (!exit.locked) continue;
-    out.push({ kind: 'exit', id: exit.id, label: `exit ${exit.id}`, switches: exit.switches ?? null, cells: exitCells(withExitDefaults(exit), data.size).inside });
+    out.push({ kind: 'exit', id: exit.id, label: `exit ${exit.id}`, switches: exit.switches ?? null, cells: exitCells(exit, data.size).inside });
   }
   (data.blocks ?? []).forEach((block, i) => {
     if (!isSwitchGate(blockTypes[block.type ?? 'block'])) return;

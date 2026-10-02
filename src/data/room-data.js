@@ -12,9 +12,49 @@ export const EXIT_DEFAULTS = { width: 2, y: 0, height: 2 };
  */
 export const PATH_DEFAULTS = { mode: 'pingpong', speed: 2, pause: 0 };
 
-/** @param {object} exit exit from a room file */
+/**
+ * The conditions of an exit's `requires` list (D151) as the fields the rest
+ * of the code reads: `locked` and `switches` (a switch lock: the listed
+ * switch ids, or every switch in the room for "*") and `access` (the level
+ * he needs, D101). One entry per switch; the exit opens when all hold.
+ * @param {({ switch: string } | { access: number })[]} [requires]
+ * @returns {{ locked?: true, switches?: string[], access?: number }}
+ */
+export function expandRequires(requires = []) {
+  const out = {};
+  for (const need of requires) {
+    if ('access' in need) out.access = need.access;
+    else if (need.switch === '*') out.locked = true;
+    else {
+      out.locked = true;
+      (out.switches ??= []).push(need.switch);
+    }
+  }
+  return out;
+}
+
+/**
+ * The inverse of expandRequires(): the `requires` list for a switch lock
+ * (`locked`, with its `switches` or every switch in the room) and an access
+ * level, `undefined` when the exit asks for nothing.
+ * @param {{ locked?: boolean, switches?: string[], access?: number }} fields
+ */
+export function requiresOf({ locked, switches, access }) {
+  const requires = [];
+  if (locked) requires.push(...(switches?.length > 0 ? switches.map((id) => ({ switch: id })) : [{ switch: '*' }]));
+  if (access) requires.push({ access });
+  return requires.length > 0 ? requires : undefined;
+}
+
+/**
+ * An exit from a room file with its defaults and its `requires` list
+ * expanded into `locked`, `switches` and `access` (see expandRequires());
+ * everything but the room files reads exits in this shape.
+ * @param {object} exit exit from a room file
+ */
 export function withExitDefaults(exit) {
-  return { ...EXIT_DEFAULTS, ...exit };
+  const { requires, ...rest } = exit;
+  return { ...EXIT_DEFAULTS, ...rest, ...(requires && expandRequires(requires)) };
 }
 
 /**

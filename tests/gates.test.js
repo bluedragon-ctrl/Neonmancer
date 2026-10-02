@@ -64,7 +64,7 @@ function zap(game) {
 test('a locked exit with its own switches opens on those, whatever the others do', () => {
   const game = gameWith({
     objects: [{ id: 'p', type: 'plate', at: [2, 0, 2] }, { id: 'q', type: 'plate', at: [5, 0, 5] }],
-    exits: [{ id: 'east', side: '+x', at: 3, locked: true, switches: ['p'] }],
+    exits: [{ id: 'east', side: '+x', at: 3, requires: [{ switch: 'p' }] }],
   });
   game.update(idle);
   assert.equal(exitOpen(game, game.room.exits[0]), false);
@@ -163,7 +163,7 @@ test('switch data: links name switches of the room, and only exits, switch gates
   assert.deepEqual(errorsOf({ blocks: [{ type: 'collapsing', at: [4, 0, 4] }] }), [], 'a step gate needs none');
   assert.match(errorsOf({ objects: [plate], blocks: [{ type: 'collapsing', at: [4, 0, 4], switches: ['p'] }] })[0], /only switch gates are powered/);
   assert.match(errorsOf({ objects: [plate, { id: 'c', type: 'crate', at: [4, 0, 4], switches: ['p'] }] })[0], /only platforms \(and gate blocks\)/);
-  assert.match(errorsOf({ objects: [plate], exits: [{ id: 'east', side: '+x', at: 3, switches: ['p'] }] })[0], /only a locked exit takes switches/);
+  assert.match(errorsOf({ objects: [plate], exits: [{ id: 'east', side: '+x', at: 3, requires: [{ switch: '*' }, { switch: 'p' }] }] })[0], /"*" already means every switch/);
   assert.deepEqual(errorsOf({ objects: [{ ...plate, type: 'plate_timed', overrides: { timer: 8 } }] }), []);
   assert.match(errorsOf({ objects: [{ ...plate, overrides: { timer: 8 } }] })[0], /"timer" is not a property/);
   const data = files({});
@@ -251,8 +251,8 @@ test('room editor: switch links on gate blocks, a platform and a locked exit, ty
   assert.deepEqual(edit.item('l').switches, ['p']);
   edit.setSwitches('l', []);
   assert.equal('switches' in edit.item('l'), false, 'none: it always runs');
-  assert.deepEqual(exitFields({ id: 'e', side: '+x', at: 3, width: 2, y: 0, height: 2, locked: true, switches: ['p'] }).switches, ['p']);
-  assert.equal(exitFields({ id: 'e', side: '+x', at: 3, width: 2, y: 0, height: 2, switches: ['p'] }).switches, undefined, 'only a locked exit');
+  assert.deepEqual(exitFields({ id: 'e', side: '+x', at: 3, width: 2, y: 0, height: 2, locked: true, switches: ['p'] }).requires, [{ switch: 'p' }]);
+  assert.equal(exitFields({ id: 'e', side: '+x', at: 3, width: 2, y: 0, height: 2, switches: ['p'] }).requires, undefined, 'only a locked exit');
 });
 
 test('editor links: a switch names what it powers; a gate, platform or locked exit its switches', async () => {
@@ -261,7 +261,7 @@ test('editor links: a switch names what it powers; a gate, platform or locked ex
   const { resolveBlockTypes } = await import('../src/data/room-data.js');
   const types = { objectTypes: TYPES, blockTypes: resolveBlockTypes(BLOCK_TYPES) };
   const room = roomFile('alpha', {
-    exits: [{ id: 'east', side: '+x', at: 3, locked: true, switches: ['t'] }],
+    exits: [{ id: 'east', side: '+x', at: 3, requires: [{ switch: 't' }] }],
     blocks: [{ type: 'gate', at: [4, 0, 1], to: [4, 1, 1], switches: ['p'] }, { type: 'bridge', at: [5, 0, 5] }, { type: 'collapsing', at: [6, 0, 6] }],
     objects: [
       { id: 'p', type: 'plate', at: [2, 0, 2] },
@@ -318,20 +318,20 @@ test('Switch tool edits: link and unlink a gate wall, a platform and an exit', a
   assert.equal('switches' in edit.item('l'), false, 'none: it always runs');
   // An exit: linking locks it; unlinking the last switch unlocks it.
   assert.deepEqual(edit.toggleExitLink('east', 'q'), ['q']);
-  assert.deepEqual(edit.exits[0], { id: 'east', side: '+x', at: 3, locked: true, switches: ['q'] });
+  assert.deepEqual(edit.exits[0], { id: 'east', side: '+x', at: 3, requires: [{ switch: 'q' }] });
   edit.toggleExitLink('east', 'q');
   assert.deepEqual(edit.exits[0], { id: 'east', side: '+x', at: 3 });
   edit.undo();
-  assert.equal(edit.exits[0].locked, true, 'each toggle is an undo step');
+  assert.deepEqual(edit.exits[0].requires, [{ switch: 'q' }], 'each toggle is an undo step');
 });
 
 test('Switch tool: an exit locked by every switch gets just the picked one, never unlocks on the first click', async () => {
   const { RoomEdit } = await import('../src/editor/room-edit.js');
   const edit = new RoomEdit(
-    roomFile('alpha', { exits: [{ id: 'east', side: '+x', at: 3, locked: true }], objects: [{ id: 'p', type: 'plate', at: [2, 0, 2] }] }),
+    roomFile('alpha', { exits: [{ id: 'east', side: '+x', at: 3, requires: [{ switch: '*' }] }], objects: [{ id: 'p', type: 'plate', at: [2, 0, 2] }] }),
   );
   assert.deepEqual(edit.toggleExitLink('east', 'p'), ['p']);
-  assert.deepEqual(edit.exits[0], { id: 'east', side: '+x', at: 3, locked: true, switches: ['p'] });
+  assert.deepEqual(edit.exits[0], { id: 'east', side: '+x', at: 3, requires: [{ switch: 'p' }] });
 });
 
 test('Room editor: deleting a switch takes it out of every link', async () => {
@@ -339,18 +339,18 @@ test('Room editor: deleting a switch takes it out of every link', async () => {
   const lift = { id: 'l', type: 'platform', at: [6, 0, 6], path: { points: [[6, 0, 2]] } };
   const edit = new RoomEdit(
     roomFile('alpha', {
-      exits: [{ id: 'east', side: '+x', at: 3, locked: true, switches: ['p'] }, { id: 'west', side: '-x', at: 3, locked: true, switches: ['p', 'q'] }],
+      exits: [{ id: 'east', side: '+x', at: 3, requires: [{ switch: 'p' }] }, { id: 'west', side: '-x', at: 3, requires: [{ switch: 'p' }, { switch: 'q' }] }],
       objects: [{ id: 'p', type: 'plate', at: [2, 0, 2] }, { id: 'q', type: 'plate', at: [3, 0, 2] }, { ...lift, switches: ['p'] }],
       blocks: [{ type: 'gate', at: [4, 0, 1], to: [4, 1, 3], switches: ['p', 'q'] }, { type: 'gate', at: [5, 0, 6], switches: ['p'] }],
     }),
   );
   assert.equal(edit.erase([2, 0, 2]), true);
   const data = edit.toData();
-  assert.deepEqual(data.exits, [{ id: 'east', side: '+x', at: 3 }, { id: 'west', side: '-x', at: 3, locked: true, switches: ['q'] }]);
+  assert.deepEqual(data.exits, [{ id: 'east', side: '+x', at: 3 }, { id: 'west', side: '-x', at: 3, requires: [{ switch: 'q' }] }]);
   assert.equal('switches' in edit.item('l'), false, 'its platform always runs');
   assert.deepEqual(data.blocks, [{ type: 'gate', at: [4, 0, 1], to: [4, 1, 3], switches: ['q'] }, { type: 'gate', at: [5, 0, 6] }]);
   edit.undo();
-  assert.deepEqual(edit.exits[0].switches, ['p'], 'one undo step brings the links back');
+  assert.deepEqual(edit.exits[0].requires, [{ switch: 'p' }], 'one undo step brings the links back');
 });
 
 test('Gate cells with the same switches in another order are one box', async () => {

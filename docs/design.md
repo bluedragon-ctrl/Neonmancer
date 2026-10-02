@@ -1221,13 +1221,15 @@ Collecting the key fragments is the goal of the game (D101).
   key's 8-bit field, D91), raised only by the core, never counted from
   the bits; 500 points each. His hat shows it: a thin gold band per level
   round the cone, from the brim up (`hatBands()` in `render/wizard.js`).
-- **Access locks:** `"access": n` on an exit (1–15; validation: a level
-  the thresholds give). Solid until his level is n or more; with
-  `"locked"` too, the switches must be on as well. The exit he came in
-  through stays open for him (D75). The look is the switch lock's white
-  barrier with the level as a thick gold Roman numeral (I–III, up to XV),
-  gold like the hat bands, between a bar across its top and one across
-  its bottom, as on a clock face, so a lone I reads as a numeral
+- **Access locks:** `{ "access": n }` in an exit's `requires` (1–15;
+  validation: a level the thresholds give; D151). Solid until his level
+  is n or more; with switch entries too, the switches must be on as well.
+  The exit he came in through stays open for him (D75). The look is the
+  switch lock's white glass pane with the level as a small Roman numeral
+  (I–III, up to XV) in its top corner, between a bar across its top and
+  one across its bottom, as on a clock face, so a lone I reads as a
+  numeral; it is red while his level is too low and green once it is
+  enough (the switch lights in the middle are red and green the same way)
   (`romanBars()` in `render/switch-view.js`). It opens as soon as the
   core raises the level in the same room, with `> ACCESS GRANTED: EXIT
   UNLOCKED`. Room editor: `Access level` in the exit fields.
@@ -1479,8 +1481,9 @@ before D140 work as they did). Switch types in `defs.json` are placed in
 - **Powered platform** (a platform with `switches`, D140): runs only
   while they are all on, and stops where it is when one goes off;
   without `switches` a platform always runs.
-- **Locked exit** (`"locked": true` on an exit, its switches in
-  `"switches"` or every switch in the room): solid, like the room's
+- **Locked exit** (`"requires": [{ "switch": "p" }, ...]` on an exit, one
+  entry per switch, or `{ "switch": "*" }` for every switch in the room;
+  D151): solid, like the room's
   edge, until those switches are all on; then it opens (`> ACCESS
   GRANTED: EXIT UNLOCKED`). When a switch goes off it closes again, but
   never on the wizard: while he stands in the opening it waits. The exit
@@ -1488,7 +1491,7 @@ before D140 work as they did). Switch types in `defs.json` are placed in
   after a respawn, so he can always leave the way he came (D67). The room
   needs at least one switch.
 - **Hidden exit** (`"hidden": true` on an exit, D128): solid and drawn as
-  wall until a scan reaches it (see Scan); with `"locked"` or `"access"`
+  wall until a scan reaches it (see Scan); with `"requires"`
   it is a lock once revealed.
 - **Look** (D75, after two showcase rounds): white (`#eef3ff`, the
   type's `color`). Both switches carry a square bull's-eye, a small square
@@ -2450,7 +2453,7 @@ Example room:
   "spawn": [2.5, 0, 5.5],
   "exits": [
     { "id": "west", "side": "-x", "at": 5 },
-    { "id": "north", "side": "-z", "at": 3, "width": 3, "y": 1, "locked": true }
+    { "id": "north", "side": "-z", "at": 3, "width": 3, "y": 1, "requires": [{ "switch": "*" }] }
   ],
   "blocks": [
     { "at": [0, 0, 0], "to": [2, 0, 3] },

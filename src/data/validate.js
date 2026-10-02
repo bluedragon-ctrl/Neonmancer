@@ -673,10 +673,10 @@ function validatePlate({ room, report, filled, plates }, path, [x, y, z]) {
 }
 
 /**
- * A locked exit (D75) and a switch gate (D140, D141) open when their
+ * A switch-locked exit (D75, `requires`, D151) and a switch gate (D140, D141) open when their
  * switches are all on (by default every switch in the room), so the room
  * needs one; a "switches" list names switches of this room, and only
- * locked exits, switch gate blocks and platforms take one.
+ * switch-locked exits, switch gate blocks and platforms take one.
  */
 function validateLocks({ room, report }, exits, objectTypes, blockTypes) {
   const switches = new Set((room.objects ?? []).filter((object) => SWITCH_KINDS.includes(objectTypes[object.type]?.kind)).map((object) => object.id));
@@ -684,9 +684,11 @@ function validateLocks({ room, report }, exits, objectTypes, blockTypes) {
     for (const id of ids ?? []) if (!switches.has(id)) report(path, `"${id}" is no switch (a target or a plate) of this room`);
   };
   exits.forEach((exit, i) => {
-    if (exit.locked && switches.size === 0) report(`exits[${i}].locked`, 'a locked exit needs a switch in the room (a target or a plate)');
-    if (exit.switches && !exit.locked) report(`exits[${i}].switches`, 'only a locked exit takes switches ("locked": true)');
-    links(`exits[${i}].switches`, exit.switches);
+    if (exit.locked && switches.size === 0) report(`exits[${i}].requires`, 'a switch lock needs a switch in the room (a target or a plate)');
+    const needs = (room.exits?.[i]?.requires ?? []).filter((need) => 'switch' in need).map((need) => need.switch);
+    if (needs.includes('*') && needs.length > 1) report(`exits[${i}].requires`, '"*" already means every switch in the room, so it cannot be listed with others');
+    if (room.exits?.[i]?.requires?.filter((need) => 'access' in need).length > 1) report(`exits[${i}].requires`, 'only one access level');
+    links(`exits[${i}].requires`, exit.switches);
   });
   (room.objects ?? []).forEach((object, i) => {
     if (objectTypes[object.type]?.kind === 'platform') links(`objects[${i}].switches`, object.switches);
@@ -867,9 +869,9 @@ function validateFragments(world, rooms, objectTypes, report) {
   });
   const cores = [];
   for (const [id, room] of rooms) {
-    (room?.exits ?? []).forEach((exit, i) => {
+    (room?.exits ?? []).map(withExitDefaults).forEach((exit, i) => {
       if (exit.access > access.length) {
-        report(`rooms/${id}.json`, `exits[${i}].access`, `level ${exit.access} can't be reached: world.json gives ${access.length} access level${access.length === 1 ? '' : 's'}`);
+        report(`rooms/${id}.json`, `exits[${i}].requires`, `level ${exit.access} can't be reached: world.json gives ${access.length} access level${access.length === 1 ? '' : 's'}`);
       }
     });
     for (const object of room?.objects ?? []) if (objectTypes[object.type]?.kind === 'core') cores.push(`${id}.${object.id}`);

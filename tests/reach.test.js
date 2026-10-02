@@ -114,7 +114,7 @@ test('Compile makes a step; Pull brings a crate across a pit; Cut & Paste moves 
 test('a locked exit opens by a crate on a plate, or a decoy', () => {
   const crate = { id: 'c', type: 'crate', at: [3, 0, 3] };
   const plate = { id: 'p', type: 'plate', at: [3, 0, 5] };
-  const props = { exits: [WEST, { ...EAST, locked: true }], objects: [plate, crate] };
+  const props = { exits: [WEST, { ...EAST, requires: [{ switch: '*' }] }], objects: [plate, crate] };
   assert.equal(reach(props).exits.east, true);
   assert.equal(reach({ ...props, objects: [plate] }).exits.east, false);
   assert.equal(reach({ ...props, objects: [plate] }, ['fork']).exits.east, true);
@@ -130,7 +130,7 @@ test('a hidden exit needs a scan, and so does a fake block', () => {
 });
 
 test('a target switch needs Zap', () => {
-  const props = { exits: [WEST, { ...EAST, locked: true }], objects: [{ id: 't', type: 'target', at: [4, 0, 5] }] };
+  const props = { exits: [WEST, { ...EAST, requires: [{ switch: '*' }] }], objects: [{ id: 't', type: 'target', at: [4, 0, 5] }] };
   assert.equal(reach(props).exits.east, false);
   assert.equal(reach(props, ['zap']).exits.east, true);
 });
@@ -184,7 +184,7 @@ test('world: what he can never reach is an error', () => {
 test('world: an access-locked exit waits for the access pass', () => {
   const content = gameData({
     rooms: [
-      roomFile('a', { exits: [EAST, { id: 'south', side: '+z', at: 3, access: 2 }], pickups: [pickup('pass', [3, 0, 3], 'access_pass_3')] }),
+      roomFile('a', { exits: [EAST, { id: 'south', side: '+z', at: 3, requires: [{ access: 2 }] }], pickups: [pickup('pass', [3, 0, 3], 'access_pass_3')] }),
       roomFile('b', { exits: [WEST] }),
       roomFile('c', { exits: [{ id: 'north', side: '-z', at: 3 }] }),
     ],

@@ -8,7 +8,7 @@
  */
 import { MAX_ROOM_FOOTPRINT, ROOM_HEIGHT } from '../core/rules.js';
 import { DATA_SCHEMA_VERSION } from '../core/version.js';
-import { DECO_FACES, EXIT_DEFAULTS, sideLength, withExitDefaults } from '../data/room-data.js';
+import { DECO_FACES, EXIT_DEFAULTS, requiresOf, sideLength, withExitDefaults } from '../data/room-data.js';
 import { Boxes, boxFields, boxKey } from './boxes.js';
 import { formatJson } from './format-json.js';
 import { idProblem } from './ids.js';
@@ -676,7 +676,7 @@ export class RoomEdit {
    * @returns {string[]} its switches now
    */
   toggleExitLink(exitId, id) {
-    const exit = this.exits.find((e) => e.id === exitId);
+    const exit = withExitDefaults(this.exits.find((e) => e.id === exitId));
     const next = exit.locked && exit.switches ? toggled(exit.switches, id) : [id];
     this.updateExit(exitId, next.length > 0 ? { locked: true, switches: next } : { locked: false, switches: undefined });
     return next;
@@ -846,10 +846,11 @@ export class RoomEdit {
    */
   unlinkSwitch(id) {
     const without = (list) => list.filter((one) => one !== id);
-    if (this.data.exits) this.data.exits = this.exits.map((exit) => {
-      if (!exit.switches?.includes(id)) return exit;
+    if (this.data.exits) this.data.exits = this.exits.map((raw) => {
+      const exit = withExitDefaults(raw);
+      if (!exit.switches?.includes(id)) return raw;
       const rest = without(exit.switches);
-      return exitFields({ ...withExitDefaults(exit), locked: rest.length > 0, switches: rest });
+      return exitFields({ ...exit, locked: rest.length > 0, switches: rest });
     });
     for (const { cell, type: key } of this.blocks.cells()) {
       const { type, switches } = boxFields(key);
@@ -896,10 +897,9 @@ export function exitFields({ id, side, at, width, y, height, locked, switches, a
   if (width !== EXIT_DEFAULTS.width) exit.width = width;
   if (y !== EXIT_DEFAULTS.y) exit.y = y;
   if (height !== EXIT_DEFAULTS.height) exit.height = height;
-  if (locked) exit.locked = true;
-  // Only a locked exit is opened by switches (D140).
-  if (locked && switches?.length > 0) exit.switches = [...switches];
-  if (access) exit.access = access;
+  // One list for the switches that open it (D140) and the access level it asks for (D101, D151).
+  const requires = requiresOf({ locked, switches, access });
+  if (requires) exit.requires = requires;
   if (hidden) exit.hidden = true;
   return exit;
 }

@@ -389,7 +389,7 @@ test('room height and access level limits match the room schema', () => {
   const schema = JSON.parse(readFileSync(fileURLToPath(new URL('../schemas/room.schema.json', import.meta.url)), 'utf8'));
   const height = schema.properties.size.prefixItems[1];
   assert.deepEqual(ROOM_HEIGHT, { min: height.minimum, max: height.maximum });
-  assert.equal(MAX_ACCESS_LEVEL, schema.$defs.exit.properties.access.maximum);
+  assert.equal(MAX_ACCESS_LEVEL, schema.$defs.exit.properties.requires.items.oneOf[1].properties.access.maximum);
 });
 
 /** Two rooms side by side (lab east of hall), connected; a platform and a bug in lab. */
@@ -576,11 +576,11 @@ test('RoomEdit moves exits along their side and up, not onto another exit', () =
 test('RoomEdit locks and unlocks an exit (D75); a moved locked exit stays locked', () => {
   const hall = new RoomEdit(twoRooms()['rooms/hall.json']);
   assert.equal(hall.updateExit('east', { locked: true }), true);
-  assert.equal(hall.exits[0].locked, true);
+  assert.deepEqual(hall.exits[0].requires, [{ switch: '*' }]);
   assert.equal(hall.updateExit('east', { at: 2 }), true);
-  assert.equal(hall.exits[0].locked, true);
+  assert.deepEqual(hall.exits[0].requires, [{ switch: '*' }]);
   assert.equal(hall.updateExit('east', { locked: false }), true);
-  assert.equal('locked' in hall.exits[0], false, 'unlocked is the default, left out');
+  assert.equal('requires' in hall.exits[0], false, 'unlocked is the default, left out');
 });
 
 test('RoomEdit.describe says what is in a cell', () => {

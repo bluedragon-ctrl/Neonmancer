@@ -348,8 +348,8 @@ test('a boss\'s drop falls into its cell and rests there', () => {
 
 test('an arena never locks its doors: a locked exit there still needs a switch, like anywhere (D135)', () => {
   const files = arena();
-  files['rooms/arena.json'].exits[0].locked = true;
-  assert.match(validateData(files).join('\n'), /a locked exit needs a switch in the room/);
+  files['rooms/arena.json'].exits[0].requires = [{ switch: '*' }];
+  assert.match(validateData(files).join('\n'), /a switch lock needs a switch in the room/);
   const game = gameIn(arena());
   assert.deepEqual(game.locks, [], 'its doors are open while the boss lives');
 });

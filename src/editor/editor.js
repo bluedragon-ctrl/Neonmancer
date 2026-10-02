@@ -725,7 +725,7 @@ export class Editor {
     if (item) return linksAt(this.linkData, this.linkTypes, item.at);
     if (this.selected?.kind === 'gate') return linksAt(this.linkData, this.linkTypes, this.selected.cell);
     const exit = this.selectedExit;
-    if (!exit?.locked) return null;
+    if (!exit || !withExitDefaults(exit).locked) return null;
     const thing = poweredThings(this.linkData, this.linkTypes).find((one) => one.kind === 'exit' && one.id === exit.id);
     return thing ? { switches: switchesOf(thing, roomSwitches(this.linkData, this.objectTypes)), powered: [thing] } : null;
   }

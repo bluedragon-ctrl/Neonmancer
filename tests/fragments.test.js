@@ -23,7 +23,7 @@ const FRAGMENTS = { required: 4, access: [2, 3] };
  * Two rooms: alpha (8×4×8) with the core at [4, 0, 4], `pickups`, and its
  * east exit asking for access level 1; beta behind it.
  */
-function files({ pickups = [], exit = { id: 'east', side: '+x', at: 3, access: 1 }, fragments = FRAGMENTS, objects = [{ id: 'core', type: 'core', at: [4, 0, 4] }] } = {}) {
+function files({ pickups = [], exit = { id: 'east', side: '+x', at: 3, requires: [{ access: 1 }] }, fragments = FRAGMENTS, objects = [{ id: 'core', type: 'core', at: [4, 0, 4] }] } = {}) {
   return dataFiles({
     rooms: [
       roomFile('alpha', { exits: [exit], objects, pickups }),
@@ -145,16 +145,16 @@ test('an access lock is solid until his level is high enough; the one he came in
   const [lock] = low.locks;
   assert.equal(exitOpen(low, lock.exit), false);
   assert.equal(gameWith({}, { accessLevel: 1 }).locks[0].open, true, 'a level he has: open from the start');
-  const back = gameWith({ exit: { id: 'east', side: '+x', at: 3, access: 1 } });
+  const back = gameWith({ exit: { id: 'east', side: '+x', at: 3, requires: [{ access: 1 }] } });
   back.enterRoom('alpha', undefined, 'east');
   assert.equal(back.locks[0].open, true, 'he came in through it (D75)');
   // With a switch lock too, both must be met.
-  const both = gameWith({ exit: { id: 'east', side: '+x', at: 3, access: 1, locked: true }, objects: [{ id: 't', type: 'target', at: [6, 0, 6] }] }, { accessLevel: 1 });
+  const both = gameWith({ exit: { id: 'east', side: '+x', at: 3, requires: [{ switch: '*' }, { access: 1 }] }, objects: [{ id: 't', type: 'target', at: [6, 0, 6] }] }, { accessLevel: 1 });
   assert.equal(both.locks[0].open, false, 'his level is enough, the switch is off');
   both.switches[0].on = true;
   both.update(idle);
   assert.equal(both.locks[0].open, true);
-  const switchedOnly = gameWith({ exit: { id: 'east', side: '+x', at: 3, access: 1, locked: true }, objects: [{ id: 't', type: 'target', at: [6, 0, 6] }] });
+  const switchedOnly = gameWith({ exit: { id: 'east', side: '+x', at: 3, requires: [{ switch: '*' }, { access: 1 }] }, objects: [{ id: 't', type: 'target', at: [6, 0, 6] }] });
   switchedOnly.switches[0].on = true;
   switchedOnly.update(idle);
   assert.equal(switchedOnly.locks[0].open, false, 'the switch is on, his level too low');
@@ -197,7 +197,7 @@ test('validation: fragment slots, rising access thresholds, reachable exit level
   assert.ok(errors({}, (data) => (data['defs.json'].pickups.fragment_9 = { kind: 'fragment', slot: 1 })).some((e) => e.includes('fragment slot 1 is taken')));
   assert.ok(errors({ fragments: { required: 4, access: [3, 2] } }).some((e) => e.includes('must be more than')));
   assert.ok(errors({ fragments: { required: 4, access: [2, 5] } }).some((e) => e.includes('more than the 4 fragments')));
-  assert.ok(errors({ exit: { id: 'east', side: '+x', at: 3, access: 3 } }).some((e) => e.includes("level 3 can't be reached")));
+  assert.ok(errors({ exit: { id: 'east', side: '+x', at: 3, requires: [{ access: 3 }] } }).some((e) => e.includes("level 3 can't be reached")));
   const twoCores = (data) => (data['rooms/beta.json'].objects = [{ id: 'core', type: 'core', at: [4, 0, 4] }]);
   assert.ok(errors({}, twoCores).some((e) => e.includes('2 cores')));
   const onTop = [{ id: 'core', type: 'core', at: [4, 0, 4] }, { id: 'c', type: 'crate', at: [4, 1, 4] }];
@@ -211,7 +211,7 @@ test('the pickup report lists fragments by their save bit', () => {
 });
 
 test('the room editor keeps an exit\'s access level', () => {
-  assert.deepEqual(exitFields({ id: 'e', side: '+x', at: 3, width: 2, y: 0, height: 2, access: 2 }), { id: 'e', side: '+x', at: 3, access: 2 });
+  assert.deepEqual(exitFields({ id: 'e', side: '+x', at: 3, width: 2, y: 0, height: 2, access: 2 }), { id: 'e', side: '+x', at: 3, requires: [{ access: 2 }] });
   assert.deepEqual(exitFields({ id: 'e', side: '+x', at: 3, width: 2, y: 0, height: 2, access: 0 }), { id: 'e', side: '+x', at: 3 });
 });
 

@@ -9,7 +9,7 @@
   "exits": [
     { "id": "west", "side": "-x", "at": 5 },
     { "id": "east", "side": "+x", "at": 5 },
-    { "id": "north", "side": "-z", "at": 2, "locked": true }
+    { "id": "north", "side": "-z", "at": 2, "requires": [{ "switch": "*" }] }
   ],
   "objects": [
     { "id": "screen_zap", "type": "screen", "at": [2, 0, 9], "text": "tut_zap", "overrides": { "face": "+z" } },

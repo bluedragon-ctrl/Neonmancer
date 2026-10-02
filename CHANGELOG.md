@@ -40,6 +40,13 @@ docs/decisions.md).
   Alt+click with the Block tool copies a block's type and switches.
 
 ### Changed
+- Doors (D151): a locked exit is a pane of white glass like the switch gates;
+  one `requires` list on an exit replaces `locked`, `switches` and `access`
+  (switch entries and an access level); lock lights glow red until their
+  switch is on, then green, and the access numeral sits small in the top
+  corner, red until his level is enough, then green. The authored rooms
+  Boot Sector and `room_1` and the test rooms `decoy_lab` and `zap_port`
+  were migrated.
 - Crates are neon green instead of lime (D150); the tutorial screen says so.
 - The dev wing (5.4, D147): `world.json` `dev` lists the test rooms that
   only the dev server shows; a build for players leaves them out and walls
