@@ -1,0 +1,19 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "first_steps",
+  "name": "First Steps",
+  "biome": "home_lattice",
+  "size": [8, 4, 8],
+  "spawn": [1.5, 0, 5.5],
+  "exits": [
+    { "id": "west", "side": "-x", "at": 5 },
+    { "id": "east", "side": "+x", "at": 5 }
+  ],
+  "holes": [{ "at": [4, 0], "to": [5, 7] }],
+  "objects": [
+    { "id": "screen_push", "type": "screen", "at": [1, 0, 2], "text": "tut_push", "overrides": { "face": "+z" } },
+    { "id": "crate_a", "type": "crate", "at": [3, 0, 5] },
+    { "id": "crate_b", "type": "crate", "at": [3, 0, 6] }
+  ]
+}

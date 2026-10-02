@@ -5,188 +5,211 @@
     "boot_hello": {
       "title": "SYSLOG 0x01",
       "lines": [
-        "CORE OFFLINE. GRID IN SAFE MODE.",
-        "KEY FRAGMENTS SCATTERED ACROSS SECTORS.",
-        "BRING THEM HOME. MIND THE GAPS."
+        "CORE OFFLINE. GRID RUNNING IN SAFE MODE.",
+        "KEY FRAGMENTS SCATTERED ACROSS ALL SECTORS.",
+        "RECOVERY ADVISED. MIND THE NULL SECTORS."
       ]
     },
     "help_zap": {
-      "title": "HELP ZAP.EXE",
+      "title": "MAN ZAP.EXE",
       "lines": [
-        "FIRES A FAST BOLT THE WAY YOU FACE.",
-        "SHORT COOLDOWN, 10 ENERGY A SHOT.",
-        "HITS ENEMIES AND SWITCHES TARGETS ON/OFF.",
-        "TIP: A HIT ALERTS THE TARGET. AIM FIRST."
+        "ZAP(1): EMIT A FAST BOLT ALONG FACING.",
+        "COOLDOWN: SHORT. COST: 10 ENERGY PER CALL.",
+        "IMPACT: DAMAGES PROCESSES, TOGGLES TARGETS.",
+        "NOTE: A HIT ALERTS THE PROCESS HIT."
       ]
     },
     "help_shield": {
-      "title": "HELP SHIELD.EXE",
+      "title": "MAN SHIELD.EXE",
       "lines": [
-        "WRAPS YOU IN A CRACKLING RING FOR 7 SEC.",
-        "BLOCKS INCOMING BOLTS, ARCS AND BURSTS.",
-        "DOES NOT STOP A BITE. KEEP YOUR DISTANCE."
+        "SHIELD(1): WRAP CALLER IN AN ARC RING, 7 SEC.",
+        "DEFLECTS BOLTS, ARCS AND BURSTS.",
+        "DOES NOT DEFLECT PROCESSES IN CONTACT."
       ]
     },
     "help_firewall": {
-      "title": "HELP FIREWALL.EXE",
+      "title": "MAN FIREWALL.EXE",
       "lines": [
-        "A RING OF FLAMES AROUND YOU FOR 7 SEC.",
-        "BLOCKS BOLTS, BURSTS AND TOUCH ALIKE.",
-        "BURNS ANY ENEMY THAT PRESSES CLOSE.",
-        "COSTS 40 ENERGY. WORTH EVERY BYTE."
+        "FIREWALL(1): FLAME RING ON CALLER, 7 SEC.",
+        "BLOCKS BOLTS, BURSTS AND CONTACT ALIKE.",
+        "BURNS ANY PROCESS THAT PRESSES CLOSE.",
+        "COST: 40 ENERGY."
       ]
     },
     "help_pause": {
-      "title": "HELP PAUSE.EXE",
+      "title": "MAN PAUSE.EXE",
       "lines": [
-        "A BOLT THAT FREEZES AN ENEMY FOR 5 SEC.",
-        "FROZEN PROCESSES ARE HARMLESS AND SOLID:",
-        "STAND ON THEM, PARK THEM ON A PLATE.",
-        "STILL HITTABLE. RESUMES WHEN TIME RUNS OUT."
+        "PAUSE(1): SUSPEND A PROCESS FOR 5 SEC.",
+        "SUSPENDED: HARMLESS, SOLID, STILL HITTABLE.",
+        "MAY BE STOOD ON OR PARKED ON A PLATE.",
+        "RESUMES ON TIMEOUT."
       ]
     },
     "help_blink": {
-      "title": "HELP BLINK.EXE",
+      "title": "MAN BLINK.EXE",
       "lines": [
-        "DASHES UP TO 3 UNITS AHEAD IN A FLASH,",
-        "OVER GAPS, HAZARDS AND HOLES.",
-        "HURTS ANY ENEMY YOU DASH THROUGH.",
-        "WARNING: A WALL IN THE WAY HURTS YOU."
+        "BLINK(1): RELOCATE UP TO 3 UNITS FORWARD.",
+        "IGNORES GAPS, HAZARDS AND HOLES IN TRANSIT.",
+        "DAMAGES PROCESSES IN THE PATH.",
+        "FAULT: A WALL IN THE PATH DAMAGES CALLER."
       ]
     },
     "help_warp": {
-      "title": "HELP WARP.EXE",
+      "title": "MAN WARP.EXE",
       "lines": [
-        "TELEPORTS YOU AHEAD, AS FAR AS THE FIRST",
-        "WALL OR OBJECT IN LINE. ANY GAP, ANY WIDTH.",
-        "SAFE LANDING, SHORT OF WHAT STOPS YOU.",
-        "COSTS 30 ENERGY."
+        "WARP(1): RELOCATE FORWARD TO THE FIRST",
+        "WALL OR OBJECT IN LINE. GAP WIDTH IGNORED.",
+        "LANDS SAFELY SHORT OF THE OBSTACLE.",
+        "COST: 30 ENERGY."
       ]
     },
     "help_cut_paste": {
-      "title": "HELP CUT_PASTE.EXE",
+      "title": "MAN CUT_PASTE.EXE",
       "lines": [
-        "CAST: CUT THE CRATE OR FROZEN ENEMY",
-        "IN FRONT OF YOU INTO YOUR CLIPBOARD.",
-        "CAST AGAIN: PASTE IT INTO THE FREE CELL",
-        "IN FRONT OF YOU. PASTING IS FREE.",
-        "THE CLIPBOARD TRAVELS WITH YOU.",
-        "NOTHING ON TOP, YOUR LEVEL ONLY."
+        "CUT: MOVE A CRATE OR SUSPENDED PROCESS IN",
+        "FRONT OF CALLER TO THE CLIPBOARD (1 SLOT).",
+        "PASTE: WRITE IT TO THE FREE CELL AHEAD. FREE.",
+        "CLIPBOARD PERSISTS ACROSS SECTORS.",
+        "LIMITS: NOTHING ON TOP, CALLER'S LEVEL ONLY."
       ]
     },
     "help_compile": {
-      "title": "HELP COMPILE.EXE",
+      "title": "MAN COMPILE.EXE",
       "lines": [
-        "BUILDS A CRATE IN THE FREE CELL AHEAD.",
-        "A STEP UP, OR A PLUG FOR A HOLE.",
-        "PUSH IT, PULL IT, STAND ON IT.",
-        "IT DEREZZES AFTER 7 SEC. WATCH THE BLINK."
+        "COMPILE(1): BUILD A CRATE IN THE FREE CELL.",
+        "USES: A STEP UP, OR A PLUG FOR A NULL SECTOR.",
+        "MAY BE PUSHED, PULLED AND STOOD ON.",
+        "TTL: 7 SEC. BLINKS BEFORE DEREZ."
       ]
     },
     "help_fork": {
-      "title": "HELP FORK.EXE",
+      "title": "MAN FORK.EXE",
       "lines": [
-        "SPAWNS A HOLOGRAM OF YOU IN THE FREE CELL",
-        "AHEAD. IT STANDS FOR 10 SEC.",
-        "IT HOLDS A FLOOR PLATE DOWN.",
-        "ENEMIES THAT SEE IT GO FOR IT, NOT YOU.",
+        "FORK(1): SPAWN A CHILD HOLOGRAM IN THE FREE",
+        "CELL AHEAD. TTL: 10 SEC.",
+        "CHILD HOLDS A FLOOR PLATE DOWN.",
+        "HOSTILE PROCESSES TARGET THE CHILD FIRST.",
         "A NEW FORK REPLACES THE OLD ONE."
       ]
     },
     "help_scan": {
-      "title": "HELP SCAN.EXE",
+      "title": "MAN SCAN.EXE",
       "lines": [
-        "SENDS A WAVE 6 UNITS OUT FROM YOUR FEET.",
-        "FAKE BLOCKS IT REACHES DEREZ.",
-        "HIDDEN EXITS IT REACHES OPEN UP.",
-        "SOMETHING LOOKS OFF? SCAN IT."
+        "SCAN(1): EMIT A WAVE, RADIUS 6, FROM CALLER.",
+        "FAKE BLOCKS IN RANGE: DEREZ.",
+        "HIDDEN EXITS IN RANGE: MOUNT.",
+        "NOTE: ANOMALIES LOOK ORDINARY UNTIL SCANNED."
       ]
     },
     "help_pull": {
-      "title": "HELP PULL.EXE",
+      "title": "MAN PULL.EXE",
       "lines": [
-        "PULLS THE FIRST CRATE OR ENEMY IN LINE,",
-        "UP TO 6 CELLS AWAY, ONE CELL TOWARD YOU.",
-        "ENEMIES GO EVEN INTO A HOLE.",
-        "PULLED ENEMIES BLAME YOU. BE READY."
+        "PULL(1): DRAG THE FIRST CRATE OR PROCESS IN",
+        "LINE (RANGE 6) ONE CELL TOWARD CALLER.",
+        "PROCESSES MAY BE DRAGGED INTO NULL SECTORS.",
+        "NOTE: A PULLED PROCESS BLAMES THE CALLER."
       ]
     },
     "help_zap_plus": {
-      "title": "HELP ZAP+.EXE",
+      "title": "PATCH ZAP+.EXE",
       "lines": [
-        "PATCH FOR ZAP. SAME KEY, SAME COST.",
-        "BOLTS NOW BOUNCE OFF WALLS 3 TIMES.",
-        "BANK A SHOT ROUND A CORNER,",
-        "OR INTO A TARGET OUT OF PLAIN SIGHT."
+        "UPDATE FOR ZAP.EXE. SAME BINDING, SAME COST.",
+        "BOLTS NOW REFLECT OFF WALLS, 3 BOUNCES.",
+        "BANKED SHOTS REACH TARGETS OUT OF LINE."
       ]
     },
     "help_shield_plus": {
-      "title": "HELP SHIELD+.EXE",
+      "title": "PATCH SHIELD+.EXE",
       "lines": [
-        "PATCH FOR SHIELD. SAME KEY, SAME COST.",
-        "ENEMY BOLTS NO LONGER JUST FIZZLE:",
-        "THEY FLY BACK THE WAY THEY CAME, AS YOURS.",
-        "LET THE SENTINELS SHOOT THEMSELVES."
+        "UPDATE FOR SHIELD.EXE. SAME BINDING, SAME COST.",
+        "DEFLECTED BOLTS NOW RETURN TO SENDER,",
+        "RE-OWNED BY CALLER.",
+        "SENTINELS FIRE AT THEIR OWN RISK."
       ]
     },
     "help_double_jump": {
-      "title": "HELP DOUBLE_JUMP.SYS",
+      "title": "DRIVER DOUBLE_JUMP.SYS",
       "lines": [
-        "PRESS JUMP AGAIN IN MID-AIR",
-        "FOR A SECOND JUMP.",
-        "REACHES 2 BLOCKS UP AND WIDER GAPS.",
-        "OLD ROOMS MAY HIDE NEW WAYS. GO BACK."
+        "JUMP IN MID-AIR: SECOND IMPULSE GRANTED.",
+        "REACH: 2 BLOCKS UP, WIDER GAPS.",
+        "NOTE: PRIOR SECTORS MAY NOW HAVE NEW PATHS."
       ]
     },
     "help_fragments": {
-      "title": "HELP FRAGMENT.DAT",
+      "title": "FRAGMENT.DAT // BOOT KEY",
       "lines": [
-        "GOLD TILES ARE KEY FRAGMENTS.",
-        "64 OF THEM MAKE THE 8X8 BOOT KEY.",
-        "EACH ONE FILLS A MODULE ON YOUR HUD.",
-        "FOUND IS FOUND: THEY SURVIVE ANY CRASH.",
-        "CARRY THEM TO THE CORE TO USE THEM."
+        "GOLD TILE: 1 OF 64 MODULES OF THE BOOT KEY.",
+        "KEY GRID IS 8X8. HUD MAPS EACH SHARD ON PICKUP.",
+        "RECOVERED SHARDS PERSIST ACROSS CRASHES.",
+        "DELIVER TO CORE TO RAISE ACCESS LEVEL."
       ]
     },
     "help_core": {
-      "title": "HELP CORE.SYS",
+      "title": "DOC CORE.SYS",
       "lines": [
-        "THE CENTRAL CORE READS YOUR FRAGMENTS.",
-        "TOUCH IT TO RAISE YOUR ACCESS LEVEL.",
-        "BRING ALL 64 AND THE GRID REBOOTS.",
-        "COME BACK WHENEVER YOUR KEY GROWS."
+        "CENTRAL CORE: READS ALL RECOVERED FRAGMENTS.",
+        "CONTACT RAISES THE CALLER'S ACCESS LEVEL.",
+        "64 OF 64 FRAGMENTS: GRID REBOOT.",
+        "RE-ENTER AT ANY TIME TO UPDATE LEVEL."
       ]
     },
     "help_access": {
-      "title": "HELP ACCESS.LVL",
+      "title": "DOC ACCESS.LVL",
       "lines": [
-        "DOORS MARKED I, II OR III ARE LOCKED",
-        "TO LOW ACCESS LEVELS.",
+        "DOORS MARKED I, II, III: RESTRICTED.",
         "CORE GRANTS: 16 FRAGMENTS  -> LEVEL I",
         "             32 FRAGMENTS  -> LEVEL II",
         "             48 FRAGMENTS  -> LEVEL III",
-        "A GOLD BAND ON YOUR HAT FOR EACH LEVEL."
+        "LEVEL SHOWN AS GOLD BANDS ON THE HAT."
       ]
     },
     "access_1": {
       "title": "ACCESS DENIED",
-      "lines": [
-        "THIS SECTOR NEEDS ACCESS LEVEL I.",
-        "BRING 16 FRAGMENTS TO THE CORE."
-      ]
+      "lines": ["SECTOR REQUIRES ACCESS LEVEL I.", "SUBMIT 16 FRAGMENTS TO THE CORE."]
     },
     "access_2": {
       "title": "ACCESS DENIED",
-      "lines": [
-        "THIS SECTOR NEEDS ACCESS LEVEL II.",
-        "BRING 32 FRAGMENTS TO THE CORE."
-      ]
+      "lines": ["SECTOR REQUIRES ACCESS LEVEL II.", "SUBMIT 32 FRAGMENTS TO THE CORE."]
     },
     "access_3": {
       "title": "ACCESS DENIED",
+      "lines": ["SECTOR REQUIRES ACCESS LEVEL III.", "SUBMIT 48 FRAGMENTS TO THE CORE."]
+    },
+    "tut_move": {
+      "title": "BOOT.LOG // 0x02",
       "lines": [
-        "THIS SECTOR NEEDS ACCESS LEVEL III.",
-        "BRING 48 FRAGMENTS TO THE CORE."
+        "KERNEL SPAWNED USER PROCESS: WIZARD.EXE",
+        "INPUT DRIVERS: WASD, ARROWS, SPACE (JUMP).",
+        "STEP LIMIT: ONE BLOCK. TALLER IS A WALL.",
+        "UNHANDLED EXCEPTION: RESTORE FROM SHRINE."
+      ]
+    },
+    "tut_push": {
+      "title": "MEMDUMP // CRATE.DAT",
+      "lines": [
+        "CRATE: MOVABLE ALLOCATION. LIME. 1X1X1.",
+        "FORCE ON A FACE: IT SLIDES ONE CELL.",
+        "NULL SECTOR IN FLOOR TABLE, 2 CELLS WIDE.",
+        "FILL WITH ALLOCATIONS. 2 CRATES ON FILE.",
+        "FALL INTO NULL: PROCESS RESTARTED."
+      ]
+    },
+    "tut_zap": {
+      "title": "PORTMAP // ZAP.EXE",
+      "lines": [
+        "DATA DISK ON HOST: ZAP.EXE. INSTALLS ON CONTACT.",
+        "INVOKE: E. CYCLE LOADED PROGRAMS: TAB / Q.",
+        "TARGET NODES TOGGLE ON BOLT IMPACT.",
+        "NORTH DOOR: POWERED BY ONE TARGET NODE.",
+        "BUG.PROC PATROLS THE PORT. BITE: -1 INTEGRITY."
+      ]
+    },
+    "tut_atrium": {
+      "title": "DIR // /HOME/LATTICE/ATRIUM",
+      "lines": [
+        "HUB NODE. WINGS MOUNT HERE AS ACCESS GROWS.",
+        "ALLOCATIONS ARE STRUCTURE: A CRATE IS A STEP.",
+        "STEP LIMIT 1 + CRATE 1 = REACHABLE HEIGHT 2."
       ]
     }
   }

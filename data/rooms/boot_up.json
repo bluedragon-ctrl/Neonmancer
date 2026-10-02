@@ -1,0 +1,15 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "boot_up",
+  "name": "Boot Up",
+  "biome": "home_lattice",
+  "size": [8, 4, 8],
+  "spawn": [1.5, 0, 5.5],
+  "exits": [{ "id": "east", "side": "+x", "at": 5 }],
+  "blocks": [{ "at": [4, 0, 0], "to": [4, 0, 7] }],
+  "shrine": [2, 6],
+  "objects": [
+    { "id": "screen_move", "type": "screen", "at": [2, 0, 3], "text": "tut_move", "overrides": { "face": "+z" } }
+  ]
+}

@@ -496,6 +496,10 @@ not critical.
     the affected authored rooms in the PR, and any change to their
     files waits for the author's OK;
   - running, playing and screenshotting them to check a mechanic is fine.
+- A git worktree has no node_modules of its own and Node would use the
+  main checkout's (maybe from an older branch). `tools/ensure-deps.js`
+  runs before dev, build, test, validate:data and check:reach and installs
+  what this checkout lacks, so a new worktree just works.
 - CLAUDE.md is versioned in the repo so every machine shares it; put
   working rules here, not in machine-local notes.
 - Conventional Commits (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`).
