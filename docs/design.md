@@ -861,7 +861,9 @@ of the 2-high pillar (push the crate against it and climb).
   walks on from there when it thaws. It sees nothing, cuts off a charged
   attack and fires none, and touching it doesn't hurt. It is solid, by
   the solid-enemy rules (D51): he bumps into it and stands on it, and a
-  bouncy one doesn't bounce him. It still falls, rides platforms, holds a
+  bouncy one doesn't bounce him. Its box is the whole cell while frozen
+  (1×1×1 at least, D155), so it is a block to climb from like a crate, and
+  it can be pushed (D154). It still falls, rides platforms, holds a
   plate down and takes hits (a Zap, a burn, another enemy's discharge or
   bolt); it pops as usual.
 - A frozen enemy he stands inside when it freezes doesn't trap him: it is

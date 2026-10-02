@@ -137,7 +137,8 @@ mobile/touch support, backend or accounts.
   be pushed (only the top of a stack moves).
 - No basic carry action: the wizard can only push objects until he
   unlocks the Cut & Paste spell.
-- Frozen enemies can be stood on and pushed one cell at a time (D154).
+- Frozen enemies are 1×1×1 blocks (D155): stood on, climbed from and pushed
+  one cell at a time (D154).
   Active enemies can't, except bouncy ones
   (landing on top bounces the wizard up 2 blocks, harmlessly, D48) and
   solid ones, which block, carry and shove him like platforms (D51).

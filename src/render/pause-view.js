@@ -6,8 +6,8 @@
 import { Group } from 'three';
 import { lineMaterial, neonLines } from './neon.js';
 
-/** Sizes in units: half the cage's edge round the middle of a 0.6 enemy, a bracket's length. */
-export const PAUSE_VIEW = { half: 0.42, arm: 0.14, lift: 0.02 };
+/** Sizes in units: half the cage's edge round the middle of a frozen enemy's whole cell (D155), a bracket's length. */
+export const PAUSE_VIEW = { half: 0.5, arm: 0.16, lift: 0 };
 
 /**
  * The cage round a frozen enemy (placePauseCage()), hidden; its origin is
