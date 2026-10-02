@@ -491,10 +491,16 @@
     },
     "objectType": {
       "type": "object",
-      "required": ["kind"],
+      "description": "A base type has a kind; a variant (\"extends\", D145) only the values it changes.",
+      "if": { "properties": { "extends": true }, "required": ["extends"] },
+      "else": { "properties": { "kind": true }, "required": ["kind"] },
       "additionalProperties": false,
       "$comment": "A decoration has a look and no color, every other kind a color and no look: checked in src/data/validate.js.",
       "properties": {
+        "extends": {
+          "$ref": "common.schema.json#/$defs/id",
+          "description": "Variant (D145): the base object type (one without \"extends\") whose values it takes; its own values replace the base's. It keeps the base's kind."
+        },
         "kind": {
           "enum": ["pushable", "platform", "target", "plate", "core", "deco"],
           "description": "Which engine behavior the object uses. pushable: the wizard pushes it; platform: follows its path (room data \"path\") carrying the wizard and pushables (with \"damage\" it hurts him instead, a spiked platform, D82); target: a fixed block a Zap switches on and off; plate: a floor tile (y 0) that is on while a crate, an enemy or the wizard stands on it. Targets and plates are switches: they power the room's locked exits, gate blocks and platforms that link them (room data \"switches\", by default every switch in the room), each powered while all its switches are on (D75, D140); their look is fixed (render/switch-view.js), only the color comes from here. Gates are block types (\"blocks\", D141). core: the central core (D101), a fixed block that takes the key fragments: touching it raises the wizard's access level to what his fragments earn (world.json \"fragments\"), and with all of them the Grid reboots; at most one in the world. deco: a decoration (D117), a fixed body as big as its \"look\" that does nothing; it has no color of its own and takes the room's. Collapsing blocks are block types (\"blocks\", D60)."

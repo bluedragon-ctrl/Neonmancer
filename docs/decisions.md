@@ -1410,3 +1410,18 @@ into more boxes and scatter tuning over room files; a new variant stays
 one line in `defs.json`. `start` names the state plainly where
 `inverted` did not. No room file used `inverted`; only `defs.json`
 changes.
+
+### D145 — 2026-10-02 — Object types have variants (`extends`)
+An object type in `defs.json` may `extend` a base object type and list
+only the values it changes, like block types (D60): one level (a variant
+never extends a variant) and it keeps the base's kind. The loader fills
+variants in (`resolveObjectTypes()`), so rooms, the game and the editor
+see complete types. The crate variants (`crate_plain`, `crate_cross`,
+`crate_dashed`) extend `crate` (setting `mark: none` where they had no
+mark) and the timed switches extend `target` and `plate`; resolved, every
+type is the same as before. `spiked_platform` stays its own base: it
+shares almost nothing with `platform`.
+**Why:** the crates repeated their kind, color and faces four times and
+the timed switches their base's values, so changing the crate color
+meant four edits that could drift apart. One level and a fixed kind keep
+a variant readable on its own, as for block types.

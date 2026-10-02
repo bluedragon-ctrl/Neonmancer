@@ -28,6 +28,7 @@ import {
   holeTiles,
   sideLength,
   resolveBlockTypes,
+  resolveObjectTypes,
   resolveEnemyTemplates,
   templateChain,
   withEnemyDefaults,
@@ -77,9 +78,10 @@ export function validateData(files) {
     }
   }
 
+  const objectTypes = validateObjectVariants(files['defs.json'].objects ?? {}, report);
   // Only pushables break (entities/pushable.js) and only platforms hurt
   // (D82); on another kind these would do nothing.
-  for (const [id, type] of Object.entries(files['defs.json'].objects ?? {})) {
+  for (const [id, type] of Object.entries(objectTypes)) {
     if (type.integrity !== undefined && type.kind !== 'pushable') {
       report('defs.json', `objects.${id}.integrity`, `only pushable objects can be destroyed, not a ${type.kind}`);
     }
@@ -100,9 +102,9 @@ export function validateData(files) {
   const blocks = files['defs.json'].blocks ?? {};
   validateBlockTypes(blocks, report);
   const pickupTypes = files['defs.json'].pickups ?? {};
-  validateSpellsAndPickups(files['defs.json'].spells ?? {}, pickupTypes, files['defs.json'].objects ?? {}, report);
+  validateSpellsAndPickups(files['defs.json'].spells ?? {}, pickupTypes, objectTypes, report);
   const context = {
-    objectTypes: files['defs.json'].objects ?? {},
+    objectTypes,
     pickupTypes,
     blockTypes: resolveBlockTypes(blocks),
     enemyTemplates: resolveEnemyTemplates(enemies),
@@ -246,6 +248,27 @@ function validateSpellsAndPickups(spells, pickupTypes, objectTypes, report) {
   if (PLAYER.energyTicks - total.recharge < 1) {
     report('defs.json', 'pickups', `recharge buffs take away ${total.recharge} of ${PLAYER.energyTicks} ticks per energy unit; at least 1 must be left`);
   }
+}
+
+/**
+ * Object type variants (D145): a variant extends a base type (one without
+ * "extends") and takes its values; filled in, it needs a kind like any
+ * other. Broken variants are left out of what it returns.
+ * @returns {Record<string, object>} the object types resolved
+ */
+function validateObjectVariants(objects, report) {
+  const resolved = resolveObjectTypes(objects);
+  for (const [id, own] of Object.entries(objects)) {
+    const path = `objects.${id}`;
+    if (own.extends === undefined) continue;
+    const base = objects[own.extends];
+    if (!base) report('defs.json', `${path}.extends`, `unknown object type "${own.extends}"`);
+    else if (base.extends !== undefined) report('defs.json', `${path}.extends`, `"${own.extends}" is a variant itself; extend its base "${base.extends}"`);
+    else if (own.kind !== undefined && own.kind !== base.kind) report('defs.json', `${path}.kind`, `a variant keeps its base's kind (${base.kind})`);
+    else continue;
+    delete resolved[id];
+  }
+  return resolved;
 }
 
 /**

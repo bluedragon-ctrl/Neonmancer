@@ -35,6 +35,8 @@ docs/decisions.md).
   Alt+click with the Block tool copies a block's type and switches.
 
 ### Changed
+- Object types may `extend` a base type (D145), like block types: the
+  crate variants and timed switches list only what they change.
 - Gate block types (D144): a bridge is `"start": "gone"` (was
   `"inverted": true`). The room editor's Block tool lists block types in
   groups (Static, Switch gates, Collapsing (step) gates), each saying

@@ -356,7 +356,8 @@ they stay for the run.
 The engine is generic; all content lives in data.
 
 - `data/defs.json` — object types (kind, style, damage for spiked
-  platforms, a decoration's look, a switch's timer), block types (look or kind, color, a gate's trigger,
+  platforms, a decoration's look, a switch's timer; variants `extend` a
+  base, D145), block types (look or kind, color, a gate's trigger,
   properties such as damage and lethal; variants `extend` a base, D60),
   enemy templates (look, movement, attack,
   hostility, aggro range, integrity, damage, speeds, bounce, solid, color,

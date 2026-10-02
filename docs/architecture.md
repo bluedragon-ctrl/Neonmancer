@@ -58,7 +58,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `core/version.js` | Game and data-schema version numbers (the game's patch number comes from `tools/game-version.js`, D42) |
 | `data/bundle.js` | The only Vite-specific module: bundles `data/**/*.json`, imports dev schema errors, `DEV_SERVER` flag |
 | `data/load.js` | Validate the data files and build the content tables; throws `DataError` |
-| `data/room-data.js` | Shared reading of room data: block boxes → cells, block types with variants filled in (`resolveBlockTypes()`, D60), exit defaults, sides, exit cells |
+| `data/room-data.js` | Shared reading of room data: block boxes → cells, block and object types with variants filled in (`resolveBlockTypes()`, D60; `resolveObjectTypes()`, D145), exit defaults, sides, exit cells |
 | `data/validate.js` | Semantic checks and readable error messages (Ajv schema pass is dev/CI) |
 | `world/boot-key.js` | The boot key (D101): the 8×8 code whose modules are the 64 fragments (`BOOT_KEY`) |
 | `world/exits.js` | Which exit the wizard left through; where he arrives in the connected room |
