@@ -166,7 +166,7 @@ mobile/touch support, backend or accounts.
   Temporary pickups (refills, boosts) are not saved and come back with the
   room. Boosts (D152) reward simple secrets: Overdrive (faster on the
   ground), Patch (absorbs a hit) and Overclock (free spells) end when the
-  room resets; the Sparkle trail and Rainbow hat stay until a crash or a
+  room resets; the Sparkle trail and Rainbow hat stay until his next death or a
   reload.
   Death resets the wizard to his base state, so a detour for a refill
   can be worth it.
