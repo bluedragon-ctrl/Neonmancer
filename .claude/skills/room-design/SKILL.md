@@ -130,7 +130,11 @@ Edit existing files with small text edits, not a JSON dump.
 ## Rules
 1. **Readable from the front corner.** Tall blocks against the back walls
    (x = 0, z = 0), steps on the camera side, every mechanic (pit, hazard,
-   collapsing bridge, plate) in view from the entrance.
+   collapsing bridge, plate) in view from the entrance. **Every crate is
+   visible** (D164): never hidden behind a tall block, a ledge, a pillar or
+   a memory wall from the camera (+x +y +z), never inside a fake block or
+   walled in where no cell of it shows; at least its top and one front
+   face (+x or +z) in view.
 2. **Gates look like gates** (a too-high ledge, a locked door): he should
    come back later, not think it is broken (D67).
 3. **He can always leave the way he came** with what he has; a room needn't
@@ -232,7 +236,8 @@ margin: less than ~1 s spare is a problem.
 
 Screenshot: `npx vite`, open `http://localhost:5173/?room=<id>&msaa=0` with
 Playwright (`executablePath: '/opt/pw-browsers/chromium'`) and look at it from
-the entrance: is every mechanic visible, does anything tall hide a cell?
+the entrance: is every mechanic and every crate visible, does anything tall
+hide a cell?
 
 ## Wiring
 - A door needs the room's exit, the neighbour's matching exit (check the

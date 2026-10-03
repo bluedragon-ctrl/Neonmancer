@@ -1746,3 +1746,12 @@ text; a secret's hint is in the room's shape, never on a screen. The
 room-design skill, `craft.md` and the room design checklist say so.
 **Why:** the author wants rooms to teach by their shape; a screen that
 spells out the moves turns a puzzle into a walk.
+
+### D164 — 2026-10-03 — Every crate is visible
+Every crate in a room is visible to the player: no tall block, ledge,
+pillar or memory wall hides it from the camera (+x +y +z), and none lies
+inside a fake block or walled in out of sight; its top and a front face
+show. Holds for secrets too. The room-design skill, `craft.md`, the
+level-review subagent and the room design checklist say so.
+**Why:** crates are the wizard's tools; a puzzle whose tool can't be seen
+is a guess, not a riddle.

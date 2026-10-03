@@ -38,7 +38,8 @@ For each room:
      jumps and pushes) and compare it with the timer: shorter is a
      BLOCKER, less than ~1 s to spare a PROBLEM.
    - **Readability**: tall blocks vs the +x/+z camera, each mechanic
-     visible from the entrance, gates look like gates.
+     visible from the entrance, every crate visible (none behind tall
+     blocks or decor, none inside fake blocks; D164), gates look like gates.
    - **Spells and backtracking** (D67): what each exit/pickup needs, that
      he can leave the way he came, shortcuts not blocked by accident.
    - **No soft-locks**: every one-shot change (collapse, crate in a corner

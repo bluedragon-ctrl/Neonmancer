@@ -13,7 +13,8 @@ Ideas only; nothing is copied (CLAUDE.md §1).
    mechanic or an enemy), *revisit* (a short, easy callback later). Say the
    rung before drafting. A twist room whose parts he has not met is a bug.
 2. **Show the ingredients first.** The goal (exit, pickup, plate) and every
-   tool (crate, switch, ledge) are seen from the entrance or one step in.
+   tool (crate, switch, ledge) are seen from the entrance or one step in;
+   a crate is never hidden, not even for a secret (D164).
    Secrets are the exception, and even they get a hint (a lone block, a
    strange gap), never a screen text.
 3. **Planning beats reflexes.** A room is a thinking room (few or slow
