@@ -3,26 +3,11 @@
   "schemaVersion": 1,
   "id": "room_1",
   "name": "Room 1",
-  "authored": true,
   "biome": "home_lattice",
   "size": [12, 4, 12],
   "spawn": [6.5, 0, 6.5],
   "exits": [
     { "id": "south", "side": "+z", "at": 5 },
-    { "id": "north", "side": "-z", "at": 5, "requires": [{ "switch": "*" }] }
-  ],
-  "blocks": [
-    { "at": [0, 0, 2], "to": [1, 0, 4] },
-    { "at": [0, 0, 7], "to": [1, 0, 9] }
-  ],
-  "objects": [
-    { "id": "data_pillar_1", "type": "data_pillar", "at": [4, 0, 0] },
-    { "id": "data_pillar_2", "type": "data_pillar", "at": [7, 0, 0] },
-    { "id": "target_1", "type": "target", "at": [2, 0, 0] },
-    { "id": "target_2", "type": "target", "at": [9, 0, 0] }
-  ],
-  "pickups": [
-    { "id": "disk_zap_1", "type": "disk_zap", "at": [0, 1, 8] },
-    { "id": "fragment_0_1", "type": "fragment_0", "at": [0, 1, 3] }
+    { "id": "west", "side": "-x", "at": 5 }
   ]
 }

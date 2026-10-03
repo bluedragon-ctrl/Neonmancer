@@ -12,8 +12,10 @@
   ],
   "holes": [{ "at": [4, 0], "to": [5, 7] }],
   "objects": [
-    { "id": "screen_push", "type": "screen", "at": [1, 0, 2], "text": "tut_push", "overrides": { "face": "+z" } },
     { "id": "crate_a", "type": "crate", "at": [3, 0, 5] },
-    { "id": "crate_b", "type": "crate", "at": [3, 0, 6] }
+    { "id": "crate_b", "type": "crate", "at": [3, 0, 6] },
+    { "id": "screen_1", "type": "screen", "at": [1, 0, 0], "text": "tut_push" },
+    { "id": "data_pillar_1", "type": "data_pillar", "at": [3, 0, 0] },
+    { "id": "data_pillar_2", "type": "data_pillar", "at": [6, 0, 0] }
   ]
 }

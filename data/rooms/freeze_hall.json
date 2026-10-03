@@ -4,16 +4,23 @@
   "id": "freeze_hall",
   "name": "Freeze Hall",
   "biome": "home_lattice",
-  "size": [12, 4, 12],
+  "size": [9, 4, 12],
   "spawn": [4.5, 0, 1.5],
   "exits": [{ "id": "north", "side": "-z", "at": 4 }],
+  "blocks": [{ "at": [0, 0, 10], "to": [1, 1, 11] }],
   "objects": [
     { "id": "screen_pause", "type": "screen", "at": [1, 0, 3], "text": "tut_pause", "overrides": { "face": "+x" } }
   ],
-  "enemies": [{ "id": "patrol", "template": "bug", "at": [1, 0, 9], "path": { "points": [[10, 0, 9]], "pause": 0.6 } }],
-  "blocks": [{ "at": [9, 0, 10], "to": [10, 1, 11] }],
+  "enemies": [
+    {
+      "id": "patrol",
+      "template": "bug",
+      "at": [1, 0, 9],
+      "path": { "points": [[1, 0, 5], [7, 0, 5], [7, 0, 9]], "mode": "loop" }
+    }
+  ],
   "pickups": [
-    { "id": "fragment_6", "type": "fragment_6", "at": [10, 2, 10] },
-    { "id": "disk_pause", "type": "disk_pause", "at": [3, 0, 1] }
+    { "id": "disk_pause", "type": "disk_pause", "at": [3, 0, 1] },
+    { "id": "fragment_1_1", "type": "fragment_1", "at": [0, 2, 11] }
   ]
 }
