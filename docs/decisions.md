@@ -1651,3 +1651,24 @@ and then dying was the only way out.
 must not trap him for a habit (zapping a bug); the checker models a
 bounce as going straight up, so both are judged by playing.
 
+### D160 — 2026-10-03 — Ledger Cell: no climbing past the gates
+
+Amends D156. A crate pushed beside the 2-high divider (x = 3) was a step
+onto its top, and from there he dropped into the fragment alcove with both
+gates shut (found by a mutation test: sealing both gates changed nothing;
+confirmed by headless play, fragment taken in 4.4 s). With the divider
+fixed, crate B pushed beside the 2-high alcove wall was the next way past
+gate 2. Now the divider (its wall, gate 1 and the end block) and the
+alcove's wall and gate 2 are 3 high: a crate step reaches 2, never 3, and no
+2-high top touches a 3-high one. Lowering the room to 3 high does not help:
+the room height is no ceiling. The room is mirrored along z so the 3-high
+walls stand behind the alcove (now x 0-2, z 6-7, fragment at [0, 0, 7])
+instead of between it and the camera; the east door keeps its cells, the
+data pillar stays against the back wall, the screen moves to [7, 0, 6].
+Plate B moves to [7, 0, 0], against the wall, so crate B cannot be pushed
+past it. Crate B is now out of sight behind the divider until gate 1 opens;
+the screen already names it. Every crate and gate matters to the checker
+without abilities; double jump, Compile, Fork and Cut & Paste remain later
+alternatives (D67). Headless play: solved in about 16 s.
+**Why:** a fragment puzzle that a single crate skips teaches nothing, and
+the hidden alcove of the first fix broke "show the goal from the entrance".

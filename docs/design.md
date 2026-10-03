@@ -2219,7 +2219,7 @@ tracks and is done after 5.5 (D147).
 | 5.4 (done, D147) | `refactor/dev-wing` | The old test rooms move to a dev-only wing (kept, D45, never deleted): a `dev` list in world.json, shown by the dev server and absent from builds for players. Boot Sector stays the start until 5.5. |
 | 5.5 (done, D148) | `feat/lattice-tutorial` | The first rooms from the plan: start, movement, pushing, the first disk, the first fragment; screens with hints (D118). |
 | 5.6a (done, D151) | `feat/lattice-atrium` | The central area first: the Atrium finished as the hub (doors west to the tutorial, north to the Shield wing, south to the Pause wing; a backup shrine, screens), plus the two wing entrances that hold the disks: `shield_hall` (Shield) and `freeze_hall` (Pause). The hub then has all its exits, so the author can refine and flag it (D90). |
-| 5.6b (done, D156) | `feat/lattice-shield-wing` | `bolt_gallery` (fragment 3), `relay_loft` (fragment 4) and `ledger_cell` (fragment 5). |
+| 5.6b (done, D156) | `feat/lattice-shield-wing` | `bolt_gallery` (fragment 3), `relay_loft` (fragment 4) and `ledger_cell` (fragment 5; bypass fixed, D160). |
 | 5.6c (done, D157) | `feat/lattice-pause-wing` | `cold_stairs` (fragment 6): frozen enemies as steps. |
 | 5.6d | `feat/lattice-boss-one` | `warden_pit` (boss 1, drops fragment 7) and `idle_cache` (fragment 8), placed from the test arena. |
 | 5.6e | `feat/lattice-scan-wing-1` | The Scan wing, first half: `scan_lab` (Scan disk) and `mirror_stacks` (fragment 9); the door from `relay_loft` is added. |

@@ -118,6 +118,10 @@ docs/decisions.md).
   collapsing block no longer derezzes.
 
 ### Fixed
+- `ledger_cell` (D160): a crate was a step over the 2-high divider, so
+  fragment 5 could be taken with both gates shut. The divider and the
+  alcove's wall and gates are 3 high now, the room is mirrored so the
+  fragment shows from the door, and plate B lies against the wall.
 - `cold_stairs` (D159): no bounce across the pit without Pause (the key
   bug's lane ends a cell short of it), and a spare crate gets him back up
   the ledge if the stair bug is gone.
