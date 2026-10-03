@@ -106,6 +106,77 @@ numbers and playtest lessons). Read the checklist before drafting.
   solution. Raise `MAX_CONFIGS` temporarily to confirm, keep rooms checkable
   (fewer free crates), or both.
 
+## Design craft (what makes a room good, not just valid)
+Principles from games of the same family: Solstice and Head Over Heels
+(isometric, planning over reflexes), Zelda dungeons and Mario 3D World
+(teach/test/twist), Super Metroid (ability gates, pacing), Sokoban and
+Baba Is You (one rule, fair riddles), The Witness (one idea, many
+variations). Ideas only; nothing is copied (CLAUDE.md §1).
+
+1. **One idea per room, taught in order.** Per mechanic, a ladder over
+   several rooms: *teach* (the idea alone, safe: a mistake costs a reset,
+   not a life), *develop* (same idea, a harder shape), *twist* (combined
+   with another mechanic or an enemy), *revisit* (a short, easy callback
+   later, so he feels he has learned it). Before drafting a room, say which
+   rung it is. A twist room whose parts he has not met is a bug.
+2. **Show the answer's ingredients first.** The player should see the goal
+   (an exit, a pickup, a plate) and every tool (crate, switch, ledge) from
+   the entrance or from one step in. Puzzles of the "I did not know that
+   existed" kind are unfair; secrets are the exception, and even they get
+   a hint (a lone block, a strange gap, a screen text).
+3. **Planning beats reflexes** (the isometric tradition). Timing and enemy
+   pressure spice a puzzle; they do not replace it. A room is either a
+   thinking room (few or slow enemies, no clock) or an action room (simple
+   layout), rarely both. Hard on both axes is for a boss or a late combo.
+4. **A first-glance failure must be recoverable and visible.** Wrong
+   crate push, wrong jump: the cause is obvious and re-entering costs
+   seconds. Avoid failures he cannot explain (hidden hitbox edges, a
+   platform that depends on unseen timing).
+5. **Archetypes.** Pick one on purpose:
+   - *teaching* (small, 8x8, no threat, one mechanic, reward visible)
+   - *test* (12x12, the mechanic in a new shape, light threat)
+   - *combo* (two mechanics; only after both were taught)
+   - *arena* (open floor, cover, a few enemies, no puzzle)
+   - *breather* (a refill or shrine, scenery, lore screen; no threat)
+   - *connector* (a walk with one small beat: a gap, a patrol)
+   - *secret* (off the path, needs a spell or a sharp eye, pays a
+     permanent pickup)
+   - *boss* (see the boss rules above)
+6. **Pacing across rooms.** Alternate effort: no more than two threat-heavy
+   rooms in a row, and a breather or shrine before a boss. A wing opens with
+   a teaching room and ends with a payoff (a pickup, a shortcut, a gate
+   opening). Shortcuts that open a loop back to a hub are rewards: place one
+   per wing so backtracking gets shorter as the world grows (D67).
+7. **Gates and keys.** A locked thing is seen before its key is found, ideally
+   in a room he passes twice. The key room and the lock room should be far
+   enough apart that he has a mental to-do and near enough that he
+   remembers it. A new ability should open at least two seen-but-closed
+   places, never just one.
+8. **Space and composition.** Give every room a focal point (the exit
+   ahead, a tall structure, the core, a glowing plate) placed away from the
+   entrance so the eye crosses the room. Use height for drama, not filler:
+   tall blocks against back walls, low ones in front (rule 1). No dead
+   floor: if an area is empty, it is a sightline, a safe landing, or it is
+   cut. A big room needs a reason (an arena, a hub, a vista).
+9. **Fair difficulty dials.** Tune by crates, pit width and enemy count
+   before tuning by speed or damage. Leave one slack unit: one crate
+   spare, one cell of landing room, one second on a timed switch.
+10. **Reward honesty.** Effort and reward match: a permanent pickup for a
+    multi-step puzzle or a risk, a refill for a short detour. A secret
+    costs an extra move, not a guess among 50 walls.
+11. **Name and dress it.** Every room gets a short, funny terminal-style
+    name and (where it helps) a screen with a hint or a joke (D118). Decor
+    (pillars, screens, memory stacks) frames the focal point; it never
+    hides a mechanic or blocks a sightline from the entrance.
+12. **Self-check before the checker.** In one line each: the idea, the
+    rung (teach/develop/twist/revisit), the archetype, the focal point,
+    what he sees first, and the fair-failure case. If one line is hard to
+    write, redraw the room, then run `check:reach` and `level-review`.
+
+Mining the author's taste: the rooms with `"authored": true` are the
+reference. Open two or three similar in role (size, archetype) before
+drafting and copy their density and rhythm, not their cells.
+
 ## Wiring a room
 - A new door also needs the neighbour's exit, the connection pair and the
   `positions` entry in `data/world.json`; check the neighbour is not
