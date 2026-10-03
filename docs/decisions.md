@@ -1672,3 +1672,24 @@ without abilities; double jump, Compile, Fork and Cut & Paste remain later
 alternatives (D67). Headless play: solved in about 16 s.
 **Why:** a fragment puzzle that a single crate skips teaches nothing, and
 the hidden alcove of the first fix broke "show the goal from the entrance".
+
+### D161 — 2026-10-03 — Room-design skill: mutation test and play helper as scripts
+The room-design skill (D132) starts with a workflow, keeps a schema cheat
+sheet and a tuning table (checked against `room.schema.json`, `validate.js`
+and the checklist: an exit's access level is a `requires` entry, test rooms
+go in the dev wing, D147, not next to Boot Sector), and moves the design
+principles to `craft.md`, read when a room is a new idea. Two scripts ship
+with it in `.claude/skills/room-design/scripts/`: `mutate.mjs` removes each
+helper (crate, platform, enemy, bridge, block) and seals each gate in memory,
+re-runs the reachability checker on the room and lists what each exit and
+pickup depends on; `sim.mjs` wraps `Game` for headless play (walk, cast,
+wait until, a state line). The level-review subagent runs the mutation test.
+A new checklist lesson: a crate or frozen enemy beside a 2-high wall is a
+step over it. A checklist fact corrected: the room's height is no ceiling
+in play (he stood on a 2-high wall in a 3-high room); blocks above are.
+**Why:** the manual mutation test (edit a scratch copy, re-run) was skipped
+in practice; run as a script it found that `ledger_cell`'s fragment is taken
+with both gates shut (crate as a step over the 2-high wall, confirmed by
+headless play; fixed in D160) and that `bolt_gallery`'s caged crate and gates change
+nothing for the checker. The skill also carried stale facts that would have
+produced invalid rooms.
