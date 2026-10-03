@@ -1,272 +1,244 @@
 ---
 name: room-design
-description: Design, draft or edit a Neonmancer room (data/rooms/*.json): schema, rules, tuning numbers, the room design checklist and annotated examples. Use whenever a room is created, resized or reviewed, or a mechanic needs a test room.
+description: Design, draft, edit or review a Neonmancer room (data/rooms/*.json) and its wiring in data/world.json: workflow, schema cheat sheet, tuning numbers, puzzle rules, a mutation test and a headless play helper. Use whenever a room is created, resized, rewired or reviewed, or a mechanic needs a test room.
 ---
 
 # Room design
 
-A room is one JSON file in `data/rooms/`, all content, no code. Source of
-truth: `schemas/room.schema.json` (fields), `src/data/validate.js` (rules
-JSON Schema can't say), `docs/design.md` "Room design checklist" (the
-numbers and playtest lessons). Read the checklist before drafting.
+A room is one JSON file in `data/rooms/`: all content, no code. Sources of
+truth, in order: `schemas/room.schema.json` (fields), `src/data/validate.js`
+(rules a schema can't say), `docs/design.md` "Room design checklist" (numbers
+and playtest lessons). If this file disagrees with them, they win; fix this
+file in the same PR.
 
-## First: may you touch it?
-- A room with `"authored": true` is the author's (CLAUDE.md §10, D90).
-  Never edit, resize, move or reconnect it, and never attach a new room to
-  one. New test rooms connect only to test rooms. Real-content rooms are
-  drafted **unflagged**; the author refines them in the editor and flags them.
-- Tests never depend on authored rooms (fixtures in `tests/helpers.js`).
+## Workflow
+1. **May you touch it?** A room with `"authored": true` is the author's
+   (CLAUDE.md §10, D90): never edit, resize, move or reconnect it, never attach
+   a room to it. Real-content rooms are drafted **unflagged**; the author
+   flags them. Tests never depend on rooms (use `tests/helpers.js` fixtures).
+2. **Base.** CI on `main` green (a red base becomes your PR's problem); run
+   `node tools/ensure-deps.js` once in a fresh checkout (npm scripts do it for
+   you, scratch scripts don't).
+3. **Concept** in six lines before any JSON: the idea, the rung
+   (teach/develop/twist/revisit), the archetype, the focal point, what he sees
+   from the entrance, the fair-failure case. Hard to write → redraw. Read
+   [craft.md](craft.md) when the room is a new idea rather than a fix.
+4. **Draft** from the skeleton below; place pieces per the rules and tuning.
+5. **Check** (all must pass; quote the output in the PR):
+   ```
+   npm run validate:data
+   npm run check:reach -- <room>                     # needs per exit/pickup, in the world's order
+   npm run check:reach -- <room> --with <a,b> --from <exit>   # every exit, first arrival and each gate's ability
+   node .claude/skills/room-design/scripts/mutate.mjs <room>  # is the puzzle enforced?
+   npm test
+   ```
+6. **Play** what the checker can't see (timing, bounces, enemies, races) with
+   `scripts/sim.mjs`; screenshot it from the entrance.
+7. **Wire** the doors, then **document**: a decision in `docs/decisions.md`, a
+   CHANGELOG line, the step table in `docs/design.md`.
+8. **Review**: run the `level-review` subagent and fix its findings.
 
-## Coordinates and format
-- y is up. `size` = `[x width, y height, z depth]`, width + depth <= 32,
-  height 2-6. Floor is y = 0; back walls are x = 0 and z = 0. Camera looks
-  from +x +y +z.
-- `blocks`/`objects`/`enemies`/`pickups` cells are `[x, y, z]`; `holes` and
-  `shrine` are floor tiles `[x, z]`; `spawn`/`reset` are feet-center points
-  (`[5.5, 0, 8.5]` = middle of cell 5,8). `at` + `to` fills a box.
-- Ids are stable snake_case; room ids match the file name; object, enemy
-  and pickup ids share one namespace per room. Start from `$schema` and
-  `schemaVersion` as in the examples.
-- Exits: `{ id, side: -x|+x|-z|+z, at, width 2, y 0, height 2 }`, plus
-  optional `requires` (`[{ "switch": id }]` or `{ "switch": "*" }` for every switch; `{ "access": n }`; needs >= 1 switch in the room), `access` (level 1-15), `hidden` (wall until Scan). Connections
-  live in `data/world.json` (`"room.exit"` pairs, `positions` on the map
-  grid; neighbours sit one cell apart, the side must match the direction).
-- Types come from `data/defs.json`: blocks `block hazard void fake
-  collapsing collapsing_regrow gate bridge`; objects `crate* plate target
-  plate_timed target_timed core platform spiked_platform screen
-  data_pillar memory_stack`; platforms need a `path`. Plates (timed ones
-  too) lie on the floor, y = 0 (validation); on a raised level the only
-  switch is a target. A `gate`/`bridge`
-  block entry (a box) may take `switches` (D140, D141: a gate goes, a
-  bridge appears while they are all on; without, every switch in the
-  room). Gate and bridge blocks in a hole stand a block high (top 1.0),
-  not flush with the floor: a bridge is a step he hops onto, and a gone
-  bridge shows no outline, so name it in a screen text; a platform's `switches` run it only while they are all on;
-  screens may name a `text` id in `data/lore.json`; pickups by their defs id
-  (`disk_*`, `fragment_N`, `secret_N`, `buff_*`, `upgrade_*`, `refill_*`).
-- Enemies: `{ id, template, at, path? }` only. No overrides, no path speed
-  (D119). A patroller needs a path of level legs; a chaser may have one.
-  A boss (template with a `boss` block) also has `drop`: the id of a
-  permanent pickup in the room, where it falls once the boss is beaten
-  (D104, D135). One boss a room, no `shrine`; don't lock the arena's
-  exits: the wizard may always retreat.
-- A permanent pickup is one save bit, the item not the place (D71): don't
-  place the same fragment twice by accident (the world map F3 report lists
-  duplicates).
+## Skeleton
+```json
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "snake_case_matches_file",
+  "name": "Short Funny Name",
+  "biome": "home_lattice",
+  "size": [10, 4, 10],
+  "spawn": [8.5, 0, 8.5],
+  "exits": [{ "id": "west", "side": "-x", "at": 4 }],
+  "blocks": [{ "at": [0, 0, 0], "to": [1, 1, 3] }],
+  "holes": [{ "at": [4, 2], "to": [5, 3] }],
+  "objects": [{ "id": "crate_1", "type": "crate", "at": [6, 0, 2] }],
+  "enemies": [{ "id": "bug_1", "template": "bug", "at": [2, 0, 6], "path": { "points": [[2, 0, 9]] } }],
+  "pickups": [{ "id": "fragment_7", "type": "fragment_7", "at": [0, 2, 0] }]
+}
+```
+Write new files with `formatJson` (`src/editor/format-json.js`; `npm test`
+rejects any other spacing):
+`node -e "import('./src/editor/format-json.js').then(({formatJson})=>{const f='data/rooms/x.json',fs=require('fs');fs.writeFileSync(f,formatJson(JSON.parse(fs.readFileSync(f,'utf8'))))})"`.
+Edit existing files with small text edits, not a JSON dump.
 
-## Tuning (from the checklist; trust the doc if these drift)
-- Jump clears exactly 1 block up; crosses a 1-tile gap, never 2. Double jump
-  (upgrade): 2 up, 2 wide. Bouncy enemy: launches 2.2 up.
-- Wizard is 1.5 high: 2 free cells above every surface he stands on, so a
-  3-high ledge needs height 5.
-- Walk 4.5 u/s (~13 ticks per cell); a push ~28 ticks; collapsing block goes
-  30 ticks after a step. Never make him stand still on one.
-- Pause: 25 energy a cast of the base 50 (two casts, then a slow
-  recharge), a 5 s freeze (300 ticks). A frozen bug holding a plate is a
-  timed switch: count from the shot.
-- Timed switch: its timer is the run from it to the far side of what it
-  powers (~0.22 s a cell, ~0.57 s a jump) plus about a second. The checker
-  doesn't check timing; work it out by hand.
+## Schema cheat sheet
+- **Axes.** y up. `size` = `[x, y, z]`, x and z 1-31 with x + z <= 32, y 2-6.
+  Floor y = 0, back walls x = 0 and z = 0, camera at +x +y +z.
+- **Cells.** `blocks`/`objects`/`enemies`/`pickups` take `[x, y, z]`; `holes`
+  and `shrine` take floor tiles `[x, z]`; `spawn`/`reset` are feet-center
+  points (`[5.5, 0, 8.5]` = middle of cell 5,8). `at` + `to` fills a box
+  (blocks, holes). Required: `schemaVersion id name biome size spawn`.
+- **Ids.** Stable snake_case; room id = file name; object, enemy and pickup
+  ids share one namespace per room.
+- **Exits.** `{ id, side: -x|+x|-z|+z, at, width 2, y 0, height 2 }` (`at` =
+  first cell along the side; `y` raises the doorway). Optional:
+  `requires: [{ "switch": id } | { "switch": "*" } | { "access": 1-15 }]`
+  (solid until every entry holds; recloses when a switch goes off, never on
+  him, always open for him if he came in through it; a switch entry needs a
+  switch in the room), `hidden: true` (wall until Scan). The first row inside
+  must be free.
+- **Blocks** (`defs.json` blocks): `block` (default) `hazard void fake
+  collapsing collapsing_regrow gate bridge`. `gate`/`bridge` take `switches`
+  (default: every switch in the room): a gate goes, a bridge appears while
+  all are on. In a hole they stand a block high (top 1.0): a step, not floor.
+  A gone bridge shows no outline: name it in a screen text.
+- **Objects** (`defs.json` objects): crates `crate crate_plain crate_cross
+  crate_dashed`; switches `plate plate_timed target target_timed`; `platform
+  spiked_platform` (need `path`, may take `switches`: run only while all on);
+  decorations `screen data_pillar memory_stack` (`overrides: { "face":
+  "+x"|"+z" }`; a screen may name a `text` in `data/lore.json`: title <= 32,
+  lines <= 48 characters); `core`. `overrides` change only existing type
+  values (e.g. a timer). Plates lie at y = 0 (validated): on a raised level
+  the only switch is a target.
+- **Paths.** `{ points, mode: pingpong|loop, speed, pause }`: points follow
+  `at`, each leg along one axis. `speed` (u/s, default 2) and `pause` (s at
+  the ends) are for platforms only; a platform path may not cross a static
+  block.
+- **Enemies.** `{ id, template, at, path? }` only: no overrides, no speed
+  (D119). Patrollers need a level path (legs along x or z), chasers may have
+  one, stationary ones none. Not over a hole or on a lethal block. A boss
+  (template with `boss`) adds `drop`: the id of a permanent pickup of the
+  room (D104, D135); one boss a room, no `shrine`, arena exits never locked.
+- **Pickups** by defs id: `disk_*`, `fragment_N`, `secret_N`, `buff_*`,
+  `upgrade_*` (permanent: one save bit each, D71: never place the same one
+  twice by accident; world map F3 lists duplicates), `refill_*`, `boost_*`
+  (temporary). Inside a `fake` block is fine (Scan reveals it).
+- **Shrine** `[x, z]`: one floor tile, not on a hole, plate, block or object.
 
-## Design rules
-1. **Readable** from the front corner: tall blocks against back walls, steps
-   on the camera-facing side, each mechanic visible from the entrance.
-2. **Gates look like gates** (a too-high ledge, a locked door): the player
-   should come back later, not think it is broken (D67).
-3. **Backtracking is fine**: a room needn't be solvable on first arrival,
-   but he can always leave the way he came with what he has.
-4. **No soft-locks**: every one-shot change (collapsing block, crate pushed
-   into a corner or hole) leaves a way to an exit or a way to die and reset.
-   `reset` is safe: not on a collapsing block, not under a platform's path.
-5. Small rooms beat big ones (D68): one idea per room, 8x8 / 12x12 mostly.
-6. Refills are temporary and death resets: place them as a real trade-off.
-7. Room colors come from the biome; don't invent colors (D99). Red hurts,
-   white is a mechanism, cyan moves, lime is pushable.
-8. New mechanics get a test room (D43) near the start (<= 2 rooms from Boot
-   Sector, D49), plus a showcase look and unit tests.
+## Tuning (from the checklist; 60 ticks a second)
+| What | Number |
+|---|---|
+| Jump | clears 1 block up (apex 1.2), never 2; crosses a 1-tile gap, never 2 |
+| Double jump (upgrade) | 2 up, 2 wide |
+| Headroom | wizard 1.5 high: 2 free cells over every standing surface. A block above is a ceiling, the room's height is not (he stands on top of a 2-high wall in a 3-high room); keep standing surfaces 2 below the room height for the look |
+| Bouncy enemy (bug, glowbug) | launches 2.2 above its top (0.6), so 2.8: clears a 2-high ledge, never 3 |
+| Frozen enemy | a 1-high step (1×1×1), pushed like a crate |
+| Walk | 4.5 u/s, ~13 ticks (0.22 s) a cell; a jump ~34 ticks (0.57 s) |
+| Push | ~28 ticks (0.47 s) a cell |
+| Collapsing block | goes 30 ticks (0.5 s) after a step: never make him stand still on one |
+| Pause | 25 energy of the base 50 (two casts, then slow recharge); 5 s freeze (300 ticks), a recast restarts it |
+| Timed switch | timer = the run from the switch to the far side of what it powers + ~1 s; checker counts it as on for good |
 
-## Puzzle craft (lessons from the Shield wing, D156)
-- **Sokoban riddles are welcome.** Crates pushed round corners onto plates,
-  through gates, into pits: they make good multistep rooms. Keep them fair:
-  a crate can only be pushed away from a side he can stand on, so check
-  every crate's route; put a plate against a wall so a crate cannot
-  overshoot it; do not wall in his own path with crates (a 2-wide island
-  with crates across it is a knot). A crate lost in a corner is fine (leave
-  and re-enter resets the room), but say so to yourself and check it.
-- **Pit width = crates + 1.** A jump crosses one tile, so a pit N wide needs
-  N-1 crates; a 2-wide pit falls to one crate. Count crates that can reach
-  it from the *other* side too (the island's crates, the return trip).
-- **Both directions.** Check `--from <exit>` for every exit: coming back
-  must work with what lies on that side (a puzzle solved on the way in is
-  reset on re-entry).
-- **Crates as cover.** A crate between a tower and him blocks its line;
-  cover ends when the crate drops into a hole. Do not promise more in hints.
-- **Don't land in a fire line.** Check the cells just inside each exit
-  against tower columns and rows.
-- **Mutation test** (required for every puzzle room). Remove each key crate, gate or enemy from a scratch copy and
-  re-run `check:reach <room>`: if a pickup stays "free" the puzzle is not
-  enforced. Platforms count as free floor for the checker, so ferry/lift
-  power must be judged by hand (moats wide enough that a crate cannot
-  bypass them).
-- **Truncated search.** "crate search stopped at 500 configurations" makes
-  a `never` verdict unreliable; with 4+ roaming crates it can hide a
-  solution. Raise `MAX_CONFIGS` temporarily to confirm, keep rooms checkable
-  (fewer free crates), or both.
+## Rules
+1. **Readable from the front corner.** Tall blocks against the back walls
+   (x = 0, z = 0), steps on the camera side, every mechanic (pit, hazard,
+   collapsing bridge, plate) in view from the entrance.
+2. **Gates look like gates** (a too-high ledge, a locked door): he should
+   come back later, not think it is broken (D67).
+3. **He can always leave the way he came** with what he has; a room needn't
+   be solvable on first arrival.
+4. **No soft-locks.** Every one-shot change (collapse without regrow, crate in
+   a corner or hole, spent Compile/Fork) leaves a way to an exit or a way to
+   die and reset. `reset` is safe: not on a collapsing block, not under a
+   platform's path. Dropping off a ledge is always possible, climbing back not.
+5. **Small rooms, one idea** (D68): 8x8 and 12x12 mostly; a big room needs a
+   reason (arena, hub, vista).
+6. **Colors come from the biome** (D99): red hurts, white is a mechanism,
+   cyan moves, neon green is pushable, black is a pit.
+7. **Refills are a trade-off**: temporary, and death resets him.
+8. **Test rooms** for a new mechanic go in the dev wing: add the id to
+   `world.json` `dev` and connect it only to dev-wing rooms (D147, D158;
+   today `hidden_layer`); start it with `?room=<id>` on the dev server. Add a
+   showcase look and unit tests for the mechanic (D43).
 
-## Enemy puzzles (lessons from Cold Stairs, D157)
-- **Bugs bounce.** Landing on a moving bug (and glowbug) launches him to
-  2.8, so a bug patrolling the foot of a 2-high ledge is a way up without
-  Pause. The Lattice roster has no patroller that doesn't bounce; only a
-  3-high ledge stops both the bounce and a frozen-bug step (1.0 + 1.2).
-  Where he already has Pause on arrival, a bounce is an accepted alternative.
-  A bounce also carries him sideways, about 2.4 cells at air speed: keep
-  a bouncy enemy's lane 2+ cells away from a gap it could throw him over
-  (Cold Stairs, D159). The checker models a bounce as straight up only.
-- **An enemy used as a step can die.** He zaps hostiles from habit, and a
-  frozen enemy pushed into a hole pops. If the only way out of an area is
-  that enemy, give a second way (a crate, a step) so killing it never
-  leaves death as the exit.
-- **A plate on a patrol path flickers.** The walking enemy presses it as
-  it passes, and a gate opens at once, so he can slip through in that
-  moment. Put the plate one cell beside the path: only a frozen enemy
-  pushed onto it holds it. Prefer a bridge to a gate for a held plate: a
-  flicker of a bridge carries nobody.
-- **Where can a frozen enemy go?** It is pushed like a crate, a cell at a
-  time while he walks, and a second cast restarts the clock. Follow every
-  push from every cell of its path: hem the path in (walls, the room
-  side, a pit it pops into) so it can't reach the foot of the wrong ledge.
-  The checker models only the one push onto a plate, so this is by hand.
-- **Overshoot.** Put the plate against a wall, as for crates: the next
-  push of a frozen enemy past it may go into a pit.
+## Puzzle checks (lessons from D156 and D157)
+- **Crates.** A crate can only be pushed away from a side he can stand on:
+  trace every crate's route. Plates against a wall so nothing overshoots. Do
+  not wall in his own path with crates (a 2-wide island with crates across
+  it is a knot). A crate lost in a corner is fine (rooms reset) if you
+  checked it.
+- **Pit width = crates + 1.** A pit N wide needs N-1 crates; count crates that
+  can reach it from the *other* side too (the island's, the return trip).
+- **Walls are steps too.** A crate (or frozen enemy) beside a 2-high wall is
+  a way onto it, and its top is a road: a gated alcove behind 2-high walls
+  is no gate. Walls that guard something are 3 high, and no 2-high top may
+  touch a 3-high one (a 1-block step again). Keep 3-high walls behind what
+  they guard from the camera (`ledger_cell`, D160).
+- **Both directions.** `--from <exit>` for every exit: coming back must work
+  with what lies on that side (the way-in puzzle is reset on re-entry).
+- **Crates as cover** block a tower's line until they drop into a hole; don't
+  promise more in hints. **No fire line** on the cells just inside an exit.
+- **Bugs bounce** (2.8): a bug at the foot of a 2-high ledge is a way up
+  without Pause; only 3 high stops the bounce and a frozen-bug step (1.0 +
+  1.2). Fine where he already has Pause. A bounce also carries him ~2.4
+  cells sideways: keep a bouncy lane 2+ cells from a gap it could throw him
+  over (D159); the checker models a bounce as straight up only.
+- **An enemy used as a step can die** (zapped from habit, or popped in a
+  hole): if it is the only way out of an area, give a second way (a crate,
+  a step) so killing it never leaves death as the exit.
+- **A plate on a patrol path flickers** (the walker presses it, a gate opens
+  for a moment): put it one cell beside the path; prefer a bridge to a gate
+  for a held plate (a flicker of a bridge carries nobody).
+- **Frozen enemies go where they are pushed.** Follow every push from every
+  cell of the path (the checker models only one push onto a plate); hem the
+  path in (walls, the room side, a pit it pops into). Plate against a wall:
+  the next push may go into a pit.
 
-## Verify by playing (headless and on screen)
-The checker knows no timing or bounce. Before review, play the solution
-in a scratch script (scratchpad, never a committed test: tests must not
-depend on rooms the author may flag):
+## Mutation test (`scripts/mutate.mjs`)
+Takes each helper away (crate, platform, enemy, bridge, block) and seals each
+gate (a plain block for good), in memory, then lists per exit and pickup what
+it depends on and which pieces nothing depends on:
+```
+node .claude/skills/room-design/scripts/mutate.mjs ledger_cell --with ""
+Depends on:
+  pickup fragment_5: crate_b [1,0,1] (→ never), crate_1 [5,0,5] (→ never), sealed gate [3,0,1]-[3,2,1] (→ never), sealed gate [2,0,5]-[2,2,5] (→ never)
+Every helper and gate matters.
+```
+A sealed gate or a key piece with NO EFFECT is a bypass: find the route and
+fix it (before D160, `ledger_cell` showed both gates as NO EFFECT: a crate
+was a step over the 2-high wall). Default searches with every
+ability (so each target shows its smallest ability sets); `--with a,b` and
+`--from exit` as for `check:reach`. Interchangeable crates hide each other
+when taken one at a time: `--without crate_a,crate_b` takes all but one out
+first. The checker takes platforms as free floor, so ferry and lift power
+(plates only crates hold) is judged by hand.
+"crate search stopped at 500 configurations" makes a `never` unreliable (4+
+roaming crates can hide a solution): raise `MAX_CONFIGS`
+(`src/world/reach.js`) temporarily to confirm, or keep fewer free crates.
+
+## Play it (`scripts/sim.mjs`)
+The checker knows no timing, bounce, energy, facing or enemies ("reachable"
+is not a promise; "unreachable" is a real bug). Play the solution in a scratch
+script in the scratchpad (never a committed test), importing the helper by
+absolute path:
 ```js
-import { readDataFiles } from './tools/check-data.js';
-import { loadGameData } from './src/data/load.js';
-import { Game } from './src/game.js';
-import { pauseEnemy } from './src/combat.js';
-const game = new Game(loadGameData(readDataFiles('.').files), { start: 'room_id' });
-const step = (held = [], tap = []) => game.update({ down: (a) => held.includes(a), pressed: (a) => tap.includes(a) });
-// down +x, up -x, right -z, left +z; game.player.place([x, y, z]) to skip a walk;
-// pauseEnemy(game, game.enemies[i], 300) freezes as the spell does.
+import { startRoom, pauseEnemy } from '<checkout>/.claude/skills/room-design/scripts/sim.mjs'; // absolute path
+const sim = startRoom('cold_stairs', { abilities: ['zap', 'pause'] }); // or { at: [x, y, z] }
+sim.walkTo([8.5, 0, 3.5]);         // along x, then z, to within 0.1
+sim.cast('pause'); sim.run(30);    // selects via Tab, casts, waits 30 ticks
+sim.step(['up'], ['jump']);        // hold up, tap jump, one tick
+sim.until(() => sim.game.player.pos[1] >= 2, ['up']);  // throws when stuck
+sim.log('on ledge');               // tick, seconds, pos, integrity, energy, gates, pickups
 ```
-Imports resolve from the script's own folder: in the scratchpad, write
-them as absolute paths into the checkout (or run a throwaway file from the
-repo root and delete it). Bugs move 0.05 a tick: wait for a cell with a
-tolerance, not equality.
-Log positions, integrity, gate states (`game.objects` of kind `gate`) and
-pickup states (`game.pickups[i].state`); time each race against its
-clock. For readability, screenshot it: `npx vite`, open
-`?room=<id>&msaa=0` with Playwright (`executablePath:
-'/opt/pw-browsers/chromium'`), and look at it from the entrance.
+Directions: down +x, up -x, right -z, left +z. `sim.game` is the real `Game`
+(`game.enemies`, `game.objects`, `game.player.place([x, y, z])`);
+`pauseEnemy(sim.game, enemy, 300)` freezes as the spell does. Bugs move 0.05 a
+tick: wait for a cell with a tolerance, not equality. Time each race against
+its clock (a timed switch, a freeze counted from the shot) and report the
+margin: less than ~1 s spare is a problem.
 
-## Design craft (what makes a room good, not just valid)
-Principles from games of the same family: Solstice and Head Over Heels
-(isometric, planning over reflexes), Zelda dungeons and Mario 3D World
-(teach/test/twist), Super Metroid (ability gates, pacing), Sokoban and
-Baba Is You (one rule, fair riddles), The Witness (one idea, many
-variations). Ideas only; nothing is copied (CLAUDE.md §1).
+Screenshot: `npx vite`, open `http://localhost:5173/?room=<id>&msaa=0` with
+Playwright (`executablePath: '/opt/pw-browsers/chromium'`) and look at it from
+the entrance: is every mechanic visible, does anything tall hide a cell?
 
-1. **One idea per room, taught in order.** Per mechanic, a ladder over
-   several rooms: *teach* (the idea alone, safe: a mistake costs a reset,
-   not a life), *develop* (same idea, a harder shape), *twist* (combined
-   with another mechanic or an enemy), *revisit* (a short, easy callback
-   later, so he feels he has learned it). Before drafting a room, say which
-   rung it is. A twist room whose parts he has not met is a bug.
-2. **Show the answer's ingredients first.** The player should see the goal
-   (an exit, a pickup, a plate) and every tool (crate, switch, ledge) from
-   the entrance or from one step in. Puzzles of the "I did not know that
-   existed" kind are unfair; secrets are the exception, and even they get
-   a hint (a lone block, a strange gap, a screen text).
-3. **Planning beats reflexes** (the isometric tradition). Timing and enemy
-   pressure spice a puzzle; they do not replace it. A room is either a
-   thinking room (few or slow enemies, no clock) or an action room (simple
-   layout), rarely both. Hard on both axes is for a boss or a late combo.
-4. **A first-glance failure must be recoverable and visible.** Wrong
-   crate push, wrong jump: the cause is obvious and re-entering costs
-   seconds. Avoid failures he cannot explain (hidden hitbox edges, a
-   platform that depends on unseen timing).
-5. **Archetypes.** Pick one on purpose:
-   - *teaching* (small, 8x8, no threat, one mechanic, reward visible)
-   - *test* (12x12, the mechanic in a new shape, light threat)
-   - *combo* (two mechanics; only after both were taught)
-   - *arena* (open floor, cover, a few enemies, no puzzle)
-   - *breather* (a refill or shrine, scenery, lore screen; no threat)
-   - *connector* (a walk with one small beat: a gap, a patrol)
-   - *secret* (off the path, needs a spell or a sharp eye, pays a
-     permanent pickup)
-   - *boss* (see the boss rules above)
-6. **Pacing across rooms.** Alternate effort: no more than two threat-heavy
-   rooms in a row, and a breather or shrine before a boss. A wing opens with
-   a teaching room and ends with a payoff (a pickup, a shortcut, a gate
-   opening). Shortcuts that open a loop back to a hub are rewards: place one
-   per wing so backtracking gets shorter as the world grows (D67).
-7. **Gates and keys.** A locked thing is seen before its key is found, ideally
-   in a room he passes twice. The key room and the lock room should be far
-   enough apart that he has a mental to-do and near enough that he
-   remembers it. A new ability should open at least two seen-but-closed
-   places, never just one.
-8. **Space and composition.** Give every room a focal point (the exit
-   ahead, a tall structure, the core, a glowing plate) placed away from the
-   entrance so the eye crosses the room. Use height for drama, not filler:
-   tall blocks against back walls, low ones in front (rule 1). No dead
-   floor: if an area is empty, it is a sightline, a safe landing, or it is
-   cut. A big room needs a reason (an arena, a hub, a vista).
-9. **Fair difficulty dials.** Tune by crates, pit width and enemy count
-   before tuning by speed or damage. Leave one slack unit: one crate
-   spare, one cell of landing room, one second on a timed switch.
-10. **Reward honesty.** Effort and reward match: a permanent pickup for a
-    multi-step puzzle or a risk, a refill for a short detour. A secret
-    costs an extra move, not a guess among 50 walls.
-11. **Name and dress it.** Every room gets a short, funny terminal-style
-    name and (where it helps) a screen with a hint or a joke (D118). Decor
-    (pillars, screens, memory stacks) frames the focal point; it never
-    hides a mechanic or blocks a sightline from the entrance.
-12. **Self-check before the checker.** In one line each: the idea, the
-    rung (teach/develop/twist/revisit), the archetype, the focal point,
-    what he sees first, and the fair-failure case. If one line is hard to
-    write, redraw the room, then run `check:reach` and `level-review`.
+## Wiring
+- A door needs the room's exit, the neighbour's matching exit (check the
+  neighbour is not authored), a `"room.exit"` pair in `world.json`
+  `connections` and the room in `positions` (map cells; neighbours one cell
+  apart, the side matching the direction: -x is west, -z is north).
+  Validation fails until every exit is connected and the room has a position.
+- Keep exits the author has left free for later wings (decisions name them).
 
-Mining the author's taste: the rooms with `"authored": true` are the
-reference. Open two or three similar in role (size, archetype) before
-drafting and copy their density and rhythm, not their cells.
-
-## Wiring a room
-- A new door also needs the neighbour's exit, the connection pair and the
-  `positions` entry in `data/world.json`; check the neighbour is not
-  authored. Edit existing files with small text edits, not a JSON dump.
-- Format room files with `formatJson` (`src/editor/format-json.js`); a test
-  rejects other spacing. Lore lines are at most 48 characters.
-- Before starting, check that CI on `main` is green: a red base becomes
-  part of your PR.
-- Finish with a decision in `docs/decisions.md`, a CHANGELOG line and the
-  step table in `docs/design.md`; run `level-review` and fix its findings.
-
-## Loop: draft -> check
-```
-npm run validate:data                       # schema + game rules
-npm run check:reach -- <room_id>            # what each exit/pickup needs
-npm run check:reach -- <room_id> --with double_jump,zap --from west
-npm run check:reach                         # whole world, in CI
-npm test
-```
-The checker knows nothing of enemies (except that with `pause` every cell a
-pausable enemy walks counts as a 1-high step, and a plate on that path or
-one push beside it can be held), timing, energy or facing: "reachable"
-is not a promise, "unreachable" is a real bug. Then run the level-review
-subagent (`level-review`) on the finished room.
-
-## Annotated examples (copy their shape)
-The old test rooms (tractor_bay, decoy_lab, build_yard, ...) were removed
-from the data; these Lattice drafts are the examples now (git history
-keeps the old ones).
-- `data/rooms/bolt_gallery.json`: a 3-wide pit filled with two crates, one
-  caged behind a gate a target opens; towers cover the bridge column.
-- `data/rooms/ledger_cell.json`: a chain of two plates and two gates.
-- `data/rooms/cold_stairs.json` (Pause): a frozen bug pushed onto a plate
-  beside its lane holds a bridge for the freeze time; a second bug is the
-  step to a ledge that leads back over the pit.
-- `data/rooms/hidden_layer.json` (Scan, dev wing): `fake` blocks.
+## Examples (copy their shape, not their cells)
+No room is flagged authored yet; when some are, open two or three of the
+same role before drafting and copy their density and rhythm.
+- `cold_stairs.json` (Pause): a frozen bug pushed onto a plate beside its lane
+  holds a bridge for the freeze; a second bug is the step up a ledge; a 3-high
+  back ledge leads home over the pit. Every piece matters (mutation test).
+- `bolt_gallery.json`: a 3-wide pit filled with two crates, towers covering
+  the bridge column. Its caged crate and gates show NO EFFECT: study it as a
+  layout, not as a sealed puzzle.
+- `ledger_cell.json`: a chain of two plates and two gates; 3-high guarding
+  walls behind the alcove from the camera, plates against walls (D160).
+- `relay_loft.json`: ferries powered by crate-held plates (judged by hand).
+- `hidden_layer.json` (dev wing, Scan): `fake` blocks.

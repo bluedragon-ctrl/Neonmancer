@@ -1644,13 +1644,17 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
   that clears a 2-high ledge, never 3. Where the enemy can walk, the way
   up moves with it.
 - Headroom: the wizard is 1.5 high, so wherever he stands there must be 2
-  free cells above the surface. A ledge 3 high needs a room 5 high.
+  free cells above the surface. A block above is a ceiling, the room's
+  height is not (D161), but a ledge 3 high still wants a room 5 high for
+  the look.
 - A frozen enemy is a 1-high step (D155) and can be pushed like a crate
   (D154): follow its pushes from every cell of its path; bugs also bounce
   him to 2.8, so only a 3-high ledge stops both, and the bounce carries
   him ~2.4 cells sideways (keep the lane 2+ cells from a gap). An enemy
   he needs as a step can be killed: give the area a second way out.
 - Gate and bridge blocks in a hole stand a block high: a step up, not floor.
+- A crate or a frozen enemy beside a 2-high wall is a step over it: an
+  alcove behind 2-high walls is no gate (`ledger_cell`, D160).
 
 **Timing** (60 ticks per second)
 - Walking (4.5 units/s) crosses one cell in ~13 ticks (0.22 s); a jump
