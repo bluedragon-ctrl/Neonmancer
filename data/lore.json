@@ -273,6 +273,24 @@
         "THE BRIDGE STANDS WHILE THE PLATE FEELS WEIGHT.",
         "FREEZE TIME: 5 S. RUN."
       ]
+    },
+    "tut_warden": {
+      "title": "WARNING // NULL POINTER",
+      "lines": [
+        "PROCESS DEREFERENCES ANYTHING IT CAN SEE.",
+        "PAUSE.EXE: NO EFFECT. ZAP.EXE: SLOW BUT SURE.",
+        "IT JUMPS AROUND. THE PILLARS STOP ITS BOLTS.",
+        "DOORS STAY OPEN. RETREAT IS A VALID BRANCH."
+      ]
+    },
+    "tut_idle": {
+      "title": "CACHE // IDLE.LOCK",
+      "lines": [
+        "BRIDGE WANTS TWO WEIGHTS: A CRATE, A BUG.",
+        "THE BUG NEVER IDLES. MAKE IT.",
+        "BRIDGE ON THE EAST EDGE. FREEZE TIME: 5 S.",
+        "BRIDGE GONE? THE FAR CRATE IS YOUR WAY HOME."
+      ]
     }
   }
 }

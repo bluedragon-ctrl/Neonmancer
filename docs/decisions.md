@@ -1693,3 +1693,33 @@ with both gates shut (crate as a step over the 2-high wall, confirmed by
 headless play; fixed in D160) and that `bolt_gallery`'s caged crate and gates change
 nothing for the checker. The skill also carried stale facts that would have
 produced invalid rooms.
+
+### D162 — 2026-10-03 — Warden Pit and Idle Cache (5.6d)
+
+`cold_stairs` gets a south door (`at` 5, in the far half, past the frozen-bug
+bridge) to `warden_pit` (8,3), and `warden_pit` a south door to `idle_cache`
+(8,4). Both are unflagged.
+- `warden_pit` (14x4x14, fragment 7): the first boss, Null Pointer, placed
+  from the old test arena (D136). It starts in the middle; six 2-high cover
+  bars (two across the door lanes, four round them) stop its bolts, so the
+  cells inside both doors are out of its sight and it sleeps until he steps
+  out (4 s at either door: still asleep). Two energy refills and an
+  integrity refill lie in the open corners as a trade-off (24 integrity
+  takes about 24 Zaps, five times his base energy). No shrine (D104), doors
+  never locked (D135). 14x14 instead of the plan's 16x16: the bolt range is
+  14 and a smaller floor keeps the teleports in view.
+- `idle_cache` (8x4x10, fragment 8): a 2-wide pit splits the room; one
+  bridge on the east edge stands while two plates feel weight, one for a
+  crate and one for a frozen bug (a combo of `ledger_cell`'s plates and
+  `cold_stairs`' freeze). The crate lies against the west wall and slides
+  only along it (a data pillar stops it short of the pit), so it can never
+  fill the pit. The bug's lane runs two cells from the pit, so a bounce
+  lands short of it. On the island a second crate, pushed into the pit, is
+  the way home once the bridge is gone (the mutation test shows it as NO
+  EFFECT: it serves only the return). Headless play: the island 3.5 s after
+  the Pause shot (1.5 s spare), the fragment at 11 s, home at 14 s.
+**Why:** boss 1 belongs to the Pause wing (D133) and the plan puts a small
+fragment room behind it. The boss fight was tuned in its test arena; the
+arena only needs cover and safe doors. The cache combines two things
+already taught, with a clock, as a calm room after the fight.
+

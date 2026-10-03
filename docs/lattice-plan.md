@@ -69,8 +69,8 @@ then. Steps and room order: docs/design.md, Phase 5.
 | 9 | `ledger_cell` | 8x8 | A dead end with a plate; fragment 5 |
 | 10 | `freeze_hall` | 12x12 | Pause disk; a bug patrol to stop |
 | 11 | `cold_stairs` | 12x12 | Frozen enemies as steps over a gap; fragment 6; the door to the Fork wing |
-| 12 | `warden_pit` | 16x16 | Boss 1, drops fragment 7; cover blocks, no shrine (D134) |
-| 13 | `idle_cache` | 8x8 | Reached after the boss; fragment 8 |
+| 12 | `warden_pit` | 14x14 | Boss 1, drops fragment 7; cover blocks, no shrine (D134) |
+| 13 | `idle_cache` | 8x10 | Reached after the boss; fragment 8 |
 | 14 | `scan_lab` | 12x12 | Scan disk; fake blocks |
 | 15 | `mirror_stacks` | 12x12 | Memory walls with fake blocks; fragment 9 |
 | 16 | `ghost_exit` | 12x12 | Hidden exit; fragment 10 |
