@@ -15,7 +15,7 @@ Ideas only; nothing is copied (CLAUDE.md §1).
 2. **Show the ingredients first.** The goal (exit, pickup, plate) and every
    tool (crate, switch, ledge) are seen from the entrance or one step in.
    Secrets are the exception, and even they get a hint (a lone block, a
-   strange gap, a screen text).
+   strange gap), never a screen text.
 3. **Planning beats reflexes.** A room is a thinking room (few or slow
    enemies, no clock) or an action room (simple layout), rarely both. Hard on
    both axes is for a boss or a late combo.
@@ -49,6 +49,7 @@ Ideas only; nothing is copied (CLAUDE.md §1).
 10. **Honest rewards.** A permanent pickup for a multistep puzzle or a risk,
     a refill for a short detour. A secret costs an extra move, not a guess
     among 50 walls.
-11. **Name and dress it.** A short, funny terminal-style name; a screen with
-    a hint or a joke where it helps (D118). Decor frames the focal point,
+11. **Name and dress it.** A short, funny terminal-style name. A screen text
+    only to explain a spell or concept met here first, never the solution:
+    the room must teach by its shape (D118, D163). Decor frames the focal point,
     never hides a mechanic or blocks a sightline from the entrance.

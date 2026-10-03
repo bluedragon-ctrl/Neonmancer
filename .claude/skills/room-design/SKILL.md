@@ -81,15 +81,23 @@ Edit existing files with small text edits, not a JSON dump.
   collapsing collapsing_regrow gate bridge`. `gate`/`bridge` take `switches`
   (default: every switch in the room): a gate goes, a bridge appears while
   all are on. In a hole they stand a block high (top 1.0): a step, not floor.
-  A gone bridge shows no outline: name it in a screen text.
+  A gone bridge shows no outline: the room that first shows bridges says
+  what one is in a screen text (see Screen texts below).
 - **Objects** (`defs.json` objects): crates `crate crate_plain crate_cross
   crate_dashed`; switches `plate plate_timed target target_timed`; `platform
   spiked_platform` (need `path`, may take `switches`: run only while all on);
   decorations `screen data_pillar memory_stack` (`overrides: { "face":
   "+x"|"+z" }`; a screen may name a `text` in `data/lore.json`: title <= 32,
-  lines <= 48 characters); `core`. `overrides` change only existing type
+  lines <= 48 characters, only as help, see Screen texts below); `core`. `overrides` change only existing type
   values (e.g. a timer). Plates lie at y = 0 (validated): on a raised level
   the only switch is a target.
+- **Screen texts (help, D163).** A screen with a `text` is a console: help
+  for a spell or concept the wizard meets here for the first time (what Zap,
+  a plate, a bridge, a frozen bug does; the key to cast), in the room that
+  teaches it. Never how to solve the room: no which crate goes where, which
+  plate needs what, the order of moves, or where the way home is. Test it: the text reads true in any room with that
+  mechanic, not only this one. Rooms with no new concept get no help text
+  (a plain screen as decor, or lore and a joke with no hint, is fine).
 - **Paths.** `{ points, mode: pingpong|loop, speed, pause }`: points follow
   `at`, each leg along one axis. `speed` (u/s, default 2) and `pause` (s at
   the ends) are for platforms only; a platform path may not cross a static

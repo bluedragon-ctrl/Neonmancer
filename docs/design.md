@@ -1686,7 +1686,12 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
   camera, not behind a ledge.
 - Each mechanic should be seen before it matters: a pit, a hazard or a
   collapsing bridge in view from where the wizard enters. A bridge that
-  starts gone shows no outline: name it in a screen text.
+  starts gone shows no outline: the room that first shows bridges says
+  what one is in a screen text.
+- Screen texts are help for a spell or concept met for the first time,
+  never the room's solution (no where a crate goes, which plate needs
+  what, the order of moves); a help text reads true in any room with that
+  mechanic (D163).
 - A plate on an enemy's patrol path flickers as it walks over: keep it
   beside the path when only a frozen enemy should hold it.
 - A gate that needs a stronger spell or a buff (a ledge too high for the
@@ -1832,7 +1837,8 @@ Every other biome is a twist on it.
   are looks only. The data flows outside show through them: windows onto
   the city.
 - **Decorations:** pillars with steady, evenly spaced data; screens with
-  clean, friendly terminal text (tutorial hints).
+  clean, friendly terminal text (help on a new spell or concept, never a
+  room's solution, D163).
 - **Enemies, in tiers:** the glowbug (peaceful, harmless, bouncy), life
   in the safe sector; the bug (hostile, patrols a fixed path, bouncy);
   virus, sentinel and cron, all hostile (the cron fires four ways). Both

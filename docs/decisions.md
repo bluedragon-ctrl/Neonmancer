@@ -1735,3 +1735,14 @@ fragment room behind it. The boss fight was tuned in its test arena; the
 arena only needs cover and safe doors. The cache combines two things
 already taught, with a clock, as a calm room after the fight.
 
+
+### D163 — 2026-10-03 — Screen texts are help, never the solution
+A screen text (D118) explains a spell or concept the wizard meets for the
+first time, in the room that teaches it: what it does and how to use it.
+It never explains how to solve the room (where a crate goes, which plate
+needs what, the order of moves, the way home). Test: the text reads true
+in any room with that mechanic. Rooms without a new concept carry no help
+text; a secret's hint is in the room's shape, never on a screen. The
+room-design skill, `craft.md` and the room design checklist say so.
+**Why:** the author wants rooms to teach by their shape; a screen that
+spells out the moves turns a puzzle into a walk.
