@@ -27,7 +27,8 @@ For each room:
      up); platform pauses long enough; `reset` safe (not collapsing, not
      in a platform path). Timed switches (a type or override with
      `timer`): the checker counts them as on for good, so work out the
-     race by hand per the checklist (cells from the switch to the far
+     race by hand per the checklist (a frozen enemy on a plate is one
+     too, a 5 s freeze counted from the shot; cells from the switch to the far
      side of the gate, bridge or exit it powers, ~0.22 s a cell, plus
      jumps and pushes) and compare it with the timer: shorter is a
      BLOCKER, less than ~1 s to spare a PROBLEM.
@@ -39,7 +40,11 @@ For each room:
      or hole, spent Compile/Fork) leaves a way out or a way to reset.
    - **Enemies**: templates only (no overrides), paths level, no patrol
      over holes, hostile ones not on the entry spot, peaceful ones not
-     breaking a puzzle (the checker ignores enemies).
+     breaking a puzzle (the checker ignores enemies). Bouncy ones (bug,
+     glowbug) at the foot of a 2-high ledge are a way up without Pause; a
+     plate on a patrol path flickers as it is walked over; follow where a
+     frozen enemy can be pushed from each cell of its path (the checker
+     models only one push onto a plate).
    - **Rules**: authored rooms untouched (D90), test rooms within 2 rooms
      of Boot Sector (D49), room ids/file names match, no duplicate permanent
      pickup by accident (D71), colors per the D99 rules.

@@ -1645,6 +1645,10 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
   up moves with it.
 - Headroom: the wizard is 1.5 high, so wherever he stands there must be 2
   free cells above the surface. A ledge 3 high needs a room 5 high.
+- A frozen enemy is a 1-high step (D155) and can be pushed like a crate
+  (D154): follow its pushes from every cell of its path; bugs also bounce
+  him to 2.8, so only a 3-high ledge stops both.
+- Gate and bridge blocks in a hole stand a block high: a step up, not floor.
 
 **Timing** (60 ticks per second)
 - Walking (4.5 units/s) crosses one cell in ~13 ticks (0.22 s); a jump
@@ -1661,7 +1665,8 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
 - Timed switches (D140): the reachability checker counts them as on for
   good, so check the race by hand. Count the cells from where the switch
   goes on (the plate he steps off; for a target, the cell he zaps from,
-  the bolt is near instant) to the far side of what it powers, ~13 ticks
+  the bolt is near instant; for a frozen enemy on a plate, the Pause shot)
+  to the far side of what it powers, ~13 ticks
   a cell plus ~34 per jump and ~28 per push on the way; the timer should
   be that plus about a second (60 ticks), not less and not much more.
 
@@ -1671,7 +1676,10 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
   the back walls (x = 0, z = 0), and put steps on the side facing the
   camera, not behind a ledge.
 - Each mechanic should be seen before it matters: a pit, a hazard or a
-  collapsing bridge in view from where the wizard enters.
+  collapsing bridge in view from where the wizard enters. A bridge that
+  starts gone shows no outline: name it in a screen text.
+- A plate on an enemy's patrol path flickers as it walks over: keep it
+  beside the path when only a frozen enemy should hold it.
 - A gate that needs a stronger spell or a buff (a ledge too high for the
   base jump, D68) should look like a gate: the player should recognise it
   and come back later, not think the room is unsolvable.
