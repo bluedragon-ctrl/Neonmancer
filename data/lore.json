@@ -189,45 +189,26 @@
       "lines": [
         "CRATE: MOVABLE ALLOCATION. NEON GREEN. 1X1X1.",
         "FORCE ON A FACE: IT SLIDES ONE CELL.",
-        "NULL SECTOR IN FLOOR TABLE, 2 CELLS WIDE.",
-        "FILL WITH ALLOCATIONS. 2 CRATES ON FILE.",
+        "A CRATE IN A NULL SECTOR FILLS IT: FLOOR AGAIN.",
+        "A CRATE IS ALSO A STEP: ONE BLOCK HIGH.",
         "FALL INTO NULL: PROCESS RESTARTED."
       ]
     },
     "tut_zap": {
       "title": "PORTMAP // ZAP.EXE",
       "lines": [
-        "DATA DISK ON HOST: ZAP.EXE. INSTALLS ON CONTACT.",
+        "DATA DISK: A PROGRAM. INSTALLS ON CONTACT.",
         "INVOKE: E. CYCLE LOADED PROGRAMS: TAB / Q.",
         "TARGET NODES TOGGLE ON BOLT IMPACT.",
-        "NORTH DOOR: POWERED BY ONE TARGET NODE.",
-        "BUG.PROC PATROLS THE PORT. BITE: -1 INTEGRITY."
-      ]
-    },
-    "tut_atrium": {
-      "title": "DIR // /HOME/LATTICE/ATRIUM",
-      "lines": [
-        "HUB NODE. WINGS MOUNT HERE AS ACCESS GROWS.",
-        "ALLOCATIONS ARE STRUCTURE: A CRATE IS A STEP.",
-        "STEP LIMIT 1 + CRATE 1 = REACHABLE HEIGHT 2."
-      ]
-    },
-    "tut_wings": {
-      "title": "MOUNT // WINGS",
-      "lines": [
-        "NORTH: SHIELD HALL. SOUTH: FREEZE HALL.",
-        "EACH HALL HOLDS ONE DATA DISK.",
-        "WEST DOOR: BACK TO THE PORT.",
-        "BACKUP SHRINE ON THIS NODE: REFILLS EVERYTHING."
+        "BUG.PROC: PATROLS. BITE: -1 INTEGRITY."
       ]
     },
     "tut_shield": {
       "title": "HALL // SHIELD.EXE",
       "lines": [
-        "SENTINEL.PROC GUARDS THIS HALL. LONG AIMED ARC.",
-        "COVER BLOCKS BREAK ITS LINE OF SIGHT.",
-        "SHIELD.EXE ON HOST: BLOCKS RANGED ATTACKS.",
-        "DISK IS BEHIND THE WALL. MIND THE ARC."
+        "SENTINEL.PROC: KEEPS AWAY. FIRES A LONG ARC.",
+        "BLOCKS BREAK ITS LINE OF SIGHT.",
+        "SHIELD.EXE: BLOCKS RANGED ATTACKS."
       ]
     },
     "tut_gallery": {
@@ -235,43 +216,31 @@
       "lines": [
         "TOWERS FIRE FOUR WAYS WHEN YOU STAND NEAR.",
         "A CRATE IN THE LINE STOPS BOLTS. SO DOES SHIELD.",
-        "NULL SECTOR AHEAD: 3 WIDE. FILL 2, JUMP 1.",
-        "ONE CRATE IS CAGED. A TARGET NODE HOLDS KEY."
+        "WHITE GATES ANSWER TO SWITCHES. TARGETS TOO."
       ]
     },
     "tut_relay": {
       "title": "LOFT // RELAY.SYS",
       "lines": [
-        "FERRY A: PLATE A. FERRY B: PLATES B AND C.",
         "A PLATE FEELS WEIGHT. YOU CANNOT RIDE AND WEIGH.",
         "CRATES WEIGH FOR YOU. FERRIES CARRY YOU.",
-        "LEDGE ON THE FAR SIDE: STEP LIMIT 1, CRATE 1."
-      ]
-    },
-    "tut_ledger": {
-      "title": "LEDGER // CELL.LOG",
-      "lines": [
-        "GATE 1 ANSWERS TO PLATE A. GATE 2 TO PLATE B.",
-        "THE SECOND ALLOCATION IS LOCKED BEHIND GATE 1.",
-        "ENTRIES POST IN ORDER. SKIPPING IS A NO-OP."
+        "A FERRY RUNS WHILE ALL ITS PLATES FEEL WEIGHT."
       ]
     },
     "tut_pause": {
       "title": "HALL // PAUSE.EXE",
       "lines": [
-        "BUG.PROC PATROLS THE FLOOR. BITE: -1 INTEGRITY.",
-        "PAUSE.EXE ON HOST: FREEZES ONE PROCESS.",
+        "PAUSE.EXE: FREEZES ONE PROCESS FOR 5 S.",
         "A FROZEN PROCESS IS HARMLESS AND SOLID.",
-        "A FROZEN BUG IS A STEP. THE LEDGE IS 2 HIGH."
+        "A FROZEN BUG IS A STEP."
       ]
     },
     "tut_stairs": {
       "title": "STAIRS // COLD.BAK",
       "lines": [
-        "STAIRS NOT INSTALLED. BUGS FOUND: 2.",
         "A FROZEN BUG SLIDES LIKE A CRATE. PUSH IT.",
-        "THE BRIDGE STANDS WHILE THE PLATE FEELS WEIGHT.",
-        "FREEZE TIME: 5 S. RUN."
+        "A BRIDGE STANDS WHILE ITS PLATES FEEL WEIGHT.",
+        "GONE BRIDGES SHOW NO OUTLINE. FREEZE TIME: 5 S."
       ]
     },
     "tut_warden": {
@@ -279,17 +248,8 @@
       "lines": [
         "PROCESS DEREFERENCES ANYTHING IT CAN SEE.",
         "PAUSE.EXE: NO EFFECT. ZAP.EXE: SLOW BUT SURE.",
-        "IT JUMPS AROUND. THE LOW WALLS STOP ITS BOLTS.",
+        "IT JUMPS AROUND. BLOCKS STOP ITS BOLTS.",
         "DOORS STAY OPEN. RETREAT IS A VALID BRANCH."
-      ]
-    },
-    "tut_idle": {
-      "title": "CACHE // IDLE.LOCK",
-      "lines": [
-        "BRIDGE WANTS TWO WEIGHTS: A CRATE, A BUG.",
-        "THE BUG NEVER IDLES. MAKE IT.",
-        "THE BRIDGE COMES UP MID-PIT. FREEZE TIME: 5 S.",
-        "BRIDGE GONE? THE FAR CRATE IS YOUR WAY HOME."
       ]
     }
   }

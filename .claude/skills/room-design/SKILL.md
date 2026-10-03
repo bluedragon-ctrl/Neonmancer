@@ -198,7 +198,7 @@ it depends on and which pieces nothing depends on:
 ```
 node .claude/skills/room-design/scripts/mutate.mjs ledger_cell --with ""
 Depends on:
-  pickup fragment_5: crate_b [1,0,1] (→ never), crate_1 [5,0,5] (→ never), sealed gate [3,0,1]-[3,2,1] (→ never), sealed gate [2,0,5]-[2,2,5] (→ never)
+  pickup fragment_5: crate_b [2,0,7] (→ never), crate_1 [6,0,2] (→ never), sealed gate [1,0,6]-[1,2,6] (→ never), sealed gate [6,0,6]-[6,2,6] (→ never)
 Every helper and gate matters.
 ```
 A sealed gate or a key piece with NO EFFECT is a bypass: find the route and
@@ -254,9 +254,11 @@ same role before drafting and copy their density and rhythm.
   holds a bridge for the freeze; a second bug is the step up a ledge; a 3-high
   back ledge leads home over the pit. Every piece matters (mutation test).
 - `bolt_gallery.json`: a 3-wide pit filled with two crates, towers covering
-  the bridge column. Its caged crate and gates show NO EFFECT: study it as a
-  layout, not as a sealed puzzle.
-- `ledger_cell.json`: a chain of two plates and two gates; 3-high guarding
-  walls behind the alcove from the camera, plates against walls (D160).
+  the bridge column; a target opens the cage of the second crate (both
+  crates matter with Zap from south; the cage's gates show NO EFFECT one at
+  a time only because each side is a way out).
+- `ledger_cell.json`: a chain of two plates and two gates; the guarded crate
+  cell and the fragment alcove lie on the camera side of their 3-high walls,
+  so everything shows; plates in corners (D160, D165).
 - `relay_loft.json`: ferries powered by crate-held plates (judged by hand).
 - `hidden_layer.json` (dev wing, Scan): `fake` blocks.

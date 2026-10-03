@@ -1755,3 +1755,38 @@ show. Holds for secrets too. The room-design skill, `craft.md`, the
 level-review subagent and the room design checklist say so.
 **Why:** crates are the wizard's tools; a puzzle whose tool can't be seen
 is a guess, not a riddle.
+
+### D165 — 2026-10-03 — Lattice rooms reviewed against D163 and D164
+The level-review subagent read all fifteen non-dev rooms; the fixes:
+- **Screen texts (D163).** `tut_push`, `tut_zap`, `tut_shield`,
+  `tut_gallery`, `tut_relay`, `tut_pause`, `tut_stairs` and `tut_warden`
+  keep only help that reads true in any room (what a crate, target, frozen
+  bug, bridge, ferry, sentinel, tower or boss does) and lose the lines
+  that solve the room (pit widths, crate counts, which plate holds what,
+  where the disk lies, the way home). `tut_ledger`, `tut_idle`, `tut_wings`
+  and `tut_atrium` are gone: their rooms teach nothing new or the text was
+  only directions; those screens stay as decor. "A crate is a step" moves
+  to `tut_push`, where crates are met; `atrium`'s screen shows `help_core`,
+  since the core is first seen there.
+- **`ledger_cell` (D164).** crate_b sat behind the 3-high x = 3 wall, out
+  of sight. Re-laid out at 8x4x9: the crate cell (x 0-3) and the fragment
+  alcove (x 5-7) lie at the front (z 7-8), behind them the 3-high row
+  z = 6 with gate 1 (plate_a) and gate 2 (both plates); plates in the back
+  corners. Mutation test: every helper and gate matters; played headless.
+- **`first_steps`.** From the top of a crate beside the 2-wide pit he
+  leapt it (D162). The pit is 3 wide (x 3-5), the crates at x = 2: both
+  are needed.
+- **`bolt_gallery`.** crate_f made the caged crate a spare; it is gone, and
+  the cage's front gate [9,0,10] with it, so the caged crate shows a front
+  face. crate_e moves to [11,0,2], which also ends the checker's crate
+  search limit coming back from north.
+- **Small ones.** `zap_port` 4 high (its 2-high ledge) and its floating
+  memory stack on the floor; `atrium`'s two crates, which did nothing,
+  removed; `relay_loft`'s first ferry pauses 1 s at its ends; `room_1` and
+  `room_2`, empty placeholders, join the dev wing (D147).
+- **Not changed:** `freeze_hall`'s bug can bounce him onto the fragment
+  ledge without Pause, but the checker counts a frozen enemy as a step on
+  its path cells only, so any lane far enough from the ledge makes the
+  fragment "never" for CI; left for the author.
+**Why:** D163 and D164 were new rules; the existing rooms needed to meet
+them, and the review found the bypasses above along the way.

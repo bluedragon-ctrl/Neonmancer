@@ -35,7 +35,7 @@
       "id": "platform_1",
       "type": "platform",
       "at": [2, 0, 3],
-      "path": { "points": [[5, 0, 3]] },
+      "path": { "points": [[5, 0, 3]], "pause": 1 },
       "switches": ["plate_a"]
     }
   ],

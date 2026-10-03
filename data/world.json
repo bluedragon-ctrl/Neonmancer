@@ -2,7 +2,7 @@
   "$schema": "../schemas/world.schema.json",
   "schemaVersion": 1,
   "start": "boot_up",
-  "dev": ["hidden_layer"],
+  "dev": ["hidden_layer", "room_1", "room_2"],
   "fragments": { "required": 64, "access": [16, 32, 48] },
   "connections": [
     ["first_steps.east", "zap_port.west"],

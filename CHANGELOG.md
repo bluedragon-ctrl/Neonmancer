@@ -8,6 +8,17 @@ docs/decisions.md).
 
 ## [Unreleased]
 
+### Changed
+- Screen texts are help for a new spell or concept, never a room's
+  solution (D163), and every crate is visible (D164): the room-design
+  skill, `craft.md`, the level-review subagent and the checklist say so.
+- A level review of the Lattice rooms against them, fixed (D165): help
+  texts rewritten or removed, `ledger_cell` re-laid out so its crates show,
+  `first_steps` with a 3-wide pit, `bolt_gallery` without its spare crate,
+  `zap_port` 4 high, `atrium` with the core's help and no idle crates,
+  `relay_loft`'s first ferry waiting at its ends, `room_1` and `room_2` in
+  the dev wing.
+
 ### Added
 - Boss one in the Lattice (5.6d, D162): `warden_pit`, off a new south door
   of `cold_stairs`, where Null Pointer guards fragment 7 among cover
