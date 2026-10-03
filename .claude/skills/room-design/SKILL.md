@@ -194,7 +194,8 @@ npm run check:reach -- <room_id> --with double_jump,zap --from west
 npm run check:reach                         # whole world, in CI
 npm test
 ```
-The checker knows nothing of enemies, timing, energy or facing: "reachable"
+The checker knows nothing of enemies (except that with `pause` every cell a
+pausable enemy walks counts as a 1-high step), timing, energy or facing: "reachable"
 is not a promise, "unreachable" is a real bug. Then run the level-review
 subagent (`level-review`) on the finished room.
 

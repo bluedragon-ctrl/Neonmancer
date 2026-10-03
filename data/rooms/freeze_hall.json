@@ -10,6 +10,10 @@
   "objects": [
     { "id": "screen_pause", "type": "screen", "at": [1, 0, 3], "text": "tut_pause", "overrides": { "face": "+x" } }
   ],
-  "enemies": [{ "id": "patrol", "template": "bug", "at": [1, 0, 6], "path": { "points": [[10, 0, 6]], "pause": 0.6 } }],
-  "pickups": [{ "id": "disk_pause", "type": "disk_pause", "at": [9, 0, 10] }]
+  "enemies": [{ "id": "patrol", "template": "bug", "at": [1, 0, 9], "path": { "points": [[10, 0, 9]], "pause": 0.6 } }],
+  "blocks": [{ "at": [9, 0, 10], "to": [10, 1, 11] }],
+  "pickups": [
+    { "id": "fragment_6", "type": "fragment_6", "at": [10, 2, 10] },
+    { "id": "disk_pause", "type": "disk_pause", "at": [3, 0, 1] }
+  ]
 }

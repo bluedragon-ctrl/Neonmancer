@@ -25,6 +25,10 @@
  * both closed and open there counts as both: never in the way, and floor
  * to stand on.
  *
+ * Pause (D85, D155): a frozen enemy is a 1×1×1 block he can stand on, so
+ * with the spell every cell a pausable (non-boss) enemy walks counts as
+ * floor along its whole path, like a platform's (optimistic).
+ *
  * What it knows nothing about, on purpose: enemies and their fire (combat
  * is a different check), timing (collapsing blocks, platforms waiting,
  * spell durations, how long a timed switch stays on), energy, and which
@@ -38,7 +42,7 @@ import { Grid } from './grid.js';
 import { pathCells } from './path.js';
 
 /** The abilities the search knows how to use: spells by id, the double jump by its upgrade id. */
-export const ABILITIES = ['double_jump', 'zap', 'scan', 'pull', 'compile', 'fork', 'cut_paste', 'blink', 'warp'];
+export const ABILITIES = ['double_jump', 'zap', 'scan', 'pull', 'compile', 'fork', 'cut_paste', 'blink', 'warp', 'pause'];
 
 /**
  * Jump tuning in cells, from PLAYER (apex 1.2 above take-off, ~1.65 units of
@@ -114,6 +118,10 @@ class RoomModel {
     this.gateFloor = new Set();
     this.core = null;
     this.crates = [];
+    // Pause: the cells a pausable enemy can be frozen in are steps.
+    if (abilities.has('pause'))
+      for (const enemy of room.enemies ?? [])
+        if (enemy.pausable !== false && !enemy.boss) for (const [px, py, pz] of enemy.path ? pathCells(enemy.at, enemy.path) : [enemy.at]) this.floors.add(this.index(px, py, pz));
     for (const object of room.objects) {
       const [x, y, z] = object.at;
       if (object.kind === 'pushable') this.crates.push(this.index(x, y, z));
