@@ -15,10 +15,11 @@
   "holes": [{ "at": [2, 5], "to": [9, 6] }],
   "objects": [
     { "id": "screen_stairs", "type": "screen", "at": [9, 0, 3], "text": "tut_stairs", "overrides": { "face": "+x" } },
-    { "id": "plate_cold", "type": "plate", "at": [2, 0, 2] }
+    { "id": "plate_cold", "type": "plate", "at": [2, 0, 2] },
+    { "id": "crate_spare", "type": "crate", "at": [4, 0, 9] }
   ],
   "enemies": [
-    { "id": "bug_key", "template": "bug", "at": [3, 0, 0], "path": { "points": [[3, 0, 4]] } },
+    { "id": "bug_key", "template": "bug", "at": [3, 0, 0], "path": { "points": [[3, 0, 3]] } },
     { "id": "bug_stair", "template": "bug", "at": [2, 0, 11], "path": { "points": [[2, 0, 7]] } }
   ],
   "pickups": [

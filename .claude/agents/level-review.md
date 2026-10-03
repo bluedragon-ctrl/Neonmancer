@@ -49,7 +49,9 @@ For each room:
      glowbug) at the foot of a 2-high ledge are a way up without Pause; a
      plate on a patrol path flickers as it is walked over; follow where a
      frozen enemy can be pushed from each cell of its path (the checker
-     models only one push onto a plate).
+     models only one push onto a plate); a bounce carries him ~2.4 cells
+     sideways, so a lane end beside a gap is a way across; an area whose
+     only way out is an enemy step traps him when it is killed.
    - **Timing by play**: where a race or bounce decides the room, play it
      with `.claude/skills/room-design/scripts/sim.mjs` from a scratch
      script (see the skill) and quote the ticks and the margin.

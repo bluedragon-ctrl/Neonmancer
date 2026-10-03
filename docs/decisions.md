@@ -1638,7 +1638,20 @@ dev wing's door behind access 3, which no player room gives; players never
 see the wing (it is left out of their builds), so it cannot fail their
 world. CI on `main` was red from it.
 
-### D159 — 2026-10-03 — Room-design skill: mutation test and play helper as scripts
+### D159 — 2026-10-03 — Cold Stairs review fixes
+
+Amends D157 after the level review. The key bug's lane ends at z = 3, a
+cell short of the pit: a bounce off it carries the wizard about 2.4 cells
+sideways, and from the old lane end at z = 4 he could land across the pit
+without Pause (108 of 21,600 simulated tries; none with the new end). A
+spare crate in the far half (`crate_spare`) is a second way up the ledge:
+the stair bug can be killed (zapped, or frozen and pushed into the pit),
+and then dying was the only way out.
+**Why:** a puzzle room must not be solved by a habit (riding a bug) and
+must not trap him for a habit (zapping a bug); the checker models a
+bounce as going straight up, so both are judged by playing.
+
+### D161 — 2026-10-03 — Room-design skill: mutation test and play helper as scripts
 The room-design skill (D132) starts with a workflow, keeps a schema cheat
 sheet and a tuning table (checked against `room.schema.json`, `validate.js`
 and the checklist: an exit's access level is a `requires` entry, test rooms
@@ -1650,10 +1663,11 @@ re-runs the reachability checker on the room and lists what each exit and
 pickup depends on; `sim.mjs` wraps `Game` for headless play (walk, cast,
 wait until, a state line). The level-review subagent runs the mutation test.
 A new checklist lesson: a crate or frozen enemy beside a 2-high wall is a
-step over it.
+step over it. A checklist fact corrected: the room's height is no ceiling
+in play (he stood on a 2-high wall in a 3-high room); blocks above are.
 **Why:** the manual mutation test (edit a scratch copy, re-run) was skipped
 in practice; run as a script it found that `ledger_cell`'s fragment is taken
 with both gates shut (crate as a step over the 2-high wall, confirmed by
-headless play) and that `bolt_gallery`'s caged crate and gates change
+headless play; fixed in D160) and that `bolt_gallery`'s caged crate and gates change
 nothing for the checker. The skill also carried stale facts that would have
 produced invalid rooms.

@@ -110,7 +110,7 @@ Edit existing files with small text edits, not a JSON dump.
 |---|---|
 | Jump | clears 1 block up (apex 1.2), never 2; crosses a 1-tile gap, never 2 |
 | Double jump (upgrade) | 2 up, 2 wide |
-| Headroom | wizard 1.5 high: 2 free cells over every standing surface (3-high ledge → room height 5) |
+| Headroom | wizard 1.5 high: 2 free cells over every standing surface. A block above is a ceiling, the room's height is not (he stands on top of a 2-high wall in a 3-high room); keep standing surfaces 2 below the room height for the look |
 | Bouncy enemy (bug, glowbug) | launches 2.2 above its top (0.6), so 2.8: clears a 2-high ledge, never 3 |
 | Frozen enemy | a 1-high step (1×1×1), pushed like a crate |
 | Walk | 4.5 u/s, ~13 ticks (0.22 s) a cell; a jump ~34 ticks (0.57 s) |
@@ -150,15 +150,22 @@ Edit existing files with small text edits, not a JSON dump.
 - **Pit width = crates + 1.** A pit N wide needs N-1 crates; count crates that
   can reach it from the *other* side too (the island's, the return trip).
 - **Walls are steps too.** A crate (or frozen enemy) beside a 2-high wall is
-  a way over it: a gated alcove behind 2-high walls is no gate. Walls that
-  guard something are 3 high, or he must not get a crate next to them.
+  a way onto it, and its top is a road: a gated alcove behind 2-high walls
+  is no gate. Walls that guard something are 3 high, and no 2-high top may
+  touch a 3-high one (a 1-block step again). Keep 3-high walls behind what
+  they guard from the camera (`ledger_cell`, D160).
 - **Both directions.** `--from <exit>` for every exit: coming back must work
   with what lies on that side (the way-in puzzle is reset on re-entry).
 - **Crates as cover** block a tower's line until they drop into a hole; don't
   promise more in hints. **No fire line** on the cells just inside an exit.
 - **Bugs bounce** (2.8): a bug at the foot of a 2-high ledge is a way up
   without Pause; only 3 high stops the bounce and a frozen-bug step (1.0 +
-  1.2). Fine where he already has Pause.
+  1.2). Fine where he already has Pause. A bounce also carries him ~2.4
+  cells sideways: keep a bouncy lane 2+ cells from a gap it could throw him
+  over (D159); the checker models a bounce as straight up only.
+- **An enemy used as a step can die** (zapped from habit, or popped in a
+  hole): if it is the only way out of an area, give a second way (a crate,
+  a step) so killing it never leaves death as the exit.
 - **A plate on a patrol path flickers** (the walker presses it, a gate opens
   for a moment): put it one cell beside the path; prefer a bridge to a gate
   for a held plate (a flicker of a bridge carries nobody).
@@ -172,12 +179,14 @@ Takes each helper away (crate, platform, enemy, bridge, block) and seals each
 gate (a plain block for good), in memory, then lists per exit and pickup what
 it depends on and which pieces nothing depends on:
 ```
-node .claude/skills/room-design/scripts/mutate.mjs ledger_cell
-  pickup fragment_5: crate_1 [5,0,2] (→ double_jump or compile or fork)
-NO EFFECT (spare, scenery, or a bypass): sealed gate [3,0,6]-[3,1,6], sealed gate [2,0,2]-[2,1,2]
+node .claude/skills/room-design/scripts/mutate.mjs ledger_cell --with ""
+Depends on:
+  pickup fragment_5: crate_b [1,0,1] (→ never), crate_1 [5,0,5] (→ never), sealed gate [3,0,1]-[3,2,1] (→ never), sealed gate [2,0,5]-[2,2,5] (→ never)
+Every helper and gate matters.
 ```
-A sealed gate or a key piece with NO EFFECT is a bypass: find it (here a
-crate as a step over the 2-high wall) and fix it. Default searches with every
+A sealed gate or a key piece with NO EFFECT is a bypass: find the route and
+fix it (before D160, `ledger_cell` showed both gates as NO EFFECT: a crate
+was a step over the 2-high wall). Default searches with every
 ability (so each target shows its smallest ability sets); `--with a,b` and
 `--from exit` as for `check:reach`. Interchangeable crates hide each other
 when taken one at a time: `--without crate_a,crate_b` takes all but one out
@@ -229,7 +238,7 @@ same role before drafting and copy their density and rhythm.
 - `bolt_gallery.json`: a 3-wide pit filled with two crates, towers covering
   the bridge column. Its caged crate and gates show NO EFFECT: study it as a
   layout, not as a sealed puzzle.
-- `ledger_cell.json`: a chain of two plates and two gates, but a crate climbs
-  the 2-high wall past both (see the mutation test): an example of the bug.
+- `ledger_cell.json`: a chain of two plates and two gates; 3-high guarding
+  walls behind the alcove from the camera, plates against walls (D160).
 - `relay_loft.json`: ferries powered by crate-held plates (judged by hand).
 - `hidden_layer.json` (dev wing, Scan): `fake` blocks.
