@@ -8,33 +8,33 @@
   "spawn": [4.5, 0, 10.5],
   "exits": [
     { "id": "south", "side": "+z", "at": 4 },
-    { "id": "north", "side": "-z", "at": 9 }
+    { "id": "north", "side": "-z", "at": 9, "requires": [{ "switch": "target_1" }] }
   ],
   "blocks": [
     { "at": [0, 0, 0], "to": [2, 1, 2] },
-    { "at": [9, 0, 8], "to": [9, 1, 8] },
-    { "at": [9, 0, 10], "to": [9, 1, 10] },
-    { "type": "gate", "at": [8, 0, 9], "to": [8, 1, 9], "switches": ["cage_target"] }
+    { "type": "gate", "at": [3, 0, 0], "switches": ["target_2"] },
+    { "at": [4, 0, 8], "to": [4, 0, 9] },
+    { "type": "gate", "at": [8, 0, 8], "to": [10, 0, 8], "switches": ["target_2"] },
+    { "type": "gate", "at": [8, 0, 9], "to": [8, 0, 10], "switches": ["target_2"] },
+    { "type": "gate", "at": [10, 0, 9], "to": [10, 0, 10], "switches": ["target_2"] },
+    { "type": "gate", "at": [9, 0, 10], "switches": ["target_2"] },
+    { "at": [0, 1, 4] }
   ],
   "holes": [{ "at": [0, 5], "to": [11, 7] }],
   "objects": [
-    {
-      "id": "screen_gallery",
-      "type": "screen",
-      "at": [1, 0, 10],
-      "text": "tut_gallery",
-      "overrides": { "face": "+z" }
-    },
-    { "id": "cage_target", "type": "target", "at": [0, 0, 9] },
-    { "id": "crate_a", "type": "crate", "at": [5, 0, 9] },
-    { "id": "crate_b", "type": "crate", "at": [9, 0, 9] },
-    { "id": "crate_c", "type": "crate", "at": [7, 0, 1] },
     { "id": "crate_e", "type": "crate", "at": [10, 0, 2] },
-    { "id": "crate_f", "type": "crate", "at": [3, 0, 9] }
+    { "id": "crate_f", "type": "crate", "at": [3, 0, 9] },
+    { "id": "screen_1", "type": "screen", "at": [0, 0, 11], "text": "tut_gallery", "overrides": { "face": "+x" } },
+    { "id": "crate_1", "type": "crate", "at": [9, 0, 9] },
+    { "id": "crate_2", "type": "crate", "at": [10, 0, 3] },
+    { "id": "target_2", "type": "target", "at": [0, 0, 4] },
+    { "id": "target_1", "type": "target", "at": [0, 2, 4] },
+    { "id": "crate_3", "type": "crate", "at": [5, 0, 9] }
   ],
   "enemies": [
     { "id": "tower_bridge", "template": "cron", "at": [5, 0, 3] },
-    { "id": "tower_exit", "template": "cron", "at": [8, 0, 3] }
+    { "id": "cron_1", "template": "cron", "at": [8, 0, 4] },
+    { "id": "cron_2", "template": "cron", "at": [6, 0, 1] }
   ],
   "pickups": [{ "id": "fragment_3", "type": "fragment_3", "at": [1, 2, 1] }]
 }
