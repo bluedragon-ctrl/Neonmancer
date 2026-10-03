@@ -1639,7 +1639,10 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
   needs a crate, a platform or a step in between.
 - A running jump crosses a 1-tile gap, never a 2-tile one (~1.65 units of
   air travel); a pit 2 or more wide needs a bridge, a platform or a crate
-  to plug it.
+  to plug it. Only from the same level: from a 1-high top (a crate, a
+  frozen enemy, a bridge block) beside a floor pit, a late running jump
+  lands up to 2.45 units on, so it crosses 2 tiles (D162). Keep anything
+  pushable or freezable 2+ cells from a 2-wide pit, or make the pit 3 wide.
 - A bouncy enemy launches him 2.2 above its top (0.6): from the floor
   that clears a 2-high ledge, never 3. Where the enemy can walk, the way
   up moves with it.
@@ -1650,7 +1653,7 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
 - A frozen enemy is a 1-high step (D155) and can be pushed like a crate
   (D154): follow its pushes from every cell of its path; bugs also bounce
   him to 2.8, so only a 3-high ledge stops both, and the bounce carries
-  him ~2.4 cells sideways (keep the lane 2+ cells from a gap). An enemy
+  him ~3 cells sideways (keep the lane 2+ cells from a gap). An enemy
   he needs as a step can be killed: give the area a second way out.
 - Gate and bridge blocks in a hole stand a block high: a step up, not floor.
 - A crate or a frozen enemy beside a 2-high wall is a step over it: an

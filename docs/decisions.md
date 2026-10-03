@@ -1709,15 +1709,27 @@ bridge) to `warden_pit` (8,3), and `warden_pit` a south door to `idle_cache`
   never locked (D135). 14x14 instead of the plan's 16x16: the bolt range is
   14 and a smaller floor keeps the teleports in view.
 - `idle_cache` (8x4x10, fragment 8): a 2-wide pit splits the room; one
-  bridge on the east edge stands while two plates feel weight, one for a
+  bridge (x = 4) stands while two plates feel weight, one for a
   crate and one for a frozen bug (a combo of `ledger_cell`'s plates and
   `cold_stairs`' freeze). The crate lies against the west wall and slides
   only along it (a data pillar stops it short of the pit), so it can never
-  fill the pit. The bug's lane runs two cells from the pit, so a bounce
-  lands short of it. On the island a second crate, pushed into the pit, is
-  the way home once the bridge is gone (the mutation test shows it as NO
-  EFFECT: it serves only the return). Headless play: the island 3.5 s after
-  the Pause shot (1.5 s spare), the fragment at 11 s, home at 14 s.
+  fill the pit. A 1-high row (z = 4, x 1-7) in front of the pit stops a
+  pushed bug two cells short: from a frozen bug at the pit's edge a late
+  running jump crossed the 2-wide pit (level review). A bounce off the lane
+  lands on the row or the floor before the pit. On the island a second
+  crate, pushed into the pit, is the way home once the bridge is gone (the
+  mutation test shows it as NO EFFECT: it serves only the return).
+  Headless play: the island 3.5 s after the Pause shot (1.5 s spare), the
+  fragment at 11 s, home at 13 s; 120 running leaps off the row: none
+  crossed.
+- `cold_stairs` (amends D157): the same leap skipped its plate (the key bug
+  pushed once onto row z = 4, then a jump from its top to the far half;
+  9 of 40 takeoffs crossed). The pit is now 3 wide (z 4-6) with a 3-deep
+  bridge, the lane ends at its edge: 0 of 40 cross, and the intended run
+  takes about 3 s of the 5 s freeze. A bounce off the lane end now drops
+  him into the pit instead of short of it.
+- A checklist lesson: from a 1-high top beside a floor pit a late running
+  jump crosses 2 tiles (lands up to 2.45 units on, coyote time included).
 **Why:** boss 1 belongs to the Pause wing (D133) and the plan puts a small
 fragment room behind it. The boss fight was tuned in its test arena; the
 arena only needs cover and safe doors. The cache combines two things

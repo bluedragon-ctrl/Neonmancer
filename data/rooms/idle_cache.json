@@ -7,7 +7,10 @@
   "size": [8, 4, 10],
   "spawn": [4.5, 0, 1.5],
   "exits": [{ "id": "north", "side": "-z", "at": 4 }],
-  "blocks": [{ "type": "bridge", "at": [7, 0, 6], "to": [7, 0, 7], "switches": ["plate_crate", "plate_idle"] }],
+  "blocks": [
+    { "at": [1, 0, 4], "to": [7, 0, 4] },
+    { "type": "bridge", "at": [4, 0, 6], "to": [4, 0, 7], "switches": ["plate_crate", "plate_idle"] }
+  ],
   "holes": [{ "at": [0, 6], "to": [7, 7] }],
   "objects": [
     { "id": "screen_idle", "type": "screen", "at": [7, 0, 0], "text": "tut_idle", "overrides": { "face": "+x" } },
@@ -15,7 +18,7 @@
     { "id": "plate_idle", "type": "plate", "at": [2, 0, 1] },
     { "id": "crate_1", "type": "crate", "at": [0, 0, 2] },
     { "id": "pillar_stop", "type": "data_pillar", "at": [0, 0, 4], "overrides": { "face": "+x" } },
-    { "id": "crate_back", "type": "crate", "at": [4, 0, 8] }
+    { "id": "crate_back", "type": "crate", "at": [2, 0, 8] }
   ],
   "enemies": [{ "id": "bug_idle", "template": "bug", "at": [1, 0, 2], "path": { "points": [[6, 0, 2]] } }],
   "pickups": [{ "id": "fragment_8", "type": "fragment_8", "at": [1, 0, 9] }]

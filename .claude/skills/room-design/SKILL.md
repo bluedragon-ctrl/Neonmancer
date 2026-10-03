@@ -108,7 +108,7 @@ Edit existing files with small text edits, not a JSON dump.
 ## Tuning (from the checklist; 60 ticks a second)
 | What | Number |
 |---|---|
-| Jump | clears 1 block up (apex 1.2), never 2; crosses a 1-tile gap, never 2 |
+| Jump | clears 1 block up (apex 1.2), never 2; crosses a 1-tile gap, never 2, but from a 1-high top (crate, frozen enemy) beside a floor pit it crosses 2 (D162) |
 | Double jump (upgrade) | 2 up, 2 wide |
 | Headroom | wizard 1.5 high: 2 free cells over every standing surface. A block above is a ceiling, the room's height is not (he stands on top of a 2-high wall in a 3-high room); keep standing surfaces 2 below the room height for the look |
 | Bouncy enemy (bug, glowbug) | launches 2.2 above its top (0.6), so 2.8: clears a 2-high ledge, never 3 |
@@ -149,6 +149,11 @@ Edit existing files with small text edits, not a JSON dump.
   checked it.
 - **Pit width = crates + 1.** A pit N wide needs N-1 crates; count crates that
   can reach it from the *other* side too (the island's, the return trip).
+- **A step at the edge is a springboard.** A crate or frozen enemy pushed to a
+  2-wide pit's edge lets a late running jump cross it (the checker misses
+  it): a 1-high row or the room side must stop pushes 2+ cells short, or the
+  pit is 3 wide (`idle_cache`, `cold_stairs`, D162). A bounce carries him
+  up to ~3 cells sideways, not 2.4.
 - **Walls are steps too.** A crate (or frozen enemy) beside a 2-high wall is
   a way onto it, and its top is a road: a gated alcove behind 2-high walls
   is no gate. Walls that guard something are 3 high, and no 2-high top may
@@ -160,7 +165,7 @@ Edit existing files with small text edits, not a JSON dump.
   promise more in hints. **No fire line** on the cells just inside an exit.
 - **Bugs bounce** (2.8): a bug at the foot of a 2-high ledge is a way up
   without Pause; only 3 high stops the bounce and a frozen-bug step (1.0 +
-  1.2). Fine where he already has Pause. A bounce also carries him ~2.4
+  1.2). Fine where he already has Pause. A bounce also carries him ~3
   cells sideways: keep a bouncy lane 2+ cells from a gap it could throw him
   over (D159); the checker models a bounce as straight up only.
 - **An enemy used as a step can die** (zapped from habit, or popped in a
