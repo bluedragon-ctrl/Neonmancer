@@ -195,16 +195,19 @@ npm run check:reach                         # whole world, in CI
 npm test
 ```
 The checker knows nothing of enemies (except that with `pause` every cell a
-pausable enemy walks counts as a 1-high step), timing, energy or facing: "reachable"
+pausable enemy walks counts as a 1-high step, and a plate on that path or
+one push beside it can be held), timing, energy or facing: "reachable"
 is not a promise, "unreachable" is a real bug. Then run the level-review
 subagent (`level-review`) on the finished room.
 
 ## Annotated examples (copy their shape)
-- `data/rooms/tractor_bay.json` (Pull): two crates across a moat; `holes`
-  rectangles are the moat; the east exit is behind it, so the mechanic is
-  seen from the entrance and the reward (disk) sits on the near side.
-- `data/rooms/decoy_lab.json` (Fork): a plate in a slot under a lintel (only
-  a decoy fits), a `locked` exit opened by it, a virus to draw away.
-- `data/rooms/hidden_layer.json` + `secret_cache.json` (Scan): `fake`
-  blocks, a `hidden` exit, a secret behind it.
-- `data/rooms/build_yard.json` (Compile): a 2-wide trench and a 2-high ledge.
+The old test rooms (tractor_bay, decoy_lab, build_yard, ...) were removed
+from the data; these Lattice drafts are the examples now (git history
+keeps the old ones).
+- `data/rooms/bolt_gallery.json`: a 3-wide pit filled with two crates, one
+  caged behind a gate a target opens; towers cover the bridge column.
+- `data/rooms/ledger_cell.json`: a chain of two plates and two gates.
+- `data/rooms/cold_stairs.json` (Pause): a frozen bug pushed onto a plate
+  beside its lane holds a bridge for the freeze time; a second bug is the
+  step to a ledge that leads back over the pit.
+- `data/rooms/hidden_layer.json` (Scan, dev wing): `fake` blocks.

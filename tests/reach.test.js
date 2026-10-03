@@ -62,6 +62,16 @@ test('Pause: a frozen enemy on its path is a step up a 2-high wall', () => {
   assert.equal(room([{ ...patrol, at: [8, 0, 1], path: { points: [[8, 0, 5]] } }], ['pause']), false); // not beside the wall
 });
 
+test('Pause: a frozen enemy holds a plate on its path or one push beside it (D154)', () => {
+  const patrol = { id: 'b', template: 'bug', at: [3, 0, 1], path: { points: [[3, 0, 5]] } };
+  const locked = (plateAt, abilities) =>
+    reach({ exits: [WEST, { ...EAST, requires: [{ switch: '*' }] }], objects: [{ id: 'p', type: 'plate', at: plateAt }], enemies: [patrol] }, abilities).exits.east;
+  assert.equal(locked([4, 0, 3], []), false);
+  assert.equal(locked([4, 0, 3], ['pause']), true); // pushed a cell sideways
+  assert.equal(locked([3, 0, 6], ['pause']), true); // pushed on past its end
+  assert.equal(locked([5, 0, 3], ['pause']), false); // two pushes away
+});
+
 test('pits: one tile is jumped, two need the double jump or Blink, more Warp or Compile', () => {
   const room = (width, abilities) => reached(reach({ holes: [pit(width)], pickups: [far] }, abilities));
   assert.equal(room(1), true);
@@ -221,6 +231,21 @@ test('world: a room not connected to the start is a warning, not an error', () =
   const report = analyzeWorld(gameData({ rooms: [roomFile('a'), roomFile('lost')] }));
   assert.deepEqual(report.errors, []);
   assert.ok(report.warnings.some((w) => w.startsWith('lost: not connected')));
+});
+
+test('world: the dev wing and rooms behind it are warnings, not errors (D147)', () => {
+  const content = row(
+    [
+      roomFile('a', { exits: [{ ...EAST, requires: [{ access: 3 }] }] }),
+      roomFile('d', { exits: [WEST, EAST] }),
+      roomFile('e', { exits: [WEST] }),
+    ],
+    { dev: ['d'], fragments: { required: 4, access: [1, 2, 3] } },
+  );
+  const report = analyzeWorld(content);
+  assert.deepEqual(report.errors, []);
+  assert.ok(report.warnings.some((w) => w.startsWith('d: in the dev wing')));
+  assert.ok(report.warnings.some((w) => w.startsWith('e: not connected')));
 });
 
 test('describeNeeds', () => {
