@@ -17,12 +17,17 @@ For each room:
 2. Run, and quote the relevant output:
    - `npm run validate:data`
    - `npm run check:reach -- <room_id>` (what each exit and pickup needs)
-   - where the room has a gate: `npm run check:reach -- <room_id> --with <abilities> --from <exit>`
-     for the first-arrival case (no abilities) and for the ability the gate wants.
+   - for every exit: `npm run check:reach -- <room_id> --with <abilities> --from <exit>`
+     for the first-arrival case (what he has on arrival) and for the ability a gate wants.
+   - `node .claude/skills/room-design/scripts/mutate.mjs <room_id>` (is the
+     puzzle enforced?): a sealed gate or a key crate, enemy or bridge with
+     NO EFFECT is a bypass (a BLOCKER for a puzzle room); find the route.
+     Interchangeable crates: rerun with `--without` all but one.
 3. Walk the checklist against the actual coordinates, not the intent:
    - **Reach**: every step <= 1 block (2 with double jump), gaps <= 1 tile,
-     2 free cells of headroom above every standing surface, bounce
-     launches <= 2 high.
+     2 free cells of headroom above every standing surface, a bouncy
+     enemy clears a 2-high ledge (never 3), a crate or frozen enemy beside
+     a 2-high wall is a way over it.
    - **Timing**: collapsing blocks never under a stop (push, wait, lining
      up); platform pauses long enough; `reset` safe (not collapsing, not
      in a platform path). Timed switches (a type or override with
@@ -45,8 +50,11 @@ For each room:
      plate on a patrol path flickers as it is walked over; follow where a
      frozen enemy can be pushed from each cell of its path (the checker
      models only one push onto a plate).
-   - **Rules**: authored rooms untouched (D90), test rooms within 2 rooms
-     of Boot Sector (D49), room ids/file names match, no duplicate permanent
+   - **Timing by play**: where a race or bounce decides the room, play it
+     with `.claude/skills/room-design/scripts/sim.mjs` from a scratch
+     script (see the skill) and quote the ticks and the margin.
+   - **Rules**: authored rooms untouched (D90), test rooms in the dev wing
+     (`world.json` `dev`, D147), room ids/file names match, no duplicate permanent
      pickup by accident (D71), colors per the D99 rules.
 4. Report per room, most severe first: **BLOCKER** (soft-lock, unreachable,
    validation error, authored room edited), **PROBLEM** (unfair or

@@ -463,9 +463,10 @@ not critical.
   or timing.
 - **Claude Code skills and subagents** (D132, `.claude/`): the
   `room-design` and `enemy-design` skills (schema, rules, tuning numbers,
-  annotated examples) and the read-only `level-review` subagent (runs
-  validation and the reachability checker, reads a room against the
-  checklist). Use them when drafting or reviewing rooms and enemies; keep
+  annotated examples; room-design ships a mutation test and a headless
+  play helper in its `scripts/`, D159) and the read-only `level-review`
+  subagent (runs validation, the reachability checker and the mutation
+  test, reads a room against the checklist). Use them when drafting or reviewing rooms and enemies; keep
   them in step with the schemas and the checklist in docs/design.md. A
   room-drafting subagent comes with Phase 5's content steps.
 

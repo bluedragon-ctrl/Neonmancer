@@ -1649,6 +1649,8 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
   (D154): follow its pushes from every cell of its path; bugs also bounce
   him to 2.8, so only a 3-high ledge stops both.
 - Gate and bridge blocks in a hole stand a block high: a step up, not floor.
+- A crate or a frozen enemy beside a 2-high wall is a step over it: an
+  alcove behind 2-high walls is no gate (`ledger_cell`, D159).
 
 **Timing** (60 ticks per second)
 - Walking (4.5 units/s) crosses one cell in ~13 ticks (0.22 s); a jump

@@ -9,6 +9,12 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
+- The room-design skill reworked (D159): a workflow up front, a schema cheat
+  sheet and tuning table checked against the schema and the code, the
+  design principles moved to `craft.md`, and two scripts: `mutate.mjs` (is
+  the puzzle enforced? which pieces each exit and pickup depends on) and
+  `sim.mjs` (play a room headless, tick by tick). The level-review subagent
+  runs the mutation test.
 - `cold_stairs` (5.6c, D157), the Pause wing's second room, off a new south
   door of `freeze_hall`: freeze a bug, push it onto a plate to hold a
   bridge, and freeze another as a step to fragment 6. The reachability
