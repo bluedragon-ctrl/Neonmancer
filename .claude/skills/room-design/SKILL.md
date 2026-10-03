@@ -119,6 +119,13 @@ numbers and playtest lessons). Read the checklist before drafting.
   Pause. The Lattice roster has no patroller that doesn't bounce; only a
   3-high ledge stops both the bounce and a frozen-bug step (1.0 + 1.2).
   Where he already has Pause on arrival, a bounce is an accepted alternative.
+  A bounce also carries him sideways, about 2.4 cells at air speed: keep
+  a bouncy enemy's lane 2+ cells away from a gap it could throw him over
+  (Cold Stairs, D159). The checker models a bounce as straight up only.
+- **An enemy used as a step can die.** He zaps hostiles from habit, and a
+  frozen enemy pushed into a hole pops. If the only way out of an area is
+  that enemy, give a second way (a crate, a step) so killing it never
+  leaves death as the exit.
 - **A plate on a patrol path flickers.** The walking enemy presses it as
   it passes, and a gate opens at once, so he can slip through in that
   moment. Put the plate one cell beside the path: only a frozen enemy

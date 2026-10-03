@@ -1638,3 +1638,16 @@ dev wing's door behind access 3, which no player room gives; players never
 see the wing (it is left out of their builds), so it cannot fail their
 world. CI on `main` was red from it.
 
+### D159 — 2026-10-03 — Cold Stairs review fixes
+
+Amends D157 after the level review. The key bug's lane ends at z = 3, a
+cell short of the pit: a bounce off it carries the wizard about 2.4 cells
+sideways, and from the old lane end at z = 4 he could land across the pit
+without Pause (108 of 21,600 simulated tries; none with the new end). A
+spare crate in the far half (`crate_spare`) is a second way up the ledge:
+the stair bug can be killed (zapped, or frozen and pushed into the pit),
+and then dying was the only way out.
+**Why:** a puzzle room must not be solved by a habit (riding a bug) and
+must not trap him for a habit (zapping a bug); the checker models a
+bounce as going straight up, so both are judged by playing.
+
