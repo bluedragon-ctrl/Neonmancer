@@ -62,14 +62,33 @@ test('Pause: a frozen enemy on its path is a step up a 2-high wall', () => {
   assert.equal(room([{ ...patrol, at: [8, 0, 1], path: { points: [[8, 0, 5]] } }], ['pause']), false); // not beside the wall
 });
 
-test('Pause: a frozen enemy holds a plate on its path or one push beside it (D154)', () => {
+test('Pause: a frozen enemy holds a plate it is pushed onto (D154, D166)', () => {
   const patrol = { id: 'b', template: 'bug', at: [3, 0, 1], path: { points: [[3, 0, 5]] } };
-  const locked = (plateAt, abilities) =>
-    reach({ exits: [WEST, { ...EAST, requires: [{ switch: '*' }] }], objects: [{ id: 'p', type: 'plate', at: plateAt }], enemies: [patrol] }, abilities).exits.east;
+  const locked = (plateAt, abilities, holes) =>
+    reach({ exits: [WEST, { ...EAST, requires: [{ switch: '*' }] }], objects: [{ id: 'p', type: 'plate', at: plateAt }], enemies: [patrol], holes }, abilities).exits.east;
   assert.equal(locked([4, 0, 3], []), false);
   assert.equal(locked([4, 0, 3], ['pause']), true); // pushed a cell sideways
   assert.equal(locked([3, 0, 6], ['pause']), true); // pushed on past its end
-  assert.equal(locked([5, 0, 3], ['pause']), false); // two pushes away
+  assert.equal(locked([7, 0, 3], ['pause']), true); // four pushes away
+  assert.equal(locked([7, 0, 3], ['pause'], [{ at: [5, 0], to: [5, 7] }]), false); // it pops in the hole on the way
+});
+
+test('Pause: one frozen enemy holds one plate at a time (D166)', () => {
+  const patrol = (id, z) => ({ id, template: 'bug', at: [3, 0, z], path: { points: [[6, 0, z]] } });
+  const plates = [{ id: 'p', type: 'plate', at: [4, 0, 2] }, { id: 'q', type: 'plate', at: [5, 0, 2] }];
+  const locked = (enemies) => reach({ exits: [WEST, { ...EAST, requires: [{ switch: '*' }] }], objects: plates, enemies }, ['pause']).exits.east;
+  assert.equal(locked([patrol('a', 2)]), false); // both plates on its path, but it is one body
+  assert.equal(locked([patrol('a', 2), patrol('b', 5)]), true); // the second is pushed to the other plate
+});
+
+test('Pause: a frozen enemy pushed across the floor is a step up a far ledge (D166)', () => {
+  const patrol = { id: 'b', template: 'bug', at: [6, 0, 6], path: { points: [[10, 0, 6]] } };
+  const ledge = { at: [10, 0, 0], to: [11, 1, 1] };
+  const top = pickup('top', [11, 2, 0]);
+  const room = (abilities, holes) => reached(reach({ blocks: [ledge], holes, enemies: [patrol], pickups: [top] }, abilities), 'top');
+  assert.equal(room([]), false);
+  assert.equal(room(['pause']), true); // pushed -z from [10,0,6] to [10,0,2], at the ledge's foot
+  assert.equal(room(['pause'], [{ at: [0, 5], to: [11, 5] }]), false); // he jumps the hole, a pushed enemy pops in it
 });
 
 test('pits: one tile is jumped, two need the double jump or Blink, more Warp or Compile', () => {

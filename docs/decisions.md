@@ -1783,9 +1783,31 @@ The level-review subagent read all fifteen non-dev rooms; the fixes:
   memory stack on the floor; `atrium`'s two crates, which did nothing,
   removed; `relay_loft`'s first ferry pauses 1 s at its ends; `room_1` and
   `room_2`, empty placeholders, join the dev wing (D147).
-- **Not changed:** `freeze_hall`'s bug can bounce him onto the fragment
-  ledge without Pause, but the checker counts a frozen enemy as a step on
-  its path cells only, so any lane far enough from the ledge makes the
-  fragment "never" for CI; left for the author.
+- **`freeze_hall`** (with D166): the bug's lane passed the ledge's foot, so
+  a bounce put him on the fragment's ledge without Pause. It now walks
+  z = 6, x 1-5, four cells off: freeze it and push it to the ledge.
 **Why:** D163 and D164 were new rules; the existing rooms needed to meet
 them, and the review found the bypasses above along the way.
+
+### D166 — 2026-10-03 — The checker pushes frozen enemies; other solutions
+- **Reachability checker.** With Pause, a frozen enemy is pushed like a
+  crate (D154): from any cell of its path, from a cell he stands on, level,
+  into a free cell; it falls off a ledge and pops on a hole, hazard or
+  void. Every cell it can come to rest in is a step and weight for a plate
+  there. Worked out per crate configuration, alongside the gates, until
+  nothing more opens. Optimistic like the rest: the 5 s freeze and the
+  enemy's own walk are not modelled, and as a step one enemy may count in
+  several cells; as weight it holds one plate at most (a plate set needs an
+  enemy each, or the checker would make `idle_cache`'s crate a spare). Before, only its path cells were steps and only a plate one push
+  away counted.
+- **`freeze_hall`.** The bug walks z = 6, x 1-5, four cells from the
+  fragment's 2-high ledge: the checker finds the push to its foot
+  (`pause`), the mutation test says the bug matters. Played headless: shot
+  at 2.5 s, three pushes, on the ledge 3.2 s later (1.8 s of the freeze
+  spare); 23 bounces off the bug from every side, none reached the ledge.
+- **Rule.** A second solution of the same or higher difficulty is fine; a
+  bypass is only one that skips the room's idea for less effort. The
+  room-design skill, the level-review subagent and the checklist say so.
+**Why:** the author asked for both. The bounce bypass could not be fixed
+while the checker only knew path cells: a lane far enough from the ledge
+read as unreachable in CI.

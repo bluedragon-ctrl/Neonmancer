@@ -17,7 +17,9 @@ docs/decisions.md).
   `first_steps` with a 3-wide pit, `bolt_gallery` without its spare crate,
   `zap_port` 4 high, `atrium` with the core's help and no idle crates,
   `relay_loft`'s first ferry waiting at its ends, `room_1` and `room_2` in
-  the dev wing.
+  the dev wing, `freeze_hall`'s bug off the ledge.
+- The reachability checker pushes frozen enemies like crates (D166); a
+  second solution no easier than the intended one is not a bypass.
 
 ### Added
 - Boss one in the Lattice (5.6d, D162): `warden_pit`, off a new south door

@@ -455,7 +455,8 @@ not critical.
   delete. Dev server only; the room editor only picks templates.
 - **Reachability checker** (`tools/check-reach.js`, `npm run check:reach`,
   D131): searches every room's grid with jump height, the double jump,
-  crates (pushed, pulled, pasted) and the spells found so far, and the
+  crates (pushed, pulled, pasted), frozen enemies (pushed, D166) and the
+  spells found so far, and the
   world as a fixpoint, flagging exits, pickups and rooms that stay out of
   reach; `<room>` checks one room (`--with` abilities, `--from` an exit),
   `--rooms` lists what each exit and pickup needs. Used by CI, the

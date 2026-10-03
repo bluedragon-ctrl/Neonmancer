@@ -27,8 +27,12 @@
  *
  * Pause (D85, D155): a frozen enemy is a 1×1×1 block he can stand on, so
  * with the spell every cell a pausable (non-boss) enemy walks counts as
- * floor along its whole path, like a platform's (optimistic). It also
- * holds a plate on its path or one push away from it (D154).
+ * floor along its whole path, like a platform's (optimistic). He pushes it
+ * like a crate (D154, D166): from where he stands, level, into a free
+ * cell; it falls off a ledge and pops on a hole, hazard or void. Every cell
+ * it can be pushed to is floor too and weight for a plate there; as a step
+ * one enemy may count in several cells at once (optimistic, like the
+ * timing), but it holds one plate at most.
  *
  * What it knows nothing about, on purpose: enemies and their fire (combat
  * is a different check), timing (collapsing blocks, platforms waiting,
@@ -119,16 +123,19 @@ class RoomModel {
     this.gateFloor = new Set();
     this.core = null;
     this.crates = [];
-    /** Cells a pausable enemy can be frozen in (with Pause): steps, and weight for a plate there or a push away. */
-    this.frozenCells = new Set();
+    /** Cells a pausable enemy can be frozen in (with Pause): steps, and weight for a plate; by cell index, which enemies (by number). */
+    this.frozenCells = new Map();
     // Pause: the cells a pausable enemy can be frozen in are steps.
     if (abilities.has('pause'))
-      for (const enemy of room.enemies ?? [])
-        if (enemy.pausable !== false && !enemy.boss)
-          for (const [px, py, pz] of enemy.path ? pathCells(enemy.at, enemy.path) : [enemy.at]) {
-            this.floors.add(this.index(px, py, pz));
-            this.frozenCells.add(this.index(px, py, pz));
-          }
+      (room.enemies ?? []).forEach((enemy, n) => {
+        if (enemy.pausable === false || enemy.boss) return;
+        for (const [px, py, pz] of enemy.path ? pathCells(enemy.at, enemy.path) : [enemy.at]) {
+          const i = this.index(px, py, pz);
+          this.floors.add(i);
+          if (!this.frozenCells.has(i)) this.frozenCells.set(i, new Set());
+          this.frozenCells.get(i).add(n);
+        }
+      });
     for (const object of room.objects) {
       const [x, y, z] = object.at;
       if (object.kind === 'pushable') this.crates.push(this.index(x, y, z));
@@ -147,6 +154,50 @@ class RoomModel {
           for (let dy = 0; dy < sy; dy++) for (let dz = 0; dz < sz; dz++) this.bodies.add(this.index(x + dx, y + dy, z + dz));
       } else if (object.kind === 'gate') this.bodies.add(this.index(x, y, z)); // a step gate (collapsing block): timing is not checked
     }
+    /** Floors and frozen cells before any push (spreadFrozen() adds to them per configuration). */
+    this.baseFloors = new Set(this.floors);
+    this.baseFrozen = this.frozenCells;
+  }
+
+  /** Forget the pushes of frozen enemies worked out for another configuration. */
+  resetFrozen() {
+    this.floors = new Set(this.baseFloors);
+    this.frozenCells = new Map([...this.baseFrozen].map(([i, enemies]) => [i, new Set(enemies)]));
+  }
+
+  /**
+   * Push frozen enemies (D166): from a cell he stands on, level, into a free
+   * cell beyond; it falls and pops on a hole, hazard or void. Each cell it
+   * comes to rest in is a frozen cell and floor.
+   * @returns {boolean} whether any cell was added
+   */
+  spreadFrozen(cfg, stands) {
+    let changed = false;
+    const queue = [...this.frozenCells.keys()];
+    while (queue.length > 0) {
+      const from = queue.pop();
+      const [x, y, z] = this.cell(from);
+      for (const [dx, dz] of DIRS) {
+        if (!this.grid.isInside(x - dx, z - dz) || !stands.has(this.index(x - dx, y, z - dz))) continue;
+        const tx = x + dx;
+        const tz = z + dz;
+        if (!this.grid.isInside(tx, tz) || this.blocked(tx, y, tz, cfg)) continue;
+        let ty = y;
+        let under = this.below(tx, ty, tz, cfg);
+        while (under === 'air') under = this.below(tx, --ty, tz, cfg);
+        if (under === 'hole' || under === 'bad') continue;
+        const i = this.index(tx, ty, tz);
+        if (!this.frozenCells.has(i)) this.frozenCells.set(i, new Set());
+        const there = this.frozenCells.get(i);
+        const before = there.size;
+        for (const n of this.frozenCells.get(from)) there.add(n);
+        if (there.size === before) continue;
+        this.floors.add(i);
+        queue.push(i);
+        changed = true;
+      }
+    }
+    return changed;
   }
 
   /** Index of a cell inside the room (y up to the room's height). */
@@ -386,6 +437,8 @@ class RoomModel {
     const { abilities } = this;
     const linked = this.linked(ids);
     if (linked.length === 0) return false;
+    /** Plates only a frozen enemy can hold: the enemies that can be there, each one on one plate at most. */
+    const byFrozen = [];
     for (const object of linked) {
       if (object.kind === 'target') {
         if (!abilities.has('zap')) return false;
@@ -394,13 +447,15 @@ class RoomModel {
       const [x, y, z] = object.at;
       if (cfg.crateSet.has(this.index(x, y, z))) continue;
       if (object.timer && stands.has(this.index(x, y, z))) continue;
-      // A frozen enemy on it, or pushed onto it from a cell beside (D154).
-      if (this.frozenCells.has(this.index(x, y, z)) || DIRS.some(([dx, dz]) => this.frozenCells.has(this.index(x - dx, y, z - dz)))) continue;
       const beside = DIRS.some(([dx, dz]) => stands.has(this.index(x - dx, y, z - dz)));
       const placed = (abilities.has('fork') || abilities.has('compile') || (abilities.has('cut_paste') && cfg.crates.length > 0)) && beside;
-      if (!placed) return false;
+      if (placed) continue;
+      // A frozen enemy on it: on its path or pushed there (D154, D166).
+      const enemies = this.frozenCells.get(this.index(x, y, z));
+      if (!enemies) return false;
+      byFrozen.push(enemies);
     }
-    return true;
+    return assignable(byFrozen);
   }
 
   /** Are the switches `ids` all on whatever he does: plates under crates (targets he can always switch off). */
@@ -430,6 +485,22 @@ class RoomModel {
     this.gateFloor = floor;
     return changed;
   }
+}
+
+/**
+ * Can each plate get an enemy of its own? `plates` lists, per plate, the
+ * enemies that can hold it (a small backtracking match).
+ * @param {Set<number>[]} plates
+ */
+function assignable(plates, used = new Set(), k = 0) {
+  if (k === plates.length) return true;
+  for (const n of plates[k]) {
+    if (used.has(n)) continue;
+    used.add(n);
+    if (assignable(plates, used, k + 1)) return true;
+    used.delete(n);
+  }
+  return false;
 }
 
 /**
@@ -483,9 +554,16 @@ export function analyzeRoom(room, { abilities, starts, tuning }) {
     const cfg = todo.pop();
     reach.configs++;
     // Gates follow what he can switch from where he stands, which can open more of the room (D140).
+    model.resetFrozen();
     model.setGates(cfg, new Set());
     let stands = model.flood(starts, cfg);
-    for (let round = 0; round < 4 && model.setGates(cfg, stands); round++) stands = model.flood(starts, cfg);
+    // Gates and pushed frozen enemies open more of the room, which may open more again.
+    for (let round = 0; round < 8; round++) {
+      const gates = model.setGates(cfg, stands);
+      const frozen = model.spreadFrozen(cfg, stands);
+      if (!gates && !frozen) break;
+      stands = model.flood(starts, cfg);
+    }
     if (reach.configs === 1 && stands.size === 0) reach.deadStart = true;
     for (const s of stands) union.add(s);
     collect(model, cfg, stands, reach);

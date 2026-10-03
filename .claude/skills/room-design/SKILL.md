@@ -186,10 +186,16 @@ Edit existing files with small text edits, not a JSON dump.
 - **A plate on a patrol path flickers** (the walker presses it, a gate opens
   for a moment): put it one cell beside the path; prefer a bridge to a gate
   for a held plate (a flicker of a bridge carries nobody).
-- **Frozen enemies go where they are pushed.** Follow every push from every
-  cell of the path (the checker models only one push onto a plate); hem the
-  path in (walls, the room side, a pit it pops into). Plate against a wall:
-  the next push may go into a pit.
+- **Frozen enemies go where they are pushed.** The checker pushes them
+  like crates from every cell of the path (D166), as far as he can follow,
+  and counts every cell they can reach as a step and plate weight (it
+  ignores the 5 s clock: time the run with `sim.mjs`). Hem the path in
+  (walls, the room side, a pit it pops into). Plate against a wall: the
+  next push may go into a pit.
+- **Another way is fine if it is no easier** (D166). A second solution of
+  the same or higher difficulty (a harder jump, a tighter race, a spell
+  found later) is not a bypass; one that skips the room's idea for less
+  effort is. Say which in the review.
 
 ## Mutation test (`scripts/mutate.mjs`)
 Takes each helper away (crate, platform, enemy, bridge, block) and seals each
