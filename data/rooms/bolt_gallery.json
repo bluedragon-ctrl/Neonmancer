@@ -1,0 +1,38 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "bolt_gallery",
+  "name": "Bolt Gallery",
+  "biome": "home_lattice",
+  "size": [12, 4, 12],
+  "spawn": [4.5, 0, 10.5],
+  "exits": [
+    { "id": "south", "side": "+z", "at": 4 },
+    { "id": "north", "side": "-z", "at": 8 }
+  ],
+  "blocks": [
+    { "at": [0, 0, 0], "to": [2, 1, 2] },
+    { "at": [9, 0, 8], "to": [9, 1, 8] },
+    { "at": [9, 0, 10], "to": [9, 1, 10] },
+    { "type": "gate", "at": [8, 0, 9], "to": [8, 1, 9], "switches": ["cage_target"] }
+  ],
+  "holes": [{ "at": [0, 5], "to": [11, 7] }],
+  "objects": [
+    {
+      "id": "screen_gallery",
+      "type": "screen",
+      "at": [1, 0, 10],
+      "text": "tut_gallery",
+      "overrides": { "face": "+z" }
+    },
+    { "id": "cage_target", "type": "target", "at": [0, 0, 9] },
+    { "id": "crate_a", "type": "crate", "at": [5, 0, 9] },
+    { "id": "crate_b", "type": "crate", "at": [9, 0, 9] },
+    { "id": "crate_c", "type": "crate", "at": [7, 0, 1] }
+  ],
+  "enemies": [
+    { "id": "tower_bridge", "template": "cron", "at": [5, 0, 3] },
+    { "id": "tower_exit", "template": "cron", "at": [8, 0, 3] }
+  ],
+  "pickups": [{ "id": "fragment_3", "type": "fragment_3", "at": [1, 2, 1] }]
+}

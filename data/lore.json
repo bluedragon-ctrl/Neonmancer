@@ -230,6 +230,32 @@
         "DISK IS BEHIND THE WALL. MIND THE ARC."
       ]
     },
+    "tut_gallery": {
+      "title": "GALLERY // TOWER.PROC",
+      "lines": [
+        "TOWERS FIRE FOUR WAYS WHEN YOU STAND NEAR.",
+        "A CRATE IN THE LINE STOPS BOLTS. SO DOES SHIELD.",
+        "NULL SECTOR AHEAD: 3 WIDE. FILL 2, JUMP 1.",
+        "ONE CRATE IS CAGED. A TARGET NODE HOLDS KEY."
+      ]
+    },
+    "tut_relay": {
+      "title": "LOFT // RELAY.SYS",
+      "lines": [
+        "FERRY A: PLATE A. FERRY B: PLATES B AND C.",
+        "A PLATE FEELS WEIGHT. YOU CANNOT RIDE AND WEIGH.",
+        "CRATES WEIGH FOR YOU. FERRIES CARRY YOU.",
+        "LEDGE ON THE FAR SIDE: STEP LIMIT 1, CRATE 1."
+      ]
+    },
+    "tut_ledger": {
+      "title": "LEDGER // CELL.LOG",
+      "lines": [
+        "GATE 1 ANSWERS TO PLATE A. GATE 2 TO PLATE B.",
+        "THE SECOND ALLOCATION IS LOCKED BEHIND GATE 1.",
+        "ENTRIES POST IN ORDER. SKIPPING IS A NO-OP."
+      ]
+    },
     "tut_pause": {
       "title": "HALL // PAUSE.EXE",
       "lines": [

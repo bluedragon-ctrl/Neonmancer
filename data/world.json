@@ -46,7 +46,10 @@
     ["zap_port.north", "first_light.south"],
     ["zap_port.east", "atrium.west"],
     ["atrium.north", "shield_hall.south"],
-    ["atrium.south", "freeze_hall.north"]
+    ["atrium.south", "freeze_hall.north"],
+    ["shield_hall.north", "bolt_gallery.south"],
+    ["bolt_gallery.north", "relay_loft.south"],
+    ["relay_loft.west", "ledger_cell.east"]
   ],
   "positions": {
     "boot_sector": [-1, -1],
@@ -73,6 +76,9 @@
     "first_light": [7, -1],
     "atrium": [8, 0],
     "shield_hall": [8, -1],
-    "freeze_hall": [8, 1]
+    "freeze_hall": [8, 1],
+    "bolt_gallery": [8, -2],
+    "relay_loft": [8, -3],
+    "ledger_cell": [7, -3]
   }
 }

@@ -1,0 +1,43 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "relay_loft",
+  "name": "Relay Loft",
+  "biome": "home_lattice",
+  "size": [12, 5, 8],
+  "spawn": [1.5, 0, 6.5],
+  "exits": [
+    { "id": "south", "side": "+z", "at": 1 },
+    { "id": "west", "side": "-x", "at": 3 }
+  ],
+  "blocks": [{ "at": [10, 0, 0], "to": [11, 1, 1] }],
+  "holes": [
+    { "at": [3, 0], "to": [4, 7] },
+    { "at": [7, 0], "to": [8, 7] }
+  ],
+  "objects": [
+    { "id": "screen_relay", "type": "screen", "at": [0, 0, 7], "text": "tut_relay", "overrides": { "face": "+x" } },
+    { "id": "plate_a", "type": "plate", "at": [0, 0, 6] },
+    { "id": "crate_a", "type": "crate", "at": [1, 0, 1] },
+    {
+      "id": "ferry_a",
+      "type": "platform",
+      "at": [3, 0, 3],
+      "path": { "points": [[4, 0, 3]], "speed": 1.5, "pause": 2 },
+      "switches": ["plate_a"]
+    },
+    { "id": "plate_b", "type": "plate", "at": [5, 0, 1] },
+    { "id": "plate_c", "type": "plate", "at": [6, 0, 1] },
+    { "id": "crate_b", "type": "crate", "at": [5, 0, 6] },
+    { "id": "crate_c", "type": "crate", "at": [6, 0, 3] },
+    {
+      "id": "ferry_b",
+      "type": "platform",
+      "at": [7, 0, 4],
+      "path": { "points": [[8, 0, 4]], "speed": 1.5, "pause": 2 },
+      "switches": ["plate_b", "plate_c"]
+    },
+    { "id": "crate_d", "type": "crate", "at": [9, 0, 5] }
+  ],
+  "pickups": [{ "id": "fragment_4", "type": "fragment_4", "at": [11, 2, 0] }]
+}

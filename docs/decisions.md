@@ -1584,3 +1584,28 @@ obstacle (a 0.6 box could not carry a jump over a two-block wall); it makes
 frozen enemies usable in puzzles together with pushing (D154). Shield Hall's
 two-block wall can now be crossed with a frozen enemy once Pause is found,
 which suits the maze's backtracking (D67).
+
+### D156 — 2026-10-03 — The Shield wing: three multistep rooms (5.6b)
+
+`shield_hall` gets a north door (`at` 4, an unflagged room) to `bolt_gallery`
+(8,-2), then `relay_loft` (8,-3) with `ledger_cell` (7,-3) off its west door;
+the east side of `relay_loft` stays free for the Scan wing's door (5.6e).
+Each puzzle takes several steps and is harder than the last room before it:
+- `bolt_gallery` (fragment 3): a 3-wide pit takes two crates and a jump for
+  the last tile; the second crate is caged behind a gate that a target
+  opens; two towers (cron) cover the bridge column and the exit lane, and a
+  crate pushed ahead of him blocks a bolt, so Shield (or a kill) is for the
+  last cells; a third crate is the step to the 2-high fragment ledge.
+- `relay_loft` (fragment 4): two ferries over two 2-wide pits, each powered
+  by plates only crates can hold (A: one plate on the near bank, B: two on
+  the island, one crate brought round a corner); a fourth crate is the step
+  on the far bank.
+- `ledger_cell` (fragment 5): a chain of two gates and two plates: crate 1
+  opens gate 1, which frees crate 2, which is pushed out onto plate 2 to
+  open gate 2 in front of the fragment alcove.
+**Why:** the tutorial rooms teach one verb each; the wings should combine
+them (plan: docs/lattice-plan.md). The reachability checker sees crates,
+gates and plates but takes platforms as free floor, so ferry power is
+judged by hand: the plates are on banks he can reach and a lost crate means
+leaving and re-entering (rooms reset).
+
