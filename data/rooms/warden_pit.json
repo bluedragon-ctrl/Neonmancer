@@ -1,0 +1,33 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "warden_pit",
+  "name": "Warden Pit",
+  "biome": "home_lattice",
+  "size": [14, 4, 14],
+  "spawn": [6.5, 0, 1.5],
+  "exits": [
+    { "id": "north", "side": "-z", "at": 6 },
+    { "id": "south", "side": "+z", "at": 6 }
+  ],
+  "blocks": [
+    { "at": [6, 0, 4], "to": [7, 1, 4] },
+    { "at": [6, 0, 9], "to": [7, 1, 9] },
+    { "at": [3, 0, 3], "to": [3, 1, 4] },
+    { "at": [10, 0, 3], "to": [10, 1, 4] },
+    { "at": [3, 0, 9], "to": [3, 1, 10] },
+    { "at": [10, 0, 9], "to": [10, 1, 10] }
+  ],
+  "objects": [
+    { "id": "screen_warden", "type": "screen", "at": [4, 0, 0], "text": "tut_warden", "overrides": { "face": "+z" } },
+    { "id": "pillar_west", "type": "data_pillar", "at": [0, 0, 0], "overrides": { "face": "+x" } },
+    { "id": "pillar_east", "type": "data_pillar", "at": [13, 0, 0], "overrides": { "face": "+z" } }
+  ],
+  "enemies": [{ "id": "null_pointer", "template": "null_pointer", "at": [6, 0, 6], "drop": "fragment_7" }],
+  "pickups": [
+    { "id": "fragment_7", "type": "fragment_7", "at": [7, 0, 7] },
+    { "id": "refill_energy_west", "type": "refill_energy", "at": [0, 0, 13] },
+    { "id": "refill_energy_east", "type": "refill_energy", "at": [13, 0, 13] },
+    { "id": "refill_integrity_pit", "type": "refill_integrity", "at": [0, 0, 7] }
+  ]
+}

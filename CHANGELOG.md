@@ -9,6 +9,10 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
+- Boss one in the Lattice (5.6d, D162): `warden_pit`, off a new south door
+  of `cold_stairs`, where Null Pointer guards fragment 7 among cover
+  pillars, and `idle_cache` behind it: a crate and a frozen bug hold the two
+  plates of a bridge to fragment 8.
 - The room-design skill reworked (D161): a workflow up front, a schema cheat
   sheet and tuning table checked against the schema and the code, the
   design principles moved to `craft.md`, and two scripts: `mutate.mjs` (is
