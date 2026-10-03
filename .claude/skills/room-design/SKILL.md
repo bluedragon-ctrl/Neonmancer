@@ -133,8 +133,8 @@ Edit existing files with small text edits, not a JSON dump.
    collapsing bridge, plate) in view from the entrance. **Every crate is
    visible** (D164): never hidden behind a tall block, a ledge, a pillar or
    a memory wall from the camera (+x +y +z), never inside a fake block or
-   walled in where no cell of it shows; at least its top and one front
-   face (+x or +z) in view.
+   walled in where no cell of it shows; one face in view (its top, +x or
+   +z) is enough.
 2. **Gates look like gates** (a too-high ledge, a locked door): he should
    come back later, not think it is broken (D67).
 3. **He can always leave the way he came** with what he has; a room needn't

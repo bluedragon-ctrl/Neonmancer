@@ -1750,8 +1750,8 @@ spells out the moves turns a puzzle into a walk.
 ### D164 — 2026-10-03 — Every crate is visible
 Every crate in a room is visible to the player: no tall block, ledge,
 pillar or memory wall hides it from the camera (+x +y +z), and none lies
-inside a fake block or walled in out of sight; its top and a front face
-show. Holds for secrets too. The room-design skill, `craft.md`, the
+inside a fake block or walled in out of sight; one face showing (its top,
++x or +z) is enough. Holds for secrets too. The room-design skill, `craft.md`, the
 level-review subagent and the room design checklist say so.
 **Why:** crates are the wizard's tools; a puzzle whose tool can't be seen
 is a guess, not a riddle.
@@ -1776,9 +1776,8 @@ The level-review subagent read all fifteen non-dev rooms; the fixes:
 - **`first_steps`.** From the top of a crate beside the 2-wide pit he
   leapt it (D162). The pit is 3 wide (x 3-5), the crates at x = 2: both
   are needed.
-- **`bolt_gallery`.** crate_f made the caged crate a spare; it is gone, and
-  the cage's front gate [9,0,10] with it, so the caged crate shows a front
-  face. crate_e moves to [11,0,2], which also ends the checker's crate
+- **`bolt_gallery`.** crate_f made the caged crate a spare; it is gone (the
+  caged crate's top shows, which is enough). crate_e moves to [11,0,2], which also ends the checker's crate
   search limit coming back from north.
 - **Small ones.** `zap_port` 4 high (its 2-high ledge) and its floating
   memory stack on the floor; `atrium`'s two crates, which did nothing,
