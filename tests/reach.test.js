@@ -53,6 +53,15 @@ test('one block is a step, two a wall for the double jump', () => {
   assert.equal(reached(reach({ blocks: [wall(4, 3)], pickups: [far] }, ['double_jump'])), false);
 });
 
+test('Pause: a frozen enemy on its path is a step up a 2-high wall', () => {
+  const patrol = { id: 'b', template: 'bug', at: [3, 0, 1], path: { points: [[3, 0, 5]] } };
+  const room = (enemies, abilities) => reached(reach({ blocks: [wall(4, 2)], enemies, pickups: [far] }, abilities));
+  assert.equal(room([patrol], []), false);
+  assert.equal(room([patrol], ['zap']), false); // killing it leaves no step
+  assert.equal(room([patrol], ['pause']), true);
+  assert.equal(room([{ ...patrol, at: [8, 0, 1], path: { points: [[8, 0, 5]] } }], ['pause']), false); // not beside the wall
+});
+
 test('pits: one tile is jumped, two need the double jump or Blink, more Warp or Compile', () => {
   const room = (width, abilities) => reached(reach({ holes: [pit(width)], pickups: [far] }, abilities));
   assert.equal(room(1), true);

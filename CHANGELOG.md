@@ -50,6 +50,9 @@ docs/decisions.md).
   Alt+click with the Block tool copies a block's type and switches.
 
 ### Changed
+- Reachability checker knows Pause: with the spell, the cells a pausable
+  enemy walks count as steps (a frozen enemy is a block, D155); `freeze_hall`
+  now teaches it with a 2-high ledge and fragment 6.
 - Room review pass (Shield wing): `relay_loft` plates moved to the back wall
   so a crate cannot overshoot them, plus an integrity refill; `bolt_gallery`
   gets a third south crate so the pit has one crate to spare.

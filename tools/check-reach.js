@@ -7,7 +7,7 @@
 //     searched to know what he has when he gets there, but only that room is
 //     reported, with what each exit and pickup needs
 //   --with a,b,c: with a room_id, skip the world and take these abilities
-//     (double_jump, zap, scan, pull, compile, fork, cut_paste, blink, warp)
+//     (double_jump, zap, scan, pull, compile, fork, cut_paste, blink, warp, pause)
 //   --from exit_id: with --with, arrive through that exit instead of at the spawn point
 //   --rooms: all rooms: also list what each exit and pickup needs
 //   --json: print the report as JSON instead
