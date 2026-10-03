@@ -26,8 +26,8 @@
       "path": { "points": [[5, 0, 3]], "speed": 1.5, "pause": 2 },
       "switches": ["plate_a"]
     },
-    { "id": "plate_b", "type": "plate", "at": [6, 0, 1] },
-    { "id": "plate_c", "type": "plate", "at": [7, 0, 1] },
+    { "id": "plate_b", "type": "plate", "at": [6, 0, 0] },
+    { "id": "plate_c", "type": "plate", "at": [7, 0, 0] },
     { "id": "crate_b", "type": "crate", "at": [6, 0, 6] },
     { "id": "crate_c", "type": "crate", "at": [7, 0, 3] },
     {
@@ -39,5 +39,8 @@
     },
     { "id": "crate_d", "type": "crate", "at": [12, 0, 5] }
   ],
-  "pickups": [{ "id": "fragment_4", "type": "fragment_4", "at": [13, 2, 0] }]
+  "pickups": [
+    { "id": "fragment_4", "type": "fragment_4", "at": [13, 2, 0] },
+    { "id": "refill_loft", "type": "refill_integrity", "at": [2, 0, 0] }
+  ]
 }

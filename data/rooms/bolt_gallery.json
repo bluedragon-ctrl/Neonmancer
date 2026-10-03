@@ -29,7 +29,8 @@
     { "id": "crate_a", "type": "crate", "at": [5, 0, 9] },
     { "id": "crate_b", "type": "crate", "at": [9, 0, 9] },
     { "id": "crate_c", "type": "crate", "at": [7, 0, 1] },
-    { "id": "crate_e", "type": "crate", "at": [10, 0, 2] }
+    { "id": "crate_e", "type": "crate", "at": [10, 0, 2] },
+    { "id": "crate_f", "type": "crate", "at": [3, 0, 9] }
   ],
   "enemies": [
     { "id": "tower_bridge", "template": "cron", "at": [5, 0, 3] },
