@@ -1609,3 +1609,32 @@ gates and plates but takes platforms as free floor, so ferry power is
 judged by hand: the plates are on banks he can reach and a lost crate means
 leaving and re-entering (rooms reset).
 
+### D157 — 2026-10-03 — Cold Stairs: a frozen bug holds a bridge (5.6c)
+
+`freeze_hall` gets a south door (`at` 4) to `cold_stairs` (8,2), 10x5x12,
+unflagged. A 2-wide pit splits it. Near half: a bug patrols beside a plate
+it never steps on; frozen (Pause) and pushed a cell onto the plate, it
+holds a bridge over the pit for the freeze time (5 s; the run takes about
+3.5 s from the shot). Far half: a second bug patrols the foot of a 2-high
+ledge with fragment 6; frozen, it is the step up. The ledge steps up to a
+3-high ledge along the back wall that leads back over the pit, too high to
+climb from the near half, so he drops home. An energy refill lies in the
+far corner for a third cast. The far half's east wall is kept free for the
+Fork wing's door (5.6g). The reachability checker counts a plate on a
+pausable enemy's path, or one push beside it, as held with Pause.
+**Why:** freeze_hall teaches freezing a patroller into a step; this room
+develops it with the push (D154) and gives the freeze a clock, while the
+plate beside the lane keeps the unfrozen bug from flicking the bridge.
+
+### D158 — 2026-10-03 — The dev wing is outside the world check
+
+The world check of the reachability checker no longer reports a dev-wing
+room (world.json `dev`, D147) it cannot enter as an error: it is a
+warning, and rooms joined to the start only through the wing are "not
+connected". Tests that read the removed test arenas and Boot Sector use
+the defs alone or the dev room `hidden_layer`.
+**Why:** the author's map update removed most test rooms and locked the
+dev wing's door behind access 3, which no player room gives; players never
+see the wing (it is left out of their builds), so it cannot fail their
+world. CI on `main` was red from it.
+

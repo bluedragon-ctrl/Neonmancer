@@ -27,7 +27,8 @@
  *
  * Pause (D85, D155): a frozen enemy is a 1×1×1 block he can stand on, so
  * with the spell every cell a pausable (non-boss) enemy walks counts as
- * floor along its whole path, like a platform's (optimistic).
+ * floor along its whole path, like a platform's (optimistic). It also
+ * holds a plate on its path or one push away from it (D154).
  *
  * What it knows nothing about, on purpose: enemies and their fire (combat
  * is a different check), timing (collapsing blocks, platforms waiting,
@@ -118,10 +119,16 @@ class RoomModel {
     this.gateFloor = new Set();
     this.core = null;
     this.crates = [];
+    /** Cells a pausable enemy can be frozen in (with Pause): steps, and weight for a plate there or a push away. */
+    this.frozenCells = new Set();
     // Pause: the cells a pausable enemy can be frozen in are steps.
     if (abilities.has('pause'))
       for (const enemy of room.enemies ?? [])
-        if (enemy.pausable !== false && !enemy.boss) for (const [px, py, pz] of enemy.path ? pathCells(enemy.at, enemy.path) : [enemy.at]) this.floors.add(this.index(px, py, pz));
+        if (enemy.pausable !== false && !enemy.boss)
+          for (const [px, py, pz] of enemy.path ? pathCells(enemy.at, enemy.path) : [enemy.at]) {
+            this.floors.add(this.index(px, py, pz));
+            this.frozenCells.add(this.index(px, py, pz));
+          }
     for (const object of room.objects) {
       const [x, y, z] = object.at;
       if (object.kind === 'pushable') this.crates.push(this.index(x, y, z));
@@ -387,6 +394,8 @@ class RoomModel {
       const [x, y, z] = object.at;
       if (cfg.crateSet.has(this.index(x, y, z))) continue;
       if (object.timer && stands.has(this.index(x, y, z))) continue;
+      // A frozen enemy on it, or pushed onto it from a cell beside (D154).
+      if (this.frozenCells.has(this.index(x, y, z)) || DIRS.some(([dx, dz]) => this.frozenCells.has(this.index(x - dx, y, z - dz)))) continue;
       const beside = DIRS.some(([dx, dz]) => stands.has(this.index(x - dx, y, z - dz)));
       const placed = (abilities.has('fork') || abilities.has('compile') || (abilities.has('cut_paste') && cfg.crates.length > 0)) && beside;
       if (!placed) return false;

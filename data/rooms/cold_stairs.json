@@ -1,0 +1,28 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "cold_stairs",
+  "name": "Cold Stairs",
+  "biome": "home_lattice",
+  "size": [10, 5, 12],
+  "spawn": [8.5, 0, 1.5],
+  "exits": [{ "id": "north", "side": "-z", "at": 7 }],
+  "blocks": [
+    { "at": [0, 0, 0], "to": [1, 2, 6] },
+    { "at": [0, 0, 7], "to": [1, 1, 11] },
+    { "type": "bridge", "at": [6, 0, 5], "to": [7, 0, 6], "switches": ["plate_cold"] }
+  ],
+  "holes": [{ "at": [2, 5], "to": [9, 6] }],
+  "objects": [
+    { "id": "screen_stairs", "type": "screen", "at": [9, 0, 3], "text": "tut_stairs", "overrides": { "face": "+x" } },
+    { "id": "plate_cold", "type": "plate", "at": [2, 0, 2] }
+  ],
+  "enemies": [
+    { "id": "bug_key", "template": "bug", "at": [3, 0, 0], "path": { "points": [[3, 0, 4]] } },
+    { "id": "bug_stair", "template": "bug", "at": [2, 0, 11], "path": { "points": [[2, 0, 7]] } }
+  ],
+  "pickups": [
+    { "id": "fragment_6", "type": "fragment_6", "at": [0, 2, 10] },
+    { "id": "refill_stairs", "type": "refill_energy", "at": [9, 0, 11] }
+  ]
+}

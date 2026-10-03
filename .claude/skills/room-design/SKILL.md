@@ -34,10 +34,14 @@ numbers and playtest lessons). Read the checklist before drafting.
 - Types come from `data/defs.json`: blocks `block hazard void fake
   collapsing collapsing_regrow gate bridge`; objects `crate* plate target
   plate_timed target_timed core platform spiked_platform screen
-  data_pillar memory_stack`; platforms need a `path`. A `gate`/`bridge`
+  data_pillar memory_stack`; platforms need a `path`. Plates (timed ones
+  too) lie on the floor, y = 0 (validation); on a raised level the only
+  switch is a target. A `gate`/`bridge`
   block entry (a box) may take `switches` (D140, D141: a gate goes, a
   bridge appears while they are all on; without, every switch in the
-  room); a platform's `switches` run it only while they are all on;
+  room). Gate and bridge blocks in a hole stand a block high (top 1.0),
+  not flush with the floor: a bridge is a step he hops onto, and a gone
+  bridge shows no outline, so name it in a screen text; a platform's `switches` run it only while they are all on;
   screens may name a `text` id in `data/lore.json`; pickups by their defs id
   (`disk_*`, `fragment_N`, `secret_N`, `buff_*`, `upgrade_*`, `refill_*`).
 - Enemies: `{ id, template, at, path? }` only. No overrides, no path speed
@@ -57,6 +61,9 @@ numbers and playtest lessons). Read the checklist before drafting.
   3-high ledge needs height 5.
 - Walk 4.5 u/s (~13 ticks per cell); a push ~28 ticks; collapsing block goes
   30 ticks after a step. Never make him stand still on one.
+- Pause: 25 energy a cast of the base 50 (two casts, then a slow
+  recharge), a 5 s freeze (300 ticks). A frozen bug holding a plate is a
+  timed switch: count from the shot.
 - Timed switch: its timer is the run from it to the far side of what it
   powers (~0.22 s a cell, ~0.57 s a jump) plus about a second. The checker
   doesn't check timing; work it out by hand.
@@ -96,7 +103,7 @@ numbers and playtest lessons). Read the checklist before drafting.
   cover ends when the crate drops into a hole. Do not promise more in hints.
 - **Don't land in a fire line.** Check the cells just inside each exit
   against tower columns and rows.
-- **Mutation test.** Remove each key crate or gate from a scratch copy and
+- **Mutation test** (required for every puzzle room). Remove each key crate, gate or enemy from a scratch copy and
   re-run `check:reach <room>`: if a pickup stays "free" the puzzle is not
   enforced. Platforms count as free floor for the checker, so ferry/lift
   power must be judged by hand (moats wide enough that a crate cannot
@@ -105,6 +112,49 @@ numbers and playtest lessons). Read the checklist before drafting.
   a `never` verdict unreliable; with 4+ roaming crates it can hide a
   solution. Raise `MAX_CONFIGS` temporarily to confirm, keep rooms checkable
   (fewer free crates), or both.
+
+## Enemy puzzles (lessons from Cold Stairs, D157)
+- **Bugs bounce.** Landing on a moving bug (and glowbug) launches him to
+  2.8, so a bug patrolling the foot of a 2-high ledge is a way up without
+  Pause. The Lattice roster has no patroller that doesn't bounce; only a
+  3-high ledge stops both the bounce and a frozen-bug step (1.0 + 1.2).
+  Where he already has Pause on arrival, a bounce is an accepted alternative.
+- **A plate on a patrol path flickers.** The walking enemy presses it as
+  it passes, and a gate opens at once, so he can slip through in that
+  moment. Put the plate one cell beside the path: only a frozen enemy
+  pushed onto it holds it. Prefer a bridge to a gate for a held plate: a
+  flicker of a bridge carries nobody.
+- **Where can a frozen enemy go?** It is pushed like a crate, a cell at a
+  time while he walks, and a second cast restarts the clock. Follow every
+  push from every cell of its path: hem the path in (walls, the room
+  side, a pit it pops into) so it can't reach the foot of the wrong ledge.
+  The checker models only the one push onto a plate, so this is by hand.
+- **Overshoot.** Put the plate against a wall, as for crates: the next
+  push of a frozen enemy past it may go into a pit.
+
+## Verify by playing (headless and on screen)
+The checker knows no timing or bounce. Before review, play the solution
+in a scratch script (scratchpad, never a committed test: tests must not
+depend on rooms the author may flag):
+```js
+import { readDataFiles } from './tools/check-data.js';
+import { loadGameData } from './src/data/load.js';
+import { Game } from './src/game.js';
+import { pauseEnemy } from './src/combat.js';
+const game = new Game(loadGameData(readDataFiles('.').files), { start: 'room_id' });
+const step = (held = [], tap = []) => game.update({ down: (a) => held.includes(a), pressed: (a) => tap.includes(a) });
+// down +x, up -x, right -z, left +z; game.player.place([x, y, z]) to skip a walk;
+// pauseEnemy(game, game.enemies[i], 300) freezes as the spell does.
+```
+Imports resolve from the script's own folder: in the scratchpad, write
+them as absolute paths into the checkout (or run a throwaway file from the
+repo root and delete it). Bugs move 0.05 a tick: wait for a cell with a
+tolerance, not equality.
+Log positions, integrity, gate states (`game.objects` of kind `gate`) and
+pickup states (`game.pickups[i].state`); time each race against its
+clock. For readability, screenshot it: `npx vite`, open
+`?room=<id>&msaa=0` with Playwright (`executablePath:
+'/opt/pw-browsers/chromium'`), and look at it from the entrance.
 
 ## Design craft (what makes a room good, not just valid)
 Principles from games of the same family: Solstice and Head Over Heels
@@ -183,6 +233,8 @@ drafting and copy their density and rhythm, not their cells.
   authored. Edit existing files with small text edits, not a JSON dump.
 - Format room files with `formatJson` (`src/editor/format-json.js`); a test
   rejects other spacing. Lore lines are at most 48 characters.
+- Before starting, check that CI on `main` is green: a red base becomes
+  part of your PR.
 - Finish with a decision in `docs/decisions.md`, a CHANGELOG line and the
   step table in `docs/design.md`; run `level-review` and fix its findings.
 
@@ -195,16 +247,19 @@ npm run check:reach                         # whole world, in CI
 npm test
 ```
 The checker knows nothing of enemies (except that with `pause` every cell a
-pausable enemy walks counts as a 1-high step), timing, energy or facing: "reachable"
+pausable enemy walks counts as a 1-high step, and a plate on that path or
+one push beside it can be held), timing, energy or facing: "reachable"
 is not a promise, "unreachable" is a real bug. Then run the level-review
 subagent (`level-review`) on the finished room.
 
 ## Annotated examples (copy their shape)
-- `data/rooms/tractor_bay.json` (Pull): two crates across a moat; `holes`
-  rectangles are the moat; the east exit is behind it, so the mechanic is
-  seen from the entrance and the reward (disk) sits on the near side.
-- `data/rooms/decoy_lab.json` (Fork): a plate in a slot under a lintel (only
-  a decoy fits), a `locked` exit opened by it, a virus to draw away.
-- `data/rooms/hidden_layer.json` + `secret_cache.json` (Scan): `fake`
-  blocks, a `hidden` exit, a secret behind it.
-- `data/rooms/build_yard.json` (Compile): a 2-wide trench and a 2-high ledge.
+The old test rooms (tractor_bay, decoy_lab, build_yard, ...) were removed
+from the data; these Lattice drafts are the examples now (git history
+keeps the old ones).
+- `data/rooms/bolt_gallery.json`: a 3-wide pit filled with two crates, one
+  caged behind a gate a target opens; towers cover the bridge column.
+- `data/rooms/ledger_cell.json`: a chain of two plates and two gates.
+- `data/rooms/cold_stairs.json` (Pause): a frozen bug pushed onto a plate
+  beside its lane holds a bridge for the freeze time; a second bug is the
+  step to a ledge that leads back over the pit.
+- `data/rooms/hidden_layer.json` (Scan, dev wing): `fake` blocks.

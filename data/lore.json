@@ -264,6 +264,15 @@
         "A FROZEN PROCESS IS HARMLESS AND SOLID.",
         "A FROZEN BUG IS A STEP. THE LEDGE IS 2 HIGH."
       ]
+    },
+    "tut_stairs": {
+      "title": "STAIRS // COLD.BAK",
+      "lines": [
+        "STAIRS NOT INSTALLED. BUGS FOUND: 2.",
+        "A FROZEN BUG SLIDES LIKE A CRATE. PUSH IT.",
+        "THE BRIDGE STANDS WHILE THE PLATE FEELS WEIGHT.",
+        "FREEZE TIME: 5 S. RUN."
+      ]
     }
   }
 }

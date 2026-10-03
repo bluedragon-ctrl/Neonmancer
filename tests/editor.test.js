@@ -284,7 +284,7 @@ test('saveEdits writes valid rooms and world.json together, and refuses invalid 
   const root = mkdtempSync(join(tmpdir(), 'neonmancer-'));
   try {
     for (const dir of ['data', 'schemas']) cpSync(fileURLToPath(new URL(`../${dir}`, import.meta.url)), join(root, dir), { recursive: true });
-    const file = join(root, 'data/rooms/boot_sector.json');
+    const file = join(root, 'data/rooms/hidden_layer.json');
     const before = readFileSync(file, 'utf8');
     const room = JSON.parse(before);
 
@@ -292,7 +292,7 @@ test('saveEdits writes valid rooms and world.json together, and refuses invalid 
     const blocked = { ...room, blocks: [...room.blocks, { at: room.spawn.map(Math.floor) }] };
     const refused = saveEdits(root, { rooms: [blocked] });
     assert.equal(refused.ok, false);
-    assert.match(refused.errors.join('\n'), /rooms\/boot_sector\.json › spawn/);
+    assert.match(refused.errors.join('\n'), /rooms\/hidden_layer\.json › spawn/);
     assert.equal(readFileSync(file, 'utf8'), before);
 
     // Schema errors count too; so do bad ids and a new room's unconnected exit.
@@ -302,13 +302,13 @@ test('saveEdits writes valid rooms and world.json together, and refuses invalid 
     const annex = { ...newRoom('annex', 'home_lattice'), exits: [{ id: 'west', side: '-x', at: 2 }] };
     assert.match(saveEdits(root, { rooms: [annex] }).errors.join('\n'), /exit "annex\.west" is not connected/);
 
-    // Valid: a new room with an exit into Boot Sector's new east exit, and world.json connecting them.
+    // Valid: a new room with an exit into Hidden Layer's new east exit, and world.json connecting them.
     const world = JSON.parse(readFileSync(join(root, 'data/world.json'), 'utf8'));
-    const exitFree = { ...room, name: 'Boot Sector Two', exits: [...room.exits, { id: 'east_2', side: '+x', at: 8 }] };
-    world.connections.push(['boot_sector.east_2', 'annex.west']);
+    const exitFree = { ...room, name: 'Hidden Layer Two', exits: [...room.exits, { id: 'east_2', side: '+x', at: 8 }] };
+    world.connections.push(['hidden_layer.east_2', 'annex.west']);
     world.positions.annex = [5, 5];
     const saved = saveEdits(root, { rooms: [exitFree, annex], world });
-    assert.deepEqual(saved, { ok: true, errors: [], files: ['data/rooms/boot_sector.json', 'data/rooms/annex.json', 'data/world.json'] });
+    assert.deepEqual(saved, { ok: true, errors: [], files: ['data/rooms/hidden_layer.json', 'data/rooms/annex.json', 'data/world.json'] });
     assert.equal(readFileSync(file, 'utf8'), formatJson(exitFree));
     assert.equal(readFileSync(join(root, 'data/rooms/annex.json'), 'utf8'), formatJson(annex));
     assert.equal(readFileSync(join(root, 'data/world.json'), 'utf8'), formatJson(world));

@@ -9,6 +9,10 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
+- `cold_stairs` (5.6c, D157), the Pause wing's second room, off a new south
+  door of `freeze_hall`: freeze a bug, push it onto a plate to hold a
+  bridge, and freeze another as a step to fragment 6. The reachability
+  checker knows a frozen enemy can hold a plate.
 - The Shield wing (5.6b, D156): `bolt_gallery` (fragment 3), `relay_loft`
   (fragment 4) and `ledger_cell` (fragment 5), multistep crate, gate, plate
   and ferry puzzles, with a north door on `shield_hall`.
@@ -112,6 +116,11 @@ docs/decisions.md).
   as boxes, a box's `switches` linking all its cells. Both sink into the
   floor to go and leave a dashed outline while they will come back; a
   collapsing block no longer derezzes.
+
+### Fixed
+- CI is green again after the map update (D158): the world check warns
+  about dev-wing rooms it cannot enter instead of failing, and tests no
+  longer read the removed test rooms.
 
 ## [0.4.0] - 2026-10-01
 

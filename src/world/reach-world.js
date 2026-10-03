@@ -128,10 +128,13 @@ export function analyzeWorld(content, { needs = true } = {}) {
   const errors = [];
   const targets = [];
   const entered = [...state].filter(([, s]) => s.entries.size > 0).map(([id]) => id);
-  const connected = connectedRooms(world.start, rooms, links);
+  // The dev wing (D147) is no part of the players' world: the dev server jumps there.
+  const dev = new Set(world.dev ?? []);
+  const connected = connectedRooms(world.start, rooms, links, dev);
   for (const id of rooms.keys()) {
     if (entered.includes(id)) continue;
-    if (connected.has(id)) errors.push(`${id}: no way in, the exits to it never open (with every ability found)`);
+    if (dev.has(id)) warnings.push(`${id}: in the dev wing, no way in for players`);
+    else if (connected.has(id)) errors.push(`${id}: no way in, the exits to it never open (with every ability found)`);
     else warnings.push(`${id}: not connected to the start room`);
   }
   for (const id of entered) {
@@ -173,15 +176,15 @@ export function analyzeWorld(content, { needs = true } = {}) {
   return { rooms: state, rounds, abilities: [...have], access, fragments, coreReached, targets, errors, warnings };
 }
 
-/** Rooms joined to the start by connections alone (no abilities asked). */
-function connectedRooms(start, rooms, links) {
+/** Rooms joined to the start by connections alone (no abilities asked), not through the dev wing. */
+function connectedRooms(start, rooms, links, dev) {
   const seen = new Set([start]);
   const queue = [start];
   while (queue.length > 0) {
     const id = queue.pop();
     for (const exit of rooms.get(id).exits) {
       const other = links.get(`${id}.${exit.id}`);
-      if (other && !seen.has(other.room)) {
+      if (other && !seen.has(other.room) && !dev.has(other.room)) {
         seen.add(other.room);
         queue.push(other.room);
       }

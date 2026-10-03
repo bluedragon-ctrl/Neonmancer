@@ -1645,6 +1645,10 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
   up moves with it.
 - Headroom: the wizard is 1.5 high, so wherever he stands there must be 2
   free cells above the surface. A ledge 3 high needs a room 5 high.
+- A frozen enemy is a 1-high step (D155) and can be pushed like a crate
+  (D154): follow its pushes from every cell of its path; bugs also bounce
+  him to 2.8, so only a 3-high ledge stops both.
+- Gate and bridge blocks in a hole stand a block high: a step up, not floor.
 
 **Timing** (60 ticks per second)
 - Walking (4.5 units/s) crosses one cell in ~13 ticks (0.22 s); a jump
@@ -1661,7 +1665,8 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
 - Timed switches (D140): the reachability checker counts them as on for
   good, so check the race by hand. Count the cells from where the switch
   goes on (the plate he steps off; for a target, the cell he zaps from,
-  the bolt is near instant) to the far side of what it powers, ~13 ticks
+  the bolt is near instant; for a frozen enemy on a plate, the Pause shot)
+  to the far side of what it powers, ~13 ticks
   a cell plus ~34 per jump and ~28 per push on the way; the timer should
   be that plus about a second (60 ticks), not less and not much more.
 
@@ -1671,7 +1676,10 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
   the back walls (x = 0, z = 0), and put steps on the side facing the
   camera, not behind a ledge.
 - Each mechanic should be seen before it matters: a pit, a hazard or a
-  collapsing bridge in view from where the wizard enters.
+  collapsing bridge in view from where the wizard enters. A bridge that
+  starts gone shows no outline: name it in a screen text.
+- A plate on an enemy's patrol path flickers as it walks over: keep it
+  beside the path when only a frozen enemy should hold it.
 - A gate that needs a stronger spell or a buff (a ledge too high for the
   base jump, D68) should look like a gate: the player should recognise it
   and come back later, not think the room is unsolvable.
@@ -2174,7 +2182,7 @@ author, recorded as decisions before the code lands. Every step also
 The phases were re-cut around a playtest of Home Lattice. The rules of
 "Finished phases" apply to every step: one branch, one PR against `main`,
 CI green, showcase, test room, unit tests, docs. Code steps name their
-branch; design steps end in decisions before any code. **Next: Phase 5 (5.6c; 5.3 music waits for the tracks, D147).**
+branch; design steps end in decisions before any code. **Next: Phase 5 (5.6d; 5.3 music waits for the tracks, D147).**
 
 ### Phase 4 (v0.4) steps: tools and bosses
 
@@ -2210,7 +2218,7 @@ tracks and is done after 5.5 (D147).
 | 5.5 (done, D148) | `feat/lattice-tutorial` | The first rooms from the plan: start, movement, pushing, the first disk, the first fragment; screens with hints (D118). |
 | 5.6a (done, D151) | `feat/lattice-atrium` | The central area first: the Atrium finished as the hub (doors west to the tutorial, north to the Shield wing, south to the Pause wing; a backup shrine, screens), plus the two wing entrances that hold the disks: `shield_hall` (Shield) and `freeze_hall` (Pause). The hub then has all its exits, so the author can refine and flag it (D90). |
 | 5.6b (done, D156) | `feat/lattice-shield-wing` | `bolt_gallery` (fragment 3), `relay_loft` (fragment 4) and `ledger_cell` (fragment 5). |
-| 5.6c | `feat/lattice-pause-wing` | `cold_stairs` (fragment 6): frozen enemies as steps. |
+| 5.6c (done, D157) | `feat/lattice-pause-wing` | `cold_stairs` (fragment 6): frozen enemies as steps. |
 | 5.6d | `feat/lattice-boss-one` | `warden_pit` (boss 1, drops fragment 7) and `idle_cache` (fragment 8), placed from the test arena. |
 | 5.6e | `feat/lattice-scan-wing-1` | The Scan wing, first half: `scan_lab` (Scan disk) and `mirror_stacks` (fragment 9); the door from `relay_loft` is added. |
 | 5.6f | `feat/lattice-scan-wing-2` | `ghost_exit` (fragment 10), `drift_bay` (fragment 11) and `junction` (fragment 16). |
