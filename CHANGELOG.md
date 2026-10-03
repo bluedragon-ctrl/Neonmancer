@@ -118,6 +118,9 @@ docs/decisions.md).
   collapsing block no longer derezzes.
 
 ### Fixed
+- `cold_stairs` (D159): no bounce across the pit without Pause (the key
+  bug's lane ends a cell short of it), and a spare crate gets him back up
+  the ledge if the stair bug is gone.
 - CI is green again after the map update (D158): the world check warns
   about dev-wing rooms it cannot enter instead of failing, and tests no
   longer read the removed test rooms.

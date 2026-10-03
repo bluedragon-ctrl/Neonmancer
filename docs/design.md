@@ -1647,7 +1647,9 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
   free cells above the surface. A ledge 3 high needs a room 5 high.
 - A frozen enemy is a 1-high step (D155) and can be pushed like a crate
   (D154): follow its pushes from every cell of its path; bugs also bounce
-  him to 2.8, so only a 3-high ledge stops both.
+  him to 2.8, so only a 3-high ledge stops both, and the bounce carries
+  him ~2.4 cells sideways (keep the lane 2+ cells from a gap). An enemy
+  he needs as a step can be killed: give the area a second way out.
 - Gate and bridge blocks in a hole stand a block high: a step up, not floor.
 
 **Timing** (60 ticks per second)
