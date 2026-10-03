@@ -9,6 +9,9 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
+- The Shield wing (5.6b, D156): `bolt_gallery` (fragment 3), `relay_loft`
+  (fragment 4) and `ledger_cell` (fragment 5), multistep crate, gate, plate
+  and ferry puzzles, with a north door on `shield_hall`.
 - A frozen enemy is a whole cell (D155): a 1×1×1 block to stand on and
   jump from, and the Pause cage shows it.
 - Frozen enemies can be pushed (D154): walking into one slides it a cell

@@ -28,9 +28,7 @@ numbers and playtest lessons). Read the checklist before drafting.
   and pickup ids share one namespace per room. Start from `$schema` and
   `schemaVersion` as in the examples.
 - Exits: `{ id, side: -x|+x|-z|+z, at, width 2, y 0, height 2 }`, plus
-  optional `locked` (opens while its switches are all on: `switches`, a
-  list of target/plate ids, or every switch in the room; needs >= 1
-  switch), `access` (level 1-15), `hidden` (wall until Scan). Connections
+  optional `requires` (`[{ "switch": id }]` or `{ "switch": "*" }` for every switch; `{ "access": n }`; needs >= 1 switch in the room), `access` (level 1-15), `hidden` (wall until Scan). Connections
   live in `data/world.json` (`"room.exit"` pairs, `positions` on the map
   grid; neighbours sit one cell apart, the side must match the direction).
 - Types come from `data/defs.json`: blocks `block hazard void fake
@@ -79,6 +77,43 @@ numbers and playtest lessons). Read the checklist before drafting.
    white is a mechanism, cyan moves, lime is pushable.
 8. New mechanics get a test room (D43) near the start (<= 2 rooms from Boot
    Sector, D49), plus a showcase look and unit tests.
+
+## Puzzle craft (lessons from the Shield wing, D156)
+- **Sokoban riddles are welcome.** Crates pushed round corners onto plates,
+  through gates, into pits: they make good multistep rooms. Keep them fair:
+  a crate can only be pushed away from a side he can stand on, so check
+  every crate's route; put a plate against a wall so a crate cannot
+  overshoot it; do not wall in his own path with crates (a 2-wide island
+  with crates across it is a knot). A crate lost in a corner is fine (leave
+  and re-enter resets the room), but say so to yourself and check it.
+- **Pit width = crates + 1.** A jump crosses one tile, so a pit N wide needs
+  N-1 crates; a 2-wide pit falls to one crate. Count crates that can reach
+  it from the *other* side too (the island's crates, the return trip).
+- **Both directions.** Check `--from <exit>` for every exit: coming back
+  must work with what lies on that side (a puzzle solved on the way in is
+  reset on re-entry).
+- **Crates as cover.** A crate between a tower and him blocks its line;
+  cover ends when the crate drops into a hole. Do not promise more in hints.
+- **Don't land in a fire line.** Check the cells just inside each exit
+  against tower columns and rows.
+- **Mutation test.** Remove each key crate or gate from a scratch copy and
+  re-run `check:reach <room>`: if a pickup stays "free" the puzzle is not
+  enforced. Platforms count as free floor for the checker, so ferry/lift
+  power must be judged by hand (moats wide enough that a crate cannot
+  bypass them).
+- **Truncated search.** "crate search stopped at 500 configurations" makes
+  a `never` verdict unreliable; with 4+ roaming crates it can hide a
+  solution. Raise `MAX_CONFIGS` temporarily to confirm, keep rooms checkable
+  (fewer free crates), or both.
+
+## Wiring a room
+- A new door also needs the neighbour's exit, the connection pair and the
+  `positions` entry in `data/world.json`; check the neighbour is not
+  authored. Edit existing files with small text edits, not a JSON dump.
+- Format room files with `formatJson` (`src/editor/format-json.js`); a test
+  rejects other spacing. Lore lines are at most 48 characters.
+- Finish with a decision in `docs/decisions.md`, a CHANGELOG line and the
+  step table in `docs/design.md`; run `level-review` and fix its findings.
 
 ## Loop: draft -> check
 ```
