@@ -16,7 +16,6 @@
     { "type": "fence", "at": [4, 0, 7], "to": [4, 2, 8] }
   ],
   "objects": [
-    { "id": "screen_ledger", "type": "screen", "at": [5, 0, 8], "overrides": { "face": "+x" } },
     { "id": "plate_a", "type": "plate", "at": [7, 0, 0] },
     { "id": "plate_b", "type": "plate", "at": [1, 0, 0] },
     { "id": "crate_b", "type": "crate", "at": [2, 0, 7] },

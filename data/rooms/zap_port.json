@@ -27,8 +27,13 @@
     { "id": "screen_1", "type": "screen", "at": [0, 0, 0], "text": "tut_zap" },
     { "id": "memory_stack_1", "type": "memory_stack", "at": [5, 0, 0] },
     { "id": "memory_stack_2", "type": "memory_stack", "at": [5, 1, 0] },
-    { "id": "memory_stack_3", "type": "memory_stack", "at": [7, 0, 1] },
-    { "id": "memory_stack_4", "type": "memory_stack", "at": [7, 1, 1] }
+    { "id": "memory_stack_4", "type": "memory_stack", "at": [6, 1, 0] },
+    { "id": "memory_stack_5", "type": "memory_stack", "at": [5, 2, 0] },
+    { "id": "memory_stack_6", "type": "memory_stack", "at": [6, 2, 0] },
+    { "id": "memory_stack_7", "type": "memory_stack", "at": [6, 0, 0] },
+    { "id": "memory_stack_8", "type": "memory_stack", "at": [6, 3, 0] },
+    { "id": "memory_stack_9", "type": "memory_stack", "at": [5, 3, 0] },
+    { "id": "memory_stack_10", "type": "memory_stack", "at": [7, 3, 1] }
   ],
   "enemies": [
     { "id": "patrol", "template": "bug", "at": [5, 0, 3], "path": { "points": [[5, 0, 10]], "mode": "loop" } }
