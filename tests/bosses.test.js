@@ -109,7 +109,7 @@ test('a boss phase changes only what it names; a template without a boss block h
   assert.equal(bossPhases(withEnemyDefaults(BUG)).length, 1);
 });
 
-test('the shipped data is valid with its bosses and test arenas', () => {
+test('the boss arena fixture is valid', () => {
   assert.deepEqual(validateData(arena()), []);
 });
 

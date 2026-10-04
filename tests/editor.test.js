@@ -283,32 +283,33 @@ test('an edited room is checked with the rest of the data', () => {
 test('saveEdits writes valid rooms and world.json together, and refuses invalid data', () => {
   const root = mkdtempSync(join(tmpdir(), 'neonmancer-'));
   try {
-    for (const dir of ['data', 'schemas']) cpSync(fileURLToPath(new URL(`../${dir}`, import.meta.url)), join(root, dir), { recursive: true });
-    const file = join(root, 'data/rooms/hidden_layer.json');
+    cpSync(fileURLToPath(new URL('../schemas', import.meta.url)), join(root, 'schemas'), { recursive: true });
+    writeDataFiles(root, testWorld());
+    const file = join(root, 'data/rooms/cache_hall.json');
     const before = readFileSync(file, 'utf8');
     const room = JSON.parse(before);
 
     // Invalid: a block where the wizard spawns. Nothing is written.
-    const blocked = { ...room, blocks: [...room.blocks, { at: room.spawn.map(Math.floor) }] };
+    const blocked = { ...room, blocks: [{ at: room.spawn.map(Math.floor) }] };
     const refused = saveEdits(root, { rooms: [blocked] });
     assert.equal(refused.ok, false);
-    assert.match(refused.errors.join('\n'), /rooms\/hidden_layer\.json › spawn/);
+    assert.match(refused.errors.join('\n'), /rooms\/cache_hall\.json › spawn/);
     assert.equal(readFileSync(file, 'utf8'), before);
 
     // Schema errors count too; so do bad ids and a new room's unconnected exit.
     assert.equal(saveEdits(root, { rooms: [{ ...room, size: [12, 9, 12] }] }).ok, false);
     assert.equal(saveEdits(root, { rooms: [{ ...room, id: '../world' }] }).ok, false);
     assert.equal(saveEdits(root, {}).ok, false);
-    const annex = { ...newRoom('annex', 'home_lattice'), exits: [{ id: 'west', side: '-x', at: 2 }] };
+    const annex = { ...newRoom('annex', 'home'), exits: [{ id: 'west', side: '-x', at: 2 }] };
     assert.match(saveEdits(root, { rooms: [annex] }).errors.join('\n'), /exit "annex\.west" is not connected/);
 
-    // Valid: a new room with an exit into Hidden Layer's new east exit, and world.json connecting them.
+    // Valid: a new room with an exit into Cache Hall's new east exit, and world.json connecting them.
     const world = JSON.parse(readFileSync(join(root, 'data/world.json'), 'utf8'));
-    const exitFree = { ...room, name: 'Hidden Layer Two', exits: [...room.exits, { id: 'east_2', side: '+x', at: 8 }] };
-    world.connections.push(['hidden_layer.east_2', 'annex.west']);
+    const exitFree = { ...room, name: 'Cache Hall Two', exits: [...room.exits, { id: 'east_2', side: '+x', at: 8 }] };
+    world.connections.push(['cache_hall.east_2', 'annex.west']);
     world.positions.annex = [5, 5];
     const saved = saveEdits(root, { rooms: [exitFree, annex], world });
-    assert.deepEqual(saved, { ok: true, errors: [], files: ['data/rooms/hidden_layer.json', 'data/rooms/annex.json', 'data/world.json'] });
+    assert.deepEqual(saved, { ok: true, errors: [], files: ['data/rooms/cache_hall.json', 'data/rooms/annex.json', 'data/world.json'] });
     assert.equal(readFileSync(file, 'utf8'), formatJson(exitFree));
     assert.equal(readFileSync(join(root, 'data/rooms/annex.json'), 'utf8'), formatJson(annex));
     assert.equal(readFileSync(join(root, 'data/world.json'), 'utf8'), formatJson(world));
