@@ -19,7 +19,6 @@
     { "at": [10, 0, 9], "to": [10, 1, 10] }
   ],
   "objects": [
-    { "id": "screen_warden", "type": "screen", "at": [4, 0, 0], "text": "tut_warden", "overrides": { "face": "+z" } },
     { "id": "pillar_west", "type": "data_pillar", "at": [0, 0, 0], "overrides": { "face": "+x" } },
     { "id": "pillar_east", "type": "data_pillar", "at": [13, 0, 0], "overrides": { "face": "+z" } }
   ],

@@ -21,7 +21,6 @@
     { "at": [8, 0], "to": [11, 7] }
   ],
   "objects": [
-    { "id": "screen_relay", "type": "screen", "at": [0, 0, 7], "text": "tut_relay", "overrides": { "face": "+x" } },
     { "id": "plate_a", "type": "plate", "at": [0, 0, 6] },
     { "id": "crate_a", "type": "crate", "at": [1, 0, 1] },
     { "id": "plate_b", "type": "plate", "at": [6, 0, 0] },

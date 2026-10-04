@@ -22,8 +22,6 @@
   "shrine": [1, 10],
   "objects": [
     { "id": "screen_1", "type": "screen", "at": [0, 0, 3], "overrides": { "face": "+x" }, "text": "help_core" },
-    { "id": "screen_2", "type": "screen", "at": [0, 0, 1], "overrides": { "face": "+x" } },
     { "id": "core_1", "type": "core", "at": [10, 0, 1] }
-  ],
-  "pickups": [{ "id": "fragment_0_1", "type": "fragment_0", "at": [10, 0, 10] }]
+  ]
 }
