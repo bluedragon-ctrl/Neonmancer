@@ -7,7 +7,8 @@
  */
 import { AdditiveBlending, BufferGeometry, Color, DoubleSide, Float32BufferAttribute, Group, Mesh, MeshBasicMaterial } from 'three';
 import { FRAGMENT_COLOR } from '../entities/pickup.js';
-import { faceMaterial, lineMaterial, neonLines } from './neon.js';
+import { boxEdges, boxFaces } from './deco.js';
+import { lineMaterial, neonLines } from './neon.js';
 
 /** Tuning (units, seconds). */
 export const CORE_FX = {
@@ -30,27 +31,7 @@ export const CORE_FX = {
   ringSpin: 0.6,
 };
 
-const WHITE_FACE = new Color(0x070916);
 const UNLIT = new Color(0xffffff);
-
-/** Line segments of a box's 12 edges. */
-function boxEdges([x0, y0, z0], [x1, y1, z1]) {
-  const c = (i) => [i & 1 ? x1 : x0, i & 2 ? y1 : y0, i & 4 ? z1 : z0];
-  const pairs = [[0, 1], [2, 3], [4, 5], [6, 7], [0, 2], [1, 3], [4, 6], [5, 7], [0, 4], [1, 5], [2, 6], [3, 7]];
-  return pairs.map(([a, b]) => [c(a), c(b)]);
-}
-
-/** Dark faces of a box. */
-function boxFaces([x0, y0, z0], [x1, y1, z1], color = WHITE_FACE) {
-  const c = (i) => [i & 1 ? x1 : x0, i & 2 ? y1 : y0, i & 4 ? z1 : z0];
-  const quads = [[0, 2, 3, 1], [4, 5, 7, 6], [0, 1, 5, 4], [2, 6, 7, 3], [0, 4, 6, 2], [1, 3, 7, 5]];
-  const positions = quads.flatMap(([a, b, d, e]) => [a, b, d, a, d, e].flatMap((i) => c(i)));
-  const geometry = new BufferGeometry();
-  geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
-  const material = faceMaterial(color);
-  material.side = DoubleSide;
-  return new Mesh(geometry, material);
-}
 
 /**
  * A circle of segments round the y axis, turned by `tilt` (radians about x).
@@ -106,7 +87,7 @@ export function createCore({ color = '#eef3ff', levels = 3 } = {}) {
   const group = new Group();
   const { pedestal: h, margin: m } = CORE_FX;
   const white = liveLines(boxEdges([m, 0, m], [1 - m, h, 1 - m]), 2);
-  group.add(boxFaces([m, 0, m], [1 - m, h, 1 - m]), white.lines);
+  group.add(boxFaces([[[m, 0, m], [1 - m, h, 1 - m]]]), white.lines);
 
   const [r, up, down] = CORE_FX.crystal;
   const tips = [[0, up, 0], [0, -down, 0]];

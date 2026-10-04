@@ -7,10 +7,15 @@
  * (the costliest part of rendering on weak GPUs), then the render scale.
  * It only ever steps down, so quality never flickers up and down.
  *
+ * On a high-DPI screen multisampling is off anyway (viewport.js
+ * effectiveMultisampling()), so its steps would change nothing there:
+ * qualityLevels() leaves them out, and the render scale steps down first.
+ *
  * A step that makes frames no faster means the GPU was not the limit (a
  * slow CPU, or a display that refreshes at 30 or 50 Hz): after two such
  * steps in a row it goes back to where frames were last judged and stops.
  */
+import { bufferPixelRatio, effectiveMultisampling } from './viewport.js';
 
 /** Quality levels, best first: MSAA samples and render scale. */
 export const QUALITY_LEVELS = [
@@ -20,6 +25,22 @@ export const QUALITY_LEVELS = [
   { multisampling: 0, renderScale: 0.75 },
   { multisampling: 0, renderScale: 0.5 },
 ];
+
+/**
+ * The quality levels as they come out on a screen with `devicePixelRatio`:
+ * the MSAA each would really use, steps that change nothing left out.
+ * @param {number} devicePixelRatio
+ * @returns {typeof QUALITY_LEVELS}
+ */
+export function qualityLevels(devicePixelRatio) {
+  const levels = [];
+  for (const { multisampling, renderScale } of QUALITY_LEVELS) {
+    const level = { multisampling: effectiveMultisampling(multisampling, bufferPixelRatio(devicePixelRatio, renderScale)), renderScale };
+    const last = levels.at(-1);
+    if (!last || last.multisampling !== level.multisampling || last.renderScale !== level.renderScale) levels.push(level);
+  }
+  return levels;
+}
 
 /** Tuning; times in seconds. */
 export const AUTO_QUALITY = {
@@ -50,8 +71,12 @@ export function trimmedMean(times) {
 }
 
 export class AutoQuality {
-  /** @param {number} [level] index into QUALITY_LEVELS to start at */
-  constructor(level = 0) {
+  /**
+   * @param {typeof QUALITY_LEVELS} [levels] best first (qualityLevels())
+   * @param {number} [level] index into `levels` to start at
+   */
+  constructor(levels = QUALITY_LEVELS, level = 0) {
+    this.levels = levels;
     this.level = level;
     /** Stopped: a step did not help, or there is nothing lower. */
     this.done = false;
@@ -66,7 +91,7 @@ export class AutoQuality {
 
   /** Settings of the current level. */
   get settings() {
-    return QUALITY_LEVELS[this.level];
+    return this.levels[this.level];
   }
 
   /**
@@ -106,7 +131,7 @@ export class AutoQuality {
       return this.change(this.base.level);
     }
     if (helped) this.base = { level: this.level, mean };
-    if (this.level === QUALITY_LEVELS.length - 1) {
+    if (this.level === this.levels.length - 1) {
       this.done = true;
       return null;
     }

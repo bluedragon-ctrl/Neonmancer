@@ -13,12 +13,13 @@
  * always shows exactly where the block is (no strobing).
  * Time comes from HOLO_TIME (advanced once per frame).
  */
-import { BoxGeometry, Color, Group, InstancedMesh, Matrix4, ShaderMaterial } from 'three';
+import { Color, Group, InstancedMesh, Matrix4, ShaderMaterial } from 'three';
 import { blockEdges } from './edges.js';
+import { UNIT_BOX } from './geometry.js';
 import { GLASS, GLASS_BLEND } from './glass.js';
 import { HOLO_TIME } from './holo.js';
 import { createMistView } from './mist.js';
-import { lineMaterial, neonLines, shared } from './neon.js';
+import { lineMaterial, neonLines } from './neon.js';
 
 /** Tuning; pixel counts per world unit, rates per second. */
 export const BLOCK_FX = {
@@ -173,9 +174,6 @@ export function flareHazard(material, cell, since) {
   material.uniforms.uFlareCell.value = cell;
   material.uniforms.uFlare.value = Math.max(0, 1 - since / BLOCK_FX.hazard.flareTime);
 }
-
-/** Unit cube with its corner at the origin, shared by every block view. */
-const UNIT_BOX = shared(new BoxGeometry(1, 1, 1).translate(0.5, 0.5, 0.5));
 
 /**
  * A block type's cells in an animated look: instanced faces and edges.

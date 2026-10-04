@@ -9,6 +9,14 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Changed
+- Rendering does less work for the same picture (D169): a decoration's
+  dark boxes, glass and lights draw in a handful of draws (a memory stack
+  went from 24 to 5; `mirror_stacks` from about 380 to about 155 draws a
+  frame); behind the title, pause and map screens the last frame is kept
+  instead of redrawn; a high-DPI screen renders without MSAA, and auto
+  quality lowers its render scale first. Shared geometry primitives
+  (`render/geometry.js`) replace four copies of the unit cube; pixel bursts
+  share one cube; the core's pedestal uses the decorations' box helpers.
 - `ledger_cell`'s 3-high walls and the 3-high wall by `shield_hall`'s
   corridor are fences (D167), so the floor behind them stays in view; the
   gates and the sentinel's cover stay blocks.

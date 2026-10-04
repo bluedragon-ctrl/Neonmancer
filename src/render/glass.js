@@ -17,10 +17,11 @@
  * honor clipping planes (a crate sinking into a hole is cut at the floor).
  *
  * Anything glass (crates, decorations) is built with glassBox(): a box
- * between two corners, in a color, with a preset from GLASS.
+ * between two corners, in a color, with a preset from GLASS; glassBoxes()
+ * draws several such boxes of one look at once (a decoration's plates).
  */
-import { BoxGeometry, Color, Mesh, ShaderMaterial } from 'three';
-import { shared } from './neon.js';
+import { Color, InstancedMesh, Matrix4, Mesh, ShaderMaterial } from 'three';
+import { UNIT_BOX } from './geometry.js';
 
 /** Tuning; brightness values are raw colors (the bloom threshold is 0.12). */
 export const GLASS = {
@@ -55,7 +56,9 @@ export const GLASS = {
   gate: { alpha: 0.55, tint: 0.3, milk: 0.5 },
 };
 
-// Local position in the unit cell (the geometry runs 0..1) and the face normal.
+// Local position in the unit cell (the geometry runs 0..1) and the face
+// normal. Instanced (glassBoxes()), each instance scales the unit cell into
+// place; boxes are only moved and scaled, so the normal stays as it is.
 const vertexShader = /* glsl */ `
   #include <clipping_planes_pars_vertex>
   varying vec3 vLocal;
@@ -63,7 +66,11 @@ const vertexShader = /* glsl */ `
   void main() {
     vLocal = position;
     vNormal = normal;
-    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+    vec4 local = vec4(position, 1.0);
+  #ifdef USE_INSTANCING
+    local = instanceMatrix * local;
+  #endif
+    vec4 mvPosition = modelViewMatrix * local;
     gl_Position = projectionMatrix * mvPosition;
     #include <clipping_planes_vertex>
   }
@@ -107,7 +114,7 @@ const fragmentShader = /* glsl */ `
 
 /**
  * See-through glass faces in an object's color, for a unit-cell geometry
- * running 0..1 (room-view.js UNIT_BOX).
+ * running 0..1 (geometry.js UNIT_BOX).
  * @param {number|string|Color} color
  * @param {Partial<Pick<typeof GLASS, 'alpha'|'tint'|'milk'|'rim'|'frost'>>} [tuning]
  *   other values than GLASS's
@@ -132,9 +139,6 @@ export function glassFaceMaterial(color, tuning = {}) {
   });
 }
 
-/** A unit cube running 0..1: the glass shader works in the unit cell. */
-const UNIT_BOX = shared(new BoxGeometry(1, 1, 1).translate(0.5, 0.5, 0.5));
-
 /**
  * A glass box between corners `lo` and `hi`: the unit cube scaled into
  * place, so rim and frost follow the box.
@@ -147,6 +151,23 @@ export function glassBox([x0, y0, z0], [x1, y1, z1], color, tuning = {}) {
   const mesh = new Mesh(UNIT_BOX, glassFaceMaterial(color, tuning));
   mesh.position.set(x0, y0, z0);
   mesh.scale.set(x1 - x0, y1 - y0, z1 - z0);
+  return mesh;
+}
+
+/**
+ * Several glass boxes of one look as one draw: an instance of the unit
+ * cube per box, scaled into place like glassBox().
+ * @param {number[][][]} boxes [lo, hi] corners of each box
+ * @param {number|string|Color} color
+ * @param {Parameters<typeof glassFaceMaterial>[1]} [tuning] e.g. GLASS.deco
+ */
+export function glassBoxes(boxes, color, tuning = {}) {
+  const mesh = new InstancedMesh(UNIT_BOX, glassFaceMaterial(color, tuning), boxes.length);
+  const matrix = new Matrix4();
+  boxes.forEach(([[x0, y0, z0], [x1, y1, z1]], i) => {
+    mesh.setMatrixAt(i, matrix.makeScale(x1 - x0, y1 - y0, z1 - z0).setPosition(x0, y0, z0));
+  });
+  mesh.computeBoundingSphere();
   return mesh;
 }
 

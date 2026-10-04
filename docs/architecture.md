@@ -125,7 +125,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/firewall-fx.js`, `render/firewall-view.js` | Firewall's ring of flames (D84): the segments (pure, tested; timing is the Shield's) and its meshes, shown by `PlayerView` |
 | `render/floor.js` | Infinite grid floor fading into darkness; hole tiles cut out via a mask texture |
 | `render/fragment.js` | Key fragment look (D101): a gold tile with the boot key dim and its own module lit, ghost |
-| `render/glass.js` | Glass faces (D96): a see-through face shader (transparent, no depth written, clipping) and the data core's shrunk mark; a destructible glass crate is an empty shell (D99) |
+| `render/geometry.js` | Shared geometry primitives (`UNIT_BOX` with its corner at the origin, centered `CUBE`), never disposed with a room (D169) |
+| `render/glass.js` | Glass faces (D96): a see-through face shader (transparent, no depth written, clipping, instancing) and the data core's shrunk mark; `glassBoxes()` draws several boxes of one look at once (D169); a destructible glass crate is an empty shell (D99) |
 | `render/golem.js` | Golem model (D107): stacked rack units with blinking LEDs (`ledOn()`) and scrolling slats, block fists, stomping legs, `GOLEM` tuning; `GOLEM_MODEL` |
 | `render/stream-fx.js` | The stream (D127): pixels a spell carries between two ends, each a body box or a point (`streamPixels()`, `streamCount()`), `STREAM` tuning; Cut, Paste, Compile and Warp (pure, tested) |
 | `render/derez-fx.js` | The derez (D126): one pixel burst for anything that is gone, from a body box (`derezPixels()`, `derezCount()`, `BLOCK_BODY`), `DEREZ` tuning (pure, tested) |
@@ -145,11 +146,11 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/pickup-model.js` | A pickup's model by kind (disk, upgrade card, chip, fragment, secret or refill), for the room view and the install animation |
 | `render/pickup-view.js` | A room pickup's view: its look, idle motion, ghost, pick-up effect |
 | `render/pixie.js` | Pixie model (D107): butterfly with pixel wings (`wingPixels()`), shimmer, flapping (`pixieFlap()`), dust, `PIXIE` tuning; `PIXIE_MODEL` |
-| `render/pixels.js` | Pixel bursts (`createPixelBurst()`, `placePixels()`) every effect places, the derez mesh (`createDerez(body, colors)`, `placeDerez()`, D126) and the stream's (`createStream()`, `placeStream()`, D127) |
+| `render/pixels.js` | Pixel bursts (`createPixelBurst()`, `placePixels()`; all share one cube, scaled to their pixel size) every effect places, the derez mesh (`createDerez(body, colors)`, `placeDerez()`, D126) and the stream's (`createStream()`, `placeStream()`, D127) |
 | `render/post.js` | pmndrs postprocessing composer (bloom) |
-| `render/quality.js` | Automatic quality fallback: steps MSAA, then render scale, down when frames run slow (D76; pure, tested) |
+| `render/quality.js` | Automatic quality fallback: steps MSAA, then render scale, down when frames run slow (D76); `qualityLevels()` leaves out MSAA steps on a high-DPI screen (D169; pure, tested) |
 | `render/rails.js` | Guide line along a platform's path, `RAILS` tuning (pure, tested) |
-| `render/renderer.js` | WebGLRenderer, 16:9 stage + HUD overlay, DPR cap, render scale, MSAA, resize, shader precompile |
+| `render/renderer.js` | WebGLRenderer, 16:9 stage + HUD overlay, DPR cap, render scale, MSAA (off on a high-DPI buffer), resize, shader precompile, frames kept while the game stands still (`invalidate()`, D169) |
 | `render/room-scene.js` | The current room's views, object views by kind (`OBJECT_VIEWS`); rebuilds only the objects on a respawn; `showShape()`: the empty room behind the title (D109) |
 | `render/room-view.js` | Static blocks (merged edges + instanced occluder faces), back walls, styled object views |
 | `render/secret.js` | Secret look (D100): a thick five-pointed star in the wizard's magenta, ghost |
@@ -430,11 +431,24 @@ shadow plane) are never freed.
   from the room and has the void color, so it melts into the background.
 - Composer: half-float buffers, 4× MSAA, render pass + one effect pass
   (bloom with mipmap blur, which scales with resolution by itself) (D13).
+  MSAA is off when the buffer has 1.5 or more pixels per CSS pixel
+  (`effectiveMultisampling()` in `viewport.js`, D169): a high-DPI buffer is
+  smooth enough without it.
 - Auto quality (D76): `AutoQuality` in `main.js` judges frame times in
   2 s windows and, after two slow ones (below 50 fps), lowers MSAA
   (4 → 2 → 0), then the render scale (0.75, 0.5), via
-  `Renderer.setQuality()`. `?msaa=` / `?scale=` set quality by hand and
-  turn it off. The debug readout shows the current level.
+  `Renderer.setQuality()`; on a high-DPI screen it starts at the render
+  scale (`qualityLevels()`, D169). `?msaa=` / `?scale=` set quality by hand
+  and turn it off. The debug readout shows the current level.
+- Behind a menu (title, pause, map) the game stands still and the frame on
+  screen is kept: `Renderer.render({ onlyIfChanged })` draws only after
+  `invalidate()` (a room shown, a resize, the debug overlay toggled, the
+  game paused or resumed). `HOLO_TIME` counts only time the game runs, so
+  shader animations stand still too (D169).
+- Draw calls: things built from many small parts share geometry and draw
+  together. A decoration's dark boxes are one merged geometry per look
+  (`boxFaces()` in `deco.js`, shared with one face material), its glass one
+  instanced mesh (`glassBoxes()`), its lights one instanced mesh (D169).
 - `Renderer.compile()` runs on every room show, before the old room is
   freed: it compiles hidden objects too and compiles for the composer's
   buffer, so no shader compiles during play (D76).

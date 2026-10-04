@@ -11,6 +11,7 @@
  */
 import { BoxGeometry, Color, Group, InstancedMesh, Matrix4, NormalBlending, ShaderMaterial } from 'three';
 import { blockEdges } from './edges.js';
+import { UNIT_BOX } from './geometry.js';
 import { HOLO_TIME } from './holo.js';
 import { lineMaterial, neonLines, shared } from './neon.js';
 
@@ -129,8 +130,7 @@ function mistMaterial(color, shell) {
   });
 }
 
-/** Unit cube with its corner at the origin, and the shell a little larger round it. */
-const UNIT_BOX = shared(new BoxGeometry(1, 1, 1).translate(0.5, 0.5, 0.5));
+/** The shell: a cube a little larger than the block, round it. */
 const SHELL_BOX = shared(new BoxGeometry(1 + 2 * MIST.shell, 1 + 2 * MIST.shell, 1 + 2 * MIST.shell).translate(0.5, 0.5, 0.5));
 
 /**

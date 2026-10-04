@@ -5,12 +5,17 @@
  * letterbox. The drawing buffer is the stage size × capped devicePixelRatio
  * × render scale. The HUD lives in the stage and sizes itself with the CSS
  * variable --u (one pixel at 1080p).
+ *
+ * Multisampling is used only on a buffer that is not high-DPI already
+ * (viewport.js effectiveMultisampling()). A frame is only redrawn when
+ * something may have changed it: the game redraws every frame while it
+ * runs; behind a menu it keeps the last frame until invalidate().
  */
 import { Color, Scene, WebGLRenderer } from 'three';
 import { createIsoCamera } from './camera.js';
 import { PALETTE, resizeLines, roomLook } from './neon.js';
 import { createComposer } from './post.js';
-import { REFERENCE_HEIGHT, bufferSize, clampRenderScale, fitLetterbox } from './viewport.js';
+import { REFERENCE_HEIGHT, bufferPixelRatio, bufferSize, clampRenderScale, effectiveMultisampling, fitLetterbox } from './viewport.js';
 
 /** While the window is being resized, the drawing buffer follows after this pause (ms). */
 const RESIZE_SETTLE_MS = 150;
@@ -21,10 +26,14 @@ export class Renderer {
    * @param {object} [options]
    * @param {number} [options.renderScale] 0.5–1, share of full resolution
    * @param {number} [options.multisampling] MSAA samples (0 turns it off; the
-   *   costliest part of rendering on weak GPUs)
+   *   costliest part of rendering on weak GPUs); none on a high-DPI buffer
    */
   constructor(container, { renderScale = 1, multisampling = 4 } = {}) {
     this.renderScale = clampRenderScale(renderScale);
+    /** MSAA samples asked for; the composer uses them unless the buffer is high-DPI. */
+    this.wantedMultisampling = multisampling;
+    /** Has anything changed what the last frame shows (see invalidate())? */
+    this.dirty = true;
 
     // No antialias or depth on the canvas itself: the composer renders into
     // its own multisampled buffers.
@@ -94,10 +103,13 @@ export class Renderer {
   /** Size the drawing buffers and line widths to the stage. */
   resizeBuffer() {
     const buffer = bufferSize(this.stageWidth, this.stageHeight, window.devicePixelRatio, this.renderScale);
+    // The composer reallocates its buffers only when the samples change.
+    this.composer.multisampling = effectiveMultisampling(this.wantedMultisampling, bufferPixelRatio(window.devicePixelRatio, this.renderScale));
     this.composer.setSize(buffer.width, buffer.height, false);
     resizeLines(buffer.width, buffer.height);
     this.bufferWidth = buffer.width;
     this.bufferHeight = buffer.height;
+    this.invalidate();
   }
 
   /** MSAA samples in use (the composer may allow fewer than asked for). */
@@ -116,7 +128,7 @@ export class Renderer {
    * @param {{ multisampling: number, renderScale: number }} quality
    */
   setQuality({ multisampling, renderScale }) {
-    this.composer.multisampling = multisampling;
+    this.wantedMultisampling = multisampling;
     this.setRenderScale(renderScale);
   }
 
@@ -128,6 +140,7 @@ export class Renderer {
     const { background, bloom } = roomLook(look);
     this.scene.background.set(background);
     this.bloom.intensity = bloom;
+    this.invalidate();
   }
 
   /** @param {number} level 0 (clear) to 1 (black) */
@@ -161,9 +174,24 @@ export class Renderer {
     this.webgl.compile(this.scene, this.camera);
     this.webgl.setRenderTarget(target);
     for (const node of hidden) node.visible = false;
+    // A scene that was compiled is a scene that changed.
+    this.invalidate();
   }
 
-  render() {
+  /** The scene changed while frames are kept (render({ onlyIfChanged })): draw the next one. */
+  invalidate() {
+    this.dirty = true;
+  }
+
+  /**
+   * Draw a frame.
+   * @param {object} [options]
+   * @param {boolean} [options.onlyIfChanged] keep the frame on screen unless
+   *   invalidate() was called since the last one (the game stands still)
+   */
+  render({ onlyIfChanged = false } = {}) {
+    if (onlyIfChanged && !this.dirty) return;
+    this.dirty = false;
     this.composer.render();
   }
 }

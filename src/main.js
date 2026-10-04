@@ -17,7 +17,7 @@ import { PLAYER } from './entities/player.js';
 import { PlayerView } from './render/entity-view.js';
 import { HOLO_TIME } from './render/holo.js';
 import { bootState } from './render/boot-fx.js';
-import { AutoQuality } from './render/quality.js';
+import { AutoQuality, qualityLevels } from './render/quality.js';
 import { Renderer } from './render/renderer.js';
 import { RoomScene } from './render/room-scene.js';
 import { showErrorScreen } from './ui/error-screen.js';
@@ -52,11 +52,12 @@ function boot() {
   const devRoom = DEV_SERVER && content.rooms.has(params.get('room')) ? params.get('room') : undefined;
   const game = new Game(content, { start: devRoom });
 
-  // Quality steps down by itself when frames run slow (D76). ?scale=0.5
-  // and ?msaa=0 set it by hand instead, until there is a settings menu
-  // with quality presets.
+  // Quality steps down by itself when frames run slow (D76); on a high-DPI
+  // screen there is no MSAA to drop, so the render scale goes first (D169).
+  // ?scale=0.5 and ?msaa=0 set it by hand instead, until there is a
+  // settings menu with quality presets.
   const manualQuality = params.has('scale') || params.has('msaa');
-  const autoQuality = manualQuality ? null : new AutoQuality();
+  const autoQuality = manualQuality ? null : new AutoQuality(qualityLevels(window.devicePixelRatio));
   const renderer = new Renderer(
     app,
     autoQuality?.settings ?? { renderScale: Number(params.get('scale') ?? 1), multisampling: Number(params.get('msaa') ?? 4) },
@@ -223,7 +224,10 @@ function boot() {
   function update() {
     input.sample();
     if (input.pressed('fullscreen')) toggleFullscreen(document.documentElement);
-    if (input.pressed('debug')) debug.toggle();
+    if (input.pressed('debug')) {
+      debug.toggle();
+      renderer.invalidate();
+    }
     if (input.pressed('editor') && flow.playing) editor.toggle();
     // The game stands still while the room is being edited.
     if (editor.active) {
@@ -275,16 +279,26 @@ function boot() {
   }
 
   let lastFrame = performance.now() / 1000;
+  /** Seconds the shaders' animations (HOLO_TIME) have run: they stand still behind a menu. */
+  let shaderTime = 0;
+  /** Did the last frame stand still (behind a menu)? */
+  let wasStill = false;
   function render(alpha) {
     const time = performance.now() / 1000;
-    const lowered = autoQuality?.frame(time - lastFrame);
+    // Behind a menu the game stands still: no animation, no interpolation,
+    // and the frame on screen is kept instead of drawn again (D169).
+    // While booting nothing moves either, but the room animates.
+    const still = !flow.playing && boot === null;
+    if (still !== wasStill) renderer.invalidate();
+    wasStill = still;
+    // Kept frames are no measure of how fast frames are drawn.
+    const lowered = still ? null : autoQuality?.frame(time - lastFrame);
     if (lowered) {
       renderer.setQuality(lowered);
       console.info(`Frames run slow: quality now MSAA ${renderer.multisampling}, render scale ${renderer.renderScale}`);
     }
-    // Behind a menu the game stands still: no animation, no interpolation.
-    // While booting nothing moves either, but the room animates.
     const dt = flow.playing ? Math.min(time - lastFrame, 0.1) : 0;
+    if (!still) shaderTime += Math.min(time - lastFrame, 0.1);
     lastFrame = time;
     if (!flow.playing || boot !== null) alpha = 1;
 
@@ -299,8 +313,8 @@ function boot() {
     debug.sync(game, alpha);
     renderer.setFade(game.fadeLevel(alpha));
     syncHud(hud, game, renderer, dt);
-    HOLO_TIME.value = time;
-    renderer.render();
+    HOLO_TIME.value = shaderTime;
+    renderer.render({ onlyIfChanged: still });
     readout.update(debug.active, { game, input, renderer, alpha, autoQuality });
   }
 

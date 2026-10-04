@@ -90,7 +90,7 @@ export function createScreen({ color = '#ffb020', face = '+z' } = {}) {
   const light = new Color(SCREEN_FX.color).lerp(new Color(0xffffff), 0.35).multiplyScalar(1.8);
   // Built facing +z; turned about the cell's middle to face +x.
   const body = new Group();
-  body.add(boxFaces(...slab), boxFaces(...tube), glassBox(...glass, SCREEN_FX.color, GLASS.deco));
+  body.add(boxFaces([slab, tube]), glassBox(...glass, SCREEN_FX.color, GLASS.deco));
   body.add(neonLines(boxEdges(...slab), lineMaterial({ color, width: 2, brightness: SCREEN_FX.edge })));
   body.add(neonLines([...boxEdges(...glass), ...boxEdges(...tube)], lineMaterial({ color: SCREEN_FX.color, width: 2, brightness: SCREEN_FX.screenEdge })));
 

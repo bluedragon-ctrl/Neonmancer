@@ -1,11 +1,17 @@
 /**
  * Building blocks for decorations (data pillar, screen, memory stack): dark
  * boxes, their edges and boxes of light, and turning one to face +x; glass
- * boxes are glass.js glassBox(). Boxes are given by their lower and upper
- * corners in the object's cell.
+ * boxes are glass.js glassBox() or glassBoxes(). Boxes are given by their
+ * lower and upper corners in the object's cell.
+ *
+ * A decoration is drawn in few draws: its dark boxes are one merged mesh
+ * (the same shape for every decoration of a look, so built once and
+ * shared), its glass one instanced mesh, its lights one instanced mesh.
  */
 import { AdditiveBlending, BoxGeometry, Group, InstancedMesh, Matrix4, Mesh, MeshBasicMaterial } from 'three';
-import { faceMaterial } from './neon.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { CUBE } from './geometry.js';
+import { faceMaterial, shared } from './neon.js';
 
 /**
  * Line segments of a box's 12 edges.
@@ -18,15 +24,29 @@ export function boxEdges([x0, y0, z0], [x1, y1, z1]) {
   return pairs.map(([a, b]) => [c(a), c(b)]);
 }
 
+/** Merged geometry of each set of boxes built so far, by their corners. */
+const merged = new Map();
+
+/** The dark face material every decoration shares (never changed at runtime). */
+let decoFaces = null;
+
 /**
- * Dark faces of a box.
- * @param {number[]} lo
- * @param {number[]} hi
+ * Dark faces of boxes, as one mesh. Every decoration of a look has the
+ * same boxes, so the merged geometry is built once and shared; so is the
+ * material, unless one is given.
+ * @param {number[][][]} boxes [lo, hi] corners of each box
+ * @param {import('three').Material} [material] faceMaterial() by default
  */
-export function boxFaces([x0, y0, z0], [x1, y1, z1]) {
-  const mesh = new Mesh(new BoxGeometry(x1 - x0, y1 - y0, z1 - z0), faceMaterial());
-  mesh.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
-  return mesh;
+export function boxFaces(boxes, material = (decoFaces ??= shared(faceMaterial()))) {
+  const key = JSON.stringify(boxes);
+  if (!merged.has(key)) {
+    const parts = boxes.map(([[x0, y0, z0], [x1, y1, z1]]) =>
+      new BoxGeometry(x1 - x0, y1 - y0, z1 - z0).translate((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2),
+    );
+    merged.set(key, shared(mergeGeometries(parts)));
+    for (const part of parts) part.dispose();
+  }
+  return new Mesh(merged.get(key), material);
 }
 
 /**
@@ -37,7 +57,7 @@ export function boxFaces([x0, y0, z0], [x1, y1, z1]) {
  */
 export function lightBoxes(count, color) {
   const material = new MeshBasicMaterial({ color, blending: AdditiveBlending, depthWrite: false, transparent: true });
-  const mesh = new InstancedMesh(new BoxGeometry(1, 1, 1), material, count);
+  const mesh = new InstancedMesh(CUBE, material, count);
   mesh.frustumCulled = false;
   return mesh;
 }
