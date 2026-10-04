@@ -329,8 +329,8 @@
           "description": "Variant: the base block type (one without \"extends\") whose values it takes; its own values replace the base's."
         },
         "look": {
-          "enum": ["plain", "hazard", "void"],
-          "description": "Static blocks: plain (dark faces, neon edges), hazard (red pixels switching on and off, flares when it hurts) or void (black mist with gray wisps sinking inside it, D99). Looks are built into the engine (src/render/block-fx.js)."
+          "enum": ["plain", "hazard", "void", "fence"],
+          "description": "Static blocks: plain (dark faces, neon edges), hazard (red pixels switching on and off, flares when it hurts), void (black mist with gray wisps sinking inside it, D99) or fence (no faces: horizontal data streams through the middle of the cell, linked with the fences next to it, D167; goes with \"seeThrough\"). Looks are built into the engine (src/render/block-fx.js, src/render/fence.js)."
         },
         "kind": {
           "enum": ["gate"],
@@ -352,6 +352,7 @@
         },
         "damage": { "type": "integer", "minimum": 1, "description": "Static blocks: integrity the wizard loses when he touches it (stands on it or walks into it)." },
         "lethal": { "type": "boolean", "description": "Static blocks: landing on top kills the wizard and enemies instantly; touching a side is safe." },
+        "seeThrough": { "type": "boolean", "description": "Static blocks: solid to bodies (the wizard, enemies, crates; he can stand on top), but bolts (his Zap, enemies' shots) and enemies' sight pass through it (D167). Blink, Warp, Pull and a paste stop at it as at any block." },
         "fake": { "type": "boolean", "description": "Static blocks: solid like any other until a scan reaches it (D128), then it derezzes and stays gone until the room resets. With the plain look and no color it can't be told from a plain block. A pickup may lie inside one (a hidden pickup)." },
         "regrow": {
           "type": "number",

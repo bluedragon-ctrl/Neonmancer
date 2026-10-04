@@ -163,6 +163,8 @@ const ALL_ASSETS = [
   { label: 'block-hazard', build: () => buildActiveBlock('hazard') },
   { label: 'block-void', build: () => buildActiveBlock('void') },
   { label: 'blocks-in-room', span: 5.5, build: buildBlocksInRoom },
+  // Fences (D167): see-through, the wizard walks behind them.
+  { label: 'fence-in-room', span: 5.5, build: buildFenceInRoom },
   // Glass (D96): every crate type is glass (above). Hazard blocks as glass
   // are an option not used yet; then a room corner with glass crates
   // stacked beside the old tinted crate, the wizard walking behind them.
@@ -2212,6 +2214,34 @@ function buildBlocksInRoom() {
   );
   room.position.set(-2, 0, -2);
   return new Group().add(room);
+}
+
+/**
+ * Fences (D167) in a 4×4 room corner: a 2-high run from the back wall
+ * turning a corner, a 1-high run meeting a plain block, and the wizard
+ * walking back and forth behind the tall one, seen through it.
+ */
+function buildFenceInRoom() {
+  const size = [4, 3, 4];
+  const tall = [[0, 0, 2], [1, 0, 2], [2, 0, 2], [2, 0, 3]].flatMap(([x, , z]) => [[x, 0, z], [x, 1, z]]);
+  const room = new Group().add(
+    createRoomView({ size, blocks: { block: [[3, 0, 0]], fence: [...tall, [3, 0, 1]] }, blockTypes: BLOCK_TYPES, color: PALETTE.amber }),
+  );
+  const wizard = createWizard();
+  addXray(wizard);
+  room.add(wizard);
+  room.position.set(-2, 0, -2);
+  const asset = new Group().add(room);
+  const loop = 360;
+  let tick = 0;
+  asset.userData.update = (dt) => {
+    tick = (tick + dt * 60) % loop;
+    const t = tick / loop;
+    const leg = t < 0.5 ? t * 2 : (t - 0.5) * 2;
+    wizard.position.set(t < 0.5 ? 0.5 + leg * 1.6 : 2.1 - leg * 1.6, 0, 1.2);
+    wizard.rotation.y = t < 0.5 ? Math.PI / 2 : -Math.PI / 2;
+  };
+  return asset;
 }
 
 /**

@@ -17,6 +17,8 @@
  * stops at a room object as a Zap does, so it still breaks crates and
  * switches targets. Shield+ (D95) sends an enemy's shot back the way it
  * came (reflect()): from then on it is the wizard's bolt.
+ * A see-through block (a fence, D167) doesn't stop or bounce a bolt: it
+ * flies through.
  * The body it stops at (its `target`) takes the hit (updateBolts() in combat.js:
  * enemies and the wizard; room objects only mind the wizard's Zap). It
  * never goes through a thing: it moves in short sub-steps; it gives up
@@ -189,10 +191,10 @@ export class Bolt {
     return false;
   }
 
-  /** Would a wall stop it where it is: a block, the room's side (a closed exit too) or a room object? */
+  /** Would a wall stop it where it is: a block (not a fence), the room's side (a closed exit too) or a room object? */
   walled({ grid, objects }) {
     const box = this.box();
-    return overlapsSolid(box, grid) || (this.bounceObjects && objects.some((object) => object.solid !== false && overlapsBox(box, object.box())));
+    return overlapsSolid(box, grid, { sight: true }) || (this.bounceObjects && objects.some((object) => object.solid !== false && overlapsBox(box, object.box())));
   }
 
   /**
@@ -216,7 +218,7 @@ export class Bolt {
       null;
     const [x, , z] = this.pos;
     const outside = x < 0 || z < 0 || x > grid.w || z > grid.d || this.traveled >= BOLT.range;
-    this.stopped = this.target !== null || outside || overlapsSolid(box, grid);
+    this.stopped = this.target !== null || outside || overlapsSolid(box, grid, { sight: true });
     return this.stopped;
   }
 }

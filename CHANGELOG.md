@@ -22,6 +22,11 @@ docs/decisions.md).
   second solution no easier than the intended one is not a bypass.
 
 ### Added
+- Fences (D167): block type `fence`, a see-through barrier drawn as linked
+  horizontal data streams with no faces, so it walls off an area without
+  hiding it. Solid to bodies (he can stand on it), but bolts and enemies'
+  sight pass through (`seeThrough`). Showcase `fence-in-room`, dev room
+  `fence_yard`.
 - Boss one in the Lattice (5.6d, D162): `warden_pit`, off a new south door
   of `cold_stairs`, where Null Pointer guards fragment 7 among cover
   pillars, and `idle_cache` behind it: a crate and a frozen bug hold the two

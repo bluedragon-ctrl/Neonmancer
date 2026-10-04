@@ -17,6 +17,8 @@
  * 1 the room's edge (outside the sides, below the floor), from 2 on a
  * static block type; typeAt() gives the type with its properties (damage,
  * lethal), so game rules ask about properties, never type names (D60).
+ * A see-through type (a fence, D167) is solid to bodies but lets bolts
+ * and sight through (blocksSight()).
  */
 import { exitCells } from '../data/room-data.js';
 
@@ -89,6 +91,15 @@ export class Grid {
   /** Is the cell with integer coordinates [x, y, z] solid? */
   isSolid(x, y, z) {
     return this.cellAt(x, y, z) !== CELL.empty;
+  }
+
+  /**
+   * Does the cell [x, y, z] (integers) stop bolts and sight: solid, and not
+   * a see-through block type (a fence, D167)?
+   */
+  blocksSight(x, y, z) {
+    const code = this.cellAt(x, y, z);
+    return code !== CELL.empty && !this.types[code].seeThrough;
   }
 
   /** Is the column [x, z] (integers) inside the room's sides? */
