@@ -223,14 +223,22 @@ the ones it gives:
   design tool: 1 high keeps crates and enemies in and he jumps it; 2 high
   stops him until the double jump; 3 high for good. A target behind a
   fence is switched with a Zap through it; a tower behind one still
-  shoots him (no cover). Look (`src/render/fence.js`, `FENCE` tuning): no
-  faces; two beams per unit of height (at half and full height) through
-  the middle of the cell, along its run; fence cells side by side on a
-  level link up, a corner, T or cross joins round a post in the middle,
-  a free end has a post (none where it meets a block or a back wall), a
-  lone cell runs along x (along z when only a z side is walled); the top
-  beam of a stack is the rail, brightest; pulses of data flow along the
-  beams (towards +x or +z). Room color (structure, D99). Showcase
+  shoots him (no cover). Look: no faces; two beams per unit of height (at
+  half and full height) through the middle of the cell, along its run;
+  fence cells side by side on a level link up, a corner, T or cross joins
+  round a post in the middle, a free end has a post (none where it meets
+  a block or a back wall), a lone cell runs along x (along z when only a
+  z side is walled) (`src/render/fence.js`, pure). Drawn as streams of
+  light (`src/render/fence-view.js`, `FENCE` tuning): each beam a soft
+  camera-facing ribbon, a near-white core fading into the color, with
+  packets of light (a bright head, a comet tail) running along it,
+  unevenly spaced, over a faint ripple; the lower and upper beam of a
+  level flow opposite ways; beams fade out at their ends. The top beam of
+  a stack is the rail, brighter and steadier. Posts are emitters: a
+  glowing node where each beam meets one and a faint glow up it. All
+  additive light, no depth written: it never hides the wizard or sets
+  off his x-ray. Room color (structure, D99). Chosen from three
+  showcase variants (ribbon alone, with nodes, with data pixels). Showcase
   `?asset=fence-in-room`; dev room `fence_yard`.
 - Validation: a base type has a look or a kind, not both; `damage`,
   `lethal` and `seeThrough` only on static types, `kind` values only on

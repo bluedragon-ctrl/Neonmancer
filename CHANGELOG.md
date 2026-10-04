@@ -23,8 +23,9 @@ docs/decisions.md).
 
 ### Added
 - Fences (D167): block type `fence`, a see-through barrier drawn as linked
-  horizontal data streams with no faces, so it walls off an area without
-  hiding it. Solid to bodies (he can stand on it), but bolts and enemies'
+  horizontal streams of light (glowing ribbons with packets flowing along
+  them, emitter nodes at the posts) with no faces, so it walls off an area
+  without hiding it. Solid to bodies (he can stand on it), but bolts and enemies'
   sight pass through (`seeThrough`). Showcase `fence-in-room`, dev room
   `fence_yard`.
 - Boss one in the Lattice (5.6d, D162): `warden_pit`, off a new south door

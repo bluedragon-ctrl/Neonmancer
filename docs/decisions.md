@@ -1824,8 +1824,15 @@ read as unreachable in CI.
   middle of the cell, along its run; neighbours on a level link up
   (corners and junctions round a post in the middle, posts at free ends,
   none where a run meets a block or a back wall); the top beam of a stack
-  is the brightest rail; data pulses flow along the beams. Room color
-  (structure, D99): cyan would say it moves. `src/render/fence.js`.
+  is the rail (`src/render/fence.js`). Plain neon lines read as simple
+  geometry, so the beams are streams of light (`src/render/fence-view.js`):
+  soft glowing ribbons, a white-hot core, packets with comet tails flowing
+  (the two beams of a level opposite ways), a faint ripple, ends fading;
+  posts are emitters, a glowing node at each beam. Additive, so it never
+  hides the wizard. The author picked this from three showcase variants:
+  ribbon alone (posts as thin lines), with nodes, and with data pixels
+  shed by the packet heads (busier). Room color (structure, D99): cyan
+  would say it moves.
 - **Whole cells, not edges.** A thin fence on the line between two cells
   would look more like a fence, but needs edge collision and teaching the
   editor, the checker and pushing about edges. As a cell it is one entry

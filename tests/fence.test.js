@@ -7,6 +7,7 @@ import { Game } from '../src/game.js';
 import { moveAxis, overlapsSolid } from '../src/physics/collision.js';
 import { resolveBlockTypes } from '../src/data/room-data.js';
 import { fenceLayout } from '../src/render/fence.js';
+import { nodePoints } from '../src/render/fence-view.js';
 import { createRoomView } from '../src/render/room-view.js';
 import { Progress, saveBit } from '../src/world/progress.js';
 import { BLOCK_TYPES, gameData, grid, idle, input, roomFile } from './helpers.js';
@@ -52,6 +53,11 @@ test('fence: a lone cell runs along x, or along z when only a z side meets a wal
   const walled = fenceLayout([[2, 0, 0]], (x, y, z) => z < 0);
   assert.deepEqual(lines(walled.beams), lines([[[2.5, 0.5, 0], [2.5, 0.5, 1]]]));
   assert.equal(walled.posts.length, 1, 'only at the free end');
+});
+
+test('fence: a node where each beam meets a post', () => {
+  // A 2-high post: beams at 0.5, 1, 1.5 and the rail at 2.
+  assert.deepEqual(nodePoints([[[1, 0, 2.5], [1, 2, 2.5]]]), [0.5, 1, 1.5, 2].map((y) => [1, y, 2.5]));
 });
 
 // ---- rules

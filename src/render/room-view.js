@@ -9,7 +9,7 @@
  * looks are animated (block-fx.js) and outline themselves; a line they
  * share with plain blocks (or a lethal type with a hurting one) is drawn
  * once, by the more dangerous look, so the seam is theirs alone. Fences
- * (D167, fence.js) have no faces and draw their own lines, outside the
+ * (D167, fence-view.js) have no faces and draw their own lines, outside the
  * mass: blocks next to them keep their outline. Only
  * the back walls (x = 0 and z = 0) are drawn; the front sides stay open
  * (CLAUDE.md §4). Exits are doorways in the back walls and gaps in the
@@ -17,7 +17,7 @@
  */
 import { BoxGeometry, BufferGeometry, Color, DoubleSide, Float32BufferAttribute, Group, InstancedMesh, Matrix4, Mesh } from 'three';
 import { BLOCK_FX, createActiveBlockView, flareHazard, hazardFaceMaterial } from './block-fx.js';
-import { createFenceView } from './fence.js';
+import { createFenceView } from './fence-view.js';
 import { blockEdges, edgeUnitKeys, groupedBlockEdges } from './edges.js';
 import { BITS, markSegments } from './marks.js';
 import { GLASS, glassBox, shrinkSegments } from './glass.js';
