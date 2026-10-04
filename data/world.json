@@ -13,6 +13,8 @@
     ["shield_hall.north", "bolt_gallery.south"],
     ["bolt_gallery.north", "relay_loft.south"],
     ["relay_loft.west", "ledger_cell.east"],
+    ["relay_loft.east", "scan_lab.west"],
+    ["scan_lab.east", "mirror_stacks.west"],
     ["freeze_hall.south", "cold_stairs.north"],
     ["cold_stairs.south", "warden_pit.north"],
     ["warden_pit.south", "idle_cache.north"],
@@ -37,6 +39,8 @@
     "bolt_gallery": [8, -2],
     "relay_loft": [8, -3],
     "ledger_cell": [7, -3],
+    "scan_lab": [9, -3],
+    "mirror_stacks": [10, -3],
     "room_1": [4, -1],
     "room_2": [3, -1],
     "fence_yard": [2, -1]

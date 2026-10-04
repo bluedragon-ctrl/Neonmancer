@@ -2234,7 +2234,7 @@ author, recorded as decisions before the code lands. Every step also
 The phases were re-cut around a playtest of Home Lattice. The rules of
 "Finished phases" apply to every step: one branch, one PR against `main`,
 CI green, showcase, test room, unit tests, docs. Code steps name their
-branch; design steps end in decisions before any code. **Next: Phase 5 (5.6e; 5.3 music waits for the tracks, D147).**
+branch; design steps end in decisions before any code. **Next: Phase 5 (5.6f; 5.3 music waits for the tracks, D147).**
 
 ### Phase 4 (v0.4) steps: tools and bosses
 
@@ -2272,7 +2272,7 @@ tracks and is done after 5.5 (D147).
 | 5.6b (done, D156) | `feat/lattice-shield-wing` | `bolt_gallery` (fragment 3), `relay_loft` (fragment 4) and `ledger_cell` (fragment 5; bypass fixed, D160). |
 | 5.6c (done, D157) | `feat/lattice-pause-wing` | `cold_stairs` (fragment 6): frozen enemies as steps. |
 | 5.6d (done, D162) | `feat/lattice-boss-one` | `warden_pit` (boss 1, drops fragment 7) and `idle_cache` (fragment 8), placed from the test arena. |
-| 5.6e | `feat/lattice-scan-wing-1` | The Scan wing, first half: `scan_lab` (Scan disk) and `mirror_stacks` (fragment 9); the door from `relay_loft` is added. |
+| 5.6e (done, D168) | `feat/lattice-scan-wing-1` | The Scan wing, first half: `scan_lab` (Scan disk) and `mirror_stacks` (fragment 9); the door from `relay_loft` is added. |
 | 5.6f | `feat/lattice-scan-wing-2` | `ghost_exit` (fragment 10), `drift_bay` (fragment 11) and `junction` (fragment 16). |
 | 5.6g | `feat/lattice-fork-wing-1` | The Fork wing, first half: `fork_lab` (Fork disk) and `twin_plates` (fragment 12); the door from `cold_stairs` is added. |
 | 5.6h | `feat/lattice-fork-wing-2` | `guard_loop` (fragment 13) and `split_vault` (fragments 14 and 15). |
