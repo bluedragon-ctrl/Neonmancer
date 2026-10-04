@@ -1848,3 +1848,35 @@ read as unreachable in CI.
 **Why:** the author wanted to wall off areas and raise walls without the
 fixed camera losing what is behind them; bolts passing through was the
 author's choice, so a fence is a barrier he can see and shoot through.
+
+### D168 — 2026-10-04 — The Scan wing, first half: harder rooms (5.6e)
+`relay_loft` gets an east door (`at` 3, on the far bank) to `scan_lab`
+(9,-3), 12x5x12, and on to `mirror_stacks` (10,-3), 12x5x12, both
+unflagged. `mirror_stacks` keeps its south side (x 8-9) free for
+`ghost_exit` (5.6f). The author asked for harder rooms with more complex
+puzzles from here on: each room is a chain of four or five steps where a
+tool is used twice or a step must be taken in the right place.
+- `scan_lab` (Scan disk; teach, in a multistep shape): the disk lies on
+  a 2-high plinth, one crate the step; a 2-tile hole catches the crate on
+  the obvious push, and a crate left in the plinth's corner is lost. The
+  same crate is then needed again: a 3-high fence splits the room, its
+  one plain-looking plug is a fake block (the help screen explains Scan);
+  a scan also drops a second crate off a fake pillar on the far side, and
+  both crates must go into one row of a 3-wide pit. Coming back from the
+  east a timed plate raises a bridge over the pit (1.3 s of its 3 s used).
+- `mirror_stacks` (fragment 9; develop): two cages that mirror each
+  other. The near one holds a crate behind a fake block; the far one the
+  fragment behind a gate whose target hides behind a fake column, more
+  than 6 units from the near side, so a second scan is cast once across.
+  Two crates fill one row of a 3-wide pit between. Walls round the
+  fragment are 3 high on the back side and a fence on the camera side.
+- Played headless: `scan_lab` in about 22 s, `mirror_stacks` in about
+  16 s; without the second scan the bolt hits the fake column.
+- Checker limits: it takes every fake block as gone with Scan and every
+  target as hit with Zap, so the scan range and the bolt line are judged
+  by hand (above). Entering `relay_loft` from the east reaches fragment 4
+  with the east bank's crate; that way in leads only through the Scan
+  wing, so it is a longer road, not a bypass.
+**Why:** the author asked for more difficult rooms; the plan gives the
+wing Scan and fake blocks, and using the range of a scan as part of the
+puzzle (cast it where it reaches) makes the new spell more than a key.
