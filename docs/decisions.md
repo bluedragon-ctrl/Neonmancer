@@ -1877,6 +1877,17 @@ tool is used twice or a step must be taken in the right place.
   by hand (above). Entering `relay_loft` from the east reaches fragment 4
   with the east bank's crate; that way in leads only through the Scan
   wing, so it is a longer road, not a bypass.
+- Ways home (level review). Coming back from the Scan wing, `relay_loft`
+  is reset and its ferries unpowered: he was stranded on the far bank
+  (the checker takes platforms as floor). A timed plate on the far bank
+  (`plate_home` [13,0,7], 5 s) raises two bridge rows at z = 7 over both
+  pits; only the far bank reaches it, so the ferry puzzle stays (played:
+  3.2 s of the 5 s). `mirror_stacks` gets the same, a timed plate at
+  [7,0,11] and a bridge row over the pit at z = 11 (1.3 s of 3 s), since
+  leaping the pit off a crate top is one-way.
+- Lesson: a room with platforms needs a way home checked by hand from
+  every exit; "leave the way he came" is not enough when the rooms behind
+  that exit have no other way out.
 **Why:** the author asked for more difficult rooms; the plan gives the
 wing Scan and fake blocks, and using the range of a scan as part of the
 puzzle (cast it where it reaches) makes the new spell more than a key.

@@ -29,7 +29,7 @@ docs/decisions.md).
   a plug in a fence that a scan derezzes, a crate dropped off a fake
   pillar, a timed bridge home) and `mirror_stacks` (fragment 9: a caged
   crate, a 3-wide pit, a second scan out of the first one's range to clear
-  the only line to a target); `relay_loft` gets its east door. Harder,
+  the only line to a target); `relay_loft` gets its east door and a timed bridge home from it. Harder,
   multi-step puzzles, by the author's request.
 - Fences (D167): block type `fence`, a see-through barrier drawn as linked
   horizontal streams of light (glowing ribbons with packets flowing along

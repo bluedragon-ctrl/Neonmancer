@@ -10,6 +10,7 @@
   "blocks": [
     { "at": [2, 0, 1], "to": [2, 0, 3] },
     { "type": "fake", "at": [1, 0, 3] },
+    { "type": "bridge", "at": [4, 0, 11], "to": [6, 0, 11], "switches": ["plate_home"] },
     { "at": [7, 0, 0], "to": [7, 2, 2] },
     { "type": "gate", "at": [8, 0, 2], "to": [8, 1, 2], "switches": ["target_mirror"] },
     { "type": "fence", "at": [8, 2, 2] },
@@ -34,7 +35,8 @@
     { "id": "stack_12", "type": "memory_stack", "at": [2, 1, 0] },
     { "id": "crate_a", "type": "crate", "at": [2, 0, 8] },
     { "id": "crate_b", "type": "crate", "at": [1, 0, 2] },
-    { "id": "target_mirror", "type": "target", "at": [11, 0, 0] }
+    { "id": "target_mirror", "type": "target", "at": [11, 0, 0] },
+    { "id": "plate_home", "type": "plate_timed", "at": [7, 0, 11] }
   ],
   "pickups": [
     { "id": "fragment_9", "type": "fragment_9", "at": [8, 0, 0] },

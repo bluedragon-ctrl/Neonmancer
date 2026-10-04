@@ -11,7 +11,11 @@
     { "id": "west", "side": "-x", "at": 3 },
     { "id": "east", "side": "+x", "at": 3 }
   ],
-  "blocks": [{ "at": [12, 0, 0], "to": [13, 1, 1] }],
+  "blocks": [
+    { "at": [12, 0, 0], "to": [13, 1, 1] },
+    { "type": "bridge", "at": [3, 0, 7], "to": [5, 0, 7], "switches": ["plate_home"] },
+    { "type": "bridge", "at": [8, 0, 7], "to": [11, 0, 7], "switches": ["plate_home"] }
+  ],
   "holes": [
     { "at": [3, 0], "to": [5, 7] },
     { "at": [8, 0], "to": [11, 7] }
@@ -32,6 +36,7 @@
       "switches": ["plate_b", "plate_c"]
     },
     { "id": "crate_d", "type": "crate", "at": [12, 0, 5] },
+    { "id": "plate_home", "type": "plate_timed", "at": [13, 0, 7], "overrides": { "timer": 5 } },
     {
       "id": "platform_1",
       "type": "platform",
