@@ -1829,7 +1829,10 @@ read as unreachable in CI.
   soft glowing ribbons, a white-hot core, packets with comet tails flowing
   (the two beams of a level opposite ways), a faint ripple, ends fading;
   posts are emitters, a glowing node at each beam. Additive, so it never
-  hides the wizard. The author picked this from three showcase variants:
+  hides the wizard. After playtesting, the author asked for beams that read as
+  translucent shafts of light rather than solid tubes: they give half
+  their light (`opacity`), the core is only faintly white-hot, the ribbon
+  is wider and softer, and the nodes are dimmer. The author picked this from three showcase variants:
   ribbon alone (posts as thin lines), with nodes, and with data pixels
   shed by the packet heads (busier). Room color (structure, D99): cyan
   would say it moves.
