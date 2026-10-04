@@ -9,6 +9,9 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Changed
+- `ledger_cell`'s 3-high walls and the 3-high wall by `shield_hall`'s
+  corridor are fences (D167), so the floor behind them stays in view; the
+  gates and the sentinel's cover stay blocks.
 - Screen texts are help for a new spell or concept, never a room's
   solution (D163), and every crate is visible (D164): the room-design
   skill, `craft.md`, the level-review subagent and the checklist say so.

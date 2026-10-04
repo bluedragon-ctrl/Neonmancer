@@ -8,12 +8,12 @@
   "spawn": [6.5, 0, 4.5],
   "exits": [{ "id": "east", "side": "+x", "at": 3 }],
   "blocks": [
-    { "at": [0, 0, 6], "to": [0, 2, 6] },
+    { "type": "fence", "at": [0, 0, 6], "to": [0, 2, 6] },
     { "type": "gate", "at": [1, 0, 6], "to": [1, 2, 6], "switches": ["plate_a"] },
-    { "at": [2, 0, 6], "to": [5, 2, 6] },
+    { "type": "fence", "at": [2, 0, 6], "to": [5, 2, 6] },
     { "type": "gate", "at": [6, 0, 6], "to": [6, 2, 6] },
-    { "at": [7, 0, 6], "to": [7, 2, 6] },
-    { "at": [4, 0, 7], "to": [4, 2, 8] }
+    { "type": "fence", "at": [7, 0, 6], "to": [7, 2, 6] },
+    { "type": "fence", "at": [4, 0, 7], "to": [4, 2, 8] }
   ],
   "objects": [
     { "id": "screen_ledger", "type": "screen", "at": [5, 0, 8], "overrides": { "face": "+x" } },
