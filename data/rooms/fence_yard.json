@@ -1,0 +1,26 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "fence_yard",
+  "name": "Fence Yard",
+  "biome": "home_lattice",
+  "size": [10, 4, 10],
+  "spawn": [8.5, 0, 5.5],
+  "exits": [{ "id": "east", "side": "+x", "at": 4 }],
+  "blocks": [
+    { "type": "fence", "at": [4, 0, 0], "to": [4, 1, 4] },
+    { "type": "fence", "at": [0, 0, 4], "to": [3, 1, 4] },
+    { "type": "fence", "at": [6, 0, 0], "to": [6, 0, 3] },
+    { "type": "fence", "at": [7, 0, 3], "to": [9, 0, 3] },
+    { "type": "bridge", "at": [2, 0, 7], "to": [2, 0, 8] }
+  ],
+  "holes": [{ "at": [0, 7], "to": [9, 8] }],
+  "objects": [
+    { "id": "target_1", "type": "target", "at": [1, 0, 1] },
+    { "id": "crate_1", "type": "crate", "at": [8, 0, 1] }
+  ],
+  "pickups": [
+    { "id": "disk_zap", "type": "disk_zap", "at": [5, 0, 6] },
+    { "id": "energy", "type": "refill_energy", "at": [2, 0, 9] }
+  ]
+}

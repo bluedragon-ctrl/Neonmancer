@@ -115,6 +115,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/daemon.js` | Daemon model (D107): floating teardrop flame with embers, stretch and squeeze (`daemonStretch()`), `DAEMON` tuning; `DAEMON_MODEL` |
 | `render/discharge.js` | Discharge lightning (D78): charge timing and glow (`dischargeLook()`, `chargeGlow()`), burst and arc zigzags (pure, tested), the aim line, `DISCHARGE` tuning |
 | `render/disk.js`, `render/refill.js` | Pickup looks: the data disk (bit grid showing the spell's slot, ghost, pick-up and its derez body; motion pure, tested) and the refills |
+| `render/fence.js` | Fence layout (D167): `fenceLayout()` links fence cells into beams, rails and posts (pure, tested) |
+| `render/fence-view.js` | Fence look (D167): beams as glowing ribbons with packets of light flowing along them, posts as emitters with a node at each beam (`nodePoints()`); instanced, additive, animated in shaders; `FENCE` tuning |
 | `render/edges.js` | Visible block edges from grid occupancy; several plain types as one mass, each edge to a type (`groupedBlockEdges()`, D64); merging unit segments into runs (pure, tested) |
 | `render/enemy-look.js` | What every enemy model shares (D80): mood colors (`MOODS`, `eyeMood()`, `setMood()`), the eye geometry and glow (pure parts tested); each look's `derez` body is in its own module |
 | `render/entity-view.js` | Player (with the cast flare), pushable, platform and enemy views (enemy bodies by `look`: `ENEMY_MODELS`; spell-hit flash and glitch, charge glow, "!" and discharge), glowing drop shadows, platform guide lines |

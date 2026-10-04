@@ -2,7 +2,7 @@
   "$schema": "../schemas/world.schema.json",
   "schemaVersion": 1,
   "start": "boot_up",
-  "dev": ["hidden_layer", "room_1", "room_2"],
+  "dev": ["hidden_layer", "room_1", "room_2", "fence_yard"],
   "fragments": { "required": 64, "access": [16, 32, 48] },
   "connections": [
     ["first_steps.east", "zap_port.west"],
@@ -18,6 +18,7 @@
     ["warden_pit.south", "idle_cache.north"],
     ["room_1.south", "hidden_layer.north"],
     ["room_2.east", "room_1.west"],
+    ["fence_yard.east", "room_2.west"],
     ["boot_up.east", "first_steps.west"],
     ["boot_up.west", "hidden_layer.east"]
   ],
@@ -37,6 +38,7 @@
     "relay_loft": [8, -3],
     "ledger_cell": [7, -3],
     "room_1": [4, -1],
-    "room_2": [3, -1]
+    "room_2": [3, -1],
+    "fence_yard": [2, -1]
   }
 }

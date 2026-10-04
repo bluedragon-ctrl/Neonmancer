@@ -194,12 +194,13 @@ the ones it gives:
 | `hazard` | hazard, danger red | `damage: 1` |
 | `void` | void, black mist with gray wisps (D99) | `lethal: true` |
 | `fake` | plain (room color) | `fake: true`: a scan derezzes it (D128, see Scan) |
+| `fence` | fence (room color): data streams, no faces (D167) | `seeThrough: true`: bolts and sight pass (see Fences) |
 | `collapsing` | kind `gate`, `trigger: step`; room color, dashed edges, faces barely tinted (D98, D99) | gives way (see Gate blocks) |
 | `collapsing_regrow` | extends `collapsing` | `regrow: 3` |
 | `gate` | kind `gate` (switch trigger), white, bars on its seen sides (D140) | solid until its switches are on (see Gate blocks) |
 | `bridge` | extends `gate` | `start: gone`: there only while its switches are on (D144) |
 
-- **Static types** have a `look` (`plain`, `hazard`, `void`) and live in
+- **Static types** have a `look` (`plain`, `hazard`, `void`, `fence`) and live in
   the room grid: each cell holds its type's code, and the rules ask about
   properties, never names: a cell with `damage` hurts on touch, a
   `lethal` one kills whoever lands on it. A plain type may have its own
@@ -212,9 +213,37 @@ the ones it gives:
 - A new type that only combines existing properties and looks is data
   only (e.g. `"hazard_hot": { "extends": "hazard", "damage": 2 }`); a new
   property (bounce, slippery, conveyor...) or look is code.
-- Validation: a base type has a look or a kind, not both; `damage` and
-  `lethal` only on static types, `kind` values only on kinds; a kind needs
-  a color; `block` must be static; room blocks name a known type.
+- **Fences (D167):** a see-through barrier, so a room can wall off an
+  area or raise a wall without hiding what is behind it from the fixed
+  camera. Solid to bodies like any block (the wizard, enemies, crates;
+  he stands on top, and the reachability checker treats it as a block),
+  but bolts (his Zap and Pause, enemies' shots, Zap+ bounces too) and
+  enemies' sight pass through (`seeThrough`, `Grid.blocksSight()`).
+  Blink, Warp, Pull and a paste stop at it as at a block. Height is the
+  design tool: 1 high keeps crates and enemies in and he jumps it; 2 high
+  stops him until the double jump; 3 high for good. A target behind a
+  fence is switched with a Zap through it; a tower behind one still
+  shoots him (no cover). Look: no faces; two beams per unit of height (at
+  half and full height) through the middle of the cell, along its run;
+  fence cells side by side on a level link up, a corner, T or cross joins
+  round a post in the middle, a free end has a post (none where it meets
+  a block or a back wall), a lone cell runs along x (along z when only a
+  z side is walled) (`src/render/fence.js`, pure). Drawn as streams of
+  light (`src/render/fence-view.js`, `FENCE` tuning): each beam a soft
+  camera-facing ribbon, a near-white core fading into the color, with
+  packets of light (a bright head, a comet tail) running along it,
+  unevenly spaced, over a faint ripple; the lower and upper beam of a
+  level flow opposite ways; beams fade out at their ends. The top beam of
+  a stack is the rail, brighter and steadier. Posts are emitters: a
+  glowing node where each beam meets one and a faint glow up it. All
+  additive light, no depth written: it never hides the wizard or sets
+  off his x-ray. Room color (structure, D99). Chosen from three
+  showcase variants (ribbon alone, with nodes, with data pixels). Showcase
+  `?asset=fence-in-room`; dev room `fence_yard`.
+- Validation: a base type has a look or a kind, not both; `damage`,
+  `lethal` and `seeThrough` only on static types, `kind` values only on
+  kinds; a kind needs a color; `block` must be static; room blocks name a
+  known type.
 - **Edges (D64):** neighbours of any plain types never get an edge between
   them: the corner rule (D12) runs over all plain blocks as one mass, and
   each edge takes the color of a type around it (the later one in
@@ -1616,6 +1645,7 @@ the world map tool shows the connections and flags any room further out.
 | `clipboard` | Abyssal Buffer, 12×12 | Cut & Paste: crates to cut and paste as steps and bridges, a bug to freeze and move |
 | `tractor_bay` | Home Lattice, 12×12, east of Cache Hall | Pull: two crates across a moat to pull into it as a bridge, a bug patrolling behind a trench to pull in; the Pull disk, an energy refill |
 | `build_yard` | Home Lattice, 12×12, east of Tractor Bay | Compile: a two-wide trench to plug crate by crate, a ledge two high to climb with a compiled step; the Compile disk, an energy refill on the ledge |
+| `fence_yard` | Home Lattice, 10×10, dev wing, west of Room 2 | Fences (D167): a 2-high fence round a back pocket with a target, switched by a Zap through it, raising a bridge over a pit to an energy refill; a 1-high fence pen with a crate; the Zap disk |
 | `hidden_layer` | Home Lattice, 12×12, east of Build Yard | Scan: a wall across the room with a fake gap, a hidden exit in the back wall behind it, an energy refill inside a fake block; the Scan disk |
 | `secret_cache` | Home Lattice, 8×8, north of Hidden Layer | behind the hidden exit: a secret |
 | `decoy_lab` | Home Lattice, 12×12, north of Build Yard | Fork: a plate in a slot under a lintel (only a decoy can press it), a locked exit that opens while it is pressed, a virus to draw away; the Fork disk |
@@ -1686,7 +1716,9 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
 - The camera looks from the front corner (+x, +z). Tall blocks near the
   front sides hide what is behind them: keep high ledges and walls against
   the back walls (x = 0, z = 0), and put steps on the side facing the
-  camera, not behind a ledge.
+  camera, not behind a ledge. Where a barrier must stand on the camera
+  side, or a wall must rise higher, use a fence (D167): it blocks him
+  but hides nothing. It is no cover: bolts and sight pass through it.
 - Each mechanic should be seen before it matters: a pit, a hazard or a
   collapsing bridge in view from where the wizard enters. Every crate is
   visible to the player: never hidden from the camera behind tall blocks,

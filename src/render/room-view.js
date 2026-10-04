@@ -8,13 +8,16 @@
  * edge takes the color of a type around it (D64). The hazard and void
  * looks are animated (block-fx.js) and outline themselves; a line they
  * share with plain blocks (or a lethal type with a hurting one) is drawn
- * once, by the more dangerous look, so the seam is theirs alone. Only
+ * once, by the more dangerous look, so the seam is theirs alone. Fences
+ * (D167, fence-view.js) have no faces and draw their own lines, outside the
+ * mass: blocks next to them keep their outline. Only
  * the back walls (x = 0 and z = 0) are drawn; the front sides stay open
  * (CLAUDE.md §4). Exits are doorways in the back walls and gaps in the
  * front edges (render/walls.js).
  */
 import { BoxGeometry, BufferGeometry, Color, DoubleSide, Float32BufferAttribute, Group, InstancedMesh, Matrix4, Mesh } from 'three';
 import { BLOCK_FX, createActiveBlockView, flareHazard, hazardFaceMaterial } from './block-fx.js';
+import { createFenceView } from './fence-view.js';
 import { blockEdges, edgeUnitKeys, groupedBlockEdges } from './edges.js';
 import { BITS, markSegments } from './marks.js';
 import { GLASS, glassBox, shrinkSegments } from './glass.js';
@@ -55,7 +58,7 @@ export function createRoomView({ size, blocks, blockTypes, exits = [], color = P
   // one (D64): lethal types first, then those that hurt; each leaves out
   // the lines already claimed, and plain blocks come last.
   const danger = (type) => (type.lethal ? 2 : type.damage ? 1 : 0);
-  const active = types.filter((type) => type.look !== 'plain').sort((a, b) => danger(b) - danger(a));
+  const active = types.filter((type) => type.look !== 'plain' && type.look !== 'fence').sort((a, b) => danger(b) - danger(a));
   const claimed = new Set();
   for (const type of active) {
     const cells = blocks[type.id];
@@ -67,6 +70,13 @@ export function createRoomView({ size, blocks, blockTypes, exits = [], color = P
   // In defs.json order: where plain types meet, the later one's color wins the edge.
   const plain = types.filter((type) => type.look === 'plain');
   if (plain.length > 0) group.add(createBlockView(plain.map((type) => ({ cells: blocks[type.id], color: type.color ?? color })), claimed));
+  // Fences (D167): a run ending at another block or a back wall needs no post.
+  const fences = types.filter((type) => type.look === 'fence');
+  if (fences.length > 0) {
+    const others = new Set(types.filter((type) => type.look !== 'fence').flatMap((type) => blocks[type.id].map((cell) => cell.join())));
+    const solid = (x, y, z) => x < 0 || z < 0 || others.has(`${x},${y},${z}`);
+    for (const type of fences) group.add(createFenceView(blocks[type.id], type.color ?? color, solid));
+  }
   return group;
 }
 

@@ -52,14 +52,19 @@ function cellRange([min, max]) {
 /**
  * Does the box overlap any solid cell?
  * @param {number[][]} box from bodyBox()
- * @param {{ isSolid(x: number, y: number, z: number): boolean }} grid
+ * @param {{ isSolid(x: number, y: number, z: number): boolean, blocksSight?(x: number, y: number, z: number): boolean }} grid
+ * @param {{ sight?: boolean }} [options] sight: only cells that stop bolts
+ *   and sight count (grid.blocksSight(): see-through fences don't, D167)
  */
-export function overlapsSolid(box, grid) {
+export function overlapsSolid(box, grid, { sight = false } = {}) {
   const [x0, x1] = cellRange(box[0]);
   const [y0, y1] = cellRange(box[1]);
   const [z0, z1] = cellRange(box[2]);
-  for (let x = x0; x <= x1; x++)
-    for (let y = y0; y <= y1; y++) for (let z = z0; z <= z1; z++) if (grid.isSolid(x, y, z)) return true;
+  for (let x = x0; x <= x1; x++) {
+    for (let y = y0; y <= y1; y++) {
+      for (let z = z0; z <= z1; z++) if (sight ? grid.blocksSight(x, y, z) : grid.isSolid(x, y, z)) return true;
+    }
+  }
   return false;
 }
 

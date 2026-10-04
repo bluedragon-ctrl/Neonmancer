@@ -364,7 +364,7 @@ export function resolveObjectTypes(types) {
 }
 
 /** Values only static block types take, and only object kinds take (D60). */
-export const STATIC_BLOCK_VALUES = ['look', 'damage', 'lethal', 'fake'];
+export const STATIC_BLOCK_VALUES = ['look', 'damage', 'lethal', 'fake', 'seeThrough'];
 export const KIND_BLOCK_VALUES = ['kind', 'trigger', 'start', 'regrow', 'edges', 'mark', 'faces', 'tint'];
 
 /**

@@ -1811,3 +1811,40 @@ them, and the review found the bypasses above along the way.
 **Why:** the author asked for both. The bounce bypass could not be fixed
 while the checker only knew path cells: a lane far enough from the ledge
 read as unreachable in CI.
+
+### D167 — 2026-10-04 — Fences: a see-through block
+- **What.** Block type `fence` (`"look": "fence", "seeThrough": true`): a
+  static block in the grid, solid to bodies like any other (the wizard,
+  enemies, crates; he can stand on top, which the reachability checker
+  already handles), with a new property `seeThrough`: bolts (Zap, Pause,
+  enemies' shots, bounces included) and enemies' sight pass through it
+  (`Grid.blocksSight()`, `overlapsSolid(..., { sight: true })`). Blink,
+  Warp, Pull and a paste stop at it as at any block.
+- **Look.** No faces: two horizontal beams per unit of height through the
+  middle of the cell, along its run; neighbours on a level link up
+  (corners and junctions round a post in the middle, posts at free ends,
+  none where a run meets a block or a back wall); the top beam of a stack
+  is the rail (`src/render/fence.js`). Plain neon lines read as simple
+  geometry, so the beams are streams of light (`src/render/fence-view.js`):
+  soft glowing ribbons, a white-hot core, packets with comet tails flowing
+  (the two beams of a level opposite ways), a faint ripple, ends fading;
+  posts are emitters, a glowing node at each beam. Additive, so it never
+  hides the wizard. The author picked this from three showcase variants:
+  ribbon alone (posts as thin lines), with nodes, and with data pixels
+  shed by the packet heads (busier). Room color (structure, D99): cyan
+  would say it moves.
+- **Whole cells, not edges.** A thin fence on the line between two cells
+  would look more like a fence, but needs edge collision and teaching the
+  editor, the checker and pushing about edges. As a cell it is one entry
+  in `defs.json`; the lines through the cell's middle read as thin.
+- **Height is the design tool.** 1 high pens crates and enemies; 2 high
+  stops him until the double jump (a "come back later", D68); 3 high for
+  good. No cover: a tower behind a fence still shoots him.
+- **Not chosen.** A glass block (glass is crates' look, D96; stacked glass
+  turns murky) and cutting away blocks in front of the wizard (helps only
+  him, not the area behind).
+- **Dev room** `fence_yard` (west of `room_2`, which gets a west exit):
+  a target behind a 2-high fence, zapped through it, raises a bridge.
+**Why:** the author wanted to wall off areas and raise walls without the
+fixed camera losing what is behind them; bolts passing through was the
+author's choice, so a fence is a barrier he can see and shoot through.

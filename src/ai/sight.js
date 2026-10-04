@@ -5,7 +5,7 @@
  *
  * A ray marches in short steps and stops in the first solid cell (blocks,
  * the room's edge and floor, closed exits) or inside the first body box
- * it meets. Holes don't stop it (it passes over them).
+ * it meets. Holes and see-through blocks (fences, D167) don't stop it.
  */
 
 /** Ray step in units: short enough not to skip a corner of a 0.6 body. */
@@ -28,7 +28,7 @@ export function castRay(from, dir, range, grid, bodies = []) {
   range = Math.max(0, range || 0);
   for (let t = 0; ; t = Math.min(t + STEP, range)) {
     for (let i = 0; i < 3; i++) point[i] = from[i] + dir[i] * t;
-    if (grid.isSolid(Math.floor(point[0]), Math.floor(point[1]), Math.floor(point[2]))) {
+    if (grid.blocksSight(Math.floor(point[0]), Math.floor(point[1]), Math.floor(point[2]))) {
       return { distance: t, point: [...point], body: null, blocked: true };
     }
     for (const [body, box] of boxes) {
