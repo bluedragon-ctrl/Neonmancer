@@ -17,6 +17,9 @@ docs/decisions.md).
   quality lowers its render scale first. Shared geometry primitives
   (`render/geometry.js`) replace four copies of the unit cube; pixel bursts
   share one cube; the core's pedestal uses the decorations' box helpers.
+- Fence beams are translucent light (D167): dimmer, softer and wider, with
+  only a faint white-hot core and dimmer nodes, so they no longer read as
+  solid tubes.
 - `ledger_cell`'s 3-high walls and the 3-high wall by `shield_hall`'s
   corridor are fences (D167), so the floor behind them stays in view; the
   gates and the sentinel's cover stay blocks.

@@ -1,8 +1,8 @@
 /**
  * Fences drawn as streams of light (D167), from fenceLayout():
  *
- * - Beams: each a camera-facing ribbon, a near-white core fading out into
- *   the color, with packets of light (a bright head, a comet tail)
+ * - Beams: each a camera-facing ribbon of translucent light, a faintly
+ *   white core fading out into the color, with packets of light (a bright head, a comet tail)
  *   running along it, unevenly spaced, over a faint ripple. The lower and
  *   upper beam of a level flow opposite ways; the rail on top is steadier
  *   and brighter. Beams fade out at their ends.
@@ -34,9 +34,15 @@ import { HOLO_TIME } from './holo.js';
 export const FENCE = {
   beam: {
     /** Ribbon width (the halo; the core is a share of it). */
-    width: 0.14,
+    width: 0.2,
     /** Core width as a share of the ribbon. */
-    core: 0.22,
+    core: 0.18,
+    /** How much light the beam gives: below 1 it reads as a translucent
+     * shaft of light, not a solid tube, and the room shows through. */
+    opacity: 0.5,
+    /** How white-hot the core is, between packets and at a packet. */
+    hot: 0.15,
+    hotPacket: 0.4,
     /** Brightness of the core and the halo between packets. */
     glow: 1.3,
     halo: 0.35,
@@ -54,11 +60,11 @@ export const FENCE = {
     /** Fade at the ends of a beam, in units. */
     fade: 0.18,
   },
-  rail: { width: 0.18, glow: 1.9, halo: 0.45, density: 0.25, speed: 0.9, packet: 1.6 },
+  rail: { width: 0.24, glow: 1.9, halo: 0.45, opacity: 0.65, density: 0.25, speed: 0.9, packet: 1.6 },
   /** The faint glow up a post. */
-  post: { width: 0.1, glow: 0.35, halo: 0.2, density: 0, ripple: 0.4 },
+  post: { width: 0.1, glow: 0.35, halo: 0.2, opacity: 1, hot: 0.35, density: 0, ripple: 0.4 },
   /** Emitter nodes: size of the glow, its core, brightness and a slow throb. */
-  node: { size: 0.22, core: 0.25, glow: 2.4, throb: 0.25, throbSpeed: 1.7 },
+  node: { size: 0.22, core: 0.25, glow: 1.6, throb: 0.25, throbSpeed: 1.7 },
 };
 
 // The packet pattern. `s` runs along the flow (units), moving with
@@ -153,6 +159,9 @@ const beamFragment = /* glsl */ `
   uniform float uWave;
   uniform float uRippleSpeed;
   uniform float uFade;
+  uniform float uOpacity;
+  uniform float uHot;
+  uniform float uHotPacket;
   varying float vAcross;
   varying float vDist;
   varying float vLength;
@@ -169,8 +178,8 @@ const beamFragment = /* glsl */ `
     float ends = smoothstep(0.0, uFade, vDist) * smoothstep(0.0, uFade, vLength - vDist);
     float light = (core * uGlow * ripple + halo * uHalo) * (1.0 + packet * uPacket);
     // The core goes white-hot where a packet passes.
-    vec3 color = mix(uColor, vec3(1.0), core * (0.35 + 0.5 * packet));
-    gl_FragColor = vec4(color * light * ends, 1.0);
+    vec3 color = mix(uColor, vec3(1.0), core * (uHot + uHotPacket * packet));
+    gl_FragColor = vec4(color * light * ends * uOpacity, 1.0);
   }
 `;
 
@@ -202,6 +211,9 @@ function beamMesh(beams, color, style) {
     uWave: { value: s.wave },
     uRippleSpeed: { value: s.rippleSpeed },
     uFade: { value: s.fade },
+    uOpacity: { value: s.opacity },
+    uHot: { value: s.hot },
+    uHotPacket: { value: s.hotPacket },
   });
   return lightMesh(geometry, material);
 }
