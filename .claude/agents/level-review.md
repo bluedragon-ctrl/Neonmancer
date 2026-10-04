@@ -38,7 +38,11 @@ For each room:
      jumps and pushes) and compare it with the timer: shorter is a
      BLOCKER, less than ~1 s to spare a PROBLEM.
    - **Readability**: tall blocks vs the +x/+z camera, each mechanic
-     visible from the entrance, gates look like gates.
+     visible from the entrance, every crate visible (none behind tall
+     blocks or decor, none inside fake blocks; D164), gates look like gates.
+   - **Other solutions** (D166): a second way of the same or higher
+     difficulty is fine (say so as a NOTE); only an easier one that skips
+     the room's idea is a bypass (PROBLEM or BLOCKER).
    - **Spells and backtracking** (D67): what each exit/pickup needs, that
      he can leave the way he came, shortcuts not blocked by accident.
    - **No soft-locks**: every one-shot change (collapse, crate in a corner
@@ -47,9 +51,9 @@ For each room:
      over holes, hostile ones not on the entry spot, peaceful ones not
      breaking a puzzle (the checker ignores enemies). Bouncy ones (bug,
      glowbug) at the foot of a 2-high ledge are a way up without Pause; a
-     plate on a patrol path flickers as it is walked over; follow where a
-     frozen enemy can be pushed from each cell of its path (the checker
-     models only one push onto a plate); a bounce carries him ~2.4 cells
+     plate on a patrol path flickers as it is walked over; the checker pushes a
+     frozen enemy like a crate (D166) but not its 5 s clock, so time the
+     pushes; a bounce carries him ~2.4 cells
      sideways, so a lane end beside a gap is a way across; an area whose
      only way out is an enemy step traps him when it is killed.
    - **Timing by play**: where a race or bounce decides the room, play it

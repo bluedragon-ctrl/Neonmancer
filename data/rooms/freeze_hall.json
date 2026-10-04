@@ -14,14 +14,7 @@
   "objects": [
     { "id": "screen_pause", "type": "screen", "at": [1, 0, 3], "text": "tut_pause", "overrides": { "face": "+x" } }
   ],
-  "enemies": [
-    {
-      "id": "patrol",
-      "template": "bug",
-      "at": [1, 0, 9],
-      "path": { "points": [[1, 0, 5], [7, 0, 5], [7, 0, 9]], "mode": "loop" }
-    }
-  ],
+  "enemies": [{ "id": "patrol", "template": "bug", "at": [1, 0, 6], "path": { "points": [[5, 0, 6]] } }],
   "pickups": [
     { "id": "disk_pause", "type": "disk_pause", "at": [3, 0, 1] },
     { "id": "fragment_1_1", "type": "fragment_1", "at": [0, 2, 11] }

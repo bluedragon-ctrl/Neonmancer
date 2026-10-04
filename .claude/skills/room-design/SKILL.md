@@ -81,15 +81,23 @@ Edit existing files with small text edits, not a JSON dump.
   collapsing collapsing_regrow gate bridge`. `gate`/`bridge` take `switches`
   (default: every switch in the room): a gate goes, a bridge appears while
   all are on. In a hole they stand a block high (top 1.0): a step, not floor.
-  A gone bridge shows no outline: name it in a screen text.
+  A gone bridge shows no outline: the room that first shows bridges says
+  what one is in a screen text (see Screen texts below).
 - **Objects** (`defs.json` objects): crates `crate crate_plain crate_cross
   crate_dashed`; switches `plate plate_timed target target_timed`; `platform
   spiked_platform` (need `path`, may take `switches`: run only while all on);
   decorations `screen data_pillar memory_stack` (`overrides: { "face":
   "+x"|"+z" }`; a screen may name a `text` in `data/lore.json`: title <= 32,
-  lines <= 48 characters); `core`. `overrides` change only existing type
+  lines <= 48 characters, only as help, see Screen texts below); `core`. `overrides` change only existing type
   values (e.g. a timer). Plates lie at y = 0 (validated): on a raised level
   the only switch is a target.
+- **Screen texts (help, D163).** A screen with a `text` is a console: help
+  for a spell or concept the wizard meets here for the first time (what Zap,
+  a plate, a bridge, a frozen bug does; the key to cast), in the room that
+  teaches it. Never how to solve the room: no which crate goes where, which
+  plate needs what, the order of moves, or where the way home is. Test it: the text reads true in any room with that
+  mechanic, not only this one. Rooms with no new concept get no help text
+  (a plain screen as decor, or lore and a joke with no hint, is fine).
 - **Paths.** `{ points, mode: pingpong|loop, speed, pause }`: points follow
   `at`, each leg along one axis. `speed` (u/s, default 2) and `pause` (s at
   the ends) are for platforms only; a platform path may not cross a static
@@ -122,7 +130,11 @@ Edit existing files with small text edits, not a JSON dump.
 ## Rules
 1. **Readable from the front corner.** Tall blocks against the back walls
    (x = 0, z = 0), steps on the camera side, every mechanic (pit, hazard,
-   collapsing bridge, plate) in view from the entrance.
+   collapsing bridge, plate) in view from the entrance. **Every crate is
+   visible** (D164): never hidden behind a tall block, a ledge, a pillar or
+   a memory wall from the camera (+x +y +z), never inside a fake block or
+   walled in where no cell of it shows; one face in view (its top, +x or
+   +z) is enough.
 2. **Gates look like gates** (a too-high ledge, a locked door): he should
    come back later, not think it is broken (D67).
 3. **He can always leave the way he came** with what he has; a room needn't
@@ -174,10 +186,16 @@ Edit existing files with small text edits, not a JSON dump.
 - **A plate on a patrol path flickers** (the walker presses it, a gate opens
   for a moment): put it one cell beside the path; prefer a bridge to a gate
   for a held plate (a flicker of a bridge carries nobody).
-- **Frozen enemies go where they are pushed.** Follow every push from every
-  cell of the path (the checker models only one push onto a plate); hem the
-  path in (walls, the room side, a pit it pops into). Plate against a wall:
-  the next push may go into a pit.
+- **Frozen enemies go where they are pushed.** The checker pushes them
+  like crates from every cell of the path (D166), as far as he can follow,
+  and counts every cell they can reach as a step and plate weight (it
+  ignores the 5 s clock: time the run with `sim.mjs`). Hem the path in
+  (walls, the room side, a pit it pops into). Plate against a wall: the
+  next push may go into a pit.
+- **Another way is fine if it is no easier** (D166). A second solution of
+  the same or higher difficulty (a harder jump, a tighter race, a spell
+  found later) is not a bypass; one that skips the room's idea for less
+  effort is. Say which in the review.
 
 ## Mutation test (`scripts/mutate.mjs`)
 Takes each helper away (crate, platform, enemy, bridge, block) and seals each
@@ -186,7 +204,7 @@ it depends on and which pieces nothing depends on:
 ```
 node .claude/skills/room-design/scripts/mutate.mjs ledger_cell --with ""
 Depends on:
-  pickup fragment_5: crate_b [1,0,1] (→ never), crate_1 [5,0,5] (→ never), sealed gate [3,0,1]-[3,2,1] (→ never), sealed gate [2,0,5]-[2,2,5] (→ never)
+  pickup fragment_5: crate_b [2,0,7] (→ never), crate_1 [6,0,2] (→ never), sealed gate [1,0,6]-[1,2,6] (→ never), sealed gate [6,0,6]-[6,2,6] (→ never)
 Every helper and gate matters.
 ```
 A sealed gate or a key piece with NO EFFECT is a bypass: find the route and
@@ -224,7 +242,8 @@ margin: less than ~1 s spare is a problem.
 
 Screenshot: `npx vite`, open `http://localhost:5173/?room=<id>&msaa=0` with
 Playwright (`executablePath: '/opt/pw-browsers/chromium'`) and look at it from
-the entrance: is every mechanic visible, does anything tall hide a cell?
+the entrance: is every mechanic and every crate visible, does anything tall
+hide a cell?
 
 ## Wiring
 - A door needs the room's exit, the neighbour's matching exit (check the
@@ -241,9 +260,11 @@ same role before drafting and copy their density and rhythm.
   holds a bridge for the freeze; a second bug is the step up a ledge; a 3-high
   back ledge leads home over the pit. Every piece matters (mutation test).
 - `bolt_gallery.json`: a 3-wide pit filled with two crates, towers covering
-  the bridge column. Its caged crate and gates show NO EFFECT: study it as a
-  layout, not as a sealed puzzle.
-- `ledger_cell.json`: a chain of two plates and two gates; 3-high guarding
-  walls behind the alcove from the camera, plates against walls (D160).
+  the bridge column; a target opens the cage of the second crate (both
+  crates matter with Zap from south; the cage's gates show NO EFFECT one at
+  a time only because each side is a way out).
+- `ledger_cell.json`: a chain of two plates and two gates; the guarded crate
+  cell and the fragment alcove lie on the camera side of their 3-high walls,
+  so everything shows; plates in corners (D160, D165).
 - `relay_loft.json`: ferries powered by crate-held plates (judged by hand).
 - `hidden_layer.json` (dev wing, Scan): `fake` blocks.

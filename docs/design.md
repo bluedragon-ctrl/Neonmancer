@@ -1651,11 +1651,14 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
   height is not (D161), but a ledge 3 high still wants a room 5 high for
   the look.
 - A frozen enemy is a 1-high step (D155) and can be pushed like a crate
-  (D154): follow its pushes from every cell of its path; bugs also bounce
+  (D154); the reachability checker follows its pushes from every cell of
+  its path (D166), not the 5 s it stays frozen; bugs also bounce
   him to 2.8, so only a 3-high ledge stops both, and the bounce carries
   him ~3 cells sideways (keep the lane 2+ cells from a gap). An enemy
   he needs as a step can be killed: give the area a second way out.
 - Gate and bridge blocks in a hole stand a block high: a step up, not floor.
+- A second solution of the same or higher difficulty is fine; only an
+  easier one that skips the room's idea is a bypass (D166).
 - A crate or a frozen enemy beside a 2-high wall is a step over it: an
   alcove behind 2-high walls is no gate (`ledger_cell`, D160).
 
@@ -1685,8 +1688,15 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
   the back walls (x = 0, z = 0), and put steps on the side facing the
   camera, not behind a ledge.
 - Each mechanic should be seen before it matters: a pit, a hazard or a
-  collapsing bridge in view from where the wizard enters. A bridge that
-  starts gone shows no outline: name it in a screen text.
+  collapsing bridge in view from where the wizard enters. Every crate is
+  visible to the player: never hidden from the camera behind tall blocks,
+  ledges or decorations, never inside a fake block (D164). A bridge that
+  starts gone shows no outline: the room that first shows bridges says
+  what one is in a screen text.
+- Screen texts are help for a spell or concept met for the first time,
+  never the room's solution (no where a crate goes, which plate needs
+  what, the order of moves); a help text reads true in any room with that
+  mechanic (D163).
 - A plate on an enemy's patrol path flickers as it walks over: keep it
   beside the path when only a frozen enemy should hold it.
 - A gate that needs a stronger spell or a buff (a ledge too high for the
@@ -1832,7 +1842,8 @@ Every other biome is a twist on it.
   are looks only. The data flows outside show through them: windows onto
   the city.
 - **Decorations:** pillars with steady, evenly spaced data; screens with
-  clean, friendly terminal text (tutorial hints).
+  clean, friendly terminal text (help on a new spell or concept, never a
+  room's solution, D163).
 - **Enemies, in tiers:** the glowbug (peaceful, harmless, bouncy), life
   in the safe sector; the bug (hostile, patrols a fixed path, bouncy);
   virus, sentinel and cron, all hostile (the cron fires four ways). Both

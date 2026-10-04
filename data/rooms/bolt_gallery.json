@@ -22,8 +22,7 @@
   ],
   "holes": [{ "at": [0, 5], "to": [11, 7] }],
   "objects": [
-    { "id": "crate_e", "type": "crate", "at": [10, 0, 2] },
-    { "id": "crate_f", "type": "crate", "at": [3, 0, 9] },
+    { "id": "crate_e", "type": "crate", "at": [11, 0, 2] },
     { "id": "screen_1", "type": "screen", "at": [0, 0, 11], "text": "tut_gallery", "overrides": { "face": "+x" } },
     { "id": "crate_1", "type": "crate", "at": [9, 0, 9] },
     { "id": "crate_2", "type": "crate", "at": [10, 0, 3] },

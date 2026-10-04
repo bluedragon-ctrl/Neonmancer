@@ -1735,3 +1735,79 @@ fragment room behind it. The boss fight was tuned in its test arena; the
 arena only needs cover and safe doors. The cache combines two things
 already taught, with a clock, as a calm room after the fight.
 
+
+### D163 — 2026-10-03 — Screen texts are help, never the solution
+A screen text (D118) explains a spell or concept the wizard meets for the
+first time, in the room that teaches it: what it does and how to use it.
+It never explains how to solve the room (where a crate goes, which plate
+needs what, the order of moves, the way home). Test: the text reads true
+in any room with that mechanic. Rooms without a new concept carry no help
+text; a secret's hint is in the room's shape, never on a screen. The
+room-design skill, `craft.md` and the room design checklist say so.
+**Why:** the author wants rooms to teach by their shape; a screen that
+spells out the moves turns a puzzle into a walk.
+
+### D164 — 2026-10-03 — Every crate is visible
+Every crate in a room is visible to the player: no tall block, ledge,
+pillar or memory wall hides it from the camera (+x +y +z), and none lies
+inside a fake block or walled in out of sight; one face showing (its top,
++x or +z) is enough. Holds for secrets too. The room-design skill, `craft.md`, the
+level-review subagent and the room design checklist say so.
+**Why:** crates are the wizard's tools; a puzzle whose tool can't be seen
+is a guess, not a riddle.
+
+### D165 — 2026-10-03 — Lattice rooms reviewed against D163 and D164
+The level-review subagent read all fifteen non-dev rooms; the fixes:
+- **Screen texts (D163).** `tut_push`, `tut_zap`, `tut_shield`,
+  `tut_gallery`, `tut_relay`, `tut_pause`, `tut_stairs` and `tut_warden`
+  keep only help that reads true in any room (what a crate, target, frozen
+  bug, bridge, ferry, sentinel, tower or boss does) and lose the lines
+  that solve the room (pit widths, crate counts, which plate holds what,
+  where the disk lies, the way home). `tut_ledger`, `tut_idle`, `tut_wings`
+  and `tut_atrium` are gone: their rooms teach nothing new or the text was
+  only directions; those screens stay as decor. "A crate is a step" moves
+  to `tut_push`, where crates are met; `atrium`'s screen shows `help_core`,
+  since the core is first seen there.
+- **`ledger_cell` (D164).** crate_b sat behind the 3-high x = 3 wall, out
+  of sight. Re-laid out at 8x4x9: the crate cell (x 0-3) and the fragment
+  alcove (x 5-7) lie at the front (z 7-8), behind them the 3-high row
+  z = 6 with gate 1 (plate_a) and gate 2 (both plates); plates in the back
+  corners. Mutation test: every helper and gate matters; played headless.
+- **`first_steps`.** From the top of a crate beside the 2-wide pit he
+  leapt it (D162). The pit is 3 wide (x 3-5), the crates at x = 2: both
+  are needed.
+- **`bolt_gallery`.** crate_f made the caged crate a spare; it is gone (the
+  caged crate's top shows, which is enough). crate_e moves to [11,0,2], which also ends the checker's crate
+  search limit coming back from north.
+- **Small ones.** `zap_port` 4 high (its 2-high ledge) and its floating
+  memory stack on the floor; `atrium`'s two crates, which did nothing,
+  removed; `relay_loft`'s first ferry pauses 1 s at its ends; `room_1` and
+  `room_2`, empty placeholders, join the dev wing (D147).
+- **`freeze_hall`** (with D166): the bug's lane passed the ledge's foot, so
+  a bounce put him on the fragment's ledge without Pause. It now walks
+  z = 6, x 1-5, four cells off: freeze it and push it to the ledge.
+**Why:** D163 and D164 were new rules; the existing rooms needed to meet
+them, and the review found the bypasses above along the way.
+
+### D166 — 2026-10-03 — The checker pushes frozen enemies; other solutions
+- **Reachability checker.** With Pause, a frozen enemy is pushed like a
+  crate (D154): from any cell of its path, from a cell he stands on, level,
+  into a free cell; it falls off a ledge and pops on a hole, hazard or
+  void. Every cell it can come to rest in is a step and weight for a plate
+  there. Worked out per crate configuration, alongside the gates, until
+  nothing more opens. Optimistic like the rest: the 5 s freeze and the
+  enemy's own walk are not modelled, and as a step one enemy may count in
+  several cells; as weight it holds one plate at most (a plate set needs an
+  enemy each, or the checker would make `idle_cache`'s crate a spare). Before, only its path cells were steps and only a plate one push
+  away counted.
+- **`freeze_hall`.** The bug walks z = 6, x 1-5, four cells from the
+  fragment's 2-high ledge: the checker finds the push to its foot
+  (`pause`), the mutation test says the bug matters. Played headless: shot
+  at 2.5 s, three pushes, on the ledge 3.2 s later (1.8 s of the freeze
+  spare); 23 bounces off the bug from every side, none reached the ledge.
+- **Rule.** A second solution of the same or higher difficulty is fine; a
+  bypass is only one that skips the room's idea for less effort. The
+  room-design skill, the level-review subagent and the checklist say so.
+**Why:** the author asked for both. The bounce bypass could not be fixed
+while the checker only knew path cells: a lane far enough from the ledge
+read as unreachable in CI.
