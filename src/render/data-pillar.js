@@ -15,7 +15,7 @@
  */
 import { AdditiveBlending, Color, DoubleSide, Group, Mesh, MeshBasicMaterial, PlaneGeometry } from 'three';
 import { boxEdges, boxFaces, lightBoxes, placeLight } from './deco.js';
-import { GLASS, glassBox } from './glass.js';
+import { GLASS, glassBoxes } from './glass.js';
 import { hash } from './hash.js';
 import { lineMaterial, neonLines } from './neon.js';
 
@@ -91,13 +91,12 @@ export function createDataPillar({ color = '#ffb020', height = PILLAR_FX.height,
   // Plinth, cap and core: dark boxes with edges.
   const boxes = [[[pm, 0, pm], [1 - pm, p, 1 - pm]], [[pm, top, pm], [1 - pm, height, 1 - pm]], [[c, p, c], [1 - c, top, 1 - c]]];
   const edges = boxes.flatMap(([a, b]) => boxEdges(a, b));
-  group.add(...boxes.map(([a, b]) => boxFaces(a, b)));
+  group.add(boxFaces(boxes));
   // Glass segments round the core, split at every block.
   const breaks = [p, ...Array.from({ length: Math.max(0, Math.ceil(top - 0.3) - 1) }, (_, i) => i + 1), top];
-  breaks.slice(1).forEach((y1, i) => {
-    group.add(glassBox([m, breaks[i], m], [1 - m, y1, 1 - m], base, GLASS.deco));
-    edges.push(...boxEdges([m, breaks[i], m], [1 - m, y1, 1 - m]));
-  });
+  const segments = breaks.slice(1).map((y1, i) => [[m, breaks[i], m], [1 - m, y1, 1 - m]]);
+  group.add(glassBoxes(segments, base, GLASS.deco));
+  for (const [lo, hi] of segments) edges.push(...boxEdges(lo, hi));
   group.add(neonLines(edges, lineMaterial({ color: base, width: 2, brightness: PILLAR_FX.edge })));
 
   // A point on the core's data face: `u` across it (0..1, left to right on screen), at height `y`.

@@ -16,7 +16,7 @@
  */
 import { Color, Group } from 'three';
 import { boxEdges, boxFaces, facing, lightBoxes, placeLight } from './deco.js';
-import { GLASS, glassBox } from './glass.js';
+import { GLASS, glassBoxes } from './glass.js';
 import { hash } from './hash.js';
 import { lineMaterial, neonLines } from './neon.js';
 
@@ -86,8 +86,8 @@ export function createMemoryStack({ color = '#ffb020', face = '+z', cell = [0, 0
   const spine = [[m, 0, s0], [1 - m, 1, s1]];
   const slab = (y) => [[m, y, s1], [1 - m, y + thick, front]];
   const chips = plates.flatMap((y) => [0, 1, 2, 3].map((j) => [[0.1 + j * 0.215, y + thick, 0.36], [0.24 + j * 0.215, y + thick + 0.035, 0.72]]));
-  body.add(boxFaces(...spine), ...chips.map((c) => boxFaces(...c)));
-  body.add(...plates.map((y) => glassBox(...slab(y), base, GLASS.deco)));
+  body.add(boxFaces([spine, ...chips]));
+  body.add(glassBoxes(plates.map(slab), base, GLASS.deco));
   body.add(neonLines([...boxEdges(...spine), ...plates.flatMap((y) => boxEdges(...slab(y)))], lineMaterial({ color: base, width: 2, brightness: MEMORY_FX.edge })));
   body.add(neonLines(chips.flatMap((c) => boxEdges(...c)), lineMaterial({ color: base, width: 1.2, brightness: MEMORY_FX.chipEdge })));
 

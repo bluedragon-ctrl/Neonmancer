@@ -60,7 +60,9 @@ mobile/touch support, backend or accounts.
   - Render scale setting (50–100%) separate from window size; cap
     devicePixelRatio.
   - Automatic quality fallback: when frames run slow, MSAA and then
-    render scale step down (D76). Extra full-screen effect passes are
+    render scale step down (D76); a high-DPI buffer (1.5+ pixels per
+    CSS pixel) has no MSAA (D169). Behind a menu the last frame is kept,
+    not redrawn (D169). Extra full-screen effect passes are
     costly on weak GPUs; add effects to the existing effect pass.
   - HUD and text scale with screen size.
 - Optional setting (off by default): zoom to fit smaller rooms.
@@ -334,7 +336,8 @@ they stay for the run.
   only its top, +x and +z faces. Put detail on those faces and none on the
   hidden ones; the asset showcase shows static objects without turning
   (D115). Things that turn in play (characters, spinning pickups) are exempt.
-- Glass (crates, decorations) is always built with `glassBox()` and a
+- Glass (crates, decorations) is always built with `glassBox()` (or
+  `glassBoxes()` for several boxes in one draw, D169) and a
   `GLASS` preset from `src/render/glass.js` (D116), never a material of
   its own.
 - Characters (the wizard, monsters) are holograms: a dark core glowing

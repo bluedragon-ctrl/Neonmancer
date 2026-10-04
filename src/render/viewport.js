@@ -14,6 +14,13 @@ export const REFERENCE_HEIGHT = 1080;
 /** devicePixelRatio is capped here so 4K/Retina screens don't overload the GPU. */
 export const MAX_PIXEL_RATIO = 2;
 
+/**
+ * From this many buffer pixels per CSS pixel on, multisampling is off: the
+ * buffer is dense enough that lines look smooth without it, and MSAA on top
+ * of a high-DPI buffer is the costliest thing the GPU does.
+ */
+export const MSAA_MAX_PIXEL_RATIO = 1.5;
+
 /** Allowed render scale range (share of the full resolution). */
 export const MIN_RENDER_SCALE = 0.5;
 export const MAX_RENDER_SCALE = 1;
@@ -52,11 +59,30 @@ export function clampRenderScale(scale) {
  * @param {number} renderScale 0.5–1
  */
 export function bufferSize(cssWidth, cssHeight, devicePixelRatio, renderScale) {
-  const ratio = Math.min(devicePixelRatio || 1, MAX_PIXEL_RATIO) * clampRenderScale(renderScale);
+  const ratio = bufferPixelRatio(devicePixelRatio, renderScale);
   return {
     width: Math.max(1, Math.round(cssWidth * ratio)),
     height: Math.max(1, Math.round(cssHeight * ratio)),
   };
+}
+
+/**
+ * Buffer pixels per CSS pixel: the capped devicePixelRatio times the render scale.
+ * @param {number} devicePixelRatio
+ * @param {number} renderScale 0.5–1
+ */
+export function bufferPixelRatio(devicePixelRatio, renderScale) {
+  return Math.min(devicePixelRatio || 1, MAX_PIXEL_RATIO) * clampRenderScale(renderScale);
+}
+
+/**
+ * MSAA samples to use for `samples` asked for at a buffer pixel ratio:
+ * none on a dense (high-DPI) buffer (MSAA_MAX_PIXEL_RATIO).
+ * @param {number} samples
+ * @param {number} pixelRatio from bufferPixelRatio()
+ */
+export function effectiveMultisampling(samples, pixelRatio) {
+  return pixelRatio >= MSAA_MAX_PIXEL_RATIO ? 0 : samples;
 }
 
 /**

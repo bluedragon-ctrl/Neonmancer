@@ -15,9 +15,10 @@
  * (CLAUDE.md §4). Exits are doorways in the back walls and gaps in the
  * front edges (render/walls.js).
  */
-import { BoxGeometry, BufferGeometry, Color, DoubleSide, Float32BufferAttribute, Group, InstancedMesh, Matrix4, Mesh } from 'three';
+import { BufferGeometry, Color, DoubleSide, Float32BufferAttribute, Group, InstancedMesh, Matrix4, Mesh } from 'three';
 import { BLOCK_FX, createActiveBlockView, flareHazard, hazardFaceMaterial } from './block-fx.js';
 import { createFenceView } from './fence-view.js';
+import { UNIT_BOX } from './geometry.js';
 import { blockEdges, edgeUnitKeys, groupedBlockEdges } from './edges.js';
 import { BITS, markSegments } from './marks.js';
 import { GLASS, glassBox, shrinkSegments } from './glass.js';
@@ -34,9 +35,6 @@ import {
   shared,
   tintedFaceMaterials,
 } from './neon.js';
-
-/** Unit cube with its corner at the origin, shared by every block and object view. */
-const UNIT_BOX = shared(new BoxGeometry(1, 1, 1).translate(0.5, 0.5, 0.5));
 
 /**
  * @param {object} room

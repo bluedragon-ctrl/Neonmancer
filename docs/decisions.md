@@ -1891,3 +1891,43 @@ tool is used twice or a step must be taken in the right place.
 **Why:** the author asked for more difficult rooms; the plan gives the
 wing Scan and fake blocks, and using the range of a scan as part of the
 puzzle (cast it where it reaches) makes the new spell more than a key.
+
+### D169 — 2026-10-04 — Fewer draws, no redraws behind menus, no MSAA on high-DPI
+- **What.** A review of the rendering code for performance (step 1 and 2
+  of its plan):
+  - Decorations draw in a handful of draws. `boxFaces(boxes)` (deco.js)
+    merges a decoration's dark boxes into one geometry, built once per
+    look and shared, with one shared face material; `glassBoxes()`
+    (glass.js) draws its glass boxes as one instanced mesh (the glass
+    shader honors instancing; each instance scales the unit cell, so rim
+    and frost look as before). A memory stack went from 24 draws to 5,
+    a data pillar from 10 to 6; `mirror_stacks` (12 stacks) from about
+    380 draws a frame to about 155.
+  - Shared geometry primitives in `render/geometry.js` (`UNIT_BOX`,
+    `CUBE`) replace four copies of the unit cube; every pixel burst and
+    light box uses `CUBE`, scaled per instance; a hidden burst that stays
+    hidden is not touched (no upload).
+  - Behind a menu (title, pause, map) the game stands still, so the
+    frame on screen is kept: `Renderer.render({ onlyIfChanged })` draws
+    only after `invalidate()` (a room shown or compiled, a resize, a new
+    biome look, the debug overlay toggled, the game paused or resumed).
+    `HOLO_TIME` counts only time the game runs, so shader animations
+    (scanlines, hazard pixels, mist) freeze behind the menu like the rest.
+  - MSAA is off when the drawing buffer has 1.5 or more pixels per CSS
+    pixel (`effectiveMultisampling()`): a 2× buffer is already 4× the
+    pixels, and MSAA on top of it was the costliest thing on such
+    screens. The auto quality ladder leaves out steps that change
+    nothing there (`qualityLevels(devicePixelRatio)`), so a slow high-DPI
+    screen lowers its render scale at the first step instead of two
+    useless MSAA steps (which would have made it give up).
+- **Not done (later steps of the review).** Line materials are not
+  cached across views: many are changed at runtime (flares, exits,
+  rings), so a cache needs an opt-out per caller; the visual trade-offs
+  (SMAA instead of MSAA, fewer bloom levels, rim-only outlines, cheaper
+  mist) and GPU particles and instanced enemy parts wait.
+
+**Why:** decorations were the largest share of draw calls (a memory wall
+dominated its room), the GPU ran the full post-processing chain behind
+menus for an unchanged picture, and high-DPI screens paid for MSAA on a
+buffer that does not need it. None of it changes how the game looks
+while it runs.

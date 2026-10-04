@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { AUTO_QUALITY, AutoQuality, QUALITY_LEVELS, trimmedMean } from '../src/render/quality.js';
+import { AUTO_QUALITY, AutoQuality, QUALITY_LEVELS, qualityLevels, trimmedMean } from '../src/render/quality.js';
 
 /** Feed `seconds` of frames of `interval` each; returns every change made. */
 function run(auto, interval, seconds) {
@@ -102,4 +102,21 @@ test('hitches and hidden-tab gaps are left out', () => {
   for (let i = 0; i < 20; i++) auto.frame(0.2);
   assert.deepEqual(run(auto, FAST, 10), []);
   assert.equal(auto.level, 0);
+});
+
+test('on a 1x screen the quality levels are as listed (D169)', () => {
+  assert.deepEqual(qualityLevels(1), QUALITY_LEVELS);
+});
+
+test('on a high-DPI screen there is no MSAA to drop: the render scale steps down first (D169)', () => {
+  assert.deepEqual(qualityLevels(2), [
+    { multisampling: 0, renderScale: 1 },
+    { multisampling: 0, renderScale: 0.75 },
+    { multisampling: 0, renderScale: 0.5 },
+  ]);
+});
+
+test('slow frames on a high-DPI screen lower the render scale at the first step (D169)', () => {
+  const auto = new AutoQuality(qualityLevels(2));
+  assert.deepEqual(run(auto, SLOW, STEP), [{ multisampling: 0, renderScale: 0.75 }]);
 });

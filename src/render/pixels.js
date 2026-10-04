@@ -4,21 +4,23 @@
  * (derez-fx.js, D126) and the stream of pixels carried from one place to
  * another (stream-fx.js, D127), each in one look.
  */
-import { AdditiveBlending, BoxGeometry, Color, InstancedMesh, Matrix4, MeshBasicMaterial } from 'three';
+import { AdditiveBlending, Color, InstancedMesh, Matrix4, MeshBasicMaterial } from 'three';
 import { DEREZ, derezCount, derezPixels } from './derez-fx.js';
+import { CUBE } from './geometry.js';
 import { streamPixels } from './stream-fx.js';
 
 /**
  * A burst of glowing pixels: small additive cubes, taking turns in the
- * given colors, hidden until placePixels() shows some.
+ * given colors, hidden until placePixels() shows some. Every burst shares
+ * one unit cube, scaled to `size` per pixel (`userData.size`).
  * @param {number} count
  * @param {number} size edge of one cube
  * @param {(number|string)[]} colors
  */
 export function createPixelBurst(count, size, colors) {
-  const geometry = new BoxGeometry(size, size, size);
   const material = new MeshBasicMaterial({ blending: AdditiveBlending, depthWrite: false, transparent: true });
-  const mesh = new InstancedMesh(geometry, material, count);
+  const mesh = new InstancedMesh(CUBE, material, count);
+  mesh.userData.size = size;
   const tints = colors.map((color) => new Color(color).multiplyScalar(1.6));
   for (let i = 0; i < count; i++) mesh.setColorAt(i, tints[i % tints.length]);
   mesh.frustumCulled = false; // instances move far from the geometry's own bounds
@@ -36,10 +38,14 @@ const pixelMatrix = new Matrix4();
  * @param {number[]} pos
  */
 export function placePixels(mesh, pixels, pos) {
+  // Already hidden and staying so: nothing to place or upload.
+  if (pixels.length === 0 && !mesh.visible) return;
   mesh.visible = pixels.length > 0;
   mesh.count = Math.min(pixels.length, mesh.instanceMatrix.count);
+  const { size } = mesh.userData;
   pixels.forEach(({ offset: [x, y, z], scale }, i) => {
-    pixelMatrix.makeScale(scale, scale, scale).setPosition(pos[0] + x, pos[1] + y, pos[2] + z);
+    const s = scale * size;
+    pixelMatrix.makeScale(s, s, s).setPosition(pos[0] + x, pos[1] + y, pos[2] + z);
     mesh.setMatrixAt(i, pixelMatrix);
   });
   mesh.instanceMatrix.needsUpdate = true;
