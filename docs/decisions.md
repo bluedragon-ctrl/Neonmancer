@@ -2024,9 +2024,10 @@ group has a **Timer (s)** field (blank: none). The dev wing gets
   say how to count the run by hand.
 - Optional, with no default: no authored room is affected, the data
   schema version stays 1.
-- `first_light` is the first real room with one (the author's pick): 20 s.
+- `first_light` is the first real room with one (the author's pick): 10 s.
   Played cell by cell (no corner cutting), the fragment, which stops it,
-  is taken at 7.9 s: 12 s spare, generous for an early room; the author
-  tunes it in the editor.
+  is taken at 7.9 s; the author playtested 10 s as doable, medium
+  difficulty. As the room that introduces the watchdog, its name is now
+  "Watchdog Kennel" (its id stays `first_light`: ids are stable).
 **Why:** the author asked for timed challenge rooms, the time set per
 room in the editor and the running time on screen.

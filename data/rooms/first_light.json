@@ -2,10 +2,10 @@
   "$schema": "../../schemas/room.schema.json",
   "schemaVersion": 1,
   "id": "first_light",
-  "name": "First Light",
+  "name": "Watchdog Kennel",
   "biome": "home_lattice",
   "size": [8, 4, 13],
-  "timer": 20,
+  "timer": 10,
   "spawn": [1.5, 0, 11.5],
   "exits": [{ "id": "south", "side": "+z", "at": 2 }],
   "holes": [

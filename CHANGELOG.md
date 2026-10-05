@@ -42,7 +42,8 @@ docs/decisions.md).
   resets. Taking the room's last permanent pickup still to find stops it,
   and a room with all of them found arms none. Pause, the map and the
   editor hold it; leaving the room drops it. The HUD shows the time left, red with a tick each second in its
-  last 5. `first_light` is the first room with one (20 s); the dev wing's
+  last 5. `first_light`, renamed Watchdog Kennel, is the first room with one
+  (10 s); the dev wing's
   `watchdog_run` (west of `fence_yard`) tries it too.
 - The Scan wing's second half (5.6f, D170): `ghost_exit` (fragment 9: a
   frozen bug on a plate opens a crate's pen for the freeze, the crate is
