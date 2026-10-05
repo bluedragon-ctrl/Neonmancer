@@ -2148,9 +2148,8 @@ players never see it (D67).
 - **Opening a room:** click it: the game opens in one reused tab at
   `/?room=<id>&edit`, in the room editor on that room (F2 plays it). The
   game takes `?room` and `?edit` in the dev server only.
-- **Checks:** the side panel lists the data errors, the rooms the start
-  can't reach through exits, and test rooms more than two rooms from the
-  start (D49; authored rooms, D90, are marked and not flagged).
+- **Checks:** the side panel lists the data errors and the rooms the start
+  can't reach through exits (D178; how far out a room lies is no warning).
   Click a warning to highlight its room.
 - **Pickup report** (F3 or the panel's button; F3 or Esc closes it):
   over the map, every permanent item defined in `defs.json` by its save

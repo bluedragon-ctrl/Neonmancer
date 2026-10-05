@@ -254,10 +254,7 @@ touching a hostile one hurts; landing on a bouncy one launches him 2
 blocks up. Eye color shows hostility. (Templates: D78, D119.)
 **Why:** grid movement avoids edge cases.
 
-### D49 — 2026-09-26 — Test rooms stay near the start
-The world map tool warns about an unflagged room more than two rooms from
-the start (`TEST_ROOM_REACH`, `world/map.js`); authored rooms are exempt.
-**Why:** testing the newest mechanic shouldn't mean walking the world.
+### D49 — replaced by D178 (no far-room warning)
 
 ### D50 — 2026-09-26 — Every bug bounces; a drop shadow only under the wizard
 `bounce` is true on bugs; falling objects' shadow is off
@@ -1179,3 +1176,14 @@ step of their own (5.8b). The level-3 access pass in `boot_up` stays
 while the author tests.
 **Why:** the plan's core behind boss 2 with its Level 1 reward; with two
 free sides the vault doubles as the way to Frostbyte.
+
+### D178 — 2026-10-05 — The world map tool no longer flags rooms far from the start
+`mapWarnings()` and the world map tool's CHECKS list only rooms the start
+can't reach through exits; `TEST_ROOM_REACH` and the "N ROOMS OUT" flag
+are gone (D49's warning). It flagged 23 of 28 rooms, 20 of them Lattice
+rooms. Limiting it to the dev wing, measured from the wing's entry, would
+still flag `fence_yard` and `watchdog_run`; the dev server reaches any
+room with the debug room jump or `?room=`.
+**Why:** real rooms are drafted unflagged (D90) and test rooms live in the
+dev wing (D147), so the warning flagged nearly every real room and hid the
+warnings that matter.
