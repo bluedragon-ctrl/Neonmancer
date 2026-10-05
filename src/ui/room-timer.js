@@ -1,7 +1,8 @@
 /**
  * The watchdog timer of the HUD (D171): top middle, in a room with a timer,
  * under the boss bar when that is up. The time left in seconds and tenths;
- * red and pulsing in its last seconds (red: about to hurt, D99).
+ * red and pulsing in its last seconds (red: about to hurt, D99); lime and
+ * still once it stopped (he took what it guarded).
  */
 import { DT } from '../core/loop.js';
 import { WATCHDOG } from '../game.js';
@@ -9,12 +10,13 @@ import { WATCHDOG } from '../game.js';
 /**
  * What the watchdog timer shows now, or null when the room has none.
  * @param {import('../game.js').Game} game
- * @returns {{ text: string, warn: boolean } | null}
- *   text: the time left, e.g. "0:27.4"; warn: its last seconds
+ * @returns {{ text: string, warn: boolean, stopped: boolean } | null}
+ *   text: the time left, e.g. "0:27.4"; warn: its last seconds; stopped: it stopped
  */
 export function roomTimerState(game) {
   if (game.timeLeft === null) return null;
-  return { text: formatTime(game.timeLeft * DT), warn: game.timeLeft <= WATCHDOG.warnTicks };
+  const stopped = game.watchdogStopped;
+  return { text: formatTime(game.timeLeft * DT), warn: !stopped && game.timeLeft <= WATCHDOG.warnTicks, stopped };
 }
 
 /**
@@ -54,11 +56,12 @@ export class RoomTimer {
       this.belowBoss = belowBoss;
       this.box.classList.toggle('below-boss', belowBoss);
     }
-    if (state?.text === this.shown?.text && state?.warn === this.shown?.warn) return;
+    if (state?.text === this.shown?.text && state?.warn === this.shown?.warn && state?.stopped === this.shown?.stopped) return;
     this.box.hidden = !state;
     if (state) {
       this.value.textContent = state.text;
       this.box.classList.toggle('warn', state.warn);
+      this.box.classList.toggle('stopped', state.stopped);
     }
     this.shown = state;
   }

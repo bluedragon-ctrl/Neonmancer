@@ -1611,7 +1611,12 @@ before D140 work as they did). Switch types in `defs.json` are placed in
   still behind the pause menu, the map and the editor, and while he is
   invincible (debug). At zero he dies (`> FATAL: WATCHDOG TIMEOUT`),
   using a backup like any death, and his respawn resets the room and the
-  timer. Leaving the room drops it; coming back starts it from full. The
+  timer. It guards the room's permanent pickups: taking the last one
+  still to find stops it (`> WATCHDOG DISARMED`, the time left stays on
+  show in lime), and a room whose permanent pickups are all found arms
+  no timer, so he can pass through again at leisure. A room without any
+  (a dash) arms it every time; refills and boosts don't count.
+  Leaving the room drops it; coming back starts it from full. The
   exit he came in through stays open (D75), so he can always back out.
   The HUD shows the time left (`WATCHDOG 0:24.5`, rounded up to the
   tenth); its last 5 seconds tick and turn red.
@@ -1723,9 +1728,9 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
   a cell plus ~34 per jump and ~28 per push on the way; the timer should
   be that plus about a second (60 ticks), not less and not much more.
 - A watchdog timer (room `timer`, D171): the checker knows nothing of it
-  either. Count the whole run from the entrance, and from the `reset`
-  point after a death, to the way out (or to what the room is for and
-  back), the same way: ~13 ticks a cell, ~34 a jump, ~28 a push, plus
+  either. Count the run from the entrance, and from the `reset` point
+  after a death, to the last permanent pickup (it stops the timer), or
+  to the way out in a room without one, the same way: ~13 ticks a cell, ~34 a jump, ~28 a push, plus
   waits for platforms and switches. Give it about 2–3 s to spare, more on
   a long run. A timer suits rooms where speed is the idea (a dash, a race
   over collapsing blocks), not a slow puzzle.
@@ -1913,7 +1918,7 @@ A DOM overlay on the stage, sized in 1080p pixels (`--u`), all text from
 | Where | What |
 |---|---|
 | Top left | Integrity: label over a row of slanted cyan cells, one per point; a lost cell flashes white and empties, at 2 or less the bar turns magenta and blinks. Under it the backup pips, the energy bar and the spell tag (with the clipboard slot for Cut & Paste). |
-| Top center | A room's watchdog timer (D171), over the banner: `WATCHDOG 0:24.5` in cyan, red and pulsing in its last 5 s; under the boss bar while that is up. Banner: a title decoding from glyphs (0.45 s), holding (1.8 s) and fading (0.7 s), with an optional smaller line below, in its own color. On entering a room (not on respawn) it shows the room name and the biome name in the biome color; later pickups (e.g. a spell installed) use it too. A new banner replaces the one showing. |
+| Top center | A room's watchdog timer (D171), over the banner: `WATCHDOG 0:24.5` in cyan, red and pulsing in its last 5 s, lime once stopped; under the boss bar while that is up. Banner: a title decoding from glyphs (0.45 s), holding (1.8 s) and fading (0.7 s), with an optional smaller line below, in its own color. On entering a room (not on respawn) it shows the room name and the biome name in the biome color; later pickups (e.g. a spell installed) use it too. A new banner replaces the one showing. |
 | Top right | Game name and version; the score and completion (D100) and, once he has a fragment or a level, `FRAGMENTS 03/64 ACCESS 1` in gold over the boot key, the 8×8 code filling in as fragments are found (D101); the debug readout (F3) shows below it. |
 | Whole stage | The end-of-game screen (D101): `GRID REBOOTED`, the whole boot key, the final score and completion; the game stands still until Enter. |
 | Bottom left | Terminal: lime lines typed at 40 characters/s with a block cursor, kept 4 s, then faded; at most 4 lines. |

@@ -1472,6 +1472,11 @@ body {
   animation: timer-warn 0.5s ease-in-out infinite alternate;
 }
 
+/* Stopped: he took what it guarded. */
+.hud-timer.stopped {
+  color: var(--lime);
+}
+
 @keyframes timer-warn {
   to {
     opacity: 0.55;

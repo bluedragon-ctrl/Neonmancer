@@ -157,8 +157,10 @@ mobile/touch support, backend or accounts.
 - A room may have a watchdog timer (`timer`, seconds, set in the room
   editor, D171): it starts once the room has faded in, stands still
   behind menus, and at zero kills the wizard (a death like any other: a
-  backup used, the room reset). Leaving the room drops it. The HUD shows
-  the time left.
+  backup used, the room reset). It guards the room's permanent pickups:
+  taking the last one still to find stops it, and a room whose pickups
+  are all found arms none; a room without any (a dash) always does.
+  Leaving the room drops it. The HUD shows the time left.
 - Backups (lives, D97): 8; each death uses one. With none left the
   system crashes and he reboots on the backup shrine nearest on the world
   map, keeping everything found; only the clipboard and the room's state

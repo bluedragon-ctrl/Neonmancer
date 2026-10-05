@@ -38,7 +38,8 @@ For each room:
      jumps and pushes) and compare it with the timer: shorter is a
      BLOCKER, less than ~1 s to spare a PROBLEM. A room `timer`
      (watchdog, D171): count the whole run from the entrance, and from
-     `reset` after a death, to the way out (or to the goal and back) the
+     `reset` after a death, to the last permanent pickup (taking it
+     stops the timer), or to the way out in a room without one, the
      same way; shorter is a BLOCKER, less than ~2 s to spare a PROBLEM.
    - **Readability**: tall blocks vs the +x/+z camera, each mechanic
      visible from the entrance, every crate visible (none behind tall

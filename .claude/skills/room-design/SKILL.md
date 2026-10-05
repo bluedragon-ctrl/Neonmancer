@@ -131,7 +131,7 @@ Edit existing files with small text edits, not a JSON dump.
 | Collapsing block | goes 30 ticks (0.5 s) after a step: never make him stand still on one |
 | Pause | 25 energy of the base 50 (two casts, then slow recharge); 5 s freeze (300 ticks), a recast restarts it |
 | Timed switch | timer = the run from the switch to the far side of what it powers + ~1 s; checker counts it as on for good |
-| Watchdog timer (room `timer`, D171) | the whole run from the entrance, and from `reset`, to the way out (or the goal and back) + ~2–3 s; checker ignores it; only where speed is the idea |
+| Watchdog timer (room `timer`, D171) | the run from the entrance, and from `reset`, to the last permanent pickup (taking it stops the timer; all found: no timer), or to the way out in a room without one, + ~2–3 s; checker ignores it; only where speed is the idea |
 
 ## Rules
 1. **Readable from the front corner.** Tall blocks against the back walls

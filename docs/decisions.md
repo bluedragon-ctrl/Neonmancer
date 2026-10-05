@@ -2007,9 +2007,16 @@ group has a **Timer (s)** field (blank: none). The dev wing gets
   a clock on the whole game, which stays out; a short timer on a chosen
   room is a challenge like a timed switch, and a death costs only a
   backup. Both lines now say so.
-- Nothing stops the timer but leaving the room: the challenge is to get
-  through, or to get what the room holds and out, in time. Another stop
-  (a switch, a pickup) can come later if rooms need it.
+- The timer guards the room's permanent pickups: taking the last one
+  still to find stops it (`> WATCHDOG DISARMED`; the time left stays on
+  show in lime), and a room whose permanent pickups are all found arms
+  none. First drafted as running until he left the room, the author
+  found that wrong both ways in `first_light`: with the fragment the
+  run is over, there is no need to race back out; and with it found
+  already, he may never need to come back, so a revisit should not race
+  at all. A room without permanent pickups (a dash) arms it every time;
+  refills and boosts never count, so they are no way to stop it. A boss
+  drop still held counts as one to find.
 - It counts ticks, not wall-clock time: identical at any frame rate and
   held for free wherever the game stands still.
 - The reachability checker knows nothing of it (as with timed switches);
@@ -2018,9 +2025,8 @@ group has a **Timer (s)** field (blank: none). The dev wing gets
 - Optional, with no default: no authored room is affected, the data
   schema version stays 1.
 - `first_light` is the first real room with one (the author's pick): 20 s.
-  Played cell by cell (no corner cutting), the fragment is taken at 7.9 s
-  and he is out of the door at 16.0 s, so 4 s spare on the round trip,
-  generous for an early room. Found fragments stay found, so a timeout
-  on the way back costs only a backup.
+  Played cell by cell (no corner cutting), the fragment, which stops it,
+  is taken at 7.9 s: 12 s spare, generous for an early room; the author
+  tunes it in the editor.
 **Why:** the author asked for timed challenge rooms, the time set per
 room in the editor and the running time on screen.

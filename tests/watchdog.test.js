@@ -80,7 +80,52 @@ test('the HUD shows minutes, seconds and tenths, rounded up, red in the last sec
   assert.equal(formatTime(0), '0:00.0');
   assert.equal(formatTime((10 * SECOND - 1) * DT), '0:10.0');
   const game = new Game(content(10));
-  assert.deepEqual(roomTimerState(game), { text: '0:10.0', warn: false });
+  assert.deepEqual(roomTimerState(game), { text: '0:10.0', warn: false, stopped: false });
   game.timeLeft = WATCHDOG.warnTicks;
   assert.equal(roomTimerState(game).warn, true);
+});
+
+/** A timed room "vault" (10 s) with two fragments and a refill, and "calm". */
+function vault() {
+  const pickups = [
+    { id: 'frag_a', type: 'fragment_0', at: [4, 0, 4] },
+    { id: 'frag_b', type: 'fragment_1', at: [6, 0, 6] },
+    { id: 'refill', type: 'refill_energy', at: [2, 0, 6] },
+  ];
+  return gameData({ rooms: [roomFile('vault', { timer: 10, pickups }), roomFile('calm')] });
+}
+
+/** Put him on cell [x, z] and run a tick, so he takes what lies there. */
+function visit(game, x, z) {
+  game.player.place([x + 0.5, 0, z + 0.5]);
+  game.update(idle);
+}
+
+test('taking the last permanent pickup still to find stops the timer; the time left stays on show', () => {
+  const game = new Game(vault());
+  game.player.energy = 0;
+  visit(game, 2, 6);
+  assert.equal(game.watchdogStopped, false, 'a refill is no goal');
+  visit(game, 4, 4);
+  assert.equal(game.watchdogStopped, false, 'one fragment is still there');
+  takeMessages();
+  visit(game, 6, 6);
+  assert.equal(game.watchdogStopped, true);
+  assert.ok(takeMessages().some(({ key }) => key === 'msg.watchdogStopped'));
+  const left = game.timeLeft;
+  run(game, 20 * SECOND);
+  assert.equal(game.timeLeft, left);
+  assert.equal(game.player.dead, false);
+  assert.deepEqual(roomTimerState(game), { text: formatTime(left * DT), warn: false, stopped: true });
+});
+
+test('a timed room whose permanent pickups are all found arms no timer; one with none always does', () => {
+  const game = new Game(vault());
+  visit(game, 4, 4);
+  visit(game, 6, 6);
+  game.enterRoom('calm');
+  game.enterRoom('vault');
+  assert.equal(game.timeLeft, null);
+  // A dash room: nothing to find, the timer always runs.
+  assert.notEqual(new Game(content(10)).timeLeft, null);
 });

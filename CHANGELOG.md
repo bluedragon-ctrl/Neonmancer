@@ -39,8 +39,9 @@ docs/decisions.md).
 - Watchdog timers (D171): a room's `timer` (whole seconds, 3–600, a
   **Timer (s)** field in the room editor) starts once the room has faded
   in; at zero the wizard dies (a timeout, a backup used) and the room
-  resets. Pause, the map and the editor hold it; leaving the room drops
-  it. The HUD shows the time left, red with a tick each second in its
+  resets. Taking the room's last permanent pickup still to find stops it,
+  and a room with all of them found arms none. Pause, the map and the
+  editor hold it; leaving the room drops it. The HUD shows the time left, red with a tick each second in its
   last 5. `first_light` is the first room with one (20 s); the dev wing's
   `watchdog_run` (west of `fence_yard`) tries it too.
 - The Scan wing's second half (5.6f, D170): `ghost_exit` (fragment 9: a
