@@ -2,9 +2,10 @@
   "$schema": "../../schemas/room.schema.json",
   "schemaVersion": 1,
   "id": "first_light",
-  "name": "First Light",
+  "name": "Watchdog Kennel",
   "biome": "home_lattice",
   "size": [8, 4, 13],
+  "timer": 10,
   "spawn": [1.5, 0, 11.5],
   "exits": [{ "id": "south", "side": "+z", "at": 2 }],
   "holes": [
@@ -12,6 +13,9 @@
     { "at": [1, 5], "to": [7, 6] },
     { "at": [0, 8], "to": [6, 9] }
   ],
-  "objects": [{ "id": "screen_1", "type": "screen", "at": [0, 0, 0], "text": "help_fragments" }],
+  "objects": [
+    { "id": "screen_1", "type": "screen", "at": [0, 0, 0], "text": "help_fragments" },
+    { "id": "screen_watchdog", "type": "screen", "at": [1, 0, 12], "text": "help_watchdog" }
+  ],
   "pickups": [{ "id": "fragment_2_1", "type": "fragment_2", "at": [2, 0, 0] }]
 }

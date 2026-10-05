@@ -1,0 +1,19 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "watchdog_run",
+  "name": "Watchdog Run",
+  "biome": "home_lattice",
+  "size": [12, 4, 8],
+  "timer": 25,
+  "spawn": [10.5, 0, 4],
+  "exits": [{ "id": "east", "side": "+x", "at": 3 }],
+  "holes": [
+    { "at": [3, 0], "to": [6, 0] },
+    { "at": [7, 0], "to": [8, 5] },
+    { "at": [3, 7], "to": [8, 7] },
+    { "at": [5, 2], "to": [5, 6] },
+    { "at": [3, 1], "to": [3, 5] }
+  ],
+  "pickups": [{ "id": "integrity", "type": "refill_integrity", "at": [1, 0, 6] }]
+}

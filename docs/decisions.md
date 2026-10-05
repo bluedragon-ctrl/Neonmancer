@@ -2032,3 +2032,49 @@ several steps with different tools (D168).
 second body that holds a plate he cannot stay on, then combined with
 Pause, Zap and crates. The checker had to know there is one decoy, or
 two-plate rooms looked solvable with Fork alone.
+
+### D172 — 2026-10-05 — Watchdog timers: a timed challenge per room
+A room may set `timer` (whole seconds, 3–600): a watchdog timer. It is
+armed when the room is built (entering, respawning) and runs once the
+room has faded in, while the wizard is alive; menus, the map and the
+editor hold the whole game, so they hold it too, and debug invincibility
+freezes it. At zero he dies with the cause `timeout`: a death like any
+other (a backup used, a crash with none left), and the respawn rebuilds
+the room, the timer with it. Leaving the room drops it; coming back
+starts it from full. The HUD shows the time left (`WATCHDOG 0:24.5`,
+rounded up to the tenth) top middle, under the boss bar when one is up;
+in its last 5 s it turns red (D99: about to hurt), pulses and ticks
+once a second (the timed switches' `tick` sound). The room editor's room
+group has a **Timer (s)** field (blank: none). The dev wing gets
+`watchdog_run` (1,-1), west of `fence_yard`, which gets a west door.
+- §1 ruled out a time limit, and §5 said "no time limit". That was about
+  a clock on the whole game, which stays out; a short timer on a chosen
+  room is a challenge like a timed switch, and a death costs only a
+  backup. Both lines now say so.
+- The timer guards the room's permanent pickups: taking the last one
+  still to find stops it (`> WATCHDOG DISARMED`; the time left stays on
+  show in lime), and a room whose permanent pickups are all found arms
+  none. First drafted as running until he left the room, the author
+  found that wrong both ways in `first_light`: with the fragment the
+  run is over, there is no need to race back out; and with it found
+  already, he may never need to come back, so a revisit should not race
+  at all. A room without permanent pickups (a dash) arms it every time;
+  refills and boosts never count, so they are no way to stop it. A boss
+  drop still held counts as one to find.
+- It counts ticks, not wall-clock time: identical at any frame rate and
+  held for free wherever the game stands still.
+- The reachability checker knows nothing of it (as with timed switches);
+  the room checklist, the room-design skill and the level-review agent
+  say how to count the run by hand.
+- Optional, with no default: no authored room is affected, the data
+  schema version stays 1.
+- `first_light` is the first real room with one (the author's pick): 10 s.
+  Played cell by cell (no corner cutting), the fragment, which stops it,
+  is taken at 7.9 s; the author playtested 10 s as doable, medium
+  difficulty. As the room that introduces the watchdog, its name is now
+  "Watchdog Kennel" (its id stays `first_light`: ids are stable), and a
+  second screen by the door (`help_watchdog`, D163: help that reads true
+  in any timed room) says what the watchdog is, what stops it and what
+  zero does; he passes within reach of it as he walks in.
+**Why:** the author asked for timed challenge rooms, the time set per
+room in the editor and the running time on screen.

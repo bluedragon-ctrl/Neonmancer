@@ -1605,6 +1605,21 @@ before D140 work as they did). Switch types in `defs.json` are placed in
 - Where he respawns if he dies is each room's own `reset` point (D39), not
   the arrival point: it stays put regardless of which door he came through.
 - Rooms fully reset on entry and on respawn.
+- A room may have a watchdog timer (`timer`, whole seconds 3–600, D172):
+  a challenge room. It starts once the room has faded in (`> WATCHDOG
+  ARMED: 25 S`) and runs while the wizard is alive in the room; it stands
+  still behind the pause menu, the map and the editor, and while he is
+  invincible (debug). At zero he dies (`> FATAL: WATCHDOG TIMEOUT`),
+  using a backup like any death, and his respawn resets the room and the
+  timer. It guards the room's permanent pickups: taking the last one
+  still to find stops it (`> WATCHDOG DISARMED`, the time left stays on
+  show in lime), and a room whose permanent pickups are all found arms
+  no timer, so he can pass through again at leisure. A room without any
+  (a dash) arms it every time; refills and boosts don't count.
+  Leaving the room drops it; coming back starts it from full. The
+  exit he came in through stays open (D75), so he can always back out.
+  The HUD shows the time left (`WATCHDOG 0:24.5`, rounded up to the
+  tenth); its last 5 seconds tick and turn red.
 - Objects never leave a room: pushing one out through an exit is blocked.
 - The first row of cells inside an exit must be free (no blocks, objects or,
   at floor level, holes). A raised exit (`y` > 0) needs something to stand
@@ -1646,6 +1661,7 @@ the world map tool shows the connections and flags any room further out.
 | `tractor_bay` | Home Lattice, 12×12, east of Cache Hall | Pull: two crates across a moat to pull into it as a bridge, a bug patrolling behind a trench to pull in; the Pull disk, an energy refill |
 | `build_yard` | Home Lattice, 12×12, east of Tractor Bay | Compile: a two-wide trench to plug crate by crate, a ledge two high to climb with a compiled step; the Compile disk, an energy refill on the ledge |
 | `fence_yard` | Home Lattice, 10×10, dev wing, west of Room 2 | Fences (D167): a 2-high fence round a back pocket with a target, switched by a Zap through it, raising a bridge over a pit to an energy refill; a 1-high fence pen with a crate; the Zap disk |
+| `watchdog_run` | Home Lattice, 12×8, dev wing, west of Fence Yard | a watchdog timer (D172), 25 s: a 1-wide path snaking through a pit to an integrity refill, and back out |
 | `hidden_layer` | Home Lattice, 12×12, east of Build Yard | Scan: a wall across the room with a fake gap, a hidden exit in the back wall behind it, an energy refill inside a fake block; the Scan disk |
 | `secret_cache` | Home Lattice, 8×8, north of Hidden Layer | behind the hidden exit: a secret |
 | `decoy_lab` | Home Lattice, 12×12, north of Build Yard | Fork: a plate in a slot under a lintel (only a decoy can press it), a locked exit that opens while it is pressed, a virus to draw away; the Fork disk |
@@ -1711,6 +1727,13 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
   to the far side of what it powers, ~13 ticks
   a cell plus ~34 per jump and ~28 per push on the way; the timer should
   be that plus about a second (60 ticks), not less and not much more.
+- A watchdog timer (room `timer`, D172): the checker knows nothing of it
+  either. Count the run from the entrance, and from the `reset` point
+  after a death, to the last permanent pickup (it stops the timer), or
+  to the way out in a room without one, the same way: ~13 ticks a cell, ~34 a jump, ~28 a push, plus
+  waits for platforms and switches. Give it about 2–3 s to spare, more on
+  a long run. A timer suits rooms where speed is the idea (a dash, a race
+  over collapsing blocks), not a slow puzzle.
 
 **Readability**
 - The camera looks from the front corner (+x, +z). Tall blocks near the
@@ -1895,7 +1918,7 @@ A DOM overlay on the stage, sized in 1080p pixels (`--u`), all text from
 | Where | What |
 |---|---|
 | Top left | Integrity: label over a row of slanted cyan cells, one per point; a lost cell flashes white and empties, at 2 or less the bar turns magenta and blinks. Under it the backup pips, the energy bar and the spell tag (with the clipboard slot for Cut & Paste). |
-| Top center | Banner: a title decoding from glyphs (0.45 s), holding (1.8 s) and fading (0.7 s), with an optional smaller line below, in its own color. On entering a room (not on respawn) it shows the room name and the biome name in the biome color; later pickups (e.g. a spell installed) use it too. A new banner replaces the one showing. |
+| Top center | A room's watchdog timer (D172), over the banner: `WATCHDOG 0:24.5` in cyan, red and pulsing in its last 5 s, lime once stopped; under the boss bar while that is up. Banner: a title decoding from glyphs (0.45 s), holding (1.8 s) and fading (0.7 s), with an optional smaller line below, in its own color. On entering a room (not on respawn) it shows the room name and the biome name in the biome color; later pickups (e.g. a spell installed) use it too. A new banner replaces the one showing. |
 | Top right | Game name and version; the score and completion (D100) and, once he has a fragment or a level, `FRAGMENTS 03/64 ACCESS 1` in gold over the boot key, the 8×8 code filling in as fragments are found (D101); the debug readout (F3) shows below it. |
 | Whole stage | The end-of-game screen (D101): `GRID REBOOTED`, the whole boot key, the final score and completion; the game stands still until Enter. |
 | Bottom left | Terminal: lime lines typed at 40 characters/s with a block cursor, kept 4 s, then faded; at most 4 lines. |
@@ -2073,8 +2096,9 @@ floor.
   then New; it starts empty, 12x4x12, in the current biome), sets the
   room's name, biome and size (applied on Enter or leaving the field; 2–6
   high, width + depth at most 32; a smaller room drops what ends up
-  outside, listed in the status line, and moves spawn and reset inside)
-  and the layer, and has Undo, Redo, Save or Export, and Revert (back to
+  outside, listed in the status line, and moves spawn and reset inside),
+  its watchdog timer (**Timer (s)**: whole seconds 3–600, blank for none,
+  D172) and the layer, and has Undo, Redo, Save or Export, and Revert (back to
   the last save; undo and Revert take the room's connections along). A new
   room never saved has **Discard new room**, which drops it and its
   connections and goes back to the room edited before. Under the layer, a

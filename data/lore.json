@@ -135,6 +135,15 @@
         "NOTE: PRIOR SECTORS MAY NOW HAVE NEW PATHS."
       ]
     },
+    "help_watchdog": {
+      "title": "WATCHDOG.SYS // TIMER",
+      "lines": [
+        "A WATCHDOG GUARDS THIS ROOM. CLOCK: TOP CENTER.",
+        "TAKE WHAT IT GUARDS AND THE CLOCK STOPS.",
+        "AT ZERO: PROCESS KILLED, ROOM RESET.",
+        "ALL FOUND? THE WATCHDOG SLEEPS."
+      ]
+    },
     "help_fragments": {
       "title": "FRAGMENT.DAT // BOOT KEY",
       "lines": [

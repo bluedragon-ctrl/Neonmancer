@@ -280,13 +280,13 @@ export class Player {
 
   /**
    * Die: all integrity gone; he respawns after PLAYER.deathTicks.
-   * @param {'hole'|'void'|'damage'} cause a hole drops him into the pit;
+   * @param {'hole'|'void'|'damage'|'timeout'} cause a hole drops him into the pit;
    *   otherwise he derezzes where he is
    */
   die(cause) {
     this.integrity = 0;
     this.dead = true;
-    /** Why he died, while dead: 'hole', 'void' or 'damage'. */
+    /** Why he died, while dead: 'hole', 'void', 'damage' or 'timeout' (a room's watchdog, D172). */
     this.deathCause = cause;
     this.deathTimer = PLAYER.deathTicks;
     this.grounded = false;

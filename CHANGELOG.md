@@ -36,6 +36,16 @@ docs/decisions.md).
   second solution no easier than the intended one is not a bypass.
 
 ### Added
+- Watchdog timers (D172): a room's `timer` (whole seconds, 3–600, a
+  **Timer (s)** field in the room editor) starts once the room has faded
+  in; at zero the wizard dies (a timeout, a backup used) and the room
+  resets. Taking the room's last permanent pickup still to find stops it,
+  and a room with all of them found arms none. Pause, the map and the
+  editor hold it; leaving the room drops it. The HUD shows the time
+  left, red with a tick each second in its last 5. `first_light`,
+  renamed Watchdog Kennel, is the first room with one (10 s), with a
+  help screen by the door; the dev wing's `watchdog_run` (west of
+  `fence_yard`) tries it too.
 - The Fork wing's first half (5.6g, D171): `fork_lab` (the Fork disk in
   a 3-high fenced cage that a crate on a plate opens; the same crate is
   then the step into a fenced pen, where the decoy holds the plate of a

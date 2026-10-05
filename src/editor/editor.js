@@ -188,6 +188,8 @@ export class Editor {
         authored: (on) => this.change(() => this.edit.setAuthored(on)),
         biome: (biome) => this.change(() => this.edit.setBiome(biome)),
         size: (size) => this.resize(size),
+        // A refused or clamped value snaps back to the room's own.
+        roomTimer: (seconds) => (this.edit.setRoomTimer(seconds) ? this.change(() => true) : this.refresh()),
         undo: () => this.change(() => this.edit.undo()),
         redo: () => this.change(() => this.edit.redo()),
         save: () => this.save(),

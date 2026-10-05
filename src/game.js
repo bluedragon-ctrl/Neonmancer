@@ -27,7 +27,7 @@ import { buildRoom } from './world/room.js';
 import { completion, placedBits, scoreOf } from './world/score.js';
 
 /** Terminal message for each way to die (Player.deathCause). */
-const DEATH_MESSAGES = { hole: 'msg.die', void: 'msg.void', damage: 'msg.derez' };
+const DEATH_MESSAGES = { hole: 'msg.die', void: 'msg.void', damage: 'msg.derez', timeout: 'msg.timeout' };
 
 /** Banner color of a system crash (D97): alarm red. */
 const CRASH_COLOR = '#ff3b5c';
@@ -39,6 +39,9 @@ export const TRANSITION = {
   /** Fade in from black in the new room; the game already runs. */
   inTicks: 15,
 };
+
+/** A room's watchdog timer (D172): its last seconds tick, once a second. */
+export const WATCHDOG = { warnTicks: 5 * 60 };
 
 /**
  * Something that happened, for views, the HUD and (later) sound. Returned
@@ -71,7 +74,7 @@ export const TRANSITION = {
  * @property {number[]} [dir] the way it came in (ricochet)
  * @property {number} [amount] integrity lost (hurt)
  * @property {number[]} [cell] the block that hurt him (hurt), [x, y, z]
- * @property {'hole'|'void'|'damage'} [cause] how the wizard died (die)
+ * @property {'hole'|'void'|'damage'|'timeout'} [cause] how the wizard died (die)
  * @property {boolean} [crash] he died with no backups left (die): he
  *   reboots on the nearest backup shrine (D97)
  * @property {object} [exit] the exit walked out through (exit); a locked
@@ -216,6 +219,16 @@ export class Game {
     this.player.boosts = {};
     /** Is he on the backup shrine? Stepping onto it uses it (touchShrine()). */
     this.onShrine = false;
+    /**
+     * Ticks left on the room's watchdog timer (D172), or null in a room
+     * without one or with nothing left for it to guard (watchdogGuards()).
+     * It starts again whenever the room is built (entering, respawning) and
+     * runs once the room has faded in (tickWatchdog()).
+     */
+    this.timeLeft = this.room.timer && this.watchdogGuards() ? Math.round(this.room.timer / DT) : null;
+    /** Has the watchdog stopped: he took what it guarded? The time left stays on show. */
+    this.watchdogStopped = false;
+    if (this.timeLeft !== null) say('msg.watchdog', { seconds: this.room.timer });
     this.refreshBodies();
   }
 
@@ -305,6 +318,40 @@ export class Game {
     if (this.crashing) say('msg.noBackups');
     else player.backups--;
     this.emit('die', { cause, ...(this.crashing && { crash: true }) });
+  }
+
+  /**
+   * The room's watchdog timer (D172) runs down while he is alive, the room
+   * has faded in, he is not invincible (debug mode) and it has not stopped
+   * (stopWatchdog()); menus, the map and
+   * the editor hold the whole game, so they hold it too. At zero he dies
+   * ('timeout'), and his respawn resets the room and the timer. Its last
+   * seconds tick.
+   */
+  tickWatchdog() {
+    if (!this.timeLeft || this.watchdogStopped || this.transition || this.player.dead || this.invincible) return;
+    this.timeLeft--;
+    if (this.timeLeft === 0) {
+      this.player.die('timeout');
+      this.died();
+    } else if (this.timeLeft <= WATCHDOG.warnTicks && this.timeLeft % Math.round(1 / DT) === 0) this.emit('tick');
+  }
+
+  /**
+   * Does the room's watchdog (D172) guard anything? It guards the room's
+   * permanent pickups while any is left to find; a room without any (a
+   * dash) it guards always. One whose pickups are all found arms no timer.
+   */
+  watchdogGuards() {
+    const permanent = this.pickups.filter((pickup) => pickup.bit !== null);
+    return permanent.length === 0 || permanent.some((pickup) => pickup.state === 'idle' || pickup.state === 'held');
+  }
+
+  /** He took a permanent pickup: if it was the last one the watchdog guarded, it stops (D172). */
+  stopWatchdog() {
+    if (!this.timeLeft || this.watchdogStopped || this.watchdogGuards()) return;
+    this.watchdogStopped = true;
+    say('msg.watchdogStopped');
   }
 
   /**
@@ -516,6 +563,7 @@ export class Game {
     }
     if (playerEvent === 'die') this.died();
     else if (playerEvent) this.emit(playerEvent);
+    this.tickWatchdog();
 
     // Touching a block or an object that deals damage hurts (then he is
     // invulnerable for a while). A spiked platform's sides and top hurt
@@ -633,6 +681,7 @@ export class Game {
       if (!this.use(pickup.data, pickup.bit)) continue;
       pickup.take();
       this.emit('pickup', { pickup });
+      if (pickup.bit !== null) this.stopWatchdog();
     }
   }
 
