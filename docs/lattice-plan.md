@@ -82,8 +82,8 @@ then. Steps and room order: docs/design.md, Phase 5.
 | 20 | `guard_loop` | 12x12 | Viruses to draw away; fragment 13 |
 | 21 | `split_vault` | 12x8 | A lock held by a decoy; fragments 14 and 15 |
 | 22 | `gatekeeper` | 16x16 | Boss 2, a big virus, drops an energy buff; overload plates to lure it onto (D134); doors north (`drift_bay`), south (`split_vault`), east (the core) (D174) |
-| 23 | `core` | 16x16 | The central core, no fragment; Level 1 locks east and west and north (vault) |
-| 24 | `dj_vault` | 8x8 | The double jump, behind the Level 1 lock |
+| 23 | `core_hall` | 12x12 | The central core (moved from the Atrium), no fragment; Level 1 locks north (vault, then Frostbyte) and east (Glitchmire) (D175) |
+| 24 | `dj_vault` | 8x8 | The double jump, behind the Level 1 lock; its 2-high ledge door leads on to Frostbyte (D175) |
 | 25 | `junction` | 8x8 | Off `drift_bay`, a small loop back to the Scan wing; fragment 16 |
 | S1 | `buffer_1` | 8x8 | Secret, a Scan hidden exit off `ghost_exit` |
 | S2 | `buffer_2` | 8x8 | Secret, a fake block off `mirror_stacks` |

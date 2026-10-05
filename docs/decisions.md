@@ -2173,3 +2173,41 @@ adds the door, as every exit must be connected.
 to the core leads through either. The 4.7 fight was tuned in an empty
 room; the bigger arena adds cover so a fight with 50 energy and slow
 recharge has room to breathe, without a spot where it stalls on a plate.
+
+### D175 — 2026-10-05 — The core hall, the Level 1 locks and the teasers (5.8)
+Six unflagged rooms east of the Gatekeeper; the core moves there.
+- **The core moves.** The world has one core (validation); the author
+  had put it in `atrium`, the plan (D133, D174) behind boss 2. With the
+  author: it moves to `core_hall` ("Kernel Core", 12x4x12, (10,0)),
+  reached through the Gatekeeper's east door (z 7–8). The core stands in
+  the middle, with the `help_core` and `help_access` screens, three data
+  pillars and a backup shrine, the hub he comes back to. `atrium`'s screen
+  stays as decor without text.
+- **Two Level 1 locks, three ways on.** `core_hall` has only two free
+  sides (`guard_loop` lies south), so the north lock leads to `dj_vault`
+  ("Spring Loader", 8x8, (10,-1)), which holds the double jump
+  (`upgrade_double_jump`, its first placement) and leads on to
+  Frostbyte: its east door sits on a 2-high ledge (`y` 2), so the
+  reward is also the key, and the `help_double_jump` screen is met
+  there. The east lock leads to Glitchmire. The plan's west lock is the
+  Gatekeeper's door, which never locks (D135).
+- **Teasers, look only.** Two rooms each, dead ends whose last room has a
+  lore screen (the route is not compiled yet, `lore_frost_end`,
+  `lore_glitch_end`); no permanent pickups, Lattice enemies only.
+  `frost_gate` ("Cold Storage", 12x8): a 6-wide pit crossed on a row of
+  regrowing collapsing blocks, cracking ice, the first room that uses
+  them; `frost_edge` ("Permafrost Edge", 8x8): steps to a lookout.
+  `glitch_gate` ("Torn Tiles", 12x8): staggered one-wide pits, a bug's
+  lane; `glitch_edge` ("Segfault Shore", 8x8): scattered voxels. Map
+  cells (11,-1), (12,-1) and (11,0), (12,0). The biomes' floor patterns
+  and particles come in a step of their own; the rooms use today's color
+  and surroundings.
+- Checked: without the dev wing and the access pass in `boot_up`, the
+  world check earns Level 1 from the 16 fragments at the core and reaches
+  every new room; `dj_vault`'s ledge needs the double jump (mutation
+  test; headless, 1.2 high at most without it, on the ledge 1.4 s with
+  it); the ice crossed both ways headless (2.7 s, no damage), regrowing
+  for the way back.
+**Why:** the plan's core behind boss 2 and its Level 1 reward; the map
+leaves two sides, so the vault doubles as the door to Frostbyte and makes
+the double jump the way in.

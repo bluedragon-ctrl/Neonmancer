@@ -1,0 +1,24 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "frost_gate",
+  "name": "Cold Storage",
+  "biome": "frostbyte_wastes",
+  "size": [12, 4, 8],
+  "spawn": [1.5, 0, 2],
+  "exits": [
+    { "id": "west", "side": "-x", "at": 1 },
+    { "id": "east", "side": "+x", "at": 5 }
+  ],
+  "blocks": [{ "type": "collapsing_regrow", "at": [3, 0, 3], "to": [8, 0, 3] }],
+  "holes": [{ "at": [3, 0], "to": [8, 7] }],
+  "objects": [
+    { "id": "stack_1", "type": "memory_stack", "at": [0, 0, 5], "overrides": { "face": "+x" } },
+    { "id": "stack_2", "type": "memory_stack", "at": [0, 0, 6], "overrides": { "face": "+x" } },
+    { "id": "stack_3", "type": "memory_stack", "at": [0, 1, 6], "overrides": { "face": "+x" } },
+    { "id": "stack_4", "type": "memory_stack", "at": [9, 0, 0] },
+    { "id": "stack_5", "type": "memory_stack", "at": [10, 0, 0] },
+    { "id": "stack_6", "type": "memory_stack", "at": [10, 1, 0] },
+    { "id": "stack_7", "type": "memory_stack", "at": [11, 0, 0] }
+  ]
+}

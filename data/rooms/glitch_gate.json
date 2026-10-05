@@ -1,0 +1,20 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "glitch_gate",
+  "name": "Torn Tiles",
+  "biome": "glitchmire",
+  "size": [12, 4, 8],
+  "spawn": [1.5, 0, 4],
+  "exits": [
+    { "id": "west", "side": "-x", "at": 3 },
+    { "id": "east", "side": "+x", "at": 3 }
+  ],
+  "holes": [
+    { "at": [3, 0], "to": [3, 4] },
+    { "at": [6, 3], "to": [6, 7] },
+    { "at": [9, 0], "to": [9, 2] },
+    { "at": [9, 5], "to": [9, 7] }
+  ],
+  "enemies": [{ "id": "bug_1", "template": "bug", "at": [4, 0, 0], "path": { "points": [[4, 0, 7]] } }]
+}

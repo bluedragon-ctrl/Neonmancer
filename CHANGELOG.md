@@ -36,6 +36,12 @@ docs/decisions.md).
   second solution no easier than the intended one is not a bypass.
 
 ### Added
+- The core hall and the Level 1 locks (5.8, D175): `core_hall` east of the
+  Gatekeeper takes the core from `atrium`; its north lock leads to
+  `dj_vault` (the double jump, whose 2-high ledge door leads on to
+  Frostbyte), its east lock to Glitchmire; two look-only teaser rooms
+  each, `frost_gate` (an ice crossing on regrowing collapsing blocks),
+  `frost_edge`, `glitch_gate` and `glitch_edge`, ending in lore screens.
 - The Gatekeeper's hall (5.7, D174): `gatekeeper`, a 16x16 arena at the
   meeting of the Scan and Fork wings, where boss 2 (THE GATEKEEPER, drops
   the +10 energy buff) is led onto four overload plates; four low blocks

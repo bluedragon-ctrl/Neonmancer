@@ -1253,9 +1253,10 @@ Collecting the key fragments is the goal of the game (D101).
   levels.
 - **The core** (`defs.json` `core`, kind `core`, white: a mechanism,
   D99): a room object placed with the room editor, at most one in the
-  world (validation); now in Boot Sector. A fixed body 1×2×1, too high to
-  jump onto with one jump, so he walks up to it (both cells must be
-  free). Touching it (`Game.touchCore()`, once until he steps away): the
+  world (validation); in `core_hall`, east of the Gatekeeper (D175). A
+  fixed body 1×2×1, too high to jump onto with one jump, so he walks up
+  to it (both cells must be free). Touching it
+  (`Game.touchCore()`, once until he steps away): the
   level rises to what his fragments earn (`Progress.earnedAccess()`),
   with the banner `ACCESS LEVEL n / GRANTED BY THE CORE` and `> CORE:
   ACCESS LEVEL n GRANTED`; otherwise it says how many more are needed
@@ -2258,7 +2259,7 @@ author, recorded as decisions before the code lands. Every step also
 The phases were re-cut around a playtest of Home Lattice. The rules of
 "Finished phases" apply to every step: one branch, one PR against `main`,
 CI green, showcase, test room, unit tests, docs. Code steps name their
-branch; design steps end in decisions before any code. **Next: Phase 5 (5.8; 5.3 music waits for the tracks, D147).**
+branch; design steps end in decisions before any code. **Next: Phase 5 (5.8b biome looks or 5.9; 5.3 music waits for the tracks, D147).**
 
 ### Phase 4 (v0.4) steps: tools and bosses
 
@@ -2301,7 +2302,8 @@ tracks and is done after 5.5 (D147).
 | 5.6g (done, D171) | `feat/lattice-fork-wing-1` | The Fork wing, first half: `fork_lab` (Fork disk) and `twin_plates` (fragment 12); the door from `cold_stairs` is added; `twin_plates` keeps its north side for `guard_loop`. |
 | 5.6h (done, D173) | `feat/lattice-fork-wing-2` | `guard_loop` (fragment 13) and `split_vault` (fragments 14 and 15); the door from `twin_plates` is added; `split_vault` keeps its north side for the Gatekeeper. |
 | 5.7 (done, D174) | `feat/lattice-gatekeeper` | The Gatekeeper arena (boss 2, drops the energy buff) joining the Scan and Fork wings: doors to `drift_bay` and `split_vault`; its east side keeps the way on to the core for 5.8. |
-| 5.8 | `feat/lattice-core-gates` | The core (east of the Gatekeeper, its door kept free, D174), the Level 1 access locks and the teaser rooms beyond them: a few look-only rooms each for Glitchmire and Frostbyte Wastes (looks in the showcase first). |
+| 5.8 (done, D175) | `feat/lattice-core-gates` | The core (east of the Gatekeeper, moved from the Atrium), the Level 1 access locks (the double jump vault, which leads on to Frostbyte, and Glitchmire) and the teaser rooms beyond them: two look-only rooms each for Glitchmire and Frostbyte Wastes. |
+| 5.8b | `feat/biome-looks` | The Glitchmire and Frostbyte looks for the teasers, in the showcase first: floor patterns (torn tiles, hex crystals) and particles (pixel bubbles, 0/1 flakes) (D175). |
 | 5.9 | `feat/outer-buffer-secrets` | The Outer Buffer look (floor, starfield, color re-picked) and the secret cluster, reached by Scan and similar tricks; complex multi-step rooms, often with tools found later (backtracking, D173). |
 | 5.10 | `feat/lattice-visual-pass` | Optional: the Lattice's data flows and glass panels (D121). |
 | 5.11 | `feat/quality-presets` | Quality presets, auto fallback and render scale wired up (D76), a check on a weaker GPU. |

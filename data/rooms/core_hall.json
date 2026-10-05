@@ -1,0 +1,23 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "core_hall",
+  "name": "Kernel Core",
+  "biome": "home_lattice",
+  "size": [12, 4, 12],
+  "spawn": [1.5, 0, 8],
+  "exits": [
+    { "id": "west", "side": "-x", "at": 7 },
+    { "id": "north", "side": "-z", "at": 5, "requires": [{ "access": 1 }] },
+    { "id": "east", "side": "+x", "at": 3, "requires": [{ "access": 1 }] }
+  ],
+  "shrine": [9, 9],
+  "objects": [
+    { "id": "pillar_nw", "type": "data_pillar", "at": [0, 0, 0], "overrides": { "face": "+x" } },
+    { "id": "pillar_ne", "type": "data_pillar", "at": [11, 0, 0], "overrides": { "face": "+z" } },
+    { "id": "pillar_sw", "type": "data_pillar", "at": [0, 0, 11], "overrides": { "face": "+x" } },
+    { "id": "screen_core", "type": "screen", "at": [0, 0, 3], "overrides": { "face": "+x" }, "text": "help_core" },
+    { "id": "screen_access", "type": "screen", "at": [3, 0, 0], "overrides": { "face": "+z" }, "text": "help_access" },
+    { "id": "core_1", "type": "core", "at": [6, 0, 6] }
+  ]
+}
