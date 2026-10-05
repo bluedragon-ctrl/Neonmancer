@@ -1172,8 +1172,9 @@ first placement), whose east door on a 2-high ledge (`y` 2) leads on to
 Frostbyte: the reward is the key. The east lock leads to Glitchmire.
 Teasers are look only: two rooms per biome, dead ends ending in a lore
 screen (the route is not compiled yet), no permanent pickups, Lattice
-enemies only; `frost_gate` is the first room with regrowing collapsing
-blocks (an ice crossing). The biomes' floor patterns and particles are a
+enemies only, nothing a Lattice room has not taught (`frost_gate`'s
+crossing is a plain causeway: collapsing blocks wait for a room that
+teaches them). The biomes' floor patterns and particles are a
 step of their own (5.8b). The level-3 access pass in `boot_up` stays
 while the author tests.
 **Why:** the plan's core behind boss 2 with its Level 1 reward; with two

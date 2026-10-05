@@ -16,5 +16,5 @@
     { "at": [9, 0], "to": [9, 2] },
     { "at": [9, 5], "to": [9, 7] }
   ],
-  "enemies": [{ "id": "bug_1", "template": "bug", "at": [4, 0, 0], "path": { "points": [[4, 0, 7]] } }]
+  "enemies": [{ "id": "bug_1", "template": "bug", "at": [4, 0, 0], "path": { "points": [[4, 0, 2]] } }]
 }
