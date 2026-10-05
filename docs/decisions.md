@@ -2151,8 +2151,11 @@ adds the door, as every exit must be connected.
 - Played headless with Zap only, a bot that leads it past a plate and
   steps out of the windup: beaten in 34 s from the north door and 41 s
   from the south, no damage taken and no refill used; it needs no Fork
-  or Shield (a decoy beside a plate, or the Shield, which blocks the burst so he can stand in reach, are
-  easier ways). A bot that walked into the blocks instead of hopping
+  or Shield. A decoy beside a plate holds it there, and the Shield
+  blocks the burst so he can zap from within reach: easier ways that
+  still use the plates, not bypasses (D166). The energy refill by the
+  north-east pillar stands a cell west of it (level review: behind it,
+  half hidden). A bot that walked into the blocks instead of hopping
   them died in 21 s: the blocks are a refuge only if he jumps.
 - `drift_bay`'s south door (`at` 10, not x 5–6 as D170 kept free): at
   5–6 the virus saw him come in and hit him at once, and the bank is all
