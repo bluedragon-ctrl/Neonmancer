@@ -36,6 +36,16 @@ docs/decisions.md).
   second solution no easier than the intended one is not a bypass.
 
 ### Added
+- The Scan wing's second half (5.6f, D170): `ghost_exit` (fragment 9: a
+  frozen bug on a plate opens a crate's pen for the freeze, the crate is
+  the step onto a plateau where a scan finds the fragment and the Lattice's
+  first hidden exit, raised in the wall), `junction` (fragment 11: a frozen
+  bug as the step up a pillar; a timed bridge to a one-way shortcut home
+  into `scan_lab`) and `drift_bay` (fragment 10: a ferry over a wide pit
+  under a sentinel's fire, a frozen virus or sentinel as the step up a
+  ledge; its south side waits for the Gatekeeper). `mirror_stacks` and
+  `scan_lab` get south doors; a screen text on hidden exits.
+- The room-design play helper's `walkTo` works in rooms with platforms.
 - The Scan wing's first half (5.6e, D168): `scan_lab` (the Scan disk,
   a plug in a fence that a scan derezzes, a crate dropped off a fake
   pillar, a timed bridge home) and `mirror_stacks` (fragment 9: a caged

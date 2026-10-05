@@ -1,0 +1,29 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "ghost_exit",
+  "name": "Ghost Exit",
+  "biome": "home_lattice",
+  "size": [12, 5, 12],
+  "spawn": [1.5, 0, 1.5],
+  "exits": [
+    { "id": "north", "side": "-z", "at": 1 },
+    { "id": "west", "side": "-x", "at": 9, "y": 2, "hidden": true }
+  ],
+  "blocks": [
+    { "at": [0, 0, 8], "to": [3, 1, 11] },
+    { "type": "fake", "at": [3, 2, 11] },
+    { "type": "fence", "at": [4, 0, 0], "to": [4, 0, 3] },
+    { "type": "fence", "at": [7, 0, 0], "to": [7, 0, 4] },
+    { "type": "fence", "at": [5, 0, 3] },
+    { "type": "gate", "at": [6, 0, 3], "switches": ["plate_ghost"] },
+    { "type": "fence", "at": [8, 0, 4], "to": [11, 0, 4] }
+  ],
+  "objects": [
+    { "id": "screen_ghost", "type": "screen", "at": [0, 0, 3], "text": "tut_ghost", "overrides": { "face": "+x" } },
+    { "id": "crate_1", "type": "crate", "at": [6, 0, 2] },
+    { "id": "plate_ghost", "type": "plate", "at": [8, 0, 3] }
+  ],
+  "enemies": [{ "id": "bug_ghost", "template": "bug", "at": [9, 0, 3], "path": { "points": [[11, 0, 3]] } }],
+  "pickups": [{ "id": "fragment_9", "type": "fragment_9", "at": [3, 2, 11] }]
+}

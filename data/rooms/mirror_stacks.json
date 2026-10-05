@@ -6,7 +6,10 @@
   "biome": "home_lattice",
   "size": [12, 5, 12],
   "spawn": [1.5, 0, 5.5],
-  "exits": [{ "id": "west", "side": "-x", "at": 5 }],
+  "exits": [
+    { "id": "west", "side": "-x", "at": 5 },
+    { "id": "south", "side": "+z", "at": 10 }
+  ],
   "blocks": [
     { "type": "fake", "at": [1, 0, 3] },
     { "type": "bridge", "at": [4, 0, 11], "to": [6, 0, 11], "switches": ["plate_home"] },
