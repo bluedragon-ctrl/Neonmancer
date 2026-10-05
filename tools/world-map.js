@@ -3,8 +3,7 @@
  * developer. Every room is a node in its biome color, in its cell of the
  * map grid (`positions` in world.json); lines join connected exits, drawn
  * from the side each exit is on. Flags what room validation can't see:
- * rooms the start can't reach, and test rooms more than two rooms from the
- * start (D49); authored rooms (D90) are marked and may lie further out.
+ * rooms the start can't reach (D175); authored rooms (D90) are marked.
  *
  * Tools (D77): Move drags a room to another free cell (click opens it in
  * the room editor); Add puts a new, empty room in a free cell; Connect
@@ -28,7 +27,7 @@ import { validateData } from '../src/data/validate.js';
 import { MapEdit } from '../src/editor/map-edit.js';
 import { DATA_SAVED_EVENT, saveFiles } from '../src/editor/save.js';
 import { BUFF_COLORS, SECRET_COLOR } from '../src/entities/pickup.js';
-import { TEST_ROOM_REACH, mapKey, mapWarnings, roomDistances } from '../src/world/map.js';
+import { mapKey, mapWarnings, roomDistances } from '../src/world/map.js';
 import { pickupReport } from '../src/world/pickup-report.js';
 import { analyzeWorld } from '../src/world/reach-world.js';
 import { SAVE_BLOCKS } from '../src/world/progress.js';
@@ -267,10 +266,9 @@ function draw() {
     svgEl.append(svg('line', { class: 'link-draft', x1, y1: z1, x2: state.drag.point[0], y2: state.drag.point[1] }));
   }
 
-  const { unreachable, far } = mapWarnings(edit.world, edit.rooms.keys(), authoredRooms());
-  const farBy = new Map(far.map(({ id, distance }) => [id, distance]));
+  const { unreachable } = mapWarnings(edit.world, edit.rooms.keys());
   const unsaved = unsavedRooms();
-  for (const id of edit.rooms.keys()) svgEl.append(roomNode(id, { unreachable: unreachable.includes(id), far: farBy.get(id), moved: unsaved.has(id) }));
+  for (const id of edit.rooms.keys()) svgEl.append(roomNode(id, { unreachable: unreachable.includes(id), moved: unsaved.has(id) }));
 
   // Where a dragged room would land, or a new one go.
   const target = state.drag?.tool === 'move' && state.drag.moved ? state.drag.cell : state.tool === 'add' ? state.hover : null;
@@ -286,11 +284,6 @@ function draw() {
   mapEl.append(svgEl);
 }
 
-/** Ids of the author's real game rooms (D90). */
-function authoredRooms() {
-  return new Set([...edit.rooms].filter(([, room]) => room.authored).map(([id]) => id));
-}
-
 /** The id the Add tool gives the next room. */
 function newRoomId() {
   return state.newId.trim() || edit.freeRoomId();
@@ -302,7 +295,7 @@ function centerOf(id) {
   return cellCenter(edit.positions[id]);
 }
 
-function roomNode(id, { unreachable, far, moved }) {
+function roomNode(id, { unreachable, moved }) {
   const room = edit.rooms.get(id);
   const world = edit.world;
   const color = biomes[room.biome]?.color ?? '#ffb020';
@@ -322,7 +315,6 @@ function roomNode(id, { unreachable, far, moved }) {
   g.append(svg('text', { class: 'info', x: 0, y: 28 }, room.size.join('×')));
   if (id === world.start) g.append(svg('text', { class: 'flag', x: 0, y: 50, fill: 'var(--lime)' }, 'START'));
   else if (unreachable) g.append(svg('text', { class: 'flag', x: 0, y: 50, fill: 'var(--magenta)' }, 'UNREACHABLE'));
-  else if (far !== undefined) g.append(svg('text', { class: 'flag', x: 0, y: 50, fill: 'var(--amber)' }, `${far} ROOMS OUT`));
   // Authored (D90): a real game room, left alone by development steps.
   if (room.authored) g.append(svg('text', { class: 'flag', x: 0, y: -half + 14, fill: 'var(--cyan)' }, 'AUTHORED'));
   if (moved) g.append(svg('circle', { class: 'moved', cx: half - 10, cy: -half + 10, r: 5 }, undefined));
@@ -389,20 +381,17 @@ function drawPanel() {
   const errors = dataErrors();
   const rooms = edit.rooms;
   const distances = roomDistances(world.start, world.connections);
-  const { unreachable, far } = mapWarnings(world, edit.rooms.keys(), authoredRooms());
+  const { unreachable } = mapWarnings(world, edit.rooms.keys());
 
   panelEl.append(html('h2', '', 'CHECKS'));
   const list = html('ul');
   for (const id of unreachable) list.append(roomItem(id, 'warn', `${id}: not reachable from ${world.start}`));
-  for (const { id, distance } of far) {
-    list.append(roomItem(id, 'warn', `${id}: ${distance} rooms from ${world.start}; test rooms stay within ${TEST_ROOM_REACH} (D49)`));
-  }
   for (const error of errors) list.append(html('li', 'error', error));
   const reach = reachReport();
   const reachItem = (className, message) => (rooms.has(roomOf(message)) ? roomItem(roomOf(message), className, message) : html('li', className, message));
   for (const error of reach.errors) list.append(reachItem('error', error));
   for (const warning of reach.warnings) list.append(reachItem('warn', warning));
-  if (list.children.length === 0) list.append(html('li', 'fine', `All ${distances.size} rooms reachable on the map and by the wizard's abilities, test rooms within ${TEST_ROOM_REACH} of the start.`));
+  if (list.children.length === 0) list.append(html('li', 'fine', `All ${distances.size} rooms reachable on the map and by the wizard's abilities.`));
   panelEl.append(list);
 
   const reportButton = html('button', '', 'F3 Pickup report');

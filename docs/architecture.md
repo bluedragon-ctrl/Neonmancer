@@ -63,7 +63,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `world/boot-key.js` | The boot key (D101): the 8×8 code whose modules are the 64 fragments (`BOOT_KEY`) |
 | `world/exits.js` | Which exit the wizard left through; where he arrives in the connected room |
 | `world/grid.js` | 3D occupancy grid: a block type code per cell (`typeAt()` gives its properties), room sides with exit openings (a locked exit's opening closes with `setOpening()`), hole tiles (`fillHole()`, `openHole()`); a fake block a scan revealed leaves (`clearCell()`) |
-| `world/map.js` | The world map (D66): `nearestFreeCell()` for new rooms, `roomDistances()` from the start, `mapWarnings()` (unreachable rooms, test rooms too far out, D49; authored rooms exempt, D90) (pure, tested) |
+| `world/map.js` | The world map (D66): `nearestFreeCell()` for new rooms, `roomDistances()` from the start, `mapWarnings()` (rooms the start can't reach, D175) (pure, tested) |
 | `world/path.js` | Shared path format: legs from `at` through `points`, `advance()` / `positionOf()` on a small path state, swept cells |
 | `world/pickup-report.js` | The world map tool's pickup report: every permanent item by save bit, the rooms it lies in, refills per type, unknown types (pure, tested) |
 | `world/progress.js` | What the wizard has for the whole game (D71): save bits in blocks (`SAVE_BLOCKS`, `saveBit()`, `pickupBit()`), `Progress` (bits found, known spells, a block's count); blocks: spells, buffs, upgrades, fragments, secrets (D100) (pure, tested) |

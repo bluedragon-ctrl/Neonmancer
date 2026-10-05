@@ -5,9 +5,6 @@
  * player's map screen (Phase 4) will use it too.
  */
 
-/** Test rooms stay this many rooms from the start at most (D49). */
-export const TEST_ROOM_REACH = 2;
-
 /** "x,z" key of a map cell. */
 export const mapKey = ([x, z]) => `${x},${z}`;
 
@@ -69,23 +66,14 @@ export function roomDistances(start, connections) {
 
 /**
  * What room validation can't see (D66): rooms the start can't reach through
- * exits, and test rooms too far from the start (D49). Authored rooms (D90)
- * are real game rooms and may lie as far out as the world needs.
+ * exits. How far out a room lies is no warning (D175).
  * @param {{ start: string, connections: string[][] }} world
  * @param {Iterable<string>} roomIds every room
- * @param {Set<string>} [authored] ids of the authored rooms
- * @returns {{ unreachable: string[], far: { id: string, distance: number }[] }}
+ * @returns {{ unreachable: string[] }}
  */
-export function mapWarnings(world, roomIds, authored = new Set()) {
+export function mapWarnings(world, roomIds) {
   const distances = roomDistances(world.start, world.connections);
-  const unreachable = [];
-  const far = [];
-  for (const id of roomIds) {
-    const distance = distances.get(id);
-    if (distance === undefined) unreachable.push(id);
-    else if (distance > TEST_ROOM_REACH && !authored.has(id)) far.push({ id, distance });
-  }
-  return { unreachable, far };
+  return { unreachable: [...roomIds].filter((id) => !distances.has(id)) };
 }
 
 /**

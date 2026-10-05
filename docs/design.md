@@ -1637,9 +1637,10 @@ AUTHORED and lets them lie as far from the start as the world needs.
 
 Test rooms stay in the world alongside the authored rooms (D45, D90): a
 lab where each shows one mechanic, and later spells and enemies are tried
-in them too. New mechanics add or extend one (D43). Every test room is at
-most two rooms from Boot Sector, the start (D49; Room 1 is a second hub);
-the world map tool shows the connections and flags any room further out.
+in them too. New mechanics add or extend one (D43). Test rooms once hung
+within two rooms of Boot Sector (D49); since D147 they live in the dev
+wing, reached with the debug room jump, and the world map tool no longer
+flags rooms by distance (D175).
 
 | Room | Biome, size | Shows |
 |---|---|---|
@@ -2170,9 +2171,8 @@ players never see it (D67).
 - **Opening a room:** click it: the game opens in one reused tab at
   `/?room=<id>&edit`, in the room editor on that room (F2 plays it). The
   game takes `?room` and `?edit` in the dev server only.
-- **Checks:** the side panel lists the data errors, the rooms the start
-  can't reach through exits, and test rooms more than two rooms from the
-  start (D49; authored rooms, D90, are marked and not flagged).
+- **Checks:** the side panel lists the data errors and the rooms the start
+  can't reach through exits (D175; how far out a room lies is no warning).
   Click a warning to highlight its room.
 - **Pickup report** (F3 or the panel's button; F3 or Esc closes it):
   over the map, every permanent item defined in `defs.json` by its save

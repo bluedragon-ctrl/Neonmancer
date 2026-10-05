@@ -18,14 +18,9 @@ test('roomDistances counts rooms from the start through connections', () => {
   assert.deepEqual(Object.fromEntries(roomDistances('a', connections)), { a: 0, b: 1, d: 1, c: 2 });
 });
 
-test('mapWarnings flags rooms the start cannot reach and test rooms more than two rooms away (D49)', () => {
-  const world = { start: 'a', connections: [['a.e', 'b.w'], ['b.e', 'c.w'], ['c.e', 'd.w']] };
-  assert.deepEqual(mapWarnings(world, ['a', 'b', 'c', 'd', 'lost']), { unreachable: ['lost'], far: [{ id: 'd', distance: 3 }] });
-});
-
-test('mapWarnings leaves authored rooms far from the start alone (D90)', () => {
-  const world = { start: 'a', connections: [['a.e', 'b.w'], ['b.e', 'c.w'], ['c.e', 'd.w']] };
-  assert.deepEqual(mapWarnings(world, ['a', 'b', 'c', 'd', 'lost'], new Set(['d', 'lost'])), { unreachable: ['lost'], far: [] });
+test('mapWarnings flags only rooms the start cannot reach, however far out the others lie (D175)', () => {
+  const world = { start: 'a', connections: [['a.e', 'b.w'], ['b.e', 'c.w'], ['c.e', 'd.w'], ['d.e', 'e.w']] };
+  assert.deepEqual(mapWarnings(world, ['a', 'b', 'c', 'd', 'e', 'lost']), { unreachable: ['lost'] });
 });
 
 test('pickup report: every permanent item by its bit, where it lies, not placed or placed twice; refills per type', () => {

@@ -274,6 +274,7 @@ hostility. (Extended by D78–D81.)
 Every test room is at most two rooms from Boot Sector; new ones connect
 near the hub.
 **Why:** testing the newest mechanic shouldn't mean walking the world.
+(The world map tool's warning for it is removed by D175.)
 
 ### D50 — 2026-09-26 — Every bug bounces; a drop shadow only under the wizard
 `bounce` is true on bugs; falling objects' shadow is off
@@ -2173,3 +2174,16 @@ adds the door, as every exit must be connected.
 to the core leads through either. The 4.7 fight was tuned in an empty
 room; the bigger arena adds cover so a fight with 50 energy and slow
 recharge has room to breathe, without a spot where it stalls on a plate.
+
+### D175 — 2026-10-05 — The world map tool no longer flags rooms far from the start
+`mapWarnings()` and the world map tool's CHECKS list only rooms the start
+can't reach through exits; `TEST_ROOM_REACH` and the "N ROOMS OUT" flag
+are gone. Checked on the data before the change: the warning flagged 23 of
+28 rooms, 20 of them Lattice rooms drafted unflagged (D90, D130).
+Limiting it to the dev wing, measured from the wing's entry, was the other
+option; it would still flag `fence_yard` and `watchdog_run` (3 and 4
+rooms in), and the dev server reaches any room with the debug room jump
+or `?room=`.
+**Why:** since Phase 5 real rooms are unflagged and test rooms live in the
+dev wing (D147), so D49's warning flagged nearly every real room and hid
+the warnings that matter.

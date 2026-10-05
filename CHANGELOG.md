@@ -9,6 +9,10 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Changed
+- The world map tool no longer flags rooms more than two rooms from the
+  start (D175): with real rooms unflagged and test rooms in the dev wing,
+  it flagged nearly every Lattice room. Unreachable rooms are still
+  flagged.
 - Rendering does less work for the same picture (D169): a decoration's
   dark boxes, glass and lights draw in a handful of draws (a memory stack
   went from 24 to 5; `mirror_stacks` from about 380 to about 155 draws a
