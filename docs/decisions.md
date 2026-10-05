@@ -2130,3 +2130,43 @@ Each room chains a decoy with a crate, and a fight on top (D168).
 **Why:** the plan's next two rooms. Fork is the wing's tool, now
 combined with crates: a decoy that holds one thing while a crate holds
 another, and that draws guards as well as holding plates.
+
+### D174 — 2026-10-05 — The Gatekeeper's hall (5.7)
+`gatekeeper` ("Gatekeeper Hall", 16x4x16, unflagged) sits at (9,0), east
+of the Atrium (which has no door to it), between `drift_bay` (north) and
+`split_vault` (south), so the Scan and Fork wings meet there. Its east
+side (z 7–8, the first row kept free) waits for the core in 5.8, which
+adds the door, as every exit must be connected.
+- The fight is the 4.7 one (D134, D137): THE GATEKEEPER (16 integrity,
+  plate armor) starts in the middle and drops the +10 energy buff
+  (`buff_energy_2`). Four overload plates lie in the quarters, each with
+  its eight neighbours free: next to a wall, a hole or a block, it would
+  stop on a plate short of him, out of its burst's reach and open to
+  Zap for good. Four 1-high blocks round the middle are cover: it can't
+  climb them and its chase goes straight at him, so it stalls behind one
+  while he hops over and gets his energy back. The north and south
+  blocks stand in front of the doors and hide him from it as he comes
+  in. Two energy refills and an integrity refill by the walls, three
+  data pillars against the back walls; no shrine (D104).
+- Played headless with Zap only, a bot that leads it past a plate and
+  steps out of the windup: beaten in 34 s from the north door and 41 s
+  from the south, no damage taken and no refill used; it needs no Fork
+  or Shield (a decoy beside a plate, or the Shield, which blocks the burst so he can stand in reach, are
+  easier ways). A bot that walked into the blocks instead of hopping
+  them died in 21 s: the blocks are a refuge only if he jumps.
+- `drift_bay`'s south door (`at` 10, not x 5–6 as D170 kept free): at
+  5–6 the virus saw him come in and hit him at once, and the bank is all
+  fight. Now the door is in the bank's east corner behind a 1-high wall
+  ([9..11, 9]; 1 high stops sight at body height, and the sentinel
+  behind it still shows from the camera, a 2-high one hid it). The
+  sentinel moves to [10,0,8] and the virus to [4,0,10], so neither sees
+  him in the doorway (10 s standing there). From the north the fragment
+  plays as before (on the ledge 2.7 s after the freeze, one hit taken at
+  the landing); from the south it skips the ferry (3.1 s after the
+  freeze), the other side's way in (D67).
+- `split_vault`'s north door (`at` 8) opens onto its east half: fragment
+  15 still needs Fork, so a wizard from the Scan wing comes back for it.
+**Why:** the plan's boss 2 arena, joining the two deep wings so the way
+to the core leads through either. The 4.7 fight was tuned in an empty
+room; the bigger arena adds cover so a fight with 50 energy and slow
+recharge has room to breathe, without a spot where it stalls on a plate.
