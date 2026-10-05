@@ -35,7 +35,8 @@ export const PALETTE = {
 /**
  * Surroundings of a room (biomes.json "look", D62): background, floor grid
  * outside the room, wall grid and bloom. These are Home Lattice's; a biome
- * overrides any of them.
+ * overrides any of them. The ambience fields are off by default; a biome
+ * turns them on (Home Lattice does, D179).
  */
 export const LOOK_DEFAULTS = {
   background: PALETTE.void,
@@ -45,6 +46,15 @@ export const LOOK_DEFAULTS = {
   /** Brightness of the wall grid, as a share of the room color. */
   wallGrid: 0.3,
   bloom: 1.4,
+  /**
+   * Ambience (D179), off unless a biome sets it: the share of grid lines
+   * that carry data flows (floor.js), warm motes per floor tile
+   * (motes.js), the share of free wall cells that hold a glass panel
+   * (walls.js pickPanels()).
+   */
+  flows: 0,
+  motes: 0,
+  panels: 0,
 };
 
 /**

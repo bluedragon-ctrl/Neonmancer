@@ -32,7 +32,7 @@
     },
     "look": {
       "type": "object",
-      "description": "Surroundings of the room (D62); every field is optional, with the Home Lattice look as the default.",
+      "description": "Surroundings of the room (D62); every field is optional, with the Home Lattice look as the default (the ambience fields flows, motes and panels default to off, D179).",
       "additionalProperties": false,
       "properties": {
         "background": {
@@ -60,6 +60,24 @@
           "minimum": 0,
           "maximum": 3,
           "description": "Bloom (glow) strength. Default 1.4."
+        },
+        "flows": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Data flows (D179): share of floor grid lines that now and then carry a bright dash. Default 0 (off)."
+        },
+        "motes": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2,
+          "description": "Warm motes (D179) rising through the room, per floor tile (at most 120). Default 0 (off)."
+        },
+        "panels": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.5,
+          "description": "Glass panels (D179): share of the free back-wall cells (not the bottom row, not by a doorway) that become windows, picked anew on every entry. Default 0 (off)."
         }
       }
     }

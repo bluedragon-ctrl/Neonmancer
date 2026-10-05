@@ -1837,7 +1837,8 @@ Enemy ideas, to refine in each pass:
 Dropped for now: deep-sea and nature sectors, Bitrot and Z-Fighter.
 
 Surroundings (`look` in `biomes.json`, D62; every field optional, Home
-Lattice's values are the defaults):
+Lattice's values are the defaults, except the ambience, which is off
+unless a biome turns it on, D179):
 
 | Field | What | Default |
 |---|---|---|
@@ -1846,6 +1847,9 @@ Lattice's values are the defaults):
 | `outerFade` | blocks over which that grid fades out | 5 |
 | `wallGrid` | brightness of the faint wall grid (share of the room color) | 0.3 |
 | `bloom` | glow strength | 1.4 |
+| `flows` | data flows: share of floor grid lines that now and then carry a bright dash | 0 (Home Lattice 0.5) |
+| `motes` | warm motes rising through the room, per floor tile (at most 120) | 0 (Home Lattice 0.2) |
+| `panels` | glass panels: share of the free back-wall cells that become windows | 0 (Home Lattice 0.08) |
 
 | Biome | Background, outer grid | Fade | Wall grid | Bloom |
 |---|---|---|---|---|
@@ -1865,15 +1869,25 @@ Every other biome is a twist on it.
 
 - **Look:** amber `#ffb020`, the default surroundings. A clean square
   floor grid, every line whole and straight: the healthy version the
-  other sectors corrupt. Warm motes rising slowly.
-- **Data flows (5.10):** short bright dashes now and then run along
-  the grid lines, on the room floor and on the surrounding grid outside
-  it; random decoration, not a guide.
-- **Glass panels (5.10):** random 1×1 glass panels set into the back
-  walls (`glassBox()` with a `GLASS` preset, D116), framed in the room
-  color, never over an exit; a new random set on every entry, since they
-  are looks only. The data flows outside show through them: windows onto
-  the city.
+  other sectors corrupt.
+- **Ambience (built, D179):** the biome's `flows`, `motes` and `panels`
+  (the look table above).
+  - **Data flows:** short bright dashes now and then run along the grid
+    lines, on the room floor and on the grid outside it, fading with it;
+    each line has its own speed, direction and gap from a hash of its
+    index: decoration, not a guide. In the floor's own shader
+    (`FLOWS` in `render/floor.js`).
+  - **Warm motes:** soft amber dots of light rising slowly from the
+    floor, swaying a little, fading in and out on the way up; one Points
+    object animated in its shader (`MOTES` in `render/motes.js`).
+  - **Glass panels:** random 1×1 panes of clear glass (`glassBoxes()`,
+    `GLASS.panel`) set into the back walls in a frame of the room color,
+    never in the bottom row (they would read as a way out), by a doorway
+    (hidden exits too) or touching another panel; a new random set on
+    every entry, kept through a respawn or a scan's rebuild
+    (`pickPanels()` in `render/walls.js`). The grid outside, with its
+    flows, shows through them: windows onto the city. Showcase
+    `?asset=lattice-ambience`.
 - **Decorations:** pillars with steady, evenly spaced data; screens with
   clean, friendly terminal text (help on a new spell or concept, never a
   room's solution, D163).
@@ -1884,8 +1898,7 @@ Every other biome is a twist on it.
   warm rooms (mint, violet, sky blue) or the cron's red-pink; the glowbug
   is a pale gold close to the grid, part of the city.
 - **Signature trick:** none, the Lattice is the reference. A core
-  heartbeat (the room glowing up faintly every few seconds) is to be
-  discussed in the visual pass (5.10).
+  heartbeat (the room glowing up every few seconds) was dropped (D179).
 - **Later effect:** none, the safe sector.
 
 ## HUD
@@ -2228,13 +2241,14 @@ decisions before the code lands. Every step also (D43):
 - updates `docs/design.md`, `docs/architecture.md` and CHANGELOG, and
   records new decisions.
 
-**Next: Phase 5, step 5.8b or 5.9** (5.3 music waits for the author's tracks).
+**Next: Phase 5, step 5.10, the Outer Buffer look** (5.3 music waits for the author's tracks).
 
 ### Phase 5 (v0.5) steps: Home Lattice playtest
 
 Done: 5.1 audio engine (D138), 5.2 sound effects (D139), 5.4 dev wing
 (D147), 5.5 tutorial (D148), 5.6a–h the Atrium and the four wings
-(D151, D156–D173), 5.7 the Gatekeeper's hall (D174), 5.8 the core hall, the Level 1 locks and the teasers (D177). The Lattice steps are two or three rooms each, the hub
+(D151, D156–D173), 5.7 the Gatekeeper's hall (D174), 5.8 the core hall, the Level 1 locks and the teasers (D177), 5.9 the
+Lattice's ambience (D179). The Lattice steps are two or three rooms each, the hub
 before the wings (D149); every batch goes through the reachability
 checker and the review subagent; rooms are drafted unflagged and the
 author flags them authored (D90). Room plan: [lattice-plan.md](lattice-plan.md).
@@ -2242,13 +2256,12 @@ author flags them authored (D90). Room plan: [lattice-plan.md](lattice-plan.md).
 | # | Branch | Delivers |
 |---|---|---|
 | 5.3 | `feat/music` | The author's tracks trimmed for seamless loops: Lattice, boss, title; room and biome mapping, a boss switch and a crossfade back. |
-| 5.8b | `feat/biome-looks` | The Glitchmire and Frostbyte looks for the teasers, in the showcase first: floor patterns (torn tiles, hex crystals) and particles (pixel bubbles, 0/1 flakes) (D177). |
-| 5.9 | `feat/outer-buffer-secrets` | The Outer Buffer look (floor, starfield, color re-picked) and the secret cluster: complex multi-step rooms, often with tools found later (D173). |
-| 5.10 | `feat/lattice-visual-pass` | Optional: the Lattice's data flows and glass panels (D121). |
-| 5.11 | `feat/quality-presets` | Quality presets, auto fallback and render scale wired up (D76), a check on a weaker GPU. |
-| 5.12 | `feat/onboarding-feedback` | The first minute from title to the first disk, the controls screen, the pause entry that copies debug info (version, room, key) for feedback. |
-| 5.13 | `chore/balance-pass` | Difficulty, energy, backups and shrines across the Lattice from full playthroughs. |
-| 5.14 | `chore/release-0.5.0` | Docs pass, tag `v0.5.0`, the GitHub Release: **Playtest 1**. |
+| 5.10 | `feat/outer-buffer-look` | The Outer Buffer look, in the showcase first: floor, starfield, color re-picked, its ambience (D179). |
+| 5.11 | `feat/outer-buffer-secrets` | The secret cluster: complex multi-step rooms, often with tools found later (D173). |
+| 5.12 | `feat/quality-presets` | Quality presets, auto fallback and render scale wired up (D76), a check on a weaker GPU. |
+| 5.13 | `feat/onboarding-feedback` | The first minute from title to the first disk, the controls screen, the pause entry that copies debug info (version, room, key) for feedback. |
+| 5.14 | `chore/balance-pass` | Difficulty, energy, backups and shrines across the Lattice from full playthroughs. |
+| 5.15 | `chore/release-0.5.0` | Docs pass, tag `v0.5.0`, the GitHub Release: **Playtest 1**. |
 
 ### Phase 6 (v0.6) steps: the other sectors
 
@@ -2258,7 +2271,7 @@ step (roster, look, rooms, its own mechanic of D122).
 | # | Branch | Delivers |
 |---|---|---|
 | 6.1 | `feat/playtest-fixes` | What Playtest 1 found. |
-| 6.2 | `feat/glitchmire` | The biome concept and roster (at least three enemies), its looks, rooms. |
+| 6.2 | `feat/glitchmire` | The biome concept and roster (at least three enemies), its looks (floor pattern, particles: the teaser rooms get them too, D179), rooms. |
 | 6.3 | `feat/frostbyte` | The same for Frostbyte Wastes. |
 | 6.4 | `feat/firewall-citadel` | The same for Firewall Citadel. |
 | 6.5 | `feat/phantom-partition` | The same for Phantom Partition. |

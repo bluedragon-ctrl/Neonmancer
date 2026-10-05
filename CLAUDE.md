@@ -287,9 +287,9 @@ cyan moves (platforms); magenta is the wizard (D98); neon green is pushable
 Monsters and spell effects are not bound by them yet.
 Behaviors below are ideas for Phase 5; for now biomes are look only.
 - **Home Lattice** (core, settled D121) — a clean kernel city; amber (the
-  default room color), clean square grid, warm rising motes; later data
-  flows on the grid and random glass wall panels; safe; holds the
-  central core
+  default room color), clean square grid, warm rising motes, data
+  flows on the grid and random glass wall panels (D179); safe; holds
+  the central core
 The high-level map (D122, docs/design.md, Biomes) sets each sector's
 theme, enemy family and one mechanic of its own; details are settled one
 biome at a time.
@@ -571,7 +571,8 @@ sounding Home Lattice and ship it to testers.
   drops a fragment, one the energy buff), the tutorial near the core. Two Level 1
   exits lead to the next two biomes, Glitchmire and Frostbyte Wastes,
   each only a few teaser rooms (look only); an Outer Buffer cluster of
-  secret rooms. Optional: the Lattice's data flows and glass panels.
+  secret rooms. The Lattice's ambience (data flows, motes, glass
+  panels, D179) and the Outer Buffer's look come before the secret rooms.
 - Readiness: quality presets, auto fallback and render scale wired up,
   a check on a weaker GPU; first-minute onboarding; a "copy debug info"
   pause entry for feedback; a balance pass.
