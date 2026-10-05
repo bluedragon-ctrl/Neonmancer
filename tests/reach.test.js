@@ -62,6 +62,18 @@ test('Pause: a frozen enemy on its path is a step up a 2-high wall', () => {
   assert.equal(room([{ ...patrol, at: [8, 0, 1], path: { points: [[8, 0, 5]] } }], ['pause']), false); // not beside the wall
 });
 
+test('a drop onto a frozen enemy cell may fall past it to the floor', () => {
+  // he starts on a 3-high ledge (x 0-1); below it a trench (x = 2) walled at x = 3, a bug's lane all
+  // along it: frozen it may lie anywhere there, but it need not, so the trench floor is reached too
+  const patrol = { id: 'b', template: 'bug', at: [2, 0, 0], path: { points: [[2, 0, 7]] } };
+  const blocks = [{ at: [0, 0, 0], to: [1, 2, 7] }, { at: [3, 0, 0], to: [3, 2, 7] }];
+  const props = { size: [12, 5, 8], spawn: [6.5, 0, 1.5], blocks, enemies: [patrol], pickups: [pickup('low', [2, 0, 4])], exits: [EAST] };
+  const content = gameData({ rooms: [roomFile('r', props), roomFile('o', { exits: [{ id: 'east_o', side: '-x', at: 3 }] })], connections: [['r.east', 'o.east_o']], objects: OBJECTS });
+  const room = buildRoom(content.rooms.get('r'), content);
+  const r = analyzeRoom(room, { abilities: ['pause'], starts: [[0, 3, 1]], tuning: TUNING });
+  assert.equal(r.pickups.has('low'), true);
+});
+
 test('Pause: a frozen enemy holds a plate it is pushed onto (D154, D166)', () => {
   const patrol = { id: 'b', template: 'bug', at: [3, 0, 1], path: { points: [[3, 0, 5]] } };
   const locked = (plateAt, abilities, holes) =>
@@ -156,6 +168,10 @@ test('a locked exit opens by a crate on a plate, or a decoy', () => {
   assert.equal(reach(props).exits.east, true);
   assert.equal(reach({ ...props, objects: [plate] }).exits.east, false);
   assert.equal(reach({ ...props, objects: [plate] }, ['fork']).exits.east, true);
+  // one decoy at a time: two plates need a second holder
+  const second = { id: 'q', type: 'plate', at: [5, 0, 5] };
+  assert.equal(reach({ ...props, objects: [plate, second] }, ['fork']).exits.east, false);
+  assert.equal(reach({ ...props, objects: [plate, second, crate] }, ['fork']).exits.east, true);
 });
 
 test('a hidden exit needs a scan, and so does a fake block', () => {

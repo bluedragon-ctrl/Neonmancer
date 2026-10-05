@@ -36,6 +36,14 @@ docs/decisions.md).
   second solution no easier than the intended one is not a bypass.
 
 ### Added
+- The Fork wing's first half (5.6g, D171): `fork_lab` (the Fork disk in
+  a 3-high fenced cage that a crate on a plate opens; the same crate is
+  then the step into a fenced pen, where the decoy holds the plate of a
+  bridge over a 3-wide pit while he runs for it) and `twin_plates`
+  (fragment 12: a bridge that needs two plates at once, one held by the
+  decoy and one by a frozen bug pushed onto it; a target opens the cage of
+  the crate that is the step up to the fragment). `cold_stairs` gets an
+  east door. Both rooms have a timed plate and a bridge home.
 - The Scan wing's second half (5.6f, D170): `ghost_exit` (fragment 9: a
   frozen bug on a plate opens a crate's pen for the freeze, the crate is
   the step onto a plateau where a scan finds the fragment and the Lattice's
@@ -177,6 +185,10 @@ docs/decisions.md).
   collapsing block no longer derezzes.
 
 ### Fixed
+- Reachability checker (D171): the Fork decoy holds one plate at a time
+  (it counted as holding every plate), and a drop onto a frozen enemy's
+  or a platform's cell can also fall past it to the floor (from its south
+  and east doors `cold_stairs`' north door read as never reached).
 - `ledger_cell` (D160): a crate was a step over the 2-high divider, so
   fragment 5 could be taken with both gates shut. The divider and the
   alcove's wall and gates are 3 high now, the room is mirrored so the

@@ -294,8 +294,11 @@ class RoomModel {
     };
     const land = (x, y, z) => {
       if (!this.grid.isInside(x, z)) return;
-      const ly = this.landing(x, y, z, cfg);
-      if (ly >= 0) add(x, ly, z);
+      // A frozen enemy or a platform may not be there: he lands on it, or falls past it.
+      for (let ly = this.landing(x, y, z, cfg); ly >= 0; ly = this.landing(x, ly - 1, z, cfg)) {
+        add(x, ly, z);
+        if (ly === 0 || !this.floors.has(this.index(x, ly - 1, z)) || this.blocked(x, ly - 1, z, cfg)) break;
+      }
     };
     for (const [x, y, z] of starts) land(x, y, z);
 
@@ -437,7 +440,10 @@ class RoomModel {
     const { abilities } = this;
     const linked = this.linked(ids);
     if (linked.length === 0) return false;
-    /** Plates only a frozen enemy can hold: the enemies that can be there, each one on one plate at most. */
+    /**
+     * Plates only a frozen enemy or the Fork decoy can hold: what can be
+     * there, each one on one plate at most (one decoy at a time, D129).
+     */
     const byFrozen = [];
     for (const object of linked) {
       if (object.kind === 'target') {
@@ -448,12 +454,13 @@ class RoomModel {
       if (cfg.crateSet.has(this.index(x, y, z))) continue;
       if (object.timer && stands.has(this.index(x, y, z))) continue;
       const beside = DIRS.some(([dx, dz]) => stands.has(this.index(x - dx, y, z - dz)));
-      const placed = (abilities.has('fork') || abilities.has('compile') || (abilities.has('cut_paste') && cfg.crates.length > 0)) && beside;
+      const placed = (abilities.has('compile') || (abilities.has('cut_paste') && cfg.crates.length > 0)) && beside;
       if (placed) continue;
-      // A frozen enemy on it: on its path or pushed there (D154, D166).
-      const enemies = this.frozenCells.get(this.index(x, y, z));
-      if (!enemies) return false;
-      byFrozen.push(enemies);
+      // A frozen enemy on it: on its path or pushed there (D154, D166); or the decoy.
+      const holders = [...(this.frozenCells.get(this.index(x, y, z)) ?? [])];
+      if (abilities.has('fork') && beside) holders.push('decoy');
+      if (holders.length === 0) return false;
+      byFrozen.push(holders);
     }
     return assignable(byFrozen);
   }
