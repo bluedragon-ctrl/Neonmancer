@@ -1212,3 +1212,13 @@ D121) are removed: the `motes` look field, `render/motes.js` and its
 showcase part. Data flows and glass panels stay. The backup shrine keeps
 its own motes (D97).
 **Why:** the author saw them in play and did not want them.
+
+### D181 — 2026-10-05 — Glass panels glow and flicker
+Home Lattice's glass panels (D179) glow softly in the room color,
+brightest at the frame, breathing slowly, each panel on its own rhythm;
+now and then (every 5–15 s per panel) one stutters between dark and
+bright for about a third of a second, like a faulty display. One
+instanced additive quad per panel in front of the pane, animated in its
+shader (`PANEL_FX`); no extra pass.
+**Why:** the author asked for the panels to glow a bit and flicker
+sometimes; faint enough that they still read as windows.

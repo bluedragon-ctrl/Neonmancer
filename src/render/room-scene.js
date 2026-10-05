@@ -253,6 +253,7 @@ export class RoomScene {
     }
     this.shrine?.userData.update(dt);
     this.floor?.userData.update(dt);
+    this.roomView?.userData.update?.(dt);
     if (this.flare) {
       this.flare.time += dt;
       this.flare.apply(this.flare.time);

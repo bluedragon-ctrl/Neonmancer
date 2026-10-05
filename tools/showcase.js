@@ -522,13 +522,16 @@ function buildPlate() {
   return asset;
 }
 
-/** A small Home Lattice room corner with two glass panels. */
+/** A small Home Lattice room corner with two glass panels, glowing and flickering now and then (D181). */
 function buildLatticeAmbience() {
   const size = [4, 3, 4];
   const panels = [{ side: '-x', u: 1, v: 1 }, { side: '-z', u: 2, v: 2 }];
-  const room = new Group().add(createRoomView({ size, blocks: {}, blockTypes: BLOCK_TYPES, color: PALETTE.amber, panels }));
+  const view = createRoomView({ size, blocks: {}, blockTypes: BLOCK_TYPES, color: PALETTE.amber, panels });
+  const room = new Group().add(view);
   room.position.set(-2, 0, -2);
-  return new Group().add(room);
+  const asset = new Group().add(room);
+  asset.userData.update = (dt) => view.userData.update(dt);
+  return asset;
 }
 
 /**

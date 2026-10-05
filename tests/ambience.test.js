@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { withExitDefaults } from '../src/data/room-data.js';
 import { LOOK_DEFAULTS, roomLook } from '../src/render/neon.js';
+import { panelGlowPlacement } from '../src/render/panel-glow.js';
 import { pickPanels, wallLayout } from '../src/render/walls.js';
 import biomes from '../data/biomes.json' with { type: 'json' };
 
@@ -64,3 +65,13 @@ test('walls: a panel cell is glass in a frame instead of a dark face', () => {
   assert.ok(lo[2] < 0 && hi[2] === 0);
 });
 
+
+test('panel glow: in front of each pane, facing into the room (D181)', () => {
+  const placed = panelGlowPlacement([{ side: '-x', u: 3, v: 1 }, { side: '-z', u: 5, v: 2 }]);
+  assert.equal(placed[0].facing, '+x');
+  assert.deepEqual(placed[0].center.slice(1), [1.5, 3.5]);
+  assert.ok(placed[0].center[0] > 0 && placed[0].center[0] < 0.01);
+  assert.equal(placed[1].facing, '+z');
+  assert.deepEqual(placed[1].center.slice(0, 2), [5.5, 2.5]);
+  assert.ok(placed[1].center[2] > 0 && placed[1].center[2] < 0.01);
+});

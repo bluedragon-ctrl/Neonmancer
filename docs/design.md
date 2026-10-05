@@ -1882,7 +1882,11 @@ Every other biome is a twist on it.
     (hidden exits too) or touching another panel; a new random set on
     every entry, kept through a respawn or a scan's rebuild
     (`pickPanels()` in `render/walls.js`). The grid outside, with its
-    flows, shows through them: windows onto the city. Showcase
+    flows, shows through them: windows onto the city. They glow softly
+    in the room color, brightest at the frame, breathing slowly each on
+    its own rhythm, and now and then (every 5–15 s per panel) one
+    stutters for a moment like a faulty display (D181; `PANEL_FX` in
+    `render/panel-glow.js`). Showcase
     `?asset=lattice-ambience`.
 - **Decorations:** pillars with steady, evenly spaced data; screens with
   clean, friendly terminal text (help on a new spell or concept, never a
