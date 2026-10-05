@@ -47,7 +47,7 @@ table, roster, AI rules). Prefer the monster editor
   pickup of the room (it falls there when the boss is beaten; once found,
   the boss stays away). One boss a room, no shrine; arena doors stay
   open (he may retreat). The bosses: `null_pointer` (in `warden_pit`)
-  and `gatekeeper` (its arena comes in step 5.7).
+  and `gatekeeper` (in `gatekeeper`).
 
 ## Color rules (D119, D99, D121)
 - Every template has a color of its own, >= 0.09 apart in OKLab from every

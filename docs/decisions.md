@@ -5,7 +5,7 @@ short. Numbers are stable (code, tests and docs cite them) and never
 reused. When a decision changes, update its entry (or add a new one and
 shrink the old to a one-line pointer, "replaced by Dn") and update
 CLAUDE.md if it is a locked decision; the old wording stays in git
-history and the discussion in the entry's pull request (D175). The
+history and the discussion in the entry's pull request (D176). The
 details of what was built are in docs/design.md; room layouts are in the
 room files.
 
@@ -392,7 +392,7 @@ the bob.
 
 ### D75 — 2026-09-28 — Switches: targets, floor plates, locked exits
 A target (Zap toggles it) and a plate (on while something stands on it).
-A locked exit opens while its conditions hold (D174), never closes on the
+A locked exit opens while its conditions hold (D175), never closes on the
 wizard, and the exit he came in through stays open for him. (Links and
 timers: D140; look: D143.)
 **Why:** author's choices; every room stays leavable the way he came.
@@ -558,7 +558,7 @@ completion share.
 in. Touching the core raises the access level to what the fragments earn
 (16, 32, 48 → 1, 2, 3); all 64 reboot the Grid (a placeholder end). The
 core is a placeable object, at most one. Access-locked exits show the
-level (D174). Gold hat bands show the level.
+level (D175). Gold hat bands show the level.
 **Why:** the core is the hub he returns to; the last 16 fragments are for
 the ending.
 
@@ -608,7 +608,7 @@ load from refilling lives for free.
 ### D107 — 2026-09-29 — Seven more enemy looks
 Warden, daemon, golem, wyrm, phish, overclock and pixie are looks, each
 with its template (D119), but no room uses them and there is no plan to
-(D175); a biome's roster may pick them up. A model's `muzzle` is a reach
+(D176); a biome's roster may pick them up. A model's `muzzle` is a reach
 along the line of fire.
 **Why:** more silhouettes, reviewed in the showcase first.
 
@@ -1126,7 +1126,23 @@ often with tools found later; a secret may hang off another room than
 planned.
 **Why:** Fork combined with crates and guards.
 
-### D174 — 2026-10-02 — One `requires` list for locked doors
+### D174 — 2026-10-05 — The Gatekeeper's hall (5.7)
+`gatekeeper` ("Gatekeeper Hall", 16x4x16) at (9,0) joins `drift_bay`
+(north) and `split_vault` (south), so the Scan and Fork wings meet
+there; its east side waits for the core (5.8). The fight is the one of
+D134 and D137 (drops `buff_energy_2`). Rules: each overload plate keeps
+its eight neighbours free (next to a wall, hole or block it could stop on
+a plate out of its burst's reach and open to Zap for good); 1-high cover
+blocks it can't climb give him time to recharge, a refuge only if he
+jumps them; a door must not open into an enemy's sight (`drift_bay`'s
+south door moved behind a 1-high wall, its enemies moved). A decoy or
+the Shield make it easier but still use the plates: not bypasses (D166).
+Beaten with Zap alone in about 35–40 s headless.
+**Why:** boss 2's arena, joining the two deep wings so the way to the
+core leads through either; cover gives a fight with 50 energy room to
+breathe.
+
+### D175 — 2026-10-02 — One `requires` list for locked doors
 (Numbered late: it was a second D152.) An exit's `requires` lists
 conditions that must all hold: `{ "switch": id }`, `{ "switch": "*" }`
 (every switch in the room) and `{ "access": level }`.
@@ -1137,7 +1153,7 @@ enough. Hidden exits stay a flag of their own.
 **Why:** switch locks and access locks were one idea with two
 vocabularies.
 
-### D175 — 2026-10-05 — Docs cleanup: a log of current decisions; dropped ideas
+### D176 — 2026-10-05 — Docs cleanup: a log of current decisions; dropped ideas
 The decision log shows each decision as it stands: replaced entries are
 one-line pointers, room-build entries keep only the rules they produced,
 and the old wording lives in git history (the log was over 2,000 lines).

@@ -256,7 +256,7 @@ and some exits and pickups wait for a spell or buff found later
   virus, sentinel and cron (the tower) (D108), plus the peaceful glowbug,
   in tiers (D121); each other biome gets its own roster, settled one
   biome at a time in Phase 6 (docs/design.md, Biomes)
-- Seven more looks have templates but no room or plan (D107, D175):
+- Seven more looks have templates but no room or plan (D107, D176):
   warden, daemon, golem, wyrm, phish, overclock, pixie
 
 Each has a distinct color, silhouette and animation. Enemies are

@@ -13,7 +13,7 @@ and collect key fragments to reboot the Grid.
 > boss bar; a reachability checker, design skills and a level-review
 > subagent. Phase 5, the Home Lattice playtest, is under way: the audio
 > engine and sound effects, the tutorial, the Atrium hub and its four
-> wings (22 rooms) are in; next come the Gatekeeper, the core and the
+> wings and the Gatekeeper (23 rooms) are in; next come the core and the
 > secret rooms.
 > Latest `main` build: https://bluedragon-ctrl.github.io/Neonmancer/
 

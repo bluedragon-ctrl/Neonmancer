@@ -1,0 +1,35 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "gatekeeper",
+  "name": "Gatekeeper Hall",
+  "biome": "home_lattice",
+  "size": [16, 4, 16],
+  "spawn": [8, 0, 1.5],
+  "exits": [
+    { "id": "north", "side": "-z", "at": 7 },
+    { "id": "south", "side": "+z", "at": 7 }
+  ],
+  "blocks": [
+    { "at": [7, 0, 3], "to": [8, 0, 4] },
+    { "at": [7, 0, 11], "to": [8, 0, 12] },
+    { "at": [3, 0, 7], "to": [4, 0, 8] },
+    { "at": [11, 0, 7], "to": [12, 0, 8] }
+  ],
+  "objects": [
+    { "id": "pillar_nw", "type": "data_pillar", "at": [0, 0, 0], "overrides": { "face": "+x" } },
+    { "id": "pillar_ne", "type": "data_pillar", "at": [15, 0, 0], "overrides": { "face": "+z" } },
+    { "id": "pillar_sw", "type": "data_pillar", "at": [0, 0, 15], "overrides": { "face": "+x" } },
+    { "id": "plate_nw", "type": "plate", "at": [4, 0, 4] },
+    { "id": "plate_ne", "type": "plate", "at": [11, 0, 4] },
+    { "id": "plate_sw", "type": "plate", "at": [4, 0, 11] },
+    { "id": "plate_se", "type": "plate", "at": [11, 0, 11] }
+  ],
+  "enemies": [{ "id": "gatekeeper", "template": "gatekeeper", "at": [7, 0, 7], "drop": "buff_energy_2" }],
+  "pickups": [
+    { "id": "buff_energy_2", "type": "buff_energy_2", "at": [8, 0, 8] },
+    { "id": "refill_energy_west", "type": "refill_energy", "at": [0, 0, 7] },
+    { "id": "refill_energy_north", "type": "refill_energy", "at": [13, 0, 0] },
+    { "id": "refill_integrity", "type": "refill_integrity", "at": [15, 0, 15] }
+  ]
+}

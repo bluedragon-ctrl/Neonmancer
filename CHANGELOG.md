@@ -9,9 +9,9 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Changed
-- Docs cleanup (D175): the decision log shows each decision as it stands
+- Docs cleanup (D176): the decision log shows each decision as it stands
   (replaced entries are pointers, room entries keep only their rules; the
-  duplicate D152 for `requires` is now D174); design.md's dev rooms, step
+  duplicate D152 for `requires` is now D175); design.md's dev rooms, step
   plan, bosses and data formats match the game; lattice-plan.md lists what
   is built and what is left. Dropped plans: the secrets ladder, zoom to fit,
   audio-reactive visuals, the seven unused looks as content.
@@ -42,6 +42,14 @@ docs/decisions.md).
   second solution no easier than the intended one is not a bypass.
 
 ### Added
+- The Gatekeeper's hall (5.7, D174): `gatekeeper`, a 16x16 arena at the
+  meeting of the Scan and Fork wings, where boss 2 (THE GATEKEEPER, drops
+  the +10 energy buff) is led onto four overload plates; four low blocks
+  give cover (it can't climb them) and hide each door from it, refills
+  lie by the walls. Doors north to `drift_bay` and south to
+  `split_vault`; its east side waits for the core (5.8). `drift_bay`'s
+  south door sits behind a low wall in the bank's east corner, with its
+  guards moved so neither sees him come in.
 - The Fork wing's second half (5.6h, D173): `guard_loop` (fragment 13:
   two viruses on a loop round a low block; the decoy, cast in a fenced
   pen, holds the plate of the fragment's gate and draws the guards off

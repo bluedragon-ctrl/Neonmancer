@@ -37,9 +37,9 @@ no door to the Gatekeeper: the way to the core leads through the deep end
 of the Scan or the Fork wing. Once boss 2 is beaten (it stays away, D104),
 the Gatekeeper joins the two wings as a shortcut.
 
-## Built (5.5–5.6h)
+## Built (5.5–5.7)
 
-22 rooms; the room files hold the layouts, the decisions the rules.
+23 rooms; the room files hold the layouts, the decisions the rules.
 
 | Area | Rooms |
 |---|---|
@@ -49,6 +49,7 @@ the Gatekeeper joins the two wings as a shortcut.
 | Pause wing (D157, D162) | `cold_stairs`, `warden_pit` (Null Pointer), `idle_cache` |
 | Scan wing (D168, D170) | `scan_lab` (Scan), `mirror_stacks`, `ghost_exit`, `junction`, `drift_bay` |
 | Fork wing (D171, D173) | `fork_lab` (Fork), `twin_plates`, `guard_loop`, `split_vault` |
+| Boss 2 (D174) | `gatekeeper` (the Gatekeeper; doors north to `drift_bay`, south to `split_vault`, east kept for the core) |
 
 Fragments 0–15 are all placed.
 
@@ -56,8 +57,7 @@ Fragments 0–15 are all placed.
 
 | Room | Size | What it is |
 |---|---|---|
-| `gatekeeper` (5.7) | 16x16 | Boss 2, a big virus, drops the energy buff; overload plates to lure it onto (D134); at (9,0), joining `drift_bay`'s and `split_vault`'s free sides; the way on to the core |
-| `core` (5.8) | 16x16 | The central core, no fragment; Level 1 locks to the teasers and the vault |
+| `core` (5.8) | 16x16 | The central core, east of the Gatekeeper, no fragment; Level 1 locks to the teasers and the vault |
 | `dj_vault` (5.8) | 8x8 | The double jump, behind the Level 1 lock |
 | Teasers (5.8) | small | A few look-only rooms each for Glitchmire and Frostbyte Wastes |
 | `buffer_1` (5.9) | 8x8 | Secret, a Scan hidden exit off `ghost_exit` |

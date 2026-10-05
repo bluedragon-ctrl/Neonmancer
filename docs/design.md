@@ -666,7 +666,7 @@ Firewall Wardens (D104, D134, D135) are bosses for any biome:
   locks its arena's doors (he may retreat; the room resets).
 - **The two:** Null Pointer (`null_pointer`, D136, in `warden_pit`, drops
   fragment 7) and the Gatekeeper (`gatekeeper`, D137, drops the +10
-  energy buff; its arena comes in 5.7).
+  energy buff, in `gatekeeper`, D174).
 
 ## Pickups and progress
 
@@ -1239,7 +1239,7 @@ The score is what the wizard has, not what he did (D100).
   easing out), flashing while it rolls. No popups over pickups.
 - **Dropped:** bonus bits, their room slots, the "all bits collected"
   bonus and the local high score; the secrets ladder (rewards per 4
-  secrets, a room for all 16, D175). Simple secrets give boosts (D152).
+  secrets, a room for all 16, D176). Simple secrets give boosts (D152).
 
 ## Fragments and access
 
@@ -2229,13 +2229,13 @@ decisions before the code lands. Every step also (D43):
 - updates `docs/design.md`, `docs/architecture.md` and CHANGELOG, and
   records new decisions.
 
-**Next: Phase 5, step 5.7** (5.3 music waits for the author's tracks).
+**Next: Phase 5, step 5.8** (5.3 music waits for the author's tracks).
 
 ### Phase 5 (v0.5) steps: Home Lattice playtest
 
 Done: 5.1 audio engine (D138), 5.2 sound effects (D139), 5.4 dev wing
 (D147), 5.5 tutorial (D148), 5.6a–h the Atrium and the four wings
-(D151, D156–D173). The Lattice steps are two or three rooms each, the hub
+(D151, D156–D173), 5.7 the Gatekeeper's hall (D174). The Lattice steps are two or three rooms each, the hub
 before the wings (D149); every batch goes through the reachability
 checker and the review subagent; rooms are drafted unflagged and the
 author flags them authored (D90). Room plan: [lattice-plan.md](lattice-plan.md).
@@ -2243,8 +2243,7 @@ author flags them authored (D90). Room plan: [lattice-plan.md](lattice-plan.md).
 | # | Branch | Delivers |
 |---|---|---|
 | 5.3 | `feat/music` | The author's tracks trimmed for seamless loops: Lattice, boss, title; room and biome mapping, a boss switch and a crossfade back. |
-| 5.7 | `feat/lattice-gatekeeper` | The Gatekeeper arena (boss 2, drops the energy buff) joining the Scan and Fork wings (`drift_bay` and `split_vault` keep their sides free), with the way on to the core. |
-| 5.8 | `feat/lattice-core-gates` | The core, the Level 1 access locks and the teaser rooms beyond them: a few look-only rooms each for Glitchmire and Frostbyte Wastes (looks in the showcase first). |
+| 5.8 | `feat/lattice-core-gates` | The core (east of the Gatekeeper, its door kept free, D174), the Level 1 access locks and the teaser rooms beyond them: a few look-only rooms each for Glitchmire and Frostbyte Wastes (looks in the showcase first). |
 | 5.9 | `feat/outer-buffer-secrets` | The Outer Buffer look (floor, starfield, color re-picked) and the secret cluster: complex multi-step rooms, often with tools found later (D173). |
 | 5.10 | `feat/lattice-visual-pass` | Optional: the Lattice's data flows and glass panels (D121). |
 | 5.11 | `feat/quality-presets` | Quality presets, auto fallback and render scale wired up (D76), a check on a weaker GPU. |
@@ -2424,7 +2423,7 @@ Example room:
   touch it.
 - `exits` — `side` is `-x`, `+x`, `-z` or `+z`; `at` is the first cell along
   that side; `width` (default 2), `y` floor level (default 0), `height`
-  (default 2); `requires`, the conditions that open it (D174):
+  (default 2); `requires`, the conditions that open it (D175):
   `{ "switch": id }`, `{ "switch": "*" }` (every switch in the room),
   `{ "access": level }`; `hidden` (D128).
 - `blocks` — anonymous static geometry; `to` fills a box (inclusive);
