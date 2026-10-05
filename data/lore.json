@@ -172,6 +172,22 @@
         "LEVEL SHOWN AS GOLD BANDS ON THE HAT."
       ]
     },
+    "lore_frost_end": {
+      "title": "FROSTBYTE WASTES // COLD BOOT",
+      "lines": [
+        "SECTOR FROZEN SOLID. DRIVERS STILL THAWING.",
+        "ROUTE BEYOND THIS POINT: NOT YET COMPILED.",
+        "CHECK BACK IN A LATER BUILD."
+      ]
+    },
+    "lore_glitch_end": {
+      "title": "GLITCHMIRE // SEGFAULT",
+      "lines": [
+        "TILES TORN. GEOMETRY UNSTABLE. MIND THE GAPS.",
+        "ROUTE BEYOND THIS POINT: NOT YET COMPILED.",
+        "THE MIRE IS STILL RENDERING. TRY LATER."
+      ]
+    },
     "access_1": {
       "title": "ACCESS DENIED",
       "lines": ["SECTOR REQUIRES ACCESS LEVEL I.", "SUBMIT 16 FRAGMENTS TO THE CORE."]

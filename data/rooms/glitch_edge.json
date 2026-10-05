@@ -1,0 +1,21 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "glitch_edge",
+  "name": "Segfault Shore",
+  "biome": "glitchmire",
+  "size": [8, 4, 8],
+  "spawn": [1.5, 0, 4],
+  "exits": [{ "id": "west", "side": "-x", "at": 3 }],
+  "blocks": [
+    { "at": [3, 0, 0] },
+    { "at": [5, 0, 1] },
+    { "at": [6, 0, 5] },
+    { "at": [2, 0, 6] },
+    { "at": [7, 0, 0], "to": [7, 2, 0] }
+  ],
+  "holes": [{ "at": [4, 3], "to": [5, 4] }],
+  "objects": [
+    { "id": "screen_1", "type": "screen", "at": [0, 0, 0], "overrides": { "face": "+x" }, "text": "lore_glitch_end" }
+  ]
+}

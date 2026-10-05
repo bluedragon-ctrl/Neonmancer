@@ -1162,3 +1162,20 @@ shimmer, the 16-secret room), the zoom-to-fit setting for small rooms,
 audio-reactive visuals, and the seven unused looks as planned content.
 **Why:** the author asked to cut what is obsolete; a log read at the start
 of every session must stay short enough to read.
+
+### D177 — 2026-10-05 — The core hall, the Level 1 locks and the teasers (5.8)
+The core moves from `atrium` to `core_hall` ("Kernel Core", 12x4x12,
+(10,0)), east of the Gatekeeper, as the plan put it behind boss 2 (one
+core in the world). It has only two free sides (`guard_loop` lies
+south), so its north Level 1 lock leads to `dj_vault` (the double jump's
+first placement), whose east door on a 2-high ledge (`y` 2) leads on to
+Frostbyte: the reward is the key. The east lock leads to Glitchmire.
+Teasers are look only: two rooms per biome, dead ends ending in a lore
+screen (the route is not compiled yet), no permanent pickups, Lattice
+enemies only, nothing a Lattice room has not taught (`frost_gate`'s
+crossing is a plain causeway: collapsing blocks wait for a room that
+teaches them). The biomes' floor patterns and particles are a
+step of their own (5.8b). The level-3 access pass in `boot_up` stays
+while the author tests.
+**Why:** the plan's core behind boss 2 with its Level 1 reward; with two
+free sides the vault doubles as the way to Frostbyte.

@@ -1267,9 +1267,9 @@ Collecting the key fragments is the goal of the game (D101).
   levels.
 - **The core** (`defs.json` `core`, kind `core`, white: a mechanism,
   D99): a room object placed with the room editor, at most one in the
-  world (validation); its Lattice room comes in 5.8. A fixed body 1×2×1, too high to
-  jump onto with one jump, so he walks up to it (both cells must be
-  free). Touching it (`Game.touchCore()`, once until he steps away): the
+  world (validation); in `core_hall`, east of the Gatekeeper (D177). A
+  fixed body 1×2×1, too high to jump onto with one jump, so he walks up
+  to it (both cells must be free). Touching it (`Game.touchCore()`, once until he steps away): the
   level rises to what his fragments earn (`Progress.earnedAccess()`),
   with the banner `ACCESS LEVEL n / GRANTED BY THE CORE` and `> CORE:
   ACCESS LEVEL n GRANTED`; otherwise it says how many more are needed
@@ -2229,13 +2229,13 @@ decisions before the code lands. Every step also (D43):
 - updates `docs/design.md`, `docs/architecture.md` and CHANGELOG, and
   records new decisions.
 
-**Next: Phase 5, step 5.8** (5.3 music waits for the author's tracks).
+**Next: Phase 5, step 5.8b or 5.9** (5.3 music waits for the author's tracks).
 
 ### Phase 5 (v0.5) steps: Home Lattice playtest
 
 Done: 5.1 audio engine (D138), 5.2 sound effects (D139), 5.4 dev wing
 (D147), 5.5 tutorial (D148), 5.6a–h the Atrium and the four wings
-(D151, D156–D173), 5.7 the Gatekeeper's hall (D174). The Lattice steps are two or three rooms each, the hub
+(D151, D156–D173), 5.7 the Gatekeeper's hall (D174), 5.8 the core hall, the Level 1 locks and the teasers (D177). The Lattice steps are two or three rooms each, the hub
 before the wings (D149); every batch goes through the reachability
 checker and the review subagent; rooms are drafted unflagged and the
 author flags them authored (D90). Room plan: [lattice-plan.md](lattice-plan.md).
@@ -2243,7 +2243,7 @@ author flags them authored (D90). Room plan: [lattice-plan.md](lattice-plan.md).
 | # | Branch | Delivers |
 |---|---|---|
 | 5.3 | `feat/music` | The author's tracks trimmed for seamless loops: Lattice, boss, title; room and biome mapping, a boss switch and a crossfade back. |
-| 5.8 | `feat/lattice-core-gates` | The core (east of the Gatekeeper, its door kept free, D174), the Level 1 access locks and the teaser rooms beyond them: a few look-only rooms each for Glitchmire and Frostbyte Wastes (looks in the showcase first). |
+| 5.8b | `feat/biome-looks` | The Glitchmire and Frostbyte looks for the teasers, in the showcase first: floor patterns (torn tiles, hex crystals) and particles (pixel bubbles, 0/1 flakes) (D177). |
 | 5.9 | `feat/outer-buffer-secrets` | The Outer Buffer look (floor, starfield, color re-picked) and the secret cluster: complex multi-step rooms, often with tools found later (D173). |
 | 5.10 | `feat/lattice-visual-pass` | Optional: the Lattice's data flows and glass panels (D121). |
 | 5.11 | `feat/quality-presets` | Quality presets, auto fallback and render scale wired up (D76), a check on a weaker GPU. |

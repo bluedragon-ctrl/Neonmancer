@@ -20,8 +20,5 @@
     { "at": [8, 9], "to": [8, 11] }
   ],
   "shrine": [1, 10],
-  "objects": [
-    { "id": "screen_1", "type": "screen", "at": [0, 0, 3], "overrides": { "face": "+x" }, "text": "help_core" },
-    { "id": "core_1", "type": "core", "at": [10, 0, 1] }
-  ]
+  "objects": [{ "id": "screen_1", "type": "screen", "at": [0, 0, 3], "overrides": { "face": "+x" } }]
 }
