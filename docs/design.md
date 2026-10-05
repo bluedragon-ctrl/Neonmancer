@@ -644,6 +644,30 @@ own, each in its own color.
   the D107 looks: `?asset=concepts`, their pops `concept-pops`, wyrms in
   four colors `wyrm-colors`).
 
+### Bosses
+
+Firewall Wardens (D104, D134, D135) are bosses for any biome:
+- **Mark and body:** three gold rings round a normal body
+  (`render/boss-mark.js`); one cell on the floor, one or two cubes high
+  (`height`), never frozen by Pause nor pulled.
+- **Awake:** a boss wakes when it first sees the wizard or is hit. Its bar
+  shows top middle (name from `boss.<template>` in strings.json, ticks
+  where later phases start, dimmed while plate armor is shut; it lingers
+  1.5 s once beaten).
+- **Teleport** (a phase value): half a second, to a free, safe cell of its
+  floor at least 3 units from him and his decoy, one that sees him if it
+  can, picked by seeded dice so a room plays the same each time.
+- **Plate armor:** hits glance off unless it stands on a floor plate; a
+  white dashed shell round it flashes on a glance and lifts away on a
+  plate.
+- **Drop:** the room names its `drop`, a permanent pickup it holds
+  unseen; beaten, the pickup falls into its cell, and once the bit is
+  found the boss stays away. One boss a room, no shrine; a boss never
+  locks its arena's doors (he may retreat; the room resets).
+- **The two:** Null Pointer (`null_pointer`, D136, in `warden_pit`, drops
+  fragment 7) and the Gatekeeper (`gatekeeper`, D137, drops the +10
+  energy buff, in `gatekeeper`, D174).
+
 ## Pickups and progress
 
 Things the wizard takes by touching them (D71). Types live in
@@ -652,8 +676,8 @@ Things the wizard takes by touching them (D71). Types live in
 enemies).
 
 - **Permanent: data disks.** A disk teaches a spell for good. The wizard
-  starts with no spell; the Zap disk lies in Boot Sector, two steps from
-  the spawn. Taking it shows the banner `ZAP / SPELL INSTALLED`, the
+  starts with no spell; the Zap disk lies in `zap_port`, the tutorial's
+  third room. Taking it shows the banner `ZAP / SPELL INSTALLED`, the
   terminal line `> SPELL INSTALLED: ZAP`, selects the spell and brings up
   the energy bar and the spell tag in the HUD (both hidden until then:
   energy is only for spells; see Zap and energy).
@@ -725,8 +749,8 @@ enemies).
   save bit, no score of its own (the level scores as usual). A gold
   upgrade card whose lit bit is the level; picked up like a refill.
   Banner `ACCESS LEVEL n` / `GRANTED BY A TEST PASS`, terminal line
-  `> TEST PASS: ACCESS LEVEL n GRANTED`. One lies in Boot Sector next to
-  the core; showcase `?asset=access-pass`.
+  `> TEST PASS: ACCESS LEVEL n GRANTED`. One lies in `boot_up`, the
+  start room; showcase `?asset=access-pass`.
 - **Look:** a data disk is an abstract white slab with both top corners
   clipped, hovering half a block up, spinning (a turn every ~4 s) and
   bobbing; both faces carry a 4×4 bit grid of dark gray squares whose
@@ -786,10 +810,6 @@ roster's draft, D88).
   the maximum within the key's health field (at most 15,
   `MAX_SAVED_INTEGRITY`); all recharge buffs together leave at least 1
   tick per unit.
-- **Test rooms:** `buff_integrity_1` on the Fault Line lookout,
-  `buff_energy_1` on the stairs in Cache Hall's back corner,
-  `buff_recharge` beside the energy refill past the Warp pit in Fast
-  Path.
 
 ## Zap and energy
 
@@ -831,7 +851,7 @@ roster's draft, D88).
 
 ## Shield
 
-The second spell (D73), from a data disk in Cache Hall (slot 1).
+The second spell (D73), from a data disk in `shield_hall` (slot 1).
 
 - Cast (E) with Shield selected: costs 20 energy, then 0.25 s before the
   next cast. It stays up for 7 s (D74); casting it again while it is up starts
@@ -852,8 +872,8 @@ The second spell (D73), from a data disk in Cache Hall (slot 1).
 
 ## Firewall
 
-The third spell (D84), from a data disk in Scheduler (slot 2), on the low
-wall by the west side.
+The third spell (D84), from a data disk (slot 2); not placed in the
+Lattice (D133).
 
 - Cast (E) with Firewall selected: costs 40 energy, then 0.25 s before the
   next cast. It stays up for 7 s; casting it again starts it over, casting
@@ -877,8 +897,7 @@ wall by the west side.
 
 ## Pause
 
-The fourth spell (D85), from a data disk in Quarantine (slot 3), on top
-of the 2-high pillar (push the crate against it and climb).
+The fourth spell (D85), from a data disk in `freeze_hall` (slot 3).
 
 - Cast (E) with Pause selected: costs 25 energy, then 0.25 s before the
   next cast. A bolt in its color flies the way he aims (10 units per
@@ -914,8 +933,8 @@ of the 2-high pillar (push the crate against it and climb).
 
 ## Blink and Warp
 
-Two teleport spells (D86): Blink from a data disk by the entrance of Fast
-Path (slot 4), Warp from one further in (slot 5).
+Two teleport spells (D86): Blink (slot 4) and Warp (slot 5), from data
+disks; neither is placed in the Lattice (D133).
 
 - Both go the way he aims (the way he last walked), level at his height,
   through open space only: over holes, hazard and void floors, and
@@ -995,8 +1014,8 @@ The seventh spell (D87), from a data disk by the entrance of Clipboard
 
 ## Pull
 
-The first Phase 4 spell (D89, D124), from a data disk by the entrance of
-Tractor Bay (slot 10). Pushing only moves crates away; Pull brings them,
+The first Phase 4 spell (D89, D124), from a data disk (slot 10); not
+placed in the Lattice (D133). Pushing only moves crates away; Pull brings them,
 and enemies, closer.
 
 - **The line:** along the grid axis he aims on (as Cut & Paste: the
@@ -1039,8 +1058,8 @@ and enemies, closer.
 
 ## Compile
 
-The second Phase 4 spell (D88, D125), from a data disk by the entrance
-of Build Yard (slot 7). It makes a crate out of nothing, for a while: a
+The second Phase 4 spell (D88, D125), from a data disk (slot 7); not
+placed in the Lattice (D133). It makes a crate out of nothing, for a while: a
 step up, or a hole plugged to walk over.
 
 - **Where:** the free cell in front of him at the height of his feet,
@@ -1076,7 +1095,7 @@ step up, or a hole plugged to walk over.
 
 ## Fork
 
-The fourth Phase 4 spell (D88, D129), from a data disk in Decoy Lab
+The fourth Phase 4 spell (D88, D129), from a data disk in `fork_lab`
 (slot 8). It makes a second wizard for a while: one more body to stand on
 a plate, and a target for enemies.
 
@@ -1107,7 +1126,6 @@ a plate, and a target for enemies.
 - Tuning: `defs.json` `spells.fork` (cost, cooldown, duration, color);
   the decoy is `src/entities/decoy.js`, the look `src/render/decoy-view.js`
   and `src/render/fork-view.js`; showcase `?asset=fork,disk-fork`.
-- **Test rooms:** Decoy Lab (see Test rooms).
 
 ## Scan
 
@@ -1195,7 +1213,6 @@ bit in the upgrade block (bits 32–47); the engine knows three.
 - **Validation:** upgrade slots unique; one pickup type per upgrade;
   Zap+ upgrades Zap and has `bounces`, Shield+ upgrades the Shield,
   the double jump no spell.
-- **Test room:** Upgrade Lab (see Test rooms).
 
 ## Score and secrets
 
@@ -1216,16 +1233,13 @@ The score is what the wizard has, not what he did (D100).
   in the wizard's magenta (`render/secret.js`, `SECRET_COLOR` `#ff2bd6`),
   a gray ghost once found. Taking one plays the install animation with the
   banner `SECRET FOUND / n / N` and `> SECRET FOUND n/N` (N: the secrets
-  placed in the world). They lie where it takes an extra move: on the
-  Crawl Space tower (the peaceful bouncy bug lifts the wizard there) and
-  on the Upgrade Lab wall (the double jump).
+  placed in the world). They lie where it takes an extra move.
 - **HUD:** `SCORE 000250 33%` in gold under the title, top right; a new
   score rolls up to its value in 0.9 s (`rollScore()` in `ui/hud.js`,
   easing out), flashing while it rolls. No popups over pickups.
 - **Dropped:** bonus bits, their room slots, the "all bits collected"
-  bonus and the local high score.
-- **Proposed:** visual rewards for secrets found and a special room for
-  all 16, not confirmed yet (Phase 4 outline).
+  bonus and the local high score; the secrets ladder (rewards per 4
+  secrets, a room for all 16, D176). Simple secrets give boosts (D152).
 
 ## Fragments and access
 
@@ -1253,10 +1267,9 @@ Collecting the key fragments is the goal of the game (D101).
   levels.
 - **The core** (`defs.json` `core`, kind `core`, white: a mechanism,
   D99): a room object placed with the room editor, at most one in the
-  world (validation); in `core_hall`, east of the Gatekeeper (D175). A
+  world (validation); in `core_hall`, east of the Gatekeeper (D177). A
   fixed body 1×2×1, too high to jump onto with one jump, so he walks up
-  to it (both cells must be free). Touching it
-  (`Game.touchCore()`, once until he steps away): the
+  to it (both cells must be free). Touching it (`Game.touchCore()`, once until he steps away): the
   level rises to what his fragments earn (`Progress.earnedAccess()`),
   with the banner `ACCESS LEVEL n / GRANTED BY THE CORE` and `> CORE:
   ACCESS LEVEL n GRANTED`; otherwise it says how many more are needed
@@ -1312,18 +1325,14 @@ a need for.
 - **Upgrades:** Zap+, Shield+ and the double jump, built in Phase 3 (see
   Upgrades). Found, an upgrade replaces its base spell in the Tab cycle
   (ZAP becomes ZAP+), so the cycle stays short.
-- **Order in the world** (intended; rooms place the disks later):
-  early Zap, Shield, Blink, Pause; middle Cut & Paste, Firewall, Fork,
-  Scan and the jump upgrade; late Compile (D125), Warp, Zap+ and Shield+. Pull
-  comes early, with Blink and Pause (D124).
-- **Turned down for now:** Patch (an enemy turns
-  peaceful), Overclock (a speed burst), Decrypt (dissolves an encrypted
+- **Order in the world:** Home Lattice gives Zap, Shield, Pause, Scan,
+  Fork and the double jump (D133); the rest come in later sectors.
+- **Turned down for now:** spells Decrypt (dissolves an encrypted
   wall type), Rollback (back to where he was 3 s ago); upgrades Halt
   (Pause freezing the whole room), Lift (Warp landing on top of what
   stops it), Firewall+ (hazard immunity) and Cut & Paste+ (a level up or
-  down). They remain candidates for the spare bits.
-- Slots 7–10 are provisional until each spell's step; colors and costs
-  are settled there.
+  down). They remain candidates for the spare bits. (Patch and Overclock
+  became boosts, D152.)
 
 ## X-ray outline
 
@@ -1341,8 +1350,7 @@ usual, so half behind a wall he is half ghost (D55).
   hidden while he is dead (no ghost of a hole fall or a derez).
 - The wizard only for now (D43); enemies have none.
 - Tuning: `XRAY` in `src/render/xray.js`; review it in the asset showcase
-  (`/tools/showcase.html?asset=xray`), or behind the 2-high wall near
-  Boot Sector's front.
+  (`/tools/showcase.html?asset=xray`).
 
 ## Pushing
 
@@ -1630,52 +1638,30 @@ before D140 work as they did). Switch types in `defs.json` are placed in
 
 The author's real game rooms carry `"authored": true` (D90), set with the
 *Authored* checkbox in the room editor. They share the world with the test
-rooms and start from Boot Sector too; development steps never change them
+rooms; development steps never change them
 or attach new rooms to them (CLAUDE.md §10). The world map tool marks them
 AUTHORED and lets them lie as far from the start as the world needs.
 
-### Test rooms
+### Dev rooms
 
-Test rooms stay in the world alongside the authored rooms (D45, D90): a
-lab where each shows one mechanic, and later spells and enemies are tried
-in them too. New mechanics add or extend one (D43). Every test room is at
-most two rooms from Boot Sector, the start (D49; Room 1 is a second hub);
-the world map tool shows the connections and flags any room further out.
+Rooms that show one mechanic on its own live in the dev wing (D147):
+the dev server, the tools and the tests see them, a player build leaves
+them out. A new mechanic gets one there (D43), joined to the other dev
+rooms, never to a Lattice or authored room.
 
-| Room | Biome, size | Shows |
+| Room | Size | Shows |
 |---|---|---|
-| `boot_sector` (start) | 12×12 | blocks, holes, crates, plates opening a locked exit; the Zap disk, the core, a fragment, a shrine |
-| `cache_hall` | 16×8 | a pit to plug with a crate; the Shield disk, an energy buff |
-| `relay_station` | 12×12 | switches: a Zap target, a crate for a plate, a bug patrolling over a plate |
-| `stack_yard` | Glitchmire, 8×8 | stacked crates, a climb via a crate, a plate by a locked doorway |
-| `fault_line` | 12×12 | hazard walls, spiked hoppers, a void field with a zigzag path; an integrity buff |
-| `transit_bus` | 12×12, 5 high | platforms: a ferry, a lift, a loop with a crate, a press, a pusher |
-| `volatile_memory` | 12×12, 5 high | collapsing bridges (one regrowing) and one-shot steps |
-| `crawl_space` | 12×12 | bugs, a warden; a secret on a tower, reached by bouncing off a bug |
-| `menagerie` | Home Lattice, 12×12, north of Quarantine | one of each D107 template: a warden (burst), a daemon (arc, provoked), a solid golem to ride, a wyrm (bolt, provoked), a phish, an overclock (burst, provoked), a pixie (peaceful) |
-| `quarantine` | Glitchmire, 10×10 | a virus, a sentinel, a warden; the Pause disk; the level-1 access lock |
-| `scheduler` | Outer Buffer, 10×10 | a cron, a worm, a crawler; the Firewall disk; a shrine |
-| `room_1` | 12×12 | an empty hub for the Phase 3 spell rooms |
-| `fast_path` | Frostbyte Wastes, 12×12 | Blink and Warp disks, pits to cross; the recharge buff |
-| `switch_works` | Home Lattice, 12×12, 5 high, south of Fast Path | linked switches (D140, D141): a timed plate opening a gate door in a wall, a timed target raising a bridge over a pit, a crate for a plate that runs a lift to an energy refill on a ledge |
-| `clipboard` | Abyssal Buffer, 12×12 | Cut & Paste: crates to cut and paste as steps and bridges, a bug to freeze and move |
-| `tractor_bay` | Home Lattice, 12×12, east of Cache Hall | Pull: two crates across a moat to pull into it as a bridge, a bug patrolling behind a trench to pull in; the Pull disk, an energy refill |
-| `build_yard` | Home Lattice, 12×12, east of Tractor Bay | Compile: a two-wide trench to plug crate by crate, a ledge two high to climb with a compiled step; the Compile disk, an energy refill on the ledge |
-| `fence_yard` | Home Lattice, 10×10, dev wing, west of Room 2 | Fences (D167): a 2-high fence round a back pocket with a target, switched by a Zap through it, raising a bridge over a pit to an energy refill; a 1-high fence pen with a crate; the Zap disk |
-| `watchdog_run` | Home Lattice, 12×8, dev wing, west of Fence Yard | a watchdog timer (D172), 25 s: a 1-wide path snaking through a pit to an integrity refill, and back out |
-| `hidden_layer` | Home Lattice, 12×12, east of Build Yard | Scan: a wall across the room with a fake gap, a hidden exit in the back wall behind it, an energy refill inside a fake block; the Scan disk |
-| `secret_cache` | Home Lattice, 8×8, north of Hidden Layer | behind the hidden exit: a secret |
-| `decoy_lab` | Home Lattice, 12×12, north of Build Yard | Fork: a plate in a slot under a lintel (only a decoy can press it), a locked exit that opens while it is pressed, a virus to draw away; the Fork disk |
-| `decoy_vault` | Home Lattice, 12×8, north of Decoy Lab | behind the lock: an energy refill |
-| `upgrade_lab` | Abyssal Buffer, 12×12 | the upgrades: a wall to double-jump, a bank shot for Zap+, a cron's bolts for Shield+; a secret, a shrine |
-| `vault` | Firewall Citadel, 8×8 | behind the access lock: two fragments |
+| `room_1`, `room_2` | 12×12 | empty hubs joining the dev rooms |
+| `hidden_layer` | 12×12 | Scan: a fake gap, a hidden exit, a refill in a fake block; the Scan disk |
+| `fence_yard` | 10×10 | fences (D167): a target zapped through a 2-high fence raises a bridge; a 1-high pen with a crate |
+| `watchdog_run` | 12×8 | a watchdog timer (D172), 25 s: a 1-wide path through a pit to a refill and back |
 
 ### Room design checklist
 
 What to check when building or reviewing a room, beyond what validation
 catches (validation: bounds, overlaps, exits, spawn and reset points). It
 collects problems found in playtests; the room design skill and the level
-review subagent planned for Phase 4 (CLAUDE.md §9) start from it, and the
+review subagent (D132) start from it, and the
 reachability checker (`npm run check:reach`, D131) automates the reach
 checks (not timing: collapsing blocks, platform waits, enemies). Numbers
 come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
@@ -1787,7 +1773,7 @@ the Outer Buffer, for secrets and optional rooms (D130). A biome sets the room c
 (block edges, walls, floor grid), the name in the room banner and the
 room's surroundings (`look`, D62); floor patterns, particles and the
 signature effects in the table are planned, and gameplay effects wait for
-Phase 5.
+Phase 7.
 
 | Biome | Color | Floor | Particles | Signature |
 |---|---|---|---|---|
@@ -1811,9 +1797,9 @@ black.
 Enemies by biome (D108): Home Lattice's are the default cyberspace four,
 bug, virus, sentinel and cron, plus the peaceful glowbug (D121); they read
 as the Grid's plain enemies and may show up anywhere. Every other biome
-gets a roster of its own, at least three enemies, proposed in the Phase 4
-outline and settled in Phase 4b one biome at a time, each in a section
-of its own below (look, enemies, signature trick, later effect).
+gets a roster of its own, at least three enemies, settled in Phase 6 one
+biome at a time, each in a section of its own below (look, enemies,
+signature trick, later effect).
 Firewall Wardens are bosses for any biome, Home Lattice too (D122).
 
 ### The sectors at a glance (D122)
@@ -1821,7 +1807,7 @@ Firewall Wardens are bosses for any biome, Home Lattice too (D122).
 The high-level map the per-biome passes work within: each sector has a
 theme, an enemy family and one mechanic no other sector has.
 
-| Sector | Theme | Feel | Visual key | Enemy family | Later effect (Phase 5) |
+| Sector | Theme | Feel | Visual key | Enemy family | Later effect (Phase 7) |
 |---|---|---|---|---|---|
 | Home Lattice (settled, D121) | clean kernel city | safe, orderly | amber, grid, data flows | the plain Grid four, glowbug | none |
 | Glitchmire | heavy virtual: raw virtual space, math made visible | abstract, unstable | hot pink, voxels, low-poly shapes, pixel noise | pixel and geometric monsters that split, morph and hop | low-res (pixelation) |
@@ -1830,34 +1816,25 @@ theme, an enemy family and one mechanic no other sector has.
 | Firewall Citadel | the fortress | armored, hot | ember orange, bricks, sparks | armored guards, burners, turrets | heat vents |
 | Phantom Partition (late sector, D130) | ghosts: deleted data that lingers | eerie, quiet, misty | pale violet, low glowing mist over the floor | ghosts that phase, mirror, haunt | mist hides the low floor; blocks phase in and out |
 
-Looks already made go: phish and pixie to Glitchmire; golem (a slow
-"Cold Boot" ice wall) and wyrm to Frostbyte; worm (a space serpent or
-comet) to Outer Buffer; overclock and crawler to Firewall Citadel;
-daemon to Phantom Partition. The warden is a boss anywhere.
-
 Enemy ideas, to refine in each pass:
 - **Glitchmire:** Voxel Swarm (splits in two when hit), Primitive
   (morphs cube to octahedron between patrol and attack), Null Pointer
-  (dashes straight until a wall), Artifact (short pixel hops), phish,
-  pixie.
-- **Frostbyte Wastes:** Cold Boot (the golem), Flurry (a flake swarm),
+  (dashes straight until a wall), Artifact (short pixel hops).
+- **Frostbyte Wastes:** Cold Boot (a slow ice wall), Flurry (a flake swarm),
   Freezer (a bolt that slows the wizard), Icicle (drops when he passes
-  under it), wyrm.
+  under it).
 - **Outer Buffer:** Satellite (orbits a point), Meteor (falls from above,
   its drop shadow warning), Gravity Well (stationary, pulls the wizard),
   Probe (sweeps a searchlight cone), Asteroid (a solid drifting
   platform), worm.
 - **Firewall Citadel:** Proxy (a shield knight, hit from behind),
-  Brickling (a wall brick that wakes up), Turret, overclock, crawler.
-- **Phantom Partition:** daemon (drifts through blocks), Zombie Process
+  Brickling (a wall brick that wakes up), Turret, crawler.
+- **Phantom Partition:** Zombie Process
   (moves only while the wizard faces away), Echo (mirrors his moves),
   Poltergeist (shoves crates), Orphan (a peaceful ghost leading to a
   secret).
 
-Dropped with this map: the deep-sea and nature ideas for the old
-Abyssal Buffer, Bitrot and Z-Fighter; they may come back if a sector
-needs them. Low-res moves from Frostbyte to Glitchmire, the stars from
-Phantom Partition to Outer Buffer.
+Dropped for now: deep-sea and nature sectors, Bitrot and Z-Fighter.
 
 Surroundings (`look` in `biomes.json`, D62; every field optional, Home
 Lattice's values are the defaults):
@@ -1889,10 +1866,10 @@ Every other biome is a twist on it.
 - **Look:** amber `#ffb020`, the default surroundings. A clean square
   floor grid, every line whole and straight: the healthy version the
   other sectors corrupt. Warm motes rising slowly.
-- **Data flows (Phase 5):** short bright dashes now and then run along
+- **Data flows (5.10):** short bright dashes now and then run along
   the grid lines, on the room floor and on the surrounding grid outside
   it; random decoration, not a guide.
-- **Glass panels (Phase 5):** random 1×1 glass panels set into the back
+- **Glass panels (5.10):** random 1×1 glass panels set into the back
   walls (`glassBox()` with a `GLASS` preset, D116), framed in the room
   color, never over an exit; a new random set on every entry, since they
   are looks only. The data flows outside show through them: windows onto
@@ -1908,7 +1885,7 @@ Every other biome is a twist on it.
   is a pale gold close to the grid, part of the city.
 - **Signature trick:** none, the Lattice is the reference. A core
   heartbeat (the room glowing up faintly every few seconds) is to be
-  discussed in the Phase 5 visual pass.
+  discussed in the visual pass (5.10).
 - **Later effect:** none, the safe sector.
 
 ## HUD
@@ -2235,86 +2212,44 @@ in the dev server (`#bug` picks a template); `tools\dev.bat monsters` or
 
 ---
 
-## Finished phases
+## Phases and steps
 
-Phase 1 (v0.1.0, foundations), Phase 2 (v0.2.0, hazards, combat, editor)
-and Phase 3 (v0.3.0, spells and pickups) are done; what each delivered is
-in [CHANGELOG.md](../CHANGELOG.md), why in the decisions it names.
+Phases 1–4 are done (v0.1.0 to v0.4.0); what each delivered is in
+[CHANGELOG.md](../CHANGELOG.md), why in the decisions it names. The
+phases were re-cut around a playtest of Home Lattice (D130).
 
-Each step of a phase is one branch and one PR against `main` (no stacked
-PRs); the game runs after every step and CI is green before a PR is
-called ready. A step starts by settling its open questions with the
-author, recorded as decisions before the code lands. Every step also
-(D43):
+Each step is one branch and one PR against `main` (no stacked PRs); the
+game runs after every step and CI is green before a PR is called ready. A
+step starts by settling its open questions with the author, recorded as
+decisions before the code lands. Every step also (D43):
 - adds its new looks to the asset showcase (`tools/showcase.js`);
-- adds or extends a small test room that shows the mechanic, connected to
-  the world through test rooms only, never an authored room (D90);
+- adds or extends a dev room for a new mechanic (see Dev rooms);
 - adds unit tests for the logic (fixtures in `tests/helpers.js`) and the
   room editor palette and validation for any new type;
 - updates `docs/design.md`, `docs/architecture.md` and CHANGELOG, and
   records new decisions.
 
-## Step plan: Phase 4 to 7 (D130)
-
-The phases were re-cut around a playtest of Home Lattice. The rules of
-"Finished phases" apply to every step: one branch, one PR against `main`,
-CI green, showcase, test room, unit tests, docs. Code steps name their
-branch; design steps end in decisions before any code. **Next: Phase 5 (5.8b biome looks or 5.9; 5.3 music waits for the tracks, D147).**
-
-### Phase 4 (v0.4) steps: tools and bosses
-
-Done (4a and the spells): access keys, title and pause menu, saving and
-loading, map screen; Pull, Compile, Scan, Fork; 4.1 the reachability
-checker (D131); 4.2 the design skills and the level-review subagent (D132).
-
-| # | Branch | Delivers |
-|---|---|---|
-| 4.1 (done, D131) | `feat/reachability-checker` | `tools/check-reach.js`: searches each room's grid with jump height (and the double jump), pushable crates, and the spells the wizard has, flagging unreachable exits and pickups; works out which abilities each exit and pickup needs and checks the world can be finished in some order (D67). Runs in CI and the validate script; the editor and world map tool show its verdict. Open: how deep it searches pushables and spells. |
-| 4.2 (done, D132) | `feat/design-skills` | The room design skill (schema, rules, the checklist above, annotated examples), an enemy design skill (templates, D119 colors), and the level-review subagent (runs the checker, reads the room against the checklist). |
-| 4.3 (done, D133) | `docs/lattice-plan` | Paper design of Home Lattice, no rooms yet: about 25-30 rooms on the world map, the tutorial cluster by the start and the core, where each spell and upgrade sits, the 16 fragments for Level 1 plus a few extra in secret or optional rooms, the two boss arenas, the Level 1 exits to Glitchmire and Frostbyte Wastes, the Outer Buffer secret cluster, and what the wizard needs at each point. Ends in a room list the author approves: [lattice-plan.md](lattice-plan.md). |
-| 4.4 (done, D134) | `docs/warden-design` | Settle the Warden design with the author: body size (multi-cell collision and claims), phases or attack patterns, boss integrity bar, weak points, arena rules (shrines stay out, D104), the looks of the two bosses (showcase first). Recorded as decisions. |
-| 4.5 (done, D135) | `feat/warden-engine` | One-cell bodies (D134) up to two cubes high, phases and attack patterns as data in `defs.json`, the boss bar on the HUD, the drop and the "defeated" bit (D104), a test arena. |
-| 4.6 (done, D136) | `feat/boss-one` | The first boss: the arena and fight, dropping a fragment. |
-| 4.7 (done, D137) | `feat/boss-two` | The second boss, harder, dropping an upgrade (which one is settled in 4.4). |
-| 4.8 (done) | `chore/release-0.4.0` | Docs pass, CHANGELOG, tag `v0.4.0` and GitHub Release (CLAUDE.md section 10). |
-
-Bosses are built in test arenas (D90) and placed in the Lattice in
-Phase 5.
+**Next: Phase 5, step 5.8b or 5.9** (5.3 music waits for the author's tracks).
 
 ### Phase 5 (v0.5) steps: Home Lattice playtest
 
-Sound steps can run beside the content steps; 5.3 waits for the author's
-tracks and is done after 5.5 (D147).
+Done: 5.1 audio engine (D138), 5.2 sound effects (D139), 5.4 dev wing
+(D147), 5.5 tutorial (D148), 5.6a–h the Atrium and the four wings
+(D151, D156–D173), 5.7 the Gatekeeper's hall (D174), 5.8 the core hall, the Level 1 locks and the teasers (D177). The Lattice steps are two or three rooms each, the hub
+before the wings (D149); every batch goes through the reachability
+checker and the review subagent; rooms are drafted unflagged and the
+author flags them authored (D90). Room plan: [lattice-plan.md](lattice-plan.md).
 
 | # | Branch | Delivers |
 |---|---|---|
-| 5.1 (done, D138) | `feat/audio-engine` | `data/audio.json` (named events to files), Howler music with looping and crossfades, ZzFX effects, the Options sliders wired, a stub when a file is missing. |
-| 5.2 (done, D139) | `feat/sfx-pass` | Effects for the existing events: jump, land, zap and every spell, hits, pickups, the install animation, death and derez, doors, switches, UI, enemy alerts. |
 | 5.3 | `feat/music` | The author's tracks trimmed for seamless loops: Lattice, boss, title; room and biome mapping, a boss switch and a crossfade back. |
-| 5.4 (done, D147) | `refactor/dev-wing` | The old test rooms move to a dev-only wing (kept, D45, never deleted): a `dev` list in world.json, shown by the dev server and absent from builds for players. Boot Sector stays the start until 5.5. |
-| 5.5 (done, D148) | `feat/lattice-tutorial` | The first rooms from the plan: start, movement, pushing, the first disk, the first fragment; screens with hints (D118). |
-| 5.6a (done, D151) | `feat/lattice-atrium` | The central area first: the Atrium finished as the hub (doors west to the tutorial, north to the Shield wing, south to the Pause wing; a backup shrine, screens), plus the two wing entrances that hold the disks: `shield_hall` (Shield) and `freeze_hall` (Pause). The hub then has all its exits, so the author can refine and flag it (D90). |
-| 5.6b (done, D156) | `feat/lattice-shield-wing` | `bolt_gallery` (fragment 3), `relay_loft` (fragment 4) and `ledger_cell` (fragment 5; bypass fixed, D160). |
-| 5.6c (done, D157) | `feat/lattice-pause-wing` | `cold_stairs` (fragment 6): frozen enemies as steps. |
-| 5.6d (done, D162) | `feat/lattice-boss-one` | `warden_pit` (boss 1, drops fragment 7) and `idle_cache` (fragment 8), placed from the test arena. |
-| 5.6e (done, D168) | `feat/lattice-scan-wing-1` | The Scan wing, first half: `scan_lab` (Scan disk) and `mirror_stacks` (fragment 9); the door from `relay_loft` is added. |
-| 5.6f (done, D170) | `feat/lattice-scan-wing-2` | `ghost_exit` (fragment 9), `junction` (fragment 11) and `drift_bay` (fragment 10); `junction` joins them and is a one-way shortcut back to `scan_lab`; `drift_bay` keeps its south side for the Gatekeeper. |
-| 5.6g (done, D171) | `feat/lattice-fork-wing-1` | The Fork wing, first half: `fork_lab` (Fork disk) and `twin_plates` (fragment 12); the door from `cold_stairs` is added; `twin_plates` keeps its north side for `guard_loop`. |
-| 5.6h (done, D173) | `feat/lattice-fork-wing-2` | `guard_loop` (fragment 13) and `split_vault` (fragments 14 and 15); the door from `twin_plates` is added; `split_vault` keeps its north side for the Gatekeeper. |
-| 5.7 (done, D174) | `feat/lattice-gatekeeper` | The Gatekeeper arena (boss 2, drops the energy buff) joining the Scan and Fork wings: doors to `drift_bay` and `split_vault`; its east side keeps the way on to the core for 5.8. |
-| 5.8 (done, D175) | `feat/lattice-core-gates` | The core (east of the Gatekeeper, moved from the Atrium), the Level 1 access locks (the double jump vault, which leads on to Frostbyte, and Glitchmire) and the teaser rooms beyond them: two look-only rooms each for Glitchmire and Frostbyte Wastes. |
-| 5.8b | `feat/biome-looks` | The Glitchmire and Frostbyte looks for the teasers, in the showcase first: floor patterns (torn tiles, hex crystals) and particles (pixel bubbles, 0/1 flakes) (D175). |
-| 5.9 | `feat/outer-buffer-secrets` | The Outer Buffer look (floor, starfield, color re-picked) and the secret cluster, reached by Scan and similar tricks; complex multi-step rooms, often with tools found later (backtracking, D173). |
+| 5.8b | `feat/biome-looks` | The Glitchmire and Frostbyte looks for the teasers, in the showcase first: floor patterns (torn tiles, hex crystals) and particles (pixel bubbles, 0/1 flakes) (D177). |
+| 5.9 | `feat/outer-buffer-secrets` | The Outer Buffer look (floor, starfield, color re-picked) and the secret cluster: complex multi-step rooms, often with tools found later (D173). |
 | 5.10 | `feat/lattice-visual-pass` | Optional: the Lattice's data flows and glass panels (D121). |
 | 5.11 | `feat/quality-presets` | Quality presets, auto fallback and render scale wired up (D76), a check on a weaker GPU. |
 | 5.12 | `feat/onboarding-feedback` | The first minute from title to the first disk, the controls screen, the pause entry that copies debug info (version, room, key) for feedback. |
 | 5.13 | `chore/balance-pass` | Difficulty, energy, backups and shrines across the Lattice from full playthroughs. |
 | 5.14 | `chore/release-0.5.0` | Docs pass, tag `v0.5.0`, the GitHub Release: **Playtest 1**. |
-
-The Lattice steps (5.6a to 5.7) are small, two or three rooms each, and the
-hub comes before the wings (D149). Every Lattice batch goes through the reachability checker and the
-review subagent. Rooms are drafted unflagged; the author refines them in
-the editor and flags them authored (D90).
 
 ### Phase 6 (v0.6) steps: the other sectors
 
@@ -2326,108 +2261,16 @@ step (roster, look, rooms, its own mechanic of D122).
 | 6.1 | `feat/playtest-fixes` | What Playtest 1 found. |
 | 6.2 | `feat/glitchmire` | The biome concept and roster (at least three enemies), its looks, rooms. |
 | 6.3 | `feat/frostbyte` | The same for Frostbyte Wastes. |
-| 6.4 | `feat/secrets-ladder` | The secrets rewards (hat star, trail, shimmer) and the 16-secret room in the Outer Buffer, if the author confirms them. |
-| 6.5 | `feat/firewall-citadel` | The same for Firewall Citadel. |
-| 6.6 | `feat/phantom-partition` | The same for Phantom Partition. |
-| 6.7 | `chore/release-0.6.0` | Release. |
+| 6.4 | `feat/firewall-citadel` | The same for Firewall Citadel. |
+| 6.5 | `feat/phantom-partition` | The same for Phantom Partition. |
+| 6.6 | `chore/release-0.6.0` | Release. |
 
 ### Phase 7 steps: polish, then 1.0.0
 
-Juice and post-processing pass, audio-reactive visuals, fullscreen,
-gamepad, key rebinding, biome environmental effects (Glitchmire low-res,
-Frostbyte ice, Outer Buffer low gravity and darkness) with health
-pickups and safe rooms, the real ending; split into steps when Phase 6
-nears its end.
-
-## Phase 4 (v0.4) outline
-
-Saves, guardians and tooling, in two parts (D105), planned step by step.
-
-**Phase 4a — saves and UI:** access-key codec with tests (done, D106);
-title screen and pause menu (done, D109); saving and loading
-(done, D111); map screen (done, D112).
-
-**Phase 4b — spells, bosses, tooling:** the roster's new spells, one
-step each (D88, D89): Pull (done, D124), Compile (done, D125), Scan
-(done, D128: fake blocks, hidden exits), Fork (done, D129: a decoy that holds plates and draws enemies);
-Firewall Wardens; design skills and subagents. Reachability checker
-(done, D131).
-Biome enemy rosters moved to Phase 6 (D130).
-
-Settled:
-- Saving is a player action, any time, from the pause menu (D105); it
-  writes the key to the URL hash and to localStorage, and nothing saves on
-  its own. A load starts in the saved room with the room reset, full
-  integrity and energy and an empty clipboard; the backups come from the
-  key (D106).
-- Firewall Wardens (D104) are the bosses of combat rooms. Each drops one
-  permanent pickup (a pickup naming the Warden, shown once it falls);
-  while that pickup's bit is found, the Warden is left out of its room
-  and counts as defeated. Data checks refuse a Warden without such a drop,
-  and a drop that is a refill. Shrines stay out of boss rooms.
-- Boss design (D134): three gold rings round any normal body mark a
-  boss (one render helper, `render/boss-mark.js`; the body keeps its
-  look). Bodies stay one cell on the floor, one or two
-  cubes high (no multi-cell claims); a boss bar on the HUD; Pause never
-  freezes a boss. Boss 1 (the bug body ringed by three gold circles,
-  high integrity, always hittable, drops fragment 7) shoots aimed bolts
-  and teleports about its arena, so he must take cover (bolt-stopping
-  blocks) and retarget. Boss 2 (the Gatekeeper, a virus two cubes high,
-  drops the energy buff) chases him and, next to him, winds up a charged
-  surround burst; it is immune until it stands on an overload plate of
-  its arena, which he leads it over (a Fork decoy can hold it there).
-  Engine in 4.5, bosses in 4.6 and 4.7.
-- Boss engine (D135): a template's `boss` block holds its phases (each
-  from a share of its integrity, changing any fighting value, `teleport`
-  among them) and its `armor` (`none`, or `plate`: hurt only on a floor
-  plate; a white dashed shell round it flashes when a hit glances off
-  and lifts away while it stands on a plate); `height` makes a body up to two cubes high in one cell. A boss
-  wakes when it sees the wizard or is hit: its bar shows (top middle,
-  name from `boss.<template>` in strings.json, ticks where later phases
-  start). It teleports to a free cell of its floor at least 3 units from
-  him, one that sees him if it can (seeded, so it plays the same each
-  time). The room names its `drop`, a permanent pickup it holds unseen;
-  beaten, the pickup falls into its cell; once the bit is found the boss
-  stays away. A boss never locks its arena's doors: the wizard may
-  retreat at any time (the room resets when he comes back). Test arenas: `boss_arena` and
-  `boss_plates` off Build Yard, with the prototypes `null_pointer` and
-  `gatekeeper`.
-
-- A key whose room cell holds no room (the room moved on the world map
-  since) still loads what he has and starts him in the start room.
-- The map screen (D112): M, or Map in the pause menu, shows the rooms
-  entered in this run, never saved (a new game or a load starts it
-  empty). A backup shrine reveals the rooms within 2 map cells (|dx| +
-  |dz|) as dim outlines, which stay for the run. Visited rooms show
-  their biome color, connections and cyan stubs for exits to rooms not
-  on the map yet, and a label: the room's name with a row of icons under
-  it (he is here, a fragment left, a backup shrine). It is drawn isometrically,
-  east down-right as in the rooms.
-
-Open so far:
-- Proposal, to be discussed and confirmed: small rewards for secrets
-  found, visual first. Each follows from the secret count, like the
-  access level from fragments, so no new save bits and nothing more in
-  the score (D100). A ladder, one step per 4 secrets:
-  - 4: a small magenta star lights up on the hat tip, beside the gold
-    access bands;
-  - 8: a star trail, faint magenta pixel sparkles drifting off the hat
-    while he moves;
-  - 12: a Phantom shimmer, his outline now and then shifting through the
-    Phantom Partition hues (mostly magenta still, D99);
-  - 16: a special room behind a secret lock (like the access lock, a
-    magenta star instead of a gold numeral), in the Outer Buffer (D130);
-    the shimmer stays on.
-  Each step would reuse the install banner and a terminal line. Open:
-  the steps and looks (showcase first), what the special room holds and
-  whether there is more than one, and whether a secret lock takes other
-  counts so rooms can gate optional side rooms earlier.
-
-- Biome enemy rosters (D108, moved to Phase 6, D130): settled one biome
-  at a time after the playtest,
-  within the high-level map of D122 (see Biomes, The sectors at a
-  glance); Home Lattice is done (D121). Every new look goes to the
-  showcase for the author's OK first.
+Juice and post-processing pass, fullscreen, gamepad, key rebinding,
+biome environmental effects (Glitchmire low-res, Frostbyte ice, Outer
+Buffer low gravity and darkness) with health pickups and safe rooms, the
+real ending; split into steps when Phase 6 nears its end.
 
 ## Title screen and pause menu
 
@@ -2446,13 +2289,13 @@ Visuals), Controls, Enter key and the quit question open over the menu,
 and Esc or P closes the top one (the pause menu itself: back to the
 game).
 
-**Options** (`src/ui/settings.js`, stubs): **Music** and **Sound** volume
+**Options** (`src/ui/settings.js`): **Music** and **Sound** volume
 as a bar of ten cells (0–10, default 7), and **Visuals**: **Quality**
 (Auto, Low, Medium, High), **Render scale** (50–100 %), **Screen effects**
 (On, Off). ◄ ► (or A D, or a click on the arrows) adjust the selected
 one, Enter steps it on and round. They are kept in localStorage
-(`neonmancer.settings`, apart from the access key) and read by nothing
-yet: the audio and quality presets of Phase 5 will.
+(`neonmancer.settings`, apart from the access key). The volumes drive
+the audio engine (D138); the visuals wait for the quality presets (5.11).
 
 **Start** plays the boot sequence (D110, `src/render/boot-fx.js`, 2.6 s):
 the logo scrambles and glitches out; the room compiles tile by tile along
@@ -2538,7 +2381,9 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 | `data/rooms/<id>.json` | One room (id = file name) |
 | `data/defs.json` | `objects`: object types and their defaults (crates, platforms, switches, the core); a variant `extend`s a base type and lists only what it changes, one level, keeping its kind (D145, e.g. `target_timed`: `{ "extends": "target", "timer": 5 }`); `enemies`: enemy templates, each complete or `extend`ing another (D58, D79); `spells`: tuning and color per spell; `pickups`: disks, buff chips, upgrade cards, fragments, secrets and refills; `blocks`: block types (D60); `score`: points per kind of pickup (D100). Each is described in its section above. |
 | `data/biomes.json` | Biome name and room color, optional `look` for the surroundings (see Biomes) |
-| `data/world.json` | Start room, exit connections, every room's cell on the world map (`positions`, D66) and the key fragments (`fragments`: how many the core needs, the access thresholds, D101) |
+| `data/world.json` | Start room, exit connections, every room's cell on the world map (`positions`, D66), the dev wing (`dev`, D147) and the key fragments (`fragments`: how many the core needs, the access thresholds, D101) |
+| `data/lore.json` | Screen texts by id (D118) |
+| `data/audio.json` | Named sounds and music (D138) |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |
 
 Example room:
@@ -2578,8 +2423,9 @@ Example room:
   touch it.
 - `exits` — `side` is `-x`, `+x`, `-z` or `+z`; `at` is the first cell along
   that side; `width` (default 2), `y` floor level (default 0), `height`
-  (default 2); `locked` (switches, D75) with optional `switches` (the
-  ids that open it, D140), `access` (a level, D101).
+  (default 2); `requires`, the conditions that open it (D175):
+  `{ "switch": id }`, `{ "switch": "*" }` (every switch in the room),
+  `{ "access": level }`; `hidden` (D128).
 - `blocks` — anonymous static geometry; `to` fills a box (inclusive);
   `type` is a block type from `defs.json` `blocks` (default `block`); a
   switch gate's entry may name its `switches` (D141).
@@ -2597,8 +2443,8 @@ Example room:
   `dark`/`tinted`/`hazard`/`glass`, `shape` `cube`/`spiked` (defaults
   first), `tint` 0–1 (color share of a tinted top face, default 0.1).
   Objects may override them.
-- `world.json` pairs exits: `"connections": [["boot_sector.north", "room_1.south"]]`.
+- `world.json` pairs exits: `"connections": [["boot_up.east", "first_steps.west"]]`.
   Paired exits are on opposite sides and equally wide; every exit is connected.
-  `"positions": { "boot_sector": [0, 0] }` places every room on the world
+  `"positions": { "boot_up": [5, 0] }` places every room on the world
   map, one room per cell (`[x, z]`, +x east, +z south; map neighbours need
   not be connected, D66).

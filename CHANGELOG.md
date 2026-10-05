@@ -9,6 +9,12 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Changed
+- Docs cleanup (D176): the decision log shows each decision as it stands
+  (replaced entries are pointers, room entries keep only their rules; the
+  duplicate D152 for `requires` is now D175); design.md's dev rooms, step
+  plan, bosses and data formats match the game; lattice-plan.md lists what
+  is built and what is left. Dropped plans: the secrets ladder, zoom to fit,
+  audio-reactive visuals, the seven unused looks as content.
 - Rendering does less work for the same picture (D169): a decoration's
   dark boxes, glass and lights draw in a handful of draws (a memory stack
   went from 24 to 5; `mirror_stacks` from about 380 to about 155 draws a
@@ -36,7 +42,7 @@ docs/decisions.md).
   second solution no easier than the intended one is not a bypass.
 
 ### Added
-- The core hall and the Level 1 locks (5.8, D175): `core_hall` east of the
+- The core hall and the Level 1 locks (5.8, D177): `core_hall` east of the
   Gatekeeper takes the core from `atrium`; its north lock leads to
   `dj_vault` (the double jump, whose 2-high ledge door leads on to
   Frostbyte), its east lock to Glitchmire; two look-only teaser rooms
