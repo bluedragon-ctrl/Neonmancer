@@ -2,11 +2,7 @@
   "$schema": "../schemas/biomes.schema.json",
   "schemaVersion": 1,
   "biomes": {
-    "home_lattice": {
-      "name": "Home Lattice",
-      "color": "#ffb020",
-      "look": { "flows": 0.5, "motes": 0.2, "panels": 0.08 }
-    },
+    "home_lattice": { "name": "Home Lattice", "color": "#ffb020", "look": { "flows": 0.5, "panels": 0.08 } },
     "glitchmire": {
       "name": "Glitchmire",
       "color": "#ff5fa8",

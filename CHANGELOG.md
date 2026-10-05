@@ -46,12 +46,11 @@ docs/decisions.md).
   second solution no easier than the intended one is not a bypass.
 
 ### Added
-- Home Lattice's ambience (5.9, D179): data flows, short bright dashes
-  running now and then along the floor grid, inside the room and out;
-  warm motes rising slowly through the room; and random glass panels in
-  the back walls, windows onto the grid outside, new on every entry. Biome
-  look fields `flows`, `motes` and `panels`, off unless a biome sets
-  them; showcase `?asset=lattice-ambience`.
+- Home Lattice's ambience (5.9, D179, D180): data flows, short bright
+  dashes running now and then along the floor grid, inside the room and
+  out, and random glass panels in the back walls, windows onto the grid
+  outside, new on every entry. Biome look fields `flows` and `panels`,
+  off unless a biome sets them; showcase `?asset=lattice-ambience`.
 - The core hall and the Level 1 locks (5.8, D177): `core_hall` east of the
   Gatekeeper takes the core from `atrium`; its north lock leads to
   `dj_vault` (the double jump, whose 2-high ledge door leads on to

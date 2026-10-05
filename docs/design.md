@@ -1777,7 +1777,7 @@ Phase 7.
 
 | Biome | Color | Floor | Particles | Signature |
 |---|---|---|---|---|
-| Home Lattice (core) | amber `#ffb020` | clean square grid | warm motes rising slowly | calm, steady glow |
+| Home Lattice (core) | amber `#ffb020` | clean square grid | none (data flows on the grid instead, D180) | calm, steady glow |
 | Glitchmire (heavy virtual, D122) | hot pink `#ff5fa8` | torn tiles, slightly offset | pixel bubbles popping up | edges jitter for a frame now and then |
 | Frostbyte Wastes | ice blue `#9fd0ff` | hex crystal pattern | 0/1 flakes falling | soft, frosty bloom |
 | Outer Buffer (special: secrets, D130; dark space, D122) | graphite `#7a8190` (to be picked again) | to be settled | a starfield | to be settled |
@@ -1848,7 +1848,6 @@ unless a biome turns it on, D179):
 | `wallGrid` | brightness of the faint wall grid (share of the room color) | 0.3 |
 | `bloom` | glow strength | 1.4 |
 | `flows` | data flows: share of floor grid lines that now and then carry a bright dash | 0 (Home Lattice 0.5) |
-| `motes` | warm motes rising through the room, per floor tile (at most 120) | 0 (Home Lattice 0.2) |
 | `panels` | glass panels: share of the free back-wall cells that become windows | 0 (Home Lattice 0.08) |
 
 | Biome | Background, outer grid | Fade | Wall grid | Bloom |
@@ -1870,16 +1869,13 @@ Every other biome is a twist on it.
 - **Look:** amber `#ffb020`, the default surroundings. A clean square
   floor grid, every line whole and straight: the healthy version the
   other sectors corrupt.
-- **Ambience (built, D179):** the biome's `flows`, `motes` and `panels`
+- **Ambience (built, D179):** the biome's `flows` and `panels`
   (the look table above).
   - **Data flows:** short bright dashes now and then run along the grid
     lines, on the room floor and on the grid outside it, fading with it;
     each line has its own speed, direction and gap from a hash of its
     index: decoration, not a guide. In the floor's own shader
     (`FLOWS` in `render/floor.js`).
-  - **Warm motes:** soft amber dots of light rising slowly from the
-    floor, swaying a little, fading in and out on the way up; one Points
-    object animated in its shader (`MOTES` in `render/motes.js`).
   - **Glass panels:** random 1×1 panes of clear glass (`glassBoxes()`,
     `GLASS.panel`) set into the back walls in a frame of the room color,
     never in the bottom row (they would read as a way out), by a doorway

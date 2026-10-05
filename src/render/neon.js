@@ -48,12 +48,10 @@ export const LOOK_DEFAULTS = {
   bloom: 1.4,
   /**
    * Ambience (D179), off unless a biome sets it: the share of grid lines
-   * that carry data flows (floor.js), warm motes per floor tile
-   * (motes.js), the share of free wall cells that hold a glass panel
-   * (walls.js pickPanels()).
+   * that carry data flows (floor.js) and the share of free wall cells
+   * that hold a glass panel (walls.js pickPanels()).
    */
   flows: 0,
-  motes: 0,
   panels: 0,
 };
 
