@@ -28,6 +28,7 @@ import { Hud } from './ui/hud.js';
 import { MapScreen } from './ui/map-screen.js';
 import { MenuScreen } from './ui/menu-screen.js';
 import { MenuFlow } from './ui/menus.js';
+import { roomTimerState } from './ui/room-timer.js';
 import { copyText, hashKey, keyLink, storeKey, storedKey, writeHash } from './ui/saves.js';
 import { Settings } from './ui/settings.js';
 import { readSave, saveGame } from './world/save-game.js';
@@ -368,6 +369,7 @@ function syncHud(hud, game, renderer, dt) {
   hud.setClipboard(player.spell === 'cut_paste', player.clipboard);
   hud.setBoosts(player.boosts);
   hud.setBoss(bossBarState(game));
+  hud.setRoomTimer(roomTimerState(game));
   hud.setScore(game.score, game.completion);
   hud.setFragments(game.fragmentSlots(), game.fragmentRules.required, game.progress.accessLevel);
   hud.setMovementMode(game.movementMode);

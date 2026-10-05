@@ -1988,3 +1988,34 @@ which then sits at (9,0), east of the Atrium.
 (D168), so each chains a freeze, a push and a step, with a scan or a
 fight on top, and the wing's crossroads gets a shortcut home that cannot
 be used as a way in.
+
+### D171 — 2026-10-05 — Watchdog timers: a timed challenge per room
+A room may set `timer` (whole seconds, 3–600): a watchdog timer. It is
+armed when the room is built (entering, respawning) and runs once the
+room has faded in, while the wizard is alive; menus, the map and the
+editor hold the whole game, so they hold it too, and debug invincibility
+freezes it. At zero he dies with the cause `timeout`: a death like any
+other (a backup used, a crash with none left), and the respawn rebuilds
+the room, the timer with it. Leaving the room drops it; coming back
+starts it from full. The HUD shows the time left (`WATCHDOG 0:24.5`,
+rounded up to the tenth) top middle, under the boss bar when one is up;
+in its last 5 s it turns red (D99: about to hurt), pulses and ticks
+once a second (the timed switches' `tick` sound). The room editor's room
+group has a **Timer (s)** field (blank: none). The dev wing gets
+`watchdog_run` (1,-1), west of `fence_yard`, which gets a west door.
+- §1 ruled out a time limit, and §5 said "no time limit". That was about
+  a clock on the whole game, which stays out; a short timer on a chosen
+  room is a challenge like a timed switch, and a death costs only a
+  backup. Both lines now say so.
+- Nothing stops the timer but leaving the room: the challenge is to get
+  through, or to get what the room holds and out, in time. Another stop
+  (a switch, a pickup) can come later if rooms need it.
+- It counts ticks, not wall-clock time: identical at any frame rate and
+  held for free wherever the game stands still.
+- The reachability checker knows nothing of it (as with timed switches);
+  the room checklist, the room-design skill and the level-review agent
+  say how to count the run by hand.
+- Optional, with no default: no room changes, no authored room is
+  affected, the data schema version stays 1.
+**Why:** the author asked for timed challenge rooms, the time set per
+room in the editor and the running time on screen.

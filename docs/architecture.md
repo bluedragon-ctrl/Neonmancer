@@ -174,6 +174,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/zap-view.js` | Zap meshes: bolt, cast flare, sparks, in the Zap's cyan or an enemy bolt's color; `ZapView` keeps a room's bolts and sparks (pooled by color) |
 | `ui/clip-icon.js` | SVG icons of what the clipboard holds (D87): a crate's cube, an enemy, caged while frozen (pure, tested) |
 | `ui/boss-bar.js` | The boss bar (D135): `bossBarState(game)` (name, share, phase ticks, armor) and the DOM bar, top middle while a boss is awake |
+| `ui/room-timer.js` | The watchdog timer of the HUD (D171): `roomTimerState(game)` (time left as `0:24.5`, its last seconds) and the DOM timer, top middle in a room with a timer, under the boss bar while that is up |
 | `ui/energy-bar.js` | Energy bar: one segment per cast filling as it recharges; flashes on a denied cast |
 | `ui/error-screen.js` | Startup error screen listing every data problem |
 | `ui/fullscreen.js` | Fullscreen toggle and when to suggest it (below 1080 physical pixels; tested) |

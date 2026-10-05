@@ -1429,6 +1429,55 @@ body {
   opacity: 0.35;
 }
 
+/* A room's watchdog timer (D171), top middle; under the boss bar while that is up. */
+.hud-timer {
+  position: absolute;
+  top: calc(30 * var(--u));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: baseline;
+  gap: calc(12 * var(--u));
+  color: var(--cyan);
+  text-shadow: 0 0 calc(8 * var(--u)) currentColor;
+  white-space: nowrap;
+}
+
+.hud-timer[hidden] {
+  display: none;
+}
+
+.hud-timer.below-boss {
+  top: calc(84 * var(--u));
+}
+
+.hud-timer-label {
+  font-weight: 500;
+  font-size: calc(14 * var(--u));
+  letter-spacing: 0.2em;
+}
+
+.hud-timer-value {
+  font-weight: 700;
+  font-size: calc(30 * var(--u));
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  /* Room for the widest time, so the label doesn't shift as digits change. */
+  min-width: 4.6em;
+}
+
+/* Its last seconds: red (about to hurt, D99), pulsing. */
+.hud-timer.warn {
+  color: #ff2a3a;
+  animation: timer-warn 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes timer-warn {
+  to {
+    opacity: 0.55;
+  }
+}
+
 .hud-boss-bar.hit {
   animation: boss-hit 0.25s steps(1);
 }

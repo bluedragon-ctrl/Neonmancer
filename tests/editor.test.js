@@ -243,6 +243,22 @@ test('RoomEdit marks a room authored (D90) and back; a test room has no flag', (
   assert.equal(edit.toData().authored, true);
 });
 
+test('RoomEdit sets a watchdog timer (D171) in whole seconds, 3–600; blank or 0 takes it off', () => {
+  const edit = new RoomEdit(sampleRoom());
+  assert.equal(edit.setRoomTimer(undefined), false);
+  assert.equal(edit.setRoomTimer(20.4), true);
+  assert.equal(edit.toData().timer, 20);
+  assert.match(edit.text(), /"size": \[8, 4, 8\],\n  "timer": 20,\n  "spawn"/);
+  edit.setRoomTimer(1);
+  assert.equal(edit.toData().timer, 3);
+  edit.setRoomTimer(9999);
+  assert.equal(edit.toData().timer, 600);
+  assert.equal(edit.setRoomTimer(0), true);
+  assert.equal('timer' in edit.toData(), false);
+  edit.undo();
+  assert.equal(edit.toData().timer, 600);
+});
+
 test('idProblem refuses ids off the pattern and ids in use', () => {
   assert.equal(idProblem('Exit id', 'north_2', ['north']), null);
   assert.equal(idProblem('Exit id', 'North', []), 'Exit id: lowercase letters, digits and _, starting with a letter.');

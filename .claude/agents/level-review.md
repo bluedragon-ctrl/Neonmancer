@@ -36,7 +36,10 @@ For each room:
      too, a 5 s freeze counted from the shot; cells from the switch to the far
      side of the gate, bridge or exit it powers, ~0.22 s a cell, plus
      jumps and pushes) and compare it with the timer: shorter is a
-     BLOCKER, less than ~1 s to spare a PROBLEM.
+     BLOCKER, less than ~1 s to spare a PROBLEM. A room `timer`
+     (watchdog, D171): count the whole run from the entrance, and from
+     `reset` after a death, to the way out (or to the goal and back) the
+     same way; shorter is a BLOCKER, less than ~2 s to spare a PROBLEM.
    - **Readability**: tall blocks vs the +x/+z camera, each mechanic
      visible from the entrance, every crate visible (none behind tall
      blocks or decor, none inside fake blocks; D164), gates look like gates.

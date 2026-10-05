@@ -24,7 +24,7 @@ const ITEM_LISTS = [
 const LIST_OF = Object.fromEntries(ITEM_LISTS);
 
 /** Order of a room file's keys when it is written back (as in data/rooms/). */
-const KEY_ORDER = ['$schema', 'schemaVersion', 'id', 'name', 'authored', 'biome', 'size', 'spawn', 'reset', 'exits', 'blocks', 'holes', 'shrine', 'objects', 'enemies', 'pickups'];
+const KEY_ORDER = ['$schema', 'schemaVersion', 'id', 'name', 'authored', 'biome', 'size', 'timer', 'spawn', 'reset', 'exits', 'blocks', 'holes', 'shrine', 'objects', 'enemies', 'pickups'];
 
 /** Files several rooms share, whose changes a room's undo step takes along: lore.json. */
 const SHARED = ['lore'];
@@ -374,6 +374,15 @@ export class RoomEdit {
   /** @param {string} biome biome id */
   setBiome(biome) {
     return this.setField('biome', biome);
+  }
+
+  /**
+   * The room's watchdog timer (D171), in whole seconds (3–600); none when
+   * blank or 0.
+   * @param {number} [seconds]
+   */
+  setRoomTimer(seconds) {
+    return this.setField('timer', seconds > 0 ? Math.min(600, Math.max(3, Math.round(seconds))) : undefined);
   }
 
   /**

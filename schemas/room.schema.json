@@ -38,6 +38,12 @@
       "$ref": "common.schema.json#/$defs/point",
       "description": "Where the wizard reappears (feet center) after dying in this room, however he entered it. Defaults to \"spawn\" if omitted. Above the floor is fine: he falls from there like anywhere else."
     },
+    "timer": {
+      "type": "integer",
+      "minimum": 3,
+      "maximum": 600,
+      "description": "Seconds on the room's watchdog timer (D171): it starts once the room has faded in and runs while the wizard is in the room (menus hold it); at zero he dies and the room resets. Omitted: no timer."
+    },
     "exits": {
       "type": "array",
       "items": { "$ref": "#/$defs/exit" }

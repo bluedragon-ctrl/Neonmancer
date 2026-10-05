@@ -287,7 +287,7 @@ export class EditorPanel {
    *   enemyTemplate(id),
    *   screenText(id|null), newText(id, text), updateText(text),
    *   path(field, value), clearPath(), exit(field, value), layer(step), cut(on), discard(), error(text), name(text),
-   *   authored(on), biome(id), size([x, y, z]), undo(), redo(), save(), revert()
+   *   authored(on), biome(id), size([x, y, z]), roomTimer(seconds), undo(), redo(), save(), revert()
    */
   constructor(root, { blockTypes, objectTypes, switchTypes, enemyTemplates, biomes, canSave, on }) {
     this.canSave = canSave;
@@ -327,7 +327,7 @@ export class EditorPanel {
     this.releaseKeyboard();
   }
 
-  /** The room: which one, a new one, its name, biome and size. */
+  /** The room: which one, a new one, its name, biome, size and watchdog timer. */
   roomGroup(biomes) {
     const { on } = this;
     this.roomSelect = el('select');
@@ -363,11 +363,19 @@ export class EditorPanel {
     }
     const sizeRow = el('div', 'editor-row');
     sizeRow.append(el('span', 'editor-label', 'Size'), ...this.sizeInputs);
+    // The room's watchdog timer (D171), in whole seconds; blank: none.
+    this.roomTimerInput = numberInput({ min: 3, step: 1, placeholder: 'none' });
+    this.roomTimerInput.title = 'Watchdog timer (D171): seconds until the wizard is killed and the room resets; blank: no timer';
+    this.roomTimerInput.addEventListener('change', () => {
+      // Let go first, so a clamped value shows the room's own.
+      this.roomTimerInput.blur();
+      on.roomTimer(numberValue(this.roomTimerInput));
+    });
     // A new room that was never saved can be thrown away.
     this.discardButton = el('button', 'editor-action', 'Discard new room');
     this.discardButton.addEventListener('click', () => on.discard());
     const group = el('div', 'editor-group');
-    group.append(this.row('Room', this.roomSelect), newRoomRow, this.row('Name', this.nameInput), this.row('Authored', authored), this.row('Biome', this.biomeSelect), sizeRow, this.discardButton);
+    group.append(this.row('Room', this.roomSelect), newRoomRow, this.row('Name', this.nameInput), this.row('Authored', authored), this.row('Biome', this.biomeSelect), sizeRow, this.row('Timer (s)', this.roomTimerInput), this.discardButton);
     return group;
   }
 
@@ -796,6 +804,7 @@ export class EditorPanel {
     this.sizeInputs.forEach((input, axis) => {
       if (document.activeElement !== input) input.value = String(data.size[axis]);
     });
+    this.setNumber(this.roomTimerInput, data.timer);
     this.buttons.undo.disabled = edit.undoStack.length === 0;
     this.buttons.redo.disabled = edit.redoStack.length === 0;
     this.buttons.revert.disabled = !changed;
