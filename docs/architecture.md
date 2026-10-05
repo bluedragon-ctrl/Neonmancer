@@ -123,7 +123,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/exit-layout.js` | Exit effect layout and timing, `EXIT_FX` tuning (pure, tested) |
 | `render/exit-view.js` | Exit effect in the destination color: dashed stream into doorway tunnels, arrows gliding out of front exits |
 | `render/firewall-fx.js`, `render/firewall-view.js` | Firewall's ring of flames (D84): the segments (pure, tested; timing is the Shield's) and its meshes, shown by `PlayerView` |
-| `render/floor.js` | Infinite grid floor fading into darkness; hole tiles cut out via a mask texture |
+| `render/floor.js` | Infinite grid floor fading into darkness; hole tiles cut out via a mask texture; a biome's data flows in its shader (D179, `FLOWS`) |
+| `render/motes.js` | A biome's warm motes rising through the room (D179): one Points object animated in its shader, `MOTES` (layout pure, tested) |
 | `render/fragment.js` | Key fragment look (D101): a gold tile with the boot key dim and its own module lit, ghost |
 | `render/geometry.js` | Shared geometry primitives (`UNIT_BOX` with its corner at the origin, centered `CUBE`), never disposed with a room (D169) |
 | `render/glass.js` | Glass faces (D96): a see-through face shader (transparent, no depth written, clipping, instancing) and the data core's shrunk mark; `glassBoxes()` draws several boxes of one look at once (D169); a destructible glass crate is an empty shell (D99) |
@@ -162,7 +163,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/gate-view.js` | Gate block look (`GATE_FX`, D140–D142): a switch gate is a white glass box with a light per switch on top of a stack (gone: hidden in play, an outline in the editor), a step gate its type's look with a rattle (`gateShake()`); both sink to go and leave a dashed outline if they come back; `GateView` (pure parts tested) |
 | `render/viewport.js` | Letterbox, buffer size and 1080p-relative sizing math (pure, tested) |
 | `render/virus.js` | Virus model (D78): sharp tipped cube, orbiting bits, glide, charge pose, pop pixels, `VIRUS` tuning; `VIRUS_MODEL` |
-| `render/walls.js` | Back walls with doorways and dark tunnels behind them, front edges with gaps, arrow shape for front exits (pure, tested) |
+| `render/walls.js` | Back walls with doorways and dark tunnels behind them, glass panels (D179, `pickPanels()`), front edges with gaps, arrow shape for front exits (pure, tested) |
 | `render/warden.js` | Warden model (D107): kite shield with brick seams, T-slit helm, gauntlets, greatsword poses (`swordAngle()`), `WARDEN` tuning; `WARDEN_MODEL` |
 | `render/warp-fx.js`, `render/warp-view.js` | Blink's dash (drawn position and stretch, streaks, kicked-up pixels) and Warp's arrival flash (D86; its pixels are the stream): the look (pure, tested) and its meshes, shown by `PlayerView` |
 | `render/wizard.js` | Wizard model: parts as data (pure, tested), built in the hologram look, with a rig (head, hands, hat) for animation |

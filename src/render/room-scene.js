@@ -12,7 +12,8 @@ import { EnemyView, PlatformView, PushableView } from './entity-view.js';
 import { ExitView } from './exit-view.js';
 import { createFloor } from './floor.js';
 import { createHoleView } from './hole-view.js';
-import { disposeTree } from './neon.js';
+import { createMotes } from './motes.js';
+import { disposeTree, roomLook } from './neon.js';
 import { PickupView } from './pickup-view.js';
 import { flareHazard } from './block-fx.js';
 import { CoreView } from './core-view.js';
@@ -21,6 +22,7 @@ import { GateView } from './gate-view.js';
 import { CLIP_FX, pasteGrow } from './clip-fx.js';
 import { clipBounds } from './clip-view.js';
 import { createRoomView } from './room-view.js';
+import { pickPanels } from './walls.js';
 import { createShrine } from './shrine-view.js';
 import { LockView, PlateView, TargetView } from './switch-view.js';
 import { DecoyView } from './decoy-view.js';
@@ -78,6 +80,11 @@ export class RoomScene {
     this.exitViews = [];
     /** The room's backup shrine (shrine-view.js, D97), or null. */
     this.shrine = null;
+    /** The floor (its data flows run in update()) and the warm motes or null (D179). */
+    this.floor = null;
+    this.motes = null;
+    /** The back walls' glass panels (D179), picked once per entry, so a rebuild keeps them. */
+    this.panels = [];
     /** Locked exits' barriers (switch-view.js), by exit id. */
     this.lockViews = new Map();
     /** Bolts and sparks of the room (made in show()). */
@@ -144,16 +151,20 @@ export class RoomScene {
     // A respawn after a scan brings back what it revealed.
     if (rebuild || room.id !== this.roomId || cutAbove !== this.cutAbove || game.reveals !== this.reveals) {
       old.push(this.staticGroup);
+      if (room.id !== this.roomId) this.panels = pickPanels(room.size, room.exits, roomLook(room.look).panels);
       this.exitViews = room.exits.map((exit) => new ExitView(exit, room.size, game.destinationColor(exit)));
-      const roomView = createRoomView(cutRoom(shownRoom(game), cutAbove));
+      const roomView = createRoomView({ ...cutRoom(shownRoom(game), cutAbove), panels: this.panels });
       this.roomView = roomView;
       this.reveals = game.reveals;
       this.flares = roomView.userData.flares;
       this.flare = null;
       this.shrine = room.shrine ? createShrine() : null;
       this.shrine?.position.set(room.shrine[0], 0, room.shrine[1]);
+      this.floor = createFloor(room.size, room.color, room.holes, room.look);
+      this.motes = createMotes(room.size, room.color, roomLook(room.look).motes);
       this.staticGroup = new Group().add(
-        createFloor(room.size, room.color, room.holes, room.look),
+        this.floor,
+        ...(this.motes ? [this.motes] : []),
         createHoleView(room.holes, room.color),
         roomView,
         ...this.exitViews.map((view) => view.group),
@@ -199,9 +210,12 @@ export class RoomScene {
     this.scanView = null;
     this.decoyView = null;
     this.objectGroup = new Group().add(this.zapView.group);
-    const shape = { ...room, blocks: {}, holes: [], exits: [] };
+    this.panels = pickPanels(room.size, [], roomLook(room.look).panels);
+    const shape = { ...room, blocks: {}, holes: [], exits: [], panels: this.panels };
     this.roomView = createRoomView(shape);
-    this.staticGroup = new Group().add(createFloor(room.size, room.color, [], room.look), this.roomView);
+    this.floor = createFloor(room.size, room.color, [], room.look);
+    this.motes = createMotes(room.size, room.color, roomLook(room.look).motes);
+    this.staticGroup = new Group().add(this.floor, this.roomView, ...(this.motes ? [this.motes] : []));
     frameRoom(renderer.camera, room.size);
     renderer.setLook(room.look);
     // The next show() builds the room in full, even the same one.
@@ -243,6 +257,8 @@ export class RoomScene {
       view.update(dt);
     }
     this.shrine?.userData.update(dt);
+    this.floor?.userData.update(dt);
+    this.motes?.userData.update(dt);
     if (this.flare) {
       this.flare.time += dt;
       this.flare.apply(this.flare.time);
@@ -260,7 +276,7 @@ export class RoomScene {
 
   /** Build the blocks and walls anew as the room shows now (a scan revealed something). */
   rebuildRoomView() {
-    const view = createRoomView(cutRoom(shownRoom(this.game), this.cutAbove));
+    const view = createRoomView({ ...cutRoom(shownRoom(this.game), this.cutAbove), panels: this.panels });
     if (this.roomView) {
       this.staticGroup.remove(this.roomView);
       disposeTree(this.roomView);

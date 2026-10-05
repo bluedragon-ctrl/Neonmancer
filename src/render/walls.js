@@ -9,6 +9,8 @@
  *   wall | doorway    bright doorway frame
  *   wall | nothing    bright wall outline (top and ends; the foot is on the floor)
  *   doorway | nothing bright threshold at the foot, nothing at the top or ends
+ *   panel | wall      the panel's frame (a glass window, D179)
+ *   panel | nothing   bright wall outline, as for a wall cell
  */
 import { mergeUnitSegments } from './edges.js';
 
@@ -23,25 +25,81 @@ function backWalls([w, h, d]) {
   ];
 }
 
+/** How thick a glass panel is, set into the wall's outer side (units). */
+const PANEL_DEPTH = 0.06;
+
+/**
+ * Glass panels for the back walls (D179): random wall cells, about
+ * `share` of those that may hold one. A panel is never in a doorway, next
+ * to one (hidden exits too) or next to another panel, and never in the
+ * bottom row, where it would look like a way out.
+ * @param {number[]} size room size [x, y, z]
+ * @param {{ side: string, at: number, width: number, y: number, height: number }[]} exits
+ *   every exit of the room, hidden ones too (defaults applied)
+ * @param {number} share 0..1
+ * @param {() => number} [random] 0..1
+ * @returns {{ side: string, u: number, v: number }[]}
+ */
+export function pickPanels(size, exits, share, random = Math.random) {
+  if (!(share > 0)) return [];
+  const free = [];
+  for (const wall of backWalls(size)) {
+    const doors = exits.filter((exit) => exit.side === wall.side);
+    const nearDoor = (u, v) => doors.some((e) => u >= e.at - 1 && u <= e.at + e.width && v <= e.y + e.height);
+    for (let u = 0; u < wall.length; u++) {
+      for (let v = 1; v < wall.height; v++) if (!nearDoor(u, v)) free.push({ side: wall.side, u, v });
+    }
+  }
+  const wanted = Math.round(share * free.length);
+  const picked = [];
+  // Shuffle, then take cells that touch no panel taken already.
+  for (let i = free.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [free[i], free[j]] = [free[j], free[i]];
+  }
+  for (const cell of free) {
+    if (picked.length >= wanted) break;
+    if (picked.some((p) => p.side === cell.side && Math.abs(p.u - cell.u) <= 1 && Math.abs(p.v - cell.v) <= 1)) continue;
+    picked.push(cell);
+  }
+  return picked;
+}
+
 /**
  * @param {number[]} size room size [x, y, z]
  * @param {{ side: string, at: number, width: number, y: number, height: number }[]} exits
  *   exits with defaults applied
- * @returns {{ faces: number[][][], grid: number[][][], outline: number[][][] }}
- *   `faces` are wall cells as four corners, `grid` and `outline` line segments
- *   [[x, y, z], [x, y, z]]
+ * @param {{ side: string, u: number, v: number }[]} [panels] glass panels (pickPanels())
+ * @returns {{ faces: number[][][], grid: number[][][], outline: number[][][], frames: number[][][], glass: number[][][] }}
+ *   `faces` are wall cells as four corners; `grid`, `outline` and the
+ *   panels' `frames` line segments [[x, y, z], [x, y, z]]; `glass` the
+ *   panels as boxes [lo, hi]
  */
-export function wallLayout(size, exits) {
+export function wallLayout(size, exits, panels = []) {
   const faces = [];
   const grid = [];
   const outline = [];
+  const frames = [];
+  const glass = [];
 
   for (const wall of backWalls(size)) {
     const doors = exits.filter((exit) => exit.side === wall.side);
+    const windows = new Set(panels.filter((p) => p.side === wall.side).map((p) => `${p.u},${p.v}`));
     const inWall = (u, v) => u >= 0 && v >= 0 && u < wall.length && v < wall.height;
     const isDoor = (u, v) => doors.some((e) => u >= e.at && u < e.at + e.width && v >= e.y && v < e.y + e.height);
-    /** 'wall', 'door' or 'none' for the cell (u, v). */
-    const kind = (u, v) => (!inWall(u, v) ? 'none' : isDoor(u, v) ? 'door' : 'wall');
+    /** 'wall', 'door', 'panel' or 'none' for the cell (u, v). */
+    const kind = (u, v) => (!inWall(u, v) ? 'none' : isDoor(u, v) ? 'door' : windows.has(`${u},${v}`) ? 'panel' : 'wall');
+    for (const key of windows) {
+      const [u, v] = key.split(',').map(Number);
+      const [a, b] = [wall.point(u, v), wall.point(u + 1, v + 1)];
+      // Set into the outer side of the wall plane (x = 0 or z = 0).
+      const lo = a.map((c, i) => (i === 1 ? c : Math.min(c, b[i])));
+      const hi = b.map((c, i) => (i === 1 ? c : Math.max(c, a[i])));
+      const across = wall.side === '-x' ? 0 : 2;
+      lo[across] = -PANEL_DEPTH;
+      hi[across] = 0;
+      glass.push([lo, hi]);
+    }
 
     for (let u = 0; u < wall.length; u++) {
       for (let v = 0; v < wall.height; v++) {
@@ -58,7 +116,8 @@ export function wallLayout(size, exits) {
       const segment = [wall.point(u0, v0), wall.point(u1, v1)];
       if (pair === 'wall|wall') grid.push(segment);
       else if (pair === 'door|wall') outline.push(segment);
-      else if (pair === 'none|wall' && !foot) outline.push(segment);
+      else if (pair === 'panel|wall') frames.push(segment);
+      else if ((pair === 'none|wall' || pair === 'none|panel') && !foot) outline.push(segment);
       else if (pair === 'door|none' && foot) outline.push(segment);
     };
     for (let u = 0; u <= wall.length; u++) {
@@ -82,7 +141,7 @@ export function wallLayout(size, exits) {
     }
   }
 
-  return { faces, grid: mergeUnitSegments(grid), outline: mergeUnitSegments(outline) };
+  return { faces, grid: mergeUnitSegments(grid), outline: mergeUnitSegments(outline), frames, glass };
 }
 
 /** Arrow tip distance from the side, and half its width (= its depth). */

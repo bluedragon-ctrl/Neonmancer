@@ -30,6 +30,7 @@ import { BLOCK_BODY, DEREZ } from '../src/render/derez-fx.js';
 import { advance, buildTrack, positionOf, startState } from '../src/world/path.js';
 import { HIT_FX, hitFlash, wizardLook } from '../src/render/hit-fx.js';
 import { createFloor } from '../src/render/floor.js';
+import { createMotes } from '../src/render/motes.js';
 import { PALETTE } from '../src/render/neon.js';
 import { Renderer } from '../src/render/renderer.js';
 import { ASPECT } from '../src/render/viewport.js';
@@ -372,6 +373,9 @@ const ALL_ASSETS = [
   // Backup shrine (D97): a glowing floor tile in the
   // wizard's magenta; he steps on and it flares.
   { label: 'shrine', spin: false, build: buildShrine },
+  // Home Lattice's ambience (D179): glass panels in the back walls and
+  // warm motes rising; the data flows run on the rooms' floor grid.
+  { label: 'lattice-ambience', span: 5.5, spin: false, build: buildLatticeAmbience },
   // Data pillar (decoration): glass round a core (like the crates), data up
   // its +z face or its +x face, and in every biome's color. Decorations are
   // seen only from the game's fixed angle (D115), so they stand still.
@@ -516,6 +520,18 @@ function buildPlate() {
     plate.userData.set(onCrate || onWizard);
     plate.userData.update(dt);
   };
+  return asset;
+}
+
+/** A small Home Lattice room corner with two glass panels and its warm motes. */
+function buildLatticeAmbience() {
+  const size = [4, 3, 4];
+  const panels = [{ side: '-x', u: 1, v: 1 }, { side: '-z', u: 2, v: 2 }];
+  const motes = createMotes(size, PALETTE.amber, 1.2);
+  const room = new Group().add(createRoomView({ size, blocks: {}, blockTypes: BLOCK_TYPES, color: PALETTE.amber, panels }), motes);
+  room.position.set(-2, 0, -2);
+  const asset = new Group().add(room);
+  asset.userData.update = (dt) => motes.userData.update(dt);
   return asset;
 }
 

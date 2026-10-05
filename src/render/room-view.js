@@ -13,7 +13,8 @@
  * mass: blocks next to them keep their outline. Only
  * the back walls (x = 0 and z = 0) are drawn; the front sides stay open
  * (CLAUDE.md §4). Exits are doorways in the back walls and gaps in the
- * front edges (render/walls.js).
+ * front edges (render/walls.js); a biome may set glass panels into the
+ * back walls, windows onto the grid outside (D179).
  */
 import { BufferGeometry, Color, DoubleSide, Float32BufferAttribute, Group, InstancedMesh, Matrix4, Mesh } from 'three';
 import { BLOCK_FX, createActiveBlockView, flareHazard, hazardFaceMaterial } from './block-fx.js';
@@ -21,7 +22,7 @@ import { createFenceView } from './fence-view.js';
 import { UNIT_BOX } from './geometry.js';
 import { blockEdges, edgeUnitKeys, groupedBlockEdges } from './edges.js';
 import { BITS, markSegments } from './marks.js';
-import { GLASS, glassBox, shrinkSegments } from './glass.js';
+import { GLASS, glassBox, glassBoxes, shrinkSegments } from './glass.js';
 import { spikeSegments, spikeTriangles } from './spikes.js';
 import { doorwayTunnels, wallLayout } from './walls.js';
 import {
@@ -44,12 +45,13 @@ import {
  * @param {object[]} [room.exits] exits (defaults applied): doorways in the back walls, gaps in the front edges
  * @param {number|string} [room.color] room color (biome), amber by default
  * @param {object} [room.look] biome look (neon.js roomLook()); the walls use its wall grid brightness
+ * @param {{ side: string, u: number, v: number }[]} [room.panels] glass panels in the back walls (walls.js pickPanels())
  * @returns {Group} with `userData.flares`: "x,y,z" of each hazard-look
  *   block → its face material (for flareHazard())
  */
-export function createRoomView({ size, blocks, blockTypes, exits = [], color = PALETTE.amber, look = {} }) {
+export function createRoomView({ size, blocks, blockTypes, exits = [], color = PALETTE.amber, look = {}, panels = [] }) {
   const group = new Group();
-  group.add(createWalls(size, exits, color, roomLook(look).wallGrid));
+  group.add(createWalls(size, exits, color, roomLook(look).wallGrid, panels));
   group.userData.flares = new Map();
   const types = Object.values(blockTypes).filter((type) => blocks[type.id]?.length > 0);
   // A line two looks would both draw is drawn once, by the more dangerous
@@ -102,9 +104,9 @@ export function createBlockView(groups, claimed = new Set()) {
   return group;
 }
 
-function createWalls(size, exits, color, gridBrightness) {
+function createWalls(size, exits, color, gridBrightness, panels) {
   const group = new Group();
-  const { faces, grid, outline } = wallLayout(size, exits);
+  const { faces, grid, outline, frames, glass } = wallLayout(size, exits, panels);
 
   // Dark wall faces (cells, leaving doorways open); they also hide the floor
   // grid behind the room.
@@ -121,6 +123,14 @@ function createWalls(size, exits, color, gridBrightness) {
   const edges = neonLines(outline, lineMaterial({ color, width: 2.5, brightness: 1.2 }));
   edges.renderOrder = 1;
   group.add(edges);
+
+  // Glass panels (D179): see-through, so the grid outside shows, in a frame.
+  if (glass.length > 0) {
+    group.add(glassBoxes(glass, color, GLASS.panel));
+    const frame = neonLines(frames, lineMaterial({ color, width: 2, brightness: 0.9 }));
+    frame.renderOrder = 1;
+    group.add(frame);
+  }
 
   // Doorways lead into darkness: dark tunnel faces fading to black, and
   // short corner lines fading into them (like the pits of holes).
