@@ -41,7 +41,8 @@ docs/decisions.md).
   in; at zero the wizard dies (a timeout, a backup used) and the room
   resets. Pause, the map and the editor hold it; leaving the room drops
   it. The HUD shows the time left, red with a tick each second in its
-  last 5. The dev wing's `watchdog_run` (west of `fence_yard`) tries it.
+  last 5. `first_light` is the first room with one (20 s); the dev wing's
+  `watchdog_run` (west of `fence_yard`) tries it too.
 - The Scan wing's second half (5.6f, D170): `ghost_exit` (fragment 9: a
   frozen bug on a plate opens a crate's pen for the freeze, the crate is
   the step onto a plateau where a scan finds the fragment and the Lattice's

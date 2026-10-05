@@ -5,6 +5,7 @@
   "name": "First Light",
   "biome": "home_lattice",
   "size": [8, 4, 13],
+  "timer": 20,
   "spawn": [1.5, 0, 11.5],
   "exits": [{ "id": "south", "side": "+z", "at": 2 }],
   "holes": [

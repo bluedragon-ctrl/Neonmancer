@@ -2015,7 +2015,12 @@ group has a **Timer (s)** field (blank: none). The dev wing gets
 - The reachability checker knows nothing of it (as with timed switches);
   the room checklist, the room-design skill and the level-review agent
   say how to count the run by hand.
-- Optional, with no default: no room changes, no authored room is
-  affected, the data schema version stays 1.
+- Optional, with no default: no authored room is affected, the data
+  schema version stays 1.
+- `first_light` is the first real room with one (the author's pick): 20 s.
+  Played cell by cell (no corner cutting), the fragment is taken at 7.9 s
+  and he is out of the door at 16.0 s, so 4 s spare on the round trip,
+  generous for an early room. Found fragments stay found, so a timeout
+  on the way back costs only a backup.
 **Why:** the author asked for timed challenge rooms, the time set per
 room in the editor and the running time on screen.
