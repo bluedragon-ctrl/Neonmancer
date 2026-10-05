@@ -1,0 +1,24 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "junction",
+  "name": "Junction",
+  "biome": "home_lattice",
+  "size": [8, 5, 8],
+  "spawn": [1.5, 0, 0.5],
+  "reset": [6.5, 0, 5.5],
+  "exits": [
+    { "id": "north", "side": "-z", "at": 0 },
+    { "id": "east", "side": "+x", "at": 4 },
+    { "id": "south", "side": "+z", "at": 5 }
+  ],
+  "blocks": [
+    { "type": "fence", "at": [0, 0, 2], "to": [5, 2, 2] },
+    { "type": "gate", "at": [6, 0, 2], "to": [6, 2, 2], "switches": ["plate_junction"] },
+    { "type": "fence", "at": [7, 0, 2], "to": [7, 2, 2] },
+    { "at": [0, 0, 7], "to": [0, 1, 7] }
+  ],
+  "objects": [{ "id": "plate_junction", "type": "plate_timed", "at": [7, 0, 7] }],
+  "enemies": [{ "id": "bug_junction", "template": "bug", "at": [1, 0, 5], "path": { "points": [[4, 0, 5]] } }],
+  "pickups": [{ "id": "fragment_11", "type": "fragment_11", "at": [0, 2, 7] }]
+}

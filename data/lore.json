@@ -251,6 +251,14 @@
         "IT JUMPS AROUND. BLOCKS STOP ITS BOLTS.",
         "DOORS STAY OPEN. RETREAT IS A VALID BRANCH."
       ]
+    },
+    "tut_ghost": {
+      "title": "LS -A // EXITS",
+      "lines": [
+        "NOT EVERY EXIT IS LISTED IN THE WALLS.",
+        "HIDDEN EXITS LOOK LIKE WALL. SCAN MOUNTS THEM.",
+        "A MOUNTED EXIT STAYS UNTIL THE ROOM RESETS."
+      ]
     }
   }
 }

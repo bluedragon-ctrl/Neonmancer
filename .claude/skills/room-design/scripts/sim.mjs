@@ -59,10 +59,11 @@ export function startRoom(id, { abilities = [], at } = {}) {
     throw new Error(`until: not done after ${max} ticks at [${game.player.pos.map((v) => v.toFixed(2))}]`);
   };
   /** Walk along x, then along z, to within 0.1 of `target` (feet-center). */
+  // Read game.player.pos afresh each tick: a room with platforms replaces the array.
   const walkTo = ([x, , z]) => {
-    const p = game.player.pos;
-    until(() => Math.abs(p[0] - x) < 0.1, [p[0] < x ? 'down' : 'up']);
-    until(() => Math.abs(p[2] - z) < 0.1, [p[2] < z ? 'left' : 'right']);
+    const p = () => game.player.pos;
+    until(() => Math.abs(p()[0] - x) < 0.1, [p()[0] < x ? 'down' : 'up']);
+    until(() => Math.abs(p()[2] - z) < 0.1, [p()[2] < z ? 'left' : 'right']);
   };
   /** Select `spell` (Tab cycle) and cast it; returns the cast tick's events. */
   const cast = (spell) => {

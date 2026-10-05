@@ -1934,3 +1934,57 @@ dominated its room), the GPU ran the full post-processing chain behind
 menus for an unchanged picture, and high-DPI screens paid for MSAA on a
 buffer that does not need it. None of it changes how the game looks
 while it runs.
+
+### D170 — 2026-10-05 — The Scan wing, second half (5.6f)
+`mirror_stacks` gets a south door (`at` 10, on the far side of its pit,
+since the author's fake pillar now stands at x 9) to `ghost_exit`
+(10,-2); `ghost_exit`'s hidden west exit leads to `junction` (9,-2),
+whose south door leads to `drift_bay` (9,-1) and whose north door to a
+new south door of `scan_lab` (`at` 0). All three are unflagged.
+`drift_bay` keeps its south side (x 5-6) free for the Gatekeeper (5.7),
+which then sits at (9,0), east of the Atrium.
+- The plan put `junction` "off `drift_bay`, a loop back to the Scan
+  wing"; on the map grid no cell touches both, so it sits between
+  `ghost_exit` and `drift_bay` as the wing's crossroads instead.
+- Fragments by save slot: `ghost_exit` 9 (the slot `mirror_stacks` gave
+  up when the author moved fragment 0 there), `drift_bay` 10, `junction`
+  11. The plan's fragment numbers were a count, not slots.
+- `ghost_exit` (fragment 9; the Lattice's first hidden exit). A bug
+  patrols a fenced pen; frozen and pushed onto the plate in its corner,
+  it opens the gate of the crate's fenced pen next door for the freeze.
+  The crate, pushed through the gate (it holds the gate open while in its
+  cell) and on to the foot of a 2-high plateau, is the step up. On the
+  plateau a scan derezzes the fake block holding the fragment and mounts
+  the hidden exit, raised (y 2) in the west wall. The pens are fences, so
+  the plate, the bug and the crate show from the door. A screen text
+  (`tut_ghost`) says that exits can hide and Scan mounts them. Played: the
+  crate in the gate cell 3.4 s after the Pause shot (1.6 s spare), the
+  exit at 18 s. A bug frozen at the lane's east end costs two more
+  pushes and leaves under 1 s: shoot it at the west end.
+- `junction` (fragment 11). A 3-high fence row cuts off the north
+  door's pocket; one column of it is a gate that a timed plate in the far
+  corner opens (through in 1.6 s of 3 s; a gate never closes on him).
+  From `scan_lab` the pocket is a dead end (the checker: east, south and
+  the fragment `never` from the north door), so the shortcut runs home
+  only and skips nothing. Level review: with a pit there instead (the
+  first draft) and no `reset`, a death in the pocket, or a save made
+  there, put him back at the spawn on the main side, a way in for one
+  backup. Now the pocket has nothing that kills, the `spawn` (a load)
+  lies in the pocket and the `reset` (a death) on the main side. A bug
+  lane beside a 2-high pillar: frozen near the lane's west end and
+  pushed twice, the bug is the step to the fragment (on top at 2.5 s of
+  the freeze). A bounce off the lane may also reach the pillar (10 of
+  180 tried timings): a harder way, not a bypass (D166).
+- `drift_bay` (fragment 10; combat). A ferry drifts over a 4-wide pit on
+  its own; a sentinel on the far bank fires at him on the way (Shield),
+  and a virus meets him at the landing. Either, frozen and pushed to the
+  foot of a 2-high ledge against the back wall, is the step to the
+  fragment (on the ledge 3.0 s after the freeze). When 5.7 adds the
+  south door, the virus moves off its first row (e.g. to [8,0,10]).
+- The play helper's `walkTo` read `player.pos` once; a moving platform
+  replaces that array each tick, so in a room with platforms it walked
+  on forever. It reads the position afresh now.
+**Why:** the plan's next three rooms; the author asked for harder rooms
+(D168), so each chains a freeze, a push and a step, with a scan or a
+fight on top, and the wing's crossroads gets a shortcut home that cannot
+be used as a way in.
