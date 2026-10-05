@@ -20,7 +20,9 @@ made, and it ends as decisions in `docs/decisions.md`.
   extra. Two bosses: the first drops a fragment, the second an upgrade.
 - Five Outer Buffer secret rooms, each its own room off a Lattice room.
   Some need Scan; some need a tool the Lattice does not give (double jump,
-  Warp, Cut & Paste) and wait for a return visit (D67).
+  Warp, Cut & Paste) and wait for a return visit (D67). Secret rooms are
+  complex: several steps, often with tools found later, so backtracking
+  is expected. The room a secret hangs off may change (D173).
 
 ## Shape
 
@@ -85,7 +87,7 @@ then. Steps and room order: docs/design.md, Phase 5.
 | 25 | `junction` | 8x8 | Off `drift_bay`, a small loop back to the Scan wing; fragment 16 |
 | S1 | `buffer_1` | 8x8 | Secret, a Scan hidden exit off `ghost_exit` |
 | S2 | `buffer_2` | 8x8 | Secret, a fake block off `mirror_stacks` |
-| S3 | `buffer_3` | 8x8 | Secret, a decoy lock off `split_vault` |
+| S3 | `buffer_3` | 8x8 | Secret, a decoy lock; off `guard_loop`'s east side (11,1) or another room, settled in 5.9 (D173) |
 | S4 | `buffer_4` | 8x8 | Secret, a double-jump ledge off `atrium` (after Level 1) |
 | S5 | `buffer_5` | 8x8 | Secret, needs Warp or Cut & Paste, off `relay_loft` (a later sector) |
 

@@ -2302,7 +2302,7 @@ tracks and is done after 5.5 (D147).
 | 5.6h (done, D173) | `feat/lattice-fork-wing-2` | `guard_loop` (fragment 13) and `split_vault` (fragments 14 and 15); the door from `twin_plates` is added; `split_vault` keeps its north side for the Gatekeeper. |
 | 5.7 | `feat/lattice-gatekeeper` | The Gatekeeper arena (boss 2, drops the energy buff) joining the Scan and Fork wings, with the way on to the core. |
 | 5.8 | `feat/lattice-core-gates` | The core, the Level 1 access locks and the teaser rooms beyond them: a few look-only rooms each for Glitchmire and Frostbyte Wastes (looks in the showcase first). |
-| 5.9 | `feat/outer-buffer-secrets` | The Outer Buffer look (floor, starfield, color re-picked) and the secret cluster, reached by Scan and similar tricks. |
+| 5.9 | `feat/outer-buffer-secrets` | The Outer Buffer look (floor, starfield, color re-picked) and the secret cluster, reached by Scan and similar tricks; complex multi-step rooms, often with tools found later (backtracking, D173). |
 | 5.10 | `feat/lattice-visual-pass` | Optional: the Lattice's data flows and glass panels (D121). |
 | 5.11 | `feat/quality-presets` | Quality presets, auto fallback and render scale wired up (D76), a check on a weaker GPU. |
 | 5.12 | `feat/onboarding-feedback` | The first minute from title to the first disk, the controls screen, the pause entry that copies debug info (version, room, key) for feedback. |

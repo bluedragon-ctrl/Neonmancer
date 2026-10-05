@@ -2122,8 +2122,11 @@ Each room chains a decoy with a crate, and a fight on top (D168).
   many dropped the crate in.
 - `buffer_3` (the secret "decoy lock off `split_vault`", 5.9) has no free
   map cell beside `split_vault`: the Gatekeeper, `freeze_hall`,
-  `guard_loop` and `fork_lab` take all four. `guard_loop`'s east side
-  (11,1) is free and kept for it; 5.9 settles which room it hangs off.
+  `guard_loop` and `fork_lab` take all four. The author: a secret may
+  move to another start room. `guard_loop`'s east side (11,1) is free
+  and kept for it, and 5.9 picks the room. Secret rooms are meant to be
+  complex: several steps, often with tools the wizard may not have yet,
+  so many wait for a return visit later (D67).
 **Why:** the plan's next two rooms. Fork is the wing's tool, now
 combined with crates: a decoy that holds one thing while a crate holds
 another, and that draws guards as well as holding plates.
