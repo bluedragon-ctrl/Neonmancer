@@ -1988,3 +1988,47 @@ which then sits at (9,0), east of the Atrium.
 (D168), so each chains a freeze, a push and a step, with a scan or a
 fight on top, and the wing's crossroads gets a shortcut home that cannot
 be used as a way in.
+
+### D171 — 2026-10-05 — The Fork wing, first half (5.6g)
+`cold_stairs` gets an east door (`at` 8, in its far half) to `fork_lab`
+(9,2), 12x5x12, and on to `twin_plates` (10,2), 12x4x12, both unflagged.
+`twin_plates` keeps its north side free for `guard_loop` (5.6h), which
+may sit at (10,1); the wing then turns west to `split_vault` and the
+Gatekeeper (9,0), mirroring the Scan wing. Each room is a chain of
+several steps with different tools (D168).
+- `fork_lab` (Fork disk; teach, multistep). The disk lies in a cage of
+  3-high fences at the back whose gate a plate opens; the plate lies
+  beside the cage two cells from the gate, so only a crate holds it. The
+  crate goes west once and north along x = 3: one push too many lands it
+  in the corner, pushed east it falls in the 3-wide pit. With the disk,
+  the same crate goes back south to the foot of a pen of 2-high fences;
+  from it he climbs in, casts the decoy onto the pen's plate, which
+  raises a bridge over the pit, and climbs out by a 1-high step inside the
+  pen (a way out, never a way in). A crate can't reach that plate. Played
+  headless: the disk at 8.7 s, the fork at 17 s, across 6 s later (of 10),
+  the east door at 25 s. The help screen (`help_fork`) says what a decoy
+  does. Way home from the east: a timed plate (4 s) raises a second
+  bridge (1.8 s used).
+- `twin_plates` (fragment 12; develop). A bridge over a 3-wide pit needs
+  two plates at once: the decoy holds one (cast first, the longer clock),
+  a frozen bug pushed off its lane holds the other (the plate lies one
+  cell beside the lane's west end, so the walker never flicks it). On the
+  far side a target, zapped from either bank, opens the gate of a fenced
+  cage; the crate in it is pushed out west to the foot of the 2-high
+  plinth with the fragment. Played: fork at 4.6 s, freeze at 5.9 s,
+  across at 9.5 s (3.6 s of the 5 s freeze, 4.9 s of the decoy's 10 s),
+  fragment at 15.8 s; home by a timed plate (4 s) and a second bridge
+  (1.8 s used). A bug frozen at the lane's east end costs 2.5 more pushes
+  and misses the freeze: shoot it near the plate.
+- Reachability checker. (1) Fork counted as holding every plate; it holds
+  one at a time now, like a frozen enemy (an assignment over the holders).
+  (2) The cells a frozen enemy can be in (and a platform's path) count as
+  floor that is always there, so a drop onto one landed only on top: with
+  the frozen bug's pushes spread over the whole near half, `cold_stairs`
+  read its north door as never reached from its south and east doors,
+  though it is played fine (down the 3-high ledge). A drop now also falls
+  past such a cell to the floor. Only `cold_stairs`' verdicts changed.
+**Why:** the plan's next two rooms; Fork is the wing's tool, taught as a
+second body that holds a plate he cannot stay on, then combined with
+Pause, Zap and crates. The checker had to know there is one decoy, or
+two-plate rooms looked solvable with Fork alone.

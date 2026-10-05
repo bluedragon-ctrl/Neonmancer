@@ -1,0 +1,32 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "fork_lab",
+  "name": "Fork Lab",
+  "biome": "home_lattice",
+  "size": [12, 5, 12],
+  "spawn": [1.5, 0, 4.5],
+  "exits": [
+    { "id": "west", "side": "-x", "at": 4 },
+    { "id": "east", "side": "+x", "at": 4 }
+  ],
+  "blocks": [
+    { "type": "fence", "at": [2, 0, 0], "to": [2, 2, 2] },
+    { "type": "fence", "at": [0, 0, 2], "to": [0, 2, 2] },
+    { "type": "gate", "at": [1, 0, 2], "to": [1, 2, 2], "switches": ["plate_cage"] },
+    { "type": "fence", "at": [0, 0, 8], "to": [2, 1, 8] },
+    { "type": "fence", "at": [2, 0, 9], "to": [2, 1, 11] },
+    { "at": [0, 0, 9] },
+    { "type": "bridge", "at": [6, 0, 1], "to": [8, 0, 1], "switches": ["plate_bridge"] },
+    { "type": "bridge", "at": [6, 0, 10], "to": [8, 0, 10], "switches": ["plate_home"] }
+  ],
+  "holes": [{ "at": [6, 0], "to": [8, 11] }],
+  "objects": [
+    { "id": "screen_fork", "type": "screen", "at": [0, 0, 6], "text": "help_fork", "overrides": { "face": "+x" } },
+    { "id": "plate_cage", "type": "plate", "at": [3, 0, 1] },
+    { "id": "crate_1", "type": "crate", "at": [4, 0, 6] },
+    { "id": "plate_bridge", "type": "plate", "at": [1, 0, 11] },
+    { "id": "plate_home", "type": "plate_timed", "at": [11, 0, 11], "overrides": { "timer": 4 } }
+  ],
+  "pickups": [{ "id": "disk_fork", "type": "disk_fork", "at": [1, 0, 0] }]
+}

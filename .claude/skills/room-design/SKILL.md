@@ -197,6 +197,13 @@ Edit existing files with small text edits, not a JSON dump.
   ignores the 5 s clock: time the run with `sim.mjs`). Hem the path in
   (walls, the room side, a pit it pops into). Plate against a wall: the
   next push may go into a pit.
+- **One decoy.** Fork holds one plate at a time (a new fork replaces the
+  old, D129); the checker counts it so (D171). Two plates that must be on
+  together need a second holder (a crate, a frozen enemy, him on a timed
+  one). The wizard can stand on any plate himself, so a decoy's plate is
+  one he must leave: a bridge he has to cross, or a pen of 1-high fences
+  that keeps crates off it. Cast from a ledge, the decoy falls onto what
+  lies below (the checker only counts a cast from beside the plate).
 - **Another way is fine if it is no easier** (D166). A second solution of
   the same or higher difficulty (a harder jump, a tighter race, a spell
   found later) is not a bypass; one that skips the room's idea for less
