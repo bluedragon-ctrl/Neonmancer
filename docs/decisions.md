@@ -2028,6 +2028,9 @@ group has a **Timer (s)** field (blank: none). The dev wing gets
   Played cell by cell (no corner cutting), the fragment, which stops it,
   is taken at 7.9 s; the author playtested 10 s as doable, medium
   difficulty. As the room that introduces the watchdog, its name is now
-  "Watchdog Kennel" (its id stays `first_light`: ids are stable).
+  "Watchdog Kennel" (its id stays `first_light`: ids are stable), and a
+  second screen by the door (`help_watchdog`, D163: help that reads true
+  in any timed room) says what the watchdog is, what stops it and what
+  zero does; he passes within reach of it as he walks in.
 **Why:** the author asked for timed challenge rooms, the time set per
 room in the editor and the running time on screen.
