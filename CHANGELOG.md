@@ -9,8 +9,14 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Changed
+- Docs cleanup (D176): the decision log shows each decision as it stands
+  (replaced entries are pointers, room entries keep only their rules; the
+  duplicate D152 for `requires` is now D175); design.md's dev rooms, step
+  plan, bosses and data formats match the game; lattice-plan.md lists what
+  is built and what is left. Dropped plans: the secrets ladder, zoom to fit,
+  audio-reactive visuals, the seven unused looks as content.
 - The world map tool no longer flags rooms more than two rooms from the
-  start (D175): with real rooms unflagged and test rooms in the dev wing,
+  start (D178): with real rooms unflagged and test rooms in the dev wing,
   it flagged nearly every Lattice room. Unreachable rooms are still
   flagged.
 - Rendering does less work for the same picture (D169): a decoration's
@@ -40,6 +46,12 @@ docs/decisions.md).
   second solution no easier than the intended one is not a bypass.
 
 ### Added
+- The core hall and the Level 1 locks (5.8, D177): `core_hall` east of the
+  Gatekeeper takes the core from `atrium`; its north lock leads to
+  `dj_vault` (the double jump, whose 2-high ledge door leads on to
+  Frostbyte), its east lock to Glitchmire; two look-only teaser rooms
+  each, `frost_gate` (a causeway between pits),
+  `frost_edge`, `glitch_gate` and `glitch_edge`, ending in lore screens.
 - The Gatekeeper's hall (5.7, D174): `gatekeeper`, a 16x16 arena at the
   meeting of the Scan and Fork wings, where boss 2 (THE GATEKEEPER, drops
   the +10 energy buff) is led onto four overload plates; four low blocks

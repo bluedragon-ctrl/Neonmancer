@@ -18,7 +18,7 @@ test('roomDistances counts rooms from the start through connections', () => {
   assert.deepEqual(Object.fromEntries(roomDistances('a', connections)), { a: 0, b: 1, d: 1, c: 2 });
 });
 
-test('mapWarnings flags only rooms the start cannot reach, however far out the others lie (D175)', () => {
+test('mapWarnings flags only rooms the start cannot reach, however far out the others lie (D178)', () => {
   const world = { start: 'a', connections: [['a.e', 'b.w'], ['b.e', 'c.w'], ['c.e', 'd.w'], ['d.e', 'e.w']] };
   assert.deepEqual(mapWarnings(world, ['a', 'b', 'c', 'd', 'e', 'lost']), { unreachable: ['lost'] });
 });

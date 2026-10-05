@@ -3,7 +3,7 @@
  * developer. Every room is a node in its biome color, in its cell of the
  * map grid (`positions` in world.json); lines join connected exits, drawn
  * from the side each exit is on. Flags what room validation can't see:
- * rooms the start can't reach (D175); authored rooms (D90) are marked.
+ * rooms the start can't reach (D178); authored rooms (D90) are marked.
  *
  * Tools (D77): Move drags a room to another free cell (click opens it in
  * the room editor); Add puts a new, empty room in a free cell; Connect

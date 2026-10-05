@@ -66,7 +66,7 @@ export function roomDistances(start, connections) {
 
 /**
  * What room validation can't see (D66): rooms the start can't reach through
- * exits. How far out a room lies is no warning (D175).
+ * exits. How far out a room lies is no warning (D178).
  * @param {{ start: string, connections: string[][] }} world
  * @param {Iterable<string>} roomIds every room
  * @returns {{ unreachable: string[] }}
