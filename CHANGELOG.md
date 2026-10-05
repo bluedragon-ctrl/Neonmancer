@@ -36,6 +36,16 @@ docs/decisions.md).
   second solution no easier than the intended one is not a bypass.
 
 ### Added
+- The Fork wing's second half (5.6h, D173): `guard_loop` (fragment 13:
+  two viruses on a loop round a low block; the decoy, cast in a fenced
+  pen, holds the plate of the fragment's gate and draws the guards off
+  while a crate goes through the gate to the foot of the plinth) and
+  `split_vault` (fragments 14 and 15: a pit splits the vault; a crate on
+  a plate holds the bridge west, and the cage of the second fragment
+  needs that plate and a decoy-only plate on the far side at once; a
+  virus guards the west half, a timed bridge leads home). `twin_plates`
+  gets a north door; `split_vault` keeps its north side for the
+  Gatekeeper.
 - Watchdog timers (D172): a room's `timer` (whole seconds, 3–600, a
   **Timer (s)** field in the room editor) starts once the room has faded
   in; at zero the wizard dies (a timeout, a backup used) and the room

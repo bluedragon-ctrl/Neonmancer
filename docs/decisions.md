@@ -2078,3 +2078,55 @@ group has a **Timer (s)** field (blank: none). The dev wing gets
   zero does; he passes within reach of it as he walks in.
 **Why:** the author asked for timed challenge rooms, the time set per
 room in the editor and the running time on screen.
+
+### D173 — 2026-10-05 — The Fork wing, second half (5.6h)
+`twin_plates` gets a north door (`at` 9, on the far side of its pit, so
+the way in is its puzzle) to `guard_loop` (10,1), 12x4x12, and on west
+to `split_vault` (9,1), 12x4x8, both unflagged. `split_vault`'s north
+side stays free for the Gatekeeper (9,0) in 5.7 (its door at about
+x 8–9, the first row there is kept free); until then it is a dead end.
+Each room chains a decoy with a crate, and a fight on top (D168).
+- `guard_loop` (fragment 13; develop). Two viruses walk one loop round
+  a 1-high block, half a lap apart (a 2-high block hid their back lane
+  from the camera, and the first loop let one notice him at the door:
+  moved a cell north-west, nobody sees him in either door now). The
+  fragment lies on a 2-high plinth in a pen of 1-high fences; its gate
+  opens by a plate in a pen of 1-high fences on the west wall, so only
+  the decoy holds it (crates and frozen viruses can't get in). The crate
+  goes east once and north through the gate to the plinth's foot; one
+  push too many east and it is lost by the side wall. Cast in the pen,
+  the decoy also draws the viruses to it, away from the crate; crowded
+  round it, their bursts hit each other (bursts hit every body in
+  range): a reward for drawing them, never needed. Played headless:
+  crate in the gate 3.8 s after the fork (of 10 s), the fragment at
+  13 s, two to three hits taken without fighting back. A frozen virus
+  pushed through the gate is a harder second step (D166). The room
+  itself is no lock: both doors are free.
+- `split_vault` (fragments 14 and 15; twist). A 3-wide pit splits the
+  vault. The crate, pushed south and west onto a plate against a 1-high
+  block at the pit's edge (no overshoot into the pit), holds the bridge
+  west to fragment 14; the decoy can hold that bridge instead. Fragment
+  15 lies in a 3-high cage on the east whose gate needs two plates at once: the
+  crate's, and one in a 1-high pen on the west that only the decoy
+  holds. So the decoy goes west while the crate keeps the way back: the
+  decoy can't do both. A virus guards the west half, and the decoy
+  draws it off as he runs. A timed plate (3 s) on the west raises a
+  bridge home, for a decoy-only crossing. Played: fragment 15 at 6.0 s
+  of the decoy's 10 s, the room at 15 s. Level review: the first cage
+  (the fragment right behind its gate) shut him in for good when the
+  decoy ran out while he was inside, and the gate hid half the
+  fragment. Now a 1-tile hole lies between the gate and the fragment:
+  he jumps it, and if the gate closes on him the hole is a way to die
+  and reset (fragments kept); the crate can't fill it, as it holds the
+  other plate. The first plate lay at the pit's edge, and one push too
+  many dropped the crate in.
+- `buffer_3` (the secret "decoy lock off `split_vault`", 5.9) has no free
+  map cell beside `split_vault`: the Gatekeeper, `freeze_hall`,
+  `guard_loop` and `fork_lab` take all four. The author: a secret may
+  move to another start room. `guard_loop`'s east side (11,1) is free
+  and kept for it, and 5.9 picks the room. Secret rooms are meant to be
+  complex: several steps, often with tools the wizard may not have yet,
+  so many wait for a return visit later (D67).
+**Why:** the plan's next two rooms. Fork is the wing's tool, now
+combined with crates: a decoy that holds one thing while a crate holds
+another, and that draws guards as well as holding plates.
