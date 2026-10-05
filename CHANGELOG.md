@@ -40,8 +40,8 @@ docs/decisions.md).
   frozen bug on a plate opens a crate's pen for the freeze, the crate is
   the step onto a plateau where a scan finds the fragment and the Lattice's
   first hidden exit, raised in the wall), `junction` (fragment 11: a frozen
-  bug as the step up a pillar; a timed bridge to a one-way shortcut home
-  into `scan_lab`) and `drift_bay` (fragment 10: a ferry over a wide pit
+  bug as the step up a pillar; a timed gate in a fence to a one-way
+  shortcut home into `scan_lab`) and `drift_bay` (fragment 10: a ferry over a wide pit
   under a sentinel's fire, a frozen virus or sentinel as the step up a
   ledge; its south side waits for the Gatekeeper). `mirror_stacks` and
   `scan_lab` get south doors; a screen text on hidden exits.

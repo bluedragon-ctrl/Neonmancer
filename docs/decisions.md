@@ -1959,21 +1959,28 @@ which then sits at (9,0), east of the Atrium.
   the plate, the bug and the crate show from the door. A screen text
   (`tut_ghost`) says that exits can hide and Scan mounts them. Played: the
   crate in the gate cell 3.4 s after the Pause shot (1.6 s spare), the
-  exit at 18 s.
-- `junction` (fragment 11). A 2-wide pit cuts off the north door's
-  pocket; a timed plate in the far corner raises a bridge column over it
-  (crossed in 1.8 s of 3 s). From `scan_lab` the pocket is a dead end
-  (the checker: east, south and the fragment `never` from the north
-  door), so the shortcut runs home only and skips nothing. A bug lane
-  beside a 2-high pillar: frozen near the lane's end and pushed twice,
-  the bug is the step to the fragment (on top at 2.5 s of the freeze).
-  A bounce off the lane may also reach the pillar: a harder way, not a
-  bypass (D166).
+  exit at 18 s. A bug frozen at the lane's east end costs two more
+  pushes and leaves under 1 s: shoot it at the west end.
+- `junction` (fragment 11). A 3-high fence row cuts off the north
+  door's pocket; one column of it is a gate that a timed plate in the far
+  corner opens (through in 1.6 s of 3 s; a gate never closes on him).
+  From `scan_lab` the pocket is a dead end (the checker: east, south and
+  the fragment `never` from the north door), so the shortcut runs home
+  only and skips nothing. Level review: with a pit there instead (the
+  first draft) and no `reset`, a death in the pocket, or a save made
+  there, put him back at the spawn on the main side, a way in for one
+  backup. Now the pocket has nothing that kills, the `spawn` (a load)
+  lies in the pocket and the `reset` (a death) on the main side. A bug
+  lane beside a 2-high pillar: frozen near the lane's west end and
+  pushed twice, the bug is the step to the fragment (on top at 2.5 s of
+  the freeze). A bounce off the lane may also reach the pillar (10 of
+  180 tried timings): a harder way, not a bypass (D166).
 - `drift_bay` (fragment 10; combat). A ferry drifts over a 4-wide pit on
   its own; a sentinel on the far bank fires at him on the way (Shield),
   and a virus meets him at the landing. Either, frozen and pushed to the
   foot of a 2-high ledge against the back wall, is the step to the
-  fragment (on the ledge 3.0 s after the freeze).
+  fragment (on the ledge 3.0 s after the freeze). When 5.7 adds the
+  south door, the virus moves off its first row (e.g. to [8,0,10]).
 - The play helper's `walkTo` read `player.pos` once; a moving platform
   replaces that array each tick, so in a room with platforms it walked
   on forever. It reads the position afresh now.
