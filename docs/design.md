@@ -2258,7 +2258,7 @@ author, recorded as decisions before the code lands. Every step also
 The phases were re-cut around a playtest of Home Lattice. The rules of
 "Finished phases" apply to every step: one branch, one PR against `main`,
 CI green, showcase, test room, unit tests, docs. Code steps name their
-branch; design steps end in decisions before any code. **Next: Phase 5 (5.6h; 5.3 music waits for the tracks, D147).**
+branch; design steps end in decisions before any code. **Next: Phase 5 (5.7; 5.3 music waits for the tracks, D147).**
 
 ### Phase 4 (v0.4) steps: tools and bosses
 
@@ -2299,7 +2299,7 @@ tracks and is done after 5.5 (D147).
 | 5.6e (done, D168) | `feat/lattice-scan-wing-1` | The Scan wing, first half: `scan_lab` (Scan disk) and `mirror_stacks` (fragment 9); the door from `relay_loft` is added. |
 | 5.6f (done, D170) | `feat/lattice-scan-wing-2` | `ghost_exit` (fragment 9), `junction` (fragment 11) and `drift_bay` (fragment 10); `junction` joins them and is a one-way shortcut back to `scan_lab`; `drift_bay` keeps its south side for the Gatekeeper. |
 | 5.6g (done, D171) | `feat/lattice-fork-wing-1` | The Fork wing, first half: `fork_lab` (Fork disk) and `twin_plates` (fragment 12); the door from `cold_stairs` is added; `twin_plates` keeps its north side for `guard_loop`. |
-| 5.6h | `feat/lattice-fork-wing-2` | `guard_loop` (fragment 13) and `split_vault` (fragments 14 and 15). |
+| 5.6h (done, D173) | `feat/lattice-fork-wing-2` | `guard_loop` (fragment 13) and `split_vault` (fragments 14 and 15); the door from `twin_plates` is added; `split_vault` keeps its north side for the Gatekeeper. |
 | 5.7 | `feat/lattice-gatekeeper` | The Gatekeeper arena (boss 2, drops the energy buff) joining the Scan and Fork wings, with the way on to the core. |
 | 5.8 | `feat/lattice-core-gates` | The core, the Level 1 access locks and the teaser rooms beyond them: a few look-only rooms each for Glitchmire and Frostbyte Wastes (looks in the showcase first). |
 | 5.9 | `feat/outer-buffer-secrets` | The Outer Buffer look (floor, starfield, color re-picked) and the secret cluster, reached by Scan and similar tricks. |

@@ -1,0 +1,43 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "guard_loop",
+  "name": "Guard Loop",
+  "biome": "home_lattice",
+  "size": [12, 4, 12],
+  "spawn": [9.5, 0, 10.5],
+  "exits": [
+    { "id": "south", "side": "+z", "at": 9 },
+    { "id": "west", "side": "-x", "at": 10 }
+  ],
+  "blocks": [
+    { "at": [2, 0, 1], "to": [5, 0, 3] },
+    { "at": [11, 0, 0], "to": [11, 1, 0] },
+    { "type": "fence", "at": [8, 0, 0], "to": [8, 0, 3] },
+    { "type": "fence", "at": [9, 0, 3] },
+    { "type": "gate", "at": [10, 0, 3], "switches": ["plate_cage"] },
+    { "type": "fence", "at": [11, 0, 3] },
+    { "type": "fence", "at": [0, 0, 6] },
+    { "type": "fence", "at": [1, 0, 7], "to": [1, 0, 8] },
+    { "type": "fence", "at": [0, 0, 9] }
+  ],
+  "objects": [
+    { "id": "crate_1", "type": "crate", "at": [9, 0, 7] },
+    { "id": "plate_cage", "type": "plate", "at": [0, 0, 7] }
+  ],
+  "enemies": [
+    {
+      "id": "virus_a",
+      "template": "virus",
+      "at": [1, 0, 0],
+      "path": { "points": [[6, 0, 0], [6, 0, 4], [1, 0, 4]], "mode": "loop" }
+    },
+    {
+      "id": "virus_b",
+      "template": "virus",
+      "at": [6, 0, 4],
+      "path": { "points": [[1, 0, 4], [1, 0, 0], [6, 0, 0]], "mode": "loop" }
+    }
+  ],
+  "pickups": [{ "id": "fragment_13", "type": "fragment_13", "at": [11, 2, 0] }]
+}
