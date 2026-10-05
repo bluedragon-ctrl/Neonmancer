@@ -540,7 +540,7 @@ Validation has two layers:
 
 Semantic checks run only when the schema pass is clean. Every problem is
 reported (not just the first), naming the file and path, e.g.
-`rooms/cache_hall.json › blocks[3]: cell [12,0,4] is outside size [12,4,12]`.
+`rooms/atrium.json › blocks[3]: cell [12,0,4] is outside size [12,4,12]`.
 If the game cannot start, `ui/error-screen.js` lists them.
 
 ### Saving from the room editor

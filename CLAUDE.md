@@ -36,7 +36,6 @@ mobile/touch support, backend or accounts.
   chromatic aberration, glitch), merged into as few passes as possible
 - Custom AABB grid collision — no physics engine
 - Howler.js for music (looping, crossfades); ZzFX for sound effects
-- Web Audio AnalyserNode for audio-reactive visuals (later phase)
 - Ajv (dev-only) for JSON Schema validation in the dev server, build and CI;
   not shipped to players
 - Tests: Node's built-in runner (`node --test`), no test framework
@@ -66,7 +65,6 @@ mobile/touch support, backend or accounts.
     not redrawn (D169). Extra full-screen effect passes are
     costly on weak GPUs; add effects to the existing effect pass.
   - HUD and text scale with screen size.
-- Optional setting (off by default): zoom to fit smaller rooms.
 
 ---
 
@@ -104,7 +102,7 @@ mobile/touch support, backend or accounts.
 - Neon edges are drawn over dark occluding faces, so hidden edges never show.
 - X-ray outline when the player is hidden behind blocks.
 - Movement along grid axes (screen-diagonal) by default;
-  screen-relative mode as a later option.
+  screen-relative mode on G (D38).
 
 ### Objects and blocks
 - Types: static, pushable, moving (paths or up/down cycles; player rides
@@ -193,8 +191,8 @@ mobile/touch support, backend or accounts.
 Move, jump, gravity, push objects, health ("integrity") and mana ("energy").
 
 ### Spells (programs, unlocked by finding data disks)
-The wizard starts with none; the first data disk (Zap) lies in Boot
-Sector. Each spell has a slot (0–15), its save bit, shown as the one lit
+The wizard starts with none; the first data disk (Zap) lies in
+`zap_port`, in the tutorial. Each spell has a slot (0–15), its save bit, shown as the one lit
 bit on its disk (D71).
 - **Zap** — fast bolt, short cooldown
 - **Shield** — a crackling electric ring round the wizard for a while;
@@ -212,7 +210,7 @@ bit on its disk (D71).
   into a one-slot clipboard, paste it into the free cell in front of him,
   in any room (it goes with him; copies allowed, D87)
 
-Planned for Phase 4 (the roster, D88); details settle in their steps:
+Added in Phase 4 (the roster, D88):
 - **Compile** — a crate in the free cell in front of the wizard for 7 s:
   a step up, or a hole plugged to walk over (D125; built)
 - **Fork** — a hologram decoy of the wizard in the free cell in front of
@@ -248,7 +246,6 @@ and some exits and pickups wait for a spell or buff found later
 - **Sentinels** — keep their distance and fire a long aimed bolt (D78)
 - **Worms** and **Crawlers** — a patroller and a chaser that bite on
   touch; **towers** (the cron look) fire bolts four ways (D83)
-- **Shooters** — stationary, fire slow bolts (the Pop-up idea, D84)
 - **Firewall Wardens** — bosses of combat rooms in any biome, Home
   Lattice too (D122); each drops a permanent pickup and stays away once
   it is found (D104). A template's `boss` block: phases by integrity
@@ -257,11 +254,10 @@ and some exits and pickups wait for a spell or buff found later
   room, no shrine; its arena's doors never lock (D134, D135)
 - Home Lattice's own enemies are the default cyberspace four: bug,
   virus, sentinel and cron (the tower) (D108), plus the peaceful glowbug,
-  in tiers (D121); each other biome gets its own roster, reviewed one
-  biome at a time in Phase 4b (docs/design.md, Biomes)
-- More looks for content (D107), no template yet: warden, daemon (wisp),
-  golem (server rack), wyrm (packet dragon), phish (a data disk mimic),
-  overclock (burning chip), pixie (pixel butterfly)
+  in tiers (D121); each other biome gets its own roster, settled one
+  biome at a time in Phase 6 (docs/design.md, Biomes)
+- Seven more looks have templates but no room or plan (D107, D175):
+  warden, daemon, golem, wyrm, phish, overclock, pixie
 
 Each has a distinct color, silhouette and animation. Enemies are
 universal and data-driven (D48, D78, D80): a template in `defs.json` is a
@@ -448,7 +444,8 @@ not critical.
 - **Debug mode** (toggle key): collision boxes, FPS, room jump,
   invincibility, test damage, finding fragments (K).
 - **Access pass** (D113): a test pickup (kind `access`) that raises the
-  access level at once; one (level 3) lies in Boot Sector. Test rooms only.
+  access level at once; one (level 3) lies in `boot_up`, the start, for
+  testing. Not for real game content.
 - **Asset showcase** (`tools/showcase.html`, also deployed): every character
   and object look on a turntable with the real renderer. Add every new
   visual asset (monsters, pickups) to it.
@@ -508,11 +505,10 @@ not critical.
   - never edit, migrate, resize or move an authored room (its file or
     its map position), and never add, remove or rename its exits or
     connections;
-  - never attach a new room to an authored room; new test rooms connect
-    only to test rooms (Boot Sector, the shared start, stays a test
-    room; if a hub becomes authored, ask where test rooms go);
+  - never attach a new room to an authored room; new test rooms go in
+    the dev wing and connect only to dev rooms (D147);
   - tests never depend on authored rooms; they use the fixtures in
-    `tests/helpers.js` or test rooms;
+    `tests/helpers.js` or dev rooms;
   - a change that could affect them (a schema change that needs a
     migration, a new default in `defs.json`, a changed mechanic) lists
     the affected authored rooms in the PR, and any change to their
@@ -556,24 +552,23 @@ Done: Phase 1 (v0.1.0, foundations), Phase 2 (v0.2.0, hazards, combat,
 editor), Phase 3 (v0.3.0, spells and pickups), Phase 4 (v0.4.0, saves,
 guardians, tooling); see CHANGELOG.md.
 
-Step plan for Phases 4 to 7: docs/design.md, Step plan (D130).
+Step plan: docs/design.md, Phases and steps (D130).
 
 **Phase 4 (v0.4) — Saves, guardians, tooling** (D105, re-cut D130) —
 done, v0.4.0: access keys, title and pause menu, saving, the map screen;
 the spells Pull, Compile, Scan and Fork; the reachability checker, design
 skills and level-review subagent; the paper design of Home Lattice
 (docs/lattice-plan.md); the boss engine and the two bosses, Null Pointer
-and the Gatekeeper (D134–D137). Biome rosters and the secrets ladder move
-to Phase 6.
+and the Gatekeeper (D134–D137). Biome rosters move to Phase 6.
 
 **Phase 5 (v0.5) — Home Lattice playtest** (D130): finish one good,
 sounding Home Lattice and ship it to testers.
 - Sound: audio engine (Howler music with crossfades, ZzFX effects,
   `audio.json`, the Options sliders wired), an effects pass over existing
   events, the author's music tracks (Lattice, boss, title).
-- Content: Home Lattice, about 25-30 rooms: 16 fragments that give Level 1
-  plus a few extra in secret or optional rooms, two bosses (one drops a
-  fragment, one an upgrade), the tutorial near the core. Two Level 1
+- Content: Home Lattice, about 30 rooms (docs/lattice-plan.md): 16
+  fragments that give Level 1 plus two in secret rooms, two bosses (one
+  drops a fragment, one the energy buff), the tutorial near the core. Two Level 1
   exits lead to the next two biomes, Glitchmire and Frostbyte Wastes,
   each only a few teaser rooms (look only); an Outer Buffer cluster of
   secret rooms. Optional: the Lattice's data flows and glass panels.
@@ -581,16 +576,15 @@ sounding Home Lattice and ship it to testers.
   a check on a weaker GPU; first-minute onboarding; a "copy debug info"
   pause entry for feedback; a balance pass.
 - Rooms: real-content rooms are drafted unflagged; the author refines
-  them in the editor and flags them authored. Old test rooms move to a
-  dev-only wing, none are deleted.
+  them in the editor and flags them authored. Test rooms live in the
+  dev wing (D147).
 - Closes as v0.5.0, "Playtest 1".
 
 **Phase 6 (v0.6+) — The other sectors**, from playtest feedback, one
 biome at a time: enemy roster, look, rooms. Glitchmire and Frostbyte
-first, then Firewall Citadel and Phantom Partition; the secrets ladder
-(docs/design.md, Phase 4 outline) and the Outer Buffer's 16-secret room.
+first, then Firewall Citadel and Phantom Partition.
 
 **Phase 7 — Polish and 1.0.0**: juice and post-processing pass,
-audio-reactive visuals, fullscreen, gamepad, key rebinding, biome
+fullscreen, gamepad, key rebinding, biome
 environmental effects (D122: Glitchmire low-res, Frostbyte ice, Outer
 Buffer low gravity and darkness) with health pickups and safe rooms.
