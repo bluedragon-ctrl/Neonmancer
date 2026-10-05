@@ -1,10 +1,13 @@
 # Decision log
 
-Each entry: date, decision, reason, kept short; newest at the bottom.
-When a decision changes, add a new entry that names the one it replaces
-(don't rewrite history) and update CLAUDE.md if it is a locked decision.
-The details of what was built are in docs/design.md; the discussion
-behind an entry is in its pull request.
+Each entry: number, date, the decision as it stands now, and why; kept
+short. Numbers are stable (code, tests and docs cite them) and never
+reused. When a decision changes, update its entry (or add a new one and
+shrink the old to a one-line pointer, "replaced by Dn") and update
+CLAUDE.md if it is a locked decision; the old wording stays in git
+history and the discussion in the entry's pull request (D176). The
+details of what was built are in docs/design.md; room layouts are in the
+room files.
 
 ---
 
@@ -73,8 +76,8 @@ pieces merged, drawn as one `LineSegments2`; faces are one instanced mesh.
 rule is exact and tested.
 
 ### D13 — 2026-09-25 — Render pipeline: half-float, 4× MSAA, one effect pass
-The composer renders into half-float buffers with 4× MSAA; all effects
-share one `EffectPass`.
+The composer renders into half-float buffers with MSAA (4× at most, see
+D76, D169); all effects share one `EffectPass`.
 **Why:** smooth lines and controllable glow at a fixed, low cost.
 
 ### D14 — 2026-09-25 — Amber is the default room color; outer floor grid is dark gray
@@ -94,8 +97,7 @@ An unconnected exit, or one used twice, is an error.
 
 ### D17 — 2026-09-25 — Object types differ by shape, not only color
 Object types set a style in `defs.json`: `edges`, `mark`, `faces`,
-`tint`, overridable per object. Box looks kept as `crate_plain`,
-`crate_cross`, `crate_dashed`.
+`tint`, overridable per object.
 **Why:** color alone fails color-blind players and washes out in bloom.
 
 ### D18 — 2026-09-25 — Holes are floor tiles, not a lower level
@@ -116,7 +118,7 @@ renderer, as a second Vite entry.
 
 ### D21 — 2026-09-25 — Wizard look: cone body, ball head, floating hands, tilted hat
 Cone body, ball head, two floating ball hands, a pointy hat tilted back;
-body and hat magenta, head and hands cyan. (Line style replaced by D22.)
+body and hat magenta, head and hands cyan; drawn as a hologram (D22).
 **Why:** author's design; the tilt shows the face from above.
 
 ### D22 — 2026-09-25 — Characters use a hologram look
@@ -139,10 +141,10 @@ Pushables collide as boxes, the player too; a push needs a short shove
 object, top flush with the floor.
 **Why:** smooth following, one code path for stacking and plugging.
 
-### D26 — 2026-09-25 — Flip-screen exits keep the offset; the arrival is the respawn point
+### D26 — 2026-09-25 — Flip-screen exits keep the offset
 The wizard arrives half a cell inside the matching exit, keeping his
 offset, height, fall and facing. Objects can't leave a room; the first
-row inside an exit must be free. (The respawn part is replaced by D39.)
+row inside an exit must be free. (Respawn point: D39.)
 **Why:** joined rooms feel continuous; objects would be lost on reset.
 
 ### D27 — 2026-09-25 — Room transitions fade through black
@@ -150,31 +152,21 @@ Fade out 0.2 s with the world frozen, fade in 0.25 s already playable;
 the veil sits under the HUD.
 **Why:** author's request; an instant swap felt abrupt.
 
-### D28 — 2026-09-25 — Exits show a data stream in the destination's color
-Exits are marked in the color of the room they lead to. (The first
-stream look was replaced by D30–D33.)
-**Why:** exits read at a glance and hint where they lead.
+### D28 — 2026-09-25 — Exits: the destination's color, dashed streams, arrows
+Exits are marked in the color of the room they lead to. Behind every back
+doorway a short dark tunnel hides the outer grid, and dashes flow from the
+doorway into it along its corner edges and two floor lanes, fading to
+black. Front exits get one small gliding arrow per tile of width, within
+the first row. No floor stream or proximity glow.
+**Why:** exits read at a glance and hint where they lead; the author
+picked the doorway stream side by side in the showcase; bigger effects
+covered too much floor.
 
-### D29 — 2026-09-25 — Doorways lead into darkness; a quieter stream
-Behind every back doorway a short dark tunnel hides the outer grid.
-**Why:** the grid through a doorway read as a hole in a thin wall.
-
-### D30 — 2026-09-25 — Exit effect only on the doorway frame and the front arrows
-The floor stream and proximity glow are dropped; front exits get gliding
-arrows instead of chevrons. (Doorway part replaced by D31, D32.)
-**Why:** author's review: the floor stream was too much.
-
-### D31 — 2026-09-25 — Doorway effect uses the arrow pattern
-Gliding frames into the tunnel. Replaced by D32.
-
-### D32 — 2026-09-25 — Doorways: a dashed stream into the tunnel
-Dashes in the destination color flow from the doorway into the tunnel
-along its corner edges and two floor lanes, fading to black.
-**Why:** author's pick side by side in the showcase.
-
-### D33 — 2026-09-25 — Front exits: one small arrow per tile
-One small arrow per tile of exit width, gliding within the first row.
-**Why:** one large arrow covered too much floor.
+### D29 — folded into D28
+### D30 — folded into D28
+### D31 — folded into D28
+### D32 — folded into D28
+### D33 — folded into D28
 
 ### D34 — 2026-09-25 — HUD layout, bundled retro fonts, text in strings.json
 Integrity top left, banner top center, name top right, terminal bottom
@@ -198,19 +190,20 @@ The test-damage key calls `Game.hurt()`; the room jump reuses
 `enterRoom()`.
 **Why:** the debug keys exercise the real code paths.
 
-### D38 — 2026-09-26 — G toggles screen-relative movement, arrives ahead of the settings menu
+### D38 — 2026-09-26 — G toggles screen-relative movement
 `G` toggles grid and screen-relative movement, announced and shown as a
 HUD tag; not saved.
 **Why:** author wants it for players who find grid controls harder.
 
 ### D39 — 2026-09-26 — Each room defines its own death-respawn point
 Optional `reset` point per room (default `spawn`); dying always respawns
-there, whichever door he came through. Replaces D26's respawn at arrival.
+there, whichever door he came through.
 **Why:** a designed spot is easier to reason about with several exits.
 
 ### D40 — 2026-09-26 — Static block types live in the grid; changing blocks are room objects
-Blocks that never move or change (hazard, void) are grid cell types;
-blocks that move or vanish (platforms, collapsing) are room objects.
+Blocks that never move or change (hazard, void, fake, fence) are grid
+cell types; things that move (platforms) are room objects; gate blocks
+are painted as blocks but run as room objects (D60, D141).
 **Why:** static blocks are one merged mesh; room objects already move,
 collide and reset.
 
@@ -226,27 +219,23 @@ since the tag (`tools/game-version.js`).
 **Why:** every merge shows a new number without PRs conflicting on
 `package.json`.
 
-### D43 — 2026-09-26 — Phase 2 scope, order and rules
-Phase 2 order: damage first, then block types, bugs, Zap, X-ray, the
-editor last. Rules: every damage source goes through `Game.hurt()`, ~1 s
-invulnerability with blinking, no knockback, death at 0; a squeezing
-platform shoves or hurts, never kills; platforms and patrols share one
-path format; X-ray for the wizard only. Every step adds showcase
-entries, a test room, tests and docs. Biome effects move to content
-production.
+### D43 — 2026-09-26 — Damage rules; what every step adds
+Every damage source goes through `Game.hurt()`, ~1 s invulnerability with
+blinking, no knockback, death at 0; a squeezing platform shoves or hurts,
+never kills; platforms and patrols share one path format; X-ray for the
+wizard only. Every step adds showcase entries for new looks, a dev room
+for a new mechanic, tests and docs.
 **Why:** author's review; fixed rules keep each step focused.
 
-### D44 — 2026-09-26 — Hazard and void contact rules and animated looks
+### D44 — 2026-09-26 — Hazard and void contact rules
 Hazard contact: overlap on two axes and within 0.02 on the third
 (standing or leaning counts, a corner doesn't), through `Game.hurt()`.
 Void kills when grounded with the feet center over it, like a hole.
-Animated shader looks, steady edges, a flare when a hazard hurts.
-(Fixed block keys replaced by D60; void look by D99.)
+Animated shader looks, steady edges, a flare when a hazard hurts (void
+look: D99).
 **Why:** walls hurt on contact without punishing a near miss.
 
-### D45 — 2026-09-26 — Test rooms stay until content production
-The rooms that each show one mechanic stay and grow with each step.
-**Why:** the only place to try a mechanic in isolation. (Refined by D90.)
+### D45 — replaced by D147 (the dev wing)
 
 ### D46 — 2026-09-26 — Moving platforms: path format, riding, waiting and squeezing
 Paths start at `at` and run through `points`, axis-aligned legs,
@@ -256,23 +245,18 @@ tick and, pinned, hurts him and waits. One dim guide line.
 **Why:** simple validation and grid alignment; a jammed lift is a puzzle;
 never instant death.
 
-### D47 — 2026-09-26 — Collapsing blocks: trigger, timing, regrow and bodies
-Only the wizard standing on one triggers it: 0.5 s of shaking, then gone,
-even if he steps off; optional `regrow` once its cell is clear. It may
-bridge a hole. (Color replaced by D98, D99.)
-**Why:** running across is safe, standing still is not.
+### D47 — replaced by D141 (collapsing blocks are step gates)
 
-### D48 — 2026-09-26 — Enemies: data-driven types, cell-by-cell physics, hostility and bounce
-Every enemy trait is data, overridable per enemy. Enemies move one cell at
-a time, fall, ride platforms, turn back when blocked and pop in holes and
-on void. The wizard walks through them; touching a hostile one hurts;
-landing on a bouncy one launches him 2 blocks up. Eye color shows
-hostility. (Extended by D78–D81.)
-**Why:** grid movement avoids edge cases; data lets rooms tune enemies.
+### D48 — 2026-09-26 — Enemies: cell-by-cell physics, hostility and bounce
+Enemies move one cell at a time, fall, ride platforms, turn back when
+blocked and pop in holes and on void. The wizard walks through them;
+touching a hostile one hurts; landing on a bouncy one launches him 2
+blocks up. Eye color shows hostility. (Templates: D78, D119.)
+**Why:** grid movement avoids edge cases.
 
-### D49 — 2026-09-26 — Test rooms hang off Boot Sector, not in one row
-Every test room is at most two rooms from Boot Sector; new ones connect
-near the hub.
+### D49 — 2026-09-26 — Test rooms stay near the start
+The world map tool warns about an unflagged room more than two rooms from
+the start (`TEST_ROOM_REACH`, `world/map.js`); authored rooms are exempt.
 **Why:** testing the newest mechanic shouldn't mean walking the world.
 
 ### D50 — 2026-09-26 — Every bug bounces; a drop shadow only under the wizard
@@ -285,17 +269,16 @@ A `solid` enemy blocks him like a crate, carries him and shoves him (at
 most 0.35 per tick); pinned, it turns back.
 **Why:** enemies to avoid or ride, set by data.
 
-### D52 — 2026-09-26 — Zap and energy: numbers, aim, what stops a bolt; bugs take two hits
+### D52 — 2026-09-26 — Zap: aim and what stops a bolt
 The bolt flies level from his hands the way he last walked or turned and
 stops at the first enemy, block, object or room side; it hits peaceful
-enemies too. A bug takes two Zaps. (Numbers replaced by D72.)
+enemies too. A bug takes two Zaps. (Energy numbers: D72.)
 **Why:** one cast key; crates stay useful as cover.
 
-### D53 — 2026-09-26 — Destructible crates: integrity on pushables, drawn as data bits
+### D53 — 2026-09-26 — Destructible crates
 A pushable type may have `integrity`; at 0 it breaks until the room
-resets. `crate` gets the `bits` mark; a destructible object shows the
-grid with 6 bits missing. Boxes stay static. (Glass look: D96, D99.)
-**Why:** author's request, with a visual hint of breakability.
+resets. (Look: D99.)
+**Why:** author's request.
 
 ### D54 — 2026-09-26 — Cast on E or Numpad 0; Tab switches spells; the selected spell under energy
 Cast on E / Numpad 0, next spell Tab, previous Q; the selected spell's
@@ -320,53 +303,41 @@ automatic corners; exits connect to fitting exits of other rooms. Rooms
 and `world.json` are checked and saved together.
 **Why:** a new exit and its connection only pass validation together.
 
-### D58 — 2026-09-26 — Enemy templates are enemy types that extend a base type
-A reusable setup is saved as a `defs.json` enemy type that `extends` a
-base and sets only what it changes. (Extended by D59, D79.)
-**Why:** linked templates: changing one changes every enemy of it.
+### D58 — replaced by D79 (every enemy type is a template)
 
-### D59 — 2026-09-27 — Room editor: template changes are undo steps; the view cuts at the layer
-Template changes are undo steps of their room; rename and delete only
-when nothing else uses the template. **Hide above** leaves out what is
-above the edited layer.
-**Why:** undo by hand was error-prone; higher blocks hid the layer.
+### D59 — 2026-09-27 — Room editor: the view cuts at the layer
+**Hide above** leaves out what is above the edited layer. (Templates are
+edited in the monster editor, D120.)
+**Why:** higher blocks hid the layer.
 
-### D60 — 2026-09-27 — Block types become open, data-driven types
+### D60 — 2026-09-27 — Block types are open, data-driven types
 `defs.json` `blocks` is an open map of types: properties the engine
-understands (`damage`, `lethal`), a look, a color, `extends` (one level).
-The engine asks properties, never names. A type with a `kind`
-(collapsing) is painted like blocks but runs as room objects (id
-`<type>@x,y,z`). One Block tool in the editor. Built 2026-09-27.
+understands (`damage`, `lethal`, `seeThrough`), a look, a color,
+`extends` (one level). The engine asks properties, never names. A type
+with a `kind` (`gate`, D141) is painted like blocks but runs as room
+objects (id `<type>@x,y,z`). One Block tool in the editor.
 **Why:** new block types become data; the engine grows by behaviors.
 
 ### D61 — 2026-09-27 — Six biomes: a core, four side sectors, one special
-Home Lattice (core), Glitchmire, Frostbyte Wastes, Abyssal Buffer,
-Firewall Citadel and Phantom Partition (special: secrets, backtracking);
-looks only for now. (Colors refined by D62, D63, D99.)
+Home Lattice (core), Glitchmire, Frostbyte Wastes, Firewall Citadel,
+Phantom Partition and the Outer Buffer (special: secrets and optional
+rooms, D130); looks only for now. (Themes: D122; colors: D99.)
 **Why:** author's request; room colors avoid gameplay colors.
 
 ### D62 — 2026-09-27 — Biomes set the room's surroundings too
 A biome's optional `look`: `background`, `outerGrid`, `outerFade`,
-`wallGrid`, `bloom`; defaults are Home Lattice's. Frostbyte becomes ice
-blue.
+`wallGrid`, `bloom`; defaults are Home Lattice's.
 **Why:** cheap values already in the renderer set the biomes apart.
 
-### D63 — 2026-09-27 — Abyssal Buffer turns graphite gray
-Graphite `#7a8190` on dark gray, drifting glitter planned.
-**Why:** author's choice: a dark, quiet sector.
+### D63 — replaced by D122 (Abyssal Buffer became the Outer Buffer)
 
 ### D64 — 2026-09-27 — Edges between block types
 All plain types are one mass for the corner rule, each edge in a
 neighbouring type's color; hazard and void outline themselves, drawn
-alone where they meet plain blocks. Collapsing blocks keep every cell
-outline.
+alone where they meet plain blocks.
 **Why:** seams only where they mean something.
 
-### D65 — 2026-09-27 — Phase 3 splits in two; spells get a discussion step
-Phase 3 (spells and pickups) and Phase 4 (guardians, saves, tooling);
-polish moves to Phase 5. A spell-roster discussion step; each step
-settles its questions with the author first.
-**Why:** the old Phase 3 was twice Phase 2's size.
+### D65 — replaced by D130 (the phase plan)
 
 ### D66 — 2026-09-27 — World map tool: its own page, room positions in world.json
 `tools/world-map.html`, dev server only; rooms are nodes on a grid, one
@@ -382,17 +353,13 @@ bit; a found one stays as a gray ghost. Temporary pickups come back.
 **Why:** author's direction: exploring and mastering the Grid is the
 reward.
 
-### D68 — 2026-09-27 — World targets: towards 128 rooms, 16 spells, buff items, access levels
-Towards 128 rooms (many small ones), up to 16 spells, buff items, access
-levels and ability gates. The save holds the wizard, not rooms (no map,
-no bonus slots); room field 8 bits. (Spell count refined by D88; bonus
-slots dropped by D100.)
+### D68 — 2026-09-27 — World targets: towards 128 rooms, spells, buffs, access levels
+Towards 128 rooms (many small ones), up to 16 spells and 16 upgrades
+(D88), buff items, access levels and ability gates. The save holds the
+wizard, not rooms (no map, no per-room data).
 **Why:** many small rooms suit flip-screen exploring; a short key.
 
-### D69 — 2026-09-27 — Switches unlock exits
-A Phase 3 step for plates and targets unlocking exits; the locked exit is
-shared with access levels. (Settled in D75.)
-**Why:** crates and Zap become puzzle keys with little new machinery.
+### D69 — replaced by D75 and D140 (switches)
 
 ### D70 — 2026-09-27 — World map tool: positions format, who saves what
 `positions`: room id → `[x, z]` (+x east, +z south). The room editor owns
@@ -404,38 +371,37 @@ only.
 ### D71 — 2026-09-27 — Pickups: save bits in blocks, the Zap disk, refills
 Save bits come in blocks per kind; a bit is the item, not the place. The
 index lives on what the item unlocks (a spell's `slot`). Integrity and
-energy refills. Zap is learnt from its disk in Boot Sector. The disk: a
-white slab with a 4×4 bit grid, the slot lit in the spell's color.
+energy refills. The disk: a white slab with a 4×4 bit grid, the slot lit
+in the spell's color.
 **Why:** countable items; a disk can wait on both sides of a gate.
 
 ### D72 — 2026-09-27 — Energy in whole units, a bar in segments of 10
 50 energy, one unit back every 12 ticks; Zap 10; refill 30. The bar is
 segments of 10 whatever the spell; costs are multiples of 10; hidden until
-a spell is known. Replaces D52's numbers.
+a spell is known.
 **Why:** the bar keeps its shape when switching spells.
 
 ### D73 — 2026-09-27 — Data disks: install animation, the Shield spell
-Taking a disk plays a 1 s scan: bits spiral in, rings sweep up him, a
-white flash. Shield (slot 1): a lightning ring. Each spell has a `color`
-in `defs.json`. (Refined by D74.)
-**Why:** a reward moment; a real second spell tests switching.
+Taking a disk plays a 1 s scan (bits spiral in, rings sweep up him, a
+white flash) without freezing him. Shield (slot 1): a lightning ring for
+7 s. Each spell has a `color` in `defs.json`. Found disks spin without
+the bob.
+**Why:** a reward moment; the author's playtest asked for no freeze.
 
-### D74 — 2026-09-27 — Playtest: no freeze while installing, Shield 7 s
-The install no longer freezes him; Shield lasts 7 s; lit bits glow
-brighter for darker colors; found disks spin without the bob.
-**Why:** author's playtest.
+### D74 — folded into D73
 
 ### D75 — 2026-09-28 — Switches: targets, floor plates, locked exits
 A target (Zap toggles it) and a plate (on while something stands on it).
-`"locked": true` exits open while every switch in the room is on, never
-close on the wizard, and the exit he came in through stays open for him.
-White with a square bull's-eye; the lock has one light per switch.
+A locked exit opens while its conditions hold (D175), never closes on the
+wizard, and the exit he came in through stays open for him. (Links and
+timers: D140; look: D143.)
 **Why:** author's choices; every room stays leavable the way he came.
 
 ### D76 — 2026-09-28 — Automatic quality fallback; shaders compiled ahead
 Two slow 2 s windows (below 50 fps) step MSAA 4 → 2 → 0, then render
 scale 0.75 → 0.5; never back up; `?msaa`/`?scale` turn it off. Shaders
 compile ahead, hidden objects included, for the composer's buffer.
+(High-DPI: D169.)
 **Why:** weak GPUs pay for resolution × MSAA; extra full-screen passes
 are costly, effects in the existing pass nearly free.
 
@@ -447,32 +413,29 @@ nothing.
 
 ### D78 — 2026-09-28 — Universal enemies; chase and discharge; Viruses and Sentinels
 An enemy's `look` is a field beside `movement`, `attack` and `color`, and
-any combine. `attack`: `touch`, `burst`, `arc`, `none`. `chase`: a hostile
-enemy follows the wizard while it sees him within `aggroRange`, searches
-where it lost him, then goes home. Charged discharges warn before they
-fire. No enemy walks into a hole or onto void. A red "!" when one notices
-him. Virus (chaser, burst) and Sentinel (keeps distance, arc); test room
-Quarantine.
+any combine. `attack`: `touch`, `burst`, `arc`, `bolt`, `none`. `chase`:
+a hostile enemy follows the wizard while it sees him within `aggroRange`,
+searches where it lost him, then goes home. Charged discharges warn
+before they fire. No enemy walks into a hole or onto void. A red "!" when
+one notices him. Virus (chaser, burst), Sentinel (keeps distance, arc).
 **Why:** new enemies are data, not code; a charged attack is fair.
 
 ### D79 — 2026-09-28 — Every enemy type is a template
 Every `defs.json` enemy is a template; chains of `extends` allowed; a room
-enemy names its `template`. Every template can be updated, renamed and
-deleted in the editor. Amends D58.
-**Why:** a type was a template in all but name; templates tune an area.
+enemy names its `template`.
+**Why:** linked templates: changing one changes every enemy of it.
 
 ### D80 — 2026-09-28 — Enemy review: bolt attack, alarm, routes, cell claims
-`bolt` attack: a slow shot at the wizard's middle, harmless to objects; a
-`shooter` template. The wizard's hits alarm an enemy. Chasers route round
-walls going home and searching. An enemy never steps into a cell another
-is entering. Validation: a chaser needs an aggro range, a peaceful enemy
-no charged attack.
+`bolt` attack: a slow shot at the wizard's middle, harmless to objects.
+Chasers route round walls going home and searching. An enemy never steps
+into a cell another is entering. Validation: a chaser needs an aggro
+range, a peaceful enemy no charged attack.
 **Why:** fixes from the enemy review; the bolt reuses the Zap's entity.
 
 ### D81 — 2026-09-28 — Bolt patterns and bounces; any hit alarms
 `boltPattern` (`aimed`, `cross`) and `boltBounces` combine freely. Every
 hit that leaves an enemy hostile alarms it, friendly fire included, and
-the wizard gets the blame. Templates `tower` and `ricochet`.
+the wizard gets the blame.
 **Why:** options keep enemies universal; stirring up a room is a trick.
 
 ### D82 — 2026-09-28 — Spiked platforms
@@ -482,70 +445,63 @@ A platform type with `damage` hurts on any touch; `spiked_platform` has
 
 ### D83 — 2026-09-28 — Cron, worm and crawler looks
 Cron (the tower's look, emitters on the grid axes), worm (patroller) and
-crawler (chaser), both touch attacks; test room Scheduler.
+crawler (chaser), both touch attacks.
 **Why:** looks are data; the tower shows its dangerous lines.
 
-### D84 — 2026-09-28 — Step 6 closed; Shield blocking and the Firewall spell
-Pop-ups are closed: the `bolt` attack and `shooter` cover them. The
-Shield absorbs bolts and blocks arcs and bursts. Firewall (slot 2, 40
-energy, 7 s) also blocks touch and burns enemies touching it; either ring
-replaces the other. Ember flames. Its disk in Scheduler.
+### D84 — 2026-09-28 — Shield blocking and the Firewall spell
+The `bolt` attack covers the old Pop-up idea. The Shield absorbs bolts
+and blocks arcs and bursts. Firewall (slot 2, 40 energy, 7 s) also blocks
+touch and burns enemies touching it; either ring replaces the other.
+Ember flames.
 **Why:** Shield for shooters, Firewall for crowds.
 
 ### D85 — 2026-09-28 — The Pause spell
 Slot 3, 25 energy: a bolt that freezes the enemy it hits for 5 s; a
 frozen enemy is solid, harmless and still hittable, and never traps the
-wizard. `pausable` template field (Wardens). A cage of corner brackets,
-pale lavender. Disk in Quarantine.
+wizard (pushing: D154; its box: D155). A cage of corner brackets, pale
+lavender.
 **Why:** a skill shot like Zap; freeze-and-zap combos.
 
 ### D86 — 2026-09-28 — Blink and Warp
 Both go the way he aims through open space only and land short of a
 stop, fizzling against a wall. Blink (slot 4, 15 energy, 3 units) hits
 enemies it passes for 2 and hurts him 1 if cut short; Warp (slot 5, 30
-energy) goes to the first stop, harmless. Test room Fast Path.
+energy) goes to the first stop, harmless.
 **Why:** a risky attack dash against a safe way across; walls stay walls.
 
 ### D87 — 2026-09-28 — Cut & Paste
 Slot 6: cut a crate or frozen enemy in front of him (his level, nothing on
 it; 20 energy) into a one-slot clipboard that goes with him; paste into
 the free cell in front for free. Copies allowed; dying loses it. A
-marching-ants marquee, an aim marker, a HUD slot; white. Test room
-Clipboard.
+marching-ants marquee, an aim marker, a HUD slot; white.
 **Why:** a puzzle spell with a combo; copies keep the rules simple.
 
-### D88 — 2026-09-28 — Spell roster: Compile, Fork, Scan; Zap+ and Mirror
-New spells Compile, Fork, Scan (slots 7–9, Phase 4). Upgrades Zap+ and
-Mirror (renamed Shield+ in D95) in their own save block (bits 32–47),
+### D88 — 2026-09-28 — Spell roster and upgrades
+Spells Compile, Fork, Scan (slots 7–9) and Pull (slot 10, D89). Upgrades
+(Zap+, Shield+, the double jump, D95) have their own save block,
 replacing their base spell in the Tab cycle. Up to 16 spells and 16
-upgrades. An intended order in the world; a buff draft (settled in D93).
-Turned down for now: Patch, Overclock, Decrypt, Rollback, Halt, Lift,
-Firewall+, Cut & Paste+.
+upgrades; spare slots wait for content.
 **Why:** new answers to puzzles; the first spells stay useful late.
 
 ### D89 — 2026-09-29 — Pull joins the spell roster
-Pull (slot 10, Phase 4): pulls the closest crate or enemy in the facing
-direction one tile towards the wizard.
+Pull (slot 10) pulls the first crate or enemy in line one tile towards
+the wizard (details: D124).
 **Why:** pushing only moves crates away.
 
 ### D90 — 2026-09-29 — Authored rooms: the author's real game rooms
 `"authored": true` marks the author's real rooms, set in the room editor.
 Development steps never change them or attach rooms to them; tests never
-depend on them; changes that could affect them are listed in the PR. The
-map tool doesn't flag them for distance. Refines D45.
+depend on them; changes that could affect them are listed in the PR.
+Real-content rooms are drafted unflagged; the author refines and flags
+them (D130).
 **Why:** the author's rooms must not grow test exits; a flag promotes a
 room in place.
 
-### D91 — 2026-09-29 — Access level in the save key; upgrades move to Phase 3
-The key gets an 8-bit access-level field (4 used), stored, not counted.
-Zap+ and Mirror move to Phase 3.
-**Why:** room to grow; upgrades make early spells matter already.
+### D91 — 2026-09-29 — Access level in the save key
+The key has an 8-bit access-level field (4 used), stored, not counted.
+**Why:** room to grow.
 
-### D92 — 2026-09-29 — The jump becomes an upgrade; backups (lives) and backup shrines
-The jump buff moves to the upgrades. Backups (lives) and backup shrines
-join Phase 3; a load starts with full backups. (Rollback replaced by D97;
-the jump settled in D95.)
-**Why:** death cost nothing, so there was no tension.
+### D92 — replaced by D95 (double jump), D97 (backups) and D106 (saved backups)
 
 ### D93 — 2026-09-29 — Buff items: amounts, taking one, the chip look
 4× +1 integrity (8 → 12), 5× +10 energy (50 → 100), one recharge buff
@@ -563,34 +519,31 @@ integrity, lime energy and recharge); found ones are solid gray ghosts.
 Upgrades are pickup types in the upgrade block; a spell upgrade replaces
 its spell in the Tab cycle at the spell's cost. Zap+ bounces three times;
 Shield+ sends bolts back as his own; the double jump adds one mid-air
-jump. An expansion card look. Test room Upgrade Lab.
+jump. An expansion card look.
 **Why:** a double jump leaves the base rules intact; names show SHIELD
 becoming SHIELD+.
 
 ### D96 — 2026-09-29 — Glass crates
 Every crate is frosted glass (`"faces": "glass"`), a marked crate's mark
-on a small dark core inside. (Destructible look replaced by D99.)
+on a small dark core inside. (Destructible look: D99.)
 **Why:** crates read as material, not items; a cheap face shader.
 
 ### D97 — 2026-09-29 — Backups: 8, no rollback, reboot on the nearest shrine
 8 backups, one per death. With none left the system crashes and he
 reboots on the shrine nearest on the world map (|dx| + |dz|, ties to the
 last used), losing nothing found. A shrine is a floor tile that refills
-integrity, energy and backups, in the wizard's magenta. Replaces D92's
-rollback.
-**Why:** losing found items felt too harsh for the game's tone.
+integrity, energy and backups, in the wizard's magenta.
+**Why:** losing found items felt too harsh for the game's tone; without
+lives death cost nothing.
 
-### D98 — 2026-09-29 — Magenta is the wizard's color; collapsing blocks turn pale white-blue
-Magenta is the player's color; collapsing blocks give it up. (Their
-color is replaced by D99.)
-**Why:** a magenta shrine by magenta blocks would look related.
+### D98 — folded into D99
 
 ### D99 — 2026-09-29 — Color rules for objects and blocks; void as black mist
 Red hurts (one `#ff2a3a`); the room color is structure (collapsing
 blocks too); black is a pit (void as black mist); white is a mechanism;
-cyan moves; magenta is the wizard; lime is pushable (a destructible crate
-an empty, thinner shell). Biome colors are tested clear of them; Phantom
-Partition turns pale violet. Refines D44, D61, D96, D98.
+cyan moves; magenta is the wizard (shrines too); neon green is pushable
+(D150; a destructible crate an empty, thinner shell). Biome colors are
+tested clear of them; Phantom Partition is pale violet.
 **Why:** with few colors, each must mean one thing.
 
 ### D100 — 2026-09-29 — Score counts what the wizard has; secrets; no bonus bits
@@ -604,1572 +557,608 @@ completion share.
 64 fragments (bits 48–111), the modules of an 8×8 boot key the HUD fills
 in. Touching the core raises the access level to what the fragments earn
 (16, 32, 48 → 1, 2, 3); all 64 reboot the Grid (a placeholder end). The
-core is a placeable object, at most one. `"access": n` exits show a gold
-Roman numeral; every locked exit is a dark door panel. Gold hat bands
-show the level. Test room Vault.
+core is a placeable object, at most one. Access-locked exits show the
+level (D175). Gold hat bands show the level.
 **Why:** the core is the hub he returns to; the last 16 fragments are for
 the ending.
 
 ### D102 — 2026-09-28 — World map tool removes single exits
 Exits are marks on their room's edge, cyan connected and magenta loose.
 Delete removes one by a click on its mark: a connected exit goes with its
-connection and the exit at the other end (every exit must be connected),
-a loose one alone; one undo step. Connect uses a loose 2-wide exit in the
-facing wall, nearest the middle, before opening a new one.
+connection and the exit at the other end, a loose one alone; one undo
+step. Connect uses a loose 2-wide exit in the facing wall, nearest the
+middle, before opening a new one.
 **Why:** a connection line between neighbours is short and hard to hit,
-and a loose exit (made by hand) has no line at all.
+and a loose exit has no line at all.
 
 ### D103 — 2026-09-28 — World map tool: Undo last save
-Before each save the map keeps a rollback point: `world.json` and every
-room file the save writes or deletes, in session storage so it survives
-the reload a new or deleted room causes. The panel's Undo button (Ctrl+Z)
-undoes edits; with none left it reads Undo last save and puts the point
-back as unsaved changes, for Save to write through its usual checks. One
-step only; another page's save (the room editor) drops the point. The map
-tool's tests use a small world of their own.
+Before each save the map keeps a rollback point (`world.json` and every
+room file the save writes or deletes, in session storage). With no edits
+left to undo, Undo reads Undo last save and puts the point back as
+unsaved changes. One step only; another page's save drops the point.
 **Why:** a room deleted by accident was gone once saved; restoring it as
-unsaved changes keeps one way to write data and lets the rollback be
-undone.
+unsaved changes keeps one way to write data.
 
 ### D104 — 2026-09-29 — Firewall Wardens are bosses that always drop loot
-Wardens are the bosses of combat rooms. Every Warden drops one permanent
-pickup (fragment, buff, upgrade, spell or secret; never a refill), shown
-once it falls. While that pickup's save bit is found, the Warden is left
-out of its room and counts as defeated, so exits it locks stay open. An
-item that also lies elsewhere skips the boss when found there first.
-Shrines stay out of boss rooms.
+Every boss drops one permanent pickup (never a refill), shown once it
+falls. While that pickup's save bit is found, the boss is left out of its
+room and counts as defeated. Shrines stay out of boss rooms.
 **Why:** a beaten boss stays beaten without saving any room state (D68).
 
-### D105 — 2026-09-29 — Saving is a player action; Phase 4 splits in two
+### D105 — 2026-09-29 — Saving is a player action
 The player saves when he chooses, from the pause menu; a save writes the
 key to the URL hash and to localStorage. Nothing saves on its own. A load
-starts in the saved room with the room reset, full integrity and energy
-and an empty clipboard; the backups left come from the key (D106,
-replacing "a load starts with full backups" of D92). Phase 4a: access keys, title
-screen and pause menu, saving and loading, the map screen. Phase 4b: the
-spells Compile, Fork, Scan and Pull, Firewall Wardens, the reachability
-checker, design skills and subagents.
+starts in the saved room with the room reset, full integrity and energy,
+an empty clipboard and the backups from the key (D106).
 **Why:** loading resets the room anyway, so a save anywhere gives nothing
-away; 4a gives players saves sooner.
+away.
 
 ### D106 — 2026-09-29 — Access keys in hex; the room as its map cell
 The key is 176 bits (format version 4, room cell x 8 and z 8, access
 level 8, pickups 128, backups 4, CRC-16 16), 44 hex digits in groups of
-4. Backups are saved, integrity is not (a load starts full). The room is its cell in `world.json` `positions` (one room per cell),
-each coordinate a signed byte. The payload is XORed with a stream seeded
-by the checksum, then every bit moves by a fixed shuffle. Input forgives
-spaces, dashes, lowercase, O for 0, I and L for 1. Replaces Base32 and
-the 8-bit room number in CLAUDE.md §8.
-**Why:** the key is copied, not typed; hex is simpler to read and debug
-than a custom alphabet (Base32 without 0/O/1/I/L has only 31 symbols).
-The map cell already names a room uniquely, so no room-number table is
-needed; moving a room breaks old keys, which matters only in development.
-Saving backups keeps save and load from refilling lives for free.
+4. The room is its cell in `world.json` `positions`, each coordinate a
+signed byte. The payload is XORed with a stream seeded by the checksum,
+then every bit moves by a fixed shuffle. Input forgives spaces, dashes,
+lowercase, O for 0, I and L for 1.
+**Why:** the key is copied, not typed; hex is simpler to read and debug.
+The map cell already names a room uniquely; moving a room breaks old
+keys, which matters only in development. Saving backups keeps save and
+load from refilling lives for free.
 
 ### D107 — 2026-09-29 — Seven more enemy looks
-Warden, daemon, golem, wyrm, phish, overclock and pixie join the enemy
-looks, each a fantasy creature crossed with a computer thing (a knight of
-firewall, a wisp daemon, a rack golem, a packet dragon, a phishing mimic,
-a burning processor, a pixel butterfly). They are looks only: no template
-uses them yet, rooms pick them with `look`, and templates come with the
-content that needs them (the warden with the Firewall Wardens). A wyrm's
-plates are shades of its own color, so a room can recolor it. A model's
-`muzzle` is a reach along the line of fire (worm and crawler had points).
-**Why:** more silhouettes for content production; reviewed in the
-showcase first.
+Warden, daemon, golem, wyrm, phish, overclock and pixie are looks, each
+with its template (D119), but no room uses them and there is no plan to
+(D176); a biome's roster may pick them up. A model's `muzzle` is a reach
+along the line of fire.
+**Why:** more silhouettes, reviewed in the showcase first.
 
 ### D108 — 2026-09-29 — Home Lattice keeps the default enemies; a roster per biome
 Home Lattice's own enemies are bug, virus, sentinel and cron (the
-`tower` template): the default cyberspace enemies, which may still show
-up anywhere. Each other biome gets a roster of its own, at least three
-enemies with a signature trick, proposed in docs/design.md (Phase 4
-outline) and reviewed in Phase 4b. Still six biomes (D61); their colors
-and setup may change so ideas such as a nature sector with insects or a
-heavy virtual one with pixelated enemies fit into them.
-**Why:** biomes should play differently, not only look different; the
-four basic enemies, one per attack, suit the core and teach the basics.
+`tower` template), which may show up anywhere. Each other biome gets a
+roster of its own, settled in Phase 6 (D130).
+**Why:** biomes should play differently, not only look different.
 
 ### D109 — 2026-09-29 — Title screen and pause menu
-The game opens on a title screen over the start room's empty shape (its
-floor grid and back walls in its biome's look, no blocks, objects or
-wizard; dimmed well down): Start, Options and Controls; the room itself
-loads after Start; Enter key joins it with
-loading. Esc or P pauses the game, and so does the window losing focus;
-the pause menu has Resume, Save (a stub that says saving comes next),
-Options, Controls and Quit to title (Copy key and Copy link join it with
-saving). Quitting asks first, as it starts a new game. Options: music
-and sound volume, 0–10, and a Visuals submenu (quality, render scale,
-screen effects); stored in localStorage apart from the key, not applied
-until audio and quality presets exist (Phase 5). Menus take
-arrows or WASD, Enter or Space, Esc or P to go back, and the mouse. Behind
-a menu the game and its animations stand still. The world map tool's dev
-links (`?room`, `?edit`) skip the title.
-**Why:** the save UI needs both screens; pausing on focus loss keeps a
-player who switched windows from coming back dead. Settings belong to the
-browser, not to the wizard, so they stay out of the access key.
+The game opens on a title screen over the start room's empty shape:
+Continue, Start, Enter key, Options and Controls. Esc or P pauses the
+game, and so does the window losing focus. Quitting asks first. Options
+(volume, visuals) are stored in localStorage apart from the key. Behind
+a menu the game and its animations stand still. The world map tool's
+dev links skip the title.
+**Why:** pausing on focus loss keeps a player who switched windows from
+coming back dead. Settings belong to the browser, not to the wizard.
 
 ### D110 — 2026-09-29 — A boot sequence after Start
-Start plays a 2.6-second boot sequence: the logo scrambles into glyphs
-and glitches out, the room compiles tile by tile along its own grid
-(2×2-cell tiles, each a column up to the ceiling, in a shuffled wave from
-the back corner, each floor outline flashing cyan) while the terminal
-types `> LOADING SECTOR`, and the world round it fades in last; then the
-wizard pops in out of gathering pixels (the derez backwards), flashing
-white and landing with a squash. Then the room's banner and the boot
-messages; the game holds until he lands. Enter, Space, Esc or P skip it.
-The tiles are a 2D canvas over the game, not clipping in 3D, which would
-recompile every shader at its start and end; a cleared tile always
-shows, so at worst a block in front shows a moment early. (A first try,
-a scan line sweeping down the screen, was dropped.) The title's tagline
-is "INTO THE GRID".
+Start plays a 2.6 s boot sequence: the logo glitches out, the room
+compiles tile by tile, then the wizard pops in out of gathering pixels.
+Enter, Space, Esc or P skip it. The tiles are a 2D canvas over the game,
+not clipping in 3D, which would recompile every shader.
 **Why:** starting should feel like being loaded into the Grid; the pixel
-pop-in reuses the derez, so it needs no new asset.
+pop-in reuses the derez.
 
 ### D111 — 2026-09-29 — Saving and loading
-**Save** in the pause menu writes the key into the URL hash
-(`history.replaceState`) and localStorage (`neonmancer.save`), and the
-pause menu shows it from then on; **Copy key** and **Copy link** copy it
-(or a link to the page with it as the hash) and ask for a save first.
-A valid key in the hash at start loads directly (the boot sequence into
-the saved room); an invalid one opens the title with a message. The title
-has **Continue** (only with a save stored: the last save in this browser)
-and **Enter key** (a text field; a refused key says why). A loaded key
-goes into the hash but not into localStorage: only Save stores. A load
-starts over in the saved room, reset, with the key's pickups, access
-level and backups, full integrity and energy, and an empty clipboard; a
-map cell with no room any more loads in the start room (D106). A hash
-changed by hand (a pasted link on the same page) reloads the page. The
-Grid-rebooted flag is not saved: after a load the core may play the
-reboot again.
-**Why:** Continue saves pasting a key in the same browser, while the key
-and the link still carry a save anywhere else. Storing only on Save keeps
-"nothing saves on its own" (D105).
+**Save** writes the key into the URL hash (`history.replaceState`) and
+localStorage (`neonmancer.save`); **Copy key** and **Copy link** copy it.
+A valid key in the hash at start loads directly; an invalid one opens
+the title with a message. **Continue** loads the last save in this
+browser; **Enter key** takes a pasted key. A loaded key is never stored:
+only Save stores. A map cell with no room any more loads in the start
+room. The Grid-rebooted flag is not saved.
+**Why:** Continue saves pasting a key in the same browser; storing only
+on Save keeps "nothing saves on its own" (D105).
 
 ### D112 — 2026-09-29 — The map screen
-M (or **Map** in the pause menu) opens the run's map over the standing
-game; M, Esc, P, Enter or Space close it. It records the rooms entered in
-this run and is never saved (D68): a new game or a loaded save starts it
-empty. Using a backup shrine (stepping on it, or a crash reboot) reveals
-every room within 2 map cells of it (|dx| + |dz|), dimmed as a dashed
-outline until visited, and they stay on the map for the run. A visited
-room shows in its biome color with its exits: connections to rooms on the
-map, center to center like a grid (dashed when they run across the map),
-and a cyan stub in the middle of each side with an exit to a room not on
-it yet; where along the wall an exit lies doesn't show. The rooms behind
-stay hidden. Each visited room
-is labelled with its name and, under it, a row of icons: a blinking dot
-where he is, a gold mark while a fragment he hasn't found lies there, a
-magenta ring for a backup shrine. Revealed rooms have no label. The map is drawn from the
-game's isometric angle, so east is down-right as in the rooms.
+M (or **Map** in the pause menu) shows the rooms entered in this run,
+never saved. A backup shrine reveals the rooms within 2 map cells, dimmed
+until visited. Visited rooms show their connections, a stub per exit to a
+room not on the map yet, and their name with icons (he is here, a
+fragment not found, a shrine). Drawn isometrically, east down-right.
 **Why:** finding what is where is part of the game (D67), so the map only
-remembers what he has seen; shrines give a local chart as a reward for
-reaching them, and the stubs show the way on without giving away the
-rooms. Fragment marks save revisiting rooms to check what is left.
+remembers what he has seen.
 
 ### D113 — 2026-09-30 — An access pass for testing
-A new temporary pickup kind, `access` (`access_pass_3` in defs.json),
-raises the wizard's access level to its `level` when he touches it, as
-the core does (D101), and lies in Boot Sector beside the core. It has no
-save bit, comes back with the room, never lowers his level and is left
-lying while he has that level. It looks like a gold upgrade card with the
-level as its lit bit.
-**Why:** access-locked exits and rooms behind them are tedious to test
-when every level needs 16 fragments at the core; debug K still finds
-fragments, but the pass works without debug mode and in a normal
-playthrough of the test rooms. It is a test item: real game rooms should
-not use it.
+A temporary pickup kind, `access` (`access_pass_3`), raises the wizard's
+access level to its `level` when he touches it, as the core does. No save
+bit, comes back with the room, never lowers his level. A gold upgrade
+card with the level as its lit bit. A test item.
+**Why:** access-locked exits are tedious to test when every level needs
+16 fragments at the core.
 
 ### D114 — 2026-09-30 — The wizard's body language
-The wizard gets a walk cycle (head bob, hand swing, forward lean), an
-idle float (breathing, drifting hands, blinks), an air pose with a
-stretch, a landing squash and a hat on a spring (docs/design.md, Player,
-Look). It is all transforms of the model's existing parts, posed by a
-pure function in the render layer (`wizard-motion.js`); the walk cycle
+A walk cycle (head bob, hand swing, forward lean), an idle float, an air
+pose, a landing squash, a hat on a spring, and action poses (pushing,
+casting, falling into a hole). All transforms of the model's existing
+parts, posed by a pure function (`wizard-motion.js`); the walk cycle
 follows the distance walked, not time.
-**Why:** a rigid wizard sliding over the floor looked static, and he is
-on screen all the time. Moving, rotating and scaling half a dozen parts
-per frame costs nothing measurable: no new geometry, materials, draw
-calls or effect passes, and the x-ray ghosts are children of the parts,
-so they follow for free. Deforming meshes (skinning, per-vertex changes)
-was ruled out as the one option with a real cost. Tying steps to
-distance keeps his feet from sliding and his stride from freezing
-mid-step. Action poses follow the same way: pushing, casting (the hands
-follow the aim, where the bolt starts, not the turning body) and falling
-into a hole; each reads existing player state (`pushTarget`,
-`castTicks`, `deathCause`), so the game logic is unchanged.
+**Why:** a rigid wizard looked static. Moving a few parts costs nothing;
+deforming meshes was ruled out as the one option with a real cost.
 
 ### D115 — 2026-09-30 — Static objects are drawn for the fixed view
-The camera never turns and looks from +x +y +z, so a static object shows
-only its top and its +x and +z faces. New static looks put their detail
-on those faces and draw nothing on the hidden ones, and the asset
-showcase shows them standing still, as they are seen in play. The first
-is the data pillar, a decoration: a glass shaft round a core with four
-data cables up one seen face, in the biome's color (docs/design.md,
-Decorations).
-**Why:** detail on hidden faces is never seen but still costs lines and
-draw work, and a turning showcase hid how the object really looks in a
-room. Of three pillar looks tried (a solid shaft with traces, a cable
-bundle round a glowing rod, an open lattice with rising bits), the shaft
-read best; data on one face only keeps it calm as room dressing. It was
-then made glass like the crates, and rooms get only that one version.
-Characters and pickups that turn in play keep full detail.
+The camera never turns, so a static object shows only its top and its +x
+and +z faces. Static looks put their detail there and nothing on the
+hidden faces; the showcase shows them standing still.
+**Why:** detail on hidden faces is never seen but costs lines and draws.
 
 ### D116 — 2026-09-30 — One glass helper for everything glass
-Glass objects are built with `glassBox(lo, hi, color, preset)` in
-`src/render/glass.js`: the crates, the data pillar and the screen. Its
-tuning lives in `GLASS`, with presets per use: `hollow` (destructible
-crates) and `deco` (decorations, hiding less so what's inside shows).
-**Why:** glass is spreading from crates to decorations. One helper keeps
-the look the same everywhere, and the shader's rim and frost correct:
-they work in a unit cell, so every box is the unit cube scaled into place
-rather than a geometry of its own size. Presets keep new objects from
-inventing their own glass values.
+Glass objects are built with `glassBox()` (or `glassBoxes()`, D169) in
+`src/render/glass.js` with a `GLASS` preset per use.
+**Why:** one look everywhere; the shader's rim and frost work in a unit
+cell; presets keep new objects from inventing their own glass values.
 
 ### D117 — 2026-09-30 — Decorations: the data pillar and the screen
-A new object kind, `deco`, for room dressing: a fixed body that does
-nothing, as big as its `look` (the data pillar 1×3×1, the screen 1×1×1),
-placed with the room editor's Object tool. A decoration type has no
-color: it takes the room's, as structure does (D99). It faces +z or +x,
-the two sides the camera sees (D115); +z is the default and a room
-object's `"face": "+x"` override turns it; in the editor, clicking it
-again turns it. The pillar is always 3 high.
-**Why:** one kind with a look, like enemies, keeps the engine generic:
-a new decoration is a look and a size, not a new class. Solid bodies
-match what they show, so the wizard never walks through a pillar, and
-the fixed-body code (collision, bolts, standing on it) is the core's.
-Without their own color, decorations never break the color rules (the
-screen's blue would sit too close to Frostbyte's ice blue as a rule
-color) and always suit their biome. A fixed height for the pillar keeps
-rooms consistent; it fits every room at least 3 high. Only two facings
-are needed because the hidden sides are never seen.
+Object kind `deco`: a fixed body that does nothing, as big as its `look`
+(the data pillar 1×3×1, the screen 1×1×1, the memory stack D123). No
+color of its own: it takes the room's. It faces +z (default) or +x.
+**Why:** one kind with a look keeps the engine generic; without their own
+color, decorations never break the color rules.
 
 ### D118 — 2026-09-30 — Screen texts: hints and lore in the terminal
-A screen may name a text (`"text": "<id>"` on the room object), kept in a
-new file, `data/lore.json`: an optional title and 1–6 lines of at most
-48 characters. When the wizard comes near the screen (within 1 unit in
-front of it, at its side or on top), his terminal prints the text in the
-screens' blue, once per visit to the room: a respawn doesn't repeat it,
-coming back does. It is a block of its own in the terminal: messages
-don't push it off, it stays until it could be read (12 characters a
-second, at least a message's hold) and fades at once; a newer text
-replaces it. A screen with a text not read yet blinks a light on its top
-and scrolls faster. The room editor picks a screen's text from a list,
-writes a new one, or changes one (every screen showing it changes);
-lore.json is saved with the rooms and its changes are part of the room's
-undo steps. Only screens show texts. Nothing is saved: the save holds
-what the wizard has, not what he read.
-**Why:** hints and story need a place in the world without a new
-system: the terminal already speaks to the player. Texts live in their
-own file, not in `strings.json` (which is the game's own words) or in
-the room (a hint may repeat in several rooms). Proximity rather than a
-use key: the game has no interact action, and walking up to a screen is
-reading it. Once per visit so a screen by the path doesn't flood the
-terminal; short texts only, because the terminal is a few lines at the
-screen's corner (a reader panel that pauses the game was left out). A
-codex of texts read was left out too: it would need save bits for what
-isn't an item.
+A screen may name a text (`"text": "<id>"`) from `data/lore.json`: an
+optional title and 1–6 lines of at most 48 characters. When the wizard
+comes near, his terminal prints it, once per visit to the room, as a block
+of its own that stays until it could be read. A screen with an unread
+text blinks a light. The room editor picks, writes and edits texts.
+Nothing is saved. (What a text may say: D163.)
+**Why:** hints need a place without a new system: the terminal already
+speaks to the player; proximity because the game has no interact action.
 
 ### D119 — 2026-09-30 — An enemy is all its template; a color per template
-A room places an enemy from a template in `defs.json` and gives it only
-its cell and, for a patrol or a chaser, its path: no `overrides`, and a
-path has no speed of its own (the template's speed counts). Every
-template has a body color of its own, at least 0.09 apart from every
-other in OKLab (`MIN_TEMPLATE_COLOR_GAP`, checked by
-`tests/colors.test.js` on the shipped data, not by the loader, so test
-fixtures may share colors). The checks on what could never happen (a
-chaser without an aggro range, a charged attack out of its reach, a
-peaceful one firing) move from the room's enemies to the templates. The
-templates start as one per look, named after it (13), from the
-templates and the Menagerie's overrides of before; `shooter`, `tower`
-and `ricochet` went (the tower is the cron). Test rooms that used
-overrides now use the plain templates and behave differently in places;
-variants are to be made as templates of their own. The room editor's
-Enemy tool only picks a template; templates are to be edited in a
-monster editor of their own (`tools/monster-editor.html`, next).
-**Why:** templates grew complex, and per-room overrides made enemies that
-looked alike behave differently from room to room: the player can't
-learn them. One behavior per template, one color per behavior, makes an
-enemy readable at a glance and keeps tuning in one place. A test (like
-the D99 color rules) rather than a load error keeps the rule on the real
-roster without forcing a color on every fixture.
+A room places an enemy from a template and gives it only its cell and
+path: no `overrides`, no path speed. Every template has a body color of
+its own, at least 0.09 apart from every other in OKLab
+(`tests/colors.test.js` on the shipped data). Template checks (chaser
+aggro range, charged attack reach, peaceful never fires) run on templates.
+**Why:** per-room overrides made enemies that looked alike behave
+differently; one behavior per template, one color per behavior.
 
 ### D120 — 2026-09-30 — The monster editor
-Enemy templates are tuned in a tool of their own, `tools/monster-editor.html`
-(dev server only, not built, like the world map): a list of templates, a
-form made from `defs.schema.json` showing where each value comes from
-(own, a base template, the default), a live preview with the game's
-models (walking, noticing the wizard, attacking in a loop), variants and
-copies in a free color, rename (rooms follow), delete (only unused),
-undo, and the color check. Save sends `defs.json` and the rooms a rename
-changed. The room editor only picks templates; it takes in templates and
-rooms another page saved (rooms with unsaved edits there are kept and
-flagged).
-**Why:** with enemies all their template (D119), tuning moves out of the
-room editor, whose panel had grown an override form; a tool of its own
-has room for every field, their descriptions and a preview of the
-behavior, not just the look.
+Enemy templates are tuned in `tools/monster-editor.html` (dev server
+only): a form from the schema showing where each value comes from, a live
+preview, variants in a free color, rename (rooms follow), delete (only
+unused), undo, the color check. The room editor only picks templates.
+**Why:** tuning moves out of the room editor, whose panel had grown an
+override form.
 
 ### D121 — 2026-09-30 — Home Lattice settled: a kernel city, enemies in tiers
-The first biome settled in Phase 4b's per-biome review (D108): Home
-Lattice is the Grid's kernel, a clean, orderly, technical city, the
-reference every other sector twists. Its enemies come in tiers: a new
-peaceful `glowbug` (extends `bug`, pale gold `#ffd27a`, harmless and
-bouncy, a friendly springboard), the hostile bug patrolling a fixed path
-(bouncy too), and virus, sentinel and cron, all hostile. Virus turns
-violet (`#b35cff`, was yellow) and sentinel sky blue (`#4fa8ff`, was
-orange); daemon (`#c79bff`), golem (`#a0a8c0`) and pixie (`#ff9a5a`),
-not yet placed in a biome, move to keep every template its own color
-(D119) and get their real colors with their biomes. Planned for the
-Phase 5 visual pass: data flows running along the floor grid in and
-around the room, random 1×1 glass panels in the back walls (new on every
-entry) showing the flows outside, and possibly a core heartbeat. Each
-biome is settled the same way: look, enemies, signature trick, later
-effect (docs/design.md, Biomes).
-**Why:** yellow and orange sat 0.12 and 0.09 (OKLab) from the amber rooms
-and blended into them; cool colors make the hostile ones pop in the warm
-city. A peaceful bug gives the safe sector life and a harmless first
-enemy to learn on, with no engine change (any hostility and bounce
-combine, D80). The glass panels are looks only, so a new random set per
-entry costs nothing and keeps rooms from looking stamped.
+Home Lattice is the Grid's clean, orderly kernel city. Enemies in tiers:
+peaceful `glowbug` (pale gold, bouncy springboard), the hostile bug, then
+virus (violet), sentinel (sky blue) and cron. Planned visual pass: data
+flows along the floor grid and random glass panels in the back walls.
+**Why:** cool colors make hostile enemies pop in the warm city; a
+peaceful bug gives a harmless first enemy to learn on.
 
 ### D122 — 2026-09-30 — The sectors at a glance; Outer Buffer
-Before settling the remaining biomes one by one, a high-level map of all
-six: each has a theme, an enemy family and one mechanic of its own
-(docs/design.md, Biomes). Glitchmire becomes the heavy virtual sector
-(pixel and geometric monsters that split, morph and hop; later low-res,
-moved from Frostbyte). Abyssal Buffer becomes **Outer Buffer**, dark space
-beyond the Grid (id `outer_buffer`; things that orbit, fall and pull;
-later low gravity and darkness with a light round the wizard; the stars
-move here from Phantom Partition). Phantom Partition becomes the ghost
-sector (low glowing mist; ghosts that phase, mirror and haunt).
-Frostbyte Wastes (slowing, freezing; later slippery ice) and Firewall
-Citadel (armored guards) stay. The looks already made are spread over
-the sectors, and Firewall Wardens are bosses for any biome, Home Lattice
-too. The deep-sea and nature ideas, Bitrot and Z-Fighter are dropped for
-now.
-**Why:** settling biomes one at a time without a map risked sectors that
-overlap; a theme, an enemy family and a mechanic of its own per sector
-keep them apart. Space, heavy virtual and ghosts were the author's three
-wishes and fit the existing sectors' setup (low gravity, pixelation,
-the special sector). Bosses anywhere let every sector close with one. The per-biome passes
-wait for the end of Phase 4, once the spells and game concepts they
-build on are ready.
+Each sector has a theme, an enemy family and one mechanic of its own
+(docs/design.md, Biomes). Glitchmire: heavy virtual (split, morph, hop;
+later low-res). Outer Buffer (was Abyssal Buffer): dark space (orbit,
+fall, pull; later low gravity and darkness). Phantom Partition: ghosts
+(phase, mirror, haunt). Frostbyte Wastes (slow, freeze; later ice) and
+Firewall Citadel (armored guards) stay. Bosses for any biome.
+**Why:** a map of all six keeps sectors from overlapping; space, heavy
+virtual and ghosts were the author's three wishes.
 
 ### D123 — 2026-09-30 — The memory stack; walls are stacks
-A third decoration (D117), the memory stack: a 1×1×1 cell of glass
-memory plates with chips on a spine, a read/write light rising past them
-and plates writing now and then. Stacks placed side by side and on top of
-each other make a memory wall; there is no height option and no wall
-object. The look takes its light's timing from its cell, so a wall's
-plates line up and the light climbs and runs across it as one.
-**Why:** chosen in the showcase from six drafts (three memory looks,
-three relay nodes); the author wanted a decoration that also builds
-walls. A cooling vent was dropped first: it doesn't fit a virtual grid.
-One 1-cell piece keeps data and editor unchanged (decorations already
-never fall and may stand on anything) and lets a wall take any shape.
+A third decoration: a 1×1×1 cell of glass memory plates with a rising
+read/write light. Stacks side by side and on top make a memory wall; no
+wall object. Timing from its cell, so a wall animates as one.
+**Why:** a decoration that also builds walls, without data changes.
 
 ### D124 — 2026-09-30 — Pull: the first crate or enemy in line, one cell
-Pull (slot 10, 15 energy, pale mint `#a6ffcf`, early in the world with
-Blink and Pause) takes the first crate or enemy in line the way the
-wizard aims, at his level, within 6 cells; a block, the room's side or
-another body first stops the line, holes don't. The target slides one
-cell towards him per cast: a crate as if pushed (nothing on it, into a
-free cell), any live enemy, frozen or not, over anything, so it can be
-pulled into a hole; pulling alarms it and he gets the blame (D81). Right
-in front of him, or with nowhere to go, it fizzles. A tractor beam of
-pixel rings and a marquee on the target; an aim marker while selected.
-Test room Tractor Bay, east of Cache Hall.
-**Why:** the author's picks among the proposals. A line to the first
-thing, like Warp's, is easy to read and aim; one cell per cast keeps the
-puzzles exact (each cast a move, like a push). Taking any enemy makes
-Pull a tool against them too (into a pit, off a plate), and the blame
-keeps it from being free. The mint keeps the beam readable on the lime
-crates and the green bug.
+Pull (slot 10, 15 energy, pale mint) takes the first crate or enemy in
+line the way he aims, at his level, within 6 cells; a block, the room
+side or another body stops the line, holes don't. It slides one cell
+towards him per cast: a crate as if pushed, any live enemy over anything
+(into a hole too); pulling alarms it. Right in front of him, or with
+nowhere to go, it fizzles. A ring beam.
+**Why:** a line to the first thing is easy to aim; one cell per cast
+keeps puzzles exact; the blame keeps it from being free.
 
 ### D125 — 2026-09-30 — Compile: a crate for 7 seconds
-Compile (slot 7, 50 energy, gold `#ffe45c`, late in the world) puts a
-crate of the dashed crate type into the free cell in front of the
-wizard at his feet, where Paste would put one. It is an ordinary crate
-while it lasts: it falls, plugs a hole, can be pushed and pulled. After
-7 s (blinking for the last 2) it derezzes; what stands on it falls and
-a hole it plugged opens again. Any number may stand at once; Cut &
-Paste can't take one. No free cell: it fizzles. Gold bits fly from his
-hands into the cell as it grows in; an aim marker shows the cell. Test
-room Build Yard, east of Tractor Bay.
-**Why:** the author's picks. A crate rather than a floating block keeps
-one set of rules (D4) and no free-standing stairs: a step is one high,
-a gap is crossed by plugging its holes. Cheap and short-lived, it is a
-tool to use often, not a lasting change to the room; no cap on how many,
-since the 7 s already limits it. The crate stays lime (pushable, D99);
-the gold marks the spell.
+Compile (slot 7, 50 energy, gold) puts a dashed crate in the free cell in
+front of him. An ordinary crate while it lasts; after 7 s (blinking for
+the last 2) it derezzes. Any number at once; Cut & Paste can't take one.
+**Why:** a crate keeps one set of rules (D4); short-lived, it is a tool
+to use often, not a lasting change.
 
 ### D126 — 2026-09-30 — One derez for everything that is gone
-The wizard's death, enemy pops (13 looks), collapsing blocks,
-destructible and compiled crates and taken pickups share one pixel
-burst (`derez-fx.js`): pixels start spread through a body box standing
-on the thing's feet, a few ticks apart, drift out from its middle and
-up, and shrink away in 48 ticks, all the same pixel size. A caller
-gives only the body (which also sets the pixel count) and the colors:
-its own, white as the second where it has only one. Blocks' pixels rise
-now, where they used to tumble down. Effects that carry pixels
-somewhere (Cut & Paste, Compile's bits, Pull, Warp, sparks, install)
-stay their own.
-**Why:** the author's proposal. Five bursts had grown apart (different
-motion, timing, pixel sizes, per-look pop settings); one look reads as
-one rule of the Grid, "gone is derezzed", and a tweak in one place now
-changes them all. Rising suits a digital derez better than falling
-rubble.
+The wizard's death, enemy pops, gate blocks, destructible and compiled
+crates and taken pickups share one rising pixel burst (`derez-fx.js`); a
+caller gives only the body box and colors.
+**Why:** five bursts had grown apart; "gone is derezzed" reads as one
+rule and tunes in one place.
 
 ### D127 — 2026-09-30 — One stream for pixels a spell carries
-Cut, Paste, Compile and Warp share one stream (`stream-fx.js`): between
-two ends, each a body box (as a derez's, D126) or a point (his hands),
-each pixel leaves its own spot of the start, staggered over 40% of the
-stream's time, and flies on a slight arc to the same spot of the end;
-full size at a body, where it waits before leaving or after arriving,
-small at a point. The count comes from the bigger body, the pixel size
-from the derez. A spell gives only the ends, its duration and colors.
-Pull's ring beam, the install spiral, Zap's sparks and the Blink kick
-stay their own.
-**Why:** the author's proposal after D126. Four streams had grown apart
-(arcs, pixel counts and sizes, lattices); one reads as one rule, "a spell
-moves data", and tunes in one place. Pull stays a ring beam (the
-author's pick): its rings tell it from Cut at a glance.
+Cut, Paste, Compile and Warp share one stream (`stream-fx.js`) between
+two ends (a body box or a point). Pull's ring beam, the install spiral,
+Zap's sparks and the Blink kick stay their own.
+**Why:** "a spell moves data" reads as one rule and tunes in one place.
 
 ### D128 — 2026-09-30 — Scan: fake blocks and hidden exits
-Scan (slot 9, 15 energy, violet `#8f6bff`) sends a square wave from the
-wizard's feet over the grid, at every height, out to 6 units along x and
-z in half a second; what it reaches is revealed, nearest first, and stays
-revealed until the room resets. It never fizzles. Two things hide from
-it: fake blocks (block type `fake`, a static plain block drawn in one
-mass with the others) derez when reached, so what stood on them falls;
-hidden exits (`"hidden": true`) are solid wall, drawn as wall, until
-reached, then their patch of wall derezzes and the doorway shows (a
-locked one is a lock from then on). The exit he came in through is never
-hidden. A pickup may lie inside a fake block: that is the hidden pickup.
-Test rooms Hidden Layer, east of Build Yard, and Secret Cache behind its
-hidden exit.
-**Why:** the author's idea (hidden exits that appear on a scan, fake
-blocks that vanish). A wave with a range makes it a search, cast where a
-room looks suspicious, not a free map of every secret; square suits the
-grid. Revealed things stay for the visit so a doorway never closes on
-him and a vanished block never reappears inside him; the room reset
-already brings secrets back. Fake blocks are static grid cells, not
-objects, so their edges merge with the plain blocks round them and
-nothing gives them away. A pickup inside a fake block covers "secret
-pickups" without a new pickup state.
+Scan (slot 9, 15 energy, violet) sends a square wave from his feet, every
+height, 6 units along x and z in half a second; what it reaches stays
+revealed until the room resets. Fake blocks (block type `fake`, drawn in
+one mass with plain blocks) derez; hidden exits (`"hidden": true`) are
+wall until reached. The exit he came in through is never hidden. A
+pickup may lie inside a fake block.
+**Why:** a wave with a range makes it a search, not a free map; fake
+blocks as grid cells give nothing away.
 
 ### D129 — 2026-09-30 — Fork: a decoy of the wizard
-Fork (slot 8, 25 energy, blue `#4d8bff`) stands a hologram of the wizard
-in the free cell in front of him (where Compile puts a crate) for 10 s.
-It is no solid body: nothing collides with it or harms it. It holds a
-floor plate down, and a hostile enemy that sees it goes for the nearer of
-it and him (the decoy wins a tie): it chases, faces and aims at that
-focus, so bolts and arcs fly at the decoy. One at a time, a new fork
-replaces the old; a new room has none. Test rooms Decoy Lab, north of
-Build Yard, and Decoy Vault behind its locked exit.
-**Why:** the roster's Fork (D88): a second body for puzzles (a plate he
-can't reach himself) and for combat (draw a sentinel's bolt, pull a
-virus away). Ghost-like and harmless keeps the rules small: no health, no
-blocking, no cleanup but the timer. Casting it in front of him, like
-Compile, makes it aimable and needs no new input. The nearer-wins rule
-keeps enemies from ignoring him when he stands next to them.
-
+Fork (slot 8, 25 energy, blue) stands a hologram of him in the free cell
+in front for 10 s. No solid body. It holds a floor plate down, and a
+hostile enemy that sees it goes for the nearer of it and him (the decoy
+wins a tie). One at a time; a new room has none.
+**Why:** a second body for puzzles and combat; harmless keeps the rules
+small.
 
 ### D130 — 2026-09-30 — Roadmap: a Home Lattice playtest first
-Phases re-cut. Phase 4 keeps the reachability checker, design skills and
-subagents, and the Firewall Wardens (two Lattice bosses: one drops a
-fragment, one an upgrade), and closes as v0.4.0. Phase 5 (v0.5.0,
-Playtest 1) finishes Home Lattice with sound: about 25-30 rooms, 16
-fragments for Level 1 plus a few extra in secret or optional rooms, two
-bosses, the author's music, quality presets, onboarding and a debug-info
-copy. Two Level 1 exits open onto Glitchmire and Frostbyte Wastes as
-teaser rooms only. Biome rosters, the secrets ladder and the other
-sectors move to Phase 6; polish, gamepad, rebinding and biome effects to
-Phase 7. The Outer Buffer becomes the special sector for secrets and
-optional rooms (was Phantom Partition), and the 16-secret room goes
-there; Phantom Partition becomes a late regular sector. Real-content
-rooms are drafted unflagged by Claude, refined and flagged authored by
-the author; old test rooms move to a dev-only wing, none deleted
-(adjusts D45 and D90 for content production). Refines D61, D105, D108
-and D122.
-**Why:** the basic gameplay is done, and feedback on one polished sector
-is worth more than six half-built ones. The Outer Buffer's lonely dark
-suits hidden rooms; Phantom's ghosts suit a late fight sector. The
-checker and review tools come first because 30 rooms cannot be checked by
-hand.
-
+Phase 5 (v0.5.0, Playtest 1) finishes Home Lattice with sound: about
+25–30 rooms, 16 fragments for Level 1 plus extras, two bosses, music,
+quality presets, onboarding. Two Level 1 exits open onto Glitchmire and
+Frostbyte teaser rooms. Phase 6: the other sectors one at a time. Phase
+7: polish and 1.0.0. The Outer Buffer is the special sector for secrets;
+Phantom Partition a late regular sector. Real-content rooms are drafted
+unflagged and flagged authored by the author; test rooms go to a dev
+wing (D147).
+**Why:** feedback on one polished sector is worth more than six
+half-built ones.
 
 ### D131 — 2026-10-01 — The reachability checker: cells, crates as a puzzle, abilities as a fixpoint
-`npm run check:reach` (`tools/check-reach.js`, in CI and the deploy) searches
-every room as whole cells and the world as a fixpoint. A room: standing
-cells (two free cells above, a floor under), walking, stepping off ledges,
-a jump up one block or over a one-tile gap, and with abilities more: the
-double jump (up two, over two tiles), Blink (3 cells ahead), Warp (to the
-first stop), Compile (a step up, or a plugged hole), Pull, Cut & Paste, a
-scan (fake blocks and hidden exits), Zap (targets), Fork or Compile (a
-plate). Crates are searched as a puzzle: every position they can be
-pushed, pulled or pasted into is a configuration with its own flood, up
-to 500; the search stops as soon as everything in the room is reached.
-The world: from the start room with nothing, every entered room is
-searched with what he has, the pickups found add abilities (disks,
-upgrades), fragments and the core raise the access level, the exits
-reached open the rooms beyond, round after round until nothing changes;
-the rounds are the order the world opens in. A pickup, an exit or a room
-that stays out of reach is an error (exit code 1); rooms not joined to
-the start, the world holding fewer fragments than the core asks for, a
-cut-off crate search, and a room whose way back is missing (arrived on a
-ledge) are warnings. One room at a time (no need to check them all
-while designing): `check-reach.js <room>` reports only that room, with
-what each exit and pickup needs (the world is still searched to know what
-he has by then); `--with a,b` skips the world and takes the abilities
-given, from the spawn point or `--from <exit>`. `--rooms` lists what each exit and pickup needs:
-the smallest sets of one or two abilities from what he finds in the
-world, measured from the way he first came in. The world map tool shows
-the errors and warnings under CHECKS.
-Left out on purpose: enemies and their fire, timing (collapsing blocks,
-platforms' waits, spell durations), energy, which way he faces. Moving
-platforms count as floor along their whole path, a scan reaches every
-fake block, and Compile crates last as long as needed. So the verdict errs
-towards "reachable": unreachable is a real problem, reachable is not a
-promise (playtests and the design checklist still apply).
-**Why:** 30 rooms cannot be checked by hand (D130), and the unclear part
-of D67 is the order: an exit that waits for a spell must have the spell
-somewhere he can get first. Plain cells and a bounded crate search are
-simple to read and test, and fast (the whole world in under a second); a
-physics replay would be exact but slow and brittle against tuning. The
-fixpoint gives the order for free and the per-target ability sets feed
-the room design skill and the review subagent (4.2).
+`npm run check:reach` (`tools/check-reach.js`, in CI) searches every room
+as whole cells and the world as a fixpoint. A room: standing cells,
+walking, stepping off ledges, a jump up one block or over a one-tile gap,
+and with abilities the double jump, Blink, Warp, Compile, Pull, Cut &
+Paste, Scan, Zap (targets), Fork, frozen enemies (D166). Crate positions
+are searched as a puzzle (up to 500 configurations). The world: from the
+start with nothing, rounds of rooms searched with what he has until
+nothing changes. Unreachable pickups, exits or rooms are errors.
+`<room>` checks one room; `--with` gives abilities, `--from` an exit;
+`--rooms` lists what each exit and pickup needs.
+Left out on purpose: enemies and their fire, timing (gates, platforms,
+spell durations, timers), energy, facing. Platforms count as floor along
+their whole path. So "reachable" is not a promise.
+**Why:** 30 rooms cannot be checked by hand, and an exit that waits for a
+spell must have the spell somewhere first. Plain cells are fast and
+simple; a physics replay would be slow and brittle.
 
 ### D132 — 2026-10-01 — Design skills and the level-review subagent live in `.claude/`
-Step 4.2 adds `.claude/skills/room-design` (format, coordinates, types,
-tuning numbers, design rules, the check loop with `validate:data` and
-`check:reach`, annotated example rooms, the authored-room rules of D90),
-`.claude/skills/enemy-design` (template axes, charged-attack rules, the
-D119 color rules, placing enemies) and `.claude/agents/level-review.md`,
-a read-only subagent that runs the checks and walks a room against the
-room design checklist, reporting blockers, problems and notes. The
-skills point to the schemas, `docs/design.md` and the checklist rather
-than copying them, and repeat only the numbers a draft needs. A
-room-drafting subagent is left for Phase 5's content steps, when the
-Lattice plan (4.3) says what to draft.
-**Why:** 25-30 Lattice rooms will be drafted and checked by Claude
-sessions that start cold; the rules were spread over CLAUDE.md, design.md
-and the schemas. One entry point per task, with the checker in the loop,
-makes drafts consistent and keeps review cheap. Pointers instead of
-copies keep a single source of truth.
+`.claude/skills/room-design`, `.claude/skills/enemy-design` and
+`.claude/agents/level-review.md` (read-only: runs the checks, reads a
+room against the checklist). The skills point to the schemas,
+`docs/design.md` and the checklist rather than copying them. A
+room-drafting subagent may come with later content steps.
+**Why:** rooms are drafted by Claude sessions that start cold; one entry
+point per task with the checker in the loop.
 
-### D133 — 2026-10-01 — Home Lattice plan: a web around the core, as a draft
-Step 4.3 settles the paper design in [lattice-plan.md](lattice-plan.md):
-about 30 rooms (25 normal, 5 Outer Buffer secrets), a new start with a
-four-room tutorial (the old test rooms and Boot Sector go to the dev wing),
-an Atrium hub, four wings (Shield, Pause, Scan, Fork; Zap in the
-tutorial), the core behind boss 2 with Level 1 locks to the double jump
-vault and the two teaser sectors. 16 fragments in normal rooms, none
-behind Level 1 or boss 2; two secret rooms hold extra fragments (18 in
-all). Boss 1 drops a fragment, boss 2 an energy buff. Pull, Compile,
-Blink, Warp, Cut & Paste and Firewall stay out of the Lattice; the double
-jump is the Level 1 reward. Some secrets need tools the Lattice does not
-give and wait for a return visit (D67).
-The whole list is a proposal: rooms, exits and fragments change during
-the author's room review and design.
+### D133 — 2026-10-01 — Home Lattice plan: a web around the core
+The plan ([lattice-plan.md](lattice-plan.md)): a tutorial, an Atrium hub,
+four wings (Shield, Pause, Scan, Fork), the core behind boss 2 with Level
+1 locks to the double-jump vault and the two teaser sectors, five Outer
+Buffer secrets. Pull, Compile, Blink, Warp, Cut & Paste and Firewall stay
+out of the Lattice. A proposal that changes as rooms are made.
 **Why:** a hub with cross-linked wings gives branching and backtracking
-instead of a line, keeps the first playtest to five simple spells, and
-lets the drafting steps (5.5 to 5.9) start from an agreed list.
+and keeps the first playtest to five spells.
 
 ### D134 — 2026-10-01 — Bosses: one cell, a boss bar, one pattern each
-Step 4.4 settles the two Lattice bosses with the author.
-- **Body:** one cell on the floor, one or two cubes high; no multi-cell
-  bodies, no multi-cell claims, so pathfinding and collision stay as they
-  are. Boss 1 has the bug body, ringed by three gold circles like the
-  core's; boss 2 is a bigger virus two cubes high (it cannot be jumped,
-  only gone round). Snake-like segmented bosses are an idea for later.
-  The Warden knight look (D107) stays for ordinary combat rooms.
-- **Boss mark:** three gold rings round a body is how a boss is told
-  apart. It is a mark, not a look: any template gets it from a `boss`
-  block (its look stays as it is, so later bosses reuse a normal body, a
-  virus, a worm, a wyrm, in its own color), and one small render helper
-  (`render/boss-mark.js`, sized to the body's height) draws it for every
-  boss, the showcase included. Boss 2 carries it too.
-- **Damage:** the HUD shows a boss bar while a boss is awake. Pause never
-  freezes a boss (`pausable` false). Boss 1 can always be hit but has
-  high integrity; no visor. Boss 2 is armored (below).
-- **Boss 1 (drops fragment 7):** shoots aimed bolts at the wizard and
-  from time to time teleports to another cell of its arena, which forces
-  him to take cover and retarget. The arena has blocks that stop bolts
-  (cover) and no shrine (D104). It shoots faster and teleports more
-  often as its integrity drops.
-- **Boss 2, the Gatekeeper (drops the +10 energy buff, D133):** it walks
-  straight at the wizard's position (or a Fork decoy's, D129); next to
-  him it winds up a charged, strong surround attack (a burst all round),
-  with a long windup he can step out of. It is immune to every spell
-  except while it stands on an overload plate of its arena (a held floor
-  plate, D75), where its armor opens; he leads it over a plate by
-  walking, and a decoy beside a plate holds it there. Because it chases
-  him, no pulling or special luring is needed. Later phases wind up
-  faster. It needs no Fork, so reaching the Gatekeeper through the Scan
-  wing first is not a dead end.
-- **Engine (4.5):** a `boss` block in a template: the bar, phases by
-  integrity thresholds with an attack pattern each (bolt, teleport,
-  chase, charged burst), a "vulnerable only on a plate" mode; `size`
-  height for a taller hitbox. Nothing else about the grid changes.
-**Why:** one-cell bodies keep the grid claims, enemy pathing and the
-reachability checker as they are, and let two different boss ideas (cover
-and retargeting; luring) carry the fights, one per boss, rather than one
-big engine step. A visor and a bar make the fight readable.
+A boss body is one cell, one or two cubes high (no multi-cell claims).
+Three gold rings round any normal body mark a boss
+(`render/boss-mark.js`). The HUD shows a boss bar; Pause never freezes a
+boss. Boss 1 shoots and teleports, so he takes cover; boss 2 chases and
+winds up a surround burst, and is armored except on an overload plate.
+**Why:** one-cell bodies keep pathing and the checker as they are; two
+different ideas (cover, luring) carry the fights.
 
 ### D135 — 2026-10-01 — The boss engine: a boss block, phases, drops
-Built in step 4.5, from D104 and D134.
-- **Template:** a `boss` block in an enemy template makes it a boss:
-  `phases`, each starting once its integrity is down to a share
-  (`from`; the first has 1) and changing any of the template's fighting
-  values (movement, attack, speeds, ranges, charge, cooldown, bolts,
-  damage) plus `teleport` (seconds between jumps); `armor` `none` or
-  `plate`. `height` (any template, 0.6 by default, up to 1.9) makes a
-  taller hitbox in the same one cell; above 1 the cell above must be
-  free. A boss is hostile, may take more than 15 integrity, is never
-  frozen by Pause nor dragged by Pull. Validation checks each phase as
-  the enemy it makes.
-- **Awake:** a boss wakes when it first sees the wizard or is hit, and
-  stays awake: its bar shows (top middle: name from `strings.json`
-  `boss.<template>`, integrity in its color, a tick per later phase,
-  dimmed while plate armor is shut; it lingers 1.5 s once beaten), and
-  its teleport clock runs.
-- **Teleport:** half a second: it narrows to a line, jumps to a free,
-  safe cell of the floor it stands on at least 3 units from the wizard
-  and his decoy, preferring a cell that sees him, picked by its own
-  seeded dice (so a room plays the same each time), and comes back.
-- **Plate armor:** spells, discharges and bolts glance off ('armor')
-  unless it stands on a floor plate (any plate object); it does not
-  stop plates working.
-- **Drop and defeated bit (D104):** a room gives its boss the id of one
-  of its permanent pickups (`drop`). The boss holds it unseen; beaten, it
-  lets it fall into its own cell (a banner and a terminal line), and
-  once its bit is found the boss is left out of the room. One boss a
-  room, no shrine with it.
-- **Open doors:** a boss never locks its arena's doors: the wizard may
-  retreat through any exit at any time, and the room resets when he comes
-  back anyway. A locked exit in a boss room follows the usual switch
-  rules (D75).
-- **Look:** a taller body draws its model bigger (at most 1.6 times, so
-  it keeps within its cell); `render/boss-mark.js` puts the three gold
-  rings round any boss, drawn in while plate armor is shut, spread and
-  spinning when it opens. Plate armor shows as a shell round the body:
-  a white dashed box, the plates' own look (a mechanism, D99), that
-  flashes when a hit glances off and lifts away when the boss steps on
-  a plate (from review: the vulnerable moment must be plain to see; the
-  plates themselves stay as they are). A teleport squeezes body and
-  rings.
-- **Test arenas:** `boss_arena` (a prototype of boss 1, `proto_warden`)
-  and `boss_plates` (of boss 2, `proto_gatekeeper`), test rooms off
-  Build Yard (D90); 4.6 and 4.7 turn the prototypes into the bosses.
-**Why:** the bosses differ by data, not code: the phase overrides reuse
-the existing movements and attacks, so boss 1 and 2 need only teleport
-and plate armor besides. The drop stays at an authored cell, so the
-reachability checker and the room designer see where it falls. Open
-doors (the author's call at review) keep a fight escapable; the room
-reset makes retreating cost the fight, nothing more.
+A `boss` block in a template: `phases` by integrity share, each changing
+fighting values plus `teleport`; `armor` `none` or `plate`. `height` (up
+to 1.9) makes a taller hitbox in one cell. A boss is hostile, never
+frozen or pulled; it wakes on sight or hit, then its bar shows. Teleport:
+to a free safe cell ≥ 3 units from him, seeded. Plate armor: hits glance
+off unless it stands on a floor plate (a white dashed shell lifts away).
+A room names its boss's `drop`; beaten, it falls into its cell. One boss a
+room, no shrine; a boss never locks its arena's doors.
+**Why:** bosses differ by data; open doors keep a fight escapable.
 
 ### D136 — 2026-10-01 — Boss one is Null Pointer
-Step 4.6 turns the prototype `proto_warden` into the first boss: template
-`null_pointer` (the bug body with the boss mark, pink, 24 integrity, aimed
-bolts, three phases that fire and teleport faster), named NULL POINTER on
-the boss bar (`boss.null_pointer`), dropping fragment 7 in the test arena
-`boss_arena` (now "Null Pointer Arena"; test room, D90). Values stay as
-tuned in D135; the Lattice room placement is Phase 5.
-**Why:** the fight already matched D134; what was missing was its identity.
+Template `null_pointer` (bug body, pink, 24 integrity, aimed bolts, three
+phases that fire and teleport faster), NULL POINTER on the bar.
+**Why:** the fight matched D134; it needed an identity.
 
 ### D137 — 2026-10-01 — Boss two is the Gatekeeper
-Step 4.7 turns `proto_gatekeeper` into the second boss: template
-`gatekeeper` (a virus 1.6 high, plate armor, chases and winds up a
-surround burst), named THE GATEKEEPER on the boss bar. Harder than the
-prototype: 16 integrity and a third phase at 30% (faster windup and
-chase). It drops the +10 energy buff (`buff_energy_2`, D133, D134) in the
-test arena `boss_plates` (now "Gatekeeper Arena"; test room, D90). The
-Lattice placement is Phase 5.
-**Why:** the lure-over-plates fight was settled in D134; this gives it a
-name and the "harder than boss one" the plan asks for.
+Template `gatekeeper` (a virus 1.6 high, plate armor, chase and surround
+burst, 16 integrity, a third phase at 30%), THE GATEKEEPER on the bar;
+drops the +10 energy buff.
+**Why:** the lure-over-plates fight of D134, harder than boss one.
 
 ### D138 — 2026-10-01 — The audio engine
-Step 5.1: `src/audio/` plays music through Howler (looping, crossfades
-of 1.5 s) and sound effects as ZzFX recipes or files, all named in
-`data/audio.json` (schema `audio.schema.json`, optional file). Slider
-steps 0–10 map to gain squared. A sound named like a game event plays on
-that event, so the effects pass is data only. A name with no entry, a
-missing file or a load error is a silent stub with one console warning.
-Only ZzFX's generator is vendored (`audio/zzfx.js`, MIT): the npm
-package creates an AudioContext on import and plays by itself, which
-neither tests nor a click-to-start browser allow. The context is made on
-the first key or click.
-**Why:** the game must never wait for assets (tracks come in 5.3), and
-tests need the engine without a browser, so the browser pieces are
-injected.
+`src/audio/` plays music through Howler (loops, 1.5 s crossfades) and
+effects as ZzFX recipes or files, named in `data/audio.json`. Slider steps
+0–10 map to gain squared. A sound named like a game event plays on it. A
+missing entry or file is a silent stub with one warning. Only ZzFX's
+generator is vendored (`audio/zzfx.js`); the context is made on the first
+key or click.
+**Why:** the game never waits for assets; tests run without a browser.
 
 ### D139 — 2026-10-01 — The sound effects: symbolic, not realistic
-Step 5.2 fills `data/audio.json` with ZzFX recipes for the existing events
-and the menus. The style is symbolic arcade: spells and enemy attacks are
-electric zaps (saw wave, FM buzz and a fast stutter), pushes and pulls a
-soft airy swish, and anything derezzing (enemies, crates, collapsing
-blocks, the wizard) a bubble pop, a sine swooping up and bursting; no
-realistic explosions or noise crashes. A sound named `type:detail` plays
-for an event whose spell, pickup kind or death cause matches (`cast:zap`,
-`pickup:disk`, `die:void`), else the plain `type` does. Menus report UI
-sounds (`ui_move`, `ui_open`, `ui_back`, `ui_choose`, `ui_adjust`,
-`ui_deny`) through `MenuFlow.onSound`.
-Appearing (respawn, regrow, paste, compile, fork) is the reverse of the pop: a swoop that falls while the sound swells. Spells are clean "pew" tones, not noise. A sound with `"loop": true` runs while the game keeps it on (`AudioEngine.setLoop`, main.js): the shield and firewall hum while they are up.
-**Why:** one coherent sound identity that fits the neon-hologram world;
-recipes stay data, so the author can retune them without code.
+Spells and enemy attacks are electric zaps, pushes a soft swish,
+derezzing a bubble pop, appearing its reverse; no realistic explosions. A
+sound named `type:detail` plays for a matching event (`cast:zap`,
+`pickup:disk`, `die:void`), else the plain `type`. Menus play `ui_*`
+sounds. `"loop": true` sounds run while the game keeps them on (shield,
+firewall).
+**Why:** one coherent sound identity; recipes stay data.
 
 ### D140 — 2026-10-01 — Linked switches, gates and timed switches
-Switches no longer only open a room's locked exits all together. A
-locked exit, a gate or a platform names the switches that power it
-(`switches`, ids of the room's targets and plates) and is powered while
-they are all on; without a list it takes every switch in the room, so
-existing rooms (authored ones included) behave as before and need no
-migration. New object kind `gate`: a white barred block, solid until
-powered; `inverted` makes it a bridge, there only while powered. A gate
-never closes on a body in its cell, and may stand in a hole like a
-collapsing block. A platform with `switches` runs only while powered
-and stops where it is. A switch type's `timer` (seconds) makes a timed
-switch: a target stays on that long after a bolt (another bolt restarts
-it, never switches it off), a plate that long after it is released;
-counting down it blinks faster and ticks. The reachability checker
-treats a gate that can be both open and closed as floor never in the
-way and counts timed switches as on for good (it knows no timing).
-**Why:** the switch mechanic could only gate exits, so a room could not
-chain steps (switch → bridge → plate → exit) or give two switches
-different jobs; timed switches add the "hit it, then race" puzzles. A
-default of every switch keeps the rule simple and leaves authored rooms
-untouched; links are explicit ids rather than channels so a room file
-reads on its own.
+A locked exit, a gate or a platform names the switches that power it and
+is powered while they are all on; without a list it takes every switch in
+the room. A platform with switches runs only while powered. A switch
+type's `timer` makes a timed switch (a target stays on that long after a
+bolt, a plate that long after release; it blinks and ticks). The checker
+treats a gate that can be open and closed as never in the way and timed
+switches as on for good.
+**Why:** rooms can chain steps and give switches different jobs; timed
+switches add "hit it, then race" puzzles.
 
 ### D141 — 2026-10-01 — Gate blocks: collapsing blocks and gates are one kind
-Collapsing blocks (D47) and the gates of D140 both come and go, so they
-are now one block kind, `gate`, with a `trigger`: `switch` (powered by
-switches; `inverted` makes a bridge) or `step` (the collapsing block:
-the wizard standing on it makes it shake, then go; `regrow` brings it
-back). Gates move from object types to block types: a wall of gates is
-one block box, and its entry's `switches` link every cell of it (the
-room editor's Block tool has a Switches field; cells merge into boxes
-only with the same type and switches). Both share one rule and one look:
-going they sink into the floor, gone they leave a dashed outline if they
-will come back, and they never come back on a body. Kind `collapsing`,
-`entities/collapsing.js` and `render/collapse-fx.js` are gone; the
-derez of a collapsing block is replaced by the sink. A switch gate shows
-its switch lights only on the top of a stack.
-**Why:** two near-identical mechanics in two places (an object kind and
-a block kind) with different looks and rules would drift apart; no room
-used collapsing blocks, so the author asked to replace them fully.
+Block kind `gate` with a `trigger`: `switch` (powered by switches) or
+`step` (the collapsing block: the wizard standing on it makes it shake,
+then go; `regrow` brings it back). A wall of gates is one block box, and
+its `switches` link every cell. Going, they sink into the floor; they
+never come back on a body.
+**Why:** two near-identical mechanics would drift apart.
 
-### D142 — 2026-10-01 — Switch links in the editor; switch gates are white glass
-Switch links were hard to see and edit: a placed switch couldn't be
-picked, a gate block not at all. The room editor gets a **Switch** tool
-(key 0): pick a target or plate, then click switch gates (a whole joined
-wall at once), platforms and exits to link or unlink them; linking an
-exit locks it, unlinking its last switch unlocks it. Hovering anything
-linked names its links in the hover line and draws them over the room
-(gold boxes, dashed lines); the picked thing's links show otherwise. The
-Object tool picks a switch or platform instead of replacing it, and the
-panel shows what a switch powers and its timer (overridable). Alt+click
-with the Block tool takes a block's type and switches. Switch gates look
-like white frosted glass boxes (`GLASS.gate`) without the bars, and a
-switched-off one is not drawn in play at all, only as a dashed outline
-in the editor; a collapsing block that will grow back keeps its outline
-in play.
-**Why:** the author asked for a tool for working with switches, for
-gates to read as white glass, and for gates that are off to stay
-invisible in play.
+### D142 — 2026-10-01 — The Switch tool in the room editor
+The room editor's **Switch** tool (key 0): pick a target or plate, then
+click gates, platforms and exits to link or unlink them. Hovering shows a
+thing's links. Alt+click with the Block tool takes a block's type and
+switches. Switch gates are white frosted glass (`GLASS.gate`); one that is
+off is not drawn in play, only outlined in the editor.
+**Why:** links were hard to see and edit.
 
 ### D143 — 2026-10-01 — Switches are white glass
-Targets and plates are built with `glassBox()` and `GLASS.gate`, like
-the switch gates: a target is a glass block, a plate a thin glass tile
-flush with the floor. Off, the glass is dark (tint 0.06) and the lines
-dim; on, it glows bright (tint 0.7). A target's bull's-eye is drawn only
-on the faces the camera sees (top, +x, +z), since glass shows the
-hidden faces through. Lock panels stay dark: they are no switches.
-**Why:** the author asked for every switch to be white glass, so what
-switches and what is switched share one material (white is a mechanism,
-D99); a first version with the gates' brightness made on and off too
-alike, so off is darker.
+Targets and plates are built with `glassBox()` and `GLASS.gate`: dark when
+off, bright when on. A target's bull's-eye only on the seen faces.
+**Why:** what switches and what is switched share one material (white is
+a mechanism, D99).
 
 ### D144 — 2026-10-02 — Gate blocks keep types; a bridge starts gone
-Gate blocks stay block types in `defs.json`, not values set per block in
-a room: a room entry gives a gate only its cells and `switches`. The
-switch gate's `inverted` becomes `start` (`solid`, the default, or
-`gone`, a bridge): its state while its switches are off, so the room
-starts with it. The room editor's Block tool lists the types in groups
-(Static, Switch gates, Collapsing (step) gates), each saying what it
-does.
-**Why:** the author asked whether gates, bridges and collapsing blocks
-could be one block with a default state and a regrow time set in the
-editor. The engine already runs them as one kind (D141); the trigger
-(switches or the wizard's step) stays the real difference. Values per
-block would let blocks that look alike behave differently (the player
-reads behavior from the look, D99), add combinations without rules
-(a step gate that starts gone can never trigger), split merged walls
-into more boxes and scatter tuning over room files; a new variant stays
-one line in `defs.json`. `start` names the state plainly where
-`inverted` did not. No room file used `inverted`; only `defs.json`
-changes.
+Gate blocks are block types in `defs.json`; a room gives a gate only its
+cells and `switches`. A switch gate's `start` is `solid` (default) or
+`gone` (a bridge). The Block tool lists types in groups.
+**Why:** values per block would let blocks that look alike behave
+differently (D99).
 
 ### D145 — 2026-10-02 — Object types have variants (`extends`)
-An object type in `defs.json` may `extend` a base object type and list
-only the values it changes, like block types (D60): one level (a variant
-never extends a variant) and it keeps the base's kind. The loader fills
-variants in (`resolveObjectTypes()`), so rooms, the game and the editor
-see complete types. The crate variants (`crate_plain`, `crate_cross`,
-`crate_dashed`) extend `crate` (setting `mark: none` where they had no
-mark) and the timed switches extend `target` and `plate`; resolved, every
-type is the same as before. `spiked_platform` stays its own base: it
-shares almost nothing with `platform`.
-**Why:** the crates repeated their kind, color and faces four times and
-the timed switches their base's values, so changing the crate color
-meant four edits that could drift apart. One level and a fixed kind keep
-a variant readable on its own, as for block types.
+An object type may `extend` a base and list only what it changes, one
+level, keeping the base's kind; the loader fills variants in
+(`resolveObjectTypes()`). Crates and timed switches use it.
+**Why:** one change in one place, as for block types (D60).
 
 ### D146 — 2026-10-02 — The Object tool's list in groups, with where pickups lie
-The room editor's Object tool listed about 120 types flat, each with only
-its kind (four crates all "pushable", 64 fragments burying the rest). It
-now lists them in groups like the Block tool (D144): Crates, Platforms,
-Decorations, Core, then the pickups: Spells, Upgrades, Buffs, Refills,
-Fragments, Secrets, Test. Each type says what it does (`breaks after 1
-hit`, `spiked, hurts 1`, `spell zap`, `+10 energy`), and each permanent
-pickup where it lies in the world now, unsaved edits included (`not
-placed`, `in room_1`, `in a ×2`), worked out like the world map's pickup
-report (F3, `world/pickup-report.js`).
-**Why:** Home Lattice needs 16 or more fragments placed over about 30
-rooms; seeing what is placed while placing avoids a slot placed twice
-by mistake (allowed, D71, but rarely meant) or one forgotten, without
-switching to the world map tool.
+The Object tool lists types in groups (Crates, Platforms, Decorations,
+Core, Spells, Upgrades, Buffs, Refills, Fragments, Secrets, Test), each
+saying what it does, and each permanent pickup where it lies in the world
+(`world/pickup-report.js`).
+**Why:** placing 16+ fragments over 30 rooms without placing a slot twice
+or forgetting one.
 
 ### D147 — 2026-10-02 — The dev wing: a list in world.json, hidden from players
-Step 5.4. `world.json` has a `dev` list of room ids. The dev server, the
-tests and the tools see the whole world; a build for players
-(`loadGameData(files, { dev: false })`, `main.js`) leaves the dev rooms
-out, with their connections and map positions, and an exit of a player
-room that led into one is dropped, so it is plain wall. Validation runs
-on the whole world first; the start room may not be in the wing. Nothing
-is moved or deleted, and no room file changes (D45, D90). For now the
-wing holds every test room except Boot Sector, `room_1` and `room_2`:
-Boot Sector is authored and the start until 5.5 gives the game a new
-start, and its neighbours cannot be hidden without sealing its exits.
-Boot Sector's role: the player start until 5.5, then it joins the wing
-(the author's OK needed to edit it, D90, but the flag is in world.json,
-not the room). Step order: 5.5 (the tutorial) comes before 5.3 (music),
-which still waits for the tracks.
-**Why:** the test rooms are the only place to try a mechanic in isolation
-(D45) and stay; a list in the world file hides them without moving
-authored rooms or touching their files, and the same data serves the
-dev-only editor and world map tool.
+`world.json` has a `dev` list of room ids. The dev server, tests and tools
+see the whole world; a build for players (`loadGameData(files, { dev:
+false })`) leaves the dev rooms out, and an exit into one becomes wall.
+The start room may not be in the wing. New mechanics get a dev room there.
+**Why:** test rooms are the place to try a mechanic in isolation; a list
+hides them without touching room files.
 
 ### D148 — 2026-10-02 — The Lattice tutorial: the real start
-Step 5.5. Five unflagged rooms (D90) in `data/rooms/`: `boot_up` (8x8,
-the start: a one-block ledge, a backup shrine, a screen with the
-controls), `first_steps` (a two-wide hole and two crates: pushing in two
-directions), `zap_port` (the Zap disk, a bug, a target that powers the
-north door), `first_light` (fragment 1, the fragments screen) and a
-small `atrium` (a crate as a step to a 2-high ledge with fragment 2; its
-other doors wait for 5.6). Map cells x 5 to 8, east of the old test
-rooms. `world.json` starts at `boot_up`; Boot Sector, `room_1` and
-`room_2` join the dev wing (the flag lives in world.json, their files are
-untouched). New screen texts `tut_*` in `lore.json`. The reachability
-checker's core check now counts only rooms joined to the start, a warning
-until 5.8 puts the core in the Lattice (the test core sits in the dev
-wing).
-**Why:** the world needs a real first minute, and the old test cluster
-must not gate CI once it is no longer the start.
+The game starts at `boot_up`, the first of the tutorial rooms; screen
+texts `tut_*`. The checker's core check counts only rooms joined to the
+start.
+**Why:** the world needs a real first minute.
 
 ### D149 — 2026-10-02 — Lattice steps: hub first, then small wings
-Step 5.6 is cut into 5.6a to 5.6h of two or three rooms (docs/design.md).
-5.6a builds the central area first: the Atrium with all its doors (west
-tutorial, north Shield wing, south Pause wing) and the two disk halls that
-open the wings, so the hub is complete and the author can refine and flag
-it. The wings follow in pairs of rooms; the Gatekeeper is 5.7. The map
-orientation of the plan's drawing is in lattice-plan.md.
-**Why:** an exit must be connected, and an authored room cannot get new
-exits (D90); finishing the hub with its neighbours first lets the author
-take it over, and small steps keep each PR reviewable and playable.
+Lattice rooms are built two or three per step, the hub first.
+**Why:** an exit must be connected and an authored room cannot get new
+exits (D90); small steps keep each PR reviewable.
 
 ### D150 — 2026-10-02 — Crates are neon green
+Pushable crates are neon green (`#39ff14`), was lime. Lime stays for the
+energy bar and buffs; new template colors keep clear of both
+(`AVOID_COLORS`).
+**Why:** the game is called NEONMANCER.
 
-Pushable crates change from lime (`#b6ff3c`) to neon green (`#39ff14`), as
-the game is called NEONMANCER. A small step ahead of Phase 5's bigger visual
-pass; the rule of D99 stays (the pushable color is its own), only the color
-moves. Lime stays for the energy bar and buffs, and both are kept clear of
-by new template colors (`AVOID_COLORS`). The tutorial's crate screen says so.
-
-### D152 — 2026-10-02 — One `requires` list for locked doors
-
-Switch locks and access locks become one system. An exit's `locked`,
-`switches` and `access` fields are replaced by `requires`, a list of
-conditions that must all hold: `{ "switch": id }` (one per switch),
-`{ "switch": "*" }` (every switch in the room) and `{ "access": level }`.
-`withExitDefaults()` expands the list into the old fields for the game, the
-reachability checker and the renderer; the editor writes it back
-(`exitFields()`). The look follows: a white glass pane (like the switch
-gates), lights red until their switch is on and then green, and the access
-level as a small numeral in the top corner, red until his level is enough,
-then green. Hidden exits (D128) stay a flag of their own.
-**Why:** both were one idea, a door waiting for a condition, with two
-vocabularies in data, editor and look; one list is easier to read and to
-extend (a later condition needs one new entry kind). It rewrote the north
-exits of the authored Boot Sector and `room_1` (`"locked": true` to
-`"requires": [{ "switch": "*" }]`), with the author's OK.
 ### D151 — 2026-10-02 — The Atrium hub and its two disk halls (5.6a)
-
-The Atrium gets its north and south doors and a backup shrine, plus a
-second screen naming the wings. North leads to `shield_hall` (the Shield
-disk behind a cover wall, a sentinel guarding it), south to `freeze_hall`
-(the Pause disk across a bug's patrol). Both halls are dead ends until the
-wings follow (5.6b, 5.6c); every exit is connected. New screen texts
-`tut_wings`, `tut_shield`, `tut_pause`. Rooms are unflagged; the author
-refines them and may flag the Atrium authored (D90).
-**Why:** the hub must have all its exits before the author takes it over,
-and each disk hall teaches its spell (hide from a ranged attack, freeze a
-patroller) before the wing that needs it.
+The Atrium with its wing doors and a shrine; `shield_hall` (Shield disk)
+and `freeze_hall` (Pause disk).
+**Why:** each disk hall teaches its spell before the wing that needs it.
 
 ### D152 — 2026-10-02 — Boosts: small temporary rewards for simple secrets
+Pickup kind `boost` (small voxel figures, no save bit, no score).
+Functional ones end when the room resets: **Overdrive** (50% faster on the
+ground, air speed unchanged), **Patch** (absorbs the next hit, 30 s),
+**Overclock** (free spells, 10 s); running ones show as tags. Cosmetic
+ones last until any death or a reload: **Sparkle trail** (small magenta
+pixels), **Rainbow hat**. One already worn is left lying. The checker
+ignores them.
+**Why:** a simple secret needs a reward between nothing and a permanent
+chip; limited to the room they never trivialise later rooms.
 
-A new temporary pickup kind, `boost` (small voxel figures, no save bit, no
-score), for secrets that don't deserve a permanent item. Five effects, built
-into the engine, one pickup type each in `defs.json`:
-- Functional, with `seconds`, ended when the room resets (leaving it, or a
-  death, which rebuilds it): **Overdrive** walks 50% faster on the ground (the
-  air speed stays, so a jump never carries further, D36); **Patch** absorbs
-  the next hit (30 s, a gold ring round him); **Overclock** makes spells cost
-  no energy (10 s). Running ones show as tags under the spell tag.
-- Cosmetic, no `seconds`, kept through deaths and rooms, lost on a crash (the
-  reboot on a shrine) or a reload: **Sparkle trail** (pixels fall off his feet
-  while he walks), **Rainbow hat** (three hat bands cycling the hues). One
-  already worn is left lying.
-Not saved, not scored, not part of the reachability checker (it knows nothing
-of them; none of them opens an area). Shapes: an arrowhead, a square ring, a
-lightning step, an X and an arch; colors: cyan moves, gold is a patch, lime is
-energy, magenta is the wizard (D99).
-**Why:** a simple secret (a side nook, a pushed crate) needs a reward between
-nothing and a permanent chip; refills only restore, boosts give a short taste
-of power or a bit of fun. Limiting functional ones to the room keeps them from
-trivialising later rooms, and cosmetic ones outlast deaths so they stay fun
-until a real setback.
+### D153 — folded into D152
 
 ### D154 — 2026-10-02 — Frozen enemies can be pushed
-
-Walking into a frozen enemy pushes it one cell, again and again while he
-keeps walking, the way it moves when Pull drags it (`Enemy.pull()`): over
-anything, so a hole or a lethal floor there is its end and it pops. It stays
-frozen on the way. Only the top of a stack moves (nothing is checked on top
-of an enemy yet), a boss never freezes, so none is pushed. Not frozen: still
-solid (D51) or not, never pushed.
-**Why:** a frozen enemy is already a platform (D85) and can be cut and pulled;
-pushing completes it as a block that blocks, carries and moves, for puzzles
-(a frozen bug as a bridge stone, or into a pit to get rid of it).
-### D153 — 2026-10-02 — Cosmetic boosts go with any death; smaller magenta sparkles
-
-Amends D152: the Sparkle trail and Rainbow hat are lost at any death (a
-recompile at the room entrance too), not only at a crash, and with a reload.
-The trail's pixels are all the wizard's magenta (D98) and half the size.
-**Why:** a cosmetic that outlasts every death made the reward too cheap to
-lose; magenta and small keep the trail a tidy accent, not glitter.
+Walking into a frozen enemy pushes it one cell (as `Enemy.pull()` moves
+it): over anything, so a hole or lethal floor is its end. Only the top of
+a stack moves; bosses never freeze.
+**Why:** a frozen enemy is already a platform; pushing makes it a block
+for puzzles.
 
 ### D155 — 2026-10-02 — A frozen enemy is a whole cell
+While frozen, an enemy's box is the whole cell, at least a block high; it
+is a step like a crate. The Pause cage shows the cell.
+**Why:** players expect to use a frozen enemy as a block.
 
-While frozen, an enemy's collision box is the whole cell, at least a block
-high (1×1×1; a taller template keeps its height), instead of its small body
-(0.6). It is a block to stand on and climb from like a crate: a frozen bug
-pushed against a two-block wall lifts the wizard to 1.0, and his jump clears
-the wall (1.0 + 1.2 > 2.0). It also blocks more of the way, and bolts hit the
-larger box. The Pause cage now shows the full cell, so the box is visible.
-The unfrozen box and the model are unchanged.
-**Why:** players expect to use a frozen enemy as a block to cross an
-obstacle (a 0.6 box could not carry a jump over a two-block wall); it makes
-frozen enemies usable in puzzles together with pushing (D154). Shield Hall's
-two-block wall can now be crossed with a frozen enemy once Pause is found,
-which suits the maze's backtracking (D67).
+### D156 — 2026-10-03 — The Shield wing (5.6b)
+`bolt_gallery`, `relay_loft` and `ledger_cell`. Rule: wing rooms combine
+taught verbs in several steps, each harder than the last. The checker
+takes platforms as free floor, so ferry power is judged by hand.
+**Why:** the tutorial teaches one verb per room; wings combine them.
 
-### D156 — 2026-10-03 — The Shield wing: three multistep rooms (5.6b)
-
-`shield_hall` gets a north door (`at` 4, an unflagged room) to `bolt_gallery`
-(8,-2), then `relay_loft` (8,-3) with `ledger_cell` (7,-3) off its west door;
-the east side of `relay_loft` stays free for the Scan wing's door (5.6e).
-Each puzzle takes several steps and is harder than the last room before it:
-- `bolt_gallery` (fragment 3): a 3-wide pit takes two crates and a jump for
-  the last tile; the second crate is caged behind a gate that a target
-  opens; two towers (cron) cover the bridge column and the exit lane, and a
-  crate pushed ahead of him blocks a bolt, so Shield (or a kill) is for the
-  last cells; a third crate is the step to the 2-high fragment ledge.
-- `relay_loft` (fragment 4): two ferries over two 2-wide pits, each powered
-  by plates only crates can hold (A: one plate on the near bank, B: two on
-  the island, one crate brought round a corner); a fourth crate is the step
-  on the far bank.
-- `ledger_cell` (fragment 5): a chain of two gates and two plates: crate 1
-  opens gate 1, which frees crate 2, which is pushed out onto plate 2 to
-  open gate 2 in front of the fragment alcove.
-**Why:** the tutorial rooms teach one verb each; the wings should combine
-them (plan: docs/lattice-plan.md). The reachability checker sees crates,
-gates and plates but takes platforms as free floor, so ferry power is
-judged by hand: the plates are on banks he can reach and a lost crate means
-leaving and re-entering (rooms reset).
-
-### D157 — 2026-10-03 — Cold Stairs: a frozen bug holds a bridge (5.6c)
-
-`freeze_hall` gets a south door (`at` 4) to `cold_stairs` (8,2), 10x5x12,
-unflagged. A 2-wide pit splits it. Near half: a bug patrols beside a plate
-it never steps on; frozen (Pause) and pushed a cell onto the plate, it
-holds a bridge over the pit for the freeze time (5 s; the run takes about
-3.5 s from the shot). Far half: a second bug patrols the foot of a 2-high
-ledge with fragment 6; frozen, it is the step up. The ledge steps up to a
-3-high ledge along the back wall that leads back over the pit, too high to
-climb from the near half, so he drops home. An energy refill lies in the
-far corner for a third cast. The far half's east wall is kept free for the
-Fork wing's door (5.6g). The reachability checker counts a plate on a
-pausable enemy's path, or one push beside it, as held with Pause.
-**Why:** freeze_hall teaches freezing a patroller into a step; this room
-develops it with the push (D154) and gives the freeze a clock, while the
-plate beside the lane keeps the unfrozen bug from flicking the bridge.
+### D157 — 2026-10-03 — Cold Stairs (5.6c)
+`cold_stairs`: a frozen bug pushed onto a plate holds a bridge. The
+checker counts a plate on a pausable enemy's path, or one push beside it,
+as held with Pause (extended by D166).
+**Why:** develops freeze-as-step with the push and a clock.
 
 ### D158 — 2026-10-03 — The dev wing is outside the world check
-
-The world check of the reachability checker no longer reports a dev-wing
-room (world.json `dev`, D147) it cannot enter as an error: it is a
-warning, and rooms joined to the start only through the wing are "not
-connected". Tests that read the removed test arenas and Boot Sector use
-the defs alone or the dev room `hidden_layer`.
-**Why:** the author's map update removed most test rooms and locked the
-dev wing's door behind access 3, which no player room gives; players never
-see the wing (it is left out of their builds), so it cannot fail their
-world. CI on `main` was red from it.
+The world check reports an unreachable dev-wing room as a warning, not an
+error.
+**Why:** players never see the wing, so it cannot fail their world.
 
 ### D159 — 2026-10-03 — Cold Stairs review fixes
-
-Amends D157 after the level review. The key bug's lane ends at z = 3, a
-cell short of the pit: a bounce off it carries the wizard about 2.4 cells
-sideways, and from the old lane end at z = 4 he could land across the pit
-without Pause (108 of 21,600 simulated tries; none with the new end). A
-spare crate in the far half (`crate_spare`) is a second way up the ledge:
-the stair bug can be killed (zapped, or frozen and pushed into the pit),
-and then dying was the only way out.
-**Why:** a puzzle room must not be solved by a habit (riding a bug) and
-must not trap him for a habit (zapping a bug); the checker models a
-bounce as going straight up, so both are judged by playing.
+Rule: a puzzle must not be solved by a habit (riding a bug's bounce) nor
+trap him for one (zapping a bug); the checker models a bounce as straight
+up, so both are judged by playing.
+**Why:** a bounce carried him across without Pause.
 
 ### D160 — 2026-10-03 — Ledger Cell: no climbing past the gates
-
-Amends D156. A crate pushed beside the 2-high divider (x = 3) was a step
-onto its top, and from there he dropped into the fragment alcove with both
-gates shut (found by a mutation test: sealing both gates changed nothing;
-confirmed by headless play, fragment taken in 4.4 s). With the divider
-fixed, crate B pushed beside the 2-high alcove wall was the next way past
-gate 2. Now the divider (its wall, gate 1 and the end block) and the
-alcove's wall and gate 2 are 3 high: a crate step reaches 2, never 3, and no
-2-high top touches a 3-high one. Lowering the room to 3 high does not help:
-the room height is no ceiling. The room is mirrored along z so the 3-high
-walls stand behind the alcove (now x 0-2, z 6-7, fragment at [0, 0, 7])
-instead of between it and the camera; the east door keeps its cells, the
-data pillar stays against the back wall, the screen moves to [7, 0, 6].
-Plate B moves to [7, 0, 0], against the wall, so crate B cannot be pushed
-past it. Crate B is now out of sight behind the divider until gate 1 opens;
-the screen already names it. Every crate and gate matters to the checker
-without abilities; double jump, Compile, Fork and Cut & Paste remain later
-alternatives (D67). Headless play: solved in about 16 s.
-**Why:** a fragment puzzle that a single crate skips teaches nothing, and
-the hidden alcove of the first fix broke "show the goal from the entrance".
+Rule: a crate step reaches 2 high, never 3; the room height is no
+ceiling. Walls a crate must not climb are 3 high, and no 2-high top
+touches a 3-high one.
+**Why:** a crate beside a 2-high divider skipped both gates.
 
 ### D161 — 2026-10-03 — Room-design skill: mutation test and play helper as scripts
-The room-design skill (D132) starts with a workflow, keeps a schema cheat
-sheet and a tuning table (checked against `room.schema.json`, `validate.js`
-and the checklist: an exit's access level is a `requires` entry, test rooms
-go in the dev wing, D147, not next to Boot Sector), and moves the design
-principles to `craft.md`, read when a room is a new idea. Two scripts ship
-with it in `.claude/skills/room-design/scripts/`: `mutate.mjs` removes each
-helper (crate, platform, enemy, bridge, block) and seals each gate in memory,
-re-runs the reachability checker on the room and lists what each exit and
-pickup depends on; `sim.mjs` wraps `Game` for headless play (walk, cast,
-wait until, a state line). The level-review subagent runs the mutation test.
-A new checklist lesson: a crate or frozen enemy beside a 2-high wall is a
-step over it. A checklist fact corrected: the room's height is no ceiling
-in play (he stood on a 2-high wall in a 3-high room); blocks above are.
-**Why:** the manual mutation test (edit a scratch copy, re-run) was skipped
-in practice; run as a script it found that `ledger_cell`'s fragment is taken
-with both gates shut (crate as a step over the 2-high wall, confirmed by
-headless play; fixed in D160) and that `bolt_gallery`'s caged crate and gates change
-nothing for the checker. The skill also carried stale facts that would have
-produced invalid rooms.
+`.claude/skills/room-design/scripts/`: `mutate.mjs` removes each helper
+and seals each gate, re-runs the checker and lists what each exit and
+pickup depends on; `sim.mjs` wraps `Game` for headless play. The
+level-review subagent runs the mutation test.
+**Why:** the manual mutation test was skipped in practice; as a script it
+found real bypasses.
 
 ### D162 — 2026-10-03 — Warden Pit and Idle Cache (5.6d)
-
-`cold_stairs` gets a south door (`at` 5, in the far half, past the frozen-bug
-bridge) to `warden_pit` (8,3), and `warden_pit` a south door to `idle_cache`
-(8,4). Both are unflagged.
-- `warden_pit` (14x4x14, fragment 7): the first boss, Null Pointer, placed
-  from the old test arena (D136). It starts in the middle; six 2-high cover
-  bars (two across the door lanes, four round them) stop its bolts, so the
-  cells inside both doors are out of its sight and it sleeps until he steps
-  out (4 s at either door: still asleep). Two energy refills and an
-  integrity refill lie in the open corners as a trade-off (24 integrity
-  takes about 24 Zaps, five times his base energy). No shrine (D104), doors
-  never locked (D135). 14x14 instead of the plan's 16x16: the bolt range is
-  14 and a smaller floor keeps the teleports in view.
-- `idle_cache` (8x4x10, fragment 8): a 2-wide pit splits the room; one
-  bridge (x = 4) stands while two plates feel weight, one for a
-  crate and one for a frozen bug (a combo of `ledger_cell`'s plates and
-  `cold_stairs`' freeze). The crate lies against the west wall and slides
-  only along it (a data pillar stops it short of the pit), so it can never
-  fill the pit. A 1-high row (z = 4, x 1-7) in front of the pit stops a
-  pushed bug two cells short: from a frozen bug at the pit's edge a late
-  running jump crossed the 2-wide pit (level review). A bounce off the lane
-  lands on the row or the floor before the pit. On the island a second
-  crate, pushed into the pit, is the way home once the bridge is gone (the
-  mutation test shows it as NO EFFECT: it serves only the return).
-  Headless play: the island 3.5 s after the Pause shot (1.5 s spare), the
-  fragment at 11 s, home at 13 s; 120 running leaps off the row: none
-  crossed.
-- `cold_stairs` (amends D157): the same leap skipped its plate (the key bug
-  pushed once onto row z = 4, then a jump from its top to the far half;
-  9 of 40 takeoffs crossed). The pit is now 3 wide (z 4-6) with a 3-deep
-  bridge, the lane ends at its edge: 0 of 40 cross, and the intended run
-  takes about 3 s of the 5 s freeze. A bounce off the lane end now drops
-  him into the pit instead of short of it.
-- A checklist lesson: from a 1-high top beside a floor pit a late running
-  jump crosses 2 tiles (lands up to 2.45 units on, coyote time included).
-**Why:** boss 1 belongs to the Pause wing (D133) and the plan puts a small
-fragment room behind it. The boss fight was tuned in its test arena; the
-arena only needs cover and safe doors. The cache combines two things
-already taught, with a clock, as a calm room after the fight.
-
+`warden_pit` (Null Pointer, cover bars so the doors are out of its sight)
+and `idle_cache`. Rule: from a 1-high top beside a floor pit a late
+running jump crosses 2 tiles (up to 2.45 units).
+**Why:** boss 1 belongs to the Pause wing.
 
 ### D163 — 2026-10-03 — Screen texts are help, never the solution
-A screen text (D118) explains a spell or concept the wizard meets for the
-first time, in the room that teaches it: what it does and how to use it.
-It never explains how to solve the room (where a crate goes, which plate
-needs what, the order of moves, the way home). Test: the text reads true
+A screen text explains a spell or concept met for the first time: what it
+does and how to use it, never how to solve the room. Test: it reads true
 in any room with that mechanic. Rooms without a new concept carry no help
-text; a secret's hint is in the room's shape, never on a screen. The
-room-design skill, `craft.md` and the room design checklist say so.
-**Why:** the author wants rooms to teach by their shape; a screen that
-spells out the moves turns a puzzle into a walk.
+text; a secret's hint is in the room's shape.
+**Why:** rooms teach by their shape.
 
 ### D164 — 2026-10-03 — Every crate is visible
-Every crate in a room is visible to the player: no tall block, ledge,
-pillar or memory wall hides it from the camera (+x +y +z), and none lies
-inside a fake block or walled in out of sight; one face showing (its top,
-+x or +z) is enough. Holds for secrets too. The room-design skill, `craft.md`, the
-level-review subagent and the room design checklist say so.
-**Why:** crates are the wizard's tools; a puzzle whose tool can't be seen
-is a guess, not a riddle.
+No block, ledge, pillar or wall hides a crate from the camera; one face
+showing is enough. Secrets too.
+**Why:** a puzzle whose tool can't be seen is a guess.
 
 ### D165 — 2026-10-03 — Lattice rooms reviewed against D163 and D164
-The level-review subagent read all fifteen non-dev rooms; the fixes:
-- **Screen texts (D163).** `tut_push`, `tut_zap`, `tut_shield`,
-  `tut_gallery`, `tut_relay`, `tut_pause`, `tut_stairs` and `tut_warden`
-  keep only help that reads true in any room (what a crate, target, frozen
-  bug, bridge, ferry, sentinel, tower or boss does) and lose the lines
-  that solve the room (pit widths, crate counts, which plate holds what,
-  where the disk lies, the way home). `tut_ledger`, `tut_idle`, `tut_wings`
-  and `tut_atrium` are gone: their rooms teach nothing new or the text was
-  only directions; those screens stay as decor. "A crate is a step" moves
-  to `tut_push`, where crates are met; `atrium`'s screen shows `help_core`,
-  since the core is first seen there.
-- **`ledger_cell` (D164).** crate_b sat behind the 3-high x = 3 wall, out
-  of sight. Re-laid out at 8x4x9: the crate cell (x 0-3) and the fragment
-  alcove (x 5-7) lie at the front (z 7-8), behind them the 3-high row
-  z = 6 with gate 1 (plate_a) and gate 2 (both plates); plates in the back
-  corners. Mutation test: every helper and gate matters; played headless.
-- **`first_steps`.** From the top of a crate beside the 2-wide pit he
-  leapt it (D162). The pit is 3 wide (x 3-5), the crates at x = 2: both
-  are needed.
-- **`bolt_gallery`.** crate_f made the caged crate a spare; it is gone (the
-  caged crate's top shows, which is enough). crate_e moves to [11,0,2], which also ends the checker's crate
-  search limit coming back from north.
-- **Small ones.** `zap_port` 4 high (its 2-high ledge) and its floating
-  memory stack on the floor; `atrium`'s two crates, which did nothing,
-  removed; `relay_loft`'s first ferry pauses 1 s at its ends; `room_1` and
-  `room_2`, empty placeholders, join the dev wing (D147).
-- **`freeze_hall`** (with D166): the bug's lane passed the ledge's foot, so
-  a bounce put him on the fragment's ledge without Pause. It now walks
-  z = 6, x 1-5, four cells off: freeze it and push it to the ledge.
-**Why:** D163 and D164 were new rules; the existing rooms needed to meet
-them, and the review found the bypasses above along the way.
+All Lattice rooms reviewed: help texts that solved rooms were cut, hidden
+crates moved, pits widened where a crate-top leap skipped them.
+**Why:** new rules apply to existing rooms.
 
 ### D166 — 2026-10-03 — The checker pushes frozen enemies; other solutions
-- **Reachability checker.** With Pause, a frozen enemy is pushed like a
-  crate (D154): from any cell of its path, from a cell he stands on, level,
-  into a free cell; it falls off a ledge and pops on a hole, hazard or
-  void. Every cell it can come to rest in is a step and weight for a plate
-  there. Worked out per crate configuration, alongside the gates, until
-  nothing more opens. Optimistic like the rest: the 5 s freeze and the
-  enemy's own walk are not modelled, and as a step one enemy may count in
-  several cells; as weight it holds one plate at most (a plate set needs an
-  enemy each, or the checker would make `idle_cache`'s crate a spare). Before, only its path cells were steps and only a plate one push
-  away counted.
-- **`freeze_hall`.** The bug walks z = 6, x 1-5, four cells from the
-  fragment's 2-high ledge: the checker finds the push to its foot
-  (`pause`), the mutation test says the bug matters. Played headless: shot
-  at 2.5 s, three pushes, on the ledge 3.2 s later (1.8 s of the freeze
-  spare); 23 bounces off the bug from every side, none reached the ledge.
-- **Rule.** A second solution of the same or higher difficulty is fine; a
-  bypass is only one that skips the room's idea for less effort. The
-  room-design skill, the level-review subagent and the checklist say so.
-**Why:** the author asked for both. The bounce bypass could not be fixed
-while the checker only knew path cells: a lane far enough from the ledge
-read as unreachable in CI.
+With Pause the checker pushes a frozen enemy like a crate; every cell it
+can rest in is a step, and as weight it holds one plate at most. Rule: a
+second solution of the same or higher difficulty is fine; a bypass is
+one that skips the room's idea for less effort.
+**Why:** bounce bypasses could not be fixed while the checker only knew
+path cells.
 
 ### D167 — 2026-10-04 — Fences: a see-through block
-- **What.** Block type `fence` (`"look": "fence", "seeThrough": true`): a
-  static block in the grid, solid to bodies like any other (the wizard,
-  enemies, crates; he can stand on top, which the reachability checker
-  already handles), with a new property `seeThrough`: bolts (Zap, Pause,
-  enemies' shots, bounces included) and enemies' sight pass through it
-  (`Grid.blocksSight()`, `overlapsSolid(..., { sight: true })`). Blink,
-  Warp, Pull and a paste stop at it as at any block.
-- **Look.** No faces: two horizontal beams per unit of height through the
-  middle of the cell, along its run; neighbours on a level link up
-  (corners and junctions round a post in the middle, posts at free ends,
-  none where a run meets a block or a back wall); the top beam of a stack
-  is the rail (`src/render/fence.js`). Plain neon lines read as simple
-  geometry, so the beams are streams of light (`src/render/fence-view.js`):
-  soft glowing ribbons, a white-hot core, packets with comet tails flowing
-  (the two beams of a level opposite ways), a faint ripple, ends fading;
-  posts are emitters, a glowing node at each beam. Additive, so it never
-  hides the wizard. After playtesting, the author asked for beams that read as
-  translucent shafts of light rather than solid tubes: they give half
-  their light (`opacity`), the core is only faintly white-hot, the ribbon
-  is wider and softer, and the nodes are dimmer. The author picked this from three showcase variants:
-  ribbon alone (posts as thin lines), with nodes, and with data pixels
-  shed by the packet heads (busier). Room color (structure, D99): cyan
-  would say it moves.
-- **Whole cells, not edges.** A thin fence on the line between two cells
-  would look more like a fence, but needs edge collision and teaching the
-  editor, the checker and pushing about edges. As a cell it is one entry
-  in `defs.json`; the lines through the cell's middle read as thin.
-- **Height is the design tool.** 1 high pens crates and enemies; 2 high
-  stops him until the double jump (a "come back later", D68); 3 high for
-  good. No cover: a tower behind a fence still shoots him.
-- **Not chosen.** A glass block (glass is crates' look, D96; stacked glass
-  turns murky) and cutting away blocks in front of the wizard (helps only
-  him, not the area behind).
-- **Dev room** `fence_yard` (west of `room_2`, which gets a west exit):
-  a target behind a 2-high fence, zapped through it, raises a bridge.
-**Why:** the author wanted to wall off areas and raise walls without the
-fixed camera losing what is behind them; bolts passing through was the
-author's choice, so a fence is a barrier he can see and shoot through.
+Block type `fence` (`"seeThrough": true`): solid to bodies and standable,
+but bolts and enemies' sight pass through (`Grid.blocksSight()`); Blink,
+Warp, Pull and paste stop at it. No faces: horizontal beams of light per
+unit of height through the cell's middle, linking to neighbours, in the
+room color. Whole cells, not edges. Height is the design tool: 1 pens
+crates and enemies, 2 waits for the double jump, 3 for good. No cover.
+**Why:** walling off areas without the fixed camera losing what is
+behind them.
 
-### D168 — 2026-10-04 — The Scan wing, first half: harder rooms (5.6e)
-`relay_loft` gets an east door (`at` 3, on the far bank) to `scan_lab`
-(9,-3), 12x5x12, and on to `mirror_stacks` (10,-3), 12x5x12, both
-unflagged. `mirror_stacks` keeps its south side (x 8-9) free for
-`ghost_exit` (5.6f). The author asked for harder rooms with more complex
-puzzles from here on: each room is a chain of four or five steps where a
-tool is used twice or a step must be taken in the right place.
-- `scan_lab` (Scan disk; teach, in a multistep shape): the disk lies on
-  a 2-high plinth, one crate the step; a 2-tile hole catches the crate on
-  the obvious push, and a crate left in the plinth's corner is lost. The
-  same crate is then needed again: a 3-high fence splits the room, its
-  one plain-looking plug is a fake block (the help screen explains Scan);
-  a scan also drops a second crate off a fake pillar on the far side, and
-  both crates must go into one row of a 3-wide pit. Coming back from the
-  east a timed plate raises a bridge over the pit (1.3 s of its 3 s used).
-- `mirror_stacks` (fragment 9; develop): two cages that mirror each
-  other. The near one holds a crate behind a fake block; the far one the
-  fragment behind a gate whose target hides behind a fake column, more
-  than 6 units from the near side, so a second scan is cast once across.
-  Two crates fill one row of a 3-wide pit between. Walls round the
-  fragment are 3 high on the back side and a fence on the camera side.
-- Played headless: `scan_lab` in about 22 s, `mirror_stacks` in about
-  16 s; without the second scan the bolt hits the fake column.
-- Checker limits: it takes every fake block as gone with Scan and every
-  target as hit with Zap, so the scan range and the bolt line are judged
-  by hand (above). Entering `relay_loft` from the east reaches fragment 4
-  with the east bank's crate; that way in leads only through the Scan
-  wing, so it is a longer road, not a bypass.
-- Ways home (level review). Coming back from the Scan wing, `relay_loft`
-  is reset and its ferries unpowered: he was stranded on the far bank
-  (the checker takes platforms as floor). A timed plate on the far bank
-  (`plate_home` [13,0,7], 5 s) raises two bridge rows at z = 7 over both
-  pits; only the far bank reaches it, so the ferry puzzle stays (played:
-  3.2 s of the 5 s). `mirror_stacks` gets the same, a timed plate at
-  [7,0,11] and a bridge row over the pit at z = 11 (1.3 s of 3 s), since
-  leaping the pit off a crate top is one-way.
-- Lesson: a room with platforms needs a way home checked by hand from
-  every exit; "leave the way he came" is not enough when the rooms behind
-  that exit have no other way out.
-**Why:** the author asked for more difficult rooms; the plan gives the
-wing Scan and fake blocks, and using the range of a scan as part of the
-puzzle (cast it where it reaches) makes the new spell more than a key.
+### D168 — 2026-10-04 — The Scan wing, first half (5.6e)
+`scan_lab` and `mirror_stacks`. From here on rooms are chains of four or
+five steps where a tool is used twice or a step must be taken in the
+right place. Rule: a room with platforms needs a way home checked by hand
+from every exit (rooms behind reset). The checker takes every fake block
+as gone and every target as hit, so scan range and bolt lines are judged
+by hand.
+**Why:** the author asked for harder rooms.
 
 ### D169 — 2026-10-04 — Fewer draws, no redraws behind menus, no MSAA on high-DPI
-- **What.** A review of the rendering code for performance (step 1 and 2
-  of its plan):
-  - Decorations draw in a handful of draws. `boxFaces(boxes)` (deco.js)
-    merges a decoration's dark boxes into one geometry, built once per
-    look and shared, with one shared face material; `glassBoxes()`
-    (glass.js) draws its glass boxes as one instanced mesh (the glass
-    shader honors instancing; each instance scales the unit cell, so rim
-    and frost look as before). A memory stack went from 24 draws to 5,
-    a data pillar from 10 to 6; `mirror_stacks` (12 stacks) from about
-    380 draws a frame to about 155.
-  - Shared geometry primitives in `render/geometry.js` (`UNIT_BOX`,
-    `CUBE`) replace four copies of the unit cube; every pixel burst and
-    light box uses `CUBE`, scaled per instance; a hidden burst that stays
-    hidden is not touched (no upload).
-  - Behind a menu (title, pause, map) the game stands still, so the
-    frame on screen is kept: `Renderer.render({ onlyIfChanged })` draws
-    only after `invalidate()` (a room shown or compiled, a resize, a new
-    biome look, the debug overlay toggled, the game paused or resumed).
-    `HOLO_TIME` counts only time the game runs, so shader animations
-    (scanlines, hazard pixels, mist) freeze behind the menu like the rest.
-  - MSAA is off when the drawing buffer has 1.5 or more pixels per CSS
-    pixel (`effectiveMultisampling()`): a 2× buffer is already 4× the
-    pixels, and MSAA on top of it was the costliest thing on such
-    screens. The auto quality ladder leaves out steps that change
-    nothing there (`qualityLevels(devicePixelRatio)`), so a slow high-DPI
-    screen lowers its render scale at the first step instead of two
-    useless MSAA steps (which would have made it give up).
-- **Not done (later steps of the review).** Line materials are not
-  cached across views: many are changed at runtime (flares, exits,
-  rings), so a cache needs an opt-out per caller; the visual trade-offs
-  (SMAA instead of MSAA, fewer bloom levels, rim-only outlines, cheaper
-  mist) and GPU particles and instanced enemy parts wait.
-
-**Why:** decorations were the largest share of draw calls (a memory wall
-dominated its room), the GPU ran the full post-processing chain behind
-menus for an unchanged picture, and high-DPI screens paid for MSAA on a
-buffer that does not need it. None of it changes how the game looks
-while it runs.
+Decorations merge their boxes (`boxFaces()`) and instance their glass
+(`glassBoxes()`); shared primitives in `render/geometry.js`. Behind a
+menu the last frame is kept (`render({ onlyIfChanged })`, `invalidate()`)
+and shader time stands still. MSAA is off at 1.5+ pixels per CSS pixel;
+the quality ladder skips steps that change nothing there. Not done yet:
+cached line materials, SMAA, fewer bloom levels, GPU particles.
+**Why:** decorations were most draws; menus redrew an unchanged picture;
+high-DPI paid for MSAA it does not need.
 
 ### D170 — 2026-10-05 — The Scan wing, second half (5.6f)
-`mirror_stacks` gets a south door (`at` 10, on the far side of its pit,
-since the author's fake pillar now stands at x 9) to `ghost_exit`
-(10,-2); `ghost_exit`'s hidden west exit leads to `junction` (9,-2),
-whose south door leads to `drift_bay` (9,-1) and whose north door to a
-new south door of `scan_lab` (`at` 0). All three are unflagged.
-`drift_bay` keeps its south side (x 5-6) free for the Gatekeeper (5.7),
-which then sits at (9,0), east of the Atrium.
-- The plan put `junction` "off `drift_bay`, a loop back to the Scan
-  wing"; on the map grid no cell touches both, so it sits between
-  `ghost_exit` and `drift_bay` as the wing's crossroads instead.
-- Fragments by save slot: `ghost_exit` 9 (the slot `mirror_stacks` gave
-  up when the author moved fragment 0 there), `drift_bay` 10, `junction`
-  11. The plan's fragment numbers were a count, not slots.
-- `ghost_exit` (fragment 9; the Lattice's first hidden exit). A bug
-  patrols a fenced pen; frozen and pushed onto the plate in its corner,
-  it opens the gate of the crate's fenced pen next door for the freeze.
-  The crate, pushed through the gate (it holds the gate open while in its
-  cell) and on to the foot of a 2-high plateau, is the step up. On the
-  plateau a scan derezzes the fake block holding the fragment and mounts
-  the hidden exit, raised (y 2) in the west wall. The pens are fences, so
-  the plate, the bug and the crate show from the door. A screen text
-  (`tut_ghost`) says that exits can hide and Scan mounts them. Played: the
-  crate in the gate cell 3.4 s after the Pause shot (1.6 s spare), the
-  exit at 18 s. A bug frozen at the lane's east end costs two more
-  pushes and leaves under 1 s: shoot it at the west end.
-- `junction` (fragment 11). A 3-high fence row cuts off the north
-  door's pocket; one column of it is a gate that a timed plate in the far
-  corner opens (through in 1.6 s of 3 s; a gate never closes on him).
-  From `scan_lab` the pocket is a dead end (the checker: east, south and
-  the fragment `never` from the north door), so the shortcut runs home
-  only and skips nothing. Level review: with a pit there instead (the
-  first draft) and no `reset`, a death in the pocket, or a save made
-  there, put him back at the spawn on the main side, a way in for one
-  backup. Now the pocket has nothing that kills, the `spawn` (a load)
-  lies in the pocket and the `reset` (a death) on the main side. A bug
-  lane beside a 2-high pillar: frozen near the lane's west end and
-  pushed twice, the bug is the step to the fragment (on top at 2.5 s of
-  the freeze). A bounce off the lane may also reach the pillar (10 of
-  180 tried timings): a harder way, not a bypass (D166).
-- `drift_bay` (fragment 10; combat). A ferry drifts over a 4-wide pit on
-  its own; a sentinel on the far bank fires at him on the way (Shield),
-  and a virus meets him at the landing. Either, frozen and pushed to the
-  foot of a 2-high ledge against the back wall, is the step to the
-  fragment (on the ledge 3.0 s after the freeze). When 5.7 adds the
-  south door, the virus moves off its first row (e.g. to [8,0,10]).
-- The play helper's `walkTo` read `player.pos` once; a moving platform
-  replaces that array each tick, so in a room with platforms it walked
-  on forever. It reads the position afresh now.
-**Why:** the plan's next three rooms; the author asked for harder rooms
-(D168), so each chains a freeze, a push and a step, with a scan or a
-fight on top, and the wing's crossroads gets a shortcut home that cannot
-be used as a way in.
+`ghost_exit` (the first hidden exit), `junction` (the wing's crossroads,
+a one-way shortcut home) and `drift_bay`. Fragment numbers are save
+slots, not a count. Rule: where a death or a load could put him on the
+wrong side of a one-way shortcut, set `spawn` and `reset` apart.
+**Why:** a shortcut home must not become a way in.
 
 ### D171 — 2026-10-05 — The Fork wing, first half (5.6g)
-`cold_stairs` gets an east door (`at` 8, in its far half) to `fork_lab`
-(9,2), 12x5x12, and on to `twin_plates` (10,2), 12x4x12, both unflagged.
-`twin_plates` keeps its north side free for `guard_loop` (5.6h), which
-may sit at (10,1); the wing then turns west to `split_vault` and the
-Gatekeeper (9,0), mirroring the Scan wing. Each room is a chain of
-several steps with different tools (D168).
-- `fork_lab` (Fork disk; teach, multistep). The disk lies in a cage of
-  3-high fences at the back whose gate a plate opens; the plate lies
-  beside the cage two cells from the gate, so only a crate holds it. The
-  crate goes west once and north along x = 3: one push too many lands it
-  in the corner, pushed east it falls in the 3-wide pit. With the disk,
-  the same crate goes back south to the foot of a pen of 2-high fences;
-  from it he climbs in, casts the decoy onto the pen's plate, which
-  raises a bridge over the pit, and climbs out by a 1-high step inside the
-  pen (a way out, never a way in). A crate can't reach that plate. Played
-  headless: the disk at 8.7 s, the fork at 17 s, across 6 s later (of 10),
-  the east door at 25 s. The help screen (`help_fork`) says what a decoy
-  does. Way home from the east: a timed plate (4 s) raises a second
-  bridge (1.8 s used).
-- `twin_plates` (fragment 12; develop). A bridge over a 3-wide pit needs
-  two plates at once: the decoy holds one (cast first, the longer clock),
-  a frozen bug pushed off its lane holds the other (the plate lies one
-  cell beside the lane's west end, so the walker never flicks it). On the
-  far side a target, zapped from either bank, opens the gate of a fenced
-  cage; the crate in it is pushed out west to the foot of the 2-high
-  plinth with the fragment. Played: fork at 4.6 s, freeze at 5.9 s,
-  across at 9.5 s (3.6 s of the 5 s freeze, 4.9 s of the decoy's 10 s),
-  fragment at 15.8 s; home by a timed plate (4 s) and a second bridge
-  (1.8 s used). A bug frozen at the lane's east end costs 2.5 more pushes
-  and misses the freeze: shoot it near the plate.
-- Reachability checker. (1) Fork counted as holding every plate; it holds
-  one at a time now, like a frozen enemy (an assignment over the holders).
-  (2) The cells a frozen enemy can be in (and a platform's path) count as
-  floor that is always there, so a drop onto one landed only on top: with
-  the frozen bug's pushes spread over the whole near half, `cold_stairs`
-  read its north door as never reached from its south and east doors,
-  though it is played fine (down the 3-high ledge). A drop now also falls
-  past such a cell to the floor. Only `cold_stairs`' verdicts changed.
-**Why:** the plan's next two rooms; Fork is the wing's tool, taught as a
-second body that holds a plate he cannot stay on, then combined with
-Pause, Zap and crates. The checker had to know there is one decoy, or
-two-plate rooms looked solvable with Fork alone.
+`fork_lab` and `twin_plates`. The checker: Fork holds one plate at a
+time, like a frozen enemy; a drop past a cell a frozen enemy or platform
+may occupy also falls to the floor.
+**Why:** two-plate rooms looked solvable with Fork alone.
 
 ### D172 — 2026-10-05 — Watchdog timers: a timed challenge per room
-A room may set `timer` (whole seconds, 3–600): a watchdog timer. It is
-armed when the room is built (entering, respawning) and runs once the
-room has faded in, while the wizard is alive; menus, the map and the
-editor hold the whole game, so they hold it too, and debug invincibility
-freezes it. At zero he dies with the cause `timeout`: a death like any
-other (a backup used, a crash with none left), and the respawn rebuilds
-the room, the timer with it. Leaving the room drops it; coming back
-starts it from full. The HUD shows the time left (`WATCHDOG 0:24.5`,
-rounded up to the tenth) top middle, under the boss bar when one is up;
-in its last 5 s it turns red (D99: about to hurt), pulses and ticks
-once a second (the timed switches' `tick` sound). The room editor's room
-group has a **Timer (s)** field (blank: none). The dev wing gets
-`watchdog_run` (1,-1), west of `fence_yard`, which gets a west door.
-- §1 ruled out a time limit, and §5 said "no time limit". That was about
-  a clock on the whole game, which stays out; a short timer on a chosen
-  room is a challenge like a timed switch, and a death costs only a
-  backup. Both lines now say so.
-- The timer guards the room's permanent pickups: taking the last one
-  still to find stops it (`> WATCHDOG DISARMED`; the time left stays on
-  show in lime), and a room whose permanent pickups are all found arms
-  none. First drafted as running until he left the room, the author
-  found that wrong both ways in `first_light`: with the fragment the
-  run is over, there is no need to race back out; and with it found
-  already, he may never need to come back, so a revisit should not race
-  at all. A room without permanent pickups (a dash) arms it every time;
-  refills and boosts never count, so they are no way to stop it. A boss
-  drop still held counts as one to find.
-- It counts ticks, not wall-clock time: identical at any frame rate and
-  held for free wherever the game stands still.
-- The reachability checker knows nothing of it (as with timed switches);
-  the room checklist, the room-design skill and the level-review agent
-  say how to count the run by hand.
-- Optional, with no default: no authored room is affected, the data
-  schema version stays 1.
-- `first_light` is the first real room with one (the author's pick): 10 s.
-  Played cell by cell (no corner cutting), the fragment, which stops it,
-  is taken at 7.9 s; the author playtested 10 s as doable, medium
-  difficulty. As the room that introduces the watchdog, its name is now
-  "Watchdog Kennel" (its id stays `first_light`: ids are stable), and a
-  second screen by the door (`help_watchdog`, D163: help that reads true
-  in any timed room) says what the watchdog is, what stops it and what
-  zero does; he passes within reach of it as he walks in.
-**Why:** the author asked for timed challenge rooms, the time set per
-room in the editor and the running time on screen.
+A room may set `timer` (whole seconds, 3–600). It runs once the room has
+faded in, stands still behind menus and with debug invincibility, and at
+zero kills him (cause `timeout`, a normal death). Leaving drops it. The
+HUD shows `WATCHDOG 0:24.5` top middle, red and ticking in the last 5 s.
+It guards the room's permanent pickups: taking the last one still to find
+stops it, and a room with all found arms none; a room without any always
+arms it. Ticks, not wall-clock time. The checker ignores it. The
+room-editor field **Timer (s)**. `first_light` ("Watchdog Kennel") is the
+first, 10 s.
+**Why:** the author asked for timed challenge rooms. A clock on the whole
+game stays out of scope.
 
 ### D173 — 2026-10-05 — The Fork wing, second half (5.6h)
-`twin_plates` gets a north door (`at` 9, on the far side of its pit, so
-the way in is its puzzle) to `guard_loop` (10,1), 12x4x12, and on west
-to `split_vault` (9,1), 12x4x8, both unflagged. `split_vault`'s north
-side stays free for the Gatekeeper (9,0) in 5.7 (its door at about
-x 8–9, the first row there is kept free); until then it is a dead end.
-Each room chains a decoy with a crate, and a fight on top (D168).
-- `guard_loop` (fragment 13; develop). Two viruses walk one loop round
-  a 1-high block, half a lap apart (a 2-high block hid their back lane
-  from the camera, and the first loop let one notice him at the door:
-  moved a cell north-west, nobody sees him in either door now). The
-  fragment lies on a 2-high plinth in a pen of 1-high fences; its gate
-  opens by a plate in a pen of 1-high fences on the west wall, so only
-  the decoy holds it (crates and frozen viruses can't get in). The crate
-  goes east once and north through the gate to the plinth's foot; one
-  push too many east and it is lost by the side wall. Cast in the pen,
-  the decoy also draws the viruses to it, away from the crate; crowded
-  round it, their bursts hit each other (bursts hit every body in
-  range): a reward for drawing them, never needed. Played headless:
-  crate in the gate 3.8 s after the fork (of 10 s), the fragment at
-  13 s, two to three hits taken without fighting back. A frozen virus
-  pushed through the gate is a harder second step (D166). The room
-  itself is no lock: both doors are free.
-- `split_vault` (fragments 14 and 15; twist). A 3-wide pit splits the
-  vault. The crate, pushed south and west onto a plate against a 1-high
-  block at the pit's edge (no overshoot into the pit), holds the bridge
-  west to fragment 14; the decoy can hold that bridge instead. Fragment
-  15 lies in a 3-high cage on the east whose gate needs two plates at once: the
-  crate's, and one in a 1-high pen on the west that only the decoy
-  holds. So the decoy goes west while the crate keeps the way back: the
-  decoy can't do both. A virus guards the west half, and the decoy
-  draws it off as he runs. A timed plate (3 s) on the west raises a
-  bridge home, for a decoy-only crossing. Played: fragment 15 at 6.0 s
-  of the decoy's 10 s, the room at 15 s. Level review: the first cage
-  (the fragment right behind its gate) shut him in for good when the
-  decoy ran out while he was inside, and the gate hid half the
-  fragment. Now a 1-tile hole lies between the gate and the fragment:
-  he jumps it, and if the gate closes on him the hole is a way to die
-  and reset (fragments kept); the crate can't fill it, as it holds the
-  other plate. The first plate lay at the pit's edge, and one push too
-  many dropped the crate in.
-- `buffer_3` (the secret "decoy lock off `split_vault`", 5.9) has no free
-  map cell beside `split_vault`: the Gatekeeper, `freeze_hall`,
-  `guard_loop` and `fork_lab` take all four. The author: a secret may
-  move to another start room. `guard_loop`'s east side (11,1) is free
-  and kept for it, and 5.9 picks the room. Secret rooms are meant to be
-  complex: several steps, often with tools the wizard may not have yet,
-  so many wait for a return visit later (D67).
-**Why:** the plan's next two rooms. Fork is the wing's tool, now
-combined with crates: a decoy that holds one thing while a crate holds
-another, and that draws guards as well as holding plates.
+`guard_loop` and `split_vault`. Secret rooms are complex: several steps,
+often with tools found later; a secret may hang off another room than
+planned.
+**Why:** Fork combined with crates and guards.
 
 ### D174 — 2026-10-05 — The Gatekeeper's hall (5.7)
-`gatekeeper` ("Gatekeeper Hall", 16x4x16, unflagged) sits at (9,0), east
-of the Atrium (which has no door to it), between `drift_bay` (north) and
-`split_vault` (south), so the Scan and Fork wings meet there. Its east
-side (z 7–8, the first row kept free) waits for the core in 5.8, which
-adds the door, as every exit must be connected.
-- The fight is the 4.7 one (D134, D137): THE GATEKEEPER (16 integrity,
-  plate armor) starts in the middle and drops the +10 energy buff
-  (`buff_energy_2`). Four overload plates lie in the quarters, each with
-  its eight neighbours free: next to a wall, a hole or a block, it would
-  stop on a plate short of him, out of its burst's reach and open to
-  Zap for good. Four 1-high blocks round the middle are cover: it can't
-  climb them and its chase goes straight at him, so it stalls behind one
-  while he hops over and gets his energy back. The north and south
-  blocks stand in front of the doors and hide him from it as he comes
-  in. Two energy refills and an integrity refill by the walls, three
-  data pillars against the back walls; no shrine (D104).
-- Played headless with Zap only, a bot that leads it past a plate and
-  steps out of the windup: beaten in 34 s from the north door and 41 s
-  from the south, no damage taken and no refill used; it needs no Fork
-  or Shield. A decoy beside a plate holds it there, and the Shield
-  blocks the burst so he can zap from within reach: easier ways that
-  still use the plates, not bypasses (D166). The energy refill by the
-  north-east pillar stands a cell west of it (level review: behind it,
-  half hidden). A bot that walked into the blocks instead of hopping
-  them died in 21 s: the blocks are a refuge only if he jumps.
-- `drift_bay`'s south door (`at` 10, not x 5–6 as D170 kept free): at
-  5–6 the virus saw him come in and hit him at once, and the bank is all
-  fight. Now the door is in the bank's east corner behind a 1-high wall
-  ([9..11, 9]; 1 high stops sight at body height, and the sentinel
-  behind it still shows from the camera, a 2-high one hid it). The
-  sentinel moves to [10,0,8] and the virus to [4,0,10], so neither sees
-  him in the doorway (10 s standing there). From the north the fragment
-  plays as before (on the ledge 2.7 s after the freeze, one hit taken at
-  the landing); from the south it skips the ferry (3.1 s after the
-  freeze), the other side's way in (D67).
-- `split_vault`'s north door (`at` 8) opens onto its east half: fragment
-  15 still needs Fork, so a wizard from the Scan wing comes back for it.
-**Why:** the plan's boss 2 arena, joining the two deep wings so the way
-to the core leads through either. The 4.7 fight was tuned in an empty
-room; the bigger arena adds cover so a fight with 50 energy and slow
-recharge has room to breathe, without a spot where it stalls on a plate.
+`gatekeeper` ("Gatekeeper Hall", 16x4x16) at (9,0) joins `drift_bay`
+(north) and `split_vault` (south), so the Scan and Fork wings meet
+there; its east side waits for the core (5.8). The fight is the one of
+D134 and D137 (drops `buff_energy_2`). Rules: each overload plate keeps
+its eight neighbours free (next to a wall, hole or block it could stop on
+a plate out of its burst's reach and open to Zap for good); 1-high cover
+blocks it can't climb give him time to recharge, a refuge only if he
+jumps them; a door must not open into an enemy's sight (`drift_bay`'s
+south door moved behind a 1-high wall, its enemies moved). A decoy or
+the Shield make it easier but still use the plates: not bypasses (D166).
+Beaten with Zap alone in about 35–40 s headless.
+**Why:** boss 2's arena, joining the two deep wings so the way to the
+core leads through either; cover gives a fight with 50 energy room to
+breathe.
+
+### D175 — 2026-10-02 — One `requires` list for locked doors
+(Numbered late: it was a second D152.) An exit's `requires` lists
+conditions that must all hold: `{ "switch": id }`, `{ "switch": "*" }`
+(every switch in the room) and `{ "access": level }`.
+`withExitDefaults()` expands it for the game, the checker and the
+renderer. Look: a white glass pane, lights red until their switch is on,
+then green; an access level as a small numeral, red until his level is
+enough. Hidden exits stay a flag of their own.
+**Why:** switch locks and access locks were one idea with two
+vocabularies.
+
+### D176 — 2026-10-05 — Docs cleanup: a log of current decisions; dropped ideas
+The decision log shows each decision as it stands: replaced entries are
+one-line pointers, room-build entries keep only the rules they produced,
+and the old wording lives in git history (the log was over 2,000 lines).
+Dropped from the plans: the secrets ladder (hat star, star trail, Phantom
+shimmer, the 16-secret room), the zoom-to-fit setting for small rooms,
+audio-reactive visuals, and the seven unused looks as planned content.
+**Why:** the author asked to cut what is obsolete; a log read at the start
+of every session must stay short enough to read.
