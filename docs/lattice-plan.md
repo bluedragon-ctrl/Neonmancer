@@ -81,7 +81,7 @@ then. Steps and room order: docs/design.md, Phase 5.
 | 19 | `twin_plates` | 12x12 | Two plates, one decoy; fragment 12 |
 | 20 | `guard_loop` | 12x12 | Viruses to draw away; fragment 13 |
 | 21 | `split_vault` | 12x8 | A lock held by a decoy; fragments 14 and 15 |
-| 22 | `gatekeeper` | 16x16 | Boss 2, a big virus, drops an energy buff; overload plates to lure it onto (D134); doors west, east, north |
+| 22 | `gatekeeper` | 16x16 | Boss 2, a big virus, drops an energy buff; overload plates to lure it onto (D134); doors north (`drift_bay`), south (`split_vault`), east (the core) (D174) |
 | 23 | `core` | 16x16 | The central core, no fragment; Level 1 locks east and west and north (vault) |
 | 24 | `dj_vault` | 8x8 | The double jump, behind the Level 1 lock |
 | 25 | `junction` | 8x8 | Off `drift_bay`, a small loop back to the Scan wing; fragment 16 |
