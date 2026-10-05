@@ -377,7 +377,7 @@ export class RoomEdit {
   }
 
   /**
-   * The room's watchdog timer (D171), in whole seconds (3–600); none when
+   * The room's watchdog timer (D172), in whole seconds (3–600); none when
    * blank or 0.
    * @param {number} [seconds]
    */

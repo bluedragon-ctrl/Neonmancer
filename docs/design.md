@@ -1605,7 +1605,7 @@ before D140 work as they did). Switch types in `defs.json` are placed in
 - Where he respawns if he dies is each room's own `reset` point (D39), not
   the arrival point: it stays put regardless of which door he came through.
 - Rooms fully reset on entry and on respawn.
-- A room may have a watchdog timer (`timer`, whole seconds 3–600, D171):
+- A room may have a watchdog timer (`timer`, whole seconds 3–600, D172):
   a challenge room. It starts once the room has faded in (`> WATCHDOG
   ARMED: 25 S`) and runs while the wizard is alive in the room; it stands
   still behind the pause menu, the map and the editor, and while he is
@@ -1661,7 +1661,7 @@ the world map tool shows the connections and flags any room further out.
 | `tractor_bay` | Home Lattice, 12×12, east of Cache Hall | Pull: two crates across a moat to pull into it as a bridge, a bug patrolling behind a trench to pull in; the Pull disk, an energy refill |
 | `build_yard` | Home Lattice, 12×12, east of Tractor Bay | Compile: a two-wide trench to plug crate by crate, a ledge two high to climb with a compiled step; the Compile disk, an energy refill on the ledge |
 | `fence_yard` | Home Lattice, 10×10, dev wing, west of Room 2 | Fences (D167): a 2-high fence round a back pocket with a target, switched by a Zap through it, raising a bridge over a pit to an energy refill; a 1-high fence pen with a crate; the Zap disk |
-| `watchdog_run` | Home Lattice, 12×8, dev wing, west of Fence Yard | a watchdog timer (D171), 25 s: a 1-wide path snaking through a pit to an integrity refill, and back out |
+| `watchdog_run` | Home Lattice, 12×8, dev wing, west of Fence Yard | a watchdog timer (D172), 25 s: a 1-wide path snaking through a pit to an integrity refill, and back out |
 | `hidden_layer` | Home Lattice, 12×12, east of Build Yard | Scan: a wall across the room with a fake gap, a hidden exit in the back wall behind it, an energy refill inside a fake block; the Scan disk |
 | `secret_cache` | Home Lattice, 8×8, north of Hidden Layer | behind the hidden exit: a secret |
 | `decoy_lab` | Home Lattice, 12×12, north of Build Yard | Fork: a plate in a slot under a lintel (only a decoy can press it), a locked exit that opens while it is pressed, a virus to draw away; the Fork disk |
@@ -1727,7 +1727,7 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
   to the far side of what it powers, ~13 ticks
   a cell plus ~34 per jump and ~28 per push on the way; the timer should
   be that plus about a second (60 ticks), not less and not much more.
-- A watchdog timer (room `timer`, D171): the checker knows nothing of it
+- A watchdog timer (room `timer`, D172): the checker knows nothing of it
   either. Count the run from the entrance, and from the `reset` point
   after a death, to the last permanent pickup (it stops the timer), or
   to the way out in a room without one, the same way: ~13 ticks a cell, ~34 a jump, ~28 a push, plus
@@ -1918,7 +1918,7 @@ A DOM overlay on the stage, sized in 1080p pixels (`--u`), all text from
 | Where | What |
 |---|---|
 | Top left | Integrity: label over a row of slanted cyan cells, one per point; a lost cell flashes white and empties, at 2 or less the bar turns magenta and blinks. Under it the backup pips, the energy bar and the spell tag (with the clipboard slot for Cut & Paste). |
-| Top center | A room's watchdog timer (D171), over the banner: `WATCHDOG 0:24.5` in cyan, red and pulsing in its last 5 s, lime once stopped; under the boss bar while that is up. Banner: a title decoding from glyphs (0.45 s), holding (1.8 s) and fading (0.7 s), with an optional smaller line below, in its own color. On entering a room (not on respawn) it shows the room name and the biome name in the biome color; later pickups (e.g. a spell installed) use it too. A new banner replaces the one showing. |
+| Top center | A room's watchdog timer (D172), over the banner: `WATCHDOG 0:24.5` in cyan, red and pulsing in its last 5 s, lime once stopped; under the boss bar while that is up. Banner: a title decoding from glyphs (0.45 s), holding (1.8 s) and fading (0.7 s), with an optional smaller line below, in its own color. On entering a room (not on respawn) it shows the room name and the biome name in the biome color; later pickups (e.g. a spell installed) use it too. A new banner replaces the one showing. |
 | Top right | Game name and version; the score and completion (D100) and, once he has a fragment or a level, `FRAGMENTS 03/64 ACCESS 1` in gold over the boot key, the 8×8 code filling in as fragments are found (D101); the debug readout (F3) shows below it. |
 | Whole stage | The end-of-game screen (D101): `GRID REBOOTED`, the whole boot key, the final score and completion; the game stands still until Enter. |
 | Bottom left | Terminal: lime lines typed at 40 characters/s with a block cursor, kept 4 s, then faded; at most 4 lines. |
@@ -2098,7 +2098,7 @@ floor.
   high, width + depth at most 32; a smaller room drops what ends up
   outside, listed in the status line, and moves spawn and reset inside),
   its watchdog timer (**Timer (s)**: whole seconds 3–600, blank for none,
-  D171) and the layer, and has Undo, Redo, Save or Export, and Revert (back to
+  D172) and the layer, and has Undo, Redo, Save or Export, and Revert (back to
   the last save; undo and Revert take the room's connections along). A new
   room never saved has **Discard new room**, which drops it and its
   connections and goes back to the room edited before. Under the layer, a
@@ -2258,7 +2258,7 @@ author, recorded as decisions before the code lands. Every step also
 The phases were re-cut around a playtest of Home Lattice. The rules of
 "Finished phases" apply to every step: one branch, one PR against `main`,
 CI green, showcase, test room, unit tests, docs. Code steps name their
-branch; design steps end in decisions before any code. **Next: Phase 5 (5.6g; 5.3 music waits for the tracks, D147).**
+branch; design steps end in decisions before any code. **Next: Phase 5 (5.6h; 5.3 music waits for the tracks, D147).**
 
 ### Phase 4 (v0.4) steps: tools and bosses
 
@@ -2298,7 +2298,7 @@ tracks and is done after 5.5 (D147).
 | 5.6d (done, D162) | `feat/lattice-boss-one` | `warden_pit` (boss 1, drops fragment 7) and `idle_cache` (fragment 8), placed from the test arena. |
 | 5.6e (done, D168) | `feat/lattice-scan-wing-1` | The Scan wing, first half: `scan_lab` (Scan disk) and `mirror_stacks` (fragment 9); the door from `relay_loft` is added. |
 | 5.6f (done, D170) | `feat/lattice-scan-wing-2` | `ghost_exit` (fragment 9), `junction` (fragment 11) and `drift_bay` (fragment 10); `junction` joins them and is a one-way shortcut back to `scan_lab`; `drift_bay` keeps its south side for the Gatekeeper. |
-| 5.6g | `feat/lattice-fork-wing-1` | The Fork wing, first half: `fork_lab` (Fork disk) and `twin_plates` (fragment 12); the door from `cold_stairs` is added. |
+| 5.6g (done, D171) | `feat/lattice-fork-wing-1` | The Fork wing, first half: `fork_lab` (Fork disk) and `twin_plates` (fragment 12); the door from `cold_stairs` is added; `twin_plates` keeps its north side for `guard_loop`. |
 | 5.6h | `feat/lattice-fork-wing-2` | `guard_loop` (fragment 13) and `split_vault` (fragments 14 and 15). |
 | 5.7 | `feat/lattice-gatekeeper` | The Gatekeeper arena (boss 2, drops the energy buff) joining the Scan and Fork wings, with the way on to the core. |
 | 5.8 | `feat/lattice-core-gates` | The core, the Level 1 access locks and the teaser rooms beyond them: a few look-only rooms each for Glitchmire and Frostbyte Wastes (looks in the showcase first). |

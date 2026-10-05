@@ -48,7 +48,7 @@ export function buildRoom(data, { objectTypes, blockTypes, enemyTemplates = {}, 
     spawn: [...data.spawn],
     /** Where the wizard reappears after dying here, however he entered (D39). */
     reset: [...(data.reset ?? data.spawn)],
-    /** Seconds on the room's watchdog timer (D171), or null: no timer. */
+    /** Seconds on the room's watchdog timer (D172), or null: no timer. */
     timer: data.timer ?? null,
     exits: (data.exits ?? []).map(withExitDefaults),
     /** Static block cells as [x, y, z], by block type (only types the room uses). */

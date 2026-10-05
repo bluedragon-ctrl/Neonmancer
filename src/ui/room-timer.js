@@ -1,5 +1,5 @@
 /**
- * The watchdog timer of the HUD (D171): top middle, in a room with a timer,
+ * The watchdog timer of the HUD (D172): top middle, in a room with a timer,
  * under the boss bar when that is up. The time left in seconds and tenths;
  * red and pulsing in its last seconds (red: about to hurt, D99); lime and
  * still once it stopped (he took what it guarded).

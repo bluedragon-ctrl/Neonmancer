@@ -363,9 +363,9 @@ export class EditorPanel {
     }
     const sizeRow = el('div', 'editor-row');
     sizeRow.append(el('span', 'editor-label', 'Size'), ...this.sizeInputs);
-    // The room's watchdog timer (D171), in whole seconds; blank: none.
+    // The room's watchdog timer (D172), in whole seconds; blank: none.
     this.roomTimerInput = numberInput({ min: 3, step: 1, placeholder: 'none' });
-    this.roomTimerInput.title = 'Watchdog timer (D171): seconds until the wizard is killed and the room resets; blank: no timer';
+    this.roomTimerInput.title = 'Watchdog timer (D172): seconds until the wizard is killed and the room resets; blank: no timer';
     this.roomTimerInput.addEventListener('change', () => {
       // Let go first, so a clamped value shows the room's own.
       this.roomTimerInput.blur();

@@ -286,7 +286,7 @@ export class Player {
   die(cause) {
     this.integrity = 0;
     this.dead = true;
-    /** Why he died, while dead: 'hole', 'void', 'damage' or 'timeout' (a room's watchdog, D171). */
+    /** Why he died, while dead: 'hole', 'void', 'damage' or 'timeout' (a room's watchdog, D172). */
     this.deathCause = cause;
     this.deathTimer = PLAYER.deathTicks;
     this.grounded = false;

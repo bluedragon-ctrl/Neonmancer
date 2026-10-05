@@ -22,7 +22,7 @@ Tone: light, playful arcade. Visuals: neon wireframe on a dark void with
 glow and retro digital effects.
 
 Explicitly NOT in scope: a time limit on the game (a room may have a
-challenge timer, D171), day/night cycle, transformations,
+challenge timer, D172), day/night cycle, transformations,
 mobile/touch support, backend or accounts.
 
 ---
@@ -155,7 +155,7 @@ mobile/touch support, backend or accounts.
 - On death the wizard derezzes into pixels and recompiles at the room
   entrance — quick and non-punishing.
 - A room may have a watchdog timer (`timer`, seconds, set in the room
-  editor, D171): it starts once the room has faded in, stands still
+  editor, D172): it starts once the room has faded in, stands still
   behind menus, and at zero kills the wizard (a death like any other: a
   backup used, the room reset). It guards the room's permanent pickups:
   taking the last one still to find stops it, and a room whose pickups
@@ -317,7 +317,7 @@ Collect the 64 key fragments and bring them to the central core (D101).
 Touching the core raises the wizard's access level to what his fragments
 earn (16 → 1, 32 → 2, 48 → 3), which opens access-locked exits; with all
 64 the Grid reboots (the end, a placeholder screen for now) and he plays
-on. No time limit (only challenge rooms' watchdog timers, D171). The fragments are the modules of one 8×8 QR-like boot
+on. No time limit (only challenge rooms' watchdog timers, D172). The fragments are the modules of one 8×8 QR-like boot
 key, which the HUD fills in; a gold band round his hat per level.
 
 ### Arcade layer
@@ -386,7 +386,7 @@ The engine is generic; all content lives in data.
   environmental effects
 - `data/rooms/*.json` — one file per room: biome, size [x, y, z], exits,
   objects (switch links, D140), enemies, pickups, a backup shrine tile, a
-  watchdog timer (D171); only overrides of type defaults;
+  watchdog timer (D172); only overrides of type defaults;
   `"authored": true` marks the author's real game rooms (D90, §10)
 - `data/world.json` — room connections, room positions on the world map,
   the dev wing (`dev`: test rooms only the dev server shows, D147),

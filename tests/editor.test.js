@@ -243,7 +243,7 @@ test('RoomEdit marks a room authored (D90) and back; a test room has no flag', (
   assert.equal(edit.toData().authored, true);
 });
 
-test('RoomEdit sets a watchdog timer (D171) in whole seconds, 3–600; blank or 0 takes it off', () => {
+test('RoomEdit sets a watchdog timer (D172) in whole seconds, 3–600; blank or 0 takes it off', () => {
   const edit = new RoomEdit(sampleRoom());
   assert.equal(edit.setRoomTimer(undefined), false);
   assert.equal(edit.setRoomTimer(20.4), true);

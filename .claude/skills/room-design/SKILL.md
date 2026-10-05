@@ -131,7 +131,7 @@ Edit existing files with small text edits, not a JSON dump.
 | Collapsing block | goes 30 ticks (0.5 s) after a step: never make him stand still on one |
 | Pause | 25 energy of the base 50 (two casts, then slow recharge); 5 s freeze (300 ticks), a recast restarts it |
 | Timed switch | timer = the run from the switch to the far side of what it powers + ~1 s; checker counts it as on for good |
-| Watchdog timer (room `timer`, D171) | the run from the entrance, and from `reset`, to the last permanent pickup (taking it stops the timer; all found: no timer), or to the way out in a room without one, + ~2–3 s; checker ignores it; only where speed is the idea |
+| Watchdog timer (room `timer`, D172) | the run from the entrance, and from `reset`, to the last permanent pickup (taking it stops the timer; all found: no timer), or to the way out in a room without one, + ~2–3 s; checker ignores it; only where speed is the idea |
 
 ## Rules
 1. **Readable from the front corner.** Tall blocks against the back walls
@@ -198,6 +198,13 @@ Edit existing files with small text edits, not a JSON dump.
   ignores the 5 s clock: time the run with `sim.mjs`). Hem the path in
   (walls, the room side, a pit it pops into). Plate against a wall: the
   next push may go into a pit.
+- **One decoy.** Fork holds one plate at a time (a new fork replaces the
+  old, D129); the checker counts it so (D171). Two plates that must be on
+  together need a second holder (a crate, a frozen enemy, him on a timed
+  one). The wizard can stand on any plate himself, so a decoy's plate is
+  one he must leave: a bridge he has to cross, or a pen of 1-high fences
+  that keeps crates off it. Cast from a ledge, the decoy falls onto what
+  lies below (the checker only counts a cast from beside the plate).
 - **Another way is fine if it is no easier** (D166). A second solution of
   the same or higher difficulty (a harder jump, a tighter race, a spell
   found later) is not a bypass; one that skips the room's idea for less

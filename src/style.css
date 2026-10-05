@@ -1429,7 +1429,7 @@ body {
   opacity: 0.35;
 }
 
-/* A room's watchdog timer (D171), top middle; under the boss bar while that is up. */
+/* A room's watchdog timer (D172), top middle; under the boss bar while that is up. */
 .hud-timer {
   position: absolute;
   top: calc(30 * var(--u));

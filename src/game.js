@@ -40,7 +40,7 @@ export const TRANSITION = {
   inTicks: 15,
 };
 
-/** A room's watchdog timer (D171): its last seconds tick, once a second. */
+/** A room's watchdog timer (D172): its last seconds tick, once a second. */
 export const WATCHDOG = { warnTicks: 5 * 60 };
 
 /**
@@ -220,7 +220,7 @@ export class Game {
     /** Is he on the backup shrine? Stepping onto it uses it (touchShrine()). */
     this.onShrine = false;
     /**
-     * Ticks left on the room's watchdog timer (D171), or null in a room
+     * Ticks left on the room's watchdog timer (D172), or null in a room
      * without one or with nothing left for it to guard (watchdogGuards()).
      * It starts again whenever the room is built (entering, respawning) and
      * runs once the room has faded in (tickWatchdog()).
@@ -321,7 +321,7 @@ export class Game {
   }
 
   /**
-   * The room's watchdog timer (D171) runs down while he is alive, the room
+   * The room's watchdog timer (D172) runs down while he is alive, the room
    * has faded in, he is not invincible (debug mode) and it has not stopped
    * (stopWatchdog()); menus, the map and
    * the editor hold the whole game, so they hold it too. At zero he dies
@@ -338,7 +338,7 @@ export class Game {
   }
 
   /**
-   * Does the room's watchdog (D171) guard anything? It guards the room's
+   * Does the room's watchdog (D172) guard anything? It guards the room's
    * permanent pickups while any is left to find; a room without any (a
    * dash) it guards always. One whose pickups are all found arms no timer.
    */
@@ -347,7 +347,7 @@ export class Game {
     return permanent.length === 0 || permanent.some((pickup) => pickup.state === 'idle' || pickup.state === 'held');
   }
 
-  /** He took a permanent pickup: if it was the last one the watchdog guarded, it stops (D171). */
+  /** He took a permanent pickup: if it was the last one the watchdog guarded, it stops (D172). */
   stopWatchdog() {
     if (!this.timeLeft || this.watchdogStopped || this.watchdogGuards()) return;
     this.watchdogStopped = true;

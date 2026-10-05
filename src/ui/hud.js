@@ -1,7 +1,7 @@
 /**
  * The HUD: a DOM overlay on the stage with the integrity bar, the backups
  * under it, the energy bar with the selected spell under it (and the
- * Cut & Paste clipboard) and the running boosts (D152), a boss's bar (D135), a room's watchdog timer (D171), the score and completion under the title (D100),
+ * Cut & Paste clipboard) and the running boosts (D152), a boss's bar (D135), a room's watchdog timer (D172), the score and completion under the title (D100),
  * the key fragments and access level under them, the end-of-game screen
  * (D101), the room name banner, terminal messages and the fullscreen
  * hint. It only shows state;
@@ -133,7 +133,7 @@ export class Hud {
     this.energy = new EnergyBar(root, this.text('hud.energy'));
     /** The boss bar (D135), up while a boss is awake. */
     this.bossBar = new BossBar(root);
-    /** The watchdog timer (D171), up in a room with one. */
+    /** The watchdog timer (D172), up in a room with one. */
     this.roomTimer = new RoomTimer(root, this.text('hud.watchdog'));
     root.insertAdjacentHTML('beforeend', '<div class="hud-spell"><span class="hud-spell-name"></span><span class="hud-clip" hidden></span><span class="hud-spell-key"></span></div>');
     // Running functional boosts (D152), under the spell tag.
@@ -289,7 +289,7 @@ export class Hud {
   }
 
   /**
-   * The watchdog timer (D171): roomTimerState(), or null to take it down. It
+   * The watchdog timer (D172): roomTimerState(), or null to take it down. It
    * sits under the boss bar while that is up.
    * @param {ReturnType<typeof import('./room-timer.js').roomTimerState>} state
    */

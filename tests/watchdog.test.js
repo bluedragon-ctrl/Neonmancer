@@ -9,7 +9,7 @@ import { eventTypes, gameData, idle, roomFile } from './helpers.js';
 
 const SECOND = Math.round(1 / DT);
 
-/** Two rooms: "timed" (the start) with a watchdog timer of `seconds` (D171), "calm" without. */
+/** Two rooms: "timed" (the start) with a watchdog timer of `seconds` (D172), "calm" without. */
 function content(seconds = 10) {
   return gameData({ rooms: [roomFile('timed', { timer: seconds }), roomFile('calm')] });
 }
