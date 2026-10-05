@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { withExitDefaults } from '../src/data/room-data.js';
-import { MOTES, moteLayout } from '../src/render/motes.js';
 import { LOOK_DEFAULTS, roomLook } from '../src/render/neon.js';
+import { panelGlowPlacement } from '../src/render/panel-glow.js';
 import { pickPanels, wallLayout } from '../src/render/walls.js';
 import biomes from '../data/biomes.json' with { type: 'json' };
 
@@ -17,14 +17,13 @@ function seeded(seed = 1) {
 
 test('ambience is off by default and on in Home Lattice only (D179)', () => {
   assert.equal(LOOK_DEFAULTS.flows, 0);
-  assert.equal(LOOK_DEFAULTS.motes, 0);
   assert.equal(LOOK_DEFAULTS.panels, 0);
   const lattice = roomLook(biomes.biomes.home_lattice.look);
-  assert.ok(lattice.flows > 0 && lattice.motes > 0 && lattice.panels > 0);
+  assert.ok(lattice.flows > 0 && lattice.panels > 0);
   for (const [id, biome] of Object.entries(biomes.biomes)) {
     if (id === 'home_lattice') continue;
     const look = roomLook(biome.look);
-    assert.deepEqual([look.flows, look.motes, look.panels], [0, 0, 0], id);
+    assert.deepEqual([look.flows, look.panels], [0, 0], id);
   }
 });
 
@@ -66,13 +65,13 @@ test('walls: a panel cell is glass in a frame instead of a dark face', () => {
   assert.ok(lo[2] < 0 && hi[2] === 0);
 });
 
-test('motes: one per tile at the density given, capped, inside the room', () => {
-  assert.equal(moteLayout([12, 4, 12], 0).length, 0);
-  const motes = moteLayout([12, 4, 12], 0.25, seeded(3));
-  assert.equal(motes.length, 36);
-  for (const { at, seed } of motes) {
-    assert.ok(at[0] >= 0 && at[0] <= 12 && at[2] >= 0 && at[2] <= 12 && at[1] === 0);
-    assert.equal(seed.length, 4);
-  }
-  assert.equal(moteLayout([16, 4, 16], 2).length, MOTES.max);
+
+test('panel glow: in front of each pane, facing into the room (D181)', () => {
+  const placed = panelGlowPlacement([{ side: '-x', u: 3, v: 1 }, { side: '-z', u: 5, v: 2 }]);
+  assert.equal(placed[0].facing, '+x');
+  assert.deepEqual(placed[0].center.slice(1), [1.5, 3.5]);
+  assert.ok(placed[0].center[0] > 0 && placed[0].center[0] < 0.01);
+  assert.equal(placed[1].facing, '+z');
+  assert.deepEqual(placed[1].center.slice(0, 2), [5.5, 2.5]);
+  assert.ok(placed[1].center[2] > 0 && placed[1].center[2] < 0.01);
 });

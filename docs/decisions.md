@@ -1189,15 +1189,15 @@ dev wing (D147), so the warning flagged nearly every real room and hid the
 warnings that matter.
 
 ### D179 — 2026-10-05 — Home Lattice's ambience; the Outer Buffer before the teasers' looks
-Step 5.9. Three biome look fields, off unless a biome sets them (the
+Step 5.9. Two biome look fields, off unless a biome sets them (the
 other look fields keep Home Lattice's values as defaults): `flows` (share
 of floor grid lines that now and then carry a bright dash, in the floor
-shader), `motes` (warm motes per floor tile, rising slowly, one Points
-object animated in its shader) and `panels` (share of free back-wall
+shader) and `panels` (share of free back-wall
 cells that become clear glass windows in a frame, never in the bottom
 row, by a doorway or touching each other; picked anew on every entry and
-kept through a respawn or a scan's rebuild). Home Lattice: 0.5, 0.2,
-0.08. No extra render pass; the core heartbeat is dropped.
+kept through a respawn or a scan's rebuild). Home Lattice: 0.5 and
+0.08. No extra render pass; the core heartbeat is dropped, and so are the
+warm motes (D180).
 The step plan with the author: the Glitchmire and Frostbyte floors and
 particles move to their Phase 6 steps (the teasers get them then); the
 Outer Buffer look (5.10) comes before its secret rooms (5.11), since
@@ -1205,3 +1205,20 @@ both the Lattice's and the Outer Buffer's looks are needed for the
 playtest.
 **Why:** the safe sector gets a living city look without gameplay
 effects; the teaser biomes are not part of the playtest's focus.
+
+### D180 — 2026-10-05 — No warm motes in Home Lattice
+The room-wide warm motes of D179 (and the "warm motes rising slowly" of
+D121) are removed: the `motes` look field, `render/motes.js` and its
+showcase part. Data flows and glass panels stay. The backup shrine keeps
+its own motes (D97).
+**Why:** the author saw them in play and did not want them.
+
+### D181 — 2026-10-05 — Glass panels glow and flicker
+Home Lattice's glass panels (D179) glow softly in the room color,
+brightest at the frame, breathing slowly, each panel on its own rhythm;
+now and then (every 5–15 s per panel) one stutters between dark and
+bright for about a third of a second, like a faulty display. One
+instanced additive quad per panel in front of the pane, animated in its
+shader (`PANEL_FX`); no extra pass.
+**Why:** the author asked for the panels to glow a bit and flicker
+sometimes; faint enough that they still read as windows.

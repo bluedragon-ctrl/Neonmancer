@@ -19,6 +19,7 @@
 import { BufferGeometry, Color, DoubleSide, Float32BufferAttribute, Group, InstancedMesh, Matrix4, Mesh } from 'three';
 import { BLOCK_FX, createActiveBlockView, flareHazard, hazardFaceMaterial } from './block-fx.js';
 import { createFenceView } from './fence-view.js';
+import { createPanelGlow } from './panel-glow.js';
 import { UNIT_BOX } from './geometry.js';
 import { blockEdges, edgeUnitKeys, groupedBlockEdges } from './edges.js';
 import { BITS, markSegments } from './marks.js';
@@ -47,12 +48,15 @@ import {
  * @param {object} [room.look] biome look (neon.js roomLook()); the walls use its wall grid brightness
  * @param {{ side: string, u: number, v: number }[]} [room.panels] glass panels in the back walls (walls.js pickPanels())
  * @returns {Group} with `userData.flares`: "x,y,z" of each hazard-look
- *   block → its face material (for flareHazard())
+ *   block → its face material (for flareHazard()), and
+ *   `userData.update(dt)` running the glass panels' glow
  */
 export function createRoomView({ size, blocks, blockTypes, exits = [], color = PALETTE.amber, look = {}, panels = [] }) {
   const group = new Group();
-  group.add(createWalls(size, exits, color, roomLook(look).wallGrid, panels));
+  const walls = createWalls(size, exits, color, roomLook(look).wallGrid, panels);
+  group.add(walls);
   group.userData.flares = new Map();
+  group.userData.update = (dt) => walls.userData.glow?.userData.update(dt);
   const types = Object.values(blockTypes).filter((type) => blocks[type.id]?.length > 0);
   // A line two looks would both draw is drawn once, by the more dangerous
   // one (D64): lethal types first, then those that hurt; each leaves out
@@ -124,9 +128,12 @@ function createWalls(size, exits, color, gridBrightness, panels) {
   edges.renderOrder = 1;
   group.add(edges);
 
-  // Glass panels (D179): see-through, so the grid outside shows, in a frame.
+  // Glass panels (D179): see-through, so the grid outside shows, in a
+  // frame, glowing softly and flickering now and then (D181).
   if (glass.length > 0) {
     group.add(glassBoxes(glass, color, GLASS.panel));
+    group.userData.glow = createPanelGlow(panels, color);
+    group.add(group.userData.glow);
     const frame = neonLines(frames, lineMaterial({ color, width: 2, brightness: 0.9 }));
     frame.renderOrder = 1;
     group.add(frame);
