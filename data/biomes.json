@@ -22,9 +22,9 @@
         "outerFade": 9,
         "wallGrid": 0.35,
         "bloom": 1.6,
-        "stars": 0.3,
+        "stars": 0.15,
         "nebula": 0.25,
-        "blackHole": 2.2
+        "blackHole": 1.1
       }
     },
     "firewall_citadel": {
