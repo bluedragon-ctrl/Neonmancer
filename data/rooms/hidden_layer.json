@@ -3,23 +3,24 @@
   "schemaVersion": 1,
   "id": "hidden_layer",
   "name": "Hidden Layer",
-  "biome": "home_lattice",
+  "biome": "outer_buffer",
   "size": [12, 4, 12],
   "spawn": [1.5, 0, 6.5],
-  "exits": [
-    { "id": "east", "side": "+x", "at": 5 },
-    { "id": "north", "side": "-z", "at": 5 }
-  ],
-  "blocks": [
-    { "at": [7, 0, 0], "to": [7, 2, 4] },
-    { "type": "fake", "at": [7, 0, 5], "to": [7, 1, 6] },
-    { "at": [7, 2, 5], "to": [7, 2, 6] },
-    { "at": [7, 0, 7], "to": [7, 2, 11] },
-    { "at": [3, 0, 10] },
-    { "type": "fake", "at": [4, 0, 10] }
-  ],
+  "exits": [{ "id": "east", "side": "+x", "at": 5 }],
   "pickups": [
-    { "id": "disk_scan", "type": "disk_scan", "at": [2, 0, 3] },
-    { "id": "energy", "type": "refill_energy", "at": [4, 0, 10] }
+    { "id": "disk_zap_1", "type": "disk_zap", "at": [0, 0, 0] },
+    { "id": "disk_shield_1", "type": "disk_shield", "at": [1, 0, 0] },
+    { "id": "disk_firewall_1", "type": "disk_firewall", "at": [2, 0, 0] },
+    { "id": "disk_pause_1", "type": "disk_pause", "at": [3, 0, 0] },
+    { "id": "disk_blink_1", "type": "disk_blink", "at": [4, 0, 0] },
+    { "id": "disk_compile_1", "type": "disk_compile", "at": [6, 0, 0] },
+    { "id": "disk_warp_1", "type": "disk_warp", "at": [5, 0, 0] },
+    { "id": "disk_cut_paste_1", "type": "disk_cut_paste", "at": [7, 0, 0] },
+    { "id": "disk_fork_1", "type": "disk_fork", "at": [8, 0, 0] },
+    { "id": "disk_scan_1", "type": "disk_scan", "at": [9, 0, 0] },
+    { "id": "disk_pull_1", "type": "disk_pull", "at": [10, 0, 0] },
+    { "id": "upgrade_double_jump_1", "type": "upgrade_double_jump", "at": [0, 0, 11] },
+    { "id": "upgrade_shield_plus_1", "type": "upgrade_shield_plus", "at": [0, 0, 9] },
+    { "id": "upgrade_double_jump_2", "type": "upgrade_double_jump", "at": [0, 0, 7] }
   ]
 }
