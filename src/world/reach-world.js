@@ -56,6 +56,22 @@ function subsets(items, size) {
  * @returns {WorldReach}
  */
 export function analyzeWorld(content, { needs = true } = {}) {
+  return softenPending(content.world, analyzeLater(content, needs));
+}
+
+/**
+ * Problems of rooms listed in `world.pending` (not finished, e.g. a secret
+ * whose entrance isn't placed yet) are warnings, not errors.
+ */
+function softenPending(world, report) {
+  const pending = new Set(world.pending ?? []);
+  if (pending.size === 0) return report;
+  const soft = report.errors.filter((e) => pending.has(e.match(/^([a-z0-9_]+):/)?.[1]));
+  if (soft.length === 0) return report;
+  return { ...report, errors: report.errors.filter((e) => !soft.includes(e)), warnings: [...report.warnings, ...soft.map((e) => `${e} (room is pending)`)] };
+}
+
+function analyzeLater(content, needs) {
   const report = searchWorld(content, needs, []);
   const later = (content.world.later ?? []).filter((a) => !report.abilities.includes(a));
   if (later.length === 0 || report.errors.length === 0) return report;

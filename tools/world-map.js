@@ -131,23 +131,41 @@ const state = {
   report: false,
 };
 
-/** Validation errors of the data as edited. */
-function dataErrors() {
-  if (SCHEMA_ERRORS.length > 0) return SCHEMA_ERRORS;
-  return validateData(edit.dataFiles());
-}
+/** How long the data must stand still before the checks run (ms): none run while dragging or clicking about. */
+const CHECK_DELAY = 700;
+/** The last checks: { key, errors, reach } for the data they ran on. */
+let checks = null;
+let checkTimer = 0;
 
 /**
- * Reachability of the data as edited (D131): problems and warnings from the
- * checker, or none while the data is invalid (the checks above say why).
+ * Validation and reachability of the data as edited (D131), cached by the
+ * data's content. While the data differs from the last check, returns null
+ * and schedules one after a pause, then redraws the panel; the slow search
+ * never runs on each redraw.
+ * @returns {{ errors: string[], reach: { errors: string[], warnings: string[] } } | null}
  */
-function reachReport() {
-  if (dataErrors().length > 0) return { errors: [], warnings: [] };
+function currentChecks() {
+  if (SCHEMA_ERRORS.length > 0) return { errors: SCHEMA_ERRORS, reach: { errors: [], warnings: [] } };
+  const files = edit.dataFiles();
+  const key = JSON.stringify(files);
+  if (checks?.key === key) return checks;
+  clearTimeout(checkTimer);
+  checkTimer = setTimeout(() => {
+    checks = { key, ...runChecks(files) };
+    drawPanel();
+  }, CHECK_DELAY);
+  return null;
+}
+
+/** Run the checks now: validation errors, and the checker's problems unless the data is invalid. */
+function runChecks(files) {
+  const errors = validateData(files);
+  if (errors.length > 0) return { errors, reach: { errors: [], warnings: [] } };
   try {
-    const { errors, warnings } = analyzeWorld(loadGameData(edit.dataFiles()), { needs: false });
-    return { errors, warnings };
+    const { errors: reachErrors, warnings } = analyzeWorld(loadGameData(files), { needs: false });
+    return { errors, reach: { errors: reachErrors, warnings } };
   } catch (error) {
-    return { errors: [`reachability check failed: ${error.message}`], warnings: [] };
+    return { errors, reach: { errors: [`reachability check failed: ${error.message}`], warnings: [] } };
   }
 }
 
@@ -378,7 +396,7 @@ function drawPanel() {
   if (state.tool === 'add') panelEl.append(newRoomFields());
   if (state.tool === 'connect' && state.linkFrom) panelEl.append(html('div', 'tool-help', `From ${state.linkFrom}: click the room to connect it to (Esc cancels).`));
 
-  const errors = dataErrors();
+  const result = currentChecks();
   const rooms = edit.rooms;
   const distances = roomDistances(world.start, world.connections);
   const { unreachable } = mapWarnings(world, edit.rooms.keys());
@@ -386,12 +404,15 @@ function drawPanel() {
   panelEl.append(html('h2', '', 'CHECKS'));
   const list = html('ul');
   for (const id of unreachable) list.append(roomItem(id, 'warn', `${id}: not reachable from ${world.start}`));
-  for (const error of errors) list.append(html('li', 'error', error));
-  const reach = reachReport();
   const reachItem = (className, message) => (rooms.has(roomOf(message)) ? roomItem(roomOf(message), className, message) : html('li', className, message));
-  for (const error of reach.errors) list.append(reachItem('error', error));
-  for (const warning of reach.warnings) list.append(reachItem('warn', warning));
-  if (list.children.length === 0) list.append(html('li', 'fine', `All ${distances.size} rooms reachable on the map and by the wizard's abilities.`));
+  if (result) {
+    for (const error of result.errors) list.append(html('li', 'error', error));
+    for (const error of result.reach.errors) list.append(reachItem('error', error));
+    for (const warning of result.reach.warnings) list.append(reachItem('warn', warning));
+  } else {
+    list.append(html('li', 'status', 'Checking…'));
+  }
+  if (result && list.children.length === 0) list.append(html('li', 'fine', `All ${distances.size} rooms reachable on the map and by the wizard's abilities.`));
   panelEl.append(list);
 
   const reportButton = html('button', '', 'F3 Pickup report');

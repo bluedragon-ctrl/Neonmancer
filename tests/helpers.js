@@ -185,12 +185,13 @@ export function dataFiles({
   fragments,
   dev,
   later,
+  pending,
 }) {
   const variants = withVariants(rooms, enemies);
   return structuredClone({
     'defs.json': { schemaVersion: 1, score: SCORE, objects: { crate: CRATE, ...objects }, enemies: variants.enemies, spells: SPELLS, pickups, blocks },
     'biomes.json': { schemaVersion: 1, biomes: { home: { name: 'Home', color: '#ffb020' } } },
-    'world.json': { schemaVersion: 1, start, ...(dev && { dev }), ...(later && { later }), ...(fragments && { fragments }), connections, positions },
+    'world.json': { schemaVersion: 1, start, ...(dev && { dev }), ...(later && { later }), ...(pending && { pending }),...(fragments && { fragments }), connections, positions },
     'strings.json': STRINGS,
     ...Object.fromEntries(variants.rooms.map((room) => [`rooms/${room.id}.json`, room])),
   });
