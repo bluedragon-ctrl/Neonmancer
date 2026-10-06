@@ -57,6 +57,8 @@ export const LOOK_DEFAULTS = {
   stars: 0,
   nebula: 0,
   blackHole: 0,
+  /** Exits that lead into this biome show drifting stars (exit-stars.js, D183). */
+  starExits: false,
 };
 
 /**

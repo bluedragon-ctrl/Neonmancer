@@ -150,7 +150,10 @@ export class RoomScene {
     if (rebuild || room.id !== this.roomId || cutAbove !== this.cutAbove || game.reveals !== this.reveals) {
       old.push(this.staticGroup);
       if (room.id !== this.roomId) this.panels = pickPanels(room.size, room.exits, roomLook(room.look).panels);
-      this.exitViews = room.exits.map((exit) => new ExitView(exit, room.size, game.destinationColor(exit)));
+      this.exitViews = room.exits.map((exit) => {
+        const biome = game.destinationBiome(exit);
+        return new ExitView(exit, room.size, biome.color, { stars: roomLook(biome.look).starExits });
+      });
       const roomView = createRoomView({ ...cutRoom(shownRoom(game), cutAbove), panels: this.panels });
       this.roomView = roomView;
       this.reveals = game.reveals;

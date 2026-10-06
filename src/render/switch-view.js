@@ -40,7 +40,7 @@ import {
 } from 'three';
 import { blockEdges } from './edges.js';
 import { GLASS, glassBox } from './glass.js';
-import { PALETTE, lineMaterial, neonLines } from './neon.js';
+import { PALETTE, lineMaterial, neonLines, roomLook } from './neon.js';
 import { linkedSwitches, switchesOn } from '../switches.js';
 
 /** Tuning (units, seconds). */
@@ -385,11 +385,13 @@ export function createPlate(color, { timed = false } = {}) {
  * `userData.openness` (0..1) tells how far it has opened.
  * @param {{ side: string, at: number, width: number, y: number, height: number }} exit defaults applied
  * @param {number[]} size room size
- * @param {{ color: number|string, switches: number, access?: number }} options switches linked to it (one light
- *   each; 0 for an access lock alone) and the access level it asks for (D101, shown as a Roman numeral in the top corner)
+ * @param {{ color: number|string, switches: number, access?: number, dark?: number|string }} options switches linked to it (one light
+ *   each; 0 for an access lock alone) and the access level it asks for (D101, shown as a Roman numeral in the top corner);
+ *   `dark`: the color of a dark glass pane with a frame in `color`, for a door into a star-exit biome (D183)
  */
-export function createLock(exit, size, { color, switches, access = 0 }) {
+export function createLock(exit, size, { color, switches, access = 0, dark }) {
   const base = new Color(color);
+  const glass = dark === undefined ? base : new Color(dark);
   const group = new Group();
   const back = exit.side.startsWith('-');
   const along = exit.side.endsWith('x') ? 2 : 0;
@@ -415,7 +417,7 @@ export function createLock(exit, size, { color, switches, access = 0 }) {
   const [lo, hi] = [p(a0, y0), p(a1, y1)];
   hi[cross] = lo[cross] + (back ? 0.06 : -0.06);
   const span = [0, 1, 2].map((i) => [Math.min(lo[i], hi[i]), Math.max(lo[i], hi[i])]);
-  barrier.add(glassBox(span.map(([l]) => l), span.map(([, h]) => h), base, GLASS.gate));
+  barrier.add(glassBox(span.map(([l]) => l), span.map(([, h]) => h), glass, dark === undefined ? GLASS.gate : { ...GLASS.gate, ...GLASS.darkGate }));
   const m = 0.1;
   const outline = [
     [p(a0 + m, y0 + m), p(a1 - m, y0 + m)],
@@ -633,9 +635,17 @@ export class LockView {
   constructor(game, lock) {
     this.game = game;
     this.lock = lock;
-    const color = game.switches[0]?.object.color ?? game.content.objectTypes.target?.color ?? 0xffffff;
     const { exit } = lock;
-    this.group = createLock(exit, game.room.size, { color, switches: exit.locked ? linkedSwitches(game, exit.switches).length : 0, access: exit.access ?? 0 });
+    // A door into a star-exit biome (D183, the Outer Buffer): dark glass in that biome's color, its frame brighter.
+    const biome = game.destinationBiome(exit);
+    const dark = roomLook(biome.look).starExits;
+    const color = dark ? biome.color : game.switches[0]?.object.color ?? game.content.objectTypes.target?.color ?? 0xffffff;
+    this.group = createLock(exit, game.room.size, {
+      color,
+      switches: exit.locked ? linkedSwitches(game, exit.switches).length : 0,
+      access: exit.access ?? 0,
+      dark: dark ? new Color(biome.color).multiplyScalar(0.28) : undefined,
+    });
     this.sync(0);
   }
 

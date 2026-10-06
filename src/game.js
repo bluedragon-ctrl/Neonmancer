@@ -870,9 +870,17 @@ export class Game {
    * @param {object} exit exit of the current room
    */
   destinationColor(exit) {
+    return this.destinationBiome(exit).color;
+  }
+
+  /**
+   * The biome of the room an exit leads to: its color and look (D183 asks for `starExits`).
+   * @param {object} exit exit of the current room
+   */
+  destinationBiome(exit) {
     const link = this.content.links.get(`${this.room.id}.${exit.id}`);
     const room = this.content.rooms.get(link?.room ?? this.room.id);
-    return this.content.biomes[room.biome].color;
+    return this.content.biomes[room.biome];
   }
 
   /**

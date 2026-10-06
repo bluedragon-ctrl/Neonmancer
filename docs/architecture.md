@@ -163,6 +163,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/viewport.js` | Letterbox, buffer size and 1080p-relative sizing math (pure, tested) |
 | `render/virus.js` | Virus model (D78): sharp tipped cube, orbiting bits, glide, charge pose, pop pixels, `VIRUS` tuning; `VIRUS_MODEL` |
 | `render/panel-glow.js` | The glass panels' glow (D181): breathing, a flicker now and then, one instanced quad per panel animated in its shader, `PANEL_FX` (placement pure, tested) |
+| `render/exit-stars.js` | The exit effect of a biome with `starExits` (D183): stars drift out through the exit, one Points shader |
 | `render/walls.js` | Back walls with doorways and dark tunnels behind them, glass panels (D179, `pickPanels()`), front edges with gaps, arrow shape for front exits (pure, tested) |
 | `render/warden.js` | Warden model (D107): kite shield with brick seams, T-slit helm, gauntlets, greatsword poses (`swordAngle()`), `WARDEN` tuning; `WARDEN_MODEL` |
 | `render/warp-fx.js`, `render/warp-view.js` | Blink's dash (drawn position and stretch, streaks, kicked-up pixels) and Warp's arrival flash (D86; its pixels are the stream): the look (pure, tested) and its meshes, shown by `PlayerView` |

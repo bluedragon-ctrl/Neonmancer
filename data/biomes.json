@@ -24,7 +24,8 @@
         "bloom": 1.6,
         "stars": 0.15,
         "nebula": 0.25,
-        "blackHole": 1.1
+        "blackHole": 1.1,
+        "starExits": true
       }
     },
     "firewall_citadel": {
