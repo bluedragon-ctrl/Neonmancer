@@ -302,7 +302,8 @@ biome at a time.
 - **Outer Buffer** (special: secrets and optional rooms, D130) — dark
   space beyond the Grid: things that orbit, fall and pull; deep indigo
   edges, no grid outside the room, only a void with twinkling stars,
-  faint clouds and a lensed black hole beside it (D182); later:
+  faint clouds and a lensed black hole beside it (D182); exits into it
+  show drifting stars, locked ones dark indigo glass (D183); later:
   low gravity, darkness with a light round the wizard
 - **Firewall Citadel** — the fortress: armored guards, burners, turrets;
   ember orange, brick floor, rising sparks, warm flicker; later: heat vents

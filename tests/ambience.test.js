@@ -86,3 +86,10 @@ test('space is off by default and on in the Outer Buffer only (D182)', () => {
     assert.deepEqual([look.stars, look.nebula, look.blackHole], [0, 0, 0], id);
   }
 });
+
+test('star exits are off by default and on in the Outer Buffer only (D183)', () => {
+  assert.equal(LOOK_DEFAULTS.starExits, false);
+  for (const [id, biome] of Object.entries(biomes.biomes)) {
+    assert.equal(roomLook(biome.look).starExits, id === 'outer_buffer', id);
+  }
+});

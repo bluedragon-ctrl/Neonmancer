@@ -54,6 +54,9 @@ docs/decisions.md).
   second solution no easier than the intended one is not a bypass.
 
 ### Added
+- Exits into the Outer Buffer (D183): stars drift out through them
+  instead of dashes and arrows, and a locked one has dark indigo glass.
+  Biome look field `starExits`.
 - The Outer Buffer look (5.10, D182): deep indigo room color, a void with no
   grid outside the room, twinkling stars in three layers, faint clouds and
   a lensed black hole beside the room, all in the floor shader. Biome look

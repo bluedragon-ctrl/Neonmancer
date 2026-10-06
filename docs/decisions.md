@@ -1240,7 +1240,7 @@ ellipse under the fixed camera.
 deep indigo palette, a clean void edge instead of drifting debris, and a
 black hole. Low gravity and the light round the wizard stay in Phase 7.
 
-### D183 — 2026-10-06 — The Outer Buffer entrances: five secret doors, each needing a later spell (5.11a)
+### D184 — 2026-10-06 — The Outer Buffer entrances: five secret doors, each needing a later spell (5.11a)
 Step 5.11 starts with the five secret rooms' entrances; the rooms
 themselves (`buffer_1`–`buffer_5`, 8×8, Outer Buffer, one exit each, width 1)
 are empty until their puzzles are built one by one. Each hangs off a Lattice
@@ -1280,3 +1280,17 @@ Compile" in `buffer_5`'s and `buffer_4`'s reports means three or more
 Compile casts (at least three crates: a step, then two stacked beside the ledge; over the 100 energy ceiling) and is no real way in; Cut &
 Paste and Pull routes are for the author to judge when those spells
 arrive. Nothing here edits an authored room (none is flagged).
+### D183 — 2026-10-06 — Exits into the Outer Buffer look different
+An exit that leads into a biome with the look field `starExits` (only the
+Outer Buffer) shows small stars drifting out through it, fading in and
+out and twinkling, instead of the usual dashes (back doorways) and
+arrows (front exits); and a locked one (switches or access level) has a
+dark indigo glass pane, a frame in the biome's color, instead of white
+glass (`GLASS.darkGate`). The lights and the numeral keep their red and
+green. It follows the destination biome, so no room data changes and
+any biome may turn it on later. A door's own color is still the
+destination's (D99); the effect is the hint that the rooms beyond are
+different and meant for later (D67).
+**Why:** the author wanted the doors into the Outer Buffer to read as
+different at a glance; only the stars, not a portal frame, and dark
+glass for the switchable ones.
