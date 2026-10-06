@@ -5,19 +5,21 @@
   "name": "Boot Up",
   "biome": "home_lattice",
   "size": [8, 4, 8],
-  "spawn": [1.5, 0, 5.5],
+  "spawn": [2.5, 0, 1.5],
   "exits": [
     { "id": "east", "side": "+x", "at": 3 },
     { "id": "west", "side": "-x", "at": 5, "requires": [{ "access": 3 }] }
   ],
   "blocks": [
-    { "at": [4, 0, 0], "to": [4, 0, 3] },
-    { "at": [0, 0, 3], "to": [3, 0, 3] }
+    { "at": [1, 0, 4] },
+    { "at": [4, 0, 0], "to": [4, 0, 1] },
+    { "at": [0, 0, 3], "to": [2, 0, 3] }
   ],
   "shrine": [4, 6],
   "objects": [
     { "id": "screen_1", "type": "screen", "at": [0, 0, 0], "text": "tut_move" },
-    { "id": "data_pillar_1", "type": "data_pillar", "at": [6, 0, 0] }
+    { "id": "data_pillar_1", "type": "data_pillar", "at": [6, 0, 0] },
+    { "id": "screen_2", "type": "screen", "at": [0, 0, 7], "overrides": { "face": "+x" } }
   ],
-  "pickups": [{ "id": "access_pass_3_1", "type": "access_pass_3", "at": [2, 0, 0] }]
+  "pickups": [{ "id": "access_pass_3_2", "type": "access_pass_3", "at": [0, 0, 4] }]
 }
