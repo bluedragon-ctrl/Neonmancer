@@ -13,6 +13,7 @@ import { Color, Group } from 'three';
 import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
 import { isBackSide, sideAxes } from '../data/room-data.js';
 import { EXIT_FX, exitStreamLayout, glideState } from './exit-layout.js';
+import { createExitStars } from './exit-stars.js';
 import { fadingLines, lineMaterial, neonLines } from './neon.js';
 import { frontChevrons } from './walls.js';
 
@@ -21,8 +22,10 @@ export class ExitView {
    * @param {object} exit exit with defaults applied
    * @param {number[]} size room size [x, y, z]
    * @param {number|string} color color of the room the exit leads to
+   * @param {object} [options]
+   * @param {boolean} [options.stars] drifting stars instead of dashes and arrows (D183, a biome's `starExits`)
    */
-  constructor(exit, size, color) {
+  constructor(exit, size, color, { stars = false } = {}) {
     /** The exit it shows (room data, defaults applied). */
     this.exit = exit;
     this.color = new Color(color);
@@ -30,7 +33,10 @@ export class ExitView {
     this.time = 0;
     this.arrows = [];
 
-    if (isBackSide(exit.side)) {
+    if (stars) {
+      this.stars = createExitStars(exit, size, color);
+      this.group.add(this.stars);
+    } else if (isBackSide(exit.side)) {
       // Dashes fading from the doorway (bright) into the tunnel (black).
       const stream = fadingLines(exitStreamLayout(exit), { color, width: 2.5, brightness: EXIT_FX.brightness, dashed: true });
       this.streamMaterial = stream.material;
@@ -57,6 +63,7 @@ export class ExitView {
   /** @param {number} dt seconds since the last frame */
   update(dt) {
     this.time += dt;
+    this.stars?.userData.update(dt);
     if (this.streamMaterial) {
       // Moving the dash pattern back makes the dashes flow forward.
       const period = EXIT_FX.streamDash + EXIT_FX.streamGap;

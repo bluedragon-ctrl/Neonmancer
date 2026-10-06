@@ -90,6 +90,10 @@
           "minimum": 0,
           "maximum": 6,
           "description": "Space (D182): radius (blocks) of a black hole in the void beside the room: a lensed starfield, a bright ring and a slowly turning disk. Default 0 (none)."
+        },
+        "starExits": {
+          "type": "boolean",
+          "description": "Exits that lead into this biome (D183): small stars drift out through them instead of dashes and arrows, and a locked one has dark glass in the biome's color instead of white. Default false."
         }
       }
     }

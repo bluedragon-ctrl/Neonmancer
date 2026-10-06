@@ -10,7 +10,7 @@
  * more room (`span`), animate (`update(dt, time)`, called every frame) and
  * stand still instead of turning (`spin: false`).
  */
-import { Group, Vector3 } from 'three';
+import { Color, Group, Vector3 } from 'three';
 import defs from '../data/defs.json';
 import strings from '../data/strings.json';
 import { OBJECT_STYLE_DEFAULTS, resolveBlockTypes, resolveEnemyTemplates, resolveObjectTypes, withEnemyDefaults, withExitDefaults } from '../src/data/room-data.js';
@@ -336,6 +336,8 @@ const ALL_ASSETS = [
   { label: 'target', group: 'switches', span: 5, spin: false, build: buildTargetZap },
   { label: 'plate', group: 'switches', span: 4, spin: false, build: buildPlate },
   { label: 'locks-in-room', group: 'switches', span: 5.5, spin: false, build: buildLocks },
+  // Exits into the Outer Buffer (D183): stars drift out; a lock there is dark indigo glass.
+  { label: 'star-exits', group: 'switches', span: 6, spin: false, build: buildStarExits },
   // Timed switches (D140): a target and a plate switched on, blinking ever
   // faster as their time runs out, then off; a gate and a bridge on one
   // plate: the gate sinks as the bridge rises, and back.
@@ -884,6 +886,37 @@ function buildCore() {
     level = stage.level;
     core.userData.set(stage);
     core.userData.update(dt);
+  };
+  return asset;
+}
+
+/**
+ * Exits into the Outer Buffer (D183): a back doorway and a front exit with
+ * drifting stars, then the same two locked, behind dark indigo glass, one
+ * opening and closing in turn.
+ */
+function buildStarExits() {
+  const size = [4, 3, 5];
+  const color = biomes.biomes.outer_buffer.color;
+  const exits = [
+    withExitDefaults({ id: 'back', side: '-z', at: 1 }),
+    withExitDefaults({ id: 'front', side: '+x', at: 1 }),
+    withExitDefaults({ id: 'back2', side: '-x', at: 2 }),
+  ];
+  const views = exits.map((exit) => new ExitView(exit, size, color, { stars: true }));
+  const dark = new Color(color).multiplyScalar(0.28);
+  const lock = createLock(exits[2], size, { color, switches: 1, dark });
+  const room = new Group().add(createRoomView({ size, blocks: {}, blockTypes: BLOCK_TYPES, exits, color: PALETTE.amber }), ...views.map((v) => v.group), lock);
+  room.position.set(-2, 0, -2.5);
+  const asset = new Group().add(room);
+  let time = 0;
+  asset.userData.update = (dt) => {
+    time = (time + dt) % 6;
+    const open = time > 3;
+    lock.userData.set({ lit: open ? 1 : 0, open });
+    lock.userData.update(dt);
+    views[2].group.visible = lock.userData.openness > 0.5;
+    for (const view of views) view.update(dt);
   };
   return asset;
 }
