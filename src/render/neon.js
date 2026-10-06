@@ -53,6 +53,10 @@ export const LOOK_DEFAULTS = {
    */
   flows: 0,
   panels: 0,
+  /** Space (D182), off unless a biome sets it: the Outer Buffer's void (floor.js). */
+  stars: 0,
+  nebula: 0,
+  blackHole: 0,
 };
 
 /**

@@ -123,7 +123,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/exit-layout.js` | Exit effect layout and timing, `EXIT_FX` tuning (pure, tested) |
 | `render/exit-view.js` | Exit effect in the destination color: dashed stream into doorway tunnels, arrows gliding out of front exits |
 | `render/firewall-fx.js`, `render/firewall-view.js` | Firewall's ring of flames (D84): the segments (pure, tested; timing is the Shield's) and its meshes, shown by `PlayerView` |
-| `render/floor.js` | Infinite grid floor fading into darkness; hole tiles cut out via a mask texture; a biome's data flows in its shader (D179, `FLOWS`) |
+| `render/floor.js` | Infinite grid floor fading into darkness; hole tiles cut out via a mask texture; a biome's data flows (D179, `FLOWS`) and the Outer Buffer's void with stars, clouds and a black hole (D182, `SPACE`) in its shader |
 | `render/fragment.js` | Key fragment look (D101): a gold tile with the boot key dim and its own module lit, ghost |
 | `render/geometry.js` | Shared geometry primitives (`UNIT_BOX` with its corner at the origin, centered `CUBE`), never disposed with a room (D169) |
 | `render/glass.js` | Glass faces (D96): a see-through face shader (transparent, no depth written, clipping, instancing) and the data core's shrunk mark; `glassBoxes()` draws several boxes of one look at once (D169); a destructible glass crate is an empty shell (D99) |

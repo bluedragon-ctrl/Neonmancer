@@ -300,7 +300,9 @@ biome at a time.
   blue, hex crystal floor, falling 0/1 flakes, soft frosty bloom; later:
   slippery ice
 - **Outer Buffer** (special: secrets and optional rooms, D130) — dark
-  space beyond the Grid: things that orbit, fall and pull; a near-black void with a starfield, dim cool edges; later:
+  space beyond the Grid: things that orbit, fall and pull; deep indigo
+  edges, no grid outside the room, only a void with twinkling stars,
+  faint clouds and a lensed black hole beside it (D182); later:
   low gravity, darkness with a light round the wizard
 - **Firewall Citadel** — the fortress: armored guards, burners, turrets;
   ember orange, brick floor, rising sparks, warm flicker; later: heat vents

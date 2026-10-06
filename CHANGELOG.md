@@ -46,6 +46,10 @@ docs/decisions.md).
   second solution no easier than the intended one is not a bypass.
 
 ### Added
+- The Outer Buffer look (5.10, D182): deep indigo room color, a void with no
+  grid outside the room, twinkling stars in three layers, faint clouds and
+  a lensed black hole beside the room, all in the floor shader. Biome look
+  fields `stars`, `nebula` and `blackHole`.
 - Home Lattice's ambience (5.9, D179–D181): data flows, short bright
   dashes running now and then along the floor grid, inside the room and
   out, and random glass panels in the back walls, windows onto the grid
