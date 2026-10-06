@@ -35,17 +35,16 @@
     ["core_hall.east", "glitch_gate.west"],
     ["glitch_gate.east", "glitch_edge.west"],
     ["warden_pit.south", "idle_cache.north"],
-    ["room_1.south", "hidden_layer.north"],
     ["room_2.east", "room_1.west"],
     ["fence_yard.east", "room_2.west"],
     ["watchdog_run.east", "fence_yard.west"],
     ["boot_up.east", "first_steps.west"],
     ["boot_up.west", "hidden_layer.east"],
     ["warden_pit.west", "buffer_2.east"],
-    ["mirror_stacks.east", "buffer_4.west"],
     ["ghost_exit.east", "buffer_5.west"],
     ["scan_lab.north_2", "buffer_1.south"],
-    ["guard_loop.east", "buffer_3.west"]
+    ["guard_loop.east", "buffer_3.west"],
+    ["mirror_stacks.east_2", "buffer_4.west"]
   ],
   "positions": {
     "hidden_layer": [4, 0],
