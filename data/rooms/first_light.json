@@ -15,7 +15,7 @@
   ],
   "objects": [
     { "id": "screen_1", "type": "screen", "at": [0, 0, 0], "text": "help_fragments" },
-    { "id": "screen_watchdog", "type": "screen", "at": [1, 0, 12], "text": "help_watchdog" }
+    { "id": "screen_2", "type": "screen", "at": [0, 0, 12], "overrides": { "face": "+x" }, "text": "help_watchdog" }
   ],
   "pickups": [{ "id": "fragment_2_1", "type": "fragment_2", "at": [2, 0, 0] }]
 }
