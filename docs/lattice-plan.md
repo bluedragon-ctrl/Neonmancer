@@ -59,8 +59,8 @@ Fragments 0–15 are all placed.
 
 | Room | Size | What it is |
 |---|---|---|
-| `buffer_1` (5.9) | 8x8 | Secret, a Scan hidden exit off `ghost_exit` |
-| `buffer_2` (5.9) | 8x8 | Secret, a fake block off `mirror_stacks`; an extra fragment |
-| `buffer_3` (5.9) | 8x8 | Secret, a decoy lock; off `guard_loop`'s east side (11,1) or another room; an extra fragment |
-| `buffer_4` (5.9) | 8x8 | Secret, a double-jump ledge off `atrium` (after Level 1) |
-| `buffer_5` (5.9) | 8x8 | Secret, needs Warp or Cut & Paste, off `relay_loft` (a later sector) |
+| `buffer_1` Dead Pixel (5.11) | 8x8 | Secret, a Scan hidden exit in `scan_lab`; entrance built (D183), contents to come |
+| `buffer_2` Stray Byte (5.11) | 8x8 | Secret, double jump or Compile up to a ledge in `warden_pit`; entrance built, an extra fragment to come |
+| `buffer_3` Null Orbit (5.11) | 8x8 | Secret, a Blink across a caged gap in `guard_loop`; entrance built, an extra fragment to come |
+| `buffer_4` Event Horizon (5.11) | 8x8 | Secret, a Warp to a high doorway in `mirror_stacks`; entrance built |
+| `buffer_5` Cache Miss (5.11) | 8x8 | Secret, Warp plus Compile or Fork onto a plate in `ghost_exit`; entrance built |

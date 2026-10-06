@@ -235,6 +235,22 @@ test('world: what he can never reach is an error', () => {
   assert.equal(formatReach(report).split('\n').at(-1), '3 reachability problem(s).');
 });
 
+test('world: a room that waits for a spell listed as later is a warning, not an error (D183)', () => {
+  // The gap is two wide and a Blink crosses it; no room holds a Blink disk yet.
+  const rooms = [
+    roomFile('a', { exits: [EAST], holes: [{ at: [4, 0], to: [5, 7] }] }),
+    roomFile('b', { exits: [WEST] }),
+  ];
+  const strict = analyzeWorld(row(rooms));
+  assert.ok(strict.errors.some((e) => e.startsWith('b: no way in')), strict.errors.join(', '));
+  const later = analyzeWorld(row(rooms, { later: ['blink'] }));
+  assert.deepEqual(later.errors, []);
+  assert.ok(later.warnings.some((w) => w.startsWith('b: no way in') && w.includes('waits for a spell not placed yet: blink')), later.warnings.join(', '));
+  // Still an error when even that spell would not help: a wall, not a gap.
+  const walled = [{ ...rooms[0], holes: undefined, blocks: [{ at: [4, 0, 0], to: [4, 3, 7] }] }, rooms[1]];
+  assert.ok(analyzeWorld(row(walled, { later: ['blink'] })).errors.some((e) => e.startsWith('b: no way in')));
+});
+
 test('world: an access-locked exit waits for the access pass', () => {
   const content = gameData({
     rooms: [

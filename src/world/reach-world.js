@@ -56,6 +56,22 @@ function subsets(items, size) {
  * @returns {WorldReach}
  */
 export function analyzeWorld(content, { needs = true } = {}) {
+  const report = searchWorld(content, needs, []);
+  const later = (content.world.later ?? []).filter((a) => !report.abilities.includes(a));
+  if (later.length === 0 || report.errors.length === 0) return report;
+  // Rooms that wait for spells the world hands out in sectors not built yet (`later`)
+  // are no error: it is one only if they stay out of reach with those spells too.
+  const hopeful = new Set(searchWorld(content, false, later).errors);
+  const waiting = report.errors.filter((e) => !hopeful.has(e));
+  return {
+    ...report,
+    errors: report.errors.filter((e) => hopeful.has(e)),
+    warnings: [...report.warnings, ...waiting.map((e) => `${e} (waits for a spell not placed yet: ${later.join(', ')})`)],
+  };
+}
+
+/** One search of the world, with the abilities `extra` given from the start. */
+function searchWorld(content, needs, extra) {
   const { world, links } = content;
   const rooms = new Map([...content.rooms].map(([id, data]) => [id, buildRoom(data, content)]));
   const tuning = { scanRange: content.spells.scan?.range, blinkRange: content.spells.blink?.range };
@@ -63,7 +79,7 @@ export function analyzeWorld(content, { needs = true } = {}) {
 
   const state = new Map(); // room id → { entries, reach }
   for (const id of rooms.keys()) state.set(id, { entries: new Map(), reach: null });
-  const have = new Set();
+  const have = new Set(extra);
   const fragments = new Set();
   let access = 0;
   let coreReached = false;
