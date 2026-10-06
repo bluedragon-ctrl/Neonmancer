@@ -251,6 +251,14 @@ test('world: a room that waits for a spell listed as later is a warning, not an 
   assert.ok(analyzeWorld(row(walled, { later: ['blink'] })).errors.some((e) => e.startsWith('b: no way in')));
 });
 
+test('world: problems of a pending room are warnings, not errors', () => {
+  const rooms = [roomFile('a', { exits: [EAST], blocks: [{ at: [4, 0, 0], to: [4, 1, 7] }] }), roomFile('b', { exits: [WEST] })];
+  assert.ok(analyzeWorld(row(rooms)).errors.length > 0);
+  const soft = analyzeWorld(row(rooms, { pending: ['a', 'b'] }));
+  assert.deepEqual(soft.errors, []);
+  assert.ok(soft.warnings.some((w) => w.startsWith('b: no way in') && w.includes('pending')), soft.warnings.join(', '));
+});
+
 test('world: an access-locked exit waits for the access pass', () => {
   const content = gameData({
     rooms: [

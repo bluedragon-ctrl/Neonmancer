@@ -1294,3 +1294,15 @@ different and meant for later (D67).
 **Why:** the author wanted the doors into the Outer Buffer to read as
 different at a glance; only the stars, not a portal frame, and dark
 glass for the switchable ones.
+
+### D185 — 2026-10-06 — The world map checks run on idle; `pending` rooms only warn
+The world map tool ran validation twice and the whole reachability
+search on every redraw (each drag, click and panel update), which made
+editing slow. The checks are now cached by the data's content and run
+once after the data has stood still for 0.7 s ("Checking…" meanwhile).
+`world.json` also gets `pending`: rooms still waiting for something not
+placed yet (a secret whose entrance comes later). The checker turns their
+errors into warnings, so they never fail CI or a release; remove a room
+from the list when it is finished (as with `later`, D183).
+**Why:** the author found the map editor too slow, and unfinished secret
+rooms must not block a release.
