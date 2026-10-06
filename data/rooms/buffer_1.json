@@ -1,0 +1,10 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "buffer_1",
+  "name": "Dead Pixel",
+  "biome": "outer_buffer",
+  "size": [8, 4, 8],
+  "spawn": [3.5, 0, 6.5],
+  "exits": [{ "id": "south", "side": "+z", "at": 3, "width": 1 }]
+}

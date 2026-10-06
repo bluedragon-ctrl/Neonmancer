@@ -26,6 +26,12 @@
       "items": { "$ref": "common.schema.json#/$defs/id" },
       "uniqueItems": true
     },
+    "later": {
+      "description": "Spells and upgrades the world will hand out in sectors not built yet (D183). The reachability checker takes a room, exit or pickup that needs one of them as a warning, not an error, while no disk or upgrade for it lies in any room.",
+      "type": "array",
+      "items": { "enum": ["double_jump", "zap", "scan", "pull", "compile", "fork", "cut_paste", "blink", "warp", "pause", "shield", "firewall"] },
+      "uniqueItems": true
+    },
     "fragments": {
       "description": "Key fragments (D101): how many end the game at the core, and the access levels they earn there.",
       "type": "object",

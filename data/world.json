@@ -3,6 +3,7 @@
   "schemaVersion": 1,
   "start": "boot_up",
   "dev": ["hidden_layer", "room_1", "room_2", "fence_yard", "watchdog_run"],
+  "later": ["compile", "blink", "warp"],
   "fragments": { "required": 64, "access": [16, 32, 48] },
   "connections": [
     ["first_steps.east", "zap_port.west"],
@@ -39,7 +40,12 @@
     ["fence_yard.east", "room_2.west"],
     ["watchdog_run.east", "fence_yard.west"],
     ["boot_up.east", "first_steps.west"],
-    ["boot_up.west", "hidden_layer.east"]
+    ["boot_up.west", "hidden_layer.east"],
+    ["scan_lab.north", "buffer_1.south"],
+    ["warden_pit.west", "buffer_2.east"],
+    ["guard_loop.east", "buffer_3.west"],
+    ["mirror_stacks.east", "buffer_4.west"],
+    ["ghost_exit.east", "buffer_5.west"]
   ],
   "positions": {
     "hidden_layer": [4, 0],
@@ -75,6 +81,11 @@
     "room_1": [4, -1],
     "room_2": [3, -1],
     "fence_yard": [2, -1],
-    "watchdog_run": [1, -1]
+    "watchdog_run": [1, -1],
+    "buffer_1": [9, -4],
+    "buffer_2": [7, 3],
+    "buffer_3": [11, 1],
+    "buffer_4": [11, -3],
+    "buffer_5": [11, -2]
   }
 }

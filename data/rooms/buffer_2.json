@@ -1,0 +1,10 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "buffer_2",
+  "name": "Stray Byte",
+  "biome": "outer_buffer",
+  "size": [8, 4, 8],
+  "spawn": [6.5, 0, 3.5],
+  "exits": [{ "id": "east", "side": "+x", "at": 3, "width": 1 }]
+}

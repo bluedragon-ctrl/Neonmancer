@@ -1240,6 +1240,46 @@ ellipse under the fixed camera.
 deep indigo palette, a clean void edge instead of drifting debris, and a
 black hole. Low gravity and the light round the wizard stay in Phase 7.
 
+### D184 — 2026-10-06 — The Outer Buffer entrances: five secret doors, each needing a later spell (5.11a)
+Step 5.11 starts with the five secret rooms' entrances; the rooms
+themselves (`buffer_1`–`buffer_5`, 8×8, Outer Buffer, one exit each, width 1)
+are empty until their puzzles are built one by one. Each hangs off a Lattice
+room by a width-1 exit; every door asks for a spell he does not have at the
+start, and the Lattice's own spells and crates must not get him in:
+- `buffer_1` Dead Pixel: **Scan**, a hidden exit in `scan_lab`'s north wall
+  (the room where he learns Scan).
+- `buffer_2` Stray Byte: **double jump or Compile**, a doorway two blocks up
+  in `warden_pit`'s west wall (a 2-high ledge; no crates, and the boss is
+  never paused, so Pause and crates give no step).
+- `buffer_3` Null Orbit: **Blink**, a door in `guard_loop`'s east wall on a
+  block island behind two void tiles, in a fence cage with a fence roof: only
+  a Blink (exactly 3 cells, from the 1-high pad) crosses it; the roof stops
+  the double jump, the pad stops crates, a Compile crate would stand under
+  the roof.
+- `buffer_4` Event Horizon: **Warp**, a doorway three blocks up in
+  `mirror_stacks`' east wall, across a 4-cell lane of holes from a staircase
+  that rises to the same height (a Blink from the stair's edge falls short,
+  the double jump is too short; the review found a 3-cell lane let a Blink
+  across; holes in the lane and a fence beside the doorway column leave no
+  place for a crate step).
+- `buffer_5` Cache Miss: **Warp plus Compile or Fork**, a door in
+  `ghost_exit`'s east wall that opens while a plate is held. The plate lies
+  in a fenced pocket that only a ledge, four blocks up and across a 4-cell
+  lane from a staircase, looks into; he warps onto the ledge, walks to its
+  edge and casts Compile (a crate falls on the plate, 7 s) or Fork (a decoy,
+  10 s), drops off and runs to the door (about 3.9 s spare in the simulation).
+  A hole beside the plate lets him end a fall into the pocket.
+`world.json` gets a `later` list (compile, blink, warp): spells the world
+hands out in sectors not built yet. The reachability checker treats a room,
+exit or pickup that stays out of reach only because of them as a warning,
+not an error, so CI stays green until the disks are placed; one that stays
+out of reach even with them is still an error.
+**Why:** the author asked for five entrances, each tied to a later spell,
+with their contents to follow. The checker ignores energy, so "double jump +
+Compile" in `buffer_5`'s and `buffer_4`'s reports means three or more
+Compile casts (at least three crates: a step, then two stacked beside the ledge; over the 100 energy ceiling) and is no real way in; Cut &
+Paste and Pull routes are for the author to judge when those spells
+arrive. Nothing here edits an authored room (none is flagged).
 ### D183 — 2026-10-06 — Exits into the Outer Buffer look different
 An exit that leads into a biome with the look field `starExits` (only the
 Outer Buffer) shows small stars drifting out through it, fading in and

@@ -8,6 +8,14 @@ docs/decisions.md).
 
 ## [Unreleased]
 
+### Added
+- Five Outer Buffer secret rooms' entrances (D183, step 5.11a): `buffer_1`–`buffer_5`
+  (empty 8×8 rooms for now) behind a hidden Scan door in `scan_lab`, a ledge
+  for the double jump or Compile in `warden_pit`, a Blink gap in `guard_loop`,
+  a Warp doorway in `mirror_stacks` and a Warp plus Compile/Fork plate door in
+  `ghost_exit`. `world.json` `later` lists spells not placed yet; rooms that
+  wait only for them are checker warnings.
+
 ### Changed
 - Docs cleanup (D176): the decision log shows each decision as it stands
   (replaced entries are pointers, room entries keep only their rules; the
