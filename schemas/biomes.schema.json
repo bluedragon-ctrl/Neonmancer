@@ -72,6 +72,24 @@
           "minimum": 0,
           "maximum": 0.5,
           "description": "Glass panels (D179): share of the free back-wall cells (not the bottom row, not by a doorway) that become windows, picked anew on every entry. Default 0 (off)."
+        },
+        "stars": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Space (D182): density of the twinkling stars in the void round the room, in three depth layers; with any space field on, the outside shows no grid, only void. Default 0 (off)."
+        },
+        "nebula": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Space (D182): strength of the slow, faint clouds in the void, tinted by the room color. Default 0 (off)."
+        },
+        "blackHole": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 6,
+          "description": "Space (D182): radius (blocks) of a black hole in the void beside the room: a lensed starfield, a bright ring and a slowly turning disk. Default 0 (none)."
         }
       }
     }

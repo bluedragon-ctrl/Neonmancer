@@ -1222,3 +1222,20 @@ instanced additive quad per panel in front of the pane, animated in its
 shader (`PANEL_FX`); no extra pass.
 **Why:** the author asked for the panels to glow a bit and flicker
 sometimes; faint enough that they still read as windows.
+
+### D182 — 2026-10-06 — The Outer Buffer look: a deep indigo void with a black hole
+The Outer Buffer (D130) is dark space beyond the Grid. Its room color is
+deep indigo (`#5b4fe0`, was gray) on a near-black indigo background; the
+whole room stays dark. Outside the room there is no grid: a clean cut
+into the void, which shows a starfield in three depth layers (tiny dim,
+medium, a few large, all twinkling), faint slow clouds in the room color,
+and a black hole beside the room: a black shadow with a thin photon
+ring, a slowly turning disk of streaks, and lensing that bends the stars
+round it. Three new biome look fields, off by default: `stars` (density),
+`nebula` (strength), `blackHole` (radius in blocks). All of it runs in the
+floor's shader (`SPACE` in `render/floor.js`), the outside being the floor
+plane, so there is no extra pass or object and the flat disk reads as an
+ellipse under the fixed camera.
+**Why:** the author asked for a dark, starry, mysterious space with a
+deep indigo palette, a clean void edge instead of drifting debris, and a
+black hole. Low gravity and the light round the wizard stay in Phase 7.

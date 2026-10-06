@@ -75,3 +75,14 @@ test('panel glow: in front of each pane, facing into the room (D181)', () => {
   assert.deepEqual(placed[1].center.slice(0, 2), [5.5, 2.5]);
   assert.ok(placed[1].center[2] > 0 && placed[1].center[2] < 0.01);
 });
+
+test('space is off by default and on in the Outer Buffer only (D182)', () => {
+  assert.deepEqual([LOOK_DEFAULTS.stars, LOOK_DEFAULTS.nebula, LOOK_DEFAULTS.blackHole], [0, 0, 0]);
+  const buffer = roomLook(biomes.biomes.outer_buffer.look);
+  assert.ok(buffer.stars > 0 && buffer.nebula > 0 && buffer.blackHole > 0);
+  for (const [id, biome] of Object.entries(biomes.biomes)) {
+    if (id === 'outer_buffer') continue;
+    const look = roomLook(biome.look);
+    assert.deepEqual([look.stars, look.nebula, look.blackHole], [0, 0, 0], id);
+  }
+});
