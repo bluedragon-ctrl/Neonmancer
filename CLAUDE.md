@@ -18,6 +18,13 @@ magic and code are the same thing. He explores rooms, solves block puzzles,
 fights corrupted programs with spells, and collects key fragments to bring
 to the central core and reboot the Grid.
 
+Gameplay (D186): an isometric push-puzzle adventure with arcade bite.
+Crates, gravity and height are the puzzle (Sokoban with a third
+dimension); enemies are puzzle pieces first and pressure second; small
+platforming and combat give the tempo. Rooms are puzzle, hybrid or
+action (roughly 60/25/15 %, tuned in playtests), and every room earns
+its place with one trick.
+
 Tone: light, playful arcade. Visuals: neon wireframe on a dark void with
 glow and retro digital effects.
 
@@ -234,7 +241,8 @@ gray (D94). Every permanent pickup plays the same install animation,
 then a banner and a terminal line (D93).
 
 Mana recharges slowly. Later spells and upgrades are stronger: they let
-the wizard skip easier rooms or solve them differently. The world is a
+the wizard pass through easier rooms without their puzzles, but never
+reach a pickup without the trick that guards it (D186). The world is a
 maze, not a line: a room need not be fully solvable on first arrival,
 and some exits and pickups wait for a spell or buff found later
 (backtracking, D67). He can always leave a room the way he came.
@@ -478,10 +486,12 @@ not critical.
   or timing.
 - **Claude Code skills and subagents** (D132, `.claude/`): the
   `room-design` and `enemy-design` skills (schema, rules, tuning numbers,
-  annotated examples; room-design ships a mutation test and a headless
-  play helper in its `scripts/`, D161) and the read-only `level-review`
-  subagent (runs validation, the reachability checker and the mutation
-  test, reads a room against the checklist). Use them when drafting or reviewing rooms and enemies; keep
+  annotated examples; room-design opens with the game's core idea and
+  has a rework workflow for existing rooms, D186, and ships a mutation
+  test and a headless play helper in its `scripts/`, D161) and the
+  read-only `level-review` subagent (runs validation, the reachability
+  checker and the mutation test, reads a room against its trick and the
+  checklist, verdict keep/tune/redesign/cut). Use them when drafting or reviewing rooms and enemies; keep
   them in step with the schemas and the checklist in docs/design.md. A
   room-drafting subagent comes with Phase 5's content steps.
 
@@ -574,8 +584,12 @@ sounding Home Lattice and ship it to testers.
   drops a fragment, one the energy buff), the tutorial near the core. Two Level 1
   exits lead to the next two biomes, Glitchmire and Frostbyte Wastes,
   each only a few teaser rooms (look only); an Outer Buffer cluster of
-  secret rooms. The Lattice's ambience (data flows, glass
-  panels, D179) and the Outer Buffer's look come before the secret rooms.
+  secret rooms (entrances built; their contents wait, D186). The
+  Lattice's ambience (data flows, glass panels, D179) and the Outer
+  Buffer's look are done.
+- Core first (D186): a Lattice ladder (each room's type, rung and trick
+  in docs/lattice-plan.md), then every Lattice room reviewed one by one
+  with the room-design skill and the author's tuning.
 - Readiness: quality presets, auto fallback and render scale wired up,
   a check on a weaker GPU; first-minute onboarding; a "copy debug info"
   pause entry for feedback; a balance pass.

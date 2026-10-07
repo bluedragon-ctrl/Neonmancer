@@ -1,6 +1,6 @@
 ---
 name: level-review
-description: Reviews a Neonmancer room (or the rooms of a branch) against the room design checklist and the reachability checker, and reports problems. Read-only; use after drafting or editing a room, before a PR.
+description: Reviews a Neonmancer room (or the rooms of a branch) against the game's core idea (D186), the room design checklist and the reachability checker, and reports problems with a keep/tune/redesign/cut verdict. Read-only; use after drafting, editing or reworking a room, before a PR.
 tools: Read, Grep, Glob, Bash
 ---
 
@@ -11,9 +11,10 @@ Input: one or more room ids (or "the rooms changed on this branch": use
 
 For each room:
 
-1. Read `docs/design.md` section "Room design checklist" and
-   `.claude/skills/room-design/SKILL.md` once, then the room JSON, its
-   exits in `data/world.json` and the neighbours it connects to.
+1. Read `docs/design.md` sections "Gameplay" and "Room design checklist",
+   `.claude/skills/room-design/SKILL.md` and the room's line in the
+   ladder of `docs/lattice-plan.md` once, then the room JSON, its exits
+   in `data/world.json` and the neighbours it connects to.
 2. Run, and quote the relevant output:
    - `npm run validate:data`
    - `npm run check:reach -- <room_id>` (what each exit and pickup needs)
@@ -23,7 +24,21 @@ For each room:
      puzzle enforced?): a sealed gate or a key crate, enemy or bridge with
      NO EFFECT is a bypass (a BLOCKER for a puzzle room); find the route.
      Interchangeable crates: rerun with `--without` all but one.
-3. Walk the checklist against the actual coordinates, not the intent:
+3. **Idea and depth first** (D186):
+   - Name the room's type (puzzle, hybrid, action, boss, secret) and
+     write its trick in one sentence and its solution as numbered moves,
+     from the coordinates. If the PR states a trick, check the room
+     really enforces it. No trick, or a trick that is only "push the crate
+     onto the plate": a PROBLEM for a puzzle room.
+   - Does the type fit (a puzzle room without threats in the thinking, a
+     hybrid only with mechanics taught before, an action room simple)?
+     Does it match its ladder line?
+   - **Later abilities and pickups**: for each pickup, every ability set
+     in the mutation test's first lines that is not the room's own: rerun
+     with `--with <that set>`; if the trick's key pieces no longer
+     matter, that set skips the trick: a BLOCKER for a fragment, a
+     PROBLEM for other pickups. The same for exits is fine (a NOTE).
+4. Walk the checklist against the actual coordinates, not the intent:
    - **Reach**: every step <= 1 block (2 with double jump), gaps <= 1 tile,
      2 free cells of headroom above every standing surface, a bouncy
      enemy clears a 2-high ledge (never 3), a crate or frozen enemy beside
@@ -66,8 +81,12 @@ For each room:
    - **Rules**: authored rooms untouched (D90), test rooms in the dev wing
      (`world.json` `dev`, D147), room ids/file names match, no duplicate permanent
      pickup by accident (D71), colors per the D99 rules.
-4. Report per room, most severe first: **BLOCKER** (soft-lock, unreachable,
-   validation error, authored room edited), **PROBLEM** (unfair or
-   unreadable), **NOTE** (taste). Each with the cell coordinates and a
-   concrete fix. End with a verdict: ship / fix first. If everything is
-   fine, say so briefly; do not invent findings.
+5. Report per room, most severe first: **BLOCKER** (soft-lock, unreachable,
+   validation error, authored room edited, a later ability reaching a
+   fragment without the trick), **PROBLEM** (unfair, unreadable, no
+   trick), **NOTE** (taste). Each with the cell coordinates and a
+   concrete fix. End with the trick as you read it and a verdict:
+   **keep** (the trick holds), **tune** (the trick is there, pieces or
+   numbers are off), **redesign** (no trick, or a later ability skips a
+   pickup's), **cut** (the room adds nothing to its wing). If
+   everything is fine, say so briefly; do not invent findings.
