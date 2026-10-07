@@ -17,6 +17,16 @@ docs/decisions.md).
   wait only for them are checker warnings.
 
 ### Changed
+- Gameplay direction (D186): an isometric push-puzzle adventure with
+  arcade bite; puzzle, hybrid and action rooms, one trick a room; later
+  abilities may skip a room's way through, never a pickup's trick; in
+  the Lattice only its own abilities count (the later sectors' Pull,
+  Compile, Cut & Paste, Blink, Warp and Firewall are left out).
+  design.md gets a Gameplay section and an Idea block in the room
+  checklist; the room-design skill opens with the core idea and gets a
+  rework workflow; the level-review subagent checks the trick and gives a
+  keep/tune/redesign/cut verdict. New steps 5.16 (the Lattice ladder) and
+  5.17 (room reviews, one a session); the secret rooms' contents wait.
 - Docs cleanup (D176): the decision log shows each decision as it stands
   (replaced entries are pointers, room entries keep only their rules; the
   duplicate D152 for `requires` is now D175); design.md's dev rooms, step

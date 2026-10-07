@@ -4,6 +4,25 @@ The plan for Playtest 1's world (D133): what is built and what is left.
 Everything not built is a proposal that changes during the author's room
 review and design. Steps: docs/design.md, Phases and steps.
 
+## Direction (D186)
+
+The rooms below were built before the gameplay direction was set
+(docs/design.md, Gameplay): a push-puzzle adventure with arcade bite,
+puzzle, hybrid and action rooms, one trick a room, and later abilities
+that skip a room's way through but never a pickup's trick. Every room is
+reviewed against it, one room a session (step 5.17), after the ladder
+below is written (step 5.16). Other sectors wait: the teasers stay as
+they are, the Outer Buffer rooms keep their entrances and wait for
+their contents.
+
+## Ladder
+
+To be written in step 5.16: per room in play order, its type (puzzle,
+hybrid, action, boss), its rung (teach, develop, twist, revisit) for
+which mechanic, and the trick it should have, in one line. Each room
+review works against its line; the review may change the line, with the
+author's OK.
+
 ## Settled with the author
 
 - A web, not a line: a tutorial, an Atrium hub, four wings that cross-link,
@@ -56,6 +75,8 @@ the Gatekeeper joins the two wings as a shortcut.
 Fragments 0–15 are all placed.
 
 ## Left to build
+
+Waits for the core (D186): the secret rooms' contents.
 
 | Room | Size | What it is |
 |---|---|---|

@@ -1,6 +1,6 @@
 ---
 name: room-design
-description: Design, draft, edit or review a Neonmancer room (data/rooms/*.json) and its wiring in data/world.json: workflow, schema cheat sheet, tuning numbers, puzzle rules, a mutation test and a headless play helper. Use whenever a room is created, resized, rewired or reviewed, or a mechanic needs a test room.
+description: Design, draft, edit, review or rework a Neonmancer room (data/rooms/*.json) and its wiring in data/world.json: the game's core idea, workflow, room rework, schema cheat sheet, tuning numbers, puzzle rules, a mutation test and a headless play helper. Use whenever a room is created, resized, rewired, reviewed or reworked, or a mechanic needs a test room.
 ---
 
 # Room design
@@ -11,6 +11,45 @@ truth, in order: `schemas/room.schema.json` (fields), `src/data/validate.js`
 and playtest lessons). If this file disagrees with them, they win; fix this
 file in the same PR.
 
+## Core idea (read first, D186)
+Neonmancer is an **isometric push-puzzle adventure with arcade bite**.
+Crates, gravity and height are the puzzle (Sokoban with a third dimension:
+crates as steps, stacks, falls off ledges, holes plugged). Enemies are
+puzzle pieces first (a frozen enemy is a block, a decoy lures one onto a
+plate) and pressure second. Small platforming and combat give the tempo.
+**Every room earns its place with one trick.** A valid room without a
+trick is not done; checks below make a room correct, the trick makes it
+worth playing.
+
+- **Type.** *Puzzle* (thinking: enemies only as pieces on readable paths,
+  no clock, failure costs seconds), *hybrid* (a simple puzzle under
+  pressure: a chaser, a tower, a timer; only mechanics already taught),
+  *action* (a fight, a dash, light platforming; simple layout). Roughly
+  60/25/15 % across the Lattice, tuned in playtests. Bosses and a breather
+  before one sit outside the mix; no pure connectors.
+- **The trick.** One sentence, "the trick is that ...", and the solution
+  as numbered moves. A good trick is not the first thing he tries: the
+  order of moves matters, a piece does two jobs or is used twice, an
+  enemy is a piece, a move looks wrong until it isn't. Can't write it,
+  or it reads "push the crate onto the plate": redraw.
+- **Spell roles (Lattice).** Puzzle verbs: Zap (targets), Pause (enemy as
+  block), Fork (plate holder, lure). Explore: Scan (secrets, hidden
+  exits). Action: Shield. World key: the double jump.
+- **Later abilities skip rooms, not pickups.** An ability found later may
+  take him through the room to its exits without the puzzle (a shortcut
+  on revisits); it never reaches a pickup without the trick that guards
+  it. A pickup may need an ability as its gate (secrets do); no later
+  ability may make its trick unnecessary. Guard pickups with what jumps
+  and spells can't replace: gates on switches, 3-high walls, fence roofs,
+  pits too wide to cross.
+- **Lattice abilities only.** In Home Lattice only its own abilities
+  count: `double_jump,zap,scan,fork,pause` (the checker doesn't model
+  Shield). Pull, Compile, Cut & Paste, Blink, Warp and Firewall belong to
+  later sectors (strong on purpose, maybe dropped or kept for
+  development): don't design Lattice rooms around them or against them,
+  and run every check below with `--with double_jump,zap,scan,fork,pause`
+  (or the subset he has) instead of the default (every ability).
+
 ## Workflow
 1. **May you touch it?** A room with `"authored": true` is the author's
    (CLAUDE.md §10, D90): never edit, resize, move or reconnect it, never attach
@@ -19,9 +58,12 @@ file in the same PR.
 2. **Base.** CI on `main` green (a red base becomes your PR's problem); run
    `node tools/ensure-deps.js` once in a fresh checkout (npm scripts do it for
    you, scratch scripts don't).
-3. **Concept** in six lines before any JSON: the idea, the rung
-   (teach/develop/twist/revisit), the archetype, the focal point, what he sees
-   from the entrance, the fair-failure case. Hard to write → redraw. Read
+3. **Concept** before any JSON: the type (puzzle/hybrid/action), the
+   **trick** in one sentence and the solution as numbered moves, the rung
+   (teach/develop/twist/revisit) and its line in the Lattice ladder
+   (`docs/lattice-plan.md`), the focal point, what he sees from the
+   entrance, the fair-failure case, and what a later ability skips (exits
+   only, never a pickup's trick). Hard to write → redraw. Read
    [craft.md](craft.md) when the room is a new idea rather than a fix.
 4. **Draft** from the skeleton below; place pieces per the rules and tuning.
 5. **Check** (all must pass; quote the output in the PR):
@@ -37,6 +79,27 @@ file in the same PR.
 7. **Wire** the doors, then **document**: a decision in `docs/decisions.md`, a
    CHANGELOG line, the step table in `docs/design.md`.
 8. **Review**: run the `level-review` subagent and fix its findings.
+
+## Rework an existing room (one room a session, step 5.17)
+For the room reviews of D186. The author tunes the result in the editor,
+so draft the idea, not the last cell.
+1. **Read** the room JSON, its line in the Lattice ladder, its neighbours
+   and the decisions it names; play it with `sim.mjs` or screenshot it.
+2. **Say what it is now**: its type, its trick (or "none"), the solution
+   as moves, what each piece does, and what the checker and the mutation
+   test say (with the Lattice abilities: which later one skips which
+   pickup).
+3. **Verdict**: *keep* (the trick holds), *tune* (the trick is there,
+   pieces or numbers are off), *redesign* (no trick, or one a later
+   ability skips for a pickup), *cut* (the room adds nothing to the
+   wing). Keep what the wing needs from it: exits, pickups, the spell or
+   boss it holds, its map position.
+4. **Propose** for tune or redesign: the concept (workflow step 3), with
+   a sketch of the layout (a top-down grid in text is fine), and stop for
+   the author's OK. No JSON before it.
+5. **Draft and check** (workflow steps 4–8) once the author agrees; the
+   PR says what changed and why, and what to tune by hand.
+6. A changed trick, rung or type updates the room's ladder line.
 
 ## Skeleton
 ```json
@@ -149,8 +212,8 @@ Edit existing files with small text edits, not a JSON dump.
    a corner or hole, spent Compile/Fork) leaves a way to an exit or a way to
    die and reset. `reset` is safe: not on a collapsing block, not under a
    platform's path. Dropping off a ledge is always possible, climbing back not.
-5. **Small rooms, one idea** (D68): 8x8 and 12x12 mostly; a big room needs a
-   reason (arena, hub, vista).
+5. **Small rooms, one trick** (D68, D186): 8x8 and 12x12 mostly; a big
+   room needs a reason (arena, hub, vista).
 6. **Colors come from the biome** (D99): red hurts, white is a mechanism,
    cyan moves, neon green is pushable, black is a pit.
 7. **Refills are a trade-off**: temporary, and death resets him.
@@ -206,9 +269,20 @@ Edit existing files with small text edits, not a JSON dump.
   that keeps crates off it. Cast from a ledge, the decoy falls onto what
   lies below (the checker only counts a cast from beside the plate).
 - **Another way is fine if it is no easier** (D166). A second solution of
-  the same or higher difficulty (a harder jump, a tighter race, a spell
-  found later) is not a bypass; one that skips the room's idea for less
-  effort is. Say which in the review.
+  the same or higher difficulty (a harder jump, a tighter race) is not a
+  bypass; one that skips the room's idea for less effort is. Say which in
+  the review.
+- **Later abilities and pickups** (D186). A later spell or the double jump
+  may open the room's exits without its puzzle; it may never reach a
+  pickup without the trick. Check it: the mutation test's first lines
+  (in the Lattice `--with double_jump,zap,scan,fork,pause`) list each
+  pickup's ability sets, e.g. `pickup fragment_6: fork or pause`. For every set
+  that is not the room's own, rerun with `--with <that set>`: the trick's
+  key pieces must still show `→ never` for the pickup. A key piece with
+  NO EFFECT, or one that turns into another ability, means that set skips
+  the trick. Fix it with what an ability can't replace (a switch-powered
+  gate, a 3-high wall, a fence roof, a wider pit). Sets that only open
+  exits are fine. The later sectors' spells are left out in the Lattice.
 
 ## Mutation test (`scripts/mutate.mjs`)
 Takes each helper away (crate, platform, enemy, bridge, block) and seals each
@@ -268,7 +342,9 @@ hide a cell?
 
 ## Examples (copy their shape, not their cells)
 No room is flagged authored yet; when some are, open two or three of the
-same role before drafting and copy their density and rhythm.
+same role before drafting and copy their density and rhythm. The rooms
+below predate D186: they show mechanics and checks done right, not the
+depth a room needs; each is reviewed in step 5.17.
 - `cold_stairs.json` (Pause): a frozen bug pushed onto a plate beside its lane
   holds a bridge for the freeze; a second bug is the step up a ledge; a 3-high
   back ledge leads home over the pit. Every piece matters (mutation test).

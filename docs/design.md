@@ -4,6 +4,44 @@ Game design details that go beyond [CLAUDE.md](../CLAUDE.md), plus the plan
 for the current phase. Locked decisions live in CLAUDE.md; their reasons in
 [decisions.md](decisions.md).
 
+## Gameplay (D186)
+
+An isometric push-puzzle adventure with arcade bite. What every room is
+measured against:
+
+1. **Pushing is the core verb.** Crates, gravity and height are the
+   puzzle: Sokoban with a third dimension (crates as steps, stacks,
+   falls off ledges, holes plugged). A room is built round one trick.
+2. **Enemies are pieces first, threats second.** A frozen enemy is a
+   block, a decoy lures one onto a plate or away from a lane, a tower's
+   line is something to cover or cross. In puzzle rooms they walk paths
+   the player can read.
+3. **Arcade gives the tempo.** Short action rooms (a fight, a dash, light
+   platforming) between thinking rooms; hybrid rooms add pressure to a
+   puzzle whose parts were already taught.
+4. **Spells are verbs or keys.** Puzzle verbs make new kinds of puzzles;
+   world keys open new routes and secrets. In the Lattice: Zap, Pause and
+   Fork are verbs, Scan explores, Shield is for action, the double jump
+   is a key.
+5. **Later abilities skip rooms, not pickups.** A spell or upgrade found
+   later may take the wizard through a room without its puzzle (a
+   shortcut once its pickup is found); it never reaches a pickup without
+   the trick that guards it. A pickup may need an ability as its gate
+   (secrets do). In the Lattice only its own abilities count: the double
+   jump, Zap, Scan, Fork and Pause. Pull, Compile, Cut & Paste, Blink,
+   Warp and Firewall belong to later sectors (maybe dropped or kept for
+   development) and are left out of Lattice design and checks.
+
+| Room type | What it is | Rough share |
+|---|---|---|
+| Puzzle | A thinking room: enemies only as pieces, no clock, failure costs seconds | 60 % |
+| Hybrid | A simple puzzle under pressure (a chaser, a tower, a timer), only with mechanics already taught | 25 % |
+| Action | Combat or light platforming in a simple layout | 15 % |
+
+Bosses and the odd breather before a boss sit outside the mix; secrets
+are puzzle rooms behind a key. No pure connectors: every room has a beat.
+The shares are a guide, tuned in playtests.
+
 ## Controls (default)
 
 | Action | Keys |
@@ -1667,6 +1705,19 @@ checks (not timing: collapsing blocks, platform waits, enemies). Numbers
 come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
 `COLLAPSING`); update them here when those change.
 
+**Idea** (D186, see Gameplay)
+- The room has a type (puzzle, hybrid, action) and a trick written in one
+  sentence ("the trick is that ..."), with its solution as numbered
+  moves. No trick, no room: redraw it.
+- A good trick is not the first thing he tries: the order of moves
+  matters, a piece does two jobs or is used twice, an enemy is a piece, a
+  move looks wrong until it isn't.
+- Every piece earns its place (the mutation test shows each one matters);
+  decoration aside, nothing is there just to fill floor.
+- A puzzle room keeps threats out of the thinking; a hybrid only presses
+  on mechanics taught in earlier rooms; an action room keeps the layout
+  simple.
+
 **Reach**
 - A jump clears exactly 1 block up, never 2 (apex 1.2). A 2-high step
   needs a crate, a platform or a step in between.
@@ -1745,13 +1796,19 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
   base jump, D68) should look like a gate: the player should recognise it
   and come back later, not think the room is unsolvable.
 
-**Spells and backtracking** (D67)
+**Spells and backtracking** (D67, D186)
 - A room need not be fully solvable on first arrival: an exit or a pickup
   may wait for a spell or buff found later. Know which abilities each
   exit and pickup needs, and make sure the player can always leave the
   way he came with what he has.
-- Later spells may open shortcuts or other solutions; that is intended,
-  so don't block them without a reason.
+- Later abilities may take him through a room (to its exits) without its
+  puzzle; that is intended, so don't block them without a reason. They
+  never reach a pickup without its trick: with any ability set that
+  reaches a pickup, the trick's key pieces must still matter (the
+  mutation test with `--with` that set, D186). In the Lattice the sets
+  come from its own abilities only (`--with
+  double_jump,zap,scan,fork,pause`); the later sectors' spells are not
+  counted.
 - Temporary pickups come back with the room and death resets the wizard
   (D67): a refill a detour away is a choice for the player; place it so
   the trip is a real trade-off.
@@ -2241,14 +2298,16 @@ decisions before the code lands. Every step also (D43):
 - updates `docs/design.md`, `docs/architecture.md` and CHANGELOG, and
   records new decisions.
 
-**Next: Phase 5, step 5.10, the Outer Buffer look** (5.3 music waits for the author's tracks).
+**Next: Phase 5, step 5.16, the Lattice ladder, then 5.17, the room
+reviews** (D186; 5.3 music waits for the author's tracks).
 
 ### Phase 5 (v0.5) steps: Home Lattice playtest
 
 Done: 5.1 audio engine (D138), 5.2 sound effects (D139), 5.4 dev wing
 (D147), 5.5 tutorial (D148), 5.6a–h the Atrium and the four wings
 (D151, D156–D173), 5.7 the Gatekeeper's hall (D174), 5.8 the core hall, the Level 1 locks and the teasers (D177), 5.9 the
-Lattice's ambience (D179). The Lattice steps are two or three rooms each, the hub
+Lattice's ambience (D179), 5.10 the Outer Buffer look (D182, D183), 5.11a
+the secret rooms' entrances (D184), the gameplay direction (D186). The Lattice steps are two or three rooms each, the hub
 before the wings (D149); every batch goes through the reachability
 checker and the review subagent; rooms are drafted unflagged and the
 author flags them authored (D90). Room plan: [lattice-plan.md](lattice-plan.md).
@@ -2256,8 +2315,9 @@ author flags them authored (D90). Room plan: [lattice-plan.md](lattice-plan.md).
 | # | Branch | Delivers |
 |---|---|---|
 | 5.3 | `feat/music` | The author's tracks trimmed for seamless loops: Lattice, boss, title; room and biome mapping, a boss switch and a crossfade back. |
-| 5.10 | `feat/outer-buffer-look` | The Outer Buffer look, in the showcase first: floor, starfield, color re-picked, its ambience (D179). |
-| 5.11 | `feat/outer-buffer-secrets` | The secret cluster: complex multi-step rooms, often with tools found later (D173). |
+| 5.16 | `docs/lattice-ladder` | The Lattice ladder in lattice-plan.md (D186): per room in play order its type, the mechanic it teaches, develops or twists, and a target trick in one line; the mix of types checked. |
+| 5.17 | `rooms/<id>` | The room reviews, one room a session and a PR, in play order: the room-design skill's rework workflow against its ladder line, then the author's tuning in the editor. |
+| 5.11 | `feat/outer-buffer-secrets` | Waits (D186): the secret cluster's contents, complex multi-step rooms, often with tools found later (D173). |
 | 5.12 | `feat/quality-presets` | Quality presets, auto fallback and render scale wired up (D76), a check on a weaker GPU. |
 | 5.13 | `feat/onboarding-feedback` | The first minute from title to the first disk, the controls screen, the pause entry that copies debug info (version, room, key) for feedback. |
 | 5.14 | `chore/balance-pass` | Difficulty, energy, backups and shrines across the Lattice from full playthroughs. |

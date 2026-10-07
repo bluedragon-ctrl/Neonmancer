@@ -1058,7 +1058,8 @@ crates moved, pits widened where a crate-top leap skipped them.
 With Pause the checker pushes a frozen enemy like a crate; every cell it
 can rest in is a step, and as weight it holds one plate at most. Rule: a
 second solution of the same or higher difficulty is fine; a bypass is
-one that skips the room's idea for less effort.
+one that skips the room's idea for less effort. Abilities found later
+may skip a room's way through, never its pickups' tricks (D186).
 **Why:** bounce bypasses could not be fixed while the checker only knew
 path cells.
 
@@ -1306,3 +1307,50 @@ errors into warnings, so they never fail CI or a release; remove a room
 from the list when it is finished (as with `later`, D183).
 **Why:** the author found the map editor too slow, and unfinished secret
 rooms must not block a release.
+
+### D186 — 2026-10-07 — Gameplay direction: a push-puzzle adventure with arcade bite
+What the game is about, set before the Lattice rooms are reviewed one by
+one. Neonmancer is an isometric push-puzzle adventure with arcade bite:
+crates, gravity and height are the puzzle (Sokoban with a third
+dimension: stacking, steps, falls, plugged holes); enemies are puzzle
+pieces first (a frozen enemy is a block, a decoy lures one onto a plate)
+and pressure second; small platforming and combat give the tempo between
+and around the puzzles. Every room earns its place with one trick.
+- **Room types:** *puzzle* (a thinking room: enemies only as pieces on
+  readable paths, no clock), *action* (combat or light platforming,
+  simple layout), *hybrid* (a simple puzzle under pressure, only with
+  mechanics already taught). Breathers only before a boss; no pure
+  connectors. A rough mix of 60 % puzzle, 25 % hybrid, 15 % action,
+  tuned in playtests.
+- **The trick:** every room's concept names its trick in one sentence
+  ("the trick is that ...") and its solution as numbered moves. A room
+  whose trick can't be written has no puzzle and is redrawn.
+- **Spell roles in the Lattice:** Zap, Pause and Fork are puzzle verbs
+  (targets, enemies as blocks, a plate holder and lure); Scan is for
+  exploring (secrets, hidden exits); Shield is for action; the double
+  jump is a world key.
+- **Later abilities skip rooms, not pickups.** A spell or upgrade found
+  later may take the wizard through a room (to its exits) without its
+  puzzle, a shortcut on revisits once its pickup is found. It never
+  reaches a pickup without the trick that guards it. A pickup may need an
+  ability (that is its gate, as for secrets); no ability found later may
+  make its trick unnecessary. D166 still holds for other solutions with
+  the same abilities.
+- **The Lattice counts only its own abilities.** For the Lattice and its
+  playtest, "later" means the double jump and the Lattice spells found
+  after a room (Fork for a Pause-wing room). Pull, Compile, Cut & Paste,
+  Blink, Warp and Firewall belong to later sectors, are meant to be
+  strong, and may yet be dropped or kept for development only: rooms are
+  neither designed nor checked against them for now (the checks run with
+  `--with double_jump,zap,scan,fork,pause`). When they are placed in a
+  sector, the rooms they reach are checked again.
+- **Core first:** the other sectors' teasers stay as they are and the
+  Outer Buffer secret rooms wait (step 5.11); new sector work waits for
+  Phase 6. Restart and backups stay as they are.
+**Why:** the author's playthrough found the engine and look fine but
+many rooms thin: the checker showed pickups and exits that any of six to
+eight abilities opened, so no room's idea carried weight. The author
+chose a mix of Sokoban with 3D parts and arcade with small platforming
+and combat, and rules that later abilities may only skip a room's way
+through, never its pickup; the strong spells of later sectors are left
+out of the Lattice playtest.

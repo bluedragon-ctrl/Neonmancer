@@ -5,7 +5,12 @@ Principles from games of the same family: Solstice and Head Over Heels
 (isometric, planning over reflexes), Zelda dungeons and Mario 3D World
 (teach/test/twist), Super Metroid (ability gates, pacing), Sokoban and Baba
 Is You (one rule, fair riddles), The Witness (one idea, many variations).
-Ideas only; nothing is copied (CLAUDE.md §1).
+Adventures of Lolo and Chip's Challenge (push puzzles where enemies are
+pieces with readable rules), A Monster's Expedition (an open world of
+small push puzzles). Ideas only; nothing is copied (CLAUDE.md §1).
+
+The core idea (SKILL.md, D186): a push-puzzle adventure with arcade bite;
+every room earns its place with one trick.
 
 1. **One idea, taught in order.** Per mechanic, a ladder over several rooms:
    *teach* (the idea alone, safe: a mistake costs a reset, not a life),
@@ -17,22 +22,34 @@ Ideas only; nothing is copied (CLAUDE.md §1).
    a crate is never hidden, not even for a secret (D164).
    Secrets are the exception, and even they get a hint (a lone block, a
    strange gap), never a screen text.
-3. **Planning beats reflexes.** A room is a thinking room (few or slow
-   enemies, no clock) or an action room (simple layout), rarely both. Hard on
-   both axes is for a boss or a late combo.
+3. **Planning beats reflexes.** A room is a puzzle room (enemies only as
+   pieces, no clock) or an action room (simple layout); a hybrid presses
+   on a simple puzzle whose parts were taught. Hard on both axes is for a
+   boss or a late combo.
+3a. **Find the trick.** Start from what makes a push puzzle interesting,
+   not from a layout: the order matters (the first crate blocks the
+   second's route), a piece does two jobs (a step, then a pit plug), a
+   piece is used twice (it holds a plate, then moves on to be a step),
+   an enemy is a piece (frozen on its lane end, lured by a decoy), height
+   changes a push (a crate pushed off a ledge lands where a floor push
+   can't reach), a move looks wrong (a crate thrown into a pit to make a
+   step for the next). Then cut everything the trick doesn't need.
 4. **Failure is visible and cheap.** Wrong push, wrong jump: the cause is
    obvious and re-entering costs seconds. No failures he can't explain
    (hidden hitbox edges, unseen platform timing).
-5. **Pick an archetype on purpose:**
-   - *teaching*: 8x8, no threat, one mechanic, reward visible
-   - *test*: 12x12, the mechanic in a new shape, light threat
-   - *combo*: two mechanics, only after both were taught
-   - *arena*: open floor, cover, a few enemies, no puzzle
-   - *breather*: a refill or shrine, scenery, a lore screen, no threat
-   - *connector*: a walk with one small beat (a gap, a patrol)
-   - *secret*: off the path, needs a spell or a sharp eye, pays a permanent
-     pickup
-   - *boss*: see the boss rules in SKILL.md
+5. **Pick a type on purpose** (D186; roughly 60/25/15 %):
+   - *puzzle*: the bulk. Teach rungs are 8x8 with one mechanic and no
+     threat; develop and twist rungs take a new shape or a second
+     mechanic already taught.
+   - *hybrid*: a simple puzzle under pressure (a chaser, a tower's line, a
+     timer), only with mechanics already taught.
+   - *action*: an arena (open floor, cover, a few enemies) or a dash
+     (light platforming, collapsing blocks, a timer); simple layout.
+   - Outside the mix: *boss* (see the boss rules in SKILL.md), a *breather*
+     before a boss (a shrine, a lore screen), *secrets* (a puzzle room
+     behind a key: a spell or a sharp eye, pays a permanent pickup).
+   - No pure connectors: a room with nothing but a walk gets a beat or is
+     cut.
 6. **Pacing across rooms.** No more than two threat-heavy rooms in a row; a
    breather or shrine before a boss. A wing opens with a teaching room and
    ends with a payoff (a pickup, a shortcut, a gate opening). One shortcut
