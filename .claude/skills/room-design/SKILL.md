@@ -42,6 +42,13 @@ worth playing.
   ability may make its trick unnecessary. Guard pickups with what jumps
   and spells can't replace: gates on switches, 3-high walls, fence roofs,
   pits too wide to cross.
+- **Lattice abilities only.** In Home Lattice only its own abilities
+  count: `double_jump,zap,scan,fork,pause` (the checker doesn't model
+  Shield). Pull, Compile, Cut & Paste, Blink, Warp and Firewall belong to
+  later sectors (strong on purpose, maybe dropped or kept for
+  development): don't design Lattice rooms around them or against them,
+  and run every check below with `--with double_jump,zap,scan,fork,pause`
+  (or the subset he has) instead of the default (every ability).
 
 ## Workflow
 1. **May you touch it?** A room with `"authored": true` is the author's
@@ -80,7 +87,8 @@ so draft the idea, not the last cell.
    and the decisions it names; play it with `sim.mjs` or screenshot it.
 2. **Say what it is now**: its type, its trick (or "none"), the solution
    as moves, what each piece does, and what the checker and the mutation
-   test say (with every ability: which later ability skips which pickup).
+   test say (with the Lattice abilities: which later one skips which
+   pickup).
 3. **Verdict**: *keep* (the trick holds), *tune* (the trick is there,
    pieces or numbers are off), *redesign* (no trick, or one a later
    ability skips for a pickup), *cut* (the room adds nothing to the
@@ -267,14 +275,14 @@ Edit existing files with small text edits, not a JSON dump.
 - **Later abilities and pickups** (D186). A later spell or the double jump
   may open the room's exits without its puzzle; it may never reach a
   pickup without the trick. Check it: the mutation test's first lines
-  (every ability, the default) list each pickup's ability sets, e.g.
-  `pickup fragment_6: compile or fork or warp or pause`. For every set
+  (in the Lattice `--with double_jump,zap,scan,fork,pause`) list each
+  pickup's ability sets, e.g. `pickup fragment_6: fork or pause`. For every set
   that is not the room's own, rerun with `--with <that set>`: the trick's
   key pieces must still show `→ never` for the pickup. A key piece with
   NO EFFECT, or one that turns into another ability, means that set skips
   the trick. Fix it with what an ability can't replace (a switch-powered
   gate, a 3-high wall, a fence roof, a wider pit). Sets that only open
-  exits are fine.
+  exits are fine. The later sectors' spells are left out in the Lattice.
 
 ## Mutation test (`scripts/mutate.mjs`)
 Takes each helper away (crate, platform, enemy, bridge, block) and seals each

@@ -19,7 +19,9 @@ docs/decisions.md).
 ### Changed
 - Gameplay direction (D186): an isometric push-puzzle adventure with
   arcade bite; puzzle, hybrid and action rooms, one trick a room; later
-  abilities may skip a room's way through, never a pickup's trick.
+  abilities may skip a room's way through, never a pickup's trick; in
+  the Lattice only its own abilities count (the later sectors' Pull,
+  Compile, Cut & Paste, Blink, Warp and Firewall are left out).
   design.md gets a Gameplay section and an Idea block in the room
   checklist; the room-design skill opens with the core idea and gets a
   rework workflow; the level-review subagent checks the trick and gives a

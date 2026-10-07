@@ -33,8 +33,13 @@ For each room:
    - Does the type fit (a puzzle room without threats in the thinking, a
      hybrid only with mechanics taught before, an action room simple)?
      Does it match its ladder line?
-   - **Later abilities and pickups**: for each pickup, every ability set
-     in the mutation test's first lines that is not the room's own: rerun
+   - **Later abilities and pickups**: in Home Lattice only its own
+     abilities count, so run the checker and the mutation test with
+     `--with double_jump,zap,scan,fork,pause` (or the subset he has), not
+     the default; Pull, Compile, Cut & Paste, Blink, Warp and Firewall
+     belong to later sectors and are not findings there. For each
+     pickup, every ability set in the mutation test's first lines that
+     is not the room's own: rerun
      with `--with <that set>`; if the trick's key pieces no longer
      matter, that set skips the trick: a BLOCKER for a fragment, a
      PROBLEM for other pickups. The same for exits is fine (a NOTE).

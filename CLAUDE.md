@@ -242,7 +242,8 @@ then a banner and a terminal line (D93).
 
 Mana recharges slowly. Later spells and upgrades are stronger: they let
 the wizard pass through easier rooms without their puzzles, but never
-reach a pickup without the trick that guards it (D186). The world is a
+reach a pickup without the trick that guards it (D186; in the Lattice
+only its own abilities count, not the later sectors' spells). The world is a
 maze, not a line: a room need not be fully solvable on first arrival,
 and some exits and pickups wait for a spell or buff found later
 (backtracking, D67). He can always leave a room the way he came.

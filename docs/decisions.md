@@ -1336,6 +1336,14 @@ and around the puzzles. Every room earns its place with one trick.
   ability (that is its gate, as for secrets); no ability found later may
   make its trick unnecessary. D166 still holds for other solutions with
   the same abilities.
+- **The Lattice counts only its own abilities.** For the Lattice and its
+  playtest, "later" means the double jump and the Lattice spells found
+  after a room (Fork for a Pause-wing room). Pull, Compile, Cut & Paste,
+  Blink, Warp and Firewall belong to later sectors, are meant to be
+  strong, and may yet be dropped or kept for development only: rooms are
+  neither designed nor checked against them for now (the checks run with
+  `--with double_jump,zap,scan,fork,pause`). When they are placed in a
+  sector, the rooms they reach are checked again.
 - **Core first:** the other sectors' teasers stay as they are and the
   Outer Buffer secret rooms wait (step 5.11); new sector work waits for
   Phase 6. Restart and backups stay as they are.
@@ -1344,4 +1352,5 @@ many rooms thin: the checker showed pickups and exits that any of six to
 eight abilities opened, so no room's idea carried weight. The author
 chose a mix of Sokoban with 3D parts and arcade with small platforming
 and combat, and rules that later abilities may only skip a room's way
-through, never its pickup.
+through, never its pickup; the strong spells of later sectors are left
+out of the Lattice playtest.

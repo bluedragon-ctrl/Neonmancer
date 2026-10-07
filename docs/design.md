@@ -27,7 +27,10 @@ measured against:
    later may take the wizard through a room without its puzzle (a
    shortcut once its pickup is found); it never reaches a pickup without
    the trick that guards it. A pickup may need an ability as its gate
-   (secrets do).
+   (secrets do). In the Lattice only its own abilities count: the double
+   jump, Zap, Scan, Fork and Pause. Pull, Compile, Cut & Paste, Blink,
+   Warp and Firewall belong to later sectors (maybe dropped or kept for
+   development) and are left out of Lattice design and checks.
 
 | Room type | What it is | Rough share |
 |---|---|---|
@@ -1802,7 +1805,10 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
   puzzle; that is intended, so don't block them without a reason. They
   never reach a pickup without its trick: with any ability set that
   reaches a pickup, the trick's key pieces must still matter (the
-  mutation test with `--with` that set, D186).
+  mutation test with `--with` that set, D186). In the Lattice the sets
+  come from its own abilities only (`--with
+  double_jump,zap,scan,fork,pause`); the later sectors' spells are not
+  counted.
 - Temporary pickups come back with the room and death resets the wizard
   (D67): a refill a detour away is a choice for the player; place it so
   the trip is a real trade-off.
