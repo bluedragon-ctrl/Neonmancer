@@ -132,10 +132,17 @@ Ideas from the author for the reviews to come (5.17):
 - The last crate is a frozen enemy: Pause turns a bug into the piece
   that finishes the push puzzle.
 - Sokoban under attack: a push puzzle in a hybrid room with enemies after him.
-- Timing: freeze the bug the moment it stands on a plate inside its
-  fenced lane (bolts pass a fence, bodies and a decoy can't, so Fork
-  doesn't skip it); a timed run of jumps (a timed target's bridge, a
-  watchdog).
+- Timing: freeze the bug the moment it stands on a plate he can't
+  reach, inside its fenced lane or across a gap too wide to jump (a
+  bolt passes a fence and flies over a gap; he and a decoy can't, so
+  Fork doesn't skip it); a timed run of jumps (a timed target's
+  bridge, a watchdog).
+- A plate in a moat: holes round the plate make him fill one before he
+  (or a crate) can reach it.
+- Proposed: a socket, a hole that is a switch once a crate fills it.
+  A decoy can't fill a hole and a frozen enemy pushed in is lost, so
+  only a crate powers it: a Sokoban goal no spell fakes. A new
+  mechanic, waiting for the author's OK.
 
 Reviews needed for the Fork skips above: `relay_loft`, `ledger_cell`,
 `ghost_exit`, `cold_stairs`, `idle_cache`, `guard_loop`.
