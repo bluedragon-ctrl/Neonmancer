@@ -34,6 +34,11 @@ every room earns its place with one trick.
    changes a push (a crate pushed off a ledge lands where a floor push
    can't reach), a move looks wrong (a crate thrown into a pit to make a
    step for the next). Then cut everything the trick doesn't need.
+   Read Sokoban (Microban) for push puzzles: one idea a room, every tile
+   used, no red herrings; a crate against a wall slides only along it, a
+   crate in a corner is lost, so walls and corners are what he reads.
+   Here holes, steps and stacks are the goals, a frozen enemy can be the
+   last crate, and enemies can press on a small push puzzle (hybrid).
 4. **Failure is visible and cheap.** Wrong push, wrong jump: the cause is
    obvious and re-entering costs seconds. No failures he can't explain
    (hidden hitbox edges, unseen platform timing).

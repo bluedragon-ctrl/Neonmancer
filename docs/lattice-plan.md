@@ -43,7 +43,7 @@ Rules for the lines (D186, D187):
 | # | Room | Type | Rung | Trick to aim for | Now |
 |---|---|---|---|---|---|
 | 1 | `boot_up` | action | teach: move, jump | The way to the door is up: a 1-high step, then a 1-tile gap, so he learns the jump's height and reach before anything can hurt him. | Reworked (D193): the east door sits on a 2-high ledge past a 1-wide gap; a short jump drops him safely into it. Start room and shrine; the access pass is test-only. |
-| 2 | `first_steps` | puzzle | teach: push, plug a hole | One push fills one cell of the 2-wide hole: the second crate needs a push from a new side, which he reaches across the first. | Holds. |
+| 2 | `first_steps` | puzzle | teach: push, plug a hole | One push fills one cell of the 2-wide hole: the second crate needs a push from a new side, which he reaches across the first. | Holds; signed off unchanged (5.17): a micro-Sokoban, pushing crate B straight in is the one dead end, and the west door resets it. |
 | 3 | `zap_port` | hybrid | teach: Zap (a target, an enemy, bolts fly level) | The target sits a block up: a floor shot hits the block under it or the bug crossing the line, and the stair he climbed for the disk is his firing step (a jump shot also reaches it). | Reworked (D189). |
 | 4 | `first_light` | action | teach: the watchdog, fragments | The straight line is a pit: a zigzag of single jumps round the pits' open ends, inside 10 s. | Holds; signed off unchanged (5.17). |
 
@@ -123,6 +123,19 @@ No line develops stacking (a crate dropped onto a crate as a 2-high
 step) after the Atrium teaches the drop; a review may add it where it
 fits (`ledger_cell`, `idle_cache`). Collapsing and hazard blocks have no
 Lattice room; they wait for the sectors.
+
+Ideas from the author for the reviews to come (5.17):
+- Sokoban, often (Microban's way: one idea a room, every tile used, no
+  red herrings, corners and walls as the deadlocks to read). Holes,
+  steps and stacks are the goals; plates are weak locks. The Lattice
+  has no Pull, so pushes are final until the room resets.
+- The last crate is a frozen enemy: Pause turns a bug into the piece
+  that finishes the push puzzle.
+- Sokoban under attack: a push puzzle in a hybrid room with enemies after him.
+- Timing: freeze the bug the moment it stands on a plate inside its
+  fenced lane (bolts pass a fence, bodies and a decoy can't, so Fork
+  doesn't skip it); a timed run of jumps (a timed target's bridge, a
+  watchdog).
 
 Reviews needed for the Fork skips above: `relay_loft`, `ledger_cell`,
 `ghost_exit`, `cold_stairs`, `idle_cache`, `guard_loop`.
