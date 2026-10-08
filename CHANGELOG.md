@@ -17,6 +17,9 @@ docs/decisions.md).
   wait only for them are checker warnings.
 
 ### Changed
+- Shield Hall's way on is a slow lift (D190, step 5.17): two crates on
+  two plates run the lift to the north door on a 3-high ledge, under two
+  sentinels' arcs; the Shield, dodging or Zap get him through.
 - Zap Port teaches that bolts fly level (D189, step 5.17): the door's
   target stands a block up, so a floor shot hits the block or the bug and
   the stair by the disk is the firing step; a new `tut_zap` line.

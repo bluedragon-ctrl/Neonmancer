@@ -1406,3 +1406,23 @@ judged by play.
 **Why:** the old target took any first shot and the bug was scenery;
 the room now teaches where a bolt flies, which later rooms' targets
 and towers build on.
+
+### D190 — 2026-10-08 — Shield Hall: the slow lift (5.17)
+`shield_hall` grows to height 5 and its north door (to `bolt_gallery`)
+moves up to a 3-high ledge (exit y 3). The only way up is a lift (a
+platform from y 0 to y 2, speed 1, a 2 s pause) that runs while two
+plates are both held by crates: one crate goes four pushes down a lane,
+the other two pushes and a turn; a 1-high block past each plate
+stops the push on it, so a crate is not lost under fire. Two sentinels stand on hole-ringed
+islands as turrets, in range of the plates and the lift. The disk lies
+behind a low wall by the entrance, free. The floating fences and the
+decorations are gone (dressing is the author's). Played headless: about
+20 s; standing and riding cost 4 hits without the Shield, 1 hit and 3
+blocks with two casts. One Shield need not cover it all: dodging and
+fighting with Zap are fair answers (author). The checker treats every
+platform as running, so the lock is judged by play. Fork, Pause or the
+double jump only skip the exit (D187).
+**Why:** a sentinel's arc is aimed when it starts charging, so it never
+hits a wizard walking across its line; the old room cost one hit in
+9 s and the sentinels were scenery. Pushes and a lift ride keep him
+still in their lines, which is when the Shield matters.

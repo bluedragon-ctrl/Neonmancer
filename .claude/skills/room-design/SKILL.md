@@ -118,6 +118,17 @@ Lessons from the reviews (D188 on):
 - **Fence a plate with holes, not with low walls.** A 1-high pen beside
   a 2-high ledge is a step onto it (walls are steps too); holes keep
   floor crates off a plate and leave a drop from above as the way in.
+- **Arcs hit what stands still.** A sentinel aims as it starts to
+  charge (0.7 s), so a wizard walking across its line is never hit;
+  pressure comes from what keeps him still or on its line: pushes, a
+  lift ride, a 1-wide lane pointing at it. Sentinels on hole-ringed
+  islands hold their post as turrets.
+- **The checker runs every platform.** It ignores a platform's
+  switches, so a lock made of plates and a lift is proven with
+  `sim.mjs` (the lift stays down unpowered, the solution gets out).
+- **Under fire, stop the push.** Where the puzzle is not the point
+  (a push under pressure), a 1-high block past the plate stops the
+  crate on it, so an over-push never loses it in a hole or a corner.
 
 ## Skeleton
 ```json

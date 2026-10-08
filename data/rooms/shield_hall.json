@@ -4,35 +4,46 @@
   "id": "shield_hall",
   "name": "Shield Hall",
   "biome": "home_lattice",
-  "size": [12, 4, 12],
+  "size": [12, 5, 12],
   "spawn": [4.5, 0, 10.5],
   "exits": [
     { "id": "south", "side": "+z", "at": 4 },
-    { "id": "north", "side": "-z", "at": 4 }
+    { "id": "north", "side": "-z", "at": 4, "y": 3 }
   ],
   "blocks": [
-    { "at": [3, 0, 0], "to": [3, 0, 4] },
-    { "at": [7, 0, 6], "to": [11, 0, 6] },
-    { "at": [3, 1, 0], "to": [3, 1, 3] },
-    { "at": [3, 0, 5], "to": [3, 0, 7] },
-    { "type": "fence", "at": [1, 0, 7], "to": [2, 2, 7] },
-    { "type": "fence", "at": [0, 2, 7] },
-    { "type": "fence", "at": [3, 1, 7], "to": [3, 2, 7] },
-    { "type": "fence", "at": [2, 3, 8] },
-    { "type": "fence", "at": [5, 3, 9] }
+    { "at": [4, 0, 0], "to": [5, 2, 1] },
+    { "at": [1, 0, 9], "to": [1, 1, 11] },
+    { "at": [4, 0, 4] },
+    { "at": [8, 0, 3] },
+    { "at": [3, 0, 1] }
   ],
-  "holes": [{ "at": [4, 2], "to": [7, 3] }],
+  "holes": [
+    { "at": [9, 0], "to": [11, 0] },
+    { "at": [9, 2], "to": [11, 2] },
+    { "at": [9, 1] },
+    { "at": [11, 1] },
+    { "at": [5, 4], "to": [7, 4] },
+    { "at": [5, 6], "to": [7, 6] },
+    { "at": [5, 5] },
+    { "at": [7, 5] }
+  ],
   "objects": [
-    { "id": "screen_1", "type": "screen", "at": [8, 0, 7], "text": "tut_shield" },
-    { "id": "memory_stack_1", "type": "memory_stack", "at": [0, 0, 11], "overrides": { "face": "+x" } },
-    { "id": "memory_stack_2", "type": "memory_stack", "at": [0, 1, 11], "overrides": { "face": "+x" } },
-    { "id": "memory_stack_3", "type": "memory_stack", "at": [0, 2, 11], "overrides": { "face": "+x" } },
-    { "id": "memory_stack_4", "type": "memory_stack", "at": [0, 3, 11], "overrides": { "face": "+x" } },
-    { "id": "data_pillar_1", "type": "data_pillar", "at": [11, 0, 0] }
+    { "id": "screen_1", "type": "screen", "at": [6, 0, 11], "text": "tut_shield" },
+    {
+      "id": "lift",
+      "type": "platform",
+      "at": [6, 0, 1],
+      "path": { "points": [[6, 2, 1]], "speed": 1, "pause": 2 },
+      "switches": ["plate_a", "plate_b"]
+    },
+    { "id": "plate_a", "type": "plate", "at": [8, 0, 4] },
+    { "id": "plate_b", "type": "plate", "at": [3, 0, 2] },
+    { "id": "crate_a", "type": "crate", "at": [8, 0, 8] },
+    { "id": "crate_b", "type": "crate", "at": [1, 0, 4] }
   ],
   "enemies": [
-    { "id": "guard", "template": "sentinel", "at": [8, 0, 3] },
-    { "id": "sentinel_1", "template": "sentinel", "at": [10, 0, 2] }
+    { "id": "sentinel_a", "template": "sentinel", "at": [10, 0, 1] },
+    { "id": "sentinel_b", "template": "sentinel", "at": [6, 0, 5] }
   ],
-  "pickups": [{ "id": "disk_shield_1", "type": "disk_shield", "at": [0, 0, 0] }]
+  "pickups": [{ "id": "disk_shield_1", "type": "disk_shield", "at": [0, 0, 11] }]
 }
