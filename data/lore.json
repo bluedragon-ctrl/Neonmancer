@@ -219,6 +219,15 @@
         "FALL INTO NULL: PROCESS RESTARTED."
       ]
     },
+    "tut_plates": {
+      "title": "ATRIUM // WEIGHT.SYS",
+      "lines": [
+        "PLATE: WHITE. IT FEELS WEIGHT. CRATES WEIGH.",
+        "A BRIDGE STANDS WHILE ITS PLATES FEEL WEIGHT.",
+        "GONE BRIDGES SHOW NO OUTLINE.",
+        "A CRATE PUSHED OFF AN EDGE FALLS."
+      ]
+    },
     "tut_zap": {
       "title": "PORTMAP // ZAP.EXE",
       "lines": [
