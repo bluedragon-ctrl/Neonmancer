@@ -1378,3 +1378,17 @@ mutation test says now. Settled with the author:
 room for skips no player can make, while Fork, which a player may
 already have in any wing, skipped six rooms' plates; plates and steps
 were first met inside the wings.
+
+### D188 — 2026-10-08 — The Atrium teaches plates and steps (5.17)
+The first room review. The Atrium keeps its doors, shrine and place; its
+east half becomes the plate lesson: a floor crate is the step onto a
+2-high ledge against the back wall, the crate up there is pushed off
+onto a plate that holes keep floor crates off, and the plate raises a
+bridge over a 3-wide pit to the Rainbow hat. New help text `tut_plates`
+(a plate, a bridge, a falling crate). Rules: a hub keeps the floor
+between its doors free and pays a boost, so later skips cost nothing;
+a plate is fenced with holes, not low walls (a 1-high pen beside a
+2-high ledge is a step). Played headless with Zap: 11.3 s; level
+review: keep.
+**Why:** plates, bridges and crate steps were first met inside the
+wings (D187), and the hub was a pure connector.

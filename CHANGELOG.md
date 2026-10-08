@@ -17,6 +17,10 @@ docs/decisions.md).
   wait only for them are checker warnings.
 
 ### Changed
+- The Atrium teaches plates and steps (D188, step 5.17): a floor crate is
+  the step onto a ledge, the crate on the ledge drops onto a plate, and
+  the plate raises a bridge to the Rainbow hat; a new help screen
+  (`tut_plates`). The room-design skill collects lessons from the reviews.
 - The Lattice ladder (D187, step 5.16): docs/lattice-plan.md lists every
   Lattice room in play order with its type, rung, mechanic, the trick to
   aim for and what the mutation test says now; the mix is 12 puzzle,
