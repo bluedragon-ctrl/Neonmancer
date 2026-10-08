@@ -44,7 +44,7 @@ Rules for the lines (D186, D187):
 |---|---|---|---|---|---|
 | 1 | `boot_up` | action | teach: move, jump | The way to the door is up: a 1-high step, then a 1-tile gap, so he learns the jump's height and reach before anything can hurt him. | Start room and shrine; the access pass is test-only. |
 | 2 | `first_steps` | puzzle | teach: push, plug a hole | One push fills one cell of the 2-wide hole: the second crate needs a push from a new side, which he reaches across the first. | Holds. |
-| 3 | `zap_port` | hybrid | teach: Zap (a target, an enemy) | The door's target lies across the bug's loop: the bolt must pass the lane, so he kills the bug or times the shot through its gap. | The bug is scenery: put its lane in the bolt's line. |
+| 3 | `zap_port` | hybrid | teach: Zap (a target, an enemy, bolts fly level) | The target sits a block up: a floor shot hits the block under it or the bug crossing the line, and the stair he climbed for the disk is his firing step (a jump shot also reaches it). | Reworked (D189). |
 | 4 | `first_light` | action | teach: the watchdog, fragments | The straight line is a pit: a zigzag of single jumps round the pits' open ends, inside 10 s. | Holds. |
 
 ### Hub
@@ -126,8 +126,7 @@ Lattice room; they wait for the sectors.
 
 Reviews needed for the Fork skips above: `relay_loft`, `ledger_cell`,
 `ghost_exit`, `cold_stairs`, `idle_cache`, `guard_loop`; and redesigns
-for the rooms whose pieces do nothing: `atrium`, `zap_port`,
-`shield_hall`.
+for the rooms whose pieces do nothing: `atrium`, `shield_hall`.
 
 ## Settled with the author
 

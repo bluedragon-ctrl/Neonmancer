@@ -17,6 +17,9 @@ docs/decisions.md).
   wait only for them are checker warnings.
 
 ### Changed
+- Zap Port teaches that bolts fly level (D189, step 5.17): the door's
+  target stands a block up, so a floor shot hits the block or the bug and
+  the stair by the disk is the firing step; a new `tut_zap` line.
 - The Lattice ladder (D187, step 5.16): docs/lattice-plan.md lists every
   Lattice room in play order with its type, rung, mechanic, the trick to
   aim for and what the mutation test says now; the mix is 12 puzzle,

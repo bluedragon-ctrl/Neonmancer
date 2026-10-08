@@ -195,6 +195,7 @@ Edit existing files with small text edits, not a JSON dump.
 | Headroom | wizard 1.5 high: 2 free cells over every standing surface. A block above is a ceiling, the room's height is not (he stands on top of a 2-high wall in a 3-high room); keep standing surfaces 2 below the room height for the look |
 | Bouncy enemy (bug, glowbug) | launches 2.2 above its top (0.6), so 2.8: clears a 2-high ledge, never 3 |
 | Frozen enemy | a 1-high step (1×1×1), pushed like a crate |
+| Zap bolt | flies level, 0.48 above his feet; a bug is 0.6 high. From the floor it hits bugs and 1-high blocks; from a 1-high top it flies over both and hits a target standing a block up; a jump shot near the apex does too (D189) |
 | Walk | 4.5 u/s, ~13 ticks (0.22 s) a cell; a jump ~34 ticks (0.57 s) |
 | Push | ~28 ticks (0.47 s) a cell |
 | Collapsing block | goes 30 ticks (0.5 s) after a step: never make him stand still on one |
