@@ -1392,3 +1392,17 @@ a plate is fenced with holes, not low walls (a 1-high pen beside a
 review: keep.
 **Why:** plates, bridges and crate steps were first met inside the
 wings (D187), and the hub was a pure connector.
+
+### D189 — 2026-10-08 — Zap Port: bolts fly level (5.17)
+`zap_port`'s target stands on a 1-high block against the back wall on
+the line x = 4 (the memory stacks are gone; decoration is the author's): a shot
+from the floor hits the block under it, or the bug whose lane (z = 9)
+crosses the line; from the 1-high stair beside the disk, a bolt flies
+over both and switches the target, opening the door to `first_light`. A
+jump shot from the floor near the apex also hits it (allowed: the same
+lesson, no easier). `tut_zap` gains "BOLTS FLY LEVEL, AT HAND HEIGHT."
+The checker counts every target as hit with Zap, so the height is
+judged by play.
+**Why:** the old target took any first shot and the bug was scenery;
+the room now teaches where a bolt flies, which later rooms' targets
+and towers build on.
