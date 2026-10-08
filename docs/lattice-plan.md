@@ -45,14 +45,14 @@ Rules for the lines (D186, D187):
 | 1 | `boot_up` | action | teach: move, jump | The way to the door is up: a 1-high step, then a 1-tile gap, so he learns the jump's height and reach before anything can hurt him. | Start room and shrine; the access pass is test-only. |
 | 2 | `first_steps` | puzzle | teach: push, plug a hole | One push fills one cell of the 2-wide hole: the second crate needs a push from a new side, which he reaches across the first. | Holds. |
 | 3 | `zap_port` | hybrid | teach: Zap (a target, an enemy, bolts fly level) | The target sits a block up: a floor shot hits the block under it or the bug crossing the line, and the stair he climbed for the disk is his firing step (a jump shot also reaches it). | Reworked (D189). |
-| 4 | `first_light` | action | teach: the watchdog, fragments | The straight line is a pit: a zigzag of single jumps round the pits' open ends, inside 10 s. | Holds. |
+| 4 | `first_light` | action | teach: the watchdog, fragments | The straight line is a pit: a zigzag of single jumps round the pits' open ends, inside 10 s. | Holds; signed off unchanged (5.17). |
 
 ### Hub
 
 | # | Room | Type | Rung | Trick to aim for | Now |
 |---|---|---|---|---|---|
 | 5 | `atrium` | puzzle | teach: a crate as a step, a crate dropped off a ledge, a plate, a bridge | The crate he climbs on is not the one for the plate: it lifts him to a ledge, and from there he pushes a second crate off onto the plate, which raises a bridge to the Rainbow hat (a boost). The doors stay free. | Reworked (D188): every piece matters; a decoy or the double jump skips it for the boost only. |
-| 6 | `shield_hall` | action | teach: Shield | The disk is easy to reach behind cover; the way out is not: two sentinels cover the open floor to both doors, so he leaves under the Shield he just found. | The sentinels are scenery: put the open floor in their lines. |
+| 6 | `shield_hall` | action | teach: Shield | The disk is easy to reach behind cover; the way on is not: the north door sits on a 3-high ledge, and the only lift up runs while two crates hold two plates. Pushing and riding are slow, and an arc hits what stands still, so the two sentinels bite there: he shields, dodges or fights. | Reworked (D190): the plates and the lift are judged by play (the checker runs every platform). |
 | 7 | `freeze_hall` | puzzle | teach: Pause, a frozen enemy as a block | The bug frozen where it walks is a cell short of the ledge: freeze it at the right end of its lane and push it to the ledge's foot, inside 5 s. | Holds (Pause only). |
 
 ### Shield wing
@@ -125,8 +125,7 @@ fits (`ledger_cell`, `idle_cache`). Collapsing and hazard blocks have no
 Lattice room; they wait for the sectors.
 
 Reviews needed for the Fork skips above: `relay_loft`, `ledger_cell`,
-`ghost_exit`, `cold_stairs`, `idle_cache`, `guard_loop`; and redesigns
-for the rooms whose pieces do nothing: `shield_hall`.
+`ghost_exit`, `cold_stairs`, `idle_cache`, `guard_loop`.
 
 ## Settled with the author
 
