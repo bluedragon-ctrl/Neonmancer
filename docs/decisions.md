@@ -1354,3 +1354,27 @@ chose a mix of Sokoban with 3D parts and arcade with small platforming
 and combat, and rules that later abilities may only skip a room's way
 through, never its pickup; the strong spells of later sectors are left
 out of the Lattice playtest.
+
+### D187 — 2026-10-08 — The Lattice ladder; "later" means any route
+Step 5.16 writes the Lattice ladder in docs/lattice-plan.md: per room in
+play order its type, rung, mechanic, the trick to aim for and what the
+mutation test says now. Settled with the author:
+- **Any route.** Past the hub the wings open in any order (the
+  Gatekeeper's doors never lock), so a wing room may be met with any
+  Lattice spell. Every pickup's trick holds against Zap, Shield, Pause,
+  Scan and Fork, which replaces "found after the room" (D186) for the
+  Lattice; the trick may use them.
+- **Not the double jump.** It comes only with Level 1, once all 16
+  fragments are found, so it never skips a Lattice fragment or disk.
+  Checks for pickups run with `--with zap,scan,fork,pause`; the double
+  jump still counts for exits and secrets.
+- **The Atrium teaches** a crate as a step, a crate dropped off a ledge,
+  a plate and a bridge, so both wings start from taught basics and the
+  hub is no pure connector.
+- **Sharpen, and hard is fine.** Reviews keep each room's idea where it
+  has one and sharpen it; harder Sokoban puzzles and tougher fights are
+  welcome.
+**Why:** with the double jump the mutation test flagged nearly every
+room for skips no player can make, while Fork, which a player may
+already have in any wing, skipped six rooms' plates; plates and steps
+were first met inside the wings.

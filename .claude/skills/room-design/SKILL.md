@@ -44,11 +44,17 @@ worth playing.
   pits too wide to cross.
 - **Lattice abilities only.** In Home Lattice only its own abilities
   count: `double_jump,zap,scan,fork,pause` (the checker doesn't model
-  Shield). Pull, Compile, Cut & Paste, Blink, Warp and Firewall belong to
-  later sectors (strong on purpose, maybe dropped or kept for
-  development): don't design Lattice rooms around them or against them,
-  and run every check below with `--with double_jump,zap,scan,fork,pause`
-  (or the subset he has) instead of the default (every ability).
+  Shield). The wings open in any order, so a pickup's trick holds
+  against all of them, not only those found after the room; the double
+  jump comes once all 16 fragments are found, so pickups are checked
+  with `--with zap,scan,fork,pause` and the double jump counts only for
+  exits and secrets (D187). Each room's type, rung and trick to aim for
+  is its line in the ladder (`docs/lattice-plan.md`). Pull, Compile,
+  Cut & Paste, Blink, Warp and Firewall belong to later sectors (strong
+  on purpose, maybe dropped or kept for development): don't design
+  Lattice rooms around them or against them, and run every check below
+  with the Lattice abilities (for an exit's first arrival, the subset
+  he has) instead of the default (every ability).
 
 ## Workflow
 1. **May you touch it?** A room with `"authored": true` is the author's
@@ -275,13 +281,16 @@ Edit existing files with small text edits, not a JSON dump.
 - **Later abilities and pickups** (D186). A later spell or the double jump
   may open the room's exits without its puzzle; it may never reach a
   pickup without the trick. Check it: the mutation test's first lines
-  (in the Lattice `--with double_jump,zap,scan,fork,pause`) list each
+  (in the Lattice `--with zap,scan,fork,pause` for pickups, D187) list each
   pickup's ability sets, e.g. `pickup fragment_6: fork or pause`. For every set
   that is not the room's own, rerun with `--with <that set>`: the trick's
   key pieces must still show `→ never` for the pickup. A key piece with
   NO EFFECT, or one that turns into another ability, means that set skips
   the trick. Fix it with what an ability can't replace (a switch-powered
-  gate, a 3-high wall, a fence roof, a wider pit). Sets that only open
+  gate, a 3-high wall, a fence roof, a wider pit). A plate alone is no
+  lock: a decoy holds any one plate, a frozen enemy one on or beside its
+  lane; lock on two plates at once, weight that stays longer than 10 s,
+  or where a crate ends up (a hole, a step, a stack). Sets that only open
   exits are fine. The later sectors' spells are left out in the Lattice.
 
 ## Mutation test (`scripts/mutate.mjs`)

@@ -35,9 +35,12 @@ For each room:
      Does it match its ladder line?
    - **Later abilities and pickups**: in Home Lattice only its own
      abilities count, so run the checker and the mutation test with
-     `--with double_jump,zap,scan,fork,pause` (or the subset he has), not
-     the default; Pull, Compile, Cut & Paste, Blink, Warp and Firewall
-     belong to later sectors and are not findings there. For each
+     `--with zap,scan,fork,pause` for pickups (any route: the wings open
+     in any order, and the double jump comes after every Lattice
+     fragment) and `--with double_jump,zap,scan,fork,pause` for exits
+     and secrets (D187), not the default; Pull, Compile, Cut & Paste,
+     Blink, Warp and Firewall belong to later sectors and are not
+     findings there. For each
      pickup, every ability set in the mutation test's first lines that
      is not the room's own: rerun
      with `--with <that set>`; if the trick's key pieces no longer
