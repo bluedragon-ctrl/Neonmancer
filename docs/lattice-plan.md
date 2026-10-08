@@ -42,7 +42,7 @@ Rules for the lines (D186, D187):
 
 | # | Room | Type | Rung | Trick to aim for | Now |
 |---|---|---|---|---|---|
-| 1 | `boot_up` | action | teach: move, jump | The way to the door is up: a 1-high step, then a 1-tile gap, so he learns the jump's height and reach before anything can hurt him. | Start room and shrine; the access pass is test-only. |
+| 1 | `boot_up` | action | teach: move, jump | The way to the door is up: a 1-high step, then a 1-tile gap, so he learns the jump's height and reach before anything can hurt him. | Reworked (D193): the east door sits on a 2-high ledge past a 1-wide gap; a short jump drops him safely into it. Start room and shrine; the access pass is test-only. |
 | 2 | `first_steps` | puzzle | teach: push, plug a hole | One push fills one cell of the 2-wide hole: the second crate needs a push from a new side, which he reaches across the first. | Holds. |
 | 3 | `zap_port` | hybrid | teach: Zap (a target, an enemy, bolts fly level) | The target sits a block up: a floor shot hits the block under it or the bug crossing the line, and the stair he climbed for the disk is his firing step (a jump shot also reaches it). | Reworked (D189). |
 | 4 | `first_light` | action | teach: the watchdog, fragments | The straight line is a pit: a zigzag of single jumps round the pits' open ends, inside 10 s. | Holds; signed off unchanged (5.17). |
