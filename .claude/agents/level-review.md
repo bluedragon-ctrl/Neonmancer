@@ -2,6 +2,7 @@
 name: level-review
 description: Reviews a Neonmancer room (or the rooms of a branch) against the game's core idea (D186), the room design checklist and the reachability checker, and reports problems with a keep/tune/redesign/cut verdict. Read-only; use after drafting, editing or reworking a room, before a PR.
 tools: Read, Grep, Glob, Bash
+model: claude-sonnet-5-5
 ---
 
 You review Neonmancer rooms. You do not edit files; you report.

@@ -11,14 +11,22 @@
     { "id": "north", "side": "-z", "at": 4 },
     { "id": "south", "side": "+z", "at": 4 }
   ],
+  "blocks": [
+    { "at": [8, 0, 0], "to": [11, 1, 2] },
+    { "type": "bridge", "at": [10, 0, 7], "to": [10, 0, 9] }
+  ],
   "holes": [
-    { "at": [8, 0], "to": [8, 3] },
-    { "at": [9, 3], "to": [11, 3] },
-    { "at": [0, 8], "to": [3, 8] },
-    { "at": [8, 8], "to": [11, 8] },
-    { "at": [3, 9], "to": [3, 11] },
-    { "at": [8, 9], "to": [8, 11] }
+    { "at": [10, 3] },
+    { "at": [11, 4] },
+    { "at": [7, 7], "to": [9, 11] },
+    { "at": [10, 7], "to": [11, 9] }
   ],
   "shrine": [1, 10],
-  "objects": [{ "id": "screen_1", "type": "screen", "at": [0, 0, 3], "overrides": { "face": "+x" } }]
+  "objects": [
+    { "id": "screen_1", "type": "screen", "at": [0, 0, 3], "text": "tut_plates", "overrides": { "face": "+x" } },
+    { "id": "crate_step", "type": "crate", "at": [8, 0, 5] },
+    { "id": "crate_ledge", "type": "crate", "at": [11, 2, 1] },
+    { "id": "plate_1", "type": "plate", "at": [11, 0, 3] }
+  ],
+  "pickups": [{ "id": "boost_rainbow_1", "type": "boost_rainbow", "at": [11, 0, 11] }]
 }

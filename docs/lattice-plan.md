@@ -51,7 +51,7 @@ Rules for the lines (D186, D187):
 
 | # | Room | Type | Rung | Trick to aim for | Now |
 |---|---|---|---|---|---|
-| 5 | `atrium` | puzzle | teach: a crate as a step, a crate dropped off a ledge, a plate, a bridge | The crate he climbs on is not the one for the plate: it lifts him to a ledge, and from there he pushes a second crate off onto the plate, which raises a bridge to a small reward (a boost or a secret star). The doors stay free. | Redesign: a connector now (decorative holes). |
+| 5 | `atrium` | puzzle | teach: a crate as a step, a crate dropped off a ledge, a plate, a bridge | The crate he climbs on is not the one for the plate: it lifts him to a ledge, and from there he pushes a second crate off onto the plate, which raises a bridge to the Rainbow hat (a boost). The doors stay free. | Reworked (D188): every piece matters; a decoy or the double jump skips it for the boost only. |
 | 6 | `shield_hall` | action | teach: Shield | The disk is easy to reach behind cover; the way out is not: two sentinels cover the open floor to both doors, so he leaves under the Shield he just found. | The sentinels are scenery: put the open floor in their lines. |
 | 7 | `freeze_hall` | puzzle | teach: Pause, a frozen enemy as a block | The bug frozen where it walks is a cell short of the ledge: freeze it at the right end of its lane and push it to the ledge's foot, inside 5 s. | Holds (Pause only). |
 
@@ -126,7 +126,7 @@ Lattice room; they wait for the sectors.
 
 Reviews needed for the Fork skips above: `relay_loft`, `ledger_cell`,
 `ghost_exit`, `cold_stairs`, `idle_cache`, `guard_loop`; and redesigns
-for the rooms whose pieces do nothing: `atrium`, `shield_hall`.
+for the rooms whose pieces do nothing: `shield_hall`.
 
 ## Settled with the author
 

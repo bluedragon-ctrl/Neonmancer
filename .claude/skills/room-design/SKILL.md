@@ -105,7 +105,19 @@ so draft the idea, not the last cell.
    the author's OK. No JSON before it.
 5. **Draft and check** (workflow steps 4–8) once the author agrees; the
    PR says what changed and why, and what to tune by hand.
-6. A changed trick, rung or type updates the room's ladder line.
+6. A changed trick, rung or type updates the room's ladder line, and
+   the "Now" column says it was reworked.
+7. **Lessons.** The author signs each room off before the next; a rule
+   the review found (a trap, a check, a better way to say it) goes into
+   this skill or `craft.md` in the same PR.
+
+Lessons from the reviews (D188 on):
+- **A hub keeps its doors.** The floor between a hub's doors stays free;
+  its puzzle sits to one side and pays a temporary reward (a boost), so
+  a decoy or the double jump skipping it later costs nothing.
+- **Fence a plate with holes, not with low walls.** A 1-high pen beside
+  a 2-high ledge is a step onto it (walls are steps too); holes keep
+  floor crates off a plate and leave a drop from above as the way in.
 
 ## Skeleton
 ```json
@@ -322,7 +334,7 @@ is not a promise; "unreachable" is a real bug). Play the solution in a scratch
 script in the scratchpad (never a committed test), importing the helper by
 absolute path:
 ```js
-import { startRoom, pauseEnemy } from '<checkout>/.claude/skills/room-design/scripts/sim.mjs'; // absolute path
+import { startRoom, pauseEnemy } from '<checkout>/.claude/skills/room-design/scripts/sim.mjs'; // absolute path; on Windows a file:/// URL with %20 for spaces
 const sim = startRoom('cold_stairs', { abilities: ['zap', 'pause'] }); // or { at: [x, y, z] }
 sim.walkTo([8.5, 0, 3.5]);         // along x, then z, to within 0.1
 sim.cast('pause'); sim.run(30);    // selects via Tab, casts, waits 30 ticks
