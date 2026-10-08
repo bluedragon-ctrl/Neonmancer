@@ -189,13 +189,16 @@ Edit existing files with small text edits, not a JSON dump.
   A gone bridge shows no outline: the room that first shows bridges says
   what one is in a screen text (see Screen texts below).
 - **Objects** (`defs.json` objects): crates `crate crate_plain crate_cross
-  crate_dashed`; switches `plate plate_timed target target_timed`; `platform
+  crate_dashed`; switches `plate plate_timed target target_timed socket`; `platform
   spiked_platform` (need `path`, may take `switches`: run only while all on);
   decorations `screen data_pillar memory_stack` (`overrides: { "face":
   "+x"|"+z" }`; a screen may name a `text` in `data/lore.json`: title <= 32,
   lines <= 48 characters, only as help, see Screen texts below); `core`. `overrides` change only existing type
-  values (e.g. a timer). Plates lie at y = 0 (validated): on a raised level
-  the only switch is a target.
+  values (e.g. a timer). Plates and sockets lie at y = 0 (validated): on a
+  raised level the only switch is a target. A socket (D194) is a hole that
+  is on once a crate fills it, for good: the lock a decoy or a frozen enemy
+  can't hold, and a crate spent there is gone for anything else. Its tile
+  is a hole (deadly; no hole entry on it).
 - **Screen texts (help, D163).** A screen with a `text` is a console: help
   for a spell or concept the wizard meets here for the first time (what Zap,
   a plate, a bridge, a frozen bug does; the key to cast), in the room that
@@ -343,7 +346,7 @@ ability (so each target shows its smallest ability sets); `--with a,b` and
 when taken one at a time: `--without crate_a,crate_b` takes all but one out
 first. The checker takes platforms as free floor, so ferry and lift power
 (plates only crates hold) is judged by hand.
-"crate search stopped at 500 configurations" makes a `never` unreliable (4+
+"crate search stopped at 2000 configurations" makes a `never` unreliable (4+
 roaming crates can hide a solution): raise `MAX_CONFIGS`
 (`src/world/reach.js`) temporarily to confirm, or keep fewer free crates.
 

@@ -12,6 +12,7 @@
     "plate": { "kind": "plate", "color": "#eef3ff", "edges": "dashed" },
     "target_timed": { "extends": "target", "timer": 5 },
     "plate_timed": { "extends": "plate", "timer": 3 },
+    "socket": { "kind": "socket", "color": "#eef3ff" },
     "platform": { "kind": "platform", "color": "#00f0ff", "mark": "brackets", "faces": "tinted" },
     "spiked_platform": { "kind": "platform", "color": "#ff2a3a", "shape": "spiked", "damage": 1 },
     "data_pillar": { "kind": "deco", "look": "data_pillar" },

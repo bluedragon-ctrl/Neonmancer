@@ -9,6 +9,10 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
+- The socket (D194): a hole that is a switch, on once a crate fills it;
+  a decoy or a frozen enemy can't, so it is the push puzzle's goal no spell
+  fakes. In the showcase and the dev room `socket_lab`; the checker knows
+  it and searches up to 2000 crate configurations (was 500).
 - Five Outer Buffer secret rooms' entrances (D183, step 5.11a): `buffer_1`–`buffer_5`
   (empty 8×8 rooms for now) behind a hidden Scan door in `scan_lab`, a ledge
   for the double jump or Compile in `warden_pit`, a Blink gap in `guard_loop`,

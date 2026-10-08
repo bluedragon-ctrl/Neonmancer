@@ -43,7 +43,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `game.js` | Owns game state; fixed-order `update()` returning typed events; room switching; `reset()` starts over in place (a new game) |
 | `spells.js` | What each spell does once cast (`SPELL_EFFECTS`): `castSpell(game)`, Blink and Warp, Cut & Paste, Pull, Compile, Scan, Fork |
 | `combat.js` | Bolts, enemies' charged attacks, bouncing off, touching and burning enemies; every hit on an enemy (`hitEnemy(game, …)`, `pauseEnemy(game, …)`), a boss's next phase, plate armor (`updateArmor()`) |
-| `switches.js` | Switches and what they power (D75, D140): plates, timed switches ticking, gates, powered platforms and locked exits, each by its `switches` or every switch in the room (`linkedSwitches()`, `powered()`); hidden exits a scan opens (D128, `revealExit()`): `updateSwitches(game)`, `exitOpen()`, `switchesOn()` |
+| `switches.js` | Switches and what they power (D75, D140): plates, sockets following their hole (D194), timed switches ticking, gates, powered platforms and locked exits, each by its `switches` or every switch in the room (`linkedSwitches()`, `powered()`); hidden exits a scan opens (D128, `revealExit()`): `updateSwitches(game)`, `exitOpen()`, `switchesOn()` |
 | `core/bindings.js` | Default key → action map (the only place raw key codes appear) |
 | `core/input.js` | Raw keys → action states once per tick |
 | `core/loop.js` | Fixed 60 Hz timestep, step clamp, interpolation alpha |
@@ -88,7 +88,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `entities/platform.js` | Moving platform: follows its path, carries riders, waits when blocked, shoves or squeezes the wizard (D46); a spiked one hurts on touch (D82) |
 | `entities/player.js` | Movement, jump, gravity, turning, pushing, integrity, invulnerability after a hit, death (hole or damage), respawn; one wizard for the whole game |
 | `entities/pushable.js` | Rest → slide → fall → land / plug-a-hole state machine; destructible ones break (`hit()` → `broken`); a compiled crate (D125, `lifetime`) derezzes when its time is up (`expire()`, a plugged hole opens again) |
-| `entities/switch.js` | Switches (D75): `Target` (a fixed body a bolt switches over) and `Plate` (a floor tile, no body, on while something stands on it); a type's `timer` makes either go off by itself (D140, `countdown`); `SWITCH_KINDS` (pure, tested) |
+| `entities/switch.js` | Switches (D75): `Target` (a fixed body a bolt switches over) `Plate` (a floor tile, no body, on while something stands on it) and `Socket` (a hole, on while filled, D194); a type's `timer` makes either go off by itself (D140, `countdown`); `SWITCH_KINDS` (pure, tested) |
 | `entities/gate.js` | Gate blocks (D140, D141): `Gate`, a block that comes and goes by its `trigger`: switch (solid until powered, `power()`; one with `start: "gone"`, a bridge, only while powered) or step (a collapsing block: solid → shake → gone → optional regrow); it never comes back on a body (pure, tested) |
 | `entities/warp.js` | Where Blink and Warp take the wizard (D86): `warpTarget()` sweeps his box along his aim through open space, stops at blocks, objects and the room's side, lands short of enemies, reports the enemies passed (pure, tested) |
 | `ai/behaviors.js` | Movement behaviors by name (`BEHAVIORS`: `patrol`, `stationary`, `chase`), as enemy templates refer to them |

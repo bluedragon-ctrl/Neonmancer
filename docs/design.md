@@ -1544,8 +1544,8 @@ Hints and lore (D118). A screen room object may name a text:
 
 Switches power what is linked to them (D69, D75, D140): locked exits,
 gates and platforms. Each of those is powered while all its switches are
-on: the ones its `switches` list names (ids of targets and plates in the
-room), or, without a list, every switch in the room (so rooms made
+on: the ones its `switches` list names (ids of targets, plates and
+sockets in the room), or, without a list, every switch in the room (so rooms made
 before D140 work as they did). Switch types in `defs.json` are placed in
 `objects` like crates; their state resets with the room.
 
@@ -1559,6 +1559,15 @@ before D140 work as they did). Switch types in `defs.json` are placed in
   footprint over the tile and its feet on the floor (jumping over it
   doesn't count). It is no body: things move over it as over the floor,
   and a crate may start on it.
+- **Socket** (`socket`, kind `socket`, D194): a floor tile at y 0 that
+  is a hole (the room adds it to its holes: deadly for the wizard, and an
+  enemy never steps in) and is on while that hole is filled. A crate
+  pushed in plugs it for good; a compiled crate powers it for its 7 s, a
+  pasted one for good. A decoy can't fill it and a frozen enemy pushed in
+  pops, so only a crate does: the Sokoban goal no spell fakes. Never
+  timed. Its look: the pit with a dashed white rim on the tile edge and
+  the plate's corner brackets; filled, the rim turns solid and the
+  plate's bull's-eye and glow light on the crate's top.
 - **Timed switches** (D140; `target_timed` 5 s, `plate_timed` 3 s; a
   type's `timer`, which a room object may override, 0.5–30 s): on for
   that long, then off by themselves. A timed target counts from the bolt
@@ -1610,9 +1619,11 @@ before D140 work as they did). Switch types in `defs.json` are placed in
 - Events: `switch` (a switch went on or off), `tick` (a timed one
   counting down), `gate` (a gate opened or closed), `unlock` and `lock`
   (a locked exit opened or closed).
-- Validation: a plate lies on the floor, inside the room, not in a block
-  and not over a hole; a locked exit and a gate need a switch in their
-  room; a `switches` list names targets and plates of the room, and only
+- Validation: a plate or a socket lies on the floor, inside the room,
+  not in a block and not over a hole (nor on another's tile; a socket's
+  tile counts as a hole for enemies, pickups and the shrine); a locked
+  exit and a gate need a switch in their room; a `switches` list names
+  targets, plates and sockets of the room, and only
   locked exits, switch gate block entries and platforms take one; only
   switch types have a `timer`.
 - Room design: a plate the wizard can reach next to the locked exit is
@@ -1626,7 +1637,8 @@ before D140 work as they did). Switch types in `defs.json` are placed in
   gates counting its switches. A timed switch's time is the run from it
   to what it powers plus about a second: the walk is ~0.22 s a cell.
 - Reachability (D131): a powered thing counts when its switches can all
-  be on at once (a timed plate also under the wizard himself); a gate
+  be on at once (a timed plate also under the wizard himself; a socket
+  with a crate plugging it, D194); a gate
   that can be both open and closed counts as both, floor never in the
   way. Timing is not checked: a timed switch counts as on for good.
 - Tuning: the look is `SWITCH_FX` in `src/render/switch-view.js` and

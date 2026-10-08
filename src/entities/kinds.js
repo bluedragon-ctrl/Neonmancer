@@ -15,13 +15,14 @@ import { Deco } from './deco.js';
 import { Gate } from './gate.js';
 import { Platform } from './platform.js';
 import { Pushable } from './pushable.js';
-import { Plate, Target } from './switch.js';
+import { Plate, Socket, Target } from './switch.js';
 
 export const OBJECT_KINDS = {
   pushable: Pushable,
   platform: Platform,
   target: Target,
   plate: Plate,
+  socket: Socket,
   core: Core,
   deco: Deco,
   gate: Gate,

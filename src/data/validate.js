@@ -38,7 +38,7 @@ import {
   KIND_BLOCK_VALUES,
   STATIC_BLOCK_VALUES,
 } from './room-data.js';
-import { SWITCH_KINDS } from '../entities/switch.js';
+import { SWITCH_KINDS, TIMED_SWITCH_KINDS } from '../entities/switch.js';
 import { TEXT_LOOKS } from './lore.js';
 import { mapKey } from '../world/map.js';
 import { legAxis, pathCells } from '../world/path.js';
@@ -90,7 +90,7 @@ export function validateData(files) {
       report('defs.json', `objects.${id}.damage`, `only platforms can hurt, not a ${type.kind}`);
     }
     // Only switches are timed (D140).
-    if (type.timer !== undefined && !SWITCH_KINDS.includes(type.kind)) report('defs.json', `objects.${id}.timer`, `only switches (targets and plates) are timed, not a ${type.kind}`);
+    if (type.timer !== undefined && !TIMED_SWITCH_KINDS.includes(type.kind)) report('defs.json', `objects.${id}.timer`, `only switches (targets and plates) are timed, not a ${type.kind}`);
     // Only a decoration has a look (D117); every other kind needs a color.
     if (type.kind === 'deco' && !DECO_LOOKS[type.look]) report('defs.json', `objects.${id}.look`, `a decoration needs a look: ${Object.keys(DECO_LOOKS).join(', ')}`);
     if (type.kind !== 'deco' && type.look !== undefined) report('defs.json', `objects.${id}.look`, `only decorations have a look, not a ${type.kind}`);
@@ -462,8 +462,9 @@ function validateObjects(checks, objectTypes, texts) {
       if (type.kind !== 'deco' || !TEXT_LOOKS.includes(object.overrides?.look ?? type.look)) report(`${path}.text`, `only screens show a text, not "${object.type}"`);
       else if (!Object.hasOwn(texts, object.text)) report(`${path}.text`, `unknown text "${object.text}" (data/lore.json)`);
     }
-    // A plate is a floor tile, no body (D75): things may stand on it.
-    if (type?.kind === 'plate') return validatePlate(checks, path, object.at);
+    // A plate is a floor tile, no body (D75): things may stand on it. A
+    // socket is a floor tile too, a hole until a crate fills it (D194).
+    if (type?.kind === 'plate' || type?.kind === 'socket') return validatePlate(checks, path, object.at, type.kind);
     const inside = fillCell(checks, object.at, path);
     // The core stands 2 high (D101), a decoration as high as its look
     // (D117): the cells above are theirs too.
@@ -667,16 +668,21 @@ function validateOverrides(report, path, object, type, enums) {
 }
 
 /**
- * A plate (D75) lies on the floor (y 0), inside the room, in a cell no block
- * fills (blocks are checked first) and on no hole (checked with the holes).
+ * A plate (D75) or a socket (D194) lies on the floor (y 0), inside the
+ * room, in a cell no block fills (blocks are checked first) and on no hole
+ * (checked with the holes). A socket's tile is a hole for what comes after
+ * (enemies, pickups, the shrine).
  */
-function validatePlate({ room, report, filled, plates }, path, [x, y, z]) {
+function validatePlate({ room, report, filled, plates, holes }, path, [x, y, z], kind) {
   const [w, , d] = room.size;
-  if (y !== 0) report(`${path}.at`, 'a plate lies on the floor (y 0)');
+  if (y !== 0) report(`${path}.at`, `a ${kind} lies on the floor (y 0)`);
   else if (x < 0 || z < 0 || x >= w || z >= d) report(`${path}.at`, `cell ${cellText([x, y, z])} is outside size ${cellText(room.size)}`);
   else if (filled.has(cellKey([x, y, z]))) report(`${path}.at`, `cell ${cellText([x, y, z])} is filled by ${filled.get(cellKey([x, y, z]))}`);
   else if (plates.has(cellKey([x, z]))) report(`${path}.at`, `tile ${cellText([x, z])} has ${plates.get(cellKey([x, z]))} already`);
-  else plates.set(cellKey([x, z]), path);
+  else {
+    plates.set(cellKey([x, z]), path);
+    if (kind === 'socket') holes.set(cellKey([x, z]), path);
+  }
 }
 
 /**
@@ -688,10 +694,10 @@ function validatePlate({ room, report, filled, plates }, path, [x, y, z]) {
 function validateLocks({ room, report }, exits, objectTypes, blockTypes) {
   const switches = new Set((room.objects ?? []).filter((object) => SWITCH_KINDS.includes(objectTypes[object.type]?.kind)).map((object) => object.id));
   const links = (path, ids) => {
-    for (const id of ids ?? []) if (!switches.has(id)) report(path, `"${id}" is no switch (a target or a plate) of this room`);
+    for (const id of ids ?? []) if (!switches.has(id)) report(path, `"${id}" is no switch (a target, a plate or a socket) of this room`);
   };
   exits.forEach((exit, i) => {
-    if (exit.locked && switches.size === 0) report(`exits[${i}].requires`, 'a switch lock needs a switch in the room (a target or a plate)');
+    if (exit.locked && switches.size === 0) report(`exits[${i}].requires`, 'a switch lock needs a switch in the room (a target, a plate or a socket)');
     const needs = (room.exits?.[i]?.requires ?? []).filter((need) => 'switch' in need).map((need) => need.switch);
     if (needs.includes('*') && needs.length > 1) report(`exits[${i}].requires`, '"*" already means every switch in the room, so it cannot be listed with others');
     if (room.exits?.[i]?.requires?.filter((need) => 'access' in need).length > 1) report(`exits[${i}].requires`, 'only one access level');
@@ -703,7 +709,7 @@ function validateLocks({ room, report }, exits, objectTypes, blockTypes) {
   (room.blocks ?? []).forEach((block, i) => {
     const type = blockTypes[block.type ?? 'block'];
     const switched = type?.kind === 'gate' && (type.trigger ?? 'switch') === 'switch';
-    if (switched && switches.size === 0) report(`blocks[${i}]`, 'a gate needs a switch in the room (a target or a plate)');
+    if (switched && switches.size === 0) report(`blocks[${i}]`, 'a gate needs a switch in the room (a target, a plate or a socket)');
     if (block.switches && type && !switched) report(`blocks[${i}].switches`, `only switch gates are powered by switches, not "${block.type ?? 'block'}"`);
     if (switched) links(`blocks[${i}].switches`, block.switches);
   });

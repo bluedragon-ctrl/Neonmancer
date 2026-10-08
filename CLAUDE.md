@@ -129,7 +129,8 @@ mobile/touch support, backend or accounts.
   short text of `data/lore.json`, printed in the wizard's terminal once
   per visit when he comes near (hints and lore, D118).
 - Switches power exits, gates and platforms: a floor plate held down by a
-  crate, an enemy or the wizard, or a target a bolt switches on and off;
+  crate, an enemy or the wizard, a target a bolt switches on and off, or a
+  socket, a hole that is on once a crate fills it (D194);
   a timed one goes off by itself after a few seconds (D140). Each locked
   exit, gate or platform names its switches (`switches`, by default every
   switch in the room) and is powered while they are all on (D140). A

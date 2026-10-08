@@ -39,6 +39,7 @@ import {
   PlaneGeometry,
 } from 'three';
 import { blockEdges } from './edges.js';
+import { fadingDrops } from './hole-view.js';
 import { GLASS, glassBox } from './glass.js';
 import { PALETTE, lineMaterial, neonLines, roomLook } from './neon.js';
 import { linkedSwitches, switchesOn } from '../switches.js';
@@ -380,6 +381,65 @@ export function createPlate(color, { timed = false } = {}) {
 }
 
 /**
+ * A socket (D194), its lower corner at the origin: a hole (the hole view
+ * draws the pit) framed as a mechanism, a dashed white rim on the tile
+ * edge, the plate's corner brackets and white lines fading down its
+ * corners into the pit, like a hole's. Filled, the rim turns solid and
+ * the plate's bull's-eye lights on the crate's top, flush with the floor.
+ * `userData.set(filled)` (0..1).
+ * @param {number|string} color
+ */
+export function createSocket(color) {
+  const base = new Color(color);
+  const group = new Group();
+  const y = SWITCH_FX.lift;
+  const marks = plateMarks(y);
+  const line = (segments, material) => {
+    const lines = neonLines(segments, material);
+    lines.renderOrder = 2;
+    group.add(lines);
+    return lines;
+  };
+  const tileMat = lineMaterial({ color: base, width: 2.2, dashed: true });
+  const markMat = lineMaterial({ color: base, width: 1.8 });
+  const bracketMat = lineMaterial({ color: base, width: 2.2 });
+  line(marks.tile, tileMat);
+  const eye = new Group().add(line(marks.outer, markMat), line(marks.inner, markMat));
+  line(marks.brackets, bracketMat);
+  const drops = fadingDrops([[0, 0], [1, 0], [1, 1], [0, 1]], 0, base, SWITCH_FX.on);
+  const fillMat = glowMaterial(base);
+  const fill = new Mesh(new PlaneGeometry(1 - 2 * SWITCH_FX.inner, 1 - 2 * SWITCH_FX.inner), fillMat);
+  fill.rotation.x = -Math.PI / 2;
+  fill.position.set(0.5, y, 0.5);
+  const spillMat = new MeshBasicMaterial({ vertexColors: true, blending: AdditiveBlending, transparent: true, depthWrite: false });
+  group.add(drops, eye, fill, floorSpill(SWITCH_FX.spill, y, spillMat));
+
+  const on = new Ease();
+  group.userData.set = (filled) => {
+    on.target = Number(filled);
+  };
+  group.userData.update = (dt) => {
+    const t = on.step(dt);
+    // Off, the rim and brackets show a mechanism; the bull's-eye waits for the crate.
+    tileMat.color.copy(base).multiplyScalar(brightness(t));
+    bracketMat.color.copy(base).multiplyScalar(brightness(t));
+    markMat.color.copy(base).multiplyScalar(SWITCH_FX.on * t);
+    eye.visible = t > 0;
+    // Filled, there is no pit left to show.
+    drops.visible = t < 0.5;
+    fillMat.opacity = t;
+    fillMat.color.copy(base).multiplyScalar(SWITCH_FX.fill);
+    spillMat.color.copy(base).multiplyScalar(SWITCH_FX.spillBrightness * t);
+    if (tileMat.dashed !== t < 0.5) {
+      tileMat.dashed = t < 0.5;
+      tileMat.needsUpdate = true;
+    }
+  };
+  group.userData.update(0);
+  return group;
+}
+
+/**
  * The barrier across a locked exit, in room coordinates.
  * `userData.set({ lit, open })`: how many switches are on, whether it is open.
  * `userData.openness` (0..1) tells how far it has opened.
@@ -574,6 +634,28 @@ export class PlateView {
   sync(alpha, dt = 0) {
     this.time += dt;
     this.group.userData.set(switchLight(this.plate.on, this.plate.countdown ?? null, this.time));
+    this.group.userData.update(dt);
+  }
+}
+
+/** A socket in the room (D194): lit while a crate fills its hole. */
+export class SocketView {
+  /**
+   * @param {import('../game.js').Game} game
+   * @param {import('../entities/switch.js').Socket} socket
+   */
+  constructor(game, socket) {
+    this.socket = socket;
+    this.group = createSocket(socket.object.color);
+    this.group.position.set(...socket.pos);
+  }
+
+  /**
+   * @param {number} alpha unused: it never moves
+   * @param {number} [dt] seconds since the last frame
+   */
+  sync(alpha, dt = 0) {
+    this.group.userData.set(this.socket.on);
     this.group.userData.update(dt);
   }
 }
