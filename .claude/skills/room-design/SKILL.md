@@ -129,6 +129,14 @@ Lessons from the reviews (D188 on):
 - **Under fire, stop the push.** Where the puzzle is not the point
   (a push under pressure), a 1-high block past the plate stops the
   crate on it, so an over-push never loses it in a hole or a corner.
+- **A watchdog sharpens a simple trick.** When a slow, sloppy way
+  round does as well as the trick (freezing a walker anywhere and
+  dragging it), a watchdog (`timer`, D172) makes the clean answer the
+  one that fits. Time the clean solve with `sim.mjs` from every door
+  and at every phase of the enemies' walk, and give it about 1.5–2× the
+  worst case: room to aim and miss once (`freeze_hall`, 15 s, D192).
+- **Hide nothing behind a cage.** Walls round a lane are 1 high: a
+  2-high wall hides the enemy from the camera at +x +y +z.
 
 ## Skeleton
 ```json

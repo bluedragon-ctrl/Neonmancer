@@ -1444,3 +1444,15 @@ and a block below it. Zap, Shield, Scan and Fork don't reach it.
 **Why:** the old lane ran in the open three cells from the ledge: freeze
 anywhere, push, climb, with no choice in it. Freezing a walker on the
 right cell is what later Pause rooms (`cold_stairs`) build on.
+
+### D192 — 2026-10-08 — Freeze Hall's watchdog (5.17)
+`freeze_hall` gets a 15 s watchdog (`timer`, D172; the watchdog is
+taught in `first_light`). Played headless, the timed freeze at the
+cage's gap takes the fragment in 5.8 s at worst from the north door
+(disk on the way) and 9.5 s from the south door (round the cage to the
+disk); 15 s leaves room for aiming and a missed bolt, while freezing
+the bug elsewhere and dragging it round is tight (not timed; tune by
+play). Once the disk and the fragment
+are found it arms no more.
+**Why:** the author: without a clock the slow way round was as good as
+the trick; the watchdog makes the timed freeze the answer.
