@@ -17,6 +17,14 @@ docs/decisions.md).
   wait only for them are checker warnings.
 
 ### Changed
+- The Lattice ladder (D187, step 5.16): docs/lattice-plan.md lists every
+  Lattice room in play order with its type, rung, mechanic, the trick to
+  aim for and what the mutation test says now; the mix is 12 puzzle,
+  5 hybrid and 4 action rooms. Pickups' tricks now hold against every
+  Lattice spell (the wings open in any order), not the double jump,
+  which comes after every Lattice fragment; the Atrium is to teach a
+  crate as a step, a dropped crate, a plate and a bridge. The room-design
+  skill, the level-review subagent and the checklist follow.
 - Gameplay direction (D186): an isometric push-puzzle adventure with
   arcade bite; puzzle, hybrid and action rooms, one trick a room; later
   abilities may skip a room's way through, never a pickup's trick; in

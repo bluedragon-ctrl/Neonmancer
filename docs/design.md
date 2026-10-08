@@ -30,7 +30,11 @@ measured against:
    (secrets do). In the Lattice only its own abilities count: the double
    jump, Zap, Scan, Fork and Pause. Pull, Compile, Cut & Paste, Blink,
    Warp and Firewall belong to later sectors (maybe dropped or kept for
-   development) and are left out of Lattice design and checks.
+   development) and are left out of Lattice design and checks. The
+   Lattice's wings open in any order, so a pickup's trick holds against
+   every Lattice spell; the double jump comes once all 16 fragments are
+   found and counts only for exits and secrets (D187). Each room's type
+   and trick to aim for: the ladder in docs/lattice-plan.md.
 
 | Room type | What it is | Rough share |
 |---|---|---|
@@ -1806,9 +1810,11 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
   never reach a pickup without its trick: with any ability set that
   reaches a pickup, the trick's key pieces must still matter (the
   mutation test with `--with` that set, D186). In the Lattice the sets
-  come from its own abilities only (`--with
-  double_jump,zap,scan,fork,pause`); the later sectors' spells are not
-  counted.
+  come from its own abilities only; pickups are checked with `--with
+  zap,scan,fork,pause` (any route: a wing room may be met with any of
+  them; the double jump comes after every Lattice fragment), exits and
+  secrets with `--with double_jump,zap,scan,fork,pause` (D187); the
+  later sectors' spells are not counted.
 - Temporary pickups come back with the room and death resets the wizard
   (D67): a refill a detour away is a choice for the player; place it so
   the trip is a real trade-off.
@@ -2298,8 +2304,8 @@ decisions before the code lands. Every step also (D43):
 - updates `docs/design.md`, `docs/architecture.md` and CHANGELOG, and
   records new decisions.
 
-**Next: Phase 5, step 5.16, the Lattice ladder, then 5.17, the room
-reviews** (D186; 5.3 music waits for the author's tracks).
+**Next: Phase 5, step 5.17, the room reviews against the Lattice
+ladder** (D186, D187; 5.3 music waits for the author's tracks).
 
 ### Phase 5 (v0.5) steps: Home Lattice playtest
 
@@ -2315,7 +2321,6 @@ author flags them authored (D90). Room plan: [lattice-plan.md](lattice-plan.md).
 | # | Branch | Delivers |
 |---|---|---|
 | 5.3 | `feat/music` | The author's tracks trimmed for seamless loops: Lattice, boss, title; room and biome mapping, a boss switch and a crossfade back. |
-| 5.16 | `docs/lattice-ladder` | The Lattice ladder in lattice-plan.md (D186): per room in play order its type, the mechanic it teaches, develops or twists, and a target trick in one line; the mix of types checked. |
 | 5.17 | `rooms/<id>` | The room reviews, one room a session and a PR, in play order: the room-design skill's rework workflow against its ladder line, then the author's tuning in the editor. |
 | 5.11 | `feat/outer-buffer-secrets` | Waits (D186): the secret cluster's contents, complex multi-step rooms, often with tools found later (D173). |
 | 5.12 | `feat/quality-presets` | Quality presets, auto fallback and render scale wired up (D76), a check on a weaker GPU. |
