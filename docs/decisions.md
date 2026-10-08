@@ -1456,3 +1456,15 @@ play). Once the disk and the fragment
 are found it arms no more.
 **Why:** the author: without a clock the slow way round was as good as
 the trick; the watchdog makes the timed freeze the answer.
+
+### D193 — 2026-10-08 — Boot Up: the way out is up (5.17)
+`boot_up`'s east door (to `first_steps`) sits 2 up on a ledge: a
+1-high step, a 2-high step, then a 1-wide gap to the ledge. The gap's
+floor is plain floor with 2-high sides, so a short jump drops him into
+it and he walks out to try again; nothing can hurt him. The old
+1-high pair of blocks by the back wall (a second way up) is gone.
+Played headless, the three jumps take him out in 3.5 s; coming back
+from `first_steps` he lands on the ledge. No watchdog: the start room.
+**Why:** the room taught nothing; now its one door teaches the jump's
+height (one block, never two) and its reach before anything bites,
+matching the screen's "step limit" line.
