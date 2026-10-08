@@ -10,13 +10,21 @@
     { "id": "north", "side": "-z", "at": 4 },
     { "id": "south", "side": "+z", "at": 4 }
   ],
-  "blocks": [{ "at": [0, 0, 10], "to": [1, 1, 11] }],
+  "blocks": [
+    { "at": [1, 0, 5], "to": [2, 0, 5] },
+    { "at": [4, 0, 5], "to": [7, 0, 5] },
+    { "at": [1, 0, 7], "to": [2, 0, 7] },
+    { "at": [4, 0, 7], "to": [7, 0, 7] },
+    { "at": [1, 0, 6], "to": [1, 0, 6] },
+    { "at": [7, 0, 6], "to": [7, 0, 6] },
+    { "at": [2, 0, 10], "to": [3, 1, 11] }
+  ],
   "objects": [
     { "id": "screen_pause", "type": "screen", "at": [1, 0, 3], "text": "tut_pause", "overrides": { "face": "+x" } }
   ],
-  "enemies": [{ "id": "patrol", "template": "bug", "at": [1, 0, 6], "path": { "points": [[5, 0, 6]] } }],
+  "enemies": [{ "id": "patrol", "template": "bug", "at": [2, 0, 6], "path": { "points": [[6, 0, 6]] } }],
   "pickups": [
     { "id": "disk_pause", "type": "disk_pause", "at": [3, 0, 1] },
-    { "id": "fragment_1_1", "type": "fragment_1", "at": [0, 2, 11] }
+    { "id": "fragment_1_1", "type": "fragment_1", "at": [2, 2, 11] }
   ]
 }

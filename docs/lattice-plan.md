@@ -53,7 +53,7 @@ Rules for the lines (D186, D187):
 |---|---|---|---|---|---|
 | 5 | `atrium` | puzzle | teach: a crate as a step, a crate dropped off a ledge, a plate, a bridge | The crate he climbs on is not the one for the plate: it lifts him to a ledge, and from there he pushes a second crate off onto the plate, which raises a bridge to the Rainbow hat (a boost). The doors stay free. | Reworked (D188): every piece matters; a decoy or the double jump skips it for the boost only. |
 | 6 | `shield_hall` | action | teach: Shield | The disk is easy to reach behind cover; the way on is not: the north door sits on a 3-high ledge, and the only lift up runs while two crates hold two plates. Pushing and riding are slow, and an arc hits what stands still, so the two sentinels bite there: he shields, dodges or fights. | Reworked (D190): the plates and the lift are judged by play (the checker runs every platform). |
-| 7 | `freeze_hall` | puzzle | teach: Pause, a frozen enemy as a block | The bug frozen where it walks is a cell short of the ledge: freeze it at the right end of its lane and push it to the ledge's foot, inside 5 s. | Holds (Pause only). |
+| 7 | `freeze_hall` | puzzle | teach: Pause, a frozen enemy as a block | The bug walks a caged lane with one gap across it: freeze it as it passes the gap in front of him, push it out across the hall to the ledge's foot and climb it. | Reworked (D191): freezing it elsewhere in the cage only costs time. |
 
 ### Shield wing
 

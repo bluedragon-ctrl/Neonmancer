@@ -1426,3 +1426,21 @@ double jump only skip the exit (D187).
 hits a wizard walking across its line; the old room cost one hit in
 9 s and the sentinels were scenery. Pushes and a lift ride keep him
 still in their lines, which is when the Shield matters.
+
+### D191 — 2026-10-08 — Freeze Hall: the caged bug (5.17)
+`freeze_hall`'s bug walks a caged lane: a 1-wide lane (x 2–6, z 6)
+between 1-high walls (higher ones hid the bug from the camera) with one
+pair of gaps across it at x = 3. He stands in the north gap, freezes the
+bug as it passes in front of him and pushes it three cells out through
+the south gap, across the hall, to the foot of the 2-high ledge with the
+fragment, his step up. A bug frozen half a cell off the gap won't go
+through; one frozen elsewhere in the cage can still be brought round
+(climb over it, push it along the lane), only slower: the timed bolt is
+the clean answer, not the only one. The cage also keeps the live bug
+from wandering into him while he learns. Played headless: the fragment
+in 5.5 s, no hits. The live bug is bouncy (D48), but a bounce carries
+him about 1.9 units, short of the ledge, and the wall tops are two cells
+and a block below it. Zap, Shield, Scan and Fork don't reach it.
+**Why:** the old lane ran in the open three cells from the ledge: freeze
+anywhere, push, climb, with no choice in it. Freezing a walker on the
+right cell is what later Pause rooms (`cold_stairs`) build on.

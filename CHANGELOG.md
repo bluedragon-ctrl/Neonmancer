@@ -17,6 +17,9 @@ docs/decisions.md).
   wait only for them are checker warnings.
 
 ### Changed
+- Freeze Hall's bug walks a cage (D191, step 5.17): he freezes it as it
+  passes the cage's one gap and pushes it out to the fragment's ledge as
+  his step.
 - Shield Hall's way on is a slow lift (D190, step 5.17): two crates on
   two plates run the lift to the north door on a 3-high ledge, under two
   sentinels' arcs; the Shield, dodging or Zap get him through.
