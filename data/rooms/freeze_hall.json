@@ -5,6 +5,7 @@
   "name": "Freeze Hall",
   "biome": "home_lattice",
   "size": [9, 4, 12],
+  "timer": 15,
   "spawn": [4.5, 0, 1.5],
   "exits": [
     { "id": "north", "side": "-z", "at": 4 },

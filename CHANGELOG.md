@@ -17,6 +17,8 @@ docs/decisions.md).
   wait only for them are checker warnings.
 
 ### Changed
+- Freeze Hall has a 15 s watchdog (D192, step 5.17): the timed freeze
+  at the cage's gap fits easily, the slow way round is tight.
 - Freeze Hall's bug walks a cage (D191, step 5.17): he freezes it as it
   passes the cage's one gap and pushes it out to the fragment's ledge as
   his step.
