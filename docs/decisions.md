@@ -1800,3 +1800,10 @@ top, 3-high walls or fences, a corner of the room: `socket_yard`,
 and the lights that say how many switches are missing, and a spell or a
 jump can't skip it (a Zap passes through, a crate or a double jump gets
 nowhere near the pickup).
+- **Built as:** `defs.json` `cage` (`kind: "gate"`, `look: "cage"`,
+  `seeThrough`: the one kind that takes a look, validated); the gate object
+  carries `seeThrough` (bolts and `game.sightBlockers` skip it) and
+  `Game.caged()` keeps a caged pickup untaken. Room editor: a pickup placed
+  on a cage cell, or a cage on a pickup, keeps both. Dev room `cage_lab`
+  (a crate-on-plate cage and a Zap-target cage with a Zap flying through
+  the first one's bars).
