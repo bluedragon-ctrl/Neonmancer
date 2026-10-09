@@ -1759,3 +1759,44 @@ no lock"), and the Sokoban goal gets a height.
 **Why:** a lock that needs height, not only a body: it keeps push order
 and the ledge drop meaningful, and cheap fakes (one decoy, one frozen
 enemy) can't open it.
+
+### D202 — 2026-10-09 — The cage: a pickup locked behind a switched, see-through gate
+(D201 is taken by the open Socket Yard PR; this is the next free number.)
+A new block type, `cage` (`kind: "gate"`, `look: "cage"`, `seeThrough`),
+a one-cell gate with a fence-like look that holds a pickup in plain view.
+Locking a pickup behind switches took a whole pocket (a gate, a block on
+top, 3-high walls or fences, a corner of the room: `socket_yard`,
+`socket_lab`); a cage is one cell.
+- **A gate underneath.** It names its switches like any gate (`switches`,
+  by default every switch in the room) and sinks while they are all on
+  (D140, D141). Closed it is solid to him, crates and enemies and standable
+  like a gate. Open it is gone; like every gate it never comes back on
+  anything in its cell. Gate rules are unchanged, so with a timed switch it
+  closes again once the time is up: the pickup, if still there, is
+  caged again; one he took is gone for good (or, a refill, comes back with
+  the room), so an empty cage costs nothing. Bridges stay as they are:
+  no cage that starts open.
+- **See-through.** Bolts and sight pass (like a fence, D167), so a Zap can't
+  take the pickup and a tower still sees through it. Collecting is blocked
+  while it is closed (he cannot enter the cell; a pickup is also never
+  collected through a closed cage).
+- **A pickup may lie inside a cage**, as inside a `fake` block (D128); a
+  cage without one is a switched see-through block. A pickup in any other
+  filled cell is still rejected. Normally one block with one pickup.
+- **Color: the room's color** like the fence (the author's call): it is
+  structure that opens. Gates are white (a mechanism, D99); the cage is
+  the exception on purpose, so a pickup's own color and the white lock
+  lights above it stay readable. `tests/colors.test.js` still holds.
+- **Look** (`src/render/cage-view.js`): the fence's streams of light on a
+  box: a frame round all four sides at half and full height, a post in each
+  corner with a glowing node, a bar up the middle of each side and a lid of
+  two bars with the switch lights between them. Detail on the top, +x and
+  +z only (D115). No faces, so the pickup shows. Sinking and rising as a
+  gate.
+- **Checker:** a caged pickup counts as reached once the cage's switches
+  can be on (a gate on its switches; the checker already knows them);
+  `mutate.mjs` lists a sealed cage like a sealed gate.
+**Why:** a lock that is one cell and readable: the player sees the prize
+and the lights that say how many switches are missing, and a spell or a
+jump can't skip it (a Zap passes through, a crate or a double jump gets
+nowhere near the pickup).

@@ -189,7 +189,7 @@ const beamFragment = /* glsl */ `
  * @param {Color} color
  * @param {object} style FENCE.beam with overrides
  */
-function beamMesh(beams, color, style) {
+export function beamMesh(beams, color, style) {
   const s = { ...FENCE.beam, ...style };
   const geometry = quadGeometry(beams.length, [
     ['aStart', 3, beams.flatMap(({ segment }) => segment[0])],
@@ -256,7 +256,7 @@ const nodeFragment = /* glsl */ `
   }
 `;
 
-function nodeMesh(points, color) {
+export function nodeMesh(points, color) {
   const s = FENCE.node;
   const geometry = quadGeometry(points.length, [['aCenter', 3, points.flat()]]);
   const material = lightMaterial(nodeVertex, nodeFragment, {
@@ -277,7 +277,7 @@ function nodeMesh(points, color) {
  * height) towards +x or +z, the upper one and the rail back.
  * @param {number[][][]} segments merged, each from its low end to its high end
  */
-function flowing(segments) {
+export function flowing(segments) {
   return segments.map((segment) => ({ segment, flow: segment[0][1] % 1 === 0.5 ? 1 : -1 }));
 }
 

@@ -19,6 +19,7 @@
  */
 import { Color, DoubleSide, Group, Mesh, MeshBasicMaterial, PlaneGeometry } from 'three';
 import { blockEdges } from './edges.js';
+import { createCageBody } from './cage-view.js';
 import { glassBox, GLASS } from './glass.js';
 import { lineMaterial, neonLines } from './neon.js';
 import { createObjectView } from './room-view.js';
@@ -80,8 +81,9 @@ function ease(value, target, dt, time) {
  * @param {object|null} [options.style] a step gate's object style (edges, faces, tint...); null: a switch gate's white glass
  * @param {number} [options.lights] switches that power it (one light each on top)
  * @param {boolean} [options.closed] solid to start with
+ * @param {boolean} [options.cage] a cage (D202): bars of light, no faces, in `color`
  */
-export function createGate(color, { style = null, lights = 0, closed = true } = {}) {
+export function createGate(color, { style = null, lights = 0, closed = true, cage = false } = {}) {
   const base = new Color(color);
   const group = new Group();
   // The block, scaled down from its foot as it sinks; `shaker` rattles it.
@@ -91,6 +93,7 @@ export function createGate(color, { style = null, lights = 0, closed = true } = 
   group.add(shaker);
   const edgeMat = lineMaterial({ color: base, width: 2.5 });
   if (style) body.add(createObjectView({ ...style, color, at: [0, 0, 0] }));
+  else if (cage) body.add(createCageBody(base));
   else {
     body.add(glassBox([0, 0, 0], [1, 1, 1], base, GLASS.gate));
     const edges = neonLines(blockEdges([[0, 0, 0]]), edgeMat);
