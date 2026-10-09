@@ -1515,3 +1515,32 @@ headless, the south solve takes 22.6 s and two tower hits.
 Loft) a north crate was a step to the plinth, so the fragment needed
 nothing; the author: the crate that bridges the pit should be his
 step to the targets first.
+
+### D196 — 2026-10-09 — Relay Loft: he rides the ferry on his crate (5.17)
+`relay_loft` is rebuilt round one trick: the fragment sits on a 3-high
+pillar by the east ferry's far dock, and the only way up is to ride
+that ferry standing on a crate. The middle island is a 1-high loft,
+flush with the ferries' tops, so its two crates roll on and off them.
+The east ferry runs only once a crate fills a socket in the pit beside
+the island (D194), so one island crate powers it and the other rides
+it. The west ferry runs while a west crate holds its plate (the plate
+lesson: it runs while held and parks where it is when let go, so he
+may also ride it there on his own weight, step off and jump onto the
+parked ferry, or a decoy holds the plate; it is the way in, not the
+trick); a
+timed plate on the east bank raises row 7's bridges for 5 s, the way
+across from the east door (3.2 s of the 5 headless). `crate_d`, the
+2-high plinth, ferry B's two plates and the refill are gone.
+The checker takes ferries as floor and ignores their power, so it
+counts one crate as enough and the socket as spare; played headless:
+the solve from the south takes 21.7 s to the fragment, the east ferry
+never leaves without the socket, and a jump from the bare ferry at the
+dock never gets the fragment. Without both island crates the checker
+finds it never. The socket lies in the pit, not in the loft: a socket
+is a floor-level hole, and a loft cell on its camera side hides it; a
+filled socket's top is at floor level, a dip in a loft. A running jump
+from the loft's edge clears the 2-wide west pit (D162), so the island
+never strands him. With the double jump (after all fragments, D187)
+the bare ferry reaches the pillar, but the socket is still needed.
+**Why:** a crate pushed once from the east door gave the fragment, and
+a decoy stood in for every ferry plate.

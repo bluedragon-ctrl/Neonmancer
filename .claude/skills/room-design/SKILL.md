@@ -149,6 +149,15 @@ Lessons from the reviews (D188 on):
   falls to a floor jump shot; two blocks up needs a crate top and a
   jump (D195). A target by a side wall keeps the crate under it
   there for good: one cell off, it can be pushed back out.
+- **Crates board ferries flush.** A platform is a 1-high block, its
+  top 1 above the floor it docks on, so a floor crate never gets on;
+  docks on a 1-high loft let crates roll on and off. He rides on top of
+  a crate a platform carries. The checker takes platforms as floor and
+  ignores their switches: prove power and riding with `sim.mjs` (D196).
+- **Sockets and plates show only in the open.** A socket or plate lies
+  at floor level; a block on its camera side (+x or +z) hides it, so
+  never sink one into a loft. A filled socket's top is the floor (0): in
+  a loft it is a dip a crate falls into (D196).
 
 ## Skeleton
 ```json
@@ -412,6 +421,8 @@ depth a room needs; each is reviewed in step 5.17.
 - `ledger_cell.json`: a chain of two plates and two gates; the guarded crate
   cell and the fragment alcove lie on the camera side of their 3-high walls,
   so everything shows; plates in corners (D160, D165).
-- `relay_loft.json`: ferries powered by crate-held plates (judged by hand).
+- `relay_loft.json`: a loft flush with the ferries' tops, so crates ride them; a
+  socket in the pit runs the ferry he rides on his crate (D196; power judged
+  with `sim.mjs`).
 - `hidden_layer.json` (dev wing, Scan): `fake` blocks.
 - `fence_yard.json` (dev wing): fences, a target zapped through one.

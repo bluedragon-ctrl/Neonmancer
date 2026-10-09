@@ -21,6 +21,9 @@ docs/decisions.md).
   wait only for them are checker warnings.
 
 ### Changed
+- Relay Loft is rebuilt (D196, step 5.17): he rides the east ferry
+  standing on a crate to reach the fragment's 3-high pillar, and the
+  ferry runs only once the other crate fills a socket.
 - Bolt Gallery's targets stand two blocks up (D195, step 5.17): the
   crate that bridges the pit is first his step for two jump shots, one
   for the cage and the fragment's gated pocket, one for the north door;
