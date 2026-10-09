@@ -194,7 +194,7 @@ export class Bolt {
   /** Would a wall stop it where it is: a block (not a fence), the room's side (a closed exit too) or a room object? */
   walled({ grid, objects }) {
     const box = this.box();
-    return overlapsSolid(box, grid, { sight: true }) || (this.bounceObjects && objects.some((object) => object.solid !== false && overlapsBox(box, object.box())));
+    return overlapsSolid(box, grid, { sight: true }) || (this.bounceObjects && objects.some((object) => object.solid !== false && !object.seeThrough && overlapsBox(box, object.box())));
   }
 
   /**
@@ -210,11 +210,12 @@ export class Bolt {
     // A shot stops at his ring while it is up (D84), else at him.
     const wizardBox = player.shield ? player.shieldBox() : player.box();
     const wizard = owner && !player.dead && overlapsBox(box, wizardBox) ? player : null;
-    // Every live enemy counts (solid or not); objects only while there (not collapsed or broken).
+    // Every live enemy counts (solid or not); objects only while there (not collapsed or broken)
+    // and not a cage's bars (D202).
     this.target =
       wizard ??
       liveEnemies.find((enemy) => (enemy !== owner || this.bounced) && hits(enemy)) ??
-      objects.find((object) => object.solid !== false && hits(object)) ??
+      objects.find((object) => object.solid !== false && !object.seeThrough && hits(object)) ??
       null;
     const [x, , z] = this.pos;
     const outside = x < 0 || z < 0 || x > grid.w || z > grid.d || this.traveled >= BOLT.range;

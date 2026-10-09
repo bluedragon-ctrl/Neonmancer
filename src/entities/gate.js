@@ -43,6 +43,8 @@ export class Gate {
     this.prev = [...this.pos];
     /** 'switch' (powered by switches) or 'step' (gives way under the wizard). */
     this.trigger = object.trigger ?? 'switch';
+    /** A cage (D202) lets bolts and sight through, like a fence (D167). */
+    this.seeThrough = object.seeThrough === true;
     /** Its state while unpowered: 'solid' (a gate) or 'gone' (a bridge, there only while powered; switch gates only). */
     this.start = object.start ?? 'solid';
     /** Ids of the switches that power it, or null for every switch in the room (switch gates only). */

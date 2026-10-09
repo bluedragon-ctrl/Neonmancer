@@ -79,6 +79,7 @@ const HINTS = {
 export function blockTypeText(type) {
   if (type.kind === 'gate') {
     if (type.trigger === 'step') return type.regrow ? `collapses, back in ${type.regrow} s` : 'collapses';
+    if (type.look === 'cage') return 'see-through, holds a pickup, gone while powered';
     return type.start === 'gone' ? 'gone, there while powered' : 'solid, gone while powered';
   }
   if (type.kind) return type.kind;

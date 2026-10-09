@@ -185,7 +185,7 @@ export class GateView {
     const switched = gate.trigger === 'switch';
     this.linked = switched && game && showsLights(gate, game.objects) ? linkedSwitches(game, gate.switches) : [];
     const { object } = gate;
-    this.group = createGate(object.color, { style: switched ? null : { ...object, kind: 'gate' }, lights: this.linked.length, closed: gate.state !== 'gone' });
+    this.group = createGate(object.color, { style: switched ? null : { ...object, kind: 'gate' }, lights: this.linked.length, closed: gate.state !== 'gone', cage: object.look === 'cage' });
     this.group.position.set(...gate.pos);
   }
 

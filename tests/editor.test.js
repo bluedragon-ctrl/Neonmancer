@@ -689,7 +689,7 @@ test('blockTypeGroups: the Block tool\'s types, static blocks first, then gates 
   const groups = blockTypeGroups(resolveBlockTypes(BLOCK_TYPES));
   const ids = Object.fromEntries(groups.map(([label, options]) => [label, options.map(([id]) => id)]));
   assert.deepEqual(Object.keys(ids), ['Static', 'Switch gates', 'Collapsing (step) gates']);
-  assert.deepEqual(ids['Switch gates'], ['gate', 'bridge']);
+  assert.deepEqual(ids['Switch gates'], ['gate', 'bridge', 'cage']);
   assert.deepEqual(ids['Collapsing (step) gates'], ['collapsing', 'collapsing_regrow']);
   assert.ok(!ids.Static.includes('gate'));
   assert.deepEqual(blockTypeGroups({ block: { look: 'plain' } }).map(([label]) => label), ['Static'], 'empty groups are left out');
