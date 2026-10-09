@@ -18,7 +18,7 @@
  */
 import { BufferGeometry, Color, DoubleSide, Float32BufferAttribute, Group, InstancedMesh, Matrix4, Mesh } from 'three';
 import { BLOCK_FX, createActiveBlockView, flareHazard, hazardFaceMaterial } from './block-fx.js';
-import { createFenceView } from './fence-view.js';
+import { STREAM_STYLE, createFenceView } from './fence-view.js';
 import { createPanelGlow } from './panel-glow.js';
 import { UNIT_BOX } from './geometry.js';
 import { blockEdges, edgeUnitKeys, groupedBlockEdges } from './edges.js';
@@ -79,7 +79,7 @@ export function createRoomView({ size, blocks, blockTypes, exits = [], color = P
   if (fences.length > 0) {
     const others = new Set(types.filter((type) => type.look !== 'fence').flatMap((type) => blocks[type.id].map((cell) => cell.join())));
     const solid = (x, y, z) => x < 0 || z < 0 || others.has(`${x},${y},${z}`);
-    for (const type of fences) group.add(createFenceView(blocks[type.id], type.color ?? color, solid));
+    for (const type of fences) group.add(createFenceView(blocks[type.id], type.color ?? color, solid, type.passes ? STREAM_STYLE : undefined));
   }
   return group;
 }

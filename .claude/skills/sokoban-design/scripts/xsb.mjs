@@ -2,7 +2,7 @@
 // sokoban-design skill: sketch a push puzzle as text, convert it, solve it
 // with solve.mjs, then wire it as a real room (room-design skill).
 //   node .claude/skills/sokoban-design/scripts/xsb.mjs <file.xsb> [--level N] [--id x] [--name "X"]
-//        [--wall H|hole] [--goal plate|socket] [--exit side:at[:y]] [--out data/rooms/x.json]
+//        [--wall H|hole] [--goal plate|socket] [--streams thin] [--exit side:at[:y]] [--out data/rooms/x.json]
 // Without --out it prints the room JSON. Text rows are z, columns x: the
 // top-left of the text is the back corner (x = 0, z = 0), the bottom-right
 // faces the camera.
@@ -16,6 +16,7 @@
 //   space - _  floor
 //   ^  hole (a crate fills it)            o  socket (a goal hole, D194)
 //   %  fence, 1 high (crates stop, he climbs it, bolts pass)
+//   ~  crate stream, 2 high (D198): crates pass, he is stopped, bolts pass
 //   &  crate on a 1-high block (a ledge crate: pushed off, it falls)
 // Floor outside the outer wall becomes wall too; whole rows and columns
 // of # at the edge are trimmed (the room's sides are walls already).
@@ -59,7 +60,7 @@ export function parseXsb(text) {
       notes.push(line.replace(/^\s*;\s?/, ''));
     } else if (line === '' && rows.length === 0) {
       notes = []; // a blank line ends a comment block that no level follows
-    } else if (line === '' || !/^[#1-5$.*@+ \-_^o%&]+$/.test(line)) {
+    } else if (line === '' || !/^[#1-5$.*@+ \-_^o%&~]+$/.test(line)) {
       flush();
       if (line !== '') notes.push(line.trim());
     } else rows.push(line);
@@ -74,9 +75,11 @@ export function parseXsb(text) {
  * @param {{ id?: string, name?: string, wall?: number|'hole', goal?: 'plate'|'socket', exits?: string[] }} [options]
  *   wall: the height of # walls, or 'hole': inside the trimmed edge they are holes (crates plug them, he jumps one)
  *   goal: what . is: a plate (anything holds it, a crate can leave it) or a socket (a crate fills it for good)
+ *   streams: 'thin' makes every # with floor on both sides along x or z (a wall one cell thick between two
+ *     floors) a crate stream (~), so crates cross it and he cannot (D198)
  *   exits: "side:at[:y]" (e.g. "-x:3", "-z:4:3" a doorway 3 up); with plates or sockets they are locked on every switch
  */
-export function xsbToRoom(level, { id = 'sokoban_draft', name = 'Sokoban Draft', wall = level.wall ?? 2, goal = 'plate', exits = level.exits ?? [] } = {}) {
+export function xsbToRoom(level, { id = 'sokoban_draft', name = 'Sokoban Draft', wall = level.wall ?? 2, goal = 'plate', exits = level.exits ?? [], streams = null } = {}) {
   let grid = level.rows.map((r) => [...r]);
   const H = grid.length;
   const W = grid[0].length;
@@ -103,11 +106,16 @@ export function xsbToRoom(level, { id = 'sokoban_draft', name = 'Sokoban Draft',
   while (grid[0].length && solidCol(grid[0].length - 1)) grid = grid.map((r) => r.slice(0, -1));
   const depth = grid.length;
   const width = grid[0].length;
+  if (streams === 'thin') {
+    const floor = (x, z) => x >= 0 && z >= 0 && x < grid[0].length && z < grid.length && !/[#1-5~]/.test(grid[z][x]);
+    const thin = grid.map((r, z) => r.map((c, x) => c === '#' && ((floor(x - 1, z) && floor(x + 1, z)) || (floor(x, z - 1) && floor(x, z + 1)))));
+    grid = grid.map((r, z) => r.map((c, x) => (thin[z][x] ? '~' : c)));
+  }
   if (wall === 'hole') grid = grid.map((r) => r.map((c) => (c === '#' ? '^' : c)));
   const socket = goal === 'socket';
   if (socket && grid.some((r) => r.includes('+'))) throw new Error('--goal socket: the wizard starts on a goal, and a socket is a hole');
 
-  const heightOf = (c) => (c === '#' ? wall : /[1-5]/.test(c) ? Number(c) : c === '%' || c === '&' ? 1 : 0);
+  const heightOf = (c) => (c === '#' ? wall : /[1-5]/.test(c) ? Number(c) : c === '%' || c === '&' ? 1 : c === '~' ? 2 : 0);
   const blocks = [];
   let tallest = 0;
   for (let z = 0; z < depth; z++) {
@@ -122,7 +130,7 @@ export function xsbToRoom(level, { id = 'sokoban_draft', name = 'Sokoban Draft',
       let end = x;
       while (end + 1 < width && grid[z][end + 1] === c) end++;
       tallest = Math.max(tallest, h);
-      blocks.push({ ...(c === '%' && { type: 'fence' }), at: [x, 0, z], ...(end > x || h > 1 ? { to: [end, h - 1, z] } : {}) });
+      blocks.push({ ...(c === '%' && { type: 'fence' }), ...(c === '~' && { type: 'stream' }), at: [x, 0, z], ...(end > x || h > 1 ? { to: [end, h - 1, z] } : {}) });
       x = end + 1;
     }
   }
@@ -178,10 +186,10 @@ export async function formatRoom(room) {
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const argv = process.argv.slice(2);
   const option = (n) => (argv.includes(n) ? argv[argv.indexOf(n) + 1] : null);
-  const valued = ['--level', '--id', '--name', '--wall', '--goal', '--exit', '--out'];
+  const valued = ['--level', '--id', '--name', '--wall', '--goal', '--exit', '--out', '--streams'];
   const file = argv.find((a, i) => !a.startsWith('--') && !valued.includes(argv[i - 1]));
   if (!file) {
-    console.error('usage: node xsb.mjs <file.xsb> [--level N] [--id x] [--name "X"] [--wall H|hole] [--goal plate|socket] [--exit side:at[:y]]... [--out file]');
+    console.error('usage: node xsb.mjs <file.xsb> [--level N] [--id x] [--name "X"] [--wall H|hole] [--goal plate|socket] [--streams thin] [--exit side:at[:y]]... [--out file]');
     process.exit(1);
   }
   const levels = parseXsb(fs.readFileSync(file, 'utf8'));
@@ -197,6 +205,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     name: option('--name') ?? undefined,
     wall: wallOption(option('--wall')),
     goal: option('--goal') ?? undefined,
+    streams: option('--streams') ?? undefined,
     exits: exits.length ? exits : undefined,
   });
   const [w, , d] = room.size;

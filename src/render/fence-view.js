@@ -162,8 +162,6 @@ const beamFragment = /* glsl */ `
   uniform float uOpacity;
   uniform float uHot;
   uniform float uHotPacket;
-  uniform vec3 uPacketColor;
-  uniform float uPacketMix;
   varying float vAcross;
   varying float vDist;
   varying float vLength;
@@ -180,8 +178,7 @@ const beamFragment = /* glsl */ `
     float ends = smoothstep(0.0, uFade, vDist) * smoothstep(0.0, uFade, vLength - vDist);
     float light = (core * uGlow * ripple + halo * uHalo) * (1.0 + packet * uPacket);
     // The core goes white-hot where a packet passes.
-    vec3 base = mix(uColor, uPacketColor, clamp(packet, 0.0, 1.0) * uPacketMix);
-    vec3 color = mix(base, vec3(1.0), core * (uHot + uHotPacket * packet));
+    vec3 color = mix(uColor, vec3(1.0), core * (uHot + uHotPacket * packet));
     gl_FragColor = vec4(color * light * ends * uOpacity, 1.0);
   }
 `;
@@ -217,8 +214,6 @@ function beamMesh(beams, color, style) {
     uOpacity: { value: s.opacity },
     uHot: { value: s.hot },
     uHotPacket: { value: s.hotPacket },
-    uPacketColor: { value: new Color(s.packetColor ?? color) },
-    uPacketMix: { value: s.packetMix ?? 0 },
   });
   return lightMesh(geometry, material);
 }
@@ -300,22 +295,25 @@ export function nodePoints(posts) {
 }
 
 /**
+ * The crate stream's look (D198): a fence's streams of light with the top
+ * beam like any other, since its top is no ledge.
+ */
+export const STREAM_STYLE = { rail: null };
+
+/**
  * The fence cells of a room as streams of light.
  * @param {number[][]} cells [x, y, z]
  * @param {number|string} color edges (the room color by default, structure, D99)
  * @param {(x: number, y: number, z: number) => boolean} [solid] see fenceLayout()
- * @param {{ beam?: object, rail?: object|null, packetColor?: number|string, packetMix?: number }} [style]
- *   overrides of FENCE.beam for all beams, of FENCE.rail for the top beam
- *   (null: the rail looks like any beam, no ledge), and packets in a color of their own
+ * @param {{ rail?: null }} [style] `rail: null`: the top beam looks like any
+ *   other, no ledge (STREAM_STYLE)
  */
 export function createFenceView(cells, color, solid, style = {}) {
   const { beams, rails, posts } = fenceLayout(cells, solid);
   const tint = new Color(color);
   const group = new Group();
-  const packets = { packetColor: style.packetColor, packetMix: style.packetMix };
-  const beamStyle = { ...style.beam, ...packets };
-  if (beams.length > 0) group.add(beamMesh(flowing(beams), tint, beamStyle));
-  if (rails.length > 0) group.add(beamMesh(flowing(rails), tint, style.rail === null ? beamStyle : { ...FENCE.rail, ...style.beam, ...packets }));
+  if (beams.length > 0) group.add(beamMesh(flowing(beams), tint, {}));
+  if (rails.length > 0) group.add(beamMesh(flowing(rails), tint, style.rail === null ? {} : FENCE.rail));
   if (posts.length > 0) {
     group.add(beamMesh(posts.map((segment) => ({ segment, flow: 1 })), tint, FENCE.post));
     group.add(nodeMesh(nodePoints(posts), tint));

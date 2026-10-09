@@ -74,9 +74,12 @@ export function cutTarget({ player, objects, liveEnemies, bodies }) {
  * Where Paste would put what he holds: the cell in front of him at his
  * feet, if it is free.
  * @param {import('../game.js').Game} game player, grid, bodies and pickups
+ * @param {'crate'|'wizard'} [kind] what is put there: a crate or a frozen
+ *   enemy (can stand in a crate stream, D198) or the decoy (cannot)
  * @returns {number[]|null} cell [x, y, z]
  */
-export function pasteCell({ player, grid, bodies, pickups }) {
+export function pasteCell({ player, grid: whole, bodies, pickups }, kind = 'crate') {
+  const grid = whole.forBody(kind);
   const cell = frontCell(player.pos, player.size, aimAxis(player.aim()));
   const [x, y, z] = cell;
   if (!grid.isInside(x, z) || y < 0 || y + 1 > grid.size[1] || grid.isSolid(x, y, z)) return null;

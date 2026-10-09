@@ -210,12 +210,18 @@ Edit existing files with small text edits, not a JSON dump.
   switch in the room), `hidden: true` (wall until Scan). The first row inside
   must be free.
 - **Blocks** (`defs.json` blocks): `block` (default) `hazard void fake
-  fence collapsing collapsing_regrow gate bridge`. A `fence` (D167) is a
+  fence stream collapsing collapsing_regrow gate bridge`. A `fence` (D167) is a
   block for bodies (he stands on it, crates and enemies stop) that hides
   nothing and lets bolts and sight through: wall off or raise a wall
   without blocking the view; a target behind it takes a Zap; a tower
   behind it still shoots (no cover). 1 high pens crates, 2 high stops him
-  until the double jump, 3 high for good. `gate`/`bridge` take `switches`
+  until the double jump, 3 high for good. A `stream` (D198) is a fence in
+  magenta that crates and frozen enemies pass and he does not, with no
+  top: no jump or crate gets him over or onto it, so build it 2 high.
+  A crate is pushed into it from the near side only (he cannot stand in
+  it): a 1-thick wall hands a crate over, one cell beyond; in a thicker
+  one it stops in the last cell. Use it where the trick is routing
+  crates through a field he cannot follow (sokoban-design). `gate`/`bridge` take `switches`
   (default: every switch in the room): a gate goes, a bridge appears while
   all are on. In a hole they stand a block high (top 1.0): a step, not floor.
   A gone bridge shows no outline: the room that first shows bridges says

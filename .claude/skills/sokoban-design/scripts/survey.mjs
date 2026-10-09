@@ -87,13 +87,15 @@ export const VARIANTS = [
   { label: 'holes, plate', wall: 'hole', goal: 'plate' },
   { label: 'wall 3, socket', wall: 3, goal: 'socket' },
   { label: 'holes, socket', wall: 'hole', goal: 'socket' },
+  // Thin walls (one cell between two floors) as crate streams (D198), the others 3-high.
+  { label: 'thin streams, plate', wall: 3, goal: 'plate', streams: 'thin' },
 ];
 
 /** One survey cell: "pushes/decisions/trap%", "free", "-", "?" or "n/a". */
 export function surveyCell(level, variant, content, max) {
   let data;
   try {
-    data = xsbToRoom(level, { wall: variant.wall, goal: variant.goal, exits: [] });
+    data = xsbToRoom(level, { wall: variant.wall, goal: variant.goal, streams: variant.streams, exits: [] });
   } catch {
     return { text: 'n/a' };
   }

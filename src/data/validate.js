@@ -310,6 +310,7 @@ function validateBlockTypes(blocks, report) {
       if (type.start === 'gone' && trigger !== 'switch') report('defs.json', `${path}.start`, 'only switch gates start gone (a bridge); a step gate starts solid');
       if (type.regrow !== undefined && trigger !== 'step') report('defs.json', `${path}.regrow`, 'only step gates (collapsing blocks) grow back; a switch gate comes back with its switches');
     } else {
+      if (type.passes !== undefined && type.look !== 'fence') report('defs.json', `${path}.passes`, 'only the fence look (see-through) can let bodies pass');
       const wrong = KIND_BLOCK_VALUES.filter((key) => key in own);
       if (wrong.length > 0) report('defs.json', path, `${wrong.join(', ')}: only for blocks with a "kind", not a static block`);
     }

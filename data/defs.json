@@ -403,6 +403,7 @@
     "void": { "look": "void", "color": "#9aa0b0", "lethal": true },
     "fake": { "look": "plain", "fake": true },
     "fence": { "look": "fence", "seeThrough": true },
+    "stream": { "extends": "fence", "color": "#ff2bd6", "passes": ["crate"] },
     "collapsing": { "kind": "gate", "trigger": "step", "edges": "dashed", "faces": "tinted", "tint": 0.05 },
     "collapsing_regrow": { "extends": "collapsing", "regrow": 3 },
     "gate": { "kind": "gate", "color": "#eef3ff" },

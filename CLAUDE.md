@@ -119,7 +119,10 @@ mobile/touch support, backend or accounts.
   (instant death when the player falls onto it), fake (a plain-looking
   block that a scan derezzes, D128), fence (see-through: solid to
   bodies, standable, but bolts and sight pass; linked data streams with
-  no faces, so a raised wall hides nothing, D167), and gate blocks that come and go
+  no faces, so a raised wall hides nothing, D167), stream (a fence in the
+  wizard's magenta that crates and frozen enemies pass and he and active
+  enemies cannot, with no top to stand on or climb over: his own barrier,
+  D198), and gate blocks that come and go
   (D140, D141): a gate or bridge switched by power, or a collapsing block
   that goes after being stepped on (optional regrow); all sink to go and
   never come back on anything in their cell.

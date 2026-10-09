@@ -19,6 +19,9 @@
  * lethal), so game rules ask about properties, never type names (D60).
  * A see-through type (a fence, D167) is solid to bodies but lets bolts
  * and sight through (blocksSight()).
+ * A type with `passes` (the crate stream, D198) is solid to every kind of
+ * body but those it names: forBody() gives the grid as a kind of body sees
+ * it. isSolid() itself is the wizard's and the active enemies' view.
  */
 import { exitCells } from '../data/room-data.js';
 
@@ -56,8 +59,16 @@ export class Grid {
     }
     for (const [id, list] of Object.entries(blocks)) {
       const code = this.types.push(blockTypes[id]) - 1;
-      for (const [x, y, z] of list) if (this.isInside(x, z) && y >= 0 && y < h) this.cells[this.index(x, y, z)] = code;
+      for (const [x, y, z] of list) {
+        if (!this.isInside(x, z) || y < 0 || y >= h) continue;
+        this.cells[this.index(x, y, z)] = code;
+        // A field that only some bodies pass has no top to stand on or climb
+        // over: for the rest it reaches up to the ceiling (D198).
+        if (blockTypes[id].passes) for (let above = y + 1; above < h; above++) this.cells[this.index(x, above, z)] ||= code;
+      }
     }
+    /** The grid as each kind of body sees it, made when first asked for (forBody()). */
+    this.views = new Map();
 
     /** Floor tiles: 1 where there is a hole, index z * w + x. */
     this.holes = new Uint8Array(w * d);
@@ -100,6 +111,30 @@ export class Grid {
   blocksSight(x, y, z) {
     const code = this.cellAt(x, y, z);
     return code !== CELL.empty && !this.types[code].seeThrough;
+  }
+
+  /**
+   * The grid as a kind of body sees it: the same cells, but those of a type
+   * that `passes` the kind are open. Kinds: 'wizard' (also the decoy and
+   * active enemies, who have the grid as it is) and 'crate' (crates and
+   * frozen enemies, which push like crates). Pass it where the collision
+   * functions take a grid.
+   * @param {'wizard'|'crate'} kind
+   * @returns {Grid}
+   */
+  forBody(kind) {
+    if (!this.types.some((type) => type?.passes?.includes(kind))) return this;
+    let view = this.views.get(kind);
+    if (!view) {
+      const open = this.types.map((type) => Boolean(type?.passes?.includes(kind)));
+      view = Object.create(this);
+      view.isSolid = (x, y, z) => {
+        const code = this.cellAt(x, y, z);
+        return code !== CELL.empty && !open[code];
+      };
+      this.views.set(kind, view);
+    }
+    return view;
   }
 
   /** Is the column [x, z] (integers) inside the room's sides? */

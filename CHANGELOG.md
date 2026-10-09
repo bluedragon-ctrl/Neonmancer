@@ -9,6 +9,12 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
+- The crate stream (D198): block type `stream`, a fence in the wizard's
+  magenta that crates and frozen enemies pass and he and active enemies
+  cannot, with no top to stand on or climb over. `Grid.forBody()` gives
+  the grid per kind of body; the reachability checker and the push-puzzle
+  solver split his blocks from the crates'. Showcase `stream-in-room`,
+  dev room `stream_lab`.
 - The `sokoban-design` sub-skill (D196): a room's push puzzle sketched as
   XSB text, solved with the game's own push rules (fewest pushes, traps,
   sharp steps) and converted into a room draft, with walls built as

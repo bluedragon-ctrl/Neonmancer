@@ -110,7 +110,8 @@ export class Pushable {
    * @param {{ grid: import('../world/grid.js').Grid, bodies: Iterable<{ box(): number[][] }> }} world
    * @returns {boolean} whether it started sliding
    */
-  push([dx, dz], { grid, bodies }) {
+  push([dx, dz], { grid: wizardGrid, bodies }) {
+    const grid = crateGrid(wizardGrid);
     if (this.state !== 'rest' || this.hasLoad(bodies)) return false;
     const [x, y, z] = this.pos;
     const target = [x + dx, y, z + dz];
@@ -131,7 +132,8 @@ export class Pushable {
    * @param {{ grid: import('../world/grid.js').Grid, bodies: Iterable<{ box(): number[][] }> }} world
    * @returns {string|null} event: 'land', 'plug', 'expire' or null
    */
-  update({ grid, bodies }) {
+  update({ grid: wizardGrid, bodies }) {
+    const grid = crateGrid(wizardGrid);
     this.savePrevious();
     if (this.hitTicks !== null) this.hitTicks++;
     if (this.state === 'broken') {
@@ -212,11 +214,17 @@ export class Pushable {
    * (the bottom of a hole) above a hole tile at floor level.
    */
   support(grid, bodies) {
+    grid = crateGrid(grid);
     const top = surfaceBelow(this.box(), grid, bodies, this);
     const [x, , z] = this.pos;
     if (top === 0 && grid.isHole(x + 0.5, z + 0.5)) return -1;
     return top;
   }
+}
+
+/** The grid as a crate sees it: the crate stream's cells are open (D198). */
+function crateGrid(grid) {
+  return grid.forBody?.('crate') ?? grid;
 }
 
 /** Does the box overlap any body except `self`? */

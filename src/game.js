@@ -938,7 +938,7 @@ export class Game {
    */
   objectShadowHeight(object, pos) {
     const box = pos.map((p, i) => [p, p + object.size[i]]);
-    const y = surfaceBelow(box, this.grid, this.bodies, object);
+    const y = surfaceBelow(box, object.kind === 'pushable' ? this.grid.forBody('crate') : this.grid, this.bodies, object);
     const [x, , z] = object.size;
     if (y === 0 && this.grid.isHole(pos[0] + x / 2, pos[2] + z / 2)) return null;
     return y;
