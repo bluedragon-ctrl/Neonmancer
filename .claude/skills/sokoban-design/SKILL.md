@@ -210,6 +210,8 @@ the author and collection in the room's decision entry. Before use:
 - `levels/motifs.xsb`: original Neonmancer motifs, solved.
 - `levels/microban.xsb`, `levels/microban-survey.md`: Microban (David W.
   Skinner) and its survey with notes on the best candidates.
+- Worked example: the dev room `socket_yard` (D201), Microban 24 taken
+  through the whole workflow (sketch, solve, convert, hand-wire, check, play).
 - `levels/sources.md`: classic collections and where to get them.
   Keep the collections in `levels/` as `.xsb` files with their
   author's credit in the header.

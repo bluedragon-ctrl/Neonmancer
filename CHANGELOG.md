@@ -9,6 +9,9 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
+- Dev room `socket_yard` (D201): Microban 24 by David W. Skinner built with
+  the `sokoban-design` skill, 1-high walls and two sockets opening a gate to a
+  refill; a worked example of the skill (9 pushes, 2 sharp steps).
 - The heavy plate (D200): a plate that needs a weight of two (`plate_heavy`,
   a plate type's `weight`, 1–4). Every body in its column counts one (crate,
   frozen enemy, decoy, the wizard, and bodies stacked on each other), so only
@@ -127,6 +130,9 @@ docs/decisions.md).
   second solution no easier than the intended one is not a bypass.
 
 ### Added
+- Dev room `socket_yard` (D201): Microban 24 by David W. Skinner built with
+  the `sokoban-design` skill, 1-high walls and two sockets opening a gate to a
+  refill; a worked example of the skill (9 pushes, 2 sharp steps).
 - Exits into the Outer Buffer (D183): stars drift out through them
   instead of dashes and arrows, and a locked one has dark indigo glass.
   Biome look field `starExits`.
@@ -354,6 +360,9 @@ bosses that drop loot, tooling) (D104, D105).
   notes and PR summary now say so.
 
 ### Added
+- Dev room `socket_yard` (D201): Microban 24 by David W. Skinner built with
+  the `sokoban-design` skill, 1-high walls and two sockets opening a gate to a
+  refill; a worked example of the skill (9 pushes, 2 sharp steps).
 - Boss two, the Gatekeeper (D137, step 4.7): the `proto_gatekeeper`
   prototype becomes the second boss, harder (16 integrity, three phases),
   named on the boss bar; it drops the +10 energy buff in the test arena
@@ -551,6 +560,9 @@ bosses that drop loot, tooling) (D104, D105).
 Phase 3 — Spells and pickups.
 
 ### Added
+- Dev room `socket_yard` (D201): Microban 24 by David W. Skinner built with
+  the `sokoban-design` skill, 1-high walls and two sockets opening a gate to a
+  refill; a worked example of the skill (9 pushes, 2 sharp steps).
 - Pickups and progress (D71): pickup types in `defs.json` and rooms; a
   `Progress` of save bits in blocks (spells, buffs, upgrades, fragments,
   secrets: 128) that survives room resets and death; found permanent
@@ -635,6 +647,9 @@ Phase 3 — Spells and pickups.
 Phase 2 — Hazards, combat, editor.
 
 ### Added
+- Dev room `socket_yard` (D201): Microban 24 by David W. Skinner built with
+  the `sokoban-design` skill, 1-high walls and two sockets opening a gate to a
+  refill; a worked example of the skill (9 pushes, 2 sharp steps).
 - Damage (D43): every source goes through `Game.hurt()`; a hit flashes
   the wizard and leaves him invulnerable for 1 s, blinking; at 0
   integrity he derezzes and recompiles at the room's reset point.
@@ -688,6 +703,9 @@ Phase 2 — Hazards, combat, editor.
 Phase 1 — Foundations.
 
 ### Added
+- Dev room `socket_yard` (D201): Microban 24 by David W. Skinner built with
+  the `sokoban-design` skill, 1-high walls and two sockets opening a gate to a
+  refill; a worked example of the skill (9 pushes, 2 sharp steps).
 - Project scaffolding: Vite, `node --test` unit tests, CI (test + build),
   GitHub Pages deploy of `main`, PR template, docs.
 - Fixed-timestep loop (60 ticks per second, interpolated rendering) and

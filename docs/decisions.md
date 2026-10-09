@@ -1759,3 +1759,20 @@ no lock"), and the Sokoban goal gets a height.
 **Why:** a lock that needs height, not only a body: it keeps push order
 and the ledge drop meaningful, and cheap fakes (one decoy, one frozen
 enemy) can't open it.
+
+### D201 — 2026-10-09 — Socket Yard: a classic level built with the sokoban-design skill
+A dev-wing sample room, `socket_yard`, north of `room_2`: the first room
+made end to end with the `sokoban-design` skill (D197), as a worked
+example. It is **Microban 24 by David W. Skinner**, mirrored so its goals
+lie along the back wall: two crates go down a 1-wide neck into two sockets
+(D194), and the order and the corner are the puzzle. Its walls are 1-high
+blocks (they stop crates; he steps over them) and its goals sockets, so no
+spell fakes them. The two sockets open a gate to a refill in a pocket
+behind a 3-high fence (see-through, so the reward shows).
+- Solver: 9 pushes (the classic count), 2 sharp steps, 68% traps; the
+  same with the Lattice spells (`--with zap,scan,fork,pause`). The refill
+  needs both crates and the gate (mutation test); the door is free.
+- Played with `sim.mjs`: both sockets plugged, the gate gone, the pocket
+  reached.
+**Why:** a small, solved example of the skill's whole path (XSB sketch,
+solve, convert, hand-wire, check, play) to copy from.
