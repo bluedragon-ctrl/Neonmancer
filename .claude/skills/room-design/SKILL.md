@@ -227,7 +227,7 @@ Edit existing files with small text edits, not a JSON dump.
   A gone bridge shows no outline: the room that first shows bridges says
   what one is in a screen text (see Screen texts below).
 - **Objects** (`defs.json` objects): crates `crate crate_plain crate_cross
-  crate_dashed`; switches `plate plate_timed target target_timed socket`; `platform
+  crate_dashed crate_spiked`; switches `plate plate_timed target target_timed socket`; `platform
   spiked_platform` (need `path`, may take `switches`: run only while all on);
   decorations `screen data_pillar memory_stack` (`overrides: { "face":
   "+x"|"+z" }`; a screen may name a `text` in `data/lore.json`: title <= 32,
@@ -267,6 +267,7 @@ Edit existing files with small text edits, not a JSON dump.
 | Headroom | wizard 1.5 high: 2 free cells over every standing surface. A block above is a ceiling, the room's height is not (he stands on top of a 2-high wall in a 3-high room); keep standing surfaces 2 below the room height for the look |
 | Bouncy enemy (bug, glowbug) | launches 2.2 above its top (0.6), so 2.8: clears a 2-high ledge, never 3 |
 | Frozen enemy | a 1-high step (1×1×1), pushed like a crate |
+| Spiked crate (`crate_spiked`, D199) | a crate whose top is no place to stand: his feet on it hurt 2 and shove him off (even while he blinks); a crate on it covers the spikes. A jump in line over a 1-high one always touches it (no hop over); the double jump clears it. A frozen enemy on a bare top is impaled, the decoy derezzes, active enemies cross unhurt |
 | Zap bolt | flies level, 0.48 above his feet; a bug is 0.6 high. From the floor it hits bugs and 1-high blocks; from a 1-high top it flies over both and hits a target standing a block up; a jump shot near the apex does too (D189) |
 | Walk | 4.5 u/s, ~13 ticks (0.22 s) a cell; a jump ~34 ticks (0.57 s) |
 | Push | ~28 ticks (0.47 s) a cell |
@@ -307,6 +308,15 @@ Edit existing files with small text edits, not a JSON dump.
   not wall in his own path with crates (a 2-wide island with crates across
   it is a knot). A crate lost in a corner is fine (rooms reset) if you
   checked it.
+- **Spiked crates (D199)** take the climb out of a crate: he can't use one as
+  a step, so a push puzzle plays like classic Sokoban (his route around the
+  crates matters again). A plain crate dropped or pasted on one covers it:
+  that is a 2-high step, so check stacks (a spiked crate pushed onto a
+  ledge below a plain one becomes the stack's base). A walled-in top is a
+  trap (he is hurt again after each blink), so keep a free side around any
+  spiked crate he can fall onto. Enemies and plates: a spiked crate on a
+  plate holds it as well as any crate. The checker knows all of it
+  (`below()` is `'bad'` on a bare spiked top).
 - **Pit width = crates + 1.** A pit N wide needs N-1 crates; count crates that
   can reach it from the *other* side too (the island's, the return trip).
 - **A step at the edge is a springboard.** A crate or frozen enemy pushed to a

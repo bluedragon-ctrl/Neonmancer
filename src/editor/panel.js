@@ -129,6 +129,7 @@ export function objectTypeText(type) {
     case 'pushable': {
       const does = [
         type.integrity !== undefined && `breaks after ${plural(type.integrity, 'hit')}`,
+        type.topDamage !== undefined && `spiked top, hurts ${type.topDamage}`,
         type.edges === 'dashed' && 'dashed edges',
         type.mark && type.mark !== 'none' && `${type.mark} mark`,
       ].filter(Boolean);

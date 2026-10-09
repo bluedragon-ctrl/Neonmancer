@@ -4,9 +4,10 @@
  * body (nothing collides with it, nothing harms it); it presses a floor plate
  * like a body standing on it (switches.js) and hostile enemies that see
  * it go for the nearest of it and the wizard (Enemy.sense()). It falls if
- * nothing holds it up, and pops into a hole.
+ * nothing holds it up, and pops into a hole, or onto a spiked crate's bare
+ * top (D199).
  */
-import { bodyBox, surfaceBelow } from '../physics/collision.js';
+import { bodyBox, restsOn, surfaceBelow } from '../physics/collision.js';
 import { DT } from '../core/loop.js';
 
 export const DECOY = {
@@ -51,11 +52,11 @@ export class Decoy {
   }
 
   /**
-   * One fixed tick: fall if nothing holds it up (a hole takes it), count
-   * down, derez when the time is up.
+   * One fixed tick: fall if nothing holds it up (a hole or a spiked top
+   * takes it), count down, derez when the time is up.
    * @param {import('../game.js').Game} game grid and solids
    */
-  update({ grid, solids }) {
+  update({ grid, solids, objectBodies }) {
     this.prev = [...this.pos];
     if (this.gone !== null) {
       this.gone++;
@@ -64,6 +65,7 @@ export class Decoy {
     const ground = surfaceBelow(this.box(), grid, solids);
     if (this.pos[1] > ground + 1e-6) this.pos[1] = Math.max(ground, this.pos[1] - DECOY.fallSpeed);
     else if (ground === 0 && grid.isHole(Math.floor(this.pos[0]), Math.floor(this.pos[2]))) this.gone = 0;
+    else if (solids.some((body) => body.topDamage > 0 && restsOn(this.box(), body.box()) && body.topHurts(objectBodies))) this.gone = 0;
     if (++this.age >= this.lifeTicks) this.gone = 0;
   }
 

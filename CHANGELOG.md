@@ -15,6 +15,12 @@ docs/decisions.md).
   the grid per kind of body; the reachability checker and the push-puzzle
   solver split his blocks from the crates'. Showcase `stream-in-room`,
   dev room `stream_lab`.
+- The spiked crate (D199): a crate whose top hurts (`topDamage` 2) and
+  shoves him off, so he can't climb it and Sokoban's "get behind the box"
+  puzzles are back; a crate on it covers the spikes. Look: square vents
+  with aurora jets and shafts to the core (`vents`). The checker, the
+  solver, `xsb.mjs` (`!`, `--spiked`) and the Microban survey (spiked
+  columns) know it; dev room `spiked_lab` (Microban 8 by David W. Skinner).
 - The `sokoban-design` sub-skill (D196): a room's push puzzle sketched as
   XSB text, solved with the game's own push rules (fewest pushes, traps,
   sharp steps) and converted into a room draft, with walls built as

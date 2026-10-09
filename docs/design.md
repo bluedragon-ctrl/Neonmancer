@@ -1468,6 +1468,54 @@ usual, so half behind a wall he is half ghost (D55).
   `src/render/break-fx.js`; review in the asset showcase
   (`?asset=crate,crate_cross,zap-break`).
 
+## The spiked crate
+
+- `crate_spiked` (D199) is a `crate` with `topDamage: 2` (pushable types
+  only; `damage` stays the platform's, which hurts on every side). It
+  pushes, falls, stacks and plugs a hole like a crate, and its top is not
+  a place to stand: when his feet rest on it (standing, or landing from a
+  jump) he is hurt for `topDamage`, with the usual invulnerability blink,
+  and shoved off the crate the shortest way that leaves its footprint with
+  room for him, with a small hop (`KNOCK_OFF` in `src/game.js`). The shove
+  also happens while he blinks. Walled in on top, he stays and is hurt
+  again after the blink: there is no safe spot. Pushing it from the side
+  is safe.
+- Stacks: a crate (of any kind) lying on it covers the spikes, so the
+  upper crate's top is a safe 2-high step; a spiked crate on a plain one
+  keeps its spikes on top; a spiked crate pushed into a hole plugs it
+  into plain floor (no spikes any more).
+- Others: a frozen enemy resting on a bare top is impaled and pops; the
+  Fork decoy derezzes there (like falling into a hole); active enemies
+  ignore the spikes (as with hazard blocks) and may cross it.
+- Why: the wizard climbs crates, so the classic Sokoban knot "get behind
+  the box" is gone; in the Microban survey 29 of the 104 levels solved
+  need half the pushes or fewer. With every crate spiked, the levels
+  build in the game play like Classic again (`microban-survey.md`,
+  spiked columns: with 3-high walls all 104 levels solved match their
+  classic push count; 1-high walls don't, he walks over them). A jump in line over a 1-high crate always touches the
+  top (a jump spends 0.23 s above 1.0 and covers 0.67 units sideways,
+  clearing needs 1.6): no bypass, no taller hurt zone. The double jump
+  does clear it, like any 2-high obstacle.
+- Checker (`src/world/reach.js`): a configuration knows which crates are
+  spiked (`config(crates, plugged, spiked)`); `below()` says `'bad'`
+  under a bare spiked top (a crate on it is the surface instead), so he
+  can't stand, climb or land there; pushed, pulled and pasted crates keep
+  their spikes. The solver and `xsb.mjs` follow (`!` = spiked crate,
+  `--spiked` builds every crate that way).
+- Look (`vents: "aurora"`, `src/render/vent-fx.js`): the glass crate with
+  its data-bits core, five square bit-like holes in the top on the 4×4 bit
+  grid (dark, red edges), an aurora jet out of each (crimson at the foot,
+  dark indigo above, slow rays), and a shaft of light down from each to a
+  smaller square on the core. The vents hide while a crate lies on top or
+  once it plugs a hole. Review: `?asset=crate,crate_spiked,crate_spiked-close`
+  in the showcase.
+- Test room: `spiked_lab` in the dev wing (north of `room_1`): Microban 8
+  by David W. Skinner turned half a circle, 3-high walls, two spiked
+  crates and two plates, the door locked until both are held. 32 pushes
+  (4 with plain crates); played headless in 30 s.
+- Tuning: `topDamage` on the type (overridable per object), `KNOCK_OFF`,
+  `VENTS`/`AURORA` in `vent-fx.js`.
+
 ## Holes
 
 - Floor tiles marked in the room data; drawn as black pits with a bright rim

@@ -17,7 +17,7 @@ Read a classic level with these differences in mind:
 
 | Sokoban | Neonmancer |
 |---|---|
-| Boxes block the player | He **climbs** a crate (1 high) and walks over crates: they block crates, not him |
+| Boxes block the player | He **climbs** a crate (1 high) and walks over crates: they block crates, not him. A **spiked crate** (`crate_spiked`, D199, `!` in XSB) is the exception: its top hurts him and shoves him off, so it blocks him like a Sokoban box (no hop over it in line) |
 | Walls block the player | He climbs anything 1 high, and anything 2 high from a crate top. Only **3-high walls** stop him for good; a 2-high wall beside a crate is a road (room-design, "Walls are steps too") |
 | Floor is flat | **Ledges**: a crate pushed off a ledge falls; a crate on a crate is a **stack** (only the top moves); a crate's top is a step 1 up, a stack's top 2 up |
 | Goals are marks | **Plates** (anything holds them: crate, frozen enemy, decoy, him), **sockets** (only a crate fills one, for good, D194), **holes** (a crate plugs it into floor) and **exits/pickups** he must reach |
@@ -43,7 +43,7 @@ drops, stacks) and crates that are spent (holes, sockets).
 3. **Solve** it and read the numbers (below). Iterate on the sketch
    until the trick is the only way and the traps are fair:
    ```
-   node .claude/skills/sokoban-design/scripts/solve.mjs <sketch.xsb> [--level N] [--wall H|hole] [--xsb-goal plate|socket] [--exit side:at[:y]]
+   node .claude/skills/sokoban-design/scripts/solve.mjs <sketch.xsb> [--level N] [--wall H|hole] [--xsb-goal plate|socket] [--exit side:at[:y]] [--spiked]
    ```
 4. **Convert** it into a room draft, with the room-design skeleton fields
    filled in, then move on from room-design step 4 (exits, wiring,
@@ -105,6 +105,8 @@ a Neonmancer room:
 | | **1-high ledge or fence** | Stops crates; he walks over it. The same puzzle as a 3-high wall in every Microban level solved, and hides nothing: the default |
 | | **Crate stream** (`~`, 2 high, D198) | Crates pass, he is stopped (no top: a jump or a crate under him never gets him over). A wall between two floors he cannot cross but a crate can: Sokoban's player routing is back, since he must go round to push the crate on from the far side. A 1-thick stream hands a crate over, one cell beyond; in a thicker one it stops in the last cell (he cannot stand in a stream to push on) |
 | | **Hole** | A crate pushed in is spent and the hole becomes floor: a wall that can be "opened" by sacrificing a crate. He jumps one, falls in two |
+| Box | **Spiked crate** | He can't stand on it or use it as a step: the player's route around the boxes matters again, so a classic keeps its push count (Microban 8: 32 spiked, 4 plain) |
+| | **Crate on a spiked crate** | A plain crate dropped on one covers the spikes: a safe 2-high step |
 | | **Ledge edge** (floor one lower) | A crate pushed off falls, and can't come back up: a one-way wall |
 | Goal | **Plate** | Anything holds it (a crate can leave it again; a decoy or a frozen enemy can fake it) |
 | | **Socket** | A crate fills it for good (spent, can't be pushed on): order matters more; no spell fakes it |
@@ -112,7 +114,8 @@ a Neonmancer room:
 | | **Stack spot** | A crate dropped onto a crate: a 2-high step to a 3-high goal |
 | Player start | The door he comes in by | And every other door: re-solve `--from` each |
 
-The survey (below) builds every level in five of these ways. Holes
+The survey (below) builds every level in five of these ways, plus three
+with every crate spiked (D199: walls 3-high, 1-high and holes, plates). Holes
 instead of walls keep the pushes and add sharp steps (a crate can be
 spent). Sockets change the order: a crate that starts on a goal is
 spent, a route over a goal is cut; some levels get easier, some
@@ -131,6 +134,13 @@ the author and collection in the room's decision entry. Before use:
   stay near the classic count: their trick is the crates' routes, and
   that survives. The survey's picks suggest a rung and a build for
   each.
+- **Spiked crates bring a collapsed classic back (D199).** Build the
+  level with `--spiked` (every `$` a spiked crate) and 3-high walls:
+  Microban 8 is 32 pushes again, 19 is 20 and 63 is 50 (`spiked_lab`
+  is 8). The survey's spiked columns list every level; use 3-high walls
+  or holes there, since he walks over 1-high ledges (the player can't
+  climb a spiked crate, but he still climbs walls). A level with a hole row
+  should stay solvable: a spiked crate plugs one into plain floor.
 - **Re-solve under Neonmancer rules** after any edit (`solve.mjs` on the
   `.xsb` with `--wall`, `--xsb-goal`, or on the room JSON).
 - **Size**: x + z <= 32 and rooms mostly 8×8 to 12×12 (room-design
@@ -169,6 +179,11 @@ the author and collection in the room's decision entry. Before use:
 - **Enemy as the last crate** (with Pause): a frozen enemy pushed like a
   crate fills the last plate (room-design, "Frozen enemies go where they
   are pushed"; the solver needs `--with pause` to count it).
+- **Spiked crate** (`!`, or `--spiked`): a classic's box. Mix with plain
+  crates for a trick: a plain crate pushed onto (off a ledge, or by Cut &
+  Paste, Compile) a spiked one is a step; two spiked crates cannot be
+  stood on at all. Keep a free side around any spiked crate he can fall
+  onto.
 - **Deadlocks to read**: a crate in a corner; two crates side by side
   along a wall; a crate on a wall line with no goal on it; the bottom of
   a stack; a crate pushed onto a ledge it can't be pushed back from.
@@ -176,13 +191,14 @@ the author and collection in the room's decision entry. Before use:
 
 ## Files
 - `scripts/xsb.mjs`: XSB to room JSON (`--out`, `--wall 1-5|hole`,
-  `--goal plate|socket`, `--streams thin`; `~` is a 2-high crate stream),
-  plus the parser.
+  `--goal plate|socket`, `--streams thin`; `~` is a 2-high crate stream, `--spiked`:
+  every crate spiked; `!` is one spiked crate), plus the parser.
 - `scripts/solve.mjs`: the solver (XSB, room id or room `.json`). A state
   is the crates plus where he is: after a push he stands where the crate
   was, so a region he can't leave counts.
 - `scripts/survey.mjs`: a whole collection under classic rules and in five
-  translations, as a Markdown table.
+  translations plus three with every crate spiked, as a Markdown table
+  (`--spiked-only` for just those, `--levels a-b` to split a long run).
 - `levels/motifs.xsb`: original Neonmancer motifs, solved.
 - `levels/microban.xsb`, `levels/microban-survey.md`: Microban (David W.
   Skinner) and its survey with notes on the best candidates.

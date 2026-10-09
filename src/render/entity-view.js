@@ -379,6 +379,8 @@ export class PushableView {
       for (const material of [node.material ?? []].flat()) material.clippingPlanes = FLOOR_CLIP;
     });
     this.shadow = createDropShadow(pushable.object.color);
+    /** A spiked crate's vents (D199): hidden while a crate lies on top, or once it has plugged a hole. */
+    this.vents = this.block.userData.vents ?? null;
     /** Made once the object plugs a hole (most never do): its vertical edges fade into the pit. */
     this.plugDrops = null;
     this.group.add(this.block, this.shadow);
@@ -412,6 +414,7 @@ export class PushableView {
       for (let i = 0; i < 3; i++) pos[i] += (1 - look.scale) / 2;
     }
     this.block.position.set(pos[0], pos[1], pos[2]);
+    if (this.vents) this.vents.visible = pushable.topHurts(this.game.objectBodies);
     if (pushable.state === 'plugged' && !this.plugDrops) {
       const corners = [[0, 0], [1, 0], [0, 1], [1, 1]];
       this.plugDrops = fadingDrops(corners, 1, pushable.object.color, 1, 2.5);

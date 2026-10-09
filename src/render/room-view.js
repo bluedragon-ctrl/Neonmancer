@@ -24,6 +24,7 @@ import { UNIT_BOX } from './geometry.js';
 import { blockEdges, edgeUnitKeys, groupedBlockEdges } from './edges.js';
 import { BITS, markSegments } from './marks.js';
 import { GLASS, glassBox, glassBoxes, shrinkSegments } from './glass.js';
+import { createVents } from './vent-fx.js';
 import { spikeSegments, spikeTriangles } from './spikes.js';
 import { doorwayTunnels, wallLayout } from './walls.js';
 import {
@@ -209,9 +210,11 @@ const EDGE_WIDTH = { gate: 1.5 };
  * for `since` seconds after it hurt the wizard. Glass faces (D96,
  * glass.js) are see-through, with the mark on a small dark core inside;
  * a destructible glass object is an empty shell of thinner glass (D99).
- * @param {{ at: number[], kind?: string, color: string, edges: string, mark: string, faces: string, shape?: string, tint: number, integrity?: number }} object
+ * Vents (`vents`, D199, vent-fx.js) add square holes in the top with
+ * aurora jets shooting out of them and shafts down to the core, for a crate whose top hurts.
+ * @param {{ at: number[], kind?: string, color: string, edges: string, mark: string, faces: string, shape?: string, tint: number, integrity?: number, vents?: string }} object
  */
-export function createObjectView({ at, kind, color, edges, mark, faces, shape = 'cube', tint, integrity }) {
+export function createObjectView({ at, kind, color, edges, mark, faces, shape = 'cube', tint, integrity, vents = 'none' }) {
   const group = new Group();
   const spiked = shape === 'spiked';
   /** What lights up when it hurts the wizard, each set for seconds since. */
@@ -250,6 +253,11 @@ export function createObjectView({ at, kind, color, edges, mark, faces, shape = 
   }
   if (flares.length > 0) group.userData.flare = (since) => flares.forEach((flare) => flare(since));
   if (spiked) return group;
+  if (vents !== 'none') {
+    // userData.vents: the part a crate on top hides (PushableView).
+    group.userData.vents = createVents(at, faces === 'glass' && mark !== 'none' && integrity === undefined ? GLASS.coreSize : 0);
+    group.add(group.userData.vents);
+  }
 
   // A destructible object shows its data bits with some missing, whatever its mark.
   const drawn = integrity !== undefined ? 'bitsBroken' : mark;

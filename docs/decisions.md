@@ -1659,3 +1659,66 @@ room, `hidden_layer`, is a dev room gaining a west exit).
 **Why:** the author: a barrier crates cross and he cannot gives the push
 puzzle the one thing climbing crates took away, the player's own route,
 and costs only a block type and a per-body view of the grid.
+
+### D199 — 2026-10-09 — The spiked crate: a crate he can't stand on
+A new pushable, `crate_spiked` (extends `crate`): it pushes, falls,
+stacks and plugs a hole like any crate, but its top is spiked. The
+reason is Sokoban: the wizard climbs 1-high crates, so the classic
+"can I get behind this box?" is gone, and in the Microban survey
+(`.claude/skills/sokoban-design/levels/microban-survey.md`, David W.
+Skinner's Microban set) 29 of the 104 solved levels need half the
+pushes or fewer. A crate he can't stand on brings those puzzles back.
+- **Hurt and knock-off** (the author's choice, damage 2, not a lethal
+  top: that would be a second instant death next to void, §4). The new
+  object property `topDamage` (pushables only; `damage` stays the
+  platform's, which hurts on every side) hurts him when his feet touch
+  the top, with the usual invulnerability blink, and shoves him off
+  towards the nearer free side. The shove also applies while he blinks,
+  so he can never rest on it. Pushing from the side is safe: only the top
+  hurts.
+- **Stacks:** a plain crate on a spiked one covers the spikes (its top is
+  a safe 2-high step); a spiked crate on a plain one keeps them on top; a
+  spiked crate pushed into a hole plugs it into plain floor.
+- **No clean hop over:** tested with the real player (hitbox 0.6, apex
+  1.2): a jump spends 0.23 s above a 1-high top and covers about 0.67
+  units sideways in that time, while clearing the crate in line takes
+  1.6; all 61 take-offs in 0.05 steps either touch the top or stop at the
+  side. A corner skim in the open is just walking around. The double
+  jump clears it, like any 2-high obstacle. No taller hurt zone needed.
+- **Frozen enemies and the decoy** can't stand on it: a frozen enemy
+  resting on a bare top is impaled (it pops, like losing its ground), the
+  decoy derezzes (like falling into a hole). **Active enemies** are not
+  hurt (as with hazard blocks today) and may cross it. A crate (or
+  anything of the objects) on it covers the spikes; a frozen enemy on it
+  does not, it is impaled.
+- **Look:** the plain green glass crate with its data-bits core, with
+  five square, bit-like holes in the top face (scattered on the bit
+  grid) and a jet of polar-aurora light shooting out of each: crimson at
+  the foot, dark indigo above, with slow rays (the author's wish: no
+  natural crack, not classical flames). Red edges mark the holes (red is
+  what hurts, D99); a shaft of light runs from each down through the
+  glass to a smaller square on the core, so the holes clearly go to the
+  core. Look only (`vents: "aurora"`), animated in the shader.
+- **Checker and solver:** a spiked crate's top is no standing surface
+  (`below()` already says `'bad'` for a hazard top), except under a
+  plain crate. The Microban survey gets a column that builds every crate
+  as spiked.
+- Test room `spiked_lab` (dev wing, north of `room_1`): Microban 8 by
+  David W. Skinner (his Microban set), turned half a circle so the door is
+  on the +z side, 3-high walls, two spiked crates and two plates, the door
+  locked until both are held. The solver: 32 pushes, the classic count (4
+  with plain crates); played headless with the room-design skill's sim
+  (the 32 pushes and out through the door in 30 s, no hurt). With 3-high
+  walls and spiked crates Microban 19 is 20 pushes and 63 is 50, their
+  classic counts too.
+- **Survey result:** Microban re-run with every crate spiked (`--max
+  30000`): with 3-high walls and plates all 104 levels solved match their
+  classic push count exactly, including the 28 whose plain-crate count was
+  half the classic or less; 23 more with a known classic count hit the
+  state cap. With 1-high walls they do not (he walks over the walls: 80
+  of 104 stay short), so build walls 3 high. See `microban-survey.md`.
+- **Names:** the property is `topDamage`, not `damage`: an object's
+  `damage` (platforms) hurts on every side. `vents: "aurora"` is the look.
+**Why:** puzzles from the Sokoban canon should not collapse to a walk
+around because the wizard can climb; the spiked crate keeps push count
+and order meaningful without a new rule for walls.

@@ -2,7 +2,7 @@
 // sokoban-design skill: sketch a push puzzle as text, convert it, solve it
 // with solve.mjs, then wire it as a real room (room-design skill).
 //   node .claude/skills/sokoban-design/scripts/xsb.mjs <file.xsb> [--level N] [--id x] [--name "X"]
-//        [--wall H|hole] [--goal plate|socket] [--streams thin] [--exit side:at[:y]] [--out data/rooms/x.json]
+//        [--wall H|hole] [--goal plate|socket] [--streams thin] [--exit side:at[:y]] [--spiked] [--out data/rooms/x.json]
 // Without --out it prints the room JSON. Text rows are z, columns x: the
 // top-left of the text is the back corner (x = 0, z = 0), the bottom-right
 // faces the camera.
@@ -18,6 +18,8 @@
 //   %  fence, 1 high (crates stop, he climbs it, bolts pass)
 //   ~  crate stream, 2 high (D198): crates pass, he is stopped, bolts pass
 //   &  crate on a 1-high block (a ledge crate: pushed off, it falls)
+//   !  spiked crate (crate_spiked, D199): its top hurts him, he can't stand on it;
+//      --spiked makes every $ and * a spiked crate (a whole level built that way)
 // Floor outside the outer wall becomes wall too; whole rows and columns
 // of # at the edge are trimmed (the room's sides are walls already).
 // Lines starting with ; are comments; levels are separated by blank lines
@@ -60,7 +62,7 @@ export function parseXsb(text) {
       notes.push(line.replace(/^\s*;\s?/, ''));
     } else if (line === '' && rows.length === 0) {
       notes = []; // a blank line ends a comment block that no level follows
-    } else if (line === '' || !/^[#1-5$.*@+ \-_^o%&~]+$/.test(line)) {
+    } else if (line === '' || !/^[#1-5$.*@+ \-_^o%&~!]+$/.test(line)) {
       flush();
       if (line !== '') notes.push(line.trim());
     } else rows.push(line);
@@ -72,14 +74,15 @@ export function parseXsb(text) {
 /**
  * A room (data/rooms JSON shape) from one level.
  * @param {{ rows: string[], title?: string }} level
- * @param {{ id?: string, name?: string, wall?: number|'hole', goal?: 'plate'|'socket', exits?: string[] }} [options]
+ * @param {{ id?: string, name?: string, wall?: number|'hole', goal?: 'plate'|'socket', exits?: string[], spiked?: boolean }} [options]
  *   wall: the height of # walls, or 'hole': inside the trimmed edge they are holes (crates plug them, he jumps one)
  *   goal: what . is: a plate (anything holds it, a crate can leave it) or a socket (a crate fills it for good)
+ *   spiked: every $ and * crate is a spiked crate (D199), as ! always is
  *   streams: 'thin' makes every # with floor on both sides along x or z (a wall one cell thick between two
  *     floors) a crate stream (~), so crates cross it and he cannot (D198)
  *   exits: "side:at[:y]" (e.g. "-x:3", "-z:4:3" a doorway 3 up); with plates or sockets they are locked on every switch
  */
-export function xsbToRoom(level, { id = 'sokoban_draft', name = 'Sokoban Draft', wall = level.wall ?? 2, goal = 'plate', exits = level.exits ?? [], streams = null } = {}) {
+export function xsbToRoom(level, { id = 'sokoban_draft', name = 'Sokoban Draft', wall = level.wall ?? 2, goal = 'plate', exits = level.exits ?? [], streams = null, spiked = false } = {}) {
   let grid = level.rows.map((r) => [...r]);
   const H = grid.length;
   const W = grid[0].length;
@@ -137,7 +140,7 @@ export function xsbToRoom(level, { id = 'sokoban_draft', name = 'Sokoban Draft',
   const objects = [];
   const holes = [];
   let spawn = null;
-  const count = { crate: 0, plate: 0, socket: 0 };
+  const count = { crate: 0, crate_spiked: 0, plate: 0, socket: 0 };
   const add = (type, x, z, y = 0) => objects.push({ id: `${type}_${++count[type]}`, type, at: [x, y, z] });
   for (let z = 0; z < depth; z++)
     for (let x = 0; x < width; x++) {
@@ -145,7 +148,8 @@ export function xsbToRoom(level, { id = 'sokoban_draft', name = 'Sokoban Draft',
       if (c === '@' || c === '+') spawn = [x + 0.5, 0, z + 0.5];
       if (c === '.') add(socket ? 'socket' : 'plate', x, z);
       if (!socket && (c === '*' || c === '+')) add('plate', x, z);
-      if (c === '$' || (!socket && c === '*')) add('crate', x, z);
+      if (c === '$' || (!socket && c === '*')) add(spiked ? 'crate_spiked' : 'crate', x, z);
+      if (c === '!') add('crate_spiked', x, z);
       if (c === '&') add('crate', x, z, 1);
       if (c === 'o') add('socket', x, z);
       if (c === '^') holes.push({ at: [x, z] });
@@ -189,7 +193,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const valued = ['--level', '--id', '--name', '--wall', '--goal', '--exit', '--out', '--streams'];
   const file = argv.find((a, i) => !a.startsWith('--') && !valued.includes(argv[i - 1]));
   if (!file) {
-    console.error('usage: node xsb.mjs <file.xsb> [--level N] [--id x] [--name "X"] [--wall H|hole] [--goal plate|socket] [--streams thin] [--exit side:at[:y]]... [--out file]');
+    console.error('usage: node xsb.mjs <file.xsb> [--level N] [--id x] [--name "X"] [--wall H|hole] [--goal plate|socket] [--streams thin] [--exit side:at[:y]]... [--spiked] [--out file]');
     process.exit(1);
   }
   const levels = parseXsb(fs.readFileSync(file, 'utf8'));
@@ -207,6 +211,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     goal: option('--goal') ?? undefined,
     streams: option('--streams') ?? undefined,
     exits: exits.length ? exits : undefined,
+    spiked: argv.includes('--spiked'),
   });
   const [w, , d] = room.size;
   if (w + d > 32) console.error(`warning: ${w}x${d} breaks x + z <= 32`);
