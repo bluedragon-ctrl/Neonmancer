@@ -163,9 +163,10 @@ Lessons from the reviews (D188 on):
   socket, a ferry dock, a hole), make its walls 1-high blocks (they
   stop crates; he steps over them, which is fine: he can't carry a
   crate, so only the pushes matter) and credit the level in the
-  decision. Solve the turned level with a scratch BFS (pushes, dead
-  ends: a wrong push should block the crates) and play it with
-  `sim.mjs` (D196).
+  decision. Solve the turned level with a scratch BFS and check the
+  crates meet: the pushes together must beat the sum of each crate
+  alone, or each crate has its own easy route (Microban 24 did); count
+  the dead ends, and play it with `sim.mjs` (D196).
 
 ## Skeleton
 ```json
@@ -430,7 +431,7 @@ depth a room needs; each is reviewed in step 5.17.
   cell and the fragment alcove lie on the camera side of their 3-high walls,
   so everything shows; plates in corners (D160, D165).
 - `relay_loft.json`: a loft flush with the ferries' tops, so crates ride them; a
-  Sokoban pen of 1-high walls on it (Microban 24) feeds a socket in the pit and the
+  Sokoban pen of 1-high walls on it (Microban 45) feeds two sockets in the pit and the
   ferry he rides on his crate (D196; power judged with `sim.mjs`).
 - `hidden_layer.json` (dev wing, Scan): `fake` blocks.
 - `fence_yard.json` (dev wing): fences, a target zapped through one.

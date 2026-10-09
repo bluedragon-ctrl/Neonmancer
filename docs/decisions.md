@@ -1521,38 +1521,43 @@ step to the targets first.
 pillar by the east ferry's far dock, and the only way up is to ride
 that ferry standing on a crate. The middle island (x 5–9) is a 1-high
 loft, flush with the ferries' tops, so crates roll on and off them.
-The east ferry runs only once a crate fills a socket in the pit beside
-the island (D194), so one island crate powers it and the other rides
-it. Getting them there is a small Sokoban on the loft, the author's
-wish: Microban 24 (David W. Skinner's Microban set), turned so its two
-goals are the pushes off the east edge onto the ferry and into the
-socket, its walls 1-high blocks on the loft. They stop crates; he
+The east ferry runs only once crates fill both sockets in the pit
+beside the island (D194); the third island crate rides it. Getting
+them there is a small Sokoban on the loft, the author's wish: Microban
+45 (David W. Skinner's Microban set), turned and mirrored so its three
+goals are the pushes off the east edge onto the ferry (row 1) and into
+the two sockets (rows 2 and 3), the room's back wall its north side
+and its other walls 1-high blocks on the loft. They stop crates; he
 steps over them and over crates, unlike a Sokoban player, but he can't
-carry a crate, so only the pushes matter: a solver over the turned
-level finds the same 11 pushes, 105 of its 169 crate positions are
-dead ends, and one of the two first pushes already ruins it. The west ferry (row 4) lands in the pen and runs while a west
-crate holds its plate (the plate lesson: it runs while held and parks
-where it is when let go, so he may also ride it there on his own
-weight, step off and jump onto the parked ferry, or a decoy holds the
-plate; it is the way in, not the trick); a timed plate on the east
-bank raises row 7's bridges for 5 s, the way across from the east door
-to the west bank and the pen. `crate_d`, the 2-high plinth, ferry B's
-two plates and the refill are gone.
+carry a crate, so only the pushes matter. A crate pushed off an open
+edge falls into one pit cell: one more dead end, no help. The crates
+block each other: the solve takes 14 pushes, against 9 for each crate
+alone, and 816 of the 1,254 crate positions are dead ends (a solver
+over the room's cells). The first try, Microban 24 with two crates,
+was too easy: each crate had its own route and they never met.
+The west ferry (row 1) lands in the pen and runs while a west crate
+holds its plate (the plate lesson: it runs while held and parks where
+it is when let go, so he may also ride it there on his own weight, step
+off and jump onto the parked ferry, or a decoy holds the plate; it is
+the way in, not the trick); a timed plate on the east bank raises row
+7's bridges for 5 s, the way across from the east door (he steps over
+the pen's low wall from the bridge row). `crate_d`, the 2-high plinth,
+ferry B's two plates and the refill are gone.
 The checker takes ferries as floor and ignores their power, so it
-counts one crate as enough and the socket as spare; played headless:
-the solve from the south (the 11 pushes, a crate onto the waiting
-ferry first, the other into the socket, then the ride once the ferry
-brings the crate back) takes 34.3 s to the fragment, the east ferry
-never leaves without the socket, and a jump from the bare ferry at the
-dock never gets the fragment. Without both island crates the checker
-finds it never. The socket lies in the pit, not in the loft: a socket
-is a floor-level hole, and a loft cell on its camera side hides it; a
+counts one crate as enough and the sockets as spare; played headless:
+the 14 pushes from the south door (one crate onto the waiting ferry
+first, then both sockets, then the ride once the ferry brings the
+crate back) take 36.9 s to the fragment; with one socket filled the
+east ferry stays put; a jump from the bare ferry at the dock never
+gets the fragment. Without the island crates the checker finds it
+never. The sockets lie in the pit, not in the loft: a socket is a
+floor-level hole, and a block on its camera side hides it, so the
+ferry takes the top opening and the sockets the open rows below it; a
 filled socket's top is at floor level, a dip in a loft. He leaves the
 pen by the west ferry, or with a running jump east over the 2-wide pit
-from the loft's edge (D162), so it never strands him; from the east
-door he steps over the pen's low wall from the bridge row. With the double jump
-(after all fragments, D187) the bare ferry reaches the pillar, but the
-socket is still needed.
+from the loft's edge (D162), so it never strands him. With the double
+jump (after all fragments, D187) the bare ferry reaches the pillar, but
+both sockets are still needed.
 **Why:** a crate pushed once from the east door gave the fragment, and
 a decoy stood in for every ferry plate; the author asked for a small
-Sokoban on the loft to get the crate to the hole.
+Sokoban on the loft in which the order of pushes matters.
