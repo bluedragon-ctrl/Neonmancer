@@ -1516,6 +1516,37 @@ Loft) a north crate was a step to the plinth, so the fragment needed
 nothing; the author: the crate that bridges the pit should be his
 step to the targets first.
 
+### D197 — 2026-10-09 — Push puzzles: a solver, motifs and classic levels
+The `sokoban-design` skill sits beside `room-design` for rooms whose
+trick is pushing crates. A puzzle is sketched as XSB text (the plain
+Sokoban format, with Neonmancer characters for holes, sockets, fences,
+wall heights and ledge crates), solved breadth first over every crate
+configuration with the reachability checker's own movement and push
+rules (`scripts/solve.mjs`: fewest pushes, the share of configurations
+that can no longer reach the goal, the sharp steps along the
+solution, the shortest way into a trap), and converted into a room
+draft (`scripts/xsb.mjs`), with walls built as blocks of any height,
+ledges or holes and goals as plates or sockets. A state is the crates
+and where he is (after a push he stands where the crate was).
+`scripts/survey.mjs` runs a whole collection under classic rules and
+in five builds; Microban (David W. Skinner, 155 levels) is in the skill
+with its survey and picks per rung. What it showed: he climbs crates,
+so levels whose trick is the player's own route collapse (29 of 104
+solved need half the pushes or fewer); levels whose trick is the
+crates' routes play the same; wall height never changed a result, so a
+puzzle's walls can be 1-high ledges that hide nothing; holes for walls
+add sharp steps; sockets cut routes over goals. `reach.js` exports `RoomModel`, `standsIn`
+and `collect` for it; `analyzeRoom` behaves as before.
+Classic Sokoban layouts may be used as they are or adapted, with the
+author and collection credited in the room's decision: they are
+public puzzles, like chess problems (the author's call; CLAUDE.md §1
+amended). Under Neonmancer's rules they play differently (the wizard
+climbs crates and 1-high walls and jumps 1-tile holes), so each is
+re-solved before use.
+**Why:** the author: push puzzles are the core (D186), and a skill that
+designs and checks them, starting from proven classics, gives rooms a
+real trick faster than drawing them by hand; the checker only says
+whether a goal is reachable, not how hard or how forgiving the puzzle is.
 ### D196 — 2026-10-09 — Relay Loft: he rides the ferry on his crate (5.17)
 `relay_loft` is rebuilt round one trick: the fragment sits on a 3-high
 pillar by the east ferry's far dock, and the only way up is to ride

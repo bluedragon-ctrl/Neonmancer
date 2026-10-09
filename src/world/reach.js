@@ -89,7 +89,7 @@ const DIRS = [
  * @property {boolean} truncated the search stopped at MAX_CONFIGS
  */
 
-class RoomModel {
+export class RoomModel {
   /**
    * @param {object} room runtime room (world/room.js buildRoom)
    * @param {Set<string>} abilities
@@ -569,17 +569,7 @@ export function analyzeRoom(room, { abilities, starts, tuning }) {
   while (todo.length > 0) {
     const cfg = todo.pop();
     reach.configs++;
-    // Gates follow what he can switch from where he stands, which can open more of the room (D140).
-    model.resetFrozen();
-    model.setGates(cfg, new Set());
-    let stands = model.flood(starts, cfg);
-    // Gates and pushed frozen enemies open more of the room, which may open more again.
-    for (let round = 0; round < 8; round++) {
-      const gates = model.setGates(cfg, stands);
-      const frozen = model.spreadFrozen(cfg, stands);
-      if (!gates && !frozen) break;
-      stands = model.flood(starts, cfg);
-    }
+    const stands = standsIn(model, cfg, starts);
     if (reach.configs === 1 && stands.size === 0) reach.deadStart = true;
     for (const s of stands) union.add(s);
     collect(model, cfg, stands, reach);
@@ -599,8 +589,31 @@ export function analyzeRoom(room, { abilities, starts, tuning }) {
   return reach;
 }
 
-/** Fill `reach` with what the wizard touches in one configuration. */
-function collect(model, cfg, stands, reach) {
+/**
+ * The cells he can stand on in one configuration, with the gates and
+ * frozen enemies worked out for it (left set on the model).
+ * @param {RoomModel} model
+ * @param {object} cfg a configuration (model.config)
+ * @param {number[][]} starts
+ * @returns {Set<number>} cell indices
+ */
+export function standsIn(model, cfg, starts) {
+  // Gates follow what he can switch from where he stands, which can open more of the room (D140).
+  model.resetFrozen();
+  model.setGates(cfg, new Set());
+  let stands = model.flood(starts, cfg);
+  // Gates and pushed frozen enemies open more of the room, which may open more again.
+  for (let round = 0; round < 8; round++) {
+    const gates = model.setGates(cfg, stands);
+    const frozen = model.spreadFrozen(cfg, stands);
+    if (!gates && !frozen) break;
+    stands = model.flood(starts, cfg);
+  }
+  return stands;
+}
+
+/** Fill `reach` with what the wizard touches in one configuration (call standsIn() first). */
+export function collect(model, cfg, stands, reach) {
   const { room, abilities } = model;
   const standAt = (x, y, z) => stands.has(model.index(x, y, z));
   // A pickup: in the cell he stands in or the one above, or higher with a jump.

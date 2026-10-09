@@ -7,7 +7,8 @@ Principles from games of the same family: Solstice and Head Over Heels
 Is You (one rule, fair riddles), The Witness (one idea, many variations).
 Adventures of Lolo and Chip's Challenge (push puzzles where enemies are
 pieces with readable rules), A Monster's Expedition (an open world of
-small push puzzles). Ideas only; nothing is copied (CLAUDE.md §1).
+small push puzzles). Ideas only; nothing is copied (CLAUDE.md §1), except
+classic Sokoban layouts (D196, the `sokoban-design` skill).
 
 The core idea (SKILL.md, D186): a push-puzzle adventure with arcade bite;
 every room earns its place with one trick.
@@ -34,7 +35,8 @@ every room earns its place with one trick.
    changes a push (a crate pushed off a ledge lands where a floor push
    can't reach), a move looks wrong (a crate thrown into a pit to make a
    step for the next). Then cut everything the trick doesn't need.
-   Read Sokoban (Microban) for push puzzles: one idea a room, every tile
+   For a push puzzle, use the `sokoban-design` skill (sketch, solve,
+   classic levels, motifs). Read Sokoban (Microban) for push puzzles: one idea a room, every tile
    used, no red herrings; a crate against a wall slides only along it, a
    crate in a corner is lost, so walls and corners are what he reads.
    Here holes, steps and stacks are the goals, a frozen enemy can be the
