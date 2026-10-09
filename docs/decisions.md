@@ -1487,3 +1487,24 @@ A dev room, `socket_lab`, off `room_1`, shows two.
 enemy holds any one), so Sokoban rooms need a goal no spell fakes; a
 crate spent in a socket also makes "which crate where, in what order"
 the puzzle.
+
+### D195 — 2026-10-09 — Bolt Gallery: one target column, shot from the south (5.17)
+`bolt_gallery`'s fragment no longer sits on a 2-high plinth by the
+north side's crates: it lies at floor level in a back-corner pocket
+behind a 3-high see-through fence and a 3-high gate on `target_2`. The
+two targets stand stacked in the back column (`target_2` on the floor,
+`target_1` on it, no block between), walled 3 high behind and beside,
+so only a bolt fired north up that column from across the pit reaches
+them: a floor shot switches `target_2` (the cage and the pocket), a
+jump shot `target_1` (the north door), as in `zap_port`. The plinth's
+gate step is gone. From the north door the fragment now costs the
+crossing south on the north crates, the shot, and the way back; from
+the south the two crates in the pit and the shot. The checker counts
+every target as on with Zap whatever its line or height, so the line
+was proven headless: no shot from the north half (floor, crate top,
+jump, 32 directions) switches either target. Played headless, the
+south solve takes 16 s and two tower hits.
+**Why:** from the north door (reached from `scan_lab` round Relay
+Loft) a north crate was a step to the plinth, so the fragment needed
+nothing; the old `target_1`, two blocks up, was only hit by a jump
+shot from a north crate.

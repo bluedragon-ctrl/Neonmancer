@@ -11,14 +11,15 @@
     { "id": "north", "side": "-z", "at": 9, "requires": [{ "switch": "target_1" }] }
   ],
   "blocks": [
-    { "at": [0, 0, 0], "to": [2, 1, 2] },
-    { "type": "gate", "at": [3, 0, 0], "switches": ["target_2"] },
+    { "type": "fence", "at": [2, 0, 0], "to": [2, 2, 1] },
+    { "type": "gate", "at": [2, 0, 2], "to": [2, 2, 2], "switches": ["target_2"] },
+    { "at": [0, 0, 3], "to": [1, 2, 3] },
+    { "at": [1, 0, 4], "to": [1, 2, 4] },
     { "at": [4, 0, 8], "to": [4, 0, 9] },
     { "type": "gate", "at": [8, 0, 8], "to": [10, 0, 8], "switches": ["target_2"] },
     { "type": "gate", "at": [8, 0, 9], "to": [8, 0, 10], "switches": ["target_2"] },
     { "type": "gate", "at": [10, 0, 9], "to": [10, 0, 10], "switches": ["target_2"] },
-    { "type": "gate", "at": [9, 0, 10], "switches": ["target_2"] },
-    { "at": [0, 1, 4] }
+    { "type": "gate", "at": [9, 0, 10], "switches": ["target_2"] }
   ],
   "holes": [{ "at": [0, 5], "to": [11, 7] }],
   "objects": [
@@ -26,7 +27,7 @@
     { "id": "crate_1", "type": "crate", "at": [9, 0, 9] },
     { "id": "crate_2", "type": "crate", "at": [10, 0, 3] },
     { "id": "target_2", "type": "target", "at": [0, 0, 4] },
-    { "id": "target_1", "type": "target", "at": [0, 2, 4] },
+    { "id": "target_1", "type": "target", "at": [0, 1, 4] },
     { "id": "crate_3", "type": "crate", "at": [5, 0, 9] }
   ],
   "enemies": [
@@ -34,5 +35,5 @@
     { "id": "cron_1", "template": "cron", "at": [8, 0, 4] },
     { "id": "cron_2", "template": "cron", "at": [6, 0, 1] }
   ],
-  "pickups": [{ "id": "fragment_3", "type": "fragment_3", "at": [1, 2, 1] }]
+  "pickups": [{ "id": "fragment_3", "type": "fragment_3", "at": [1, 0, 0] }]
 }
