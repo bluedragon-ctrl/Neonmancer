@@ -8,7 +8,7 @@ Is You (one rule, fair riddles), The Witness (one idea, many variations).
 Adventures of Lolo and Chip's Challenge (push puzzles where enemies are
 pieces with readable rules), A Monster's Expedition (an open world of
 small push puzzles). Ideas only; nothing is copied (CLAUDE.md §1), except
-classic Sokoban layouts (D196, the `sokoban-design` skill).
+classic Sokoban layouts (D197, the `sokoban-design` skill).
 
 The core idea (SKILL.md, D186): a push-puzzle adventure with arcade bite;
 every room earns its place with one trick.

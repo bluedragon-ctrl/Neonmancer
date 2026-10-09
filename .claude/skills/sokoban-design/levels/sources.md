@@ -1,7 +1,7 @@
 # Classic Sokoban collections
 
 Classic layouts may be used as they are or adapted, with the author
-credited in the room's decision (D196). A collection kept here is an
+credited in the room's decision (D197). A collection kept here is an
 `.xsb` file with a header comment: collection, author, source URL, date
 fetched. `solve.mjs` and `xsb.mjs` read it with `--level N` (levels are
 counted from 1 in file order).

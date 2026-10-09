@@ -121,9 +121,9 @@ spent). Sockets change the order: a crate that starts on a goal is
 spent, a route over a goal is cut; some levels get easier, some
 unsolvable.
 
-## Classic levels (D196)
+## Classic levels (D197)
 Sokoban layouts are classic puzzles, like chess problems: a room may use
-a classic level as it is or adapted (the author's call, D196). Credit
+a classic level as it is or adapted (the author's call, D197). Credit
 the author and collection in the room's decision entry. Before use:
 - **Read the survey.** `levels/microban-survey.md` (made by
   `scripts/survey.mjs`) lists every level's fewest pushes under classic
