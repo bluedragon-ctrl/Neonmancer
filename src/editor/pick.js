@@ -57,7 +57,7 @@ export function hitBoxes(edit, objectTypes, { cutAbove = null, blocks = true } =
   for (const item of edit.items()) {
     if (!shown(item.at[1])) continue;
     const type = objectTypes[item.type];
-    const size = type?.kind === 'deco' ? (DECO_LOOKS[item.overrides?.look ?? type.look]?.size ?? [1, 1, 1]) : [1, type?.kind === 'plate' ? PLATE_HEIGHT : 1, 1];
+    const size = type?.kind === 'deco' ? (DECO_LOOKS[item.overrides?.look ?? type.look]?.size ?? [1, 1, 1]) : [1, type?.kind === 'plate' || type?.kind === 'socket' ? PLATE_HEIGHT : 1, 1];
     out.push({ cell: item.at, lo: item.at, hi: item.at.map((v, axis) => v + size[axis]) });
   }
   return out;

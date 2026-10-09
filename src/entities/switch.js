@@ -12,6 +12,12 @@
  *   middle of its footprint over the tile and its feet on the floor. It is
  *   no body: things move over it as over the floor.
  *
+ * - Socket (D194): a hole that is a switch. Its tile is a hole (the room
+ *   adds it to its holes) and it is on while that hole is filled: a crate
+ *   dropped in plugs it for good, a compiled crate for its 7 s. No body.
+ *   A decoy can't fill a hole and a frozen enemy pushed in is lost, so
+ *   only a crate powers it.
+ *
  * A timed switch (a type with `timer`, D140) stays on for that many
  * seconds and then goes off by itself: a target from the bolt that
  * switched it on (another bolt starts the time again), a plate from the
@@ -20,7 +26,10 @@
 import { REST_EPS, cellBox } from '../physics/collision.js';
 
 /** Object kinds that are switches. */
-export const SWITCH_KINDS = ['target', 'plate'];
+export const SWITCH_KINDS = ['target', 'plate', 'socket'];
+
+/** Switch kinds that may be timed (D140): a socket follows its hole. */
+export const TIMED_SWITCH_KINDS = ['target', 'plate'];
 
 /** Shared by both switches: a fixed cell and an on/off state. */
 class Switch {
@@ -150,6 +159,24 @@ export class Plate extends Switch {
     }
     if (pressed === this.on) return null;
     this.on = pressed;
+    return 'switch';
+  }
+}
+
+export class Socket extends Switch {
+  /** No body: its tile is a hole, and the crate that fills it is the floor. */
+  get solid() {
+    return false;
+  }
+
+  /**
+   * Set whether its hole is filled (updateSwitches() in switches.js).
+   * @param {boolean} filled
+   * @returns {'switch'|null} event when it changed
+   */
+  fill(filled) {
+    if (filled === this.on) return null;
+    this.on = filled;
     return 'switch';
   }
 }

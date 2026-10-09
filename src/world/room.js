@@ -55,8 +55,11 @@ export function buildRoom(data, { objectTypes, blockTypes, enemyTemplates = {}, 
     blocks: fromBlocks.blocks,
     /** Block types (defs.json "blocks", variants filled in): look, color and properties (D60). */
     blockTypes: structuredClone(blockTypes),
-    /** Hole floor tiles as [x, z]. */
-    holes: (data.holes ?? []).flatMap(holeTiles),
+    /** Hole floor tiles as [x, z]; a socket's tile is a hole too (D194). */
+    holes: [
+      ...(data.holes ?? []).flatMap(holeTiles),
+      ...(data.objects ?? []).filter((object) => objectTypes[object.type]?.kind === 'socket').map(({ at: [x, , z] }) => [x, z]),
+    ],
     /** The backup shrine floor tile [x, z] (D97), or null. */
     shrine: data.shrine ? [...data.shrine] : null,
     /**

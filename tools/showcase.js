@@ -69,7 +69,7 @@ import { createPauseCage, placePauseCage } from '../src/render/pause-view.js';
 import { warpFlash } from '../src/render/warp-fx.js';
 import { createWarpTrail, dashPose, placeWarpTrail } from '../src/render/warp-view.js';
 import { createHoleView } from '../src/render/hole-view.js';
-import { createLock, createPlate, createTarget, switchLight } from '../src/render/switch-view.js';
+import { createLock, createPlate, createSocket, createTarget, switchLight } from '../src/render/switch-view.js';
 import { GateView, createGate } from '../src/render/gate-view.js';
 import { SWITCH_KINDS } from '../src/entities/switch.js';
 import { FRAGMENT_COLOR } from '../src/entities/pickup.js';
@@ -335,6 +335,8 @@ const ALL_ASSETS = [
   // whose lights follow its two switches.
   { label: 'target', group: 'switches', span: 5, spin: false, build: buildTargetZap },
   { label: 'plate', group: 'switches', span: 4, spin: false, build: buildPlate },
+  // A socket (D194): a hole that is a switch; a crate pushed in fills it and lights it.
+  { label: 'socket', group: 'switches', span: 4, spin: false, hole: [-0.5, -0.5], build: buildSocket },
   { label: 'locks-in-room', group: 'switches', span: 5.5, spin: false, build: buildLocks },
   // Exits into the Outer Buffer (D183): stars drift out; a lock there is dark indigo glass.
   { label: 'star-exits', group: 'switches', span: 6, spin: false, build: buildStarExits },
@@ -520,6 +522,34 @@ function buildPlate() {
     const onWizard = wizard.visible && Math.abs(wx) < 0.5;
     plate.userData.set(onCrate || onWizard);
     plate.userData.update(dt);
+  };
+  return asset;
+}
+
+/**
+ * A socket (D194) in a floor patch: a crate slides in from −x, drops into
+ * its hole and lights it, sits, then derezzes and the hole is dark again.
+ */
+function buildSocket() {
+  const asset = new Group();
+  const pit = createHoleView([[0, 0]], PALETTE.amber);
+  const socket = createSocket(SWITCH_COLOR);
+  pit.position.set(-0.5, 0, -0.5);
+  socket.position.set(-0.5, 0, -0.5);
+  const crate = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...OBJECT_TYPES.crate, at: [0, 0, 0] });
+  asset.add(pit, socket, crate);
+  const loop = 6;
+  let time = 0;
+  asset.userData.update = (dt) => {
+    time = (time + dt) % loop;
+    // 0.5–1.5 s: pushed in from −x; then it drops (0.3 s), sits lit; at 4.5 s it is gone.
+    const slide = Math.max(0, Math.min(1, (time - 0.5) / 1));
+    const fall = Math.max(0, time - 1.5);
+    const cy = -Math.min(1, 0.5 * PUSHABLE.gravity * fall ** 2);
+    crate.visible = time < 4.5;
+    crate.position.set(-2.5 + 2 * slide, cy, -0.5);
+    socket.userData.set(crate.visible && cy <= -1);
+    socket.userData.update(dt);
   };
   return asset;
 }
@@ -2420,16 +2450,23 @@ const total = spans.reduce((sum, span) => sum + span, 0);
 const side = Math.ceil(total / Math.SQRT2) + 2;
 // Height 2: the view centers on the middle of the assets, not their feet.
 const size = [side, 2, side];
-renderer.scene.add(createFloor(size, PALETTE.amber));
 frameRoom(renderer.camera, size);
 renderer.camera.zoom = Math.min(6, (VIEW_HEIGHT * ASPECT) / (total + SPACING));
 renderer.camera.updateProjectionMatrix();
 
-const turntables = ASSETS.map(({ label, build, shadow, spin = true }, i) => {
+/** Floor tiles cut out for assets with a pit (`hole`: the pit tile's lower corner, in the asset's own coordinates). */
+const floorHoles = [];
+const turntables = ASSETS.map(({ label, build, shadow, spin = true, hole }, i) => {
   const turntable = new Group();
   const offset = spans.slice(0, i).reduce((sum, span) => sum + span, 0) + spans[i] / 2 - total / 2;
   const t = offset / Math.SQRT2;
   turntable.position.set(side / 2 + t, 0, side / 2 - t);
+  // An asset with a pit snaps to the floor grid, so its tile can be cut out.
+  if (hole) {
+    const [x, z] = [Math.round(turntable.position.x + hole[0]), Math.round(turntable.position.z + hole[1])];
+    turntable.position.set(x - hole[0], 0, z - hole[1]);
+    floorHoles.push([x, z]);
+  }
   const model = build();
   turntable.userData.update = model.userData.update;
   turntable.userData.spin = spin;
@@ -2452,6 +2489,7 @@ const turntables = ASSETS.map(({ label, build, shadow, spin = true }, i) => {
   renderer.hud.append(tag);
   return turntable;
 });
+renderer.scene.add(createFloor(size, PALETTE.amber, floorHoles));
 
 renderer.hud.insertAdjacentHTML(
   'beforeend',

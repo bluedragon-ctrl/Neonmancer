@@ -21,9 +21,10 @@
  * Switches (D140): a locked exit or a gate is powered in a configuration
  * when its switches can all be on: a target with Zap, a plate with a crate
  * on it or a spell that puts a body there, a timed plate also under the
- * wizard himself (he runs on while it counts down). A gate that can be
- * both closed and open there counts as both: never in the way, and floor
- * to stand on.
+ * wizard himself (he runs on while it counts down), a socket (D194) with
+ * its hole plugged by a crate (or a compiled or pasted crate beside it).
+ * A gate that can be both closed and open there counts as both: never in
+ * the way, and floor to stand on.
  *
  * Pause (D85, D155): a frozen enemy is a 1×1×1 block he can stand on, so
  * with the spell every cell a pausable (non-boss) enemy walks counts as
@@ -66,7 +67,7 @@ export const JUMP = {
 const BLINK_RANGE = 3;
 
 /** Most crate configurations searched in one room. */
-export const MAX_CONFIGS = 500;
+export const MAX_CONFIGS = 2000;
 
 /** The four ways along the grid axes: [dx, dz]. */
 const DIRS = [
@@ -113,7 +114,7 @@ class RoomModel {
     this.bodies = new Set();
     /** Cell indices a moving platform passes: floor to stand on, never in the way (optimistic). */
     this.floors = new Set();
-    /** The room's switches: targets and plates. */
+    /** The room's switches: targets, plates and sockets (D194). */
     this.switches = [];
     /** Gates (D140): cell index, startsGone (a bridge) and the switch ids that power it (null: all). */
     this.gates = [];
@@ -140,7 +141,7 @@ class RoomModel {
       const [x, y, z] = object.at;
       if (object.kind === 'pushable') this.crates.push(this.index(x, y, z));
       else if (object.kind === 'platform') for (const [px, py, pz] of pathCells(object.at, object.path)) this.floors.add(this.index(px, py, pz));
-      else if (object.kind === 'plate') this.switches.push(object);
+      else if (object.kind === 'plate' || object.kind === 'socket') this.switches.push(object);
       else if (object.kind === 'gate' && (object.trigger ?? 'switch') === 'switch') this.gates.push({ index: this.index(x, y, z), startsGone: object.start === 'gone', switches: object.switches ?? null });
       else if (object.kind === 'target') {
         this.switches.push(object);
@@ -451,9 +452,15 @@ class RoomModel {
         continue;
       }
       const [x, y, z] = object.at;
+      const beside = DIRS.some(([dx, dz]) => stands.has(this.index(x - dx, y, z - dz)));
+      // A socket (D194): a crate fills its hole (pushed in, or a compiled or pasted one beside it).
+      if (object.kind === 'socket') {
+        if (cfg.plugged.has(z * this.w + x)) continue;
+        if ((abilities.has('compile') || (abilities.has('cut_paste') && cfg.crates.length > 0)) && beside) continue;
+        return false;
+      }
       if (cfg.crateSet.has(this.index(x, y, z))) continue;
       if (object.timer && stands.has(this.index(x, y, z))) continue;
-      const beside = DIRS.some(([dx, dz]) => stands.has(this.index(x - dx, y, z - dz)));
       const placed = (abilities.has('compile') || (abilities.has('cut_paste') && cfg.crates.length > 0)) && beside;
       if (placed) continue;
       // A frozen enemy on it: on its path or pushed there (D154, D166); or the decoy.
@@ -465,10 +472,12 @@ class RoomModel {
     return assignable(byFrozen);
   }
 
-  /** Are the switches `ids` all on whatever he does: plates under crates (targets he can always switch off). */
+  /** Are the switches `ids` all on whatever he does: plates under crates, filled sockets (targets he can always switch off). */
   forcedOn(ids, cfg) {
     const linked = this.linked(ids);
-    return linked.length > 0 && linked.every((object) => object.kind === 'plate' && cfg.crateSet.has(this.index(...object.at)));
+    const on = ({ kind, at: [x, y, z] }) =>
+      kind === 'socket' ? cfg.plugged.has(z * this.w + x) : kind === 'plate' && cfg.crateSet.has(this.index(x, y, z));
+    return linked.length > 0 && linked.every(on);
   }
 
   /**

@@ -23,7 +23,7 @@ import { clipBounds } from './clip-view.js';
 import { createRoomView } from './room-view.js';
 import { pickPanels } from './walls.js';
 import { createShrine } from './shrine-view.js';
-import { LockView, PlateView, TargetView } from './switch-view.js';
+import { LockView, PlateView, SocketView, TargetView } from './switch-view.js';
 import { DecoyView } from './decoy-view.js';
 import { ScanView } from './scan-view.js';
 import { ZapView } from './zap-view.js';
@@ -37,6 +37,7 @@ export const OBJECT_VIEWS = {
   platform: PlatformView,
   target: TargetView,
   plate: PlateView,
+  socket: SocketView,
   core: CoreView,
   deco: DecoView,
   gate: GateView,

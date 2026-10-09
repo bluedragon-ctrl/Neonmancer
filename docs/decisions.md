@@ -1468,3 +1468,22 @@ from `first_steps` he lands on the ledge. No watchdog: the start room.
 **Why:** the room taught nothing; now its one door teaches the jump's
 height (one block, never two) and its reach before anything bites,
 matching the screen's "step limit" line.
+
+### D194 — 2026-10-08 — The socket: a hole that is a switch
+A third switch kind, `socket` (object type `socket`, kind `socket`): a
+floor tile at y 0 that is a hole (the room adds it to its holes) and is
+on while that hole is filled. A crate pushed in plugs it for good, so it
+stays on until the room resets; a compiled crate (D125) powers it for its
+7 s, a pasted one for good. A decoy can't fill a hole and a frozen enemy
+pushed in pops, so in the Lattice only a crate powers it. It is never
+timed. Look: the hole's pit framed as a mechanism, a dashed white rim on
+the tile edge and the plate's corner brackets; filled, the rim turns
+solid and the plate's bull's-eye lights on the crate's top. The checker
+counts it on in a configuration with its tile plugged, or with Compile
+or Cut & Paste beside it, and raises `MAX_CONFIGS` from 500 to 2000:
+two free crates in an open room already need about 750 configurations.
+A dev room, `socket_lab`, off `room_1`, shows two.
+**Why:** the author (5.17): plates are weak locks (a decoy or a frozen
+enemy holds any one), so Sokoban rooms need a goal no spell fakes; a
+crate spent in a socket also makes "which crate where, in what order"
+the puzzle.
