@@ -1620,9 +1620,11 @@ pushes or fewer. A crate he can't stand on brings those puzzles back.
   jump clears it, like any 2-high obstacle. No taller hurt zone needed.
 - **Frozen enemies and the decoy** can't stand on it; **active enemies**
   are not hurt (as with hazard blocks today) and may cross it.
-- **Look:** green glass crate, cracked on the top with a neon red flame
-  or wave lashing out of the crack (red is what hurts, D99). Two
-  variants in the showcase, the author picks one.
+- **Look:** green glass crate with a wide fissure across the top, dark
+  inside with red edges (red is what hurts, D99), and a polar aurora
+  rising out of it: slow curtains with vertical rays, crimson at the
+  foot and dark indigo above (the author's wish: not classical flames).
+  Look only (`crack: "aurora"`), animated in the shader.
 - **Checker and solver:** a spiked crate's top is no standing surface
   (`below()` already says `'bad'` for a hazard top), except under a
   plain crate. The Microban survey gets a column that builds every crate

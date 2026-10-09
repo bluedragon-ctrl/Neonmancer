@@ -210,8 +210,8 @@ const EDGE_WIDTH = { gate: 1.5 };
  * for `since` seconds after it hurt the wizard. Glass faces (D96,
  * glass.js) are see-through, with the mark on a small dark core inside;
  * a destructible glass object is an empty shell of thinner glass (D99).
- * A cracked top (`crack`, D198, crack-fx.js) adds a red crack with fire
- * lashing out of it, for a crate whose top hurts.
+ * A cracked top (`crack`, D198, crack-fx.js) adds a wide fissure with a
+ * polar aurora rising out of it, for a crate whose top hurts.
  * @param {{ at: number[], kind?: string, color: string, edges: string, mark: string, faces: string, shape?: string, tint: number, integrity?: number, crack?: string }} object
  */
 export function createObjectView({ at, kind, color, edges, mark, faces, shape = 'cube', tint, integrity, crack = 'none' }) {
@@ -253,7 +253,7 @@ export function createObjectView({ at, kind, color, edges, mark, faces, shape = 
   }
   if (flares.length > 0) group.userData.flare = (since) => flares.forEach((flare) => flare(since));
   if (spiked) return group;
-  if (crack !== 'none') group.add(createCrack(crack, at));
+  if (crack !== 'none') group.add(createCrack(at));
 
   // A destructible object shows its data bits with some missing, whatever its mark.
   const drawn = integrity !== undefined ? 'bitsBroken' : mark;

@@ -145,7 +145,7 @@ export const OBJECT_STYLES = {
   mark: ['none', 'inset', 'cross', 'brackets', 'bits'],
   faces: ['dark', 'tinted', 'hazard', 'glass'],
   shape: ['cube', 'spiked'],
-  crack: ['none', 'flame', 'wave'],
+  crack: ['none', 'aurora'],
 };
 
 /** Style defaults: the first value of each OBJECT_STYLES list, plus the tint. */
