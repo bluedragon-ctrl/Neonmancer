@@ -9,6 +9,12 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
+- The cage (D202): block type `cage`, a one-cell switch gate with a
+  fence-like look (bars of light, see-through, the room's color) that locks
+  a pickup in plain view and goes while its switches are on. A pickup may
+  lie inside one; bolts and sight pass, collecting waits for it to open.
+  The room editor, the Switch tool, the checker and `mutate.mjs` know it;
+  dev room `cage_lab`, showcase `cage`.
 - The heavy plate (D200): a plate that needs a weight of two (`plate_heavy`,
   a plate type's `weight`, 1–4). Every body in its column counts one (crate,
   frozen enemy, decoy, the wizard, and bodies stacked on each other), so only

@@ -176,7 +176,7 @@ export function switchClick(edit, types, { cell, exit, selected, shift = false, 
   const thingHere =
     (exit && things.find((t) => t.key === `exit:${exit.id}`)) ||
     (here?.kind === 'object' && things.find((t) => t.key === `platform:${here.item.id}`)) ||
-    (here?.kind === 'block' && things.find((t) => t.kind === 'gate' && t.cells.some((c) => same(c, cell)))) ||
+    ((here?.kind === 'block' || here?.kind === 'pickup') && things.find((t) => t.kind === 'gate' && t.cells.some((c) => same(c, cell)))) ||
     null;
   const pickedSwitch = selected?.kind === 'item' ? (switches.find((object) => object.id === selected.id) ?? null) : null;
   const pickedThing = pickedSwitch ? null : pickedLinkable(things, selected);

@@ -354,6 +354,8 @@ const ALL_ASSETS = [
   // plate: the gate sinks as the bridge rises, and back.
   { label: 'timed-switches', group: 'switches', span: 4, spin: false, build: buildTimedSwitches },
   { label: 'gates', group: 'switches', span: 4.5, spin: false, build: buildGates },
+  // The cage (D202): a pickup behind bars of light, in plain view; the plate opens it (a gate), the pickup is then free.
+  { label: 'cage', group: 'switches', span: 5, spin: false, build: buildCages },
   // Cut & Paste (D87): the wizard cuts the crate in front
   // of him (a marquee snaps on, it streams into his hands as pixels), holds
   // it, and pastes it back (the pixels stream into a marquee, it grows in);
@@ -711,6 +713,40 @@ function buildGates() {
     gate.userData.set({ closed: !on, lit: Number(on) });
     bridge.userData.set({ closed: on, lit: Number(on) });
     for (const view of [plate, gate, bridge]) view.userData.update(dt);
+  };
+  return asset;
+}
+
+/**
+ * Cages (D202), one over a fragment, one over a refill, on one plate:
+ * pressed, both sink and the pickups are free; released, they close again.
+ */
+function buildCages() {
+  const plate = createPlate(SWITCH_COLOR);
+  plate.position.set(0, 0, 1.5);
+  const items = [
+    { cage: createGate(PALETTE.amber, { cage: true, lights: 1 }), model: createFragment({ slot: 7 }), x: -1.6, refill: false },
+    { cage: createGate(PALETTE.amber, { cage: true, lights: 1 }), model: createRefill('integrity'), x: 1.6, refill: true },
+  ];
+  const asset = new Group().add(plate);
+  for (const { cage, model, x } of items) {
+    cage.position.set(x - 0.5, 0, -0.5);
+    model.position.set(x, 0, 0);
+    asset.add(cage, model);
+  }
+  let time = 0;
+  asset.userData.update = (dt, clock) => {
+    time = (time + dt) % 7;
+    const on = time > 1.5 && time < 5;
+    plate.userData.set(on);
+    plate.userData.update(dt);
+    for (const { cage, model, x, refill } of items) {
+      cage.userData.set({ closed: !on, lit: Number(on) });
+      cage.userData.update(dt);
+      const motion = diskMotion({ time: clock });
+      poseDisk(model, refill ? refillMotion(motion) : motion);
+      model.position.x = x;
+    }
   };
   return asset;
 }
