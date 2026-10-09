@@ -71,6 +71,8 @@ worth playing.
    entrance, the fair-failure case, and what a later ability skips (exits
    only, never a pickup's trick). Hard to write → redraw. Read
    [craft.md](craft.md) when the room is a new idea rather than a fix.
+   When the trick is a push puzzle, design it with the `sokoban-design`
+   skill (XSB sketch, solver, classic levels) and come back for step 4.
 4. **Draft** from the skeleton below; place pieces per the rules and tuning.
 5. **Check** (all must pass; quote the output in the PR):
    ```

@@ -1,0 +1,31 @@
+; Neonmancer push motifs: small original patterns that only work under the
+; game's rules (he climbs crates and 1-high blocks, jumps 1-tile holes,
+; crates plug holes, fall off ledges and stack). Each is solved with
+; scripts/solve.mjs; the numbers are its output. Characters: see xsb.mjs.
+; Copy the idea, not the cells: a room sets it in its own shape.
+
+; Bridge and weight: the plate lies past a row of holes he can jump but a
+; crate can't cross. The trick: plug the hole in the plate's own column,
+; then the second crate rolls over the first. Plugging any other column
+; spends a crate for nothing. 8 pushes, 2 sharp steps, 86% traps (solve.mjs).
+#########
+#33.3333#
+#^^^^^^^#
+#       #
+# $  $  #
+#   @   #
+#########
+
+; Stack stairs: the way out is on a 3-high wall, two blocks above any
+; step he has. The trick: push the floor crate under the ledge's edge
+; first, then push the ledge crate off onto it: a 2-high stack beside the
+; wall. Dropping the ledge crate first (the obvious push) is the trap.
+; 7 pushes, 1 sharp step (the first), 69% traps (solve.mjs).
+; exit: +x:0:3
+#########
+#111& 33#
+#1111 33#
+#       #
+# $     #
+#  @    #
+#########

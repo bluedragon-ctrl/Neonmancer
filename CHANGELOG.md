@@ -9,6 +9,13 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
+- The `sokoban-design` sub-skill (D196): a room's push puzzle sketched as
+  XSB text, solved with the game's own push rules (fewest pushes, traps,
+  sharp steps) and converted into a room draft, with walls built as
+  blocks, ledges or holes and goals as plates or sockets. Two original
+  motifs, and Microban (David W. Skinner, 155 levels) surveyed under the
+  game's rules with picks per rung. `src/world/reach.js` exports its
+  room model and per-configuration helpers for it.
 - The socket (D194): a hole that is a switch, on once a crate fills it;
   a decoy or a frozen enemy can't, so it is the push puzzle's goal no spell
   fakes. In the showcase and the dev room `socket_lab`; the checker knows

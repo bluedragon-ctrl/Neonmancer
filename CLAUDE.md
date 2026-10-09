@@ -11,7 +11,9 @@ when decisions change (and record the reason in docs/decisions.md).
 NEONMANCER is a desktop browser game: an isometric, flip-screen adventure
 inspired by the *style and concept* of 1980s isometric games (e.g. Knight
 Lore), but fully original — own character, rooms, story, names and assets.
-Nothing from existing games is copied.
+Nothing from existing games is copied, except classic Sokoban layouts:
+they are public puzzles like chess problems, used as they are or
+adapted, with the author credited (D196).
 
 A cheerful wizard is zapped into the Grid, a colorful digital kingdom where
 magic and code are the same thing. He explores rooms, solves block puzzles,
@@ -493,7 +495,9 @@ not critical.
   `room-design` and `enemy-design` skills (schema, rules, tuning numbers,
   annotated examples; room-design opens with the game's core idea and
   has a rework workflow for existing rooms, D186, and ships a mutation
-  test and a headless play helper in its `scripts/`, D161) and the
+  test and a headless play helper in its `scripts/`, D161), the
+  `sokoban-design` sub-skill for a room's push puzzle (XSB sketches, a
+  solver with the game's push rules, classic levels and motifs, D196) and the
   read-only `level-review` subagent (runs validation, the reachability
   checker and the mutation test, reads a room against its trick and the
   checklist, verdict keep/tune/redesign/cut). Use them when drafting or reviewing rooms and enemies; keep
