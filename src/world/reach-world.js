@@ -52,7 +52,8 @@ function subsets(items, size) {
 
 /**
  * @param {object} content loaded game data (data/load.js loadGameData)
- * @param {{ needs?: boolean }} [options] `needs: false` skips the per-target ability sets
+ * @param {{ needs?: boolean|string }} [options] `needs: false` skips the per-target ability sets; a room id works them out for that room only
+ *   (the same sets as for all, which is what the one-room report needs: the search per room is costly)
  * @returns {WorldReach}
  */
 export function analyzeWorld(content, { needs = true } = {}) {
@@ -192,7 +193,7 @@ function searchWorld(content, needs, extra) {
     for (const exit of room.exits) targets.push({ room: id, kind: 'exit', id: exit.id, needs: reach.exits[exit.id] ? [[]] : null, ...(exit.access && { access: exit.access }) });
   }
   if (needs) {
-    for (const id of entered) {
+    for (const id of typeof needs === 'string' ? entered.filter((room) => room === needs) : entered) {
       const found = findNeeds(rooms.get(id), [...state.get(id).entries.values()][0].cells, ABILITIES.filter((a) => have.has(a)), tuning);
       for (const target of targets) if (target.room === id && target.needs) target.needs = found.get(`${target.kind}:${target.id}`) ?? [];
     }

@@ -220,7 +220,12 @@ export class RoomEdit {
     const here = this.at(cell);
     const what = [];
     if (here?.kind === 'block') what.push(here.type === 'block' ? 'block' : `${here.type} block`);
-    else if (here) what.push(`${here.item.id} (${here.item.template ?? here.item.type})`);
+    else if (here) {
+      what.push(`${here.item.id} (${here.item.template ?? here.item.type})`);
+      // A pickup inside a block (a cage, D202; a fake block, D128): name the block too.
+      const under = this.blocks.get(cell);
+      if (here.kind === 'pickup' && under && boxFields(under).type !== 'block') what.push(`inside a ${boxFields(under).type} block`);
+    }
     const [w, , d] = this.size;
     const edges = { '-x': x === 0, '+x': x === w - 1, '-z': z === 0, '+z': z === d - 1 };
     for (const side of Object.keys(edges).filter((key) => edges[key])) {
@@ -250,13 +255,14 @@ export class RoomEdit {
    * @param {string[]} [switches] a switch gate's switches (D140, D141); none: every switch in the room
    * @returns {boolean} whether anything changed
    */
-  placeBlock(cell, type, switches = []) {
+  placeBlock(cell, type, switches = [], holdsPickup = false) {
     if (!this.inside(cell)) return false;
     const key = boxKey(type, switches);
     return this.edit(() => {
       const here = this.at(cell);
       if (here?.kind === 'block' && boxKey(here.type, here.switches) === key) return false;
-      this.remove(cell);
+      // A cage (D202) closes round the pickup already there.
+      if (!(holdsPickup && here?.kind === 'pickup')) this.remove(cell);
       return this.blocks.set(cell, key);
     });
   }
@@ -278,19 +284,22 @@ export class RoomEdit {
    * is `disk_zap_1`...
    * @param {number[]} cell
    * @param {string} type pickup type id (defs.json "pickups")
+   * @param {(blockType: string) => boolean} [intoCage] is this block type a cage (D202)? A pickup placed on one lies inside it
    * @returns {boolean} whether anything changed
    */
-  placePickup(cell, type) {
-    return this.placeItem('pickups', cell, type);
+  placePickup(cell, type, intoCage = () => false) {
+    return this.placeItem('pickups', cell, type, intoCage);
   }
 
   /** placeObject() and placePickup(), into room list `key`. */
-  placeItem(key, cell, type) {
+  placeItem(key, cell, type, intoCage = () => false) {
     if (!this.inside(cell)) return false;
     const here = this.at(cell);
     if (here && LIST_OF[here.kind] === key && here.item.type === type) return false;
+    // A pickup goes inside a cage (D202) and leaves it standing.
+    const inside = key === 'pickups' && here?.kind === 'block' && intoCage(here.type);
     return this.edit(() => {
-      this.remove(cell);
+      if (!inside) this.remove(cell);
       this.data[key] = [...(this.data[key] ?? []), { id: this.freeId(type), type, at: [...cell] }];
       return true;
     });

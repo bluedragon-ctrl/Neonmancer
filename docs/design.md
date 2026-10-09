@@ -242,6 +242,7 @@ the ones it gives:
 | `collapsing_regrow` | extends `collapsing` | `regrow: 3` |
 | `gate` | kind `gate` (switch trigger), white, bars on its seen sides (D140) | solid until its switches are on (see Gate blocks) |
 | `bridge` | extends `gate` | `start: gone`: there only while its switches are on (D144) |
+| `cage` | kind `gate` (switch trigger), `look: cage`: bars of light round one cell, room color (D202) | `seeThrough: true`: bolts and sight pass; a pickup may lie inside (see Gate blocks) |
 
 - **Static types** have a `look` (`plain`, `hazard`, `void`, `fence`) and live in
   the room grid: each cell holds its type's code, and the rules ask about
@@ -460,8 +461,28 @@ The two triggers:
   `collapsing_regrow`: 3) it comes back that long after it went; without
   it stays gone until the room resets. Events: `shake`, `collapse`,
   `regrow`.
+- **Cage** (D202; type `cage`: kind `gate`, `look: cage`, `seeThrough`):
+  a switch gate for one cell that locks a pickup in plain view. A pickup
+  may lie inside it (as in a `fake` block, D128; in any other filled cell
+  it is rejected). It behaves as a gate: solid and standable while its
+  switches are not all on, sinks while they are, never comes back on
+  anything in its cell; with a timed switch it closes again when the time
+  is up (a pickup not yet taken is caged again; one taken is gone), and a
+  bridge-like cage that starts open does not exist. Closed, bolts and
+  enemies' sight pass (`seeThrough` on the object, so `game.sightBlockers`
+  and `Bolt` skip it) but nothing takes the pickup: `Game.caged()` blocks
+  collecting. Look (`src/render/cage-view.js`, `cageLayout()` pure): the
+  fence's streams of light in the room's color (gates are white, a
+  mechanism, D99; the cage is structure that opens): a ring at half and
+  full height, four posts with nodes, a bar up the middle of each side and
+  a two-bar lid, the switch lights between the lid bars. The checker takes
+  a caged pickup as reached once the cage's switches can be on; `mutate.mjs`
+  lists a sealed cage as `sealed cage`. Room editor: a pickup placed on a
+  cage cell lies inside it, a cage placed on a pickup closes round it, the
+  Switch tool links it like any gate. Showcase `?asset=cage`; dev room
+  `cage_lab`.
 - Validation: `trigger`, `start` and `regrow` only on gate block
-  types; `start: gone` only with the switch trigger, `regrow` only with the
+  types (`look: cage` and `seeThrough` only on a switch gate, D202); `start: gone` only with the switch trigger, `regrow` only with the
   step trigger; `switches` only on switch gate entries, naming switches
   of the room; a switch gate needs a switch in its room.
 - Tuning: `GATE` in `src/entities/gate.js` (the shake time), the look is

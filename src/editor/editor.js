@@ -886,7 +886,7 @@ export class Editor {
     const place = mode === 'place';
     const [x, y, z] = cell;
     const point = [x + 0.5, y, z + 0.5];
-    if (tool === 'block') this.change(() => (place ? edit.placeBlock(cell, this.blockType, this.blockSwitches) : edit.erase(cell)));
+    if (tool === 'block') this.change(() => (place ? edit.placeBlock(cell, this.blockType, this.blockSwitches, this.blockTypes[this.blockType]?.look === 'cage') : edit.erase(cell)));
     else if (tool === 'hole') this.change(() => edit.setHole([x, z], place));
     else if (tool === 'object') this.useObject(cell, place);
     else if (tool === 'enemy') this.useEnemy(cell, place);
@@ -1008,11 +1008,13 @@ export class Editor {
     // Nothing is ever overwritten (D142): an object, enemy or pickup there
     // is picked (a switch or a platform shows its links), a block named;
     // erase it (right click) to put something else there.
-    if (before?.kind === 'block') {
+    // A pickup is the exception for a cage (D202): it goes inside.
+    const intoCage = before?.kind === 'block' && this.pickupTypes[this.objectType] && this.blockTypes[before.type]?.look === 'cage';
+    if (before?.kind === 'block' && !intoCage) {
       this.status = `A ${before.type} block is there: erase it first to place ${this.objectType}.`;
       return this.refresh();
     }
-    if (before) {
+    if (before && !intoCage) {
       if (this.selected?.id === before.item.id && before.item.type !== this.objectType) {
         this.status = `${before.item.id} is there: erase it first (right click) to place ${this.objectType}.`;
         return this.refresh();
@@ -1020,7 +1022,7 @@ export class Editor {
       this.status = `${before.item.id} picked.`;
       return this.select({ kind: 'item', id: before.item.id });
     }
-    if (this.pickupTypes[this.objectType]) return this.change(() => edit.placePickup(cell, this.objectType));
+    if (this.pickupTypes[this.objectType]) return this.change(() => edit.placePickup(cell, this.objectType, (id) => this.blockTypes[id]?.look === 'cage'));
     this.change(() => edit.placeObject(cell, this.objectType));
     const here = edit.at(cell);
     if (here?.kind !== 'object') return;

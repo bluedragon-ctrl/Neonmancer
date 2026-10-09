@@ -305,11 +305,15 @@ function validateBlockTypes(blocks, report) {
       }
     }
     const type = resolved[id];
+    // The cage (D202) is a switch gate with a look: the one kind that takes one.
+    const cage = type.kind === 'gate' && type.look === 'cage';
     if (type.look === undefined && type.kind === undefined) report('defs.json', path, 'needs a "look" (a static block) or a "kind" (runs as room objects)');
-    else if (type.look !== undefined && type.kind !== undefined) report('defs.json', path, 'has both a "look" and a "kind"; a block type is one or the other');
+    else if (type.look !== undefined && type.kind !== undefined && !cage) report('defs.json', path, 'has both a "look" and a "kind"; a block type is one or the other');
     else if (type.kind !== undefined) {
-      const wrong = STATIC_BLOCK_VALUES.filter((key) => key in own);
+      const wrong = STATIC_BLOCK_VALUES.filter((key) => key in own && !(cage && (key === 'look' || key === 'seeThrough')));
       if (wrong.length > 0) report('defs.json', path, `${wrong.join(', ')}: only for static blocks (with a "look"), not a ${type.kind} block`);
+      if (cage && (type.trigger ?? 'switch') !== 'switch') report('defs.json', `${path}.look`, 'a cage is a switch gate: no step trigger');
+      if (type.seeThrough !== undefined && !cage) report('defs.json', `${path}.seeThrough`, 'only the cage look (a gate) is see-through');
       // A bridge is a switch gate; only a step gate (a collapsing block) grows back (D141).
       const trigger = type.trigger ?? 'switch';
       if (type.start === 'gone' && trigger !== 'switch') report('defs.json', `${path}.start`, 'only switch gates start gone (a bridge); a step gate starts solid');
@@ -356,7 +360,7 @@ function validateRoom(file, room, { objectTypes, pickupTypes, blockTypes, enemyT
     pathCells: new Map(),
     /** "x,y,z" of every gate block (D140, D141): floor that may go */
     collapsing: new Set(),
-    /** "x,y,z" of every fake block (D128): a pickup may lie inside one */
+    /** "x,y,z" of every fake block (D128) and cage (D202): a pickup may lie inside one */
     fake: new Set(),
     /** Ids of objects, enemies and pickups (one namespace per room) */
     ids: new Set(),
@@ -447,7 +451,7 @@ function validateBlocks(checks, blockTypes) {
       if (type.damage || type.lethal) checks.blockTypes.set(cellKey(cell), type);
       // Gates (collapsing blocks too, D141) go: they don't hold up the player or a hole.
       if (type.kind === 'gate') checks.collapsing.add(cellKey(cell));
-      if (type.fake) checks.fake.add(cellKey(cell));
+      if (type.fake || type.look === 'cage') checks.fake.add(cellKey(cell));
     }
   });
 }
@@ -593,7 +597,8 @@ function validateEnemies(checks, enemyTemplates) {
 /**
  * Pickups (D71): unique ids (shared with objects and enemies), known types,
  * inside the room in a cell no block or object fills, one per cell; inside
- * a fake block is fine (a hidden pickup a scan reveals, D128).
+ * a fake block is fine (a hidden pickup a scan reveals, D128), and inside
+ * a cage (D202: locked behind its switches).
  */
 function validatePickups({ room, report, ids, filled, fake }, pickupTypes) {
   const [w, h, d] = room.size;

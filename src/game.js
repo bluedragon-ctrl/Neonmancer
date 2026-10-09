@@ -258,7 +258,7 @@ export class Game {
     /** What enemies collide with: the objects and the other live enemies (not the wizard). */
     this.obstacles = [...objects, ...this.liveEnemies];
     /** What blocks an enemy's line of sight and stops an arc (besides blocks): the objects. */
-    this.sightBlockers = objects;
+    this.sightBlockers = objects.filter((object) => !object.seeThrough);
     /** The objects that are there (what lies on a spiked crate covers it, D199). */
     this.objectBodies = objects;
     /** Everything objects collide with: the solid objects, live enemies and the wizard. */
@@ -725,6 +725,12 @@ export class Game {
     }
   }
 
+  /** Is the pickup locked inside a closed cage (D202)? Nothing takes it through the bars. */
+  caged(pickup) {
+    const [x, y, z] = pickup.data.at;
+    return this.objects.some((object) => object.seeThrough && object.solid && object.pos[0] === x && object.pos[1] === y && object.pos[2] === z);
+  }
+
   /**
    * The wizard takes the pickups he touches (D71), if they are any use: a
    * data disk installs its spell for good (with an install animation
@@ -739,7 +745,7 @@ export class Game {
     if (player.dead) return;
     const box = player.box();
     for (const pickup of this.pickups) {
-      if (!pickup.takeable || !overlapsBox(box, pickup.box())) continue;
+      if (!pickup.takeable || this.caged(pickup) || !overlapsBox(box, pickup.box())) continue;
       if (!this.use(pickup.data, pickup.bit)) continue;
       pickup.take();
       this.emit('pickup', { pickup });

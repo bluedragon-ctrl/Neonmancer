@@ -12,6 +12,12 @@ docs/decisions.md).
 - Dev room `socket_yard` (D201): Microban 24 by David W. Skinner built with
   the `sokoban-design` skill, 1-high walls and two sockets opening a gate to a
   refill; a worked example of the skill (9 pushes, 2 sharp steps).
+- The cage (D202): block type `cage`, a one-cell switch gate with a
+  fence-like look (bars of light, see-through, the room's color) that locks
+  a pickup in plain view and goes while its switches are on. A pickup may
+  lie inside one; bolts and sight pass, collecting waits for it to open.
+  The room editor, the Switch tool, the checker and `mutate.mjs` know it;
+  dev room `cage_lab`, showcase `cage`.
 - The heavy plate (D200): a plate that needs a weight of two (`plate_heavy`,
   a plate type's `weight`, 1–4). Every body in its column counts one (crate,
   frozen enemy, decoy, the wizard, and bodies stacked on each other), so only
@@ -329,6 +335,11 @@ docs/decisions.md).
   collapsing block no longer derezzes.
 
 ### Fixed
+- `check:reach <room>` without `--with` finished in minutes on some rooms: it
+  worked out the ability sets of every room of the world (mirror_stacks,
+  bolt_gallery and scan_lab alone take over a minute) to report one. It now
+  does that for the asked room only (`analyzeWorld`'s `needs` takes a room
+  id), the same sets as before; the per-room crate search is unchanged.
 - Reachability checker (D171): the Fork decoy holds one plate at a time
   (it counted as holding every plate), and a drop onto a frozen enemy's
   or a platform's cell can also fall past it to the floor (from its south

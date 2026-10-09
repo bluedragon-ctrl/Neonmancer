@@ -125,7 +125,11 @@ mobile/touch support, backend or accounts.
   D198), and gate blocks that come and go
   (D140, D141): a gate or bridge switched by power, or a collapsing block
   that goes after being stepped on (optional regrow); all sink to go and
-  never come back on anything in their cell.
+  never come back on anything in their cell. The cage (`cage`, D202) is a
+  one-cell gate that looks like a fence (bars of light, see-through, in
+  the room's color: structure that opens, the exception to white gates):
+  a pickup lies inside it, in plain view, and it goes while the room's
+  switches are on; bolts and sight pass, so a Zap can't take it.
 - The spiked crate (`crate_spiked`, D199): a crate that pushes, falls,
   stacks and plugs a hole like any other, but its top is spiked
   (`topDamage` 2): touching it hurts him (the usual blink) and shoves him

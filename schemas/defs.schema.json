@@ -329,8 +329,8 @@
           "description": "Variant: the base block type (one without \"extends\") whose values it takes; its own values replace the base's."
         },
         "look": {
-          "enum": ["plain", "hazard", "void", "fence"],
-          "description": "Static blocks: plain (dark faces, neon edges), hazard (red pixels switching on and off, flares when it hurts), void (black mist with gray wisps sinking inside it, D99) or fence (no faces: horizontal data streams through the middle of the cell, linked with the fences next to it, D167; goes with \"seeThrough\"). Looks are built into the engine (src/render/block-fx.js, src/render/fence.js)."
+          "enum": ["plain", "hazard", "void", "fence", "cage"],
+          "description": "Static blocks: plain (dark faces, neon edges), hazard (red pixels switching on and off, flares when it hurts), void (black mist with gray wisps sinking inside it, D99) or fence (no faces: horizontal data streams through the middle of the cell, linked with the fences next to it, D167; goes with \"seeThrough\"). cage (a switch gate only, D202: a one-cell box of light bars round a pickup, see-through, with \"seeThrough\"). Looks are built into the engine (src/render/block-fx.js, src/render/fence.js, src/render/cage-view.js)."
         },
         "kind": {
           "enum": ["gate"],
@@ -348,11 +348,11 @@
         },
         "color": {
           "$ref": "common.schema.json#/$defs/color",
-          "description": "Edges (and lit pixels or grains). Without a color, plain blocks and gates take the room color (structure, D99); switch gates are white (a mechanism)."
+          "description": "Edges (and lit pixels or grains). Without a color, plain blocks and gates take the room color (structure, D99); switch gates are white (a mechanism), the cage (D202) the room color."
         },
         "damage": { "type": "integer", "minimum": 1, "description": "Static blocks: integrity the wizard loses when he touches it (stands on it or walks into it)." },
         "lethal": { "type": "boolean", "description": "Static blocks: landing on top kills the wizard and enemies instantly; touching a side is safe." },
-        "seeThrough": { "type": "boolean", "description": "Static blocks: solid to bodies (the wizard, enemies, crates; he can stand on top), but bolts (his Zap, enemies' shots) and enemies' sight pass through it (D167). Blink and Warp stop at it as at any block." },
+        "seeThrough": { "type": "boolean", "description": "Static blocks, and the cage (a gate with the cage look, D202; the pickup in it shows, a bolt passes): solid to bodies (the wizard, enemies, crates; he can stand on top), but bolts (his Zap, enemies' shots) and enemies' sight pass through it (D167). Blink and Warp stop at it as at any block." },
         "passes": {
           "type": "array",
           "items": { "enum": ["crate"] },

@@ -40,7 +40,8 @@ worth playing.
   on revisits); it never reaches a pickup without the trick that guards
   it. A pickup may need an ability as its gate (secrets do); no later
   ability may make its trick unnecessary. Guard pickups with what jumps
-  and spells can't replace: gates on switches, 3-high walls, fence roofs,
+  and spells can't replace: gates on switches (a `cage` over the pickup is
+  one cell of them, D202), 3-high walls, fence roofs,
   pits too wide to cross.
 - **Lattice abilities only.** In Home Lattice only its own abilities
   count: `double_jump,zap,scan,fork,pause` (the checker doesn't model
@@ -210,7 +211,7 @@ Edit existing files with small text edits, not a JSON dump.
   switch in the room), `hidden: true` (wall until Scan). The first row inside
   must be free.
 - **Blocks** (`defs.json` blocks): `block` (default) `hazard void fake
-  fence stream collapsing collapsing_regrow gate bridge`. A `fence` (D167) is a
+  fence stream collapsing collapsing_regrow gate bridge cage`. A `fence` (D167) is a
   block for bodies (he stands on it, crates and enemies stop) that hides
   nothing and lets bolts and sight through: wall off or raise a wall
   without blocking the view; a target behind it takes a Zap; a tower
@@ -221,7 +222,11 @@ Edit existing files with small text edits, not a JSON dump.
   A crate is pushed into it from the near side only (he cannot stand in
   it): a 1-thick wall hands a crate over, one cell beyond; in a thicker
   one it stops in the last cell. Use it where the trick is routing
-  crates through a field he cannot follow (sokoban-design). `gate`/`bridge` take `switches`
+  crates through a field he cannot follow (sokoban-design). A `cage` (D202) is a one-cell gate that looks like a fence, in the room's color:
+  a pickup lies inside it (the one filled cell a pickup may share, with
+  `fake`), it takes `switches` and sinks like a gate; bolts and sight pass,
+  so a Zap can't take it and nothing else needs hiding. The mutation test
+  lists it as a `sealed cage`. `gate`/`bridge` take `switches`
   (default: every switch in the room): a gate goes, a bridge appears while
   all are on. In a hole they stand a block high (top 1.0): a step, not floor.
   A gone bridge shows no outline: the room that first shows bridges says
@@ -256,7 +261,8 @@ Edit existing files with small text edits, not a JSON dump.
 - **Pickups** by defs id: `disk_*`, `fragment_N`, `secret_N`, `buff_*`,
   `upgrade_*` (permanent: one save bit each, D71: never place the same one
   twice by accident; world map F3 lists duplicates), `refill_*`, `boost_*`
-  (temporary). Inside a `fake` block is fine (Scan reveals it).
+  (temporary). Inside a `fake` block is fine (Scan reveals it), and inside a
+  `cage` (D202: locked behind its switches).
 - **Shrine** `[x, z]`: one floor tile, not on a hole, plate, block or object.
 
 ## Tuning (from the checklist; 60 ticks a second)

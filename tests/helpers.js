@@ -136,7 +136,7 @@ export const SCORE = { bit: 50, secret: 200, accessLevel: 500 };
 /**
  * Block types, as in defs.json (D60): plain, hazard, void, fake (D128), fence (D167),
  * gates (D141): collapsing (a step gate) and a variant that grows back
- * after 3 s, a switch gate and a bridge.
+ * after 3 s, a switch gate and a bridge, the cage (D202).
  */
 export const BLOCK_TYPES = {
   block: { look: 'plain' },
@@ -149,6 +149,7 @@ export const BLOCK_TYPES = {
   collapsing_regrow: { extends: 'collapsing', regrow: 3 },
   gate: { kind: 'gate', color: '#eef3ff' },
   bridge: { extends: 'gate', start: 'gone' },
+  cage: { kind: 'gate', look: 'cage', seeThrough: true },
 };
 
 /**

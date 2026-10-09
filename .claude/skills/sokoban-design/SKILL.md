@@ -110,6 +110,7 @@ a Neonmancer room:
 | | **Ledge edge** (floor one lower) | A crate pushed off falls, and can't come back up: a one-way wall |
 | Goal | **Plate** | Anything holds it (a crate can leave it again; a decoy or a frozen enemy can fake it) |
 | | **Socket** | A crate fills it for good (spent, can't be pushed on): order matters more; no spell fakes it |
+| | **Cage over the prize** | The reward of a push puzzle: a pickup in a `cage` (D202) on the plate or socket's switches is one cell, in plain view, and no spell reaches it (a Zap passes through the bars) |
 | | **Hole to plug** | Not a switch: the goal is the floor it makes (a way across to an exit or a pickup) |
 | | **Stack spot** | A crate dropped onto a crate: a 2-high step to a 3-high goal |
 | Player start | The door he comes in by | And every other door: re-solve `--from` each |
