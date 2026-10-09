@@ -10,8 +10,8 @@ docs/decisions.md).
 
 ### Added
 - Dev room `socket_yard` (D201): Microban 24 by David W. Skinner built with
-  the `sokoban-design` skill, 1-high walls and two sockets opening a gate to a
-  refill; a worked example of the skill (9 pushes, 2 sharp steps).
+  the `sokoban-design` skill, 1-high walls and two sockets opening a cage (D202)
+  over a refill; a worked example of the skill (9 pushes, 2 sharp steps).
 - The cage (D202): block type `cage`, a one-cell switch gate with a
   fence-like look (bars of light, see-through, the room's color) that locks
   a pickup in plain view and goes while its switches are on. A pickup may

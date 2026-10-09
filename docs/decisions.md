@@ -1767,13 +1767,13 @@ example. It is **Microban 24 by David W. Skinner**, mirrored so its goals
 lie along the back wall: two crates go down a 1-wide neck into two sockets
 (D194), and the order and the corner are the puzzle. Its walls are 1-high
 blocks (they stop crates; he steps over them) and its goals sockets, so no
-spell fakes them. The two sockets open a gate to a refill in a pocket
-behind a 3-high fence (see-through, so the reward shows).
+spell fakes them. The two sockets open a cage (D202) over a refill: one
+cell, the reward in plain view.
 - Solver: 9 pushes (the classic count), 2 sharp steps, 68% traps; the
   same with the Lattice spells (`--with zap,scan,fork,pause`). The refill
-  needs both crates and the gate (mutation test); the door is free.
-- Played with `sim.mjs`: both sockets plugged, the gate gone, the pocket
-  reached.
+  needs both crates and the cage (mutation test); the door is free.
+- Played with `sim.mjs`: the closed cage stops him; both sockets plugged,
+  the cage gone, the refill taken.
 **Why:** a small, solved example of the skill's whole path (XSB sketch,
 solve, convert, hand-wire, check, play) to copy from.
 
