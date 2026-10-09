@@ -1526,10 +1526,11 @@ the island (D194), so one island crate powers it and the other rides
 it. Getting them there is a small Sokoban on the loft, the author's
 wish: Microban 24 (David W. Skinner's Microban set), turned so its two
 goals are the pushes off the east edge onto the ferry and into the
-socket, its walls 3-high fences (he can't climb them, they hide
-nothing). He climbs crates, unlike a Sokoban player, but the level
-keeps its 11 pushes (a solver over the turned level, crates climbable
-or not). The west ferry (row 4) lands in the pen and runs while a west
+socket, its walls 1-high blocks on the loft. They stop crates; he
+steps over them and over crates, unlike a Sokoban player, but he can't
+carry a crate, so only the pushes matter: a solver over the turned
+level finds the same 11 pushes, 105 of its 169 crate positions are
+dead ends, and one of the two first pushes already ruins it. The west ferry (row 4) lands in the pen and runs while a west
 crate holds its plate (the plate lesson: it runs while held and parks
 where it is when let go, so he may also ride it there on his own
 weight, step off and jump onto the parked ferry, or a decoy holds the
@@ -1548,7 +1549,8 @@ finds it never. The socket lies in the pit, not in the loft: a socket
 is a floor-level hole, and a loft cell on its camera side hides it; a
 filled socket's top is at floor level, a dip in a loft. He leaves the
 pen by the west ferry, or with a running jump east over the 2-wide pit
-from the loft (D162), so it never strands him. With the double jump
+from the loft's edge (D162), so it never strands him; from the east
+door he steps over the pen's low wall from the bridge row. With the double jump
 (after all fragments, D187) the bare ferry reaches the pillar, but the
 socket is still needed.
 **Why:** a crate pushed once from the east door gave the fragment, and
