@@ -1487,3 +1487,31 @@ A dev room, `socket_lab`, off `room_1`, shows two.
 enemy holds any one), so Sokoban rooms need a goal no spell fakes; a
 crate spent in a socket also makes "which crate where, in what order"
 the puzzle.
+
+### D195 — 2026-10-09 — Bolt Gallery: the step crate shoots first (5.17)
+`bolt_gallery`'s fragment no longer sits on a 2-high plinth by the
+north side's crates: it lies at floor level in a back-corner pocket
+behind a 3-high see-through fence and a 3-high gate on `target_2`. The
+two targets stand side by side on a 2-high pillar row by the back
+wall, two blocks up (`target_2` at x 1, `target_1` at x 2), a 3-high
+wall behind them. A bolt flies at feet + 0.48, so a floor jump shot
+tops out at 1.68 and misses them; only a crate top and a jump reach
+them, from the south bank across the pit. The free crate is pushed
+west under `target_2` (cage and pocket), one cell back east under
+`target_1` (the north door), then on east to the bridge column with
+the freed caged crate: the step is spent last. The targets stand a
+cell off the side wall so the crate can be pushed back out; pushed
+to the wall, it is lost and he leaves to reset. The 1-high block that
+penned the crate at the bridge column is gone. From the north door
+the fragment costs the crossing south on the north crates, the whole
+south solve, and the way back. The checker counts every target as on
+with Zap whatever its line or height, so heights and lines were
+proven headless: no floor shot or floor jump shot from either side
+switches a target, and no shot from the north half (floor, crate
+top, jump, 32 directions) switches `target_2` (`target_1` falls to a
+north crate along row 4, harmless: he is past that door). Played
+headless, the south solve takes 22.6 s and two tower hits.
+**Why:** from the north door (reached from `scan_lab` round Relay
+Loft) a north crate was a step to the plinth, so the fragment needed
+nothing; the author: the crate that bridges the pit should be his
+step to the targets first.

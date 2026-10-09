@@ -137,6 +137,18 @@ Lessons from the reviews (D188 on):
   worst case: room to aim and miss once (`freeze_hall`, 15 s, D192).
 - **Hide nothing behind a cage.** Walls round a lane are 1 high: a
   2-high wall hides the enemy from the camera at +x +y +z.
+- **A pickup holds from every door.** Run the mutation test `--from`
+  each exit: a far door may put him beside the pickup with that side's
+  crates (`bolt_gallery`'s north door, D195).
+- **The checker hits every target.** It counts a target as on with
+  Zap whatever its line and height. Prove a target's line with
+  `sim.mjs`: sweep shots from every cell he can reach on the wrong side
+  (32 directions, floor, crate top, jump; facing can be diagonal), and
+  check the right side hits. A bolt flies at feet + 0.48: a floor jump
+  shot reaches 1.68 and a crate top 1.48, so a target one block up
+  falls to a floor jump shot; two blocks up needs a crate top and a
+  jump (D195). A target by a side wall keeps the crate under it
+  there for good: one cell off, it can be pushed back out.
 
 ## Skeleton
 ```json
@@ -393,9 +405,10 @@ depth a room needs; each is reviewed in step 5.17.
   holds a bridge for the freeze; a second bug is the step up a ledge; a 3-high
   back ledge leads home over the pit. Every piece matters (mutation test).
 - `bolt_gallery.json`: a 3-wide pit filled with two crates, towers covering
-  the bridge column; a target opens the cage of the second crate (both
-  crates matter with Zap from south; the cage's gates show NO EFFECT one at
-  a time only because each side is a way out).
+  the bridge column; the first crate is his step to two targets two
+  blocks up (the cage and the fragment's pocket, then the door) before it
+  bridges (D195; the cage's gates show NO EFFECT one at a time only because each
+  side is a way out).
 - `ledger_cell.json`: a chain of two plates and two gates; the guarded crate
   cell and the fragment alcove lie on the camera side of their 3-high walls,
   so everything shows; plates in corners (D160, D165).

@@ -59,7 +59,7 @@ Rules for the lines (D186, D187):
 
 | # | Room | Type | Rung | Trick to aim for | Now |
 |---|---|---|---|---|---|
-| 8 | `bolt_gallery` | hybrid | develop: crates into a pit, targets, under towers | Each crate is his cover until it drops in: the order he fills the 3-wide pit decides how many cells he crosses in the towers' lines. | Holds (Zap); the towers' pressure is judged by play. |
+| 8 | `bolt_gallery` | hybrid | develop: crates into a pit, targets, under towers | The bridge crate is his step first: two targets two blocks up take a jump shot from its top, pushed under one (the cage and the fragment's pocket), one cell back under the other (the door), then on to the pit with the freed crate. | Reworked (D195): only a crate reaches the targets; from the north the fragment costs the crossing both ways; the towers' pressure is judged by play. |
 | 9 | `relay_loft` | puzzle | teach: powered platforms | The ferry he needs runs only while crates hold its plates, and the second crate must come the long way round from the first ferry's far bank. | Fork holds a ferry plate: each ferry needs weight a decoy can't give. |
 | 10 | `ledger_cell` | puzzle | develop: plate chains, gates | A relay: crate 1 holds gate 1 while crate 2 comes out, then crate 2 takes over plate 1 so crate 1 can go on, and both plates end held. Order and swaps are the puzzle. | Fork replaces either crate. |
 
@@ -139,10 +139,9 @@ Ideas from the author for the reviews to come (5.17):
   bridge, a watchdog).
 - A plate in a moat: holes round the plate make him fill one before he
   (or a crate) can reach it.
-- Proposed: a socket, a hole that is a switch once a crate fills it.
-  A decoy can't fill a hole and a frozen enemy pushed in is lost, so
-  only a crate powers it: a Sokoban goal no spell fakes. A new
-  mechanic, waiting for the author's OK.
+- The socket (built, D194): a hole that is a switch once a crate
+  fills it. A decoy can't fill a hole and a frozen enemy pushed in is
+  lost, so only a crate powers it: a Sokoban goal no spell fakes.
 
 Reviews needed for the Fork skips above: `relay_loft`, `ledger_cell`,
 `ghost_exit`, `cold_stairs`, `idle_cache`, `guard_loop`.
