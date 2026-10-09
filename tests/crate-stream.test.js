@@ -7,10 +7,11 @@ import { pasteCell } from '../src/entities/clip.js';
 import { Player } from '../src/entities/player.js';
 import { Pushable } from '../src/entities/pushable.js';
 import { pullTarget } from '../src/entities/pull.js';
-import { OPPOSITE_SIDE } from '../src/data/room-data.js';
+import { OPPOSITE_SIDE, resolveBlockTypes } from '../src/data/room-data.js';
+import { blockTypeText } from '../src/editor/panel.js';
 import { buildRoom } from '../src/world/room.js';
 import { analyzeRoom } from '../src/world/reach.js';
-import { BUG, CRATE, gameData, grid as makeGrid, hold, idle, input, roomFile } from './helpers.js';
+import { BLOCK_TYPES, BUG, CRATE, gameData, grid as makeGrid, hold, idle, input, roomFile } from './helpers.js';
 
 /**
  * The crate stream (D198): a fence only crates and frozen enemies cross.
@@ -186,4 +187,8 @@ test('stream: a crate pushed through it stops one cell beyond, where a plate he 
   assert.equal(locked('block', 7), false, 'a plain wall stops it');
   assert.equal(locked('stream', 7), true, 'a stream does not');
   assert.equal(locked('stream', 8), false, 'pushing it further needs him inside the stream');
+});
+
+test('stream: the editor lists it with what passes', () => {
+  assert.equal(blockTypeText(resolveBlockTypes(BLOCK_TYPES).stream), 'crate pass');
 });
