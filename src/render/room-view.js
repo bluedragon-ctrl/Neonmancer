@@ -253,7 +253,7 @@ export function createObjectView({ at, kind, color, edges, mark, faces, shape = 
   }
   if (flares.length > 0) group.userData.flare = (since) => flares.forEach((flare) => flare(since));
   if (spiked) return group;
-  if (crack !== 'none') group.add(createCrack(at));
+  if (crack !== 'none') group.add(createCrack(at, faces === 'glass' && mark !== 'none' && integrity === undefined ? GLASS.coreSize : 0));
 
   // A destructible object shows its data bits with some missing, whatever its mark.
   const drawn = integrity !== undefined ? 'bitsBroken' : mark;
