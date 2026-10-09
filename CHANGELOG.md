@@ -28,6 +28,10 @@ docs/decisions.md).
   wait only for them are checker warnings.
 
 ### Changed
+- Relay Loft is rebuilt (D196, step 5.17): a small Sokoban on the loft
+  (Microban 45, 14 pushes) gets two crates into the sockets that run the
+  east ferry and the third onto it; he rides the ferry standing on that
+  crate to the fragment's 3-high pillar.
 - Bolt Gallery's targets stand two blocks up (D195, step 5.17): the
   crate that bridges the pit is first his step for two jump shots, one
   for the cage and the fragment's gated pocket, one for the north door;

@@ -1516,7 +1516,7 @@ Loft) a north crate was a step to the plinth, so the fragment needed
 nothing; the author: the crate that bridges the pit should be his
 step to the targets first.
 
-### D196 — 2026-10-09 — Push puzzles: a solver, motifs and classic levels
+### D197 — 2026-10-09 — Push puzzles: a solver, motifs and classic levels
 The `sokoban-design` skill sits beside `room-design` for rooms whose
 trick is pushing crates. A puzzle is sketched as XSB text (the plain
 Sokoban format, with Neonmancer characters for holes, sockets, fences,
@@ -1547,3 +1547,48 @@ re-solved before use.
 designs and checks them, starting from proven classics, gives rooms a
 real trick faster than drawing them by hand; the checker only says
 whether a goal is reachable, not how hard or how forgiving the puzzle is.
+### D196 — 2026-10-09 — Relay Loft: he rides the ferry on his crate (5.17)
+`relay_loft` is rebuilt round one trick: the fragment sits on a 3-high
+pillar by the east ferry's far dock, and the only way up is to ride
+that ferry standing on a crate. The middle island (x 5–9) is a 1-high
+loft, flush with the ferries' tops, so crates roll on and off them.
+The east ferry runs only once crates fill both sockets in the pit
+beside the island (D194); the third island crate rides it. Getting
+them there is a small Sokoban on the loft, the author's wish: Microban
+45 (David W. Skinner's Microban set), turned and mirrored so its three
+goals are the pushes off the east edge onto the ferry (row 1) and into
+the two sockets (rows 2 and 3), the room's back wall its north side
+and its other walls 1-high blocks on the loft. They stop crates; he
+steps over them and over crates, unlike a Sokoban player, but he can't
+carry a crate, so only the pushes matter. A crate pushed off an open
+edge falls into one pit cell: one more dead end, no help. The crates
+block each other: the solve takes 14 pushes, against 9 for each crate
+alone, and 816 of the 1,254 crate positions are dead ends (a solver
+over the room's cells). The first try, Microban 24 with two crates,
+was too easy: each crate had its own route and they never met.
+The west ferry (row 1) lands in the pen and runs while a west crate
+holds its plate (the plate lesson: it runs while held and parks where
+it is when let go, so he may also ride it there on his own weight, step
+off and jump onto the parked ferry, or a decoy holds the plate; it is
+the way in, not the trick); a timed plate on the east bank raises row
+7's bridges for 5 s, the way across from the east door (he steps over
+the pen's low wall from the bridge row). `crate_d`, the 2-high plinth,
+ferry B's two plates and the refill are gone.
+The checker takes ferries as floor and ignores their power, so it
+counts one crate as enough and the sockets as spare; played headless:
+the 14 pushes from the south door (one crate onto the waiting ferry
+first, then both sockets, then the ride once the ferry brings the
+crate back) take 36.9 s to the fragment; with one socket filled the
+east ferry stays put; a jump from the bare ferry at the dock never
+gets the fragment. Without the island crates the checker finds it
+never. The sockets lie in the pit, not in the loft: a socket is a
+floor-level hole, and a block on its camera side hides it, so the
+ferry takes the top opening and the sockets the open rows below it; a
+filled socket's top is at floor level, a dip in a loft. He leaves the
+pen by the west ferry, or with a running jump east over the 2-wide pit
+from the loft's edge (D162), so it never strands him. With the double
+jump (after all fragments, D187) the bare ferry reaches the pillar, but
+both sockets are still needed.
+**Why:** a crate pushed once from the east door gave the fragment, and
+a decoy stood in for every ferry plate; the author asked for a small
+Sokoban on the loft in which the order of pushes matters.
