@@ -1592,3 +1592,70 @@ both sockets are still needed.
 **Why:** a crate pushed once from the east door gave the fragment, and
 a decoy stood in for every ferry plate; the author asked for a small
 Sokoban on the loft in which the order of pushes matters.
+### D198 — 2026-10-09 — The crate stream: a fence only crates pass
+A block type `stream` extends `fence` with `passes: ["crate"]`, in the
+wizard's magenta (D98): a field keyed to him. Crates and frozen
+enemies (which push like crates, D154) pass through it; he, active
+enemies and Fork's decoy are stopped, as by a fence. Bolts and sight
+pass, as through any fence. It never moves or switches (a switched
+one may come later).
+Why it exists: he climbs crates, so Sokoban's player routing is gone
+(the Microban survey, D197). A barrier only crates cross brings it back
+exactly where a room draws one: he must route crates through a field he
+cannot follow them through, going round to push them on.
+Rules (the author's design, with these choices of mine for the author to
+veto):
+- **No top.** Its field reaches up to the ceiling for him (the grid
+  fills the cells above a stream cell with it), so no jump and no crate
+  under him gets him over or onto it, a 1-high one included. This was
+  the author's rule ("it has no top to land on") and it needed the
+  field: a plain 2-high wall has a top at 2, which he reaches from a
+  crate (1) with a jump. Rooms still build it 2 high; what is drawn is
+  what stops him where he can see. A crate resting in it is no step.
+- **He pushes from the near side only.** To push a crate on he stands
+  behind it, and he cannot stand in a stream. A 1-thick wall hands a
+  crate over, one cell beyond; in a thicker one a crate stops in the
+  last stream cell, out of his reach but for Pull.
+- A crate (or frozen enemy) in a stream cell stays pushable from either
+  side, falls through a stream cell over a gap like through air, can be
+  pulled through, and a paste or Compile may put one in a cell of it.
+  Fork's decoy may not (it is him).
+- **Colour:** magenta, the wizard's. `tests/colors.test.js` already
+  keeps every biome clear of PALETTE.magenta, so there is no new
+  conflict. The look is the fence's streams of light with the top beam
+  like any other (its top is no ledge); chosen from three showcase
+  options: plain magenta (taken), magenta with neon-green packets, a
+  dense quick one.
+Code: `Grid.forBody(kind)` answers solidity per kind of body (`'crate'`
+for crates and frozen enemies, the grid itself for him and active
+enemies); `pushable.js`, `enemy.js` (`gridView()`), `pasteCell()` and
+`pullTarget()` use the crate view. `reach.js` splits `blocked()` (him)
+from `blockedCrate()` and `below(..., crate)`; the push-puzzle solver,
+`xsb.mjs` (`~`, built 2 high, `--streams thin`) and the survey follow.
+The editor's block palette lists it.
+Survey (Microban 1–60, `--max 8000`, thin walls, the cells with floor on
+both sides along x or z, built as streams, the rest 3-high): 38 of the
+60 have such cells. 10 of those (3, 6, 11, 16, 18, 22, 37, 41, 47, 48)
+need fewer pushes than with plain walls, none more, 22 have fewer
+sharp steps, and none gets its classic push count back (level 59 hit the
+cap). So streams do not restore routing by themselves: a thin wall a
+crate crosses is a shortcut for the crate, and the player's detour only
+matters where the room is built round it. That takes a hand-built level
+(a vault the crates are handed into, the wizard going round).
+Dev room `stream_lab` (off `hidden_layer`, a new west exit there): a
+vault behind a stream row with a fence divider he steps over; two crates
+go up through the streams onto the vault's front row and are pushed
+sideways to two plates, which open a gate on a refill (a Microban-style
+mini puzzle of my own, not a classic level). Landing next to the
+divider is a dead end (he cannot stand on a fence to push), 10 pushes,
+39 % of the configurations are traps. Built as a plain 2-high wall or a
+fence in place of the streams, the checker finds the refill free: he
+steps on a crate, jumps onto the wall and walks over. With streams it
+needs both crates and the gate. Played headless: the 10 pushes take
+12 s; jumping at the stream from the floor or from a crate never put
+him past it.
+Authored rooms affected: none (no room uses `stream`; the only changed
+room, `hidden_layer`, is a dev room gaining a west exit).
+**Why:** the author: a barrier crates cross and he cannot gives the push
+puzzle the one thing climbing crates took away, the player's own route,
+and costs only a block type and a per-body view of the grid.

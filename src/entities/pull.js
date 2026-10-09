@@ -38,7 +38,8 @@ function enemyIn([x, y, z], enemies) {
  * @returns {{ object?: object, enemy?: object, cell: number[], dir: number[], distance: number }|null}
  *   `distance`: 1 right in front of him
  */
-export function pullTarget({ player, grid, objects, liveEnemies, bodies }, range) {
+export function pullTarget({ player, grid: whole, objects, liveEnemies, bodies }, range) {
+  const grid = whole.forBody('crate'); // a crate stream lets the pull through (D198)
   const axis = aimAxis(player.aim());
   const dir = [0 - axis[0], 0 - axis[1]]; // (not −0)
   const cell = frontCell(player.pos, player.size, axis);

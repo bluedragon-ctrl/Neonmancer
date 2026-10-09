@@ -82,7 +82,7 @@ export function blockTypeText(type) {
     return type.start === 'gone' ? 'gone, there while powered' : 'solid, gone while powered';
   }
   if (type.kind) return type.kind;
-  const does = [type.damage && `hurts ${type.damage}`, type.lethal && 'lethal', type.fake && 'a scan derezzes it'].filter(Boolean);
+  const does = [type.damage && `hurts ${type.damage}`, type.lethal && 'lethal', type.fake && 'a scan derezzes it', type.passes && `${type.passes.join(', ')} pass`].filter(Boolean);
   return does.join(', ') || type.look;
 }
 

@@ -295,17 +295,25 @@ export function nodePoints(posts) {
 }
 
 /**
+ * The crate stream's look (D198): a fence's streams of light with the top
+ * beam like any other, since its top is no ledge.
+ */
+export const STREAM_STYLE = { rail: null };
+
+/**
  * The fence cells of a room as streams of light.
  * @param {number[][]} cells [x, y, z]
  * @param {number|string} color edges (the room color by default, structure, D99)
  * @param {(x: number, y: number, z: number) => boolean} [solid] see fenceLayout()
+ * @param {{ rail?: null }} [style] `rail: null`: the top beam looks like any
+ *   other, no ledge (STREAM_STYLE)
  */
-export function createFenceView(cells, color, solid) {
+export function createFenceView(cells, color, solid, style = {}) {
   const { beams, rails, posts } = fenceLayout(cells, solid);
   const tint = new Color(color);
   const group = new Group();
   if (beams.length > 0) group.add(beamMesh(flowing(beams), tint, {}));
-  if (rails.length > 0) group.add(beamMesh(flowing(rails), tint, FENCE.rail));
+  if (rails.length > 0) group.add(beamMesh(flowing(rails), tint, style.rail === null ? {} : FENCE.rail));
   if (posts.length > 0) {
     group.add(beamMesh(posts.map((segment) => ({ segment, flow: 1 })), tint, FENCE.post));
     group.add(nodeMesh(nodePoints(posts), tint));

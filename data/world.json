@@ -2,7 +2,7 @@
   "$schema": "../schemas/world.schema.json",
   "schemaVersion": 1,
   "start": "boot_up",
-  "dev": ["hidden_layer", "room_1", "room_2", "fence_yard", "watchdog_run", "socket_lab"],
+  "dev": ["hidden_layer", "room_1", "room_2", "fence_yard", "watchdog_run", "socket_lab", "stream_lab"],
   "later": ["compile", "blink", "warp"],
   "fragments": { "required": 64, "access": [16, 32, 48] },
   "connections": [
@@ -41,6 +41,7 @@
     ["watchdog_run.east", "fence_yard.west"],
     ["boot_up.east", "first_steps.west"],
     ["boot_up.west", "hidden_layer.east"],
+    ["hidden_layer.west", "stream_lab.east"],
     ["warden_pit.west", "buffer_2.east"],
     ["ghost_exit.east", "buffer_5.west"],
     ["scan_lab.north_2", "buffer_1.south"],
@@ -49,6 +50,7 @@
   ],
   "positions": {
     "hidden_layer": [4, 0],
+    "stream_lab": [3, 0],
     "boot_up": [5, 0],
     "first_steps": [6, 0],
     "zap_port": [7, 0],

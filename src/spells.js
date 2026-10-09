@@ -242,7 +242,7 @@ function scan(game, { range }) {
  */
 function fork(game, { duration }) {
   const { player } = game;
-  const cell = pasteCell(game);
+  const cell = pasteCell(game, 'wizard');
   if (!cell) return false;
   game.decoy = new Decoy(cell, player.targetFacing, player.size, duration);
   player.fork = { cell, tick: 0 };

@@ -103,6 +103,7 @@ a Neonmancer room:
 | Wall | **3-high block** | Stops crates and him. Heavy: keep it at the back (camera) |
 | | **2-high block** | Stops crates; a crate beside it is his step onto it, and its top a road |
 | | **1-high ledge or fence** | Stops crates; he walks over it. The same puzzle as a 3-high wall in every Microban level solved, and hides nothing: the default |
+| | **Crate stream** (`~`, 2 high, D198) | Crates pass, he is stopped (no top: a jump or a crate under him never gets him over). A wall between two floors he cannot cross but a crate can: Sokoban's player routing is back, since he must go round to push the crate on from the far side. A 1-thick stream hands a crate over, one cell beyond; in a thicker one it stops in the last cell (he cannot stand in a stream to push on) |
 | | **Hole** | A crate pushed in is spent and the hole becomes floor: a wall that can be "opened" by sacrificing a crate. He jumps one, falls in two |
 | | **Ledge edge** (floor one lower) | A crate pushed off falls, and can't come back up: a one-way wall |
 | Goal | **Plate** | Anything holds it (a crate can leave it again; a decoy or a frozen enemy can fake it) |
@@ -157,6 +158,12 @@ the author and collection in the room's decision entry. Before use:
   shot, D195), then plugs a pit or fills a socket. Order is the trick.
 - **Socket order**: two sockets, two crates; filling the near one first
   makes floor for the far one's route, or the other way round blocks it.
+- **Stream gate**: a thin wall (one cell between two floors) built as a
+  stream: crates cross, he goes round (`xsb.mjs --streams thin` builds
+  every thin wall of a classic level this way; `~` by hand). The trick is
+  which crate to hand over first, and from where the far side can be
+  reached. A level needs a way round for him, or the far crates stay
+  where they land.
 - **Fence pen**: a 1-high fence keeps crates off a plate (he steps
   over it), so the plate needs a drop from above or a decoy.
 - **Enemy as the last crate** (with Pause): a frozen enemy pushed like a
@@ -169,7 +176,8 @@ the author and collection in the room's decision entry. Before use:
 
 ## Files
 - `scripts/xsb.mjs`: XSB to room JSON (`--out`, `--wall 1-5|hole`,
-  `--goal plate|socket`), plus the parser.
+  `--goal plate|socket`, `--streams thin`; `~` is a 2-high crate stream),
+  plus the parser.
 - `scripts/solve.mjs`: the solver (XSB, room id or room `.json`). A state
   is the crates plus where he is: after a push he stands where the crate
   was, so a region he can't leave counts.
