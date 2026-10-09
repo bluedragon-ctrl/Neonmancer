@@ -223,6 +223,23 @@ test('world: what one room gives opens the next, and the order is in rounds', ()
   assert.match(formatReach(report, { rooms: true }), /b exit east: double_jump/);
 });
 
+test('world: needs for one room only match the full report and skip the other rooms', () => {
+  const content = row([
+    roomFile('a', { exits: [EAST], pickups: [pickup('jump', [3, 0, 1], 'upgrade_double_jump')] }),
+    roomFile('b', { exits: [WEST, EAST], blocks: [{ at: [4, 0, 0], to: [4, 1, 7] }] }),
+    roomFile('c', { exits: [WEST], blocks: [{ at: [4, 0, 0], to: [4, 1, 7] }], pickups: [pickup('z', [3, 0, 3])] }),
+  ]);
+  const needs = (report, room) => Object.fromEntries(report.targets.filter((t) => t.room === room).map((t) => [t.id, describeNeeds(t.needs)]));
+  const all = analyzeWorld(content);
+  const one = analyzeWorld(content, { needs: 'b' });
+  assert.equal(needs(one, 'b').east, 'double_jump');
+  assert.deepEqual(needs(one, 'b'), needs(all, 'b'));
+  assert.deepEqual(one.errors, all.errors);
+  // Another room keeps the plain "reachable" it was found with, its sets not worked out.
+  assert.equal(needs(all, 'c').west, 'free');
+  assert.equal(needs(one, 'c').west, 'free');
+});
+
 test('world: what he can never reach is an error', () => {
   const content = row([
     roomFile('a', { exits: [EAST], blocks: [{ at: [4, 0, 0], to: [4, 1, 7] }], pickups: [pickup('walled', [6, 0, 6])] }),

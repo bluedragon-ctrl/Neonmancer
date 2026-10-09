@@ -50,7 +50,7 @@ if (roomId) {
     console.error(error.message);
     process.exit(1);
   }
-  const world = alone ? null : analyzeWorld(content);
+  const world = alone ? null : analyzeWorld(content, { needs: roomId });
   const part = alone ?? roomOfReport(world, roomId);
   const note = alone ? `${roomId} on its own with ${abilities?.length ? abilities.join(', ') : 'no abilities'}, from ${from ? `exit ${from}` : 'the spawn point'}:` : undefined;
   console.log(args.has('--json') ? JSON.stringify(part, null, 2) : formatRoom(roomId, part, note));
