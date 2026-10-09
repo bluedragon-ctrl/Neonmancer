@@ -1649,6 +1649,26 @@ before D140 work as they did). Switch types in `defs.json` are placed in
   timed. Its look: the pit with a dashed white rim on the tile edge and
   the plate's corner brackets; filled, the rim turns solid and the
   plate's bull's-eye and glow light on the crate's top.
+- **Heavy plate** (D200; `plate_heavy`, extends `plate`, `weight: 2`):
+  `weight` is a plate property of the type (1–4, default 1). Every body
+  resting in the plate's column counts 1: a crate, a frozen enemy, the
+  decoy, the wizard, and a body on top of another one (the stack counts
+  from the floor up, each body resting on the one below). The plate is
+  pressed once the weight is at least `weight`; weight 1 is the plain
+  plate. So only a stack holds a heavy plate (a crate dropped off a
+  ledge onto a crate on it): one decoy or one frozen enemy alone can't
+  fake it. He counts: a crate with him on it holds it, only while he
+  stays. Look: where a plain plate has one inner square, it has two
+  overlapping in a corner (for two boxes), bright enough to read with
+  nothing on it; under too little weight it flickers half-lit (dark and
+  half, outline dashed), fully pressed it lights like a plate. A timed
+  one (`timer`) counts down once the weight is gone. The Switch tool and
+  every link work as with any plate. Checker: a crate plate counts the
+  crates stacked in its column; a frozen enemy, the decoy and a
+  spell-placed crate add one each (each holder serves one plate, a
+  frozen enemy sits on top of the stack); he adds one on a timed plate.
+  Test room `heavy_lab` (dev wing): a floor crate onto the plate, then
+  the ledge crate dropped on it opens the gate.
 - **Timed switches** (D140; `target_timed` 5 s, `plate_timed` 3 s; a
   type's `timer`, which a room object may override, 0.5–30 s): on for
   that long, then off by themselves. A timed target counts from the bolt

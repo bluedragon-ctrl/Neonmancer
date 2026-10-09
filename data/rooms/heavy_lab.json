@@ -1,0 +1,20 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "heavy_lab",
+  "name": "Heavy Lab",
+  "biome": "home_lattice",
+  "size": [10, 4, 8],
+  "spawn": [0.5, 0, 4.5],
+  "exits": [{ "id": "west", "side": "-x", "at": 4 }],
+  "blocks": [
+    { "at": [6, 0, 0], "to": [6, 0, 3] },
+    { "type": "gate", "at": [8, 0, 0], "to": [8, 3, 7] }
+  ],
+  "objects": [
+    { "id": "plate_heavy_1", "type": "plate_heavy", "at": [6, 0, 4] },
+    { "id": "crate_1", "type": "crate", "at": [3, 0, 4] },
+    { "id": "crate_2", "type": "crate", "at": [6, 1, 1] }
+  ],
+  "pickups": [{ "id": "energy", "type": "refill_energy", "at": [9, 0, 4] }]
+}

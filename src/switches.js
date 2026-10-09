@@ -44,7 +44,7 @@ export function powered(game, ids) {
 
 /**
  * Plates follow what stands on them (a crate, an enemy, the wizard, his
- * decoy, D129), sockets their hole (filled or not, D194); targets were switched by bolts already, and timed ones
+ * decoy, D129; a heavy plate the weight of the stack, D200), sockets their hole (filled or not, D194); targets were switched by bolts already, and timed ones
  * counted down with the objects (D140). A timed switch counting down
  * ticks ('tick', every second, twice as often in its last two). Then
  * gates and platforms follow their switches (D140): a gate opens or
@@ -65,7 +65,7 @@ export function updateSwitches(game) {
     ...(game.decoy?.active ? [game.decoy.box()] : []),
   ];
   for (const object of game.switches) {
-    if (object.kind === 'plate' && object.press(object.pressedBy(boxes))) game.emit('switch', { object });
+    if (object.kind === 'plate' && object.press(object.weigh(boxes))) game.emit('switch', { object });
     // A socket is on while its hole is filled (D194).
     if (object.kind === 'socket' && object.fill(!game.grid.isHole(object.pos[0] + 0.5, object.pos[2] + 0.5))) game.emit('switch', { object });
     const left = object.countdown === null ? 0 : object.left;

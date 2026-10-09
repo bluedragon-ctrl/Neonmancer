@@ -9,6 +9,13 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
+- The heavy plate (D200): a plate that needs a weight of two (`plate_heavy`,
+  a plate type's `weight`, 1–4). Every body in its column counts one (crate,
+  frozen enemy, decoy, the wizard, and bodies stacked on each other), so only
+  a stack holds it. Look: two squares overlapping in a corner, flickering
+  half-lit under too little weight. The checker, the solver, `xsb.mjs` (`:`)
+  and the Switch tool know it; dev room `heavy_lab`, showcase `plates-compare`
+  and `plate-heavy`.
 - The crate stream (D198): block type `stream`, a fence in the wizard's
   magenta that crates and frozen enemies pass and he and active enemies
   cannot, with no top to stand on or climb over. `Grid.forBody()` gives

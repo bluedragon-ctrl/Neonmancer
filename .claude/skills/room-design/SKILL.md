@@ -227,7 +227,7 @@ Edit existing files with small text edits, not a JSON dump.
   A gone bridge shows no outline: the room that first shows bridges says
   what one is in a screen text (see Screen texts below).
 - **Objects** (`defs.json` objects): crates `crate crate_plain crate_cross
-  crate_dashed crate_spiked`; switches `plate plate_timed target target_timed socket`; `platform
+  crate_dashed crate_spiked`; switches `plate plate_timed plate_heavy target target_timed socket`; `platform
   spiked_platform` (need `path`, may take `switches`: run only while all on);
   decorations `screen data_pillar memory_stack` (`overrides: { "face":
   "+x"|"+z" }`; a screen may name a `text` in `data/lore.json`: title <= 32,
@@ -350,6 +350,13 @@ Edit existing files with small text edits, not a JSON dump.
   ignores the 5 s clock: time the run with `sim.mjs`). Hem the path in
   (walls, the room side, a pit it pops into). Plate against a wall: the
   next push may go into a pit.
+- **A heavy plate** (`plate_heavy`, `weight` 2, D200) needs two bodies in
+  its column: a stack, so it is the lock a decoy or a frozen enemy alone
+  can't fake (a crate, a frozen enemy, the decoy and he each weigh one; he
+  counts, so a crate he stands on holds it only while he stays). It is
+  the answer to "a plate alone is no lock": a crate on it plus a ledge
+  crate dropped on top. Under one weight it flickers half-lit, so the
+  player sees he is on the right track.
 - **One decoy.** Fork holds one plate at a time (a new fork replaces the
   old, D129); the checker counts it so (D171). Two plates that must be on
   together need a second holder (a crate, a frozen enemy, him on a timed
@@ -372,7 +379,7 @@ Edit existing files with small text edits, not a JSON dump.
   the trick. Fix it with what an ability can't replace (a switch-powered
   gate, a 3-high wall, a fence roof, a wider pit). A plate alone is no
   lock: a decoy holds any one plate, a frozen enemy one on or beside its
-  lane; lock on two plates at once, weight that stays longer than 10 s,
+  lane; lock on a heavy plate (two weights, D200: a stack), on two plates at once, weight that stays longer than 10 s,
   or where a crate ends up (a hole, a step, a stack). Sets that only open
   exits are fine. The later sectors' spells are left out in the Lattice.
 

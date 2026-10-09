@@ -675,7 +675,7 @@ export class PlateView {
    */
   constructor(game, plate) {
     this.plate = plate;
-    this.group = createPlate(plate.object.color, { timed: plate.timed });
+    this.group = createPlate(plate.object.color, { timed: plate.timed, heavy: plate.weight > 1 });
     this.group.position.set(...plate.pos);
     this.time = 0;
   }
@@ -686,7 +686,7 @@ export class PlateView {
    */
   sync(alpha, dt = 0) {
     this.time += dt;
-    this.group.userData.set(switchLight(this.plate.on, this.plate.countdown ?? null, this.time));
+    this.group.userData.set(switchLight(this.plate.on, this.plate.countdown ?? null, this.time), { partial: this.plate.partial });
     this.group.userData.update(dt);
   }
 }

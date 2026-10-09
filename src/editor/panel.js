@@ -444,7 +444,7 @@ export class EditorPanel {
   switchGroup(switchTypes) {
     const { on } = this;
     this.switchRows = this.group('switch');
-    const timed = (type) => (type.timer ? `, ${type.timer} s` : '');
+    const timed = (type) => (type.timer ? `, ${type.timer} s` : '') + (type.weight > 1 ? `, weight ${type.weight}` : '');
     this.switchSelect = select(Object.entries(switchTypes).map(([id, type]) => [id, `${id} (${type.kind}${timed(type)})`]));
     this.switchSelect.addEventListener('change', () => on.switchType(this.switchSelect.value));
     this.switchTypeRow = this.row('Type', this.switchSelect);
