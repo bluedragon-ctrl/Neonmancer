@@ -1644,6 +1644,12 @@ pushes or fewer. A crate he can't stand on brings those puzzles back.
   (the 32 pushes and out through the door in 30 s, no hurt). With 3-high
   walls and spiked crates Microban 19 is 20 pushes and 63 is 50, their
   classic counts too.
+- **Survey result:** Microban re-run with every crate spiked (`--max
+  30000`): with 3-high walls and plates all 104 levels solved match their
+  classic push count exactly, including the 28 whose plain-crate count was
+  half the classic or less; 23 more with a known classic count hit the
+  state cap. With 1-high walls they do not (he walks over the walls: 80
+  of 104 stay short), so build walls 3 high. See `microban-survey.md`.
 - **Names:** the property is `topDamage`, not `damage`: an object's
   `damage` (platforms) hurts on every side. `vents: "aurora"` is the look.
 **Why:** puzzles from the Sokoban canon should not collapse to a walk

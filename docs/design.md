@@ -1458,7 +1458,8 @@ usual, so half behind a wall he is half ghost (D55).
   the box" is gone; in the Microban survey 29 of the 104 levels solved
   need half the pushes or fewer. With every crate spiked, the levels
   build in the game play like Classic again (`microban-survey.md`,
-  spiked columns). A jump in line over a 1-high crate always touches the
+  spiked columns: with 3-high walls all 104 levels solved match their
+  classic push count; 1-high walls don't, he walks over them). A jump in line over a 1-high crate always touches the
   top (a jump spends 0.23 s above 1.0 and covers 0.67 units sideways,
   clearing needs 1.6): no bypass, no taller hurt zone. The double jump
   does clear it, like any 2-high obstacle.
