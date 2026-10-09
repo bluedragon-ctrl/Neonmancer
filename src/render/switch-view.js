@@ -106,12 +106,14 @@ export const SWITCH_FX = {
   blinkLit: 0.6,
   blinkDip: 0.25,
   /**
-   * A heavy plate (D200): margin of the extra solid square round its
-   * bull's-eye, and, under too little weight, how bright it flickers (0..1
+   * A heavy plate (D200): in place of the one inner square, two of this
+   * side overlapping in a corner (for two bodies), their lower left corners
+   * this far apart along each axis; and, under too little weight, how bright it flickers (0..1
    * of on, dark and half-lit) and how fast (stutters per second, the
    * eased value follows within this many seconds).
    */
-  heavyRim: 0.09,
+  heavyPair: 0.26,
+  heavyShift: 0.12,
   partialLo: 0.05,
   partialHi: 0.5,
   partialRate: 9,
@@ -163,10 +165,17 @@ export function targetMarks({ seen = false } = {}) {
   return { outer: onFaces(square2d(outer, 1 - outer)), inner: onFaces(square2d(inner, 1 - inner)) };
 }
 
+/** The two squares [from, to] of a heavy plate's centre (D200): side `heavyPair`, overlapping in a corner, the pair centred on the tile. */
+export function heavyPairSquares() {
+  const { heavyPair: side, heavyShift: shift } = SWITCH_FX;
+  const a = 0.5 - (side + shift) / 2;
+  return [[a, a + side], [a + shift, a + shift + side]];
+}
+
 /**
  * A plate's lines on the floor tile (pure, tested): the dashed tile
  * outline, the bull's-eye, and the corner brackets just outside the tile.
- * A heavy plate (D200) adds `rim`, a solid square just inside the tile edge.
+ * A heavy plate (D200) has `pair`, two squares overlapping in a corner, in place of `inner`.
  * @param {number} y height to draw at
  */
 export function plateMarks(y) {
@@ -181,7 +190,7 @@ export function plateMarks(y) {
     tile: lift(square2d(0, 1)),
     outer: lift(square2d(outer, 1 - outer)),
     inner: lift(square2d(inner, 1 - inner)),
-    rim: lift(square2d(SWITCH_FX.heavyRim, 1 - SWITCH_FX.heavyRim)),
+    pair: heavyPairSquares().map((square) => lift(square2d(...square))),
     brackets,
   };
 }
@@ -372,13 +381,19 @@ export function createPlate(color, { timed = false, heavy = false } = {}) {
   const bracketMat = lineMaterial({ color: base, width: 2.2 });
   line(marks.tile, tileMat);
   line(marks.outer, outerMat);
-  line(marks.inner, markMat);
+  // A heavy plate has two squares overlapping in a corner where a plain one has one (D200).
+  if (heavy) for (const square of marks.pair) line([square], markMat);
+  else line(marks.inner, markMat);
   line(marks.brackets, bracketMat);
-  if (heavy) line(marks.rim, markMat);
   const fillMat = glowMaterial(base);
-  const fill = new Mesh(new PlaneGeometry(1 - 2 * SWITCH_FX.inner, 1 - 2 * SWITCH_FX.inner), fillMat);
-  fill.rotation.x = -Math.PI / 2;
-  fill.position.set(0.5, y, 0.5);
+  const fills = heavy ? heavyPairSquares().map(([a, b]) => [(a + b) / 2, b - a]) : [[0.5, 1 - 2 * SWITCH_FX.inner]];
+  const fill = new Group();
+  for (const [mid, side] of fills) {
+    const plane = new Mesh(new PlaneGeometry(side, side), fillMat);
+    plane.rotation.x = -Math.PI / 2;
+    plane.position.set(mid, y, mid);
+    fill.add(plane);
+  }
   const spillMat = new MeshBasicMaterial({ vertexColors: true, blending: AdditiveBlending, transparent: true, depthWrite: false });
   group.add(fill, floorSpill(SWITCH_FX.spill, SWITCH_FX.lift, spillMat));
 

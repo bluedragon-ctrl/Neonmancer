@@ -1740,8 +1740,9 @@ no lock"), and the Sokoban goal gets a height.
   leave" puzzle, since the weight goes when he steps off. Like any plate
   he can't be the weight for an exit he must walk through; the checker
   counts him only on a timed plate (he runs on while it counts down).
-- **Look:** its own pattern, an extra solid square round the bull's-eye
-  (a double frame), white as every mechanism (D99). Under too little
+- **Look:** its own pattern: where a plain plate has one inner square, a
+  heavy one has two overlapping in a corner (the author's wish: it hints
+  at two boxes), white as every mechanism (D99). Under too little
   weight (some, not enough) it flickers half-lit: the lights stutter
   between dark and half, the outline stays dashed. Fully pressed it lights
   like a plate (solid outline, brackets, floor glow). A timed variant
