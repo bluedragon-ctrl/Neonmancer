@@ -21,9 +21,10 @@ docs/decisions.md).
   wait only for them are checker warnings.
 
 ### Changed
-- Bolt Gallery's fragment lies in a gated pocket (D195, step 5.17): the
-  targets that open it, the cage and the north door are shot only from
-  the south across the pit, so the north door no longer gives it free.
+- Bolt Gallery's targets stand two blocks up (D195, step 5.17): the
+  crate that bridges the pit is first his step for two jump shots, one
+  for the cage and the fragment's gated pocket, one for the north door;
+  the north door no longer gives the fragment free.
 - Boot Up's way out is up (D193, step 5.17): two steps and a 1-wide
   gap to the east door's ledge teach the jump's height and reach, safely.
 - Freeze Hall has a 15 s watchdog (D192, step 5.17): the timed freeze
