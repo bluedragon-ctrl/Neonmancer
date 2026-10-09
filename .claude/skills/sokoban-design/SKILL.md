@@ -147,8 +147,11 @@ the author and collection in the room's decision entry. Before use:
   rule 5). Microban-sized levels fit; big classics don't.
 - **Translate the goal**: a Sokoban goal becomes a plate (a decoy or a
   frozen enemy holds it, so mind room-design's "One decoy" and "plate
-  alone is no lock") or a socket (crate only, spent). Mixing them is
-  where Neonmancer adds to a classic.
+  alone is no lock") or a socket (crate only, spent). A goal can also be
+  a **stack spot** (`:` in XSB, a heavy plate, D200): it needs two crates
+  stacked on it (or a crate, and a frozen enemy or the decoy), so only a
+  ledge drop onto a crate already there builds it. Mixing them is where
+  Neonmancer adds to a classic.
 - **Lift it**: the best adaptations add one Neonmancer twist (a ledge
   crate, a hole row, a stack, a pen of fences) to the classic (ideas in
   the survey page).
@@ -162,6 +165,10 @@ the author and collection in the room's decision entry. Before use:
 - **Stack stairs** (`motifs.xsb` 2): the floor crate goes under the
   ledge's edge first, then the ledge crate drops onto it: a 2-high step.
   The drop alone is the trap.
+- **Heavy plate** (`:`, D200): the floor crate goes onto the plate first,
+  then the ledge crate drops on it. The drop first is the trap: that crate
+  lies on the plate alone (half-lit flicker), and the other can no longer
+  be pushed onto it. The dev room `heavy_lab` is the minimal case: 6 pushes.
 - **Ledge drop**: a ledge crate pushed off lands where floor pushes
   can't reach (a pocket past a 1-high rim, a plate behind a fence row).
 - **Step, then spend**: a crate is a step to a ledge (or a target
@@ -192,7 +199,8 @@ the author and collection in the room's decision entry. Before use:
 ## Files
 - `scripts/xsb.mjs`: XSB to room JSON (`--out`, `--wall 1-5|hole`,
   `--goal plate|socket`, `--streams thin`; `~` is a 2-high crate stream, `--spiked`:
-  every crate spiked; `!` is one spiked crate), plus the parser.
+  every crate spiked; `!` is one spiked crate; `:` is a heavy plate,
+  D200, always a plate whatever `--goal` says), plus the parser.
 - `scripts/solve.mjs`: the solver (XSB, room id or room `.json`). A state
   is the crates plus where he is: after a push he stands where the crate
   was, so a region he can't leave counts.

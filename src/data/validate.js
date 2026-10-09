@@ -94,6 +94,8 @@ export function validateData(files) {
     }
     // Only switches are timed (D140).
     if (type.timer !== undefined && !TIMED_SWITCH_KINDS.includes(type.kind)) report('defs.json', `objects.${id}.timer`, `only switches (targets and plates) are timed, not a ${type.kind}`);
+    // Only plates have a weight (D200).
+    if (type.weight !== undefined && type.kind !== 'plate') report('defs.json', `objects.${id}.weight`, `only plates have a weight, not a ${type.kind}`);
     // Only a decoration has a look (D117); every other kind needs a color.
     if (type.kind === 'deco' && !DECO_LOOKS[type.look]) report('defs.json', `objects.${id}.look`, `a decoration needs a look: ${Object.keys(DECO_LOOKS).join(', ')}`);
     if (type.kind !== 'deco' && type.look !== undefined) report('defs.json', `objects.${id}.look`, `only decorations have a look, not a ${type.kind}`);

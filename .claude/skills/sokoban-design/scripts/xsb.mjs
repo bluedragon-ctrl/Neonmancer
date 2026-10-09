@@ -17,6 +17,8 @@
 //   ^  hole (a crate fills it)            o  socket (a goal hole, D194)
 //   %  fence, 1 high (crates stop, he climbs it, bolts pass)
 //   ~  crate stream, 2 high (D198): crates pass, he is stopped, bolts pass
+//   :  heavy plate (plate_heavy, D200): needs a weight of two, a stack of two crates,
+//      or a crate and the wizard on a timed one; always a plate, whatever --goal says
 //   &  crate on a 1-high block (a ledge crate: pushed off, it falls)
 //   !  spiked crate (crate_spiked, D199): its top hurts him, he can't stand on it;
 //      --spiked makes every $ and * a spiked crate (a whole level built that way)
@@ -62,7 +64,7 @@ export function parseXsb(text) {
       notes.push(line.replace(/^\s*;\s?/, ''));
     } else if (line === '' && rows.length === 0) {
       notes = []; // a blank line ends a comment block that no level follows
-    } else if (line === '' || !/^[#1-5$.*@+ \-_^o%&~!]+$/.test(line)) {
+    } else if (line === '' || !/^[#1-5$.*@+ \-_^o%&~!:]+$/.test(line)) {
       flush();
       if (line !== '') notes.push(line.trim());
     } else rows.push(line);
@@ -140,7 +142,7 @@ export function xsbToRoom(level, { id = 'sokoban_draft', name = 'Sokoban Draft',
   const objects = [];
   const holes = [];
   let spawn = null;
-  const count = { crate: 0, crate_spiked: 0, plate: 0, socket: 0 };
+  const count = { crate: 0, crate_spiked: 0, plate: 0, plate_heavy: 0, socket: 0 };
   const add = (type, x, z, y = 0) => objects.push({ id: `${type}_${++count[type]}`, type, at: [x, y, z] });
   for (let z = 0; z < depth; z++)
     for (let x = 0; x < width; x++) {
@@ -150,12 +152,13 @@ export function xsbToRoom(level, { id = 'sokoban_draft', name = 'Sokoban Draft',
       if (!socket && (c === '*' || c === '+')) add('plate', x, z);
       if (c === '$' || (!socket && c === '*')) add(spiked ? 'crate_spiked' : 'crate', x, z);
       if (c === '!') add('crate_spiked', x, z);
+      if (c === ':') add('plate_heavy', x, z);
       if (c === '&') add('crate', x, z, 1);
       if (c === 'o') add('socket', x, z);
       if (c === '^') holes.push({ at: [x, z] });
     }
   if (!spawn) throw new Error('the level has no @ (wizard)');
-  const switches = count.plate + count.socket > 0;
+  const switches = count.plate + count.plate_heavy + count.socket > 0;
   const room = {
     $schema: '../../schemas/room.schema.json',
     schemaVersion: 1,

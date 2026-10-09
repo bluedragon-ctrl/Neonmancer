@@ -10,7 +10,9 @@
  * - Plate: a floor tile, flush with the floor like a hole. It is on while
  *   something stands on it: a crate, an enemy or the wizard, with the
  *   middle of its footprint over the tile and its feet on the floor. It is
- *   no body: things move over it as over the floor.
+ *   no body: things move over it as over the floor. A heavy plate (D200,
+ *   `weight` 2) needs that many bodies in its column, each resting on the
+ *   floor or on the one below; with some but not enough it is `partial`.
  *
  * - Socket (D194): a hole that is a switch. Its tile is a hole (the room
  *   adds it to its holes) and it is on while that hole is filled: a crate
@@ -118,6 +120,15 @@ export class Plate extends Switch {
     super(object);
     /** Is something standing on it now (a timed plate is on a while longer)? */
     this.held = false;
+    /** The weight it needs (D200): the bodies in its column. */
+    this.weight = object.weight ?? 1;
+    /** The bodies in its column at the last weighing. */
+    this.load = 0;
+  }
+
+  /** Some weight on it but not enough (D200): a heavy plate flickers. */
+  get partial() {
+    return this.load > 0 && this.load < this.weight;
   }
 
   /** A timed plate counts down only once nothing stands on it. */
@@ -131,18 +142,46 @@ export class Plate extends Switch {
   }
 
   /**
-   * Is it pressed by one of `boxes` (collision boxes of things that can
-   * stand on it): feet on its tile's floor, footprint middle over the tile?
+   * The bodies in its column among `boxes` (collision boxes of things that
+   * can stand on it): the one on the floor of its tile (footprint middle
+   * over the tile), the one resting on that, and so on up the stack (D200).
    * @param {Iterable<number[][]>} boxes
+   * @returns {number}
    */
-  pressedBy(boxes) {
+  count(boxes) {
     const [x, y, z] = this.pos;
-    for (const [bx, by, bz] of boxes) {
+    const column = [];
+    for (const box of boxes) {
+      const [bx, by, bz] = box;
       const mx = (bx[0] + bx[1]) / 2;
       const mz = (bz[0] + bz[1]) / 2;
-      if (Math.abs(by[0] - y) < REST_EPS && mx >= x && mx < x + 1 && mz >= z && mz < z + 1) return true;
+      if (mx >= x && mx < x + 1 && mz >= z && mz < z + 1) column.push(by);
     }
-    return false;
+    column.sort((p, q) => p[0] - q[0]);
+    let level = y;
+    let count = 0;
+    for (const by of column) {
+      if (by[0] > level + REST_EPS) break;
+      if (Math.abs(by[0] - level) >= REST_EPS) continue;
+      count++;
+      level = by[1];
+    }
+    return count;
+  }
+
+  /** Is it pressed by `boxes`: enough weight in its column? */
+  pressedBy(boxes) {
+    return this.count(boxes) >= this.weight;
+  }
+
+  /**
+   * Weigh `boxes` for this tick: the load it remembers (for its flicker)
+   * and whether it is pressed.
+   * @param {Iterable<number[][]>} boxes
+   */
+  weigh(boxes) {
+    this.load = this.count(boxes);
+    return this.load >= this.weight;
   }
 
   /**

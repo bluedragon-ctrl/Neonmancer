@@ -1722,3 +1722,40 @@ pushes or fewer. A crate he can't stand on brings those puzzles back.
 **Why:** puzzles from the Sokoban canon should not collapse to a walk
 around because the wizard can climb; the spiked crate keeps push count
 and order meaningful without a new rule for walls.
+
+### D200 — 2026-10-09 — The heavy plate: a plate that needs a weight of two
+A new switch object, `plate_heavy` (extends `plate`, `weight: 2`). The
+reason is the third dimension: only a stack holds it (a crate pushed off a
+ledge onto a crate that lies on the plate). One decoy or one frozen enemy
+alone can't fake it, so it is a real lock (room-design: "a plate alone is
+no lock"), and the Sokoban goal gets a height.
+- **Weight:** a general plate property `weight` (integer, 1–4, default 1;
+  plates only), so other weights stay possible. Every body resting in the
+  plate's column counts 1: a crate, a frozen enemy, the decoy, the
+  wizard, and a body stacked on another one (the stack counts from the
+  floor up, each body resting on the one below). The plate is pressed once
+  the weight is at least `weight`. Weight 1 is the old rule exactly.
+- **The wizard counts** (the author's answer, 2026-10-09). A crate he
+  stands on holds the plate, but only while he stays: a "plate you must
+  leave" puzzle, since the weight goes when he steps off. Like any plate
+  he can't be the weight for an exit he must walk through; the checker
+  counts him only on a timed plate (he runs on while it counts down).
+- **Look:** its own pattern: where a plain plate has one inner square, a
+  heavy one has two overlapping in a corner (the author's wish: it hints
+  at two boxes), white as every mechanism (D99). Under too little
+  weight (some, not enough) it flickers half-lit: the lights stutter
+  between dark and half, the outline stays dashed. Fully pressed it lights
+  like a plate (solid outline, brackets, floor glow). A timed variant
+  (`timer`) works the same way: it counts down only once the weight is
+  gone, and blinks as before.
+- **Wiring:** everything that names switches (exits' `requires`, gates,
+  bridges, platforms, D140) works with it unchanged; the Switch tool of
+  the room editor places and links it like any plate (D142).
+- **Checker and solver:** a crate plate counts the crates stacked in its
+  column; a frozen enemy, the decoy and a spell-placed crate each add one
+  at most (each holder serves one plate); the wizard adds one on a timed
+  plate. The solver follows from the checker; XSB gets `:` for an empty
+  heavy plate.
+**Why:** a lock that needs height, not only a body: it keeps push order
+and the ledge drop meaningful, and cheap fakes (one decoy, one frozen
+enemy) can't open it.

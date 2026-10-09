@@ -147,7 +147,9 @@ mobile/touch support, backend or accounts.
   per visit when he comes near (hints and lore, D118).
 - Switches power exits, gates and platforms: a floor plate held down by a
   crate, an enemy or the wizard, a target a bolt switches on and off, or a
-  socket, a hole that is on once a crate fills it (D194);
+  socket, a hole that is on once a crate fills it (D194), or a heavy
+  plate that needs a weight of two (D200: bodies in its column, a stack
+  of two crates; he counts one);
   a timed one goes off by itself after a few seconds (D140). Each locked
   exit, gate or platform names its switches (`switches`, by default every
   switch in the room) and is powered while they are all on (D140). A

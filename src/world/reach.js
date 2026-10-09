@@ -23,6 +23,9 @@
  * on it or a spell that puts a body there, a timed plate also under the
  * wizard himself (he runs on while it counts down), a socket (D194) with
  * its hole plugged by a crate (or a compiled or pasted crate beside it).
+ * A heavy plate (D200, `weight`) needs that many bodies in its column: the
+ * crates stacked on it, then a placed crate, a frozen enemy or the decoy (one
+ * each, on top of the stack) and him on a timed one.
  * A gate that can be both closed and open there counts as both: never in
  * the way, and floor to stand on.
  *
@@ -489,24 +492,38 @@ export class RoomModel {
         if ((abilities.has('compile') || (abilities.has('cut_paste') && cfg.crates.length > 0)) && beside) continue;
         return false;
       }
-      if (cfg.crateSet.has(this.index(x, y, z))) continue;
-      if (object.timer && stands.has(this.index(x, y, z))) continue;
+      // A heavy plate (D200) needs a weight: the crates stacked in its column count first.
+      let need = (object.weight ?? 1) - this.stacked(x, y, z, cfg);
+      if (need <= 0) continue;
+      const top = this.index(x, y + (object.weight ?? 1) - need, z);
+      // The wizard on top of the stack, on a timed plate (he runs on while it counts down).
+      if (object.timer && stands.has(top)) need--;
+      if (need <= 0) continue;
+      // A crate placed by a spell beside it (one).
       const placed = (abilities.has('compile') || (abilities.has('cut_paste') && cfg.crates.length > 0)) && beside;
-      if (placed) continue;
-      // A frozen enemy on it: on its path or pushed there (D154, D166); or the decoy.
-      const holders = [...(this.frozenCells.get(this.index(x, y, z)) ?? [])];
+      if (placed) need--;
+      if (need <= 0) continue;
+      // A frozen enemy on top of the stack: on its path or pushed there (D154, D166); or the decoy; each one weight.
+      const holders = [...(this.frozenCells.get(top) ?? [])];
       if (abilities.has('fork') && beside) holders.push('decoy');
-      if (holders.length === 0) return false;
-      byFrozen.push(holders);
+      if (holders.length < need) return false;
+      for (let i = 0; i < need; i++) byFrozen.push(holders);
     }
     return assignable(byFrozen);
+  }
+
+  /** How many crates are stacked in the column of the plate at (x, y, z), from the plate up (D200). */
+  stacked(x, y, z, cfg) {
+    let n = 0;
+    while (y + n < this.h && cfg.crateSet.has(this.index(x, y + n, z))) n++;
+    return n;
   }
 
   /** Are the switches `ids` all on whatever he does: plates under crates, filled sockets (targets he can always switch off). */
   forcedOn(ids, cfg) {
     const linked = this.linked(ids);
-    const on = ({ kind, at: [x, y, z] }) =>
-      kind === 'socket' ? cfg.plugged.has(z * this.w + x) : kind === 'plate' && cfg.crateSet.has(this.index(x, y, z));
+    const on = ({ kind, weight, at: [x, y, z] }) =>
+      kind === 'socket' ? cfg.plugged.has(z * this.w + x) : kind === 'plate' && this.stacked(x, y, z, cfg) >= (weight ?? 1);
     return linked.length > 0 && linked.every(on);
   }
 

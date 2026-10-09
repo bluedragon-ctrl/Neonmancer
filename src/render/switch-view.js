@@ -105,6 +105,22 @@ export const SWITCH_FX = {
   blinkFast: 0.12,
   blinkLit: 0.6,
   blinkDip: 0.25,
+  /**
+   * A heavy plate (D200): in place of the one inner square, two of this
+   * side overlapping in a corner (for two bodies), their lower left corners
+   * this far apart along each axis; and, under too little weight, how bright it flickers (0..1
+   * of on, dark and half-lit) and how fast (stutters per second, the
+   * eased value follows within this many seconds).
+   */
+  heavyPair: 0.26,
+  heavyShift: 0.12,
+  /** Its two squares stay visible with nothing on it: line brightness and fill opacity at rest. */
+  heavyOff: 0.95,
+  heavyFillOff: 0.14,
+  partialLo: 0.05,
+  partialHi: 0.5,
+  partialRate: 9,
+  partialEase: 0.03,
 };
 
 const WHITE = new Color(0xffffff);
@@ -152,9 +168,17 @@ export function targetMarks({ seen = false } = {}) {
   return { outer: onFaces(square2d(outer, 1 - outer)), inner: onFaces(square2d(inner, 1 - inner)) };
 }
 
+/** The two squares [from, to] of a heavy plate's centre (D200): side `heavyPair`, overlapping in a corner, the pair centred on the tile. */
+export function heavyPairSquares() {
+  const { heavyPair: side, heavyShift: shift } = SWITCH_FX;
+  const a = 0.5 - (side + shift) / 2;
+  return [[a, a + side], [a + shift, a + shift + side]];
+}
+
 /**
  * A plate's lines on the floor tile (pure, tested): the dashed tile
  * outline, the bull's-eye, and the corner brackets just outside the tile.
+ * A heavy plate (D200) has `pair`, two squares overlapping in a corner, in place of `inner`.
  * @param {number} y height to draw at
  */
 export function plateMarks(y) {
@@ -169,6 +193,7 @@ export function plateMarks(y) {
     tile: lift(square2d(0, 1)),
     outer: lift(square2d(outer, 1 - outer)),
     inner: lift(square2d(inner, 1 - inner)),
+    pair: heavyPairSquares().map((square) => lift(square2d(...square))),
     brackets,
   };
 }
@@ -266,6 +291,17 @@ export function switchLight(on, countdown, time) {
 }
 
 /**
+ * How lit a heavy plate is under too little weight (D200, pure): it
+ * stutters between dark and half-lit, never fully on.
+ * @param {number} time seconds
+ */
+export function partialLight(time) {
+  const { partialLo, partialHi, partialRate } = SWITCH_FX;
+  const wave = Math.sin(time * partialRate * 2.1) + Math.sin(time * partialRate * 3.7 + 1);
+  return wave > 0.3 ? partialHi : partialLo;
+}
+
+/**
  * The Zap target, its lower corner at the origin.
  * `userData.set(on, { hit })`: switch it (on: 0..1, see switchLight());
  * `hit` flashes and jolts it.
@@ -323,11 +359,12 @@ export function createTarget(color, { timed = false } = {}) {
 
 /**
  * The pressure plate, its tile corner at the origin (floor level).
- * `userData.set(pressed)` (0..1, see switchLight()).
+ * `userData.set(pressed, { partial })` (0..1, see switchLight()); a heavy
+ * plate under too little weight is `partial`: it flickers half-lit (D200).
  * @param {number|string} color
- * @param {{ timed?: boolean }} [options] a timed plate (D140): a dashed outer square
+ * @param {{ timed?: boolean, heavy?: boolean }} [options] a timed plate (D140): a dashed outer square; a heavy one (D200): a solid square round the bull's-eye
  */
-export function createPlate(color, { timed = false } = {}) {
+export function createPlate(color, { timed = false, heavy = false } = {}) {
   const base = new Color(color);
   const group = new Group();
   const slab = glassBox([0, 0, 0], [1, SWITCH_FX.slab, 1], base, GLASS.gate);
@@ -347,26 +384,42 @@ export function createPlate(color, { timed = false } = {}) {
   const bracketMat = lineMaterial({ color: base, width: 2.2 });
   line(marks.tile, tileMat);
   line(marks.outer, outerMat);
-  line(marks.inner, markMat);
+  // A heavy plate has two squares overlapping in a corner where a plain one has one (D200).
+  const pairMat = lineMaterial({ color: base, width: 1.8 });
+  if (heavy) for (const square of marks.pair) line([square], pairMat);
+  else line(marks.inner, markMat);
   line(marks.brackets, bracketMat);
   const fillMat = glowMaterial(base);
-  const fill = new Mesh(new PlaneGeometry(1 - 2 * SWITCH_FX.inner, 1 - 2 * SWITCH_FX.inner), fillMat);
-  fill.rotation.x = -Math.PI / 2;
-  fill.position.set(0.5, y, 0.5);
+  const fills = heavy ? heavyPairSquares().map(([a, b]) => [(a + b) / 2, b - a]) : [[0.5, 1 - 2 * SWITCH_FX.inner]];
+  const fill = new Group();
+  for (const [mid, side] of fills) {
+    const plane = new Mesh(new PlaneGeometry(side, side), fillMat);
+    plane.rotation.x = -Math.PI / 2;
+    plane.position.set(mid, y, mid);
+    fill.add(plane);
+  }
   const spillMat = new MeshBasicMaterial({ vertexColors: true, blending: AdditiveBlending, transparent: true, depthWrite: false });
   group.add(fill, floorSpill(SWITCH_FX.spill, SWITCH_FX.lift, spillMat));
 
   const on = new Ease();
-  group.userData.set = (pressed) => {
+  let partial = false;
+  let time = 0;
+  group.userData.set = (pressed, { partial: part = false } = {}) => {
+    partial = part && !pressed;
     on.target = Number(pressed);
   };
   group.userData.update = (dt) => {
-    const t = on.step(dt);
+    time += dt;
+    // Too little weight (D200): stutter between dark and half-lit.
+    if (partial) on.target = partialLight(time);
+    const t = on.step(dt, partial ? SWITCH_FX.partialEase : SWITCH_FX.ease);
     tileMat.color.copy(base).multiplyScalar(bodyBrightness(t));
     markMat.color.copy(base).multiplyScalar(bodyBrightness(t));
     outerMat.color.copy(markMat.color);
+    // A heavy plate's two squares show even with nothing on it (D200).
+    pairMat.color.copy(base).multiplyScalar(heavy ? Math.max(bodyBrightness(t), SWITCH_FX.heavyOff) : bodyBrightness(t));
     bracketMat.color.copy(base).multiplyScalar(SWITCH_FX.on * t);
-    fillMat.opacity = t;
+    fillMat.opacity = heavy ? Math.max(t, SWITCH_FX.heavyFillOff) : t;
     fillMat.color.copy(base).multiplyScalar(SWITCH_FX.fill);
     spillMat.color.copy(base).multiplyScalar(SWITCH_FX.spillBrightness * t);
     slabTint.value = glassTint(t);
@@ -622,7 +675,7 @@ export class PlateView {
    */
   constructor(game, plate) {
     this.plate = plate;
-    this.group = createPlate(plate.object.color, { timed: plate.timed });
+    this.group = createPlate(plate.object.color, { timed: plate.timed, heavy: plate.weight > 1 });
     this.group.position.set(...plate.pos);
     this.time = 0;
   }
@@ -633,7 +686,7 @@ export class PlateView {
    */
   sync(alpha, dt = 0) {
     this.time += dt;
-    this.group.userData.set(switchLight(this.plate.on, this.plate.countdown ?? null, this.time));
+    this.group.userData.set(switchLight(this.plate.on, this.plate.countdown ?? null, this.time), { partial: this.plate.partial });
     this.group.userData.update(dt);
   }
 }
