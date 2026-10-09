@@ -323,6 +323,11 @@ docs/decisions.md).
   collapsing block no longer derezzes.
 
 ### Fixed
+- `check:reach <room>` without `--with` finished in minutes on some rooms: it
+  worked out the ability sets of every room of the world (mirror_stacks,
+  bolt_gallery and scan_lab alone take over a minute) to report one. It now
+  does that for the asked room only (`analyzeWorld`'s `needs` takes a room
+  id), the same sets as before; the per-room crate search is unchanged.
 - Reachability checker (D171): the Fork decoy holds one plate at a time
   (it counted as holding every plate), and a drop onto a frozen enemy's
   or a platform's cell can also fall past it to the floor (from its south
