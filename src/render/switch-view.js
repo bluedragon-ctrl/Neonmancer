@@ -114,6 +114,9 @@ export const SWITCH_FX = {
    */
   heavyPair: 0.26,
   heavyShift: 0.12,
+  /** Its two squares stay visible with nothing on it: line brightness and fill opacity at rest. */
+  heavyOff: 0.95,
+  heavyFillOff: 0.14,
   partialLo: 0.05,
   partialHi: 0.5,
   partialRate: 9,
@@ -382,7 +385,8 @@ export function createPlate(color, { timed = false, heavy = false } = {}) {
   line(marks.tile, tileMat);
   line(marks.outer, outerMat);
   // A heavy plate has two squares overlapping in a corner where a plain one has one (D200).
-  if (heavy) for (const square of marks.pair) line([square], markMat);
+  const pairMat = lineMaterial({ color: base, width: 1.8 });
+  if (heavy) for (const square of marks.pair) line([square], pairMat);
   else line(marks.inner, markMat);
   line(marks.brackets, bracketMat);
   const fillMat = glowMaterial(base);
@@ -412,8 +416,10 @@ export function createPlate(color, { timed = false, heavy = false } = {}) {
     tileMat.color.copy(base).multiplyScalar(bodyBrightness(t));
     markMat.color.copy(base).multiplyScalar(bodyBrightness(t));
     outerMat.color.copy(markMat.color);
+    // A heavy plate's two squares show even with nothing on it (D200).
+    pairMat.color.copy(base).multiplyScalar(heavy ? Math.max(bodyBrightness(t), SWITCH_FX.heavyOff) : bodyBrightness(t));
     bracketMat.color.copy(base).multiplyScalar(SWITCH_FX.on * t);
-    fillMat.opacity = t;
+    fillMat.opacity = heavy ? Math.max(t, SWITCH_FX.heavyFillOff) : t;
     fillMat.color.copy(base).multiplyScalar(SWITCH_FX.fill);
     spillMat.color.copy(base).multiplyScalar(SWITCH_FX.spillBrightness * t);
     slabTint.value = glassTint(t);
