@@ -584,6 +584,12 @@
           "minimum": 0.5,
           "maximum": 30,
           "description": "Targets and plates only: a timed switch (D140), on for this many seconds and then off by itself. A target counts from the bolt that switched it on (another bolt starts the time again), a plate from the moment nothing stands on it. Drawn with a dashed outer square; it blinks while it counts down."
+        },
+        "weight": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4,
+          "description": "Plates only (D200): the weight it needs, default 1. Every body resting in its column counts 1 (a crate, a frozen enemy, the decoy, the wizard, and bodies stacked on one another); it is pressed once their number is at least this. Under too little weight it flickers half-lit."
         }
       }
     }

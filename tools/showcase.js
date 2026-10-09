@@ -341,6 +341,10 @@ const ALL_ASSETS = [
   { label: 'target', group: 'switches', span: 5, spin: false, build: buildTargetZap },
   { label: 'plate', group: 'switches', span: 4, spin: false, build: buildPlate },
   // A socket (D194): a hole that is a switch; a crate pushed in fills it and lights it.
+  // Heavy plate (D200): one crate and it flickers half-lit; a second dropped on the first and it lights fully;
+  // then the wizard alone on it (half-lit again).
+  { label: 'plates-compare', group: 'switches', span: 7, spin: false, build: buildPlateCompare },
+  { label: 'plate-heavy', group: 'switches', span: 4, spin: false, build: buildHeavyPlate },
   { label: 'socket', group: 'switches', span: 4, spin: false, hole: [-0.5, -0.5], build: buildSocket },
   { label: 'locks-in-room', group: 'switches', span: 5.5, spin: false, build: buildLocks },
   // Exits into the Outer Buffer (D183): stars drift out; a lock there is dark indigo glass.
@@ -526,6 +530,60 @@ function buildPlate() {
     const onCrate = crate.visible && cy < 0.05 && slide < 0.5;
     const onWizard = wizard.visible && Math.abs(wx) < 0.5;
     plate.userData.set(onCrate || onWizard);
+    plate.userData.update(dt);
+  };
+  return asset;
+}
+
+/** Plates side by side (D200): plain pressed; heavy dark, half-lit (flickering) and pressed. */
+function buildPlateCompare() {
+  const asset = new Group();
+  const plates = [
+    [createPlate(SWITCH_COLOR), true, false],
+    [createPlate(SWITCH_COLOR, { heavy: true }), false, false],
+    [createPlate(SWITCH_COLOR, { heavy: true }), false, true],
+    [createPlate(SWITCH_COLOR, { heavy: true }), true, false],
+  ];
+  plates.forEach(([plate, pressed, partial], i) => {
+    plate.position.set(-3.5 + i * 2 - 0.5, 0, -0.5);
+    plate.userData.set(pressed, { partial });
+    asset.add(plate);
+  });
+  asset.userData.update = (dt) => plates.forEach(([plate]) => plate.userData.update(dt));
+  return asset;
+}
+
+/**
+ * A heavy plate (D200) in a floor patch: a crate drops on it (too little
+ * weight: it flickers half-lit), a second drops on the first (lit fully),
+ * both vanish; then the wizard walks on and stands on it (one body: half-lit).
+ */
+function buildHeavyPlate() {
+  const asset = new Group();
+  const plate = createPlate(SWITCH_COLOR, { heavy: true });
+  plate.position.set(-0.5, 0, -0.5);
+  const crateA = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...OBJECT_TYPES.crate, at: [0, 0, 0] });
+  const crateB = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...OBJECT_TYPES.crate, at: [0, 0, 0] });
+  const wizard = createWizard();
+  wizard.rotation.y = Math.PI / 2;
+  asset.add(plate, crateA, crateB, wizard);
+  const loop = 9;
+  let time = 0;
+  asset.userData.update = (dt) => {
+    time = (time + dt) % loop;
+    const drop = (since, to) => Math.max(to, to + 1.6 - 0.5 * 20 * Math.min(Math.max(since, 0), 0.4) ** 2);
+    // 0.5 s: crate A drops on the plate; 2.8 s: crate B drops on A; both gone at 5.5 s.
+    crateA.visible = time >= 0.5 && time < 5.5;
+    crateB.visible = time >= 2.8 && time < 5.5;
+    crateA.position.set(-0.5, drop(time - 0.5, 0), -0.5);
+    crateB.position.set(-0.5, drop(time - 2.8, 1), -0.5);
+    const crates = (crateA.visible && time > 0.9 ? 1 : 0) + (crateB.visible && time > 3.2 ? 1 : 0);
+    // 6–9 s: the wizard walks in from −x, stands on it 6.6–8, walks on.
+    const wx = time < 6 ? -3 : time < 6.6 ? -1.5 + (time - 6) * 2.5 : time < 8 ? 0 : (time - 8) * 2.5;
+    wizard.visible = time >= 6;
+    wizard.position.set(wx, 0, 0);
+    const bodies = crates + (wizard.visible && Math.abs(wx) < 0.5 ? 1 : 0);
+    plate.userData.set(bodies >= 2, { partial: bodies === 1 });
     plate.userData.update(dt);
   };
   return asset;

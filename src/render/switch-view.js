@@ -105,6 +105,17 @@ export const SWITCH_FX = {
   blinkFast: 0.12,
   blinkLit: 0.6,
   blinkDip: 0.25,
+  /**
+   * A heavy plate (D200): margin of the extra solid square round its
+   * bull's-eye, and, under too little weight, how bright it flickers (0..1
+   * of on, dark and half-lit) and how fast (stutters per second, the
+   * eased value follows within this many seconds).
+   */
+  heavyRim: 0.09,
+  partialLo: 0.05,
+  partialHi: 0.5,
+  partialRate: 9,
+  partialEase: 0.03,
 };
 
 const WHITE = new Color(0xffffff);
@@ -155,6 +166,7 @@ export function targetMarks({ seen = false } = {}) {
 /**
  * A plate's lines on the floor tile (pure, tested): the dashed tile
  * outline, the bull's-eye, and the corner brackets just outside the tile.
+ * A heavy plate (D200) adds `rim`, a solid square just inside the tile edge.
  * @param {number} y height to draw at
  */
 export function plateMarks(y) {
@@ -169,6 +181,7 @@ export function plateMarks(y) {
     tile: lift(square2d(0, 1)),
     outer: lift(square2d(outer, 1 - outer)),
     inner: lift(square2d(inner, 1 - inner)),
+    rim: lift(square2d(SWITCH_FX.heavyRim, 1 - SWITCH_FX.heavyRim)),
     brackets,
   };
 }
@@ -266,6 +279,17 @@ export function switchLight(on, countdown, time) {
 }
 
 /**
+ * How lit a heavy plate is under too little weight (D200, pure): it
+ * stutters between dark and half-lit, never fully on.
+ * @param {number} time seconds
+ */
+export function partialLight(time) {
+  const { partialLo, partialHi, partialRate } = SWITCH_FX;
+  const wave = Math.sin(time * partialRate * 2.1) + Math.sin(time * partialRate * 3.7 + 1);
+  return wave > 0.3 ? partialHi : partialLo;
+}
+
+/**
  * The Zap target, its lower corner at the origin.
  * `userData.set(on, { hit })`: switch it (on: 0..1, see switchLight());
  * `hit` flashes and jolts it.
@@ -323,11 +347,12 @@ export function createTarget(color, { timed = false } = {}) {
 
 /**
  * The pressure plate, its tile corner at the origin (floor level).
- * `userData.set(pressed)` (0..1, see switchLight()).
+ * `userData.set(pressed, { partial })` (0..1, see switchLight()); a heavy
+ * plate under too little weight is `partial`: it flickers half-lit (D200).
  * @param {number|string} color
- * @param {{ timed?: boolean }} [options] a timed plate (D140): a dashed outer square
+ * @param {{ timed?: boolean, heavy?: boolean }} [options] a timed plate (D140): a dashed outer square; a heavy one (D200): a solid square round the bull's-eye
  */
-export function createPlate(color, { timed = false } = {}) {
+export function createPlate(color, { timed = false, heavy = false } = {}) {
   const base = new Color(color);
   const group = new Group();
   const slab = glassBox([0, 0, 0], [1, SWITCH_FX.slab, 1], base, GLASS.gate);
@@ -349,6 +374,7 @@ export function createPlate(color, { timed = false } = {}) {
   line(marks.outer, outerMat);
   line(marks.inner, markMat);
   line(marks.brackets, bracketMat);
+  if (heavy) line(marks.rim, markMat);
   const fillMat = glowMaterial(base);
   const fill = new Mesh(new PlaneGeometry(1 - 2 * SWITCH_FX.inner, 1 - 2 * SWITCH_FX.inner), fillMat);
   fill.rotation.x = -Math.PI / 2;
@@ -357,11 +383,17 @@ export function createPlate(color, { timed = false } = {}) {
   group.add(fill, floorSpill(SWITCH_FX.spill, SWITCH_FX.lift, spillMat));
 
   const on = new Ease();
-  group.userData.set = (pressed) => {
+  let partial = false;
+  let time = 0;
+  group.userData.set = (pressed, { partial: part = false } = {}) => {
+    partial = part && !pressed;
     on.target = Number(pressed);
   };
   group.userData.update = (dt) => {
-    const t = on.step(dt);
+    time += dt;
+    // Too little weight (D200): stutter between dark and half-lit.
+    if (partial) on.target = partialLight(time);
+    const t = on.step(dt, partial ? SWITCH_FX.partialEase : SWITCH_FX.ease);
     tileMat.color.copy(base).multiplyScalar(bodyBrightness(t));
     markMat.color.copy(base).multiplyScalar(bodyBrightness(t));
     outerMat.color.copy(markMat.color);
