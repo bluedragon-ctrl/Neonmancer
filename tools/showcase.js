@@ -158,7 +158,7 @@ const ALL_ASSETS = [
       return new Group().add(view);
     },
   })),
-  // TEMP close-up of the spiked crate (D198)
+  // A close-up of the spiked crate (D198): its vents and the shafts down to the core.
   { label: 'crate_spiked-close', span: 1.7, build: () => { const v = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...OBJECT_TYPES.crate_spiked, at: [0, 0, 0] }); v.position.set(-0.5, 0, -0.5); return new Group().add(v); } },
   // Animated looks of the damaging block types (block-fx.js); the hazard
   // flares every 2 s as if it just hurt the wizard.

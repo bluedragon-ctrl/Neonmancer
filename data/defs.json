@@ -7,7 +7,7 @@
     "crate_plain": { "extends": "crate", "mark": "none" },
     "crate_cross": { "extends": "crate", "mark": "none", "integrity": 1 },
     "crate_dashed": { "extends": "crate", "mark": "none", "edges": "dashed" },
-    "crate_spiked": { "extends": "crate", "topDamage": 2, "crack": "aurora" },
+    "crate_spiked": { "extends": "crate", "topDamage": 2, "vents": "aurora" },
     "target": { "kind": "target", "color": "#eef3ff" },
     "core": { "kind": "core", "color": "#eef3ff" },
     "plate": { "kind": "plate", "color": "#eef3ff", "edges": "dashed" },

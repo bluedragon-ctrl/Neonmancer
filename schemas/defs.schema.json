@@ -543,10 +543,10 @@
           "default": "cube",
           "description": "cube: fills its cell; spiked: a smaller core with four pyramids on each side, their tips reaching the cell's faces (for objects that hurt, D82). Either way it collides as its whole cell."
         },
-        "crack": {
+        "vents": {
           "enum": ["none", "aurora"],
           "default": "none",
-          "description": "Cube-shaped objects: a wide fissure across the top face with red edges and a polar aurora (curtains of crimson and dark indigo light) rising out of it (D198). Look only; what hurts is topDamage."
+          "description": "Cube-shaped objects: square bit-like holes in the top face with jets of aurora light (crimson to dark indigo) shooting out of them, and shafts running down through the glass to the core (D198). Look only; what hurts is topDamage."
         },
         "topDamage": {
           "type": "integer",
