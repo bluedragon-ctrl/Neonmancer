@@ -28,7 +28,7 @@ docs/decisions.md).
   with aurora jets and shafts to the core (`vents`). The checker, the
   solver, `xsb.mjs` (`!`, `--spiked`) and the Microban survey (spiked
   columns) know it; dev room `spiked_lab` (Microban 8 by David W. Skinner).
-- The `sokoban-design` sub-skill (D196): a room's push puzzle sketched as
+- The `sokoban-design` sub-skill (D197): a room's push puzzle sketched as
   XSB text, solved with the game's own push rules (fewest pushes, traps,
   sharp steps) and converted into a room draft, with walls built as
   blocks, ledges or holes and goals as plates or sockets. Two original

@@ -1,7 +1,7 @@
 ; Microban, by David W. Skinner (2000), 155 levels.
 ; Original site: http://users.bentonrea.com/~sasquatch/sokoban/
 ; Fetched 2026-10-09 from http://www.sneezingtiger.com/sokoban/levels/microbanText.html
-; Classic layouts, used with credit (D196). Standard XSB: # wall, $ crate,
+; Classic layouts, used with credit (D197). Standard XSB: # wall, $ crate,
 ; . goal, * crate on goal, @ player, + player on goal.
 
 ; Microban 1
