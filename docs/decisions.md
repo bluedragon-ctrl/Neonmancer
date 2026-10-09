@@ -1592,3 +1592,43 @@ both sockets are still needed.
 **Why:** a crate pushed once from the east door gave the fragment, and
 a decoy stood in for every ferry plate; the author asked for a small
 Sokoban on the loft in which the order of pushes matters.
+
+### D198 — 2026-10-09 — The spiked crate: a crate he can't stand on
+A new pushable, `crate_spiked` (extends `crate`): it pushes, falls,
+stacks and plugs a hole like any crate, but its top is spiked. The
+reason is Sokoban: the wizard climbs 1-high crates, so the classic
+"can I get behind this box?" is gone, and in the Microban survey
+(`.claude/skills/sokoban-design/levels/microban-survey.md`, David W.
+Skinner's Microban set) 29 of the 104 solved levels need half the
+pushes or fewer. A crate he can't stand on brings those puzzles back.
+- **Hurt and knock-off** (the author's choice, damage 2, not a lethal
+  top: that would be a second instant death next to void, §4). The new
+  object property `topDamage` (pushables only; `damage` stays the
+  platform's, which hurts on every side) hurts him when his feet touch
+  the top, with the usual invulnerability blink, and shoves him off
+  towards the nearer free side. The shove also applies while he blinks,
+  so he can never rest on it. Pushing from the side is safe: only the top
+  hurts.
+- **Stacks:** a plain crate on a spiked one covers the spikes (its top is
+  a safe 2-high step); a spiked crate on a plain one keeps them on top; a
+  spiked crate pushed into a hole plugs it into plain floor.
+- **No clean hop over:** tested with the real player (hitbox 0.6, apex
+  1.2): a jump spends 0.23 s above a 1-high top and covers about 0.67
+  units sideways in that time, while clearing the crate in line takes
+  1.6; all 61 take-offs in 0.05 steps either touch the top or stop at the
+  side. A corner skim in the open is just walking around. The double
+  jump clears it, like any 2-high obstacle. No taller hurt zone needed.
+- **Frozen enemies and the decoy** can't stand on it; **active enemies**
+  are not hurt (as with hazard blocks today) and may cross it.
+- **Look:** green glass crate, cracked on the top with a neon red flame
+  or wave lashing out of the crack (red is what hurts, D99). Two
+  variants in the showcase, the author picks one.
+- **Checker and solver:** a spiked crate's top is no standing surface
+  (`below()` already says `'bad'` for a hazard top), except under a
+  plain crate. The Microban survey gets a column that builds every crate
+  as spiked.
+- Test room: a Microban level rebuilt with spiked crates in the dev wing
+  (Microban N by David W. Skinner).
+**Why:** puzzles from the Sokoban canon should not collapse to a walk
+around because the wizard can climb; the spiked crate keeps push count
+and order meaningful without a new rule for walls.

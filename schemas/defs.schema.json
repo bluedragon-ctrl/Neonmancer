@@ -543,6 +543,17 @@
           "default": "cube",
           "description": "cube: fills its cell; spiked: a smaller core with four pyramids on each side, their tips reaching the cell's faces (for objects that hurt, D82). Either way it collides as its whole cell."
         },
+        "crack": {
+          "enum": ["none", "flame", "wave"],
+          "default": "none",
+          "description": "Cube-shaped objects: a jagged red crack across the top face with fire lashing out of it (D198); flame: tongues of fire, wave: a rippling sheet of fire. Look only; what hurts is topDamage."
+        },
+        "topDamage": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 99,
+          "description": "Pushable objects only (D198): touching its top (standing on it, landing on it) hurts the wizard by this much and shoves him off; its sides are safe to push. A plain crate on top covers the spikes. Not for platforms: their \"damage\" hurts on every side."
+        },
         "tint": {
           "type": "number",
           "minimum": 0,

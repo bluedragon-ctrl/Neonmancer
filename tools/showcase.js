@@ -158,6 +158,16 @@ const ALL_ASSETS = [
       return new Group().add(view);
     },
   })),
+  // The spiked crate (D198) in its other look: a cracked top with a rippling
+  // wave of fire (crate_spiked above has tongues of fire). One of the two stays.
+  {
+    label: 'crate_spiked-wave',
+    build: () => {
+      const view = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...OBJECT_TYPES.crate_spiked, crack: 'wave', at: [0, 0, 0] });
+      view.position.set(-0.5, 0, -0.5);
+      return new Group().add(view);
+    },
+  },
   // Animated looks of the damaging block types (block-fx.js); the hazard
   // flares every 2 s as if it just hurt the wizard.
   { label: 'block-hazard', build: () => buildActiveBlock('hazard') },

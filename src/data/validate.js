@@ -89,6 +89,9 @@ export function validateData(files) {
     if (type.damage !== undefined && type.kind !== 'platform') {
       report('defs.json', `objects.${id}.damage`, `only platforms can hurt, not a ${type.kind}`);
     }
+    if (type.topDamage !== undefined && type.kind !== 'pushable') {
+      report('defs.json', `objects.${id}.topDamage`, `only pushable objects have a spiked top, not a ${type.kind}`);
+    }
     // Only switches are timed (D140).
     if (type.timer !== undefined && !TIMED_SWITCH_KINDS.includes(type.kind)) report('defs.json', `objects.${id}.timer`, `only switches (targets and plates) are timed, not a ${type.kind}`);
     // Only a decoration has a look (D117); every other kind needs a color.
@@ -646,6 +649,7 @@ const OVERRIDE_RANGES = {
   tint: [0, 1, false],
   integrity: [1, 15, true],
   damage: [1, 99, true],
+  topDamage: [1, 99, true],
   timer: [0.5, 30, false],
 };
 

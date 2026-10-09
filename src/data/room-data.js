@@ -145,11 +145,13 @@ export const OBJECT_STYLES = {
   mark: ['none', 'inset', 'cross', 'brackets', 'bits'],
   faces: ['dark', 'tinted', 'hazard', 'glass'],
   shape: ['cube', 'spiked'],
+  crack: ['none', 'flame', 'wave'],
 };
 
 /** Style defaults: the first value of each OBJECT_STYLES list, plus the tint. */
 export const OBJECT_STYLE_DEFAULTS = {
-  ...Object.fromEntries(Object.entries(OBJECT_STYLES).map(([key, values]) => [key, values[0]])),
+  // (A crack, D198, is a look only a few objects have: no default, the view reads "none".)
+  ...Object.fromEntries(Object.entries(OBJECT_STYLES).filter(([key]) => key !== 'crack').map(([key, values]) => [key, values[0]])),
   /** With tinted faces: share of the object color in the top face (0–1); sides get less. */
   tint: 0.1,
 };
