@@ -1,7 +1,7 @@
 // Survey a collection of XSB levels for the sokoban-design skill: solve
 // every level under classic Sokoban rules and under Neonmancer's, in each
 // way a level can be built in the game, and print a Markdown table.
-//   node .claude/skills/sokoban-design/scripts/survey.mjs <file.xsb> [--levels 1-40] [--max N] [--out file.md]
+//   node .claude/skills/sokoban-design/scripts/survey.mjs <file.xsb> [--levels 1-40] [--max N] [--spiked-only] [--out file.md]
 // Translations (columns): walls as 3-high blocks (he can't climb them),
 // 1-high ledges (he walks over, crates stop) or holes (he jumps one, a
 // crate plugs it); goals as plates (a crate can leave one) or sockets (a
@@ -10,7 +10,8 @@
 // crates already let him climb); check one with solve.mjs --wall 2.
 // A cell reads "pushes/sharp steps/trap %" (see solve.mjs): "free" needs no push,
 // "-" is unsolvable, "?" hit --max (default 30000 states), "n/a" can't be
-// built (a socket under the wizard's start).
+// built (a socket under the wizard's start). The last columns build every
+// crate as a spiked crate (D198).
 import fs from 'node:fs';
 import { parseXsb, xsbToRoom } from './xsb.mjs';
 import { loadContent, solve } from './solve.mjs';
@@ -87,13 +88,17 @@ export const VARIANTS = [
   { label: 'holes, plate', wall: 'hole', goal: 'plate' },
   { label: 'wall 3, socket', wall: 3, goal: 'socket' },
   { label: 'holes, socket', wall: 'hole', goal: 'socket' },
+  // Every crate spiked (D198): the wizard can't climb them, so the build should play like Classic.
+  { label: 'wall 3, plate, spiked', wall: 3, goal: 'plate', spiked: true },
+  { label: 'ledge 1, plate, spiked', wall: 1, goal: 'plate', spiked: true },
+  { label: 'holes, plate, spiked', wall: 'hole', goal: 'plate', spiked: true },
 ];
 
 /** One survey cell: "pushes/decisions/trap%", "free", "-", "?" or "n/a". */
 export function surveyCell(level, variant, content, max) {
   let data;
   try {
-    data = xsbToRoom(level, { wall: variant.wall, goal: variant.goal, exits: [] });
+    data = xsbToRoom(level, { wall: variant.wall, goal: variant.goal, exits: [], spiked: variant.spiked });
   } catch {
     return { text: 'n/a' };
   }
@@ -109,8 +114,10 @@ if (process.argv[1]?.endsWith('survey.mjs')) {
   const argv = process.argv.slice(2);
   const option = (n) => (argv.includes(n) ? argv[argv.indexOf(n) + 1] : null);
   const file = argv.find((a, i) => !a.startsWith('--') && !['--levels', '--max', '--out'].includes(argv[i - 1]));
+  // --spiked-only: just the spiked columns (the others never change with the spiked crate; split a long run by --levels)
+  const variants = argv.includes('--spiked-only') ? VARIANTS.filter((v) => v.spiked) : VARIANTS;
   if (!file) {
-    console.error('usage: node survey.mjs <file.xsb> [--levels 1-40] [--max N] [--out file.md]');
+    console.error('usage: node survey.mjs <file.xsb> [--levels 1-40] [--max N] [--spiked-only] [--out file.md]');
     process.exit(1);
   }
   const max = Number(option('--max') ?? 30000);
@@ -118,16 +125,16 @@ if (process.argv[1]?.endsWith('survey.mjs')) {
   const [lo, hi] = (option('--levels') ?? `1-${levels.length}`).split('-').map(Number);
   const content = loadContent();
   const lines = [
-    `| # | Title | Size | Crates | Classic | ${VARIANTS.map((v) => v.label).join(' | ')} |`,
-    `|---|---|---|---|---|${VARIANTS.map(() => '---').join('|')}|`,
+    `| # | Title | Size | Crates | Classic | ${variants.map((v) => v.label).join(' | ')} |`,
+    `|---|---|---|---|---|${variants.map(() => '---').join('|')}|`,
   ];
   for (let n = lo; n <= Math.min(hi ?? lo, levels.length); n++) {
     const level = levels[n - 1];
     const room = xsbToRoom(level, { exits: [] });
     const [w, , d] = room.size;
-    const crates = room.objects.filter((o) => o.type === 'crate').length;
+    const crates = room.objects.filter((o) => o.type === 'crate' || o.type === 'crate_spiked').length;
     const classic = classicPushes(level.rows);
-    const cells = VARIANTS.map((v) => surveyCell(level, v, content, max).text);
+    const cells = variants.map((v) => surveyCell(level, v, content, max).text);
     const title = level.title.replace(/^.*?Microban \d+\s*/, '').replace(/\|/g, '/');
     lines.push(`| ${n} | ${title} | ${w}×${d}${w + d > 32 ? ' (big)' : ''} | ${crates} | ${classic ?? (classic === null ? '-' : '?')} | ${cells.join(' | ')} |`);
     process.stderr.write(`${n} `);

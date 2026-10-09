@@ -253,7 +253,11 @@ export function createObjectView({ at, kind, color, edges, mark, faces, shape = 
   }
   if (flares.length > 0) group.userData.flare = (since) => flares.forEach((flare) => flare(since));
   if (spiked) return group;
-  if (vents !== 'none') group.add(createVents(at, faces === 'glass' && mark !== 'none' && integrity === undefined ? GLASS.coreSize : 0));
+  if (vents !== 'none') {
+    // userData.vents: the part a crate on top hides (PushableView).
+    group.userData.vents = createVents(at, faces === 'glass' && mark !== 'none' && integrity === undefined ? GLASS.coreSize : 0);
+    group.add(group.userData.vents);
+  }
 
   // A destructible object shows its data bits with some missing, whatever its mark.
   const drawn = integrity !== undefined ? 'bitsBroken' : mark;

@@ -40,6 +40,8 @@ export class Pushable {
     this.state = 'rest';
     /** Integrity left, or null: indestructible (the type has none). */
     this.integrity = object.integrity ?? null;
+    /** Integrity the wizard loses on touching its top (a spiked crate, D198); 0 for an ordinary one. */
+    this.topDamage = object.topDamage ?? 0;
     /** Ticks since a spell last hit it, or null; ticks since it broke. */
     this.hitTicks = null;
     this.timer = 0;
@@ -62,6 +64,21 @@ export class Pushable {
   /** Is it there to collide with (not broken)? */
   get solid() {
     return this.state !== 'broken';
+  }
+
+  /**
+   * Is its top spiked right now (D198): a spiked crate with nothing on it
+   * (a crate on top covers the spikes) that isn't broken or plugged (a
+   * plugged one is plain floor)?
+   * @param {Iterable<{ box(): number[][] }>} bodies what can lie on it: the objects and enemies, not the wizard
+   */
+  topHurts(bodies) {
+    if (this.topDamage === 0 || this.state === 'plugged' || this.state === 'broken') return false;
+    const box = this.box();
+    for (const body of bodies) {
+      if (body !== this && restsOn(body.box(), box)) return false;
+    }
+    return true;
   }
 
   /**

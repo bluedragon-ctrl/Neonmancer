@@ -1,14 +1,15 @@
 // Push-puzzle solver for the sokoban-design skill: the room's whole crate
 // state space, searched breadth first with the reachability checker's own
 // rules (src/world/reach.js: he climbs crates and 1-high blocks, jumps
-// 1-tile gaps, crates fall off ledges and plug holes, gates follow their
+// 1-tile gaps, crates fall off ledges and plug holes, a spiked crate's top
+// is no place to stand unless a crate covers it (D198), gates follow their
 // switches). For each goal it prints the fewest pushes and the pushes
 // themselves, and how unforgiving the room is: how many configurations
 // can no longer reach the goal (traps: only a reset gets him out), and
 // where along the solution a wrong push is a trap.
 //   node .claude/skills/sokoban-design/scripts/solve.mjs <room_id | room.json | level.xsb>
-//        [--level N] [--wall H|hole] [--xsb-goal plate|socket] [--exit side:at[:y]] [--with a,b] [--from exit] [--goal g] [--max N]
-// --level, --wall, --exit: for an .xsb file, as in xsb.mjs; --xsb-goal is xsb.mjs's --goal
+//        [--level N] [--wall H|hole] [--xsb-goal plate|socket] [--exit side:at[:y]] [--spiked] [--with a,b] [--from exit] [--goal g] [--max N]
+// --level, --wall, --exit, --spiked: for an .xsb file, as in xsb.mjs; --xsb-goal is xsb.mjs's --goal
 // --goal: switches (every plate and socket on at once), exit:<id>, pickup:<id>
 //   (default: every exit and pickup, and switches when the room has any)
 // --with: abilities (default none: pushes only; Pull and Cut & Paste moves show as spells)
@@ -90,8 +91,13 @@ export function solve(data, content, { abilities = [], from = null, goal = null,
       for (const [dx, dz, dir] of DIRS) {
         if (!model.grid.isInside(x - dx, z - dz) || !stands.has(model.index(x - dx, y, z - dz)) || model.blocked(x + dx, y, z + dz, cfg)) continue;
         const crates = cfg.crates.filter((o) => o !== c);
-        const rest = model.settle(x + dx, y, z + dz, model.config(crates, cfg.plugged));
-        const next = rest.plug !== undefined ? model.config(crates, new Set([...cfg.plugged, rest.plug])) : model.config([...crates, rest.cell], cfg.plugged);
+        const spiked = new Set(cfg.spiked); // a spiked crate stays spiked, unless it plugs a hole (D198)
+        const wasSpiked = spiked.delete(c);
+        const rest = model.settle(x + dx, y, z + dz, model.config(crates, cfg.plugged, spiked));
+        const next =
+          rest.plug !== undefined
+            ? model.config(crates, new Set([...cfg.plugged, rest.plug]), spiked)
+            : model.config([...crates, rest.cell], cfg.plugged, wasSpiked ? new Set([...spiked, rest.cell]) : spiked);
         out.push({ cfg: next, move: { from: c, ...rest, dir } });
       }
     }
@@ -110,8 +116,9 @@ export function solve(data, content, { abilities = [], from = null, goal = null,
     const stands = standsIn(model, cfg, at);
     return { stands, key: `${cfg.key}#${stands.size ? Math.min(...stands) : at.join()}` };
   };
-  const root = region(model.config(model.crates, new Set()), starts);
-  const nodes = new Map([[root.key, { cfg: model.config(model.crates, new Set()), at: starts, parent: null, move: null, depth: 0, hits: [], next: [] }]]);
+  const first = model.config(model.crates, new Set(), model.spiked);
+  const root = region(first, starts);
+  const nodes = new Map([[root.key, { cfg: first, at: starts, parent: null, move: null, depth: 0, hits: [], next: [] }]]);
   const queue = [root.key];
   let truncated = false;
   for (let q = 0; q < queue.length; q++) {
@@ -196,12 +203,12 @@ export function solve(data, content, { abilities = [], from = null, goal = null,
 }
 
 /** Room data from a room id, a room .json file or a level of an .xsb file. */
-export function roomFrom(source, content, { level = 1, wall, goal, exits } = {}) {
+export function roomFrom(source, content, { level = 1, wall, goal, exits, spiked } = {}) {
   if (source.endsWith('.xsb')) {
     const levels = parseXsb(fs.readFileSync(source, 'utf8'));
     const found = levels[level - 1];
     if (!found) throw new Error(`${source}: no level ${level} (${levels.length} levels)`);
-    return { data: xsbToRoom(found, { wall, goal, exits }), title: found.title };
+    return { data: xsbToRoom(found, { wall, goal, exits, spiked }), title: found.title };
   }
   const data = source.endsWith('.json') ? JSON.parse(fs.readFileSync(source, 'utf8')) : content.rooms.get(source);
   if (!data) throw new Error(`no room "${source}"`);
@@ -214,7 +221,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const option = (n) => (argv.includes(n) ? argv[argv.indexOf(n) + 1] : null);
   const source = argv.find((a, i) => !a.startsWith('--') && !valued.includes(argv[i - 1]));
   if (!source) {
-    console.error('usage: node solve.mjs <room_id | room.json | level.xsb> [--level N] [--wall H|hole] [--xsb-goal plate|socket] [--exit side:at[:y]] [--with a,b] [--from exit] [--goal g] [--max N]');
+    console.error('usage: node solve.mjs <room_id | room.json | level.xsb> [--level N] [--wall H|hole] [--xsb-goal plate|socket] [--exit side:at[:y]] [--spiked] [--with a,b] [--from exit] [--goal g] [--max N]');
     process.exit(1);
   }
   const content = loadContent();
@@ -224,6 +231,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     wall: wallOption(option('--wall')),
     goal: option('--xsb-goal') ?? undefined,
     exits: exits.length ? exits : undefined,
+    spiked: argv.includes('--spiked'),
   });
   if (title) console.log(`; ${title}`);
   const abilities = (option('--with') ?? '').split(',').filter(Boolean);

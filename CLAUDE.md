@@ -123,6 +123,18 @@ mobile/touch support, backend or accounts.
   (D140, D141): a gate or bridge switched by power, or a collapsing block
   that goes after being stepped on (optional regrow); all sink to go and
   never come back on anything in their cell.
+- The spiked crate (`crate_spiked`, D198): a crate that pushes, falls,
+  stacks and plugs a hole like any other, but its top is spiked
+  (`topDamage` 2): touching it hurts him (the usual blink) and shoves him
+  off, even while he blinks, so he can never stand on it; its sides are
+  safe to push. A crate on it covers the spikes (a safe 2-high step); a
+  spiked crate on a plain one keeps them; plugged into a hole it is
+  plain floor. A frozen enemy on a bare top is impaled (pops), the
+  decoy derezzes, active enemies cross it unhurt. A hop over a 1-high
+  crate in line is impossible (D198: always touches the top), so it
+  brings Sokoban's "can't get behind the box" back. Look: the glass crate
+  with square vents in the top, aurora jets and shafts down to the core
+  (hidden while covered).
 - Decorations (kind `deco`, D117): fixed bodies that dress a room and do
   nothing, in the room's color, facing +z or +x: the data pillar
   (1×3×1, always 3 high), the screen (1×1×1) and the memory stack

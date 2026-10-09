@@ -1618,8 +1618,12 @@ pushes or fewer. A crate he can't stand on brings those puzzles back.
   1.6; all 61 take-offs in 0.05 steps either touch the top or stop at the
   side. A corner skim in the open is just walking around. The double
   jump clears it, like any 2-high obstacle. No taller hurt zone needed.
-- **Frozen enemies and the decoy** can't stand on it; **active enemies**
-  are not hurt (as with hazard blocks today) and may cross it.
+- **Frozen enemies and the decoy** can't stand on it: a frozen enemy
+  resting on a bare top is impaled (it pops, like losing its ground), the
+  decoy derezzes (like falling into a hole). **Active enemies** are not
+  hurt (as with hazard blocks today) and may cross it. A crate (or
+  anything of the objects) on it covers the spikes; a frozen enemy on it
+  does not, it is impaled.
 - **Look:** the plain green glass crate with its data-bits core, with
   five square, bit-like holes in the top face (scattered on the bit
   grid) and a jet of polar-aurora light shooting out of each: crimson at
@@ -1632,8 +1636,16 @@ pushes or fewer. A crate he can't stand on brings those puzzles back.
   (`below()` already says `'bad'` for a hazard top), except under a
   plain crate. The Microban survey gets a column that builds every crate
   as spiked.
-- Test room: a Microban level rebuilt with spiked crates in the dev wing
-  (Microban N by David W. Skinner).
+- Test room `spiked_lab` (dev wing, north of `room_1`): Microban 8 by
+  David W. Skinner (his Microban set), turned half a circle so the door is
+  on the +z side, 3-high walls, two spiked crates and two plates, the door
+  locked until both are held. The solver: 32 pushes, the classic count (4
+  with plain crates); played headless with the room-design skill's sim
+  (the 32 pushes and out through the door in 30 s, no hurt). With 3-high
+  walls and spiked crates Microban 19 is 20 pushes and 63 is 50, their
+  classic counts too.
+- **Names:** the property is `topDamage`, not `damage`: an object's
+  `damage` (platforms) hurts on every side. `vents: "aurora"` is the look.
 **Why:** puzzles from the Sokoban canon should not collapse to a walk
 around because the wizard can climb; the spiked crate keeps push count
 and order meaningful without a new rule for walls.
