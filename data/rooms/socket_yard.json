@@ -1,0 +1,25 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "socket_yard",
+  "name": "Socket Yard",
+  "biome": "home_lattice",
+  "size": [9, 4, 8],
+  "spawn": [7, 0, 7.5],
+  "exits": [{ "id": "south", "side": "+z", "at": 6 }],
+  "blocks": [
+    { "at": [5, 0, 0], "to": [5, 0, 1] },
+    { "at": [3, 0, 2], "to": [5, 0, 2] },
+    { "at": [0, 0, 3], "to": [1, 0, 4] },
+    { "at": [5, 0, 3], "to": [5, 0, 4] },
+    { "at": [0, 0, 5], "to": [5, 0, 5] },
+    { "type": "cage", "at": [7, 0, 1] }
+  ],
+  "objects": [
+    { "id": "socket_1", "type": "socket", "at": [1, 0, 0] },
+    { "id": "socket_2", "type": "socket", "at": [3, 0, 0] },
+    { "id": "crate_1", "type": "crate", "at": [2, 0, 3] },
+    { "id": "crate_2", "type": "crate", "at": [3, 0, 3] }
+  ],
+  "pickups": [{ "id": "energy", "type": "refill_energy", "at": [7, 0, 1] }]
+}

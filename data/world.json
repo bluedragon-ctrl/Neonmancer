@@ -12,6 +12,7 @@
     "stream_lab",
     "spiked_lab",
     "heavy_lab",
+    "socket_yard",
     "cage_lab"
   ],
   "later": ["compile", "blink", "warp"],
@@ -49,6 +50,7 @@
     ["room_2.east", "room_1.west"],
     ["room_1.east", "socket_lab.west"],
     ["socket_lab.east", "heavy_lab.west"],
+    ["room_2.north", "socket_yard.south"],
     ["heavy_lab.north", "cage_lab.south"],
     ["room_1.north", "spiked_lab.south"],
     ["fence_yard.east", "room_2.west"],
@@ -97,6 +99,7 @@
     "room_1": [4, -1],
     "socket_lab": [5, -1],
     "heavy_lab": [6, -1],
+    "socket_yard": [3, -2],
     "cage_lab": [6, -2],
     "spiked_lab": [4, -2],
     "room_2": [3, -1],
