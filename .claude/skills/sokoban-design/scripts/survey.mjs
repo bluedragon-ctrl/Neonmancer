@@ -11,7 +11,7 @@
 // A cell reads "pushes/sharp steps/trap %" (see solve.mjs): "free" needs no push,
 // "-" is unsolvable, "?" hit --max (default 30000 states), "n/a" can't be
 // built (a socket under the wizard's start). The last columns build every
-// crate as a spiked crate (D198).
+// crate as a spiked crate (D199).
 import fs from 'node:fs';
 import { parseXsb, xsbToRoom } from './xsb.mjs';
 import { loadContent, solve } from './solve.mjs';
@@ -88,7 +88,9 @@ export const VARIANTS = [
   { label: 'holes, plate', wall: 'hole', goal: 'plate' },
   { label: 'wall 3, socket', wall: 3, goal: 'socket' },
   { label: 'holes, socket', wall: 'hole', goal: 'socket' },
-  // Every crate spiked (D198): the wizard can't climb them, so the build should play like Classic.
+  // Thin walls (one cell between two floors) as crate streams (D198), the others 3-high.
+  { label: 'thin streams, plate', wall: 3, goal: 'plate', streams: 'thin' },
+  // Every crate spiked (D199): the wizard can't climb them, so the build should play like Classic.
   { label: 'wall 3, plate, spiked', wall: 3, goal: 'plate', spiked: true },
   { label: 'ledge 1, plate, spiked', wall: 1, goal: 'plate', spiked: true },
   { label: 'holes, plate, spiked', wall: 'hole', goal: 'plate', spiked: true },
@@ -98,7 +100,7 @@ export const VARIANTS = [
 export function surveyCell(level, variant, content, max) {
   let data;
   try {
-    data = xsbToRoom(level, { wall: variant.wall, goal: variant.goal, exits: [], spiked: variant.spiked });
+    data = xsbToRoom(level, { wall: variant.wall, goal: variant.goal, streams: variant.streams, exits: [], spiked: variant.spiked });
   } catch {
     return { text: 'n/a' };
   }

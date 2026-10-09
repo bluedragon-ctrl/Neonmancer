@@ -18,7 +18,7 @@
  */
 import { BufferGeometry, Color, DoubleSide, Float32BufferAttribute, Group, InstancedMesh, Matrix4, Mesh } from 'three';
 import { BLOCK_FX, createActiveBlockView, flareHazard, hazardFaceMaterial } from './block-fx.js';
-import { createFenceView } from './fence-view.js';
+import { STREAM_STYLE, createFenceView } from './fence-view.js';
 import { createPanelGlow } from './panel-glow.js';
 import { UNIT_BOX } from './geometry.js';
 import { blockEdges, edgeUnitKeys, groupedBlockEdges } from './edges.js';
@@ -80,7 +80,7 @@ export function createRoomView({ size, blocks, blockTypes, exits = [], color = P
   if (fences.length > 0) {
     const others = new Set(types.filter((type) => type.look !== 'fence').flatMap((type) => blocks[type.id].map((cell) => cell.join())));
     const solid = (x, y, z) => x < 0 || z < 0 || others.has(`${x},${y},${z}`);
-    for (const type of fences) group.add(createFenceView(blocks[type.id], type.color ?? color, solid));
+    for (const type of fences) group.add(createFenceView(blocks[type.id], type.color ?? color, solid, type.passes ? STREAM_STYLE : undefined));
   }
   return group;
 }
@@ -210,7 +210,7 @@ const EDGE_WIDTH = { gate: 1.5 };
  * for `since` seconds after it hurt the wizard. Glass faces (D96,
  * glass.js) are see-through, with the mark on a small dark core inside;
  * a destructible glass object is an empty shell of thinner glass (D99).
- * Vents (`vents`, D198, vent-fx.js) add square holes in the top with
+ * Vents (`vents`, D199, vent-fx.js) add square holes in the top with
  * aurora jets shooting out of them and shafts down to the core, for a crate whose top hurts.
  * @param {{ at: number[], kind?: string, color: string, edges: string, mark: string, faces: string, shape?: string, tint: number, integrity?: number, vents?: string }} object
  */

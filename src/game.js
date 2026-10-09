@@ -27,7 +27,7 @@ import { buildRoom } from './world/room.js';
 import { completion, placedBits, scoreOf } from './world/score.js';
 
 /** Terminal message for each way to die (Player.deathCause). */
-/** Tuning of the shove off a spiked crate's top (D198): the gap left beyond its edge, the hop's launch speed. */
+/** Tuning of the shove off a spiked crate's top (D199): the gap left beyond its edge, the hop's launch speed. */
 const KNOCK_OFF = { gap: 0.02, hop: 4 };
 
 const DEATH_MESSAGES = { hole: 'msg.die', void: 'msg.void', damage: 'msg.derez', timeout: 'msg.timeout' };
@@ -259,7 +259,7 @@ export class Game {
     this.obstacles = [...objects, ...this.liveEnemies];
     /** What blocks an enemy's line of sight and stops an arc (besides blocks): the objects. */
     this.sightBlockers = objects;
-    /** The objects that are there (what lies on a spiked crate covers it, D198). */
+    /** The objects that are there (what lies on a spiked crate covers it, D199). */
     this.objectBodies = objects;
     /** Everything objects collide with: the solid objects, live enemies and the wizard. */
     this.bodies = [...this.obstacles, this.player];
@@ -309,7 +309,7 @@ export class Game {
   }
 
   /**
-   * The spiked crate (D198) whose bare top he stands on, or null: his feet
+   * The spiked crate (D199) whose bare top he stands on, or null: his feet
    * are on it and nothing lies on it.
    * @returns {import('./entities/pushable.js').Pushable|null}
    */
@@ -319,7 +319,7 @@ export class Game {
   }
 
   /**
-   * Shove him off the top of a spiked crate (D198), the shortest way that
+   * Shove him off the top of a spiked crate (D199), the shortest way that
    * leaves its footprint with room for him, with a small hop; nowhere to
    * go (walled in) and he stays, to be hurt again once the blinking ends.
    * @param {import('./entities/pushable.js').Pushable} crate
@@ -344,7 +344,7 @@ export class Game {
   }
 
   /**
-   * A frozen enemy can't stand on a spiked top (D198): impaled on it, it
+   * A frozen enemy can't stand on a spiked top (D199): impaled on it, it
    * pops (active ones cross it unhurt).
    */
   impaleFrozen() {
@@ -626,7 +626,7 @@ export class Game {
     if (hazard) this.hurt(this.grid.typeAt(...hazard).damage, { cell: hazard });
     const spiked = player.dead ? null : this.spiked.find((object) => touchesBox(player.box(), object.box()));
     if (spiked) this.hurt(spiked.damage, { object: spiked });
-    // A spiked crate's bare top (D198) hurts him and shoves him off, even while he blinks.
+    // A spiked crate's bare top (D199) hurts him and shoves him off, even while he blinks.
     const spikedTop = player.dead ? null : this.spikedTopUnder();
     if (spikedTop) {
       this.hurt(spikedTop.topDamage, { object: spikedTop });
@@ -1000,7 +1000,7 @@ export class Game {
    */
   objectShadowHeight(object, pos) {
     const box = pos.map((p, i) => [p, p + object.size[i]]);
-    const y = surfaceBelow(box, this.grid, this.bodies, object);
+    const y = surfaceBelow(box, object.kind === 'pushable' ? this.grid.forBody('crate') : this.grid, this.bodies, object);
     const [x, , z] = object.size;
     if (y === 0 && this.grid.isHole(pos[0] + x / 2, pos[2] + z / 2)) return null;
     return y;

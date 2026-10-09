@@ -144,6 +144,7 @@ export const BLOCK_TYPES = {
   void: { look: 'void', color: '#8a5cff', lethal: true },
   fake: { look: 'plain', fake: true },
   fence: { look: 'fence', seeThrough: true },
+  stream: { extends: 'fence', color: '#ff2bd6', passes: ['crate'] },
   collapsing: { kind: 'gate', trigger: 'step' },
   collapsing_regrow: { extends: 'collapsing', regrow: 3 },
   gate: { kind: 'gate', color: '#eef3ff' },

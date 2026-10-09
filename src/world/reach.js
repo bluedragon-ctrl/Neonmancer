@@ -109,6 +109,8 @@ export class RoomModel {
     const blocks = {};
     for (const [id, cells] of Object.entries(room.blocks)) if (!(abilities.has('scan') && room.blockTypes[id].fake)) blocks[id] = cells;
     this.grid = new Grid({ size: room.size, blocks, blockTypes: room.blockTypes, holes: room.holes });
+    /** The grid as a crate sees it: a crate stream's cells are open (D198). */
+    this.crateGrid = this.grid.forBody('crate');
 
     /** Cell indices of fixed bodies: they block, and he can stand on them. */
     this.bodies = new Set();
@@ -124,7 +126,7 @@ export class RoomModel {
     this.gateFloor = new Set();
     this.core = null;
     this.crates = [];
-    /** The cells of the crates with a spiked top (D198, a topDamage), before any push; a configuration follows them (config()). */
+    /** The cells of the crates with a spiked top (D199, a topDamage), before any push; a configuration follows them (config()). */
     this.spiked = new Set();
     /** Cells a pausable enemy can be frozen in (with Pause): steps, and weight for a plate; by cell index, which enemies (by number). */
     this.frozenCells = new Map();
@@ -187,10 +189,10 @@ export class RoomModel {
         if (!this.grid.isInside(x - dx, z - dz) || !stands.has(this.index(x - dx, y, z - dz))) continue;
         const tx = x + dx;
         const tz = z + dz;
-        if (!this.grid.isInside(tx, tz) || this.blocked(tx, y, tz, cfg)) continue;
+        if (!this.grid.isInside(tx, tz) || this.blockedCrate(tx, y, tz, cfg)) continue;
         let ty = y;
-        let under = this.below(tx, ty, tz, cfg);
-        while (under === 'air') under = this.below(tx, --ty, tz, cfg);
+        let under = this.below(tx, ty, tz, cfg, true);
+        while (under === 'air') under = this.below(tx, --ty, tz, cfg, true);
         if (under === 'hole' || under === 'bad') continue;
         const i = this.index(tx, ty, tz);
         if (!this.frozenCells.has(i)) this.frozenCells.set(i, new Set());
@@ -221,25 +223,36 @@ export class RoomModel {
 
   /** Is the cell blocked for his body: a block, a fixed body or a crate (cells above the room are open). */
   blocked(x, y, z, cfg) {
-    if (y < 0 || !this.grid.isInside(x, z)) return true;
+    return this.blockedIn(this.grid, x, y, z, cfg);
+  }
+
+  /** Is the cell blocked for a crate (or a frozen enemy pushed like one): the same, but a crate stream is open (D198)? */
+  blockedCrate(x, y, z, cfg) {
+    return this.blockedIn(this.crateGrid, x, y, z, cfg);
+  }
+
+  blockedIn(grid, x, y, z, cfg) {
+    if (y < 0 || !grid.isInside(x, z)) return true;
     if (y >= this.h) return false;
     const i = this.index(x, y, z);
-    return this.grid.isSolid(x, y, z) || this.bodies.has(i) || this.gateSolid.has(i) || cfg.crateSet.has(i);
+    return grid.isSolid(x, y, z) || this.bodies.has(i) || this.gateSolid.has(i) || cfg.crateSet.has(i);
   }
 
   /**
    * What is under the feet at the cell: 'floor' | 'solid' | 'air' | 'hole'
    * (a pit: death) | 'bad' (hazard, void or a spiked crate on top: he can't land there).
+   * @param {boolean} [crate] for a crate (or a frozen enemy), which falls through a crate stream (D198)
    */
-  below(x, y, z, cfg) {
+  below(x, y, z, cfg, crate = false) {
+    const grid = crate ? this.crateGrid : this.grid;
     if (y === 0) return this.grid.isHole(x, z) && !cfg.plugged.has(z * this.w + x) ? 'hole' : 'floor';
     if (y > this.h) return 'air';
-    if (this.grid.isSolid(x, y - 1, z)) {
-      const type = this.grid.typeAt(x, y - 1, z);
+    if (grid.isSolid(x, y - 1, z)) {
+      const type = grid.typeAt(x, y - 1, z);
       return type.damage > 0 || type.lethal ? 'bad' : 'solid';
     }
     const index = this.index(x, y - 1, z);
-    // A spiked crate's top hurts him (D198); a crate on it is what he stands on, and covers it.
+    // A spiked crate's top hurts him (D199); a crate on it is what he stands on, and covers it.
     if (cfg.spiked.has(index)) return 'bad';
     if (this.bodies.has(index) || cfg.crateSet.has(index) || this.floors.has(index) || this.gateSolid.has(index) || this.gateFloor.has(index)) return 'solid';
     return 'air';
@@ -272,7 +285,7 @@ export class RoomModel {
    */
   settle(x, y, z, cfg) {
     for (;;) {
-      const under = this.below(x, y, z, cfg);
+      const under = this.below(x, y, z, cfg, true);
       if (under === 'hole') return { plug: z * this.w + x };
       if (under !== 'air') return { cell: this.index(x, y, z) };
       y--;
@@ -345,7 +358,7 @@ export class RoomModel {
           if (n > 0) land(x + dx * n, y, z + dz * n);
         }
         // Compile: a crate in the free cell in front; he steps up on it, or walks over the hole it plugs.
-        if (abilities.has('compile') && this.grid.isInside(nx, nz) && !this.blocked(nx, y, nz, cfg)) {
+        if (abilities.has('compile') && this.grid.isInside(nx, nz) && !this.blockedCrate(nx, y, nz, cfg)) {
           const rest = this.settle(nx, y, nz, cfg);
           const top = rest.plug !== undefined ? 0 : this.cell(rest.cell)[1] + 1;
           const lift = top - y;
@@ -362,7 +375,7 @@ export class RoomModel {
 
   /**
    * A fresh configuration: the crates, the plugged hole tiles and which of
-   * the crates have a spiked top (D198; a crate on one covers it).
+   * the crates have a spiked top (D199; a crate on one covers it).
    * @param {number[]} crates cell indices
    * @param {Set<number>} plugged hole tiles
    * @param {Set<number>} [spiked] the cells of the crates with a spiked top, among `crates`
@@ -402,12 +415,12 @@ export class RoomModel {
         // Push: he stands behind it, level, and the cell beyond is free.
         const px = x - dx;
         const pz = z - dz;
-        if (this.grid.isInside(px, pz) && stands.has(this.index(px, y, pz)) && !this.blocked(x + dx, y, z + dz, cfg)) move(c, x + dx, y, z + dz);
+        if (this.grid.isInside(px, pz) && stands.has(this.index(px, y, pz)) && !this.blockedCrate(x + dx, y, z + dz, cfg)) move(c, x + dx, y, z + dz);
         // Pull: he stands in line up to `range` cells away, level, and the cell towards him is free.
         if (abilities.has('pull')) {
           const tx = x - dx;
           const tz = z - dz;
-          if (this.grid.isInside(tx, tz) && !this.blocked(tx, y, tz, cfg)) {
+          if (this.grid.isInside(tx, tz) && !this.blockedCrate(tx, y, tz, cfg)) {
             for (let k = 2; k <= 6; k++) {
               const sx = x - dx * k;
               const sz = z - dz * k;
@@ -415,7 +428,7 @@ export class RoomModel {
               if (stands.has(this.index(sx, y, sz))) {
                 // The cells between must be open (a block or crate in line stops the beam).
                 let open = true;
-                for (let j = 1; j < k; j++) open &&= !this.blocked(x - dx * j, y, z - dz * j, cfg);
+                for (let j = 1; j < k; j++) open &&= !this.blockedCrate(x - dx * j, y, z - dz * j, cfg);
                 if (open) move(c, tx, y, tz);
                 break;
               }
@@ -434,7 +447,7 @@ export class RoomModel {
             for (const [dx, dz] of DIRS) {
               const fx = sx + dx;
               const fz = sz + dz;
-              if (this.grid.isInside(fx, fz) && !this.blocked(fx, sy, fz, probe) && !(fx === x && fz === z && sy === y)) move(c, fx, sy, fz);
+              if (this.grid.isInside(fx, fz) && !this.blockedCrate(fx, sy, fz, probe) && !(fx === x && fz === z && sy === y)) move(c, fx, sy, fz);
             }
           }
         }

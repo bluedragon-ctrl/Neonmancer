@@ -352,7 +352,13 @@
         },
         "damage": { "type": "integer", "minimum": 1, "description": "Static blocks: integrity the wizard loses when he touches it (stands on it or walks into it)." },
         "lethal": { "type": "boolean", "description": "Static blocks: landing on top kills the wizard and enemies instantly; touching a side is safe." },
-        "seeThrough": { "type": "boolean", "description": "Static blocks: solid to bodies (the wizard, enemies, crates; he can stand on top), but bolts (his Zap, enemies' shots) and enemies' sight pass through it (D167). Blink, Warp, Pull and a paste stop at it as at any block." },
+        "seeThrough": { "type": "boolean", "description": "Static blocks: solid to bodies (the wizard, enemies, crates; he can stand on top), but bolts (his Zap, enemies' shots) and enemies' sight pass through it (D167). Blink and Warp stop at it as at any block." },
+        "passes": {
+          "type": "array",
+          "items": { "enum": ["crate"] },
+          "uniqueItems": true,
+          "minItems": 1,
+          "description": "Static blocks (the crate stream, D198): the kinds of body that pass through it as through air: crate (crates and frozen enemies, which push like crates). The wizard and active enemies are stopped, and the field has no top: for them it reaches up to the ceiling, so no jump or crate gets him over it. Pushes, falls, Pull and a paste treat its cells as open for a crate; Fork's decoy does not. Goes with the fence look and \"seeThrough\"." },
         "fake": { "type": "boolean", "description": "Static blocks: solid like any other until a scan reaches it (D128), then it derezzes and stays gone until the room resets. With the plain look and no color it can't be told from a plain block. A pickup may lie inside one (a hidden pickup)." },
         "regrow": {
           "type": "number",
@@ -546,13 +552,13 @@
         "vents": {
           "enum": ["none", "aurora"],
           "default": "none",
-          "description": "Cube-shaped objects: square bit-like holes in the top face with jets of aurora light (crimson to dark indigo) shooting out of them, and shafts running down through the glass to the core (D198). Look only; what hurts is topDamage."
+          "description": "Cube-shaped objects: square bit-like holes in the top face with jets of aurora light (crimson to dark indigo) shooting out of them, and shafts running down through the glass to the core (D199). Look only; what hurts is topDamage."
         },
         "topDamage": {
           "type": "integer",
           "minimum": 1,
           "maximum": 99,
-          "description": "Pushable objects only (D198): touching its top (standing on it, landing on it) hurts the wizard by this much and shoves him off; its sides are safe to push. A plain crate on top covers the spikes. Not for platforms: their \"damage\" hurts on every side."
+          "description": "Pushable objects only (D199): touching its top (standing on it, landing on it) hurts the wizard by this much and shoves him off; its sides are safe to push. A plain crate on top covers the spikes. Not for platforms: their \"damage\" hurts on every side."
         },
         "tint": {
           "type": "number",

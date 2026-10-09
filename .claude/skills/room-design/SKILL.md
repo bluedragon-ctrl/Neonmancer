@@ -210,12 +210,18 @@ Edit existing files with small text edits, not a JSON dump.
   switch in the room), `hidden: true` (wall until Scan). The first row inside
   must be free.
 - **Blocks** (`defs.json` blocks): `block` (default) `hazard void fake
-  fence collapsing collapsing_regrow gate bridge`. A `fence` (D167) is a
+  fence stream collapsing collapsing_regrow gate bridge`. A `fence` (D167) is a
   block for bodies (he stands on it, crates and enemies stop) that hides
   nothing and lets bolts and sight through: wall off or raise a wall
   without blocking the view; a target behind it takes a Zap; a tower
   behind it still shoots (no cover). 1 high pens crates, 2 high stops him
-  until the double jump, 3 high for good. `gate`/`bridge` take `switches`
+  until the double jump, 3 high for good. A `stream` (D198) is a fence in
+  magenta that crates and frozen enemies pass and he does not, with no
+  top: no jump or crate gets him over or onto it, so build it 2 high.
+  A crate is pushed into it from the near side only (he cannot stand in
+  it): a 1-thick wall hands a crate over, one cell beyond; in a thicker
+  one it stops in the last cell. Use it where the trick is routing
+  crates through a field he cannot follow (sokoban-design). `gate`/`bridge` take `switches`
   (default: every switch in the room): a gate goes, a bridge appears while
   all are on. In a hole they stand a block high (top 1.0): a step, not floor.
   A gone bridge shows no outline: the room that first shows bridges says
@@ -261,7 +267,7 @@ Edit existing files with small text edits, not a JSON dump.
 | Headroom | wizard 1.5 high: 2 free cells over every standing surface. A block above is a ceiling, the room's height is not (he stands on top of a 2-high wall in a 3-high room); keep standing surfaces 2 below the room height for the look |
 | Bouncy enemy (bug, glowbug) | launches 2.2 above its top (0.6), so 2.8: clears a 2-high ledge, never 3 |
 | Frozen enemy | a 1-high step (1×1×1), pushed like a crate |
-| Spiked crate (`crate_spiked`, D198) | a crate whose top is no place to stand: his feet on it hurt 2 and shove him off (even while he blinks); a crate on it covers the spikes. A jump in line over a 1-high one always touches it (no hop over); the double jump clears it. A frozen enemy on a bare top is impaled, the decoy derezzes, active enemies cross unhurt |
+| Spiked crate (`crate_spiked`, D199) | a crate whose top is no place to stand: his feet on it hurt 2 and shove him off (even while he blinks); a crate on it covers the spikes. A jump in line over a 1-high one always touches it (no hop over); the double jump clears it. A frozen enemy on a bare top is impaled, the decoy derezzes, active enemies cross unhurt |
 | Zap bolt | flies level, 0.48 above his feet; a bug is 0.6 high. From the floor it hits bugs and 1-high blocks; from a 1-high top it flies over both and hits a target standing a block up; a jump shot near the apex does too (D189) |
 | Walk | 4.5 u/s, ~13 ticks (0.22 s) a cell; a jump ~34 ticks (0.57 s) |
 | Push | ~28 ticks (0.47 s) a cell |
@@ -302,7 +308,7 @@ Edit existing files with small text edits, not a JSON dump.
   not wall in his own path with crates (a 2-wide island with crates across
   it is a knot). A crate lost in a corner is fine (rooms reset) if you
   checked it.
-- **Spiked crates (D198)** take the climb out of a crate: he can't use one as
+- **Spiked crates (D199)** take the climb out of a crate: he can't use one as
   a step, so a push puzzle plays like classic Sokoban (his route around the
   crates matters again). A plain crate dropped or pasted on one covers it:
   that is a 2-high step, so check stacks (a spiked crate pushed onto a

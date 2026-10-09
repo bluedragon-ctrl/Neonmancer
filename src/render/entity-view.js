@@ -379,7 +379,7 @@ export class PushableView {
       for (const material of [node.material ?? []].flat()) material.clippingPlanes = FLOOR_CLIP;
     });
     this.shadow = createDropShadow(pushable.object.color);
-    /** A spiked crate's vents (D198): hidden while a crate lies on top, or once it has plugged a hole. */
+    /** A spiked crate's vents (D199): hidden while a crate lies on top, or once it has plugged a hole. */
     this.vents = this.block.userData.vents ?? null;
     /** Made once the object plugs a hole (most never do): its vertical edges fade into the pit. */
     this.plugDrops = null;

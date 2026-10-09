@@ -150,7 +150,7 @@ export const OBJECT_STYLES = {
 
 /** Style defaults: the first value of each OBJECT_STYLES list, plus the tint. */
 export const OBJECT_STYLE_DEFAULTS = {
-  // (Vents, D198, are a look only a few objects have: no default, the view reads "none".)
+  // (Vents, D199, are a look only a few objects have: no default, the view reads "none".)
   ...Object.fromEntries(Object.entries(OBJECT_STYLES).filter(([key]) => key !== 'vents').map(([key, values]) => [key, values[0]])),
   /** With tinted faces: share of the object color in the top face (0–1); sides get less. */
   tint: 0.1,
@@ -366,7 +366,7 @@ export function resolveObjectTypes(types) {
 }
 
 /** Values only static block types take, and only object kinds take (D60). */
-export const STATIC_BLOCK_VALUES = ['look', 'damage', 'lethal', 'fake', 'seeThrough'];
+export const STATIC_BLOCK_VALUES = ['look', 'damage', 'lethal', 'fake', 'seeThrough', 'passes'];
 export const KIND_BLOCK_VALUES = ['kind', 'trigger', 'start', 'regrow', 'edges', 'mark', 'faces', 'tint'];
 
 /**

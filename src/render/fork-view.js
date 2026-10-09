@@ -48,7 +48,7 @@ export class ForkView {
     placeStream(this.pixels, fork ? fork.tick + alpha : null, PLAYER.forkTicks, hands, into);
     this.aim.visible = false;
     if (player.spell !== SPELL || player.dead || game.transition) return;
-    const cell = pasteCell(game);
+    const cell = pasteCell(game, 'wizard');
     if (cell) placeMarquee(this.aim, cell.map((v) => v + 0.5), AIM.marquee, this.time);
   }
 }

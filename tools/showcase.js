@@ -99,6 +99,7 @@ import biomes from '../data/biomes.json';
 
 /** Block types with variants filled in (D60). */
 const BLOCK_TYPES = resolveBlockTypes(defs.blocks);
+
 /** Object types with their variants filled in (D145). */
 const OBJECT_TYPES = resolveObjectTypes(defs.objects);
 
@@ -158,7 +159,7 @@ const ALL_ASSETS = [
       return new Group().add(view);
     },
   })),
-  // A close-up of the spiked crate (D198): its vents and the shafts down to the core.
+  // A close-up of the spiked crate (D199): its vents and the shafts down to the core.
   { label: 'crate_spiked-close', span: 1.7, build: () => { const v = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...OBJECT_TYPES.crate_spiked, at: [0, 0, 0] }); v.position.set(-0.5, 0, -0.5); return new Group().add(v); } },
   // Animated looks of the damaging block types (block-fx.js); the hazard
   // flares every 2 s as if it just hurt the wizard.
@@ -167,6 +168,8 @@ const ALL_ASSETS = [
   { label: 'blocks-in-room', span: 5.5, build: buildBlocksInRoom },
   // Fences (D167): see-through, the wizard walks behind them.
   { label: 'fence-in-room', span: 5.5, build: buildFenceInRoom },
+  // The crate stream (D198): a fence only crates cross, in the wizard's magenta, 2 high, a crate inside.
+  { label: 'stream-in-room', span: 5.5, build: buildStreamInRoom },
   // Glass (D96): every crate type is glass (above). Hazard blocks as glass
   // are an option not used yet; then a room corner with glass crates
   // stacked beside the old tinted crate, the wizard walking behind them.
@@ -2294,6 +2297,35 @@ function buildBlocksInRoom() {
   );
   room.position.set(-2, 0, -2);
   return new Group().add(room);
+}
+
+/**
+ * The crate stream (D198), 2 high and 3 long from the back wall in a 4×4
+ * room corner: a crate slides in and out of it, a plain fence stands beside
+ * it for comparison and the wizard walks up to it from the front.
+ */
+function buildStreamInRoom() {
+  const size = [4, 3, 4];
+  const stream = [0, 1, 2].flatMap((x) => [[x, 0, 2], [x, 1, 2]]);
+  const room = new Group().add(
+    createRoomView({ size, blocks: { stream, fence: [[3, 0, 0], [3, 0, 1], [3, 1, 0], [3, 1, 1]] }, blockTypes: BLOCK_TYPES, color: PALETTE.amber }),
+  );
+  const crate = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...OBJECT_TYPES.crate, at: [1, 0, 2] });
+  const wizard = createWizard();
+  addXray(wizard);
+  room.add(crate, wizard);
+  room.position.set(-2, 0, -2);
+  const asset = new Group().add(room);
+  let time = 0;
+  asset.userData.update = (dt) => {
+    time += dt;
+    // The wizard paces in front of the stream; the crate slides through it and back.
+    const t = (time % 6) / 6;
+    wizard.position.set(0.5 + 2 * Math.abs(Math.sin(t * Math.PI)), 0, 3.2);
+    wizard.rotation.y = 0;
+    crate.position.set(0, 0, 0.5 * Math.sin(time * 1.0) - 0.0);
+  };
+  return asset;
 }
 
 /**

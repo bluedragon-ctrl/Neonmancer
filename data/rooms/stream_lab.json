@@ -1,0 +1,25 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "stream_lab",
+  "name": "Stream Lab",
+  "biome": "home_lattice",
+  "size": [9, 4, 7],
+  "spawn": [7.5, 0, 6.5],
+  "exits": [{ "id": "east", "side": "+x", "at": 4 }],
+  "blocks": [
+    { "type": "fence", "at": [4, 0, 0], "to": [4, 0, 2] },
+    { "at": [0, 0, 2], "to": [1, 2, 2] },
+    { "type": "stream", "at": [2, 0, 2], "to": [3, 1, 2] },
+    { "type": "stream", "at": [5, 0, 2], "to": [6, 1, 2] },
+    { "at": [7, 0, 2], "to": [8, 2, 2] },
+    { "type": "gate", "at": [1, 0, 3], "to": [1, 2, 6] }
+  ],
+  "objects": [
+    { "id": "plate_1", "type": "plate", "at": [0, 0, 1] },
+    { "id": "plate_2", "type": "plate", "at": [8, 0, 1] },
+    { "id": "crate_1", "type": "crate", "at": [2, 0, 4] },
+    { "id": "crate_2", "type": "crate", "at": [6, 0, 4] }
+  ],
+  "pickups": [{ "id": "energy", "type": "refill_energy", "at": [0, 0, 4] }]
+}

@@ -9,7 +9,7 @@ import { analyzeRoom } from '../src/world/reach.js';
 import { buildRoom } from '../src/world/room.js';
 import { BUG, eventTypes, gameData, hold, idle, roomFile } from './helpers.js';
 
-/** The spiked crate (D198) as defs.json has it, without the look: a crate whose top hurts 2. */
+/** The spiked crate (D199) as defs.json has it, without the look: a crate whose top hurts 2. */
 const SPIKED = { extends: 'crate', topDamage: 2, vents: 'aurora' };
 const OBJECTS = { crate_spiked: SPIKED };
 const STILL = { ...BUG, movement: 'stationary' };
@@ -127,7 +127,7 @@ test('a plain crate on a spiked one is a safe step: its top does not hurt', () =
   assert.equal(hurts(run(game2, idle, 3)).length, 1);
 });
 
-test('a jump in line over a 1-high spiked crate always touches it: no hop over (D198)', () => {
+test('a jump in line over a 1-high spiked crate always touches it: no hop over (D199)', () => {
   for (let d = 0; d <= 3; d += 0.25) {
     const game = gameWith([spiked('s', [5, 0, 3])], [5 - 0.3 - d, 0, 3.5]);
     let touched = false;

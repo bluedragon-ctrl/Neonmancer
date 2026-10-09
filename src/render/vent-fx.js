@@ -1,5 +1,5 @@
 /**
- * The vents of a spiked crate (D198): a few square, bit-like holes in its
+ * The vents of a spiked crate (D199): a few square, bit-like holes in its
  * top face (on the same 4 × 4 grid as the crate's data bits, marks.js),
  * dark inside with danger-red edges, and a jet of aurora light shooting
  * out of each: crimson at the foot, dark indigo above, with slow vertical

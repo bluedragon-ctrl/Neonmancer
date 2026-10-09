@@ -6,7 +6,10 @@
   "biome": "outer_buffer",
   "size": [12, 4, 12],
   "spawn": [1.5, 0, 6.5],
-  "exits": [{ "id": "east", "side": "+x", "at": 5 }],
+  "exits": [
+    { "id": "east", "side": "+x", "at": 5 },
+    { "id": "west", "side": "-x", "at": 3 }
+  ],
   "pickups": [
     { "id": "disk_zap_1", "type": "disk_zap", "at": [0, 0, 0] },
     { "id": "disk_shield_1", "type": "disk_shield", "at": [1, 0, 0] },

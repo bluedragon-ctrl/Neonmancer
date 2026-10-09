@@ -40,7 +40,7 @@ export class Pushable {
     this.state = 'rest';
     /** Integrity left, or null: indestructible (the type has none). */
     this.integrity = object.integrity ?? null;
-    /** Integrity the wizard loses on touching its top (a spiked crate, D198); 0 for an ordinary one. */
+    /** Integrity the wizard loses on touching its top (a spiked crate, D199); 0 for an ordinary one. */
     this.topDamage = object.topDamage ?? 0;
     /** Ticks since a spell last hit it, or null; ticks since it broke. */
     this.hitTicks = null;
@@ -67,7 +67,7 @@ export class Pushable {
   }
 
   /**
-   * Is its top spiked right now (D198): a spiked crate with nothing on it
+   * Is its top spiked right now (D199): a spiked crate with nothing on it
    * (a crate on top covers the spikes) that isn't broken or plugged (a
    * plugged one is plain floor)?
    * @param {Iterable<{ box(): number[][] }>} bodies what can lie on it: the objects and enemies, not the wizard
@@ -127,7 +127,8 @@ export class Pushable {
    * @param {{ grid: import('../world/grid.js').Grid, bodies: Iterable<{ box(): number[][] }> }} world
    * @returns {boolean} whether it started sliding
    */
-  push([dx, dz], { grid, bodies }) {
+  push([dx, dz], { grid: wizardGrid, bodies }) {
+    const grid = crateGrid(wizardGrid);
     if (this.state !== 'rest' || this.hasLoad(bodies)) return false;
     const [x, y, z] = this.pos;
     const target = [x + dx, y, z + dz];
@@ -148,7 +149,8 @@ export class Pushable {
    * @param {{ grid: import('../world/grid.js').Grid, bodies: Iterable<{ box(): number[][] }> }} world
    * @returns {string|null} event: 'land', 'plug', 'expire' or null
    */
-  update({ grid, bodies }) {
+  update({ grid: wizardGrid, bodies }) {
+    const grid = crateGrid(wizardGrid);
     this.savePrevious();
     if (this.hitTicks !== null) this.hitTicks++;
     if (this.state === 'broken') {
@@ -229,11 +231,17 @@ export class Pushable {
    * (the bottom of a hole) above a hole tile at floor level.
    */
   support(grid, bodies) {
+    grid = crateGrid(grid);
     const top = surfaceBelow(this.box(), grid, bodies, this);
     const [x, , z] = this.pos;
     if (top === 0 && grid.isHole(x + 0.5, z + 0.5)) return -1;
     return top;
   }
+}
+
+/** The grid as a crate sees it: the crate stream's cells are open (D198). */
+function crateGrid(grid) {
+  return grid.forBody?.('crate') ?? grid;
 }
 
 /** Does the box overlap any body except `self`? */

@@ -9,7 +9,13 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
-- The spiked crate (D198): a crate whose top hurts (`topDamage` 2) and
+- The crate stream (D198): block type `stream`, a fence in the wizard's
+  magenta that crates and frozen enemies pass and he and active enemies
+  cannot, with no top to stand on or climb over. `Grid.forBody()` gives
+  the grid per kind of body; the reachability checker and the push-puzzle
+  solver split his blocks from the crates'. Showcase `stream-in-room`,
+  dev room `stream_lab`.
+- The spiked crate (D199): a crate whose top hurts (`topDamage` 2) and
   shoves him off, so he can't climb it and Sokoban's "get behind the box"
   puzzles are back; a crate on it covers the spikes. Look: square vents
   with aurora jets and shafts to the core (`vents`). The checker, the

@@ -237,6 +237,7 @@ the ones it gives:
 | `void` | void, black mist with gray wisps (D99) | `lethal: true` |
 | `fake` | plain (room color) | `fake: true`: a scan derezzes it (D128, see Scan) |
 | `fence` | fence (room color): data streams, no faces (D167) | `seeThrough: true`: bolts and sight pass (see Fences) |
+| `stream` | extends `fence`, magenta (the wizard's color, D98): the crate stream (D198) | `passes: ["crate"]` (see Crate streams) |
 | `collapsing` | kind `gate`, `trigger: step`; room color, dashed edges, faces barely tinted (D98, D99) | gives way (see Gate blocks) |
 | `collapsing_regrow` | extends `collapsing` | `regrow: 3` |
 | `gate` | kind `gate` (switch trigger), white, bars on its seen sides (D140) | solid until its switches are on (see Gate blocks) |
@@ -261,7 +262,7 @@ the ones it gives:
   he stands on top, and the reachability checker treats it as a block),
   but bolts (his Zap and Pause, enemies' shots, Zap+ bounces too) and
   enemies' sight pass through (`seeThrough`, `Grid.blocksSight()`).
-  Blink, Warp, Pull and a paste stop at it as at a block. Height is the
+  Blink and Warp stop at it as at a block. Height is the
   design tool: 1 high keeps crates and enemies in and he jumps it; 2 high
   stops him until the double jump; 3 high for good. A target behind a
   fence is switched with a Zap through it; a tower behind one still
@@ -282,8 +283,40 @@ the ones it gives:
   off his x-ray. Room color (structure, D99). Chosen from three
   showcase variants (ribbon alone, with nodes, with data pixels). Showcase
   `?asset=fence-in-room`; dev room `fence_yard`.
+- **Crate streams (D198):** a fence that only crates pass, the push
+  puzzle's one barrier: *he* must route crates through a field he cannot
+  follow them through, which brings back Sokoban's player routing (he
+  climbs crates, so a plain wall cannot). Block type `stream` extends
+  `fence` with `passes: ["crate"]`, in the wizard's magenta (a field keyed
+  to him; no new color rule: the wizard's magenta is already one). It
+  never moves or switches (a switched one may come later). Rules:
+  - **Crates and frozen enemies** (which push like crates, D154) pass:
+    pushed into it, resting in it, pushed on from either side, falling
+    through its cells like air, pulled through, pasted or compiled into
+    one. **He, active enemies and Fork's decoy** are stopped, as by a
+    fence. Bolts and sight pass, as through any fence.
+  - **No top:** for him its field reaches up to the ceiling, so a jump
+    or a crate under him never gets him over or onto it (a 1-high one
+    included); rooms still build it 2 high, so what is drawn is what
+    stops him on the way he can see. A crate inside one is no step.
+  - **He pushes from the near side only:** to push a crate on he stands
+    behind it, and he cannot stand in the stream. A 1-thick wall hands a
+    crate over, one cell beyond it; in a thicker one a crate stops in the
+    last stream cell, out of his reach but for Pull.
+  - In code: `Grid.forBody(kind)` gives the grid as a kind of body sees
+    it (`'crate'`: open where a type `passes` it; the wizard and active
+    enemies have `isSolid()` itself). Crates (`pushable.js`), frozen
+    enemies (`enemy.js`: `gridView()`), Pull and Paste (`pasteCell(game,
+    kind)`) use the crate view, Fork's decoy `'wizard'`. The reachability
+    checker has `blocked()` (him) and `blockedCrate()` (crates) and
+    `below(..., crate)`; the solver, `xsb.mjs` (`~`) and the survey
+    (`--streams thin`) follow.
+  - Look: the fence's streams of light in magenta, the top beam like any
+    other (its top is no ledge): `STREAM_STYLE` in `fence-view.js`.
+    Showcase `?asset=stream-in-room`; dev room `stream_lab`.
 - Validation: a base type has a look or a kind, not both; `damage`,
-  `lethal` and `seeThrough` only on static types, `kind` values only on
+  `lethal`, `seeThrough` and `passes` only on static types (`passes`
+  only with the fence look), `kind` values only on
   kinds; a kind needs a color; `block` must be static; room blocks name a
   known type.
 - **Edges (D64):** neighbours of any plain types never get an edge between
@@ -1437,7 +1470,7 @@ usual, so half behind a wall he is half ghost (D55).
 
 ## The spiked crate
 
-- `crate_spiked` (D198) is a `crate` with `topDamage: 2` (pushable types
+- `crate_spiked` (D199) is a `crate` with `topDamage: 2` (pushable types
   only; `damage` stays the platform's, which hurts on every side). It
   pushes, falls, stacks and plugs a hole like a crate, and its top is not
   a place to stand: when his feet rest on it (standing, or landing from a
@@ -1756,6 +1789,7 @@ rooms, never to a Lattice or authored room.
 | `room_1`, `room_2` | 12×12 | empty hubs joining the dev rooms |
 | `hidden_layer` | 12×12 | Scan: a fake gap, a hidden exit, a refill in a fake block; the Scan disk |
 | `fence_yard` | 10×10 | fences (D167): a target zapped through a 2-high fence raises a bridge; a 1-high pen with a crate |
+| `stream_lab` | 10×9 | the crate stream (D198): Microban 3 rebuilt with streams; he cannot follow the crates through it |
 | `watchdog_run` | 12×8 | a watchdog timer (D172), 25 s: a 1-wide path through a pit to a refill and back |
 
 ### Room design checklist

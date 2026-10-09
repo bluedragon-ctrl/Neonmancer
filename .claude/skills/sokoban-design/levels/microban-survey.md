@@ -2,7 +2,7 @@
 
 Microban by David W. Skinner (`microban.xsb`), surveyed with
 `scripts/survey.mjs` (2026-10-09, `--max 30000`; the three spiked columns
-added the same day, D198). This page is the
+added the same day, D199). This page is the
 review: what survives the game's rules, and how to build the best levels
 in a room. Re-run the survey after any change to the push rules.
 
@@ -15,14 +15,14 @@ in a room. Re-run the survey after any change to the push rules.
   **sockets** (a crate spent for good). Each cell reads `pushes/sharp
   steps/trap %`. A sharp step is one where half or more of the pushes
   are traps; the trick lives there.
-- The last three columns build every crate as a **spiked crate** (D198: he
+- The last three columns build every crate as a **spiked crate** (D199: he
   can't stand on it, so he can't climb it) with 3-high walls, 1-high
   ledges and holes, plates. **Classic** is what they should play like.
 - `-` unsolvable, `?` the search hit 30 000 states (four or more crates:
   solve that level alone with a higher `--max`), `n/a` the wizard
   starts on a goal (no socket under him).
 
-## Spiked crates bring Classic back (D198)
+## Spiked crates bring Classic back (D199)
 Every crate built as `crate_spiked` (`scripts/xsb.mjs --spiked`, or `!` in
 the text):
 - **Walls 3 high, plates: 104 of the 104 levels solved match Classic
@@ -264,3 +264,16 @@ A classic gives the crate puzzle; the room adds one thing of its own:
 | 153 | 'reduction of (Revenge 306)' | 11×8 | 10 | ? | ? | ? | ? | ? | ? | ? | ? | ? |
 | 154 | 'Take the long way home.' | 27×15 (big) | 1 | 2 | 2/0/11% | 2/0/11% | 2/0/20% | 2/0/6% | 2/0/12% | 2/0/6% | 2/0/11% | 2/0/12% |
 | 155 | 'The Dungeon' | 28×15 (big) | 11 | 175 | 67/15/27% | 67/15/27% | 67/15/54% | 67/15/27% | 67/16/54% | 175/19/22% | 67/15/27% | 69/17/54% |
+
+## Crate streams (D198)
+`xsb.mjs --streams thin` builds every thin wall (one cell between two
+floors along x or z) as a crate stream, the other walls 3-high; the survey
+has a column for it (`thin streams, plate`). Run on levels 1-60 (`--max
+8000`): 38 have thin walls. 10 of them (3, 6, 11, 16, 18, 22, 37, 41, 47,
+48) need fewer pushes than with plain walls, none more, 22 have fewer sharp
+steps, and none gets its classic push count back. A stream is a shortcut
+for the crate, and the player's detour matters only where the room is
+built round it: build the stream by hand (`~` in the XSB), as a wall
+between a front area and a vault, with the vault's way in for him over a
+fence (`stream_lab`, D198).
+

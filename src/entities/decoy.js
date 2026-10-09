@@ -5,7 +5,7 @@
  * like a body standing on it (switches.js) and hostile enemies that see
  * it go for the nearest of it and the wizard (Enemy.sense()). It falls if
  * nothing holds it up, and pops into a hole, or onto a spiked crate's bare
- * top (D198).
+ * top (D199).
  */
 import { bodyBox, restsOn, surfaceBelow } from '../physics/collision.js';
 import { DT } from '../core/loop.js';
