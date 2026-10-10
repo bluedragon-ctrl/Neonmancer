@@ -493,7 +493,15 @@ export class RoomModel {
         return false;
       }
       // A heavy plate (D200) needs a weight: the crates stacked in its column count first.
-      let need = (object.weight ?? 1) - this.stacked(x, y, z, cfg);
+      const crates = this.stacked(x, y, z, cfg);
+      let need = (object.weight ?? 1) - crates;
+      if (need <= 0) continue;
+      // A frozen enemy in the plate's cell with a crate dropped on it (D205): the crate lies in the
+      // plate's cell, or one above it where the enemy is already counted as floor; one weight each.
+      if (this.frozenUnder(x, y, z, stands)) {
+        if (crates > 0 && this.dropsFromLedge(x, y, z, cfg, stands)) need--;
+        else if (crates === 0 && cfg.crateSet.has(this.index(x, y + 1, z))) need -= 2;
+      }
       if (need <= 0) continue;
       const top = this.index(x, y + (object.weight ?? 1) - need, z);
       // The wizard on top of the stack, on a timed plate (he runs on while it counts down).
@@ -510,6 +518,24 @@ export class RoomModel {
       for (let i = 0; i < need; i++) byFrozen.push(holders);
     }
     return assignable(byFrozen);
+  }
+
+  /** Can a crate come down on cell (x, y, z) from a ledge beside it (a 1-high block, a place to push from on top)? */
+  dropsFromLedge(x, y, z, cfg, stands) {
+    return DIRS.some(([dx, dz]) => this.blocked(x - dx, y, z - dz, cfg) && stands.has(this.index(x - 2 * dx, y + 1, z - 2 * dz)));
+  }
+
+  /**
+   * Can a frozen enemy lie in cell (x, y, z) with a crate dropped on it (D205)?
+   * It is there on its path, or one push away from a frozen cell beside it
+   * (worked out without the crate, which falls on it afterwards).
+   */
+  frozenUnder(x, y, z, stands) {
+    if (this.baseFrozen.get(this.index(x, y, z))?.size > 0) return true;
+    return DIRS.some(([dx, dz]) => {
+      const beside = this.frozenCells.get(this.index(x - dx, y, z - dz));
+      return beside?.size > 0 && stands.has(this.index(x - 2 * dx, y, z - 2 * dz));
+    });
   }
 
   /** How many crates are stacked in the column of the plate at (x, y, z), from the plate up (D200). */

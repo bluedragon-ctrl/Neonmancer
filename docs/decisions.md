@@ -1891,3 +1891,34 @@ the 2-high ledge. Rules found:
 **Why:** the plate was Fork's and the second bug had no job; a barrier only
 a frozen body crosses gives Pause a role no spell fakes, and the stream is
 now taught in the Pause wing before `split_vault`.
+
+### D205 — 2026-10-10 — Idle Cache: a frozen bug as the base of a stack (5.17)
+`idle_cache` rebuilt (id, size, north exit and fragment 8 stay): the
+pit, bridge, second plate and spare crate are gone. A bug patrols a lane
+(z 2); beside it a one-high ledge holds a crate over a heavy plate
+(`plate_stack`); the fragment lies in a cage (D202) in the open, on the
+plate's switch. He freezes the bug, pushes it from the lane onto the plate,
+climbs the ledge and pushes the crate off: it lands on the bug, a stack of
+two, and the cage goes. The run is the clock: freeze, push, climb, drop and
+the walk to the cage (6,6) are one 5 s freeze (0.7 s spare from a freeze in
+the lane's middle with a slow, detouring route, from `sim.mjs`; a freeze at the
+east end needs three more pushes and fails, a recast restarts it). The
+crate dropped first lies alone on the plate and the bug can no longer be
+pushed under it: a reset. Rules found:
+- **A frozen enemy is a base for a stack** (the author's "last crate is a
+  frozen enemy", the plan's "stacking has no home"). The stack's weight is
+  the enemy plus the crate, so a plate needs only one crate and Pause.
+- **The checker now knows it.** `reach.js` counts a frozen enemy that can
+  lie in a heavy plate's cell (on its path, or one push from a frozen cell
+  beside it) as one weight under a crate that can come down on it from a
+  ledge, or lying one above it. A crate that starts on the plate does not
+  count (an enemy cannot get under it). Test in `reach.test.js`.
+- **The wizard counts as a weight**, so a bug on the plate with him on top
+  also holds it: the cage sits three cells from the plate so he can't do both.
+- **Fork still bases the stack** (the decoy is no solid body, a crate
+  drops through it). The ledge drop and the crate remain; no other plate
+  is fakeable. Said, not fixed.
+- Lattice abilities: every key piece is `never` without Pause (and without
+  Fork); the double jump changes nothing here.
+**Why:** the old room held a plain plate a decoy could fake and a spare
+crate with no job; stacking had no home after the Atrium (plan review).

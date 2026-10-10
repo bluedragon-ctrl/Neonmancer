@@ -187,6 +187,11 @@ Lessons from the reviews (D188 on):
   lane against its wall. Time the freeze, align and push with `sim.mjs`:
   the bolt only hits a bug whose box crosses his line (cast on a bug a few
   ticks short of the row), and the 5 s run is the clock.
+- **A frozen bug is a stack's base** (`idle_cache`, D205). Freeze it, push it
+  onto a heavy plate and drop the ledge crate on it: one crate and Pause make
+  the weight of two, and the freeze is the clock. The crate first lies alone
+  (a reset). The wizard counts too: keep the prize 2+ cells from the plate.
+  Fork can still be the base (a decoy is no solid body). Time it with `sim.mjs`.
 - **Walls keep the crate search small.** Three or four free crates on
   open floor blow `MAX_CONFIGS` and a truncated search is a false
   "never" (it also hides bypasses: it stops at the first one it finds).

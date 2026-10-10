@@ -8,7 +8,7 @@ import { describeNeeds, formatReach, formatRoom, roomOfReport } from '../src/wor
 import { LIFT, gameData, roomFile } from './helpers.js';
 
 /** Object types the tests use besides the crate. */
-const OBJECTS = { plate: { kind: 'plate', color: '#eef3ff' }, target: { kind: 'target', color: '#eef3ff' }, platform: LIFT };
+const OBJECTS = { plate: { kind: 'plate', color: '#eef3ff' }, plate_heavy: { kind: 'plate', color: '#eef3ff', weight: 2 }, target: { kind: 'target', color: '#eef3ff' }, platform: LIFT };
 const TUNING = { scanRange: 6, blinkRange: 3 };
 const WEST = { id: 'west', side: '-x', at: 3 };
 const EAST = { id: 'east', side: '+x', at: 3 };
@@ -358,4 +358,14 @@ test('one room on its own: with the abilities given, from the spawn or an exit',
   assert.equal(analyzeRoomAlone(content, 'b').errors.length, 1);
   assert.throws(() => analyzeRoomAlone(content, 'b', { from: 'nope' }), /no exit "nope"/);
   assert.throws(() => analyzeRoomAlone(content, 'nope'), /no room "nope"/);
+});
+
+test('Pause: a frozen enemy pushed onto a heavy plate takes a ledge crate dropped on it (D205)', () => {
+  const patrol = { id: 'b', template: 'bug', at: [3, 0, 2], path: { points: [[9, 0, 2]] } };
+  const objects = [{ id: 'p', type: 'plate_heavy', at: [6, 0, 3] }, { id: 'c', type: 'crate', at: [5, 1, 3] }];
+  const ledge = { at: [4, 0, 3], to: [5, 0, 4] };
+  const locked = (enemies, abilities) => reach({ exits: [WEST, { ...EAST, requires: [{ switch: '*' }] }], blocks: [ledge], objects, enemies }, abilities).exits.east;
+  assert.equal(locked([], ['pause']), false); // the crate alone is one weight
+  assert.equal(locked([patrol], []), false); // a bug not frozen is no weight
+  assert.equal(locked([patrol], ['pause']), true); // frozen at [6,0,2], pushed onto the plate, the crate dropped on it
 });

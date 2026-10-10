@@ -9,6 +9,11 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
+- Idle Cache is rebuilt (D205, step 5.17): a frozen bug is the base of a stack. He
+  freezes the patrolling bug, pushes it onto the heavy plate and drops the
+  ledge crate on it, and the cage over fragment 8 goes for the rest of the 5 s.
+  The reachability checker counts a frozen enemy under a ledge crate on a heavy
+  plate.
 - Cold Stairs is rebuilt (D204, step 5.17): each of the two bugs is frozen and pushed
   through a stream cell onto a plate in a sealed pocket a decoy cannot reach;
   both plates hold the bridge for good. The second bug now has a job, and Fork
