@@ -9,6 +9,10 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
+- Guard Loop is rebuilt (D207, step 5.17): the fragment sits on a 3-high column, so
+  the step is two crates: the first is pushed through the guards' lane, the second
+  waits on the ledge and drops on it. The plate and the bridge are gone; Fork is a
+  lure, a frozen virus can be the base.
 - Ghost Exit is tuned (D206, step 5.17): the low stair blocks on the z=6 wall are
   gone, so the plateau needs the crate, which needs the gate, which needs the
   bug (or a decoy) on the plate; Scan then reveals the fragment and the exit.

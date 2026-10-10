@@ -12,31 +12,25 @@
     { "id": "east", "side": "+x", "at": 5, "width": 1, "y": 3, "hidden": true }
   ],
   "blocks": [
-    { "at": [11, 0, 0], "to": [11, 1, 0] },
-    { "at": [8, 0, 5] },
-    { "at": [8, 0, 0], "to": [8, 1, 0] },
-    { "type": "bridge", "at": [9, 0, 0], "to": [9, 1, 0] },
+    { "at": [11, 0, 0], "to": [11, 2, 0] },
+    { "at": [8, 0, 0] },
+    { "at": [9, 0, 0] },
     { "at": [2, 0, 1], "to": [5, 0, 2] },
     { "type": "fake", "at": [11, 0, 3], "to": [11, 0, 4] },
-    { "at": [7, 0, 5] },
-    { "at": [9, 0, 5], "to": [11, 0, 5] },
-    { "at": [0, 0, 6], "to": [1, 0, 6] },
-    { "type": "fence", "at": [1, 0, 7], "to": [1, 0, 8] },
-    { "type": "fence", "at": [0, 0, 8] },
-    { "at": [11, 1, 5], "to": [11, 2, 5] }
+    { "at": [0, 0, 5], "to": [5, 0, 5] },
+    { "at": [7, 0, 5], "to": [11, 0, 5] },
+    { "at": [11, 1, 5], "to": [11, 2, 5] },
+    { "at": [0, 0, 7], "to": [5, 0, 7] },
+    { "at": [7, 0, 7], "to": [11, 0, 7] },
+    { "at": [7, 0, 1], "to": [9, 0, 2] }
   ],
   "objects": [
-    { "id": "crate_1", "type": "crate", "at": [9, 0, 7] },
-    { "id": "plate_cage", "type": "plate", "at": [0, 0, 7] }
+    { "id": "crate_1", "type": "crate", "at": [9, 0, 6] },
+    { "id": "crate_2", "type": "crate", "at": [9, 1, 0] }
   ],
   "enemies": [
-    { "id": "virus_a", "template": "virus", "at": [1, 0, 0], "path": { "points": [[6, 0, 0]], "mode": "loop" } },
-    {
-      "id": "virus_b",
-      "template": "virus",
-      "at": [6, 0, 4],
-      "path": { "points": [[1, 0, 4], [1, 0, 0], [6, 0, 0]], "mode": "loop" }
-    }
+    { "id": "virus_a", "template": "virus", "at": [7, 0, 4], "path": { "points": [[10, 0, 4]], "mode": "loop" } },
+    { "id": "virus_b", "template": "virus", "at": [6, 0, 0], "path": { "points": [[6, 0, 3]], "mode": "loop" } }
   ],
-  "pickups": [{ "id": "fragment_13", "type": "fragment_13", "at": [11, 2, 0] }]
+  "pickups": [{ "id": "fragment_13", "type": "fragment_13", "at": [11, 3, 0] }]
 }

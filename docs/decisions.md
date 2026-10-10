@@ -1953,3 +1953,39 @@ derezzes the fake over fragment 9 and mounts the hidden west exit. The 4- and
 **Why:** the room's trick (the way on is hidden, and a chain carries him
 there) was not enforced; a wall built as scenery is a route, and the
 mutation test finds it.
+
+### D207 — 2026-10-10 — Guard Loop: a ledge crate drops on the one he pushes (5.17)
+`guard_loop` is rebuilt as a hybrid push under guards. The plate pocket, the
+bridge and the fences are gone (a decoy could hold that plate, and the bridge
+opened nothing: the mutation test called it, the viruses and the plate
+NO EFFECT, and the single crate was a plain 1-high step). The fragment now sits
+on a 3-high column `[11,0,0]-[11,2,0]` (fragment at y 3), so the step is 2 high:
+crate B waits on the ledge `[9,1,0]` (on the 1-high block `[9,0,0]`) and drops
+onto crate A at `[10,0,0]` when pushed east from the 1-high step `[8,0,0]`.
+- **Route of A:** west along z=6 (the lane between the z=5 wall and a new 1-high
+  wall on z=7), north through the one-cell door `[6,0,5]`, up the x=6 column to
+  z=3, east along z=3 to x=10 (a block `[7,0,1]-[9,0,2]` keeps it off the
+  north lane), then north to the edge `(10,0,0)`, which stops it. He climbs the
+  block at `(9,1)`, steps on `(8,0,0)`, pushes B east, walks the ledge, hops
+  the stack, hops the column.
+- **The guards are pieces of the lane**, not a lock: virus_a patrols z=4 x 7-10
+  (his walk to the north push), virus_b the x=6 column z 0-3 (the crate's lane);
+  a virus in the column blocks the crate and chases at range 5. Ways through:
+  Fork (a decoy in the west ring land, cast from `(5,4)` facing -x, pulls both:
+  the whole solve takes about 17 s and costs 2 hp in a sloppy run), Pause (a
+  frozen virus is a 1-high block he can push out of the lane, or a base for B in
+  place of A), Zap (2 shots each, 20 energy per virus), or timing the patrol.
+  The checker ignores them: they are NO EFFECT in the mutation test by design.
+- Over-pushing B before A is placed drops it on the floor: leave and re-enter.
+  A pushed to `(7,0,0)` (z=0, east) is lost for the same reason.
+- Lattice abilities: fragment 13 is `free` (the crates alone), `crate_2` is
+  `never` without it, and `crate_1` and the two ledge blocks fall to Pause (a
+  frozen virus as the base). The east exit still needs Scan and the double
+  jump (`buffer_3`); the fakes and the 3-high column at `(11,5)` are unchanged.
+- Check cost: the single-room `check:reach guard_loop` and the mutation test
+  take over a minute (two crates and two pushable frozen guards; about 1300
+  configurations with Pause); `check:reach` of the world takes 6 s.
+**Why:** the plan's aim for the Fork wing (a plate-free lure, a 2-high stack so
+a frozen virus alone is not enough, and the finding that stacking had no home
+after the Atrium); a lock that needs both crates is enforced by the mutation
+test, the guards by the lane.
