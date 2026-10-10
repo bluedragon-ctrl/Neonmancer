@@ -9,6 +9,12 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
+- Ledger Cell is rebuilt (D203, step 5.17): a socket and a heavy plate on one
+  cage over the fragment. Three crates: one spent in the socket, one pushed
+  along a walled lane onto the plate, one dropped from the ledge onto it
+  (a stack). The west pen and its spare plates are gone. Two rules found:
+  1-high walls are roads for crates, and walls (not distance) keep crates
+  inside the checker's search.
 - Dev room `socket_yard` (D201): Microban 24 by David W. Skinner built with
   the `sokoban-design` skill, 1-high walls and two sockets opening a cage (D202)
   over a refill; a worked example of the skill (9 pushes, 2 sharp steps).

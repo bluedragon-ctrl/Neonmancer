@@ -61,7 +61,7 @@ Rules for the lines (D186, D187):
 |---|---|---|---|---|---|
 | 8 | `bolt_gallery` | hybrid | develop: crates into a pit, targets, under towers | The bridge crate is his step first: two targets two blocks up take a jump shot from its top, pushed under one (the cage and the fragment's pocket), one cell back under the other (the door), then on to the pit with the freed crate. | Reworked (D195): only a crate reaches the targets; from the north the fragment costs the crossing both ways; the towers' pressure is judged by play. |
 | 9 | `relay_loft` | puzzle | teach: powered platforms | Ferries carry crates: a small Sokoban on the loft (Microban 45, 1-high walls, 14 pushes) gets two crates into the sockets that run the east ferry and the third onto it; he rides on top, his step to the fragment's 3-high pillar at the far dock. | Reworked (D196): two sockets, not plates, run the ferry to the fragment; the west ferry's plate (the way in) may be held by his own weight or a decoy and the ferry parked. |
-| 10 | `ledger_cell` | puzzle | develop: plate chains, gates | A relay: crate 1 holds gate 1 while crate 2 comes out, then crate 2 takes over plate 1 so crate 1 can go on, and both plates end held. Order and swaps are the puzzle. | Mutation test (plan review, 2026-10-10): with Fork the fragment is free, every crate is NO EFFECT and gate 1 is a bypass. Proposed: see Plan review. |
+| 10 | `ledger_cell` | puzzle | develop: socket, heavy plate, stacking | The order of three crates: one is spent in the socket, one goes west along the lane onto the heavy plate, and the ledge crate is dropped on it (a stack of two). Both switch the cage over the fragment. | Reworked (D203): a decoy is one weight, so Fork can stand in for one body, never for the socket. |
 
 ### Scan wing
 
@@ -121,7 +121,7 @@ makes one the puzzle.
 
 No line develops stacking (a crate dropped onto a crate as a 2-high
 step) after the Atrium teaches the drop; a review may add it where it
-fits (`ledger_cell`, `idle_cache`). Collapsing and hazard blocks have no
+fits (`idle_cache`; `ledger_cell` has it since D203). Collapsing and hazard blocks have no
 Lattice room; they wait for the sectors.
 
 Ideas from the author for the reviews to come (5.17):
