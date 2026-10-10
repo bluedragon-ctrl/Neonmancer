@@ -8,18 +8,14 @@
   "spawn": [4.5, 0, 1.5],
   "exits": [{ "id": "north", "side": "-z", "at": 4 }],
   "blocks": [
-    { "at": [1, 0, 4], "to": [7, 0, 4] },
-    { "type": "bridge", "at": [4, 0, 6], "to": [4, 0, 7], "switches": ["plate_crate", "plate_idle"] },
-    { "at": [0, 0, 4] }
+    { "at": [0, 0, 3], "to": [2, 0, 4] },
+    { "type": "cage", "at": [6, 0, 6] }
   ],
-  "holes": [{ "at": [0, 6], "to": [7, 7] }],
   "objects": [
-    { "id": "plate_crate", "type": "plate", "at": [0, 0, 0] },
-    { "id": "plate_idle", "type": "plate", "at": [2, 0, 1] },
-    { "id": "crate_1", "type": "crate", "at": [0, 0, 2] },
-    { "id": "crate_back", "type": "crate", "at": [2, 0, 8] },
+    { "id": "plate_stack", "type": "plate_heavy", "at": [3, 0, 3] },
+    { "id": "crate_1", "type": "crate", "at": [2, 1, 3] },
     { "id": "data_pillar_1", "type": "data_pillar", "at": [0, 0, 5], "overrides": { "face": "+x" } }
   ],
   "enemies": [{ "id": "bug_idle", "template": "bug", "at": [1, 0, 2], "path": { "points": [[6, 0, 2]] } }],
-  "pickups": [{ "id": "fragment_8", "type": "fragment_8", "at": [1, 0, 9] }]
+  "pickups": [{ "id": "fragment_8", "type": "fragment_8", "at": [6, 0, 6] }]
 }

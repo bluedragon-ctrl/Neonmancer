@@ -79,7 +79,7 @@ Rules for the lines (D186, D187):
 |---|---|---|---|---|---|
 | 16 | `cold_stairs` | puzzle | develop: Pause parks a piece behind a barrier, with a clock | Two bugs, two jobs, two casts: each frozen and pushed through a stream (D198) onto its own plate, which a decoy cannot reach; the plates hold the bridge for good. The 5 s freeze is the clock. | Reworked (D204): Fork cannot hold a plate, each bug is needed, `mutate.mjs` says every piece matters. |
 | 17 | `warden_pit` | boss | Null Pointer | Cover bars and refills set the fight's rhythm; its teleports break cover. As hard as it should be. Drops fragment 7. | Boss. |
-| 18 | `idle_cache` | puzzle | twist: two holders that move differently | The order: the crate slides only along the wall, the frozen bug only along its lane, and the bug's 5 s starts the run, so the crate goes first. | Fork replaces the bug; `crate_back` is NO EFFECT (spare). Proposed: see Plan review. |
+| 18 | `idle_cache` | hybrid | twist: a frozen enemy is the base of a stack | The bug is the first weight: frozen in its lane, pushed onto the heavy plate, and the ledge crate dropped on it; the 5 s freeze is the clock for freeze, push, drop and the run to the caged fragment. The crate dropped first is lost. | Reworked (D205): the stack needs both (`mutate.mjs` says every piece matters with Pause); Fork can still be the base (a decoy is no solid body), but the ledge drop stays. |
 
 ### Fork wing
 
@@ -121,7 +121,7 @@ makes one the puzzle.
 
 No line develops stacking (a crate dropped onto a crate as a 2-high
 step) after the Atrium teaches the drop; a review may add it where it
-fits (`idle_cache`; `ledger_cell` has it since D203). Collapsing and hazard blocks have no
+fits (`ledger_cell` has it since D203, `idle_cache` since D205). Collapsing and hazard blocks have no
 Lattice room; they wait for the sectors.
 
 Ideas from the author for the reviews to come (5.17):
