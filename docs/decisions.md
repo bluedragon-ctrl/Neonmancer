@@ -1989,3 +1989,32 @@ onto crate A at `[10,0,0]` when pushed east from the 1-high step `[8,0,0]`.
 a frozen virus alone is not enough, and the finding that stacking had no home
 after the Atrium); a lock that needs both crates is enforced by the mutation
 test, the guards by the lane.
+
+### D208 — 2026-10-10 — Split Vault: crates handed through a stream wall (5.17)
+`split_vault` is rebuilt (id, size, exits, spawn, both fragments, the pillar
+and the virus stay): the hole band, the two bridges, the gate and the three
+plates are gone. A wall row at z=5 (3-high fences, a 1-high divider fence at
+x=4 and x=9, a stream at x=3 and x=8) splits the room into the vault (z 0-4,
+both exits, the virus) and a lane (z 6-7) with two crates. He cannot cross a
+stream, the crates do: he pushes each north from the lane through its stream
+(it lands in row 4), hops a divider into the vault and pushes it to a socket
+at (5,4) / (6,4) (8 pushes). Fragment 15 sits in a cage (D202) on both sockets
+and `plate_w`, a plate in the old two-cell pocket in the NW corner behind
+1-high fences: he hops in, casts Fork, hops out and runs to the cage in the
+NE corner while the decoy holds the plate (10 s).
+- **Locks:** sockets are the lock no spell fakes; the pocket's fences stop
+  crates and a frozen virus, so only the decoy holds the plate (the old room's
+  plate was fakeable and fence-skippable). The cage gives no Zap the prize.
+- **Fair failure:** a crate pushed west in the lane is lost in the corner
+  (31 % of the configurations are traps, 0 sharp steps: a hybrid is a simple
+  puzzle under pressure); leave and re-enter resets. The virus is a chaser in
+  the vault (it can't pass the fences or streams): a sloppy run loses about
+  3 hp (`sim.mjs`: the whole solve 17 s, the decoy needed 3 s of its 10); Zap
+  (2 shots), Pause or Fork lure it.
+- **Lattice abilities:** fragment 15 is `fork` only; `zap,scan,pause` is
+  `never`; fragment 14 is free (walk past the virus); both exits free. The
+  mutation test lists the sockets and the virus as NO EFFECT (removing a
+  socket only drops it from the cage's switches; the virus is pressure).
+- Checks: `solve.mjs` finds 8 pushes with Fork, UNSOLVABLE without.
+**Why:** the plan's aim (a vault the crates are handed into, a cage on
+fragment 15) and the Fork finding: the old plate pocket skipped by a spell.
