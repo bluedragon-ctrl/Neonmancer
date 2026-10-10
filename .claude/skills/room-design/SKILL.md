@@ -174,8 +174,12 @@ Lessons from the reviews (D188 on):
   and a road for a crate pushed off a ledge: it slides along the tops at
   height 1 and drops onto another crate, a 2-stack next to a 3-high
   fence is a way over it (`ledger_cell`, D203). Guard with a `cage`, a
-  4-high wall or no wall there; run the mutation test with the lane walls
-  in.
+  2-high `fence` rail, a 4-high wall or no wall there; run the mutation
+  test with the lane walls in. A wall in front (+z) of a plate or socket
+  hides it: use a `fence` there, and keep sockets off the back-corner edge.
+- **A plate is one weight for Fork.** A decoy cast from a ledge onto the
+  first crate of a stack holds a heavy plate; only sockets are fake-proof.
+  Give every crate a job a decoy can't take (a socket on its route).
 - **Walls keep the crate search small.** Three or four free crates on
   open floor blow `MAX_CONFIGS` and a truncated search is a false
   "never" (it also hides bypasses: it stops at the first one it finds).

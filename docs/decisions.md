@@ -1824,36 +1824,39 @@ nowhere near the pickup).
   (a crate-on-plate cage and a Zap-target cage with a Zap flying through
   the first one's bars).
 
-### D203 — 2026-10-10 — Ledger Cell: a stack on a heavy plate (5.17)
-`ledger_cell` rebuilt (the room's id, exit, fragment and map cell stay):
-a puzzle that develops stacking, the first since the Atrium. Its three
-crates have three jobs: one is spent in a socket (a push down the east
-column), one is pushed west along a walled lane onto a heavy plate, and the
-one that waits on the 1-high ledge is pushed off its end onto the first,
-a stack of two. Both locks switch a cage over fragment 5. Order and counting
-are the puzzle: a ledge crate dropped before the base crate lands alone
-and the plate stays half lit (a fair failure; the room resets).
-- **Why:** the old room was a flat plate pair, a second gate and a spare
-  pen no one needed; the mutation test showed six pieces with no effect and
-  a decoy opening the lock (Fork skip, plan review of 2026-10-10).
-- **Fork:** a decoy is one weight, so it can stand in for the ledge crate
-  (cast from the ledge onto the base crate) or for one body on the plate,
-  but a hole can't take a decoy: the socket always costs a crate, and the
-  plate still needs the lane and the base crate. Fork saves a crate, it
-  doesn't skip the room's idea.
-- **Rule found: 1-high walls are roads for crates.** Lane walls (1 high) let
-  a crate pushed off the ledge slide along their tops at height 1, then
-  drop onto a lane crate: a 2-stack beside a 3-high fence climbs it (the
-  checker found it; the pen's fences had to go to 4 high). The cage over
-  the fragment makes the question moot (nothing to climb to), and the lane
-  walls are as low as a crate road allows.
+### D203 — 2026-10-10 — Ledger Cell: sockets and a stack on a heavy plate (5.17)
+`ledger_cell` rebuilt (the room's id, exit, fragment and map cell stay): a
+puzzle that develops stacking, the first since the Atrium. Four crates,
+three locks on one cage over fragment 5:
+- **Socket A** (row 1, open floor): one crate pushed east, spent for good.
+- **Socket B** (in the lane, row 4): the first lane crate fills it, and its
+  tile is floor after that; the second lane crate rides over it.
+- **Heavy plate** (west end of the lane): the second lane crate is pushed
+  onto it first, then the ledge crate is pushed off the ledge's end onto it
+  (a stack of two). Dropped first, it lands alone and the plate stays half
+  lit (a fair failure; the room resets).
+- **Fork:** a decoy is one weight, so it can replace one plate body (cast
+  from the ledge onto the first crate). It cannot fill a socket, so both
+  sockets still cost a crate each, and the lane still has to be used for
+  socket B. The first version had one socket and a plate: the review
+  played a decoy-from-the-ledge skip of the whole lane (4 pushes).
+- **Rule found: 1-high walls are roads for crates.** A crate pushed
+  off the ledge sideways rides the lane walls' tops and drops anywhere. The
+  ledge has a 2-high `fence` rail on its east side (a wall would hide the
+  ledge crate from the camera) and the lane's back wall starts one cell
+  away from the ledge.
 - **Rule found: confine crates with walls, not distance.** Four free
-  crates in an 8×8 floor blew the checker's 2000-configuration cap, and a
-  full search that stops early is a false "never". A 1-high wall on the
-  side a crate can only be pushed from keeps it in its lane (he can't push
-  from the wall top, one level up): `ledger_cell` has three crates and
-  two lane walls and searches in full.
-- Lattice abilities: pickup holds against `zap,scan,fork,pause` and the
-  double jump (every key piece is `never` without it, `fork` replaces one
-  weight). Checked with `mutate.mjs` and played with `sim.mjs`.
-**Why:** stacking has no home in the wings and a plate pair is no lock.
+  crates on an 8×8 floor blew the checker's 2000-configuration cap and a
+  truncated search is a false "never". A 1-high wall on the side a crate
+  can only be pushed from (he can't push from a wall top, a level up) keeps
+  it in its lane; the sockets' rows have walls on both sides and the
+  search runs in full.
+- **Rule found: a wall in front of a plate hides it** (the review): the
+  lane's front wall is a `fence`, which hides nothing. A socket on the
+  back-corner edge was also lost against the void; sockets stand in the
+  open floor.
+- Lattice abilities: every key piece is `never` without a crate, the
+  double jump changes nothing, `fork` replaces one plate body. Checked with
+  `mutate.mjs` and the checker's full search (no truncation warning).
+**Why:** stacking has no home in the wings and a plate pair is no lock;
+sockets are the lock no spell fakes.
