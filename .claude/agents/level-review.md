@@ -81,9 +81,22 @@ For each room:
      glowbug) at the foot of a 2-high ledge are a way up without Pause; a
      plate on a patrol path flickers as it is walked over; the checker pushes a
      frozen enemy like a crate (D166) but not its 5 s clock, so time the
-     pushes; a bounce carries him ~2.4 cells
+     pushes; a bounce carries him ~3 cells
      sideways, so a lane end beside a gap is a way across; an area whose
      only way out is an enemy step traps him when it is killed.
+   - **Push puzzles** (D197–D202): for a room whose trick is pushing
+     crates, run `node .claude/skills/sokoban-design/scripts/solve.mjs
+     <room_id> [--from <exit>] [--with zap,fork,pause]` and quote the
+     fewest pushes, the share of traps and the sharp steps (none: only a
+     walk; past ~25 pushes: a chore). Know the locks: a plate is faked by
+     a decoy or a frozen enemy; a **socket** (only a crate fills it, for
+     good), a **heavy plate** (`weight` 2: a stack; a decoy or frozen
+     enemy adds one, he counts one while he stands), a **cage** over a
+     pickup (switch-locked, see-through: a Zap passes through) and a
+     3-high wall are real locks. A **stream** stops him and passes crates
+     (no top), a **spiked crate** is no step (its top hurts 2 and shoves
+     him off; a plain crate on it covers it). A classic level is credited
+     in the room's decision and re-solved under these rules.
    - **Timing by play**: where a race or bounce decides the room, play it
      with `.claude/skills/room-design/scripts/sim.mjs` from a scratch
      script (see the skill) and quote the ticks and the margin.
