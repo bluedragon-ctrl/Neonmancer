@@ -1882,8 +1882,12 @@ the 2-high ledge. Rules found:
 - **The stack was dropped.** A crate on a shelf one cell from a 3-high
   ledge is itself a step (a jump over a 1-cell gap and 1 up works), so
   "bug plus crate" as the step has no honest layout in this room.
-- Lattice abilities: every key piece is `never` without Pause; the double
-  jump changes nothing (a 3-wide pit); Fork replaces nothing.
+- **Roof the pockets.** The wall tops form a walkway at y=3; an open pocket
+  column beside it is a drop he cannot climb out of (a soft-lock with no
+  death). Each pocket has a fence cell over it (y=2), level with the tops.
+- Lattice abilities: every key piece is `never` without Pause; Fork
+  replaces nothing. The double jump skips the room only for exits, with a
+  frozen bug as a step up to the fence top (fine under D187).
 **Why:** the plate was Fork's and the second bug had no job; a barrier only
 a frozen body crosses gives Pause a role no spell fakes, and the stream is
 now taught in the Pause wing before `split_vault`.
