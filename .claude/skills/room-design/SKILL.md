@@ -197,6 +197,13 @@ Lessons from the reviews (D188 on):
   mutation test shows it as the crate, enemy and gate "NO EFFECT" while
   Scan alone reaches the prize (`ghost_exit`, D206). Keep wall rows 1
   high or without a chain of steps he can climb.
+- **A ledge crate is the second step.** Crates can't climb, so a 2-high stack
+  needs the second one to start on a 1-high ledge and be pushed off onto the first
+  (`guard_loop`, D207). Push it too early and it lands on the floor with nothing
+  to stack on: a reset, so say it in the decision. A 1-wide door and 1-high wall
+  lanes keep the crate's cells few, but two pushable frozen guards still make the
+  single-room check and the mutation test take over a minute: fine for CI
+  (`check:reach` of the world stays seconds), say so.
 - **Walls keep the crate search small.** Three or four free crates on
   open floor blow `MAX_CONFIGS` and a truncated search is a false
   "never" (it also hides bypasses: it stops at the first one it finds).
