@@ -192,6 +192,11 @@ Lessons from the reviews (D188 on):
   the weight of two, and the freeze is the clock. The crate first lies alone
   (a reset). The wizard counts too: keep the prize 2+ cells from the plate.
   Fork can still be the base (a decoy is no solid body). Time it with `sim.mjs`.
+- **Scenery stairs are routes.** A staircase of wall pieces (1, 2, 3
+  high) beside a plateau is a way up whatever it was drawn for; the
+  mutation test shows it as the crate, enemy and gate "NO EFFECT" while
+  Scan alone reaches the prize (`ghost_exit`, D206). Keep wall rows 1
+  high or without a chain of steps he can climb.
 - **Walls keep the crate search small.** Three or four free crates on
   open floor blow `MAX_CONFIGS` and a truncated search is a false
   "never" (it also hides bypasses: it stops at the first one it finds).

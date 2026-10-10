@@ -1922,3 +1922,34 @@ pushed under it: a reset. Rules found:
   Fork); the double jump changes nothing here.
 **Why:** the old room held a plain plate a decoy could fake and a spare
 crate with no job; stacking had no home after the Atrium (plan review).
+
+### D206 — 2026-10-10 — Ghost Exit: the stairs were the bypass (5.17)
+`ghost_exit` keeps its layout; two blocks go: `[2,0,6]` and `[3,0,6]-[3,1,6]`,
+the low end of the z=6 wall, and the plate and its bug move to row 1. They were a free staircase (1 then 2 high, then a
+hop across one gap) onto the 2-high plateau, so Scan alone reached fragment 9
+and the west exit, and `mutate.mjs` called the crate, the bug and the gate
+NO EFFECT. Now the chain is the lock: Pause freezes the bug, he pushes it from
+inside its fenced pen onto the plate (or Fork holds the plate), hops the
+shared 1-high fence into the crate's pen and pushes the crate south through the
+gate; the crate in the gate's cell holds it open, and it is pushed down the
+x=6 lane and west to the plateau's face (4,8), the step up. Scan on top
+derezzes the fake over fragment 9 and mounts the hidden west exit. The 4- and
+3-high stubs `[4,0,6]` and `[5,0,6]` stay (scenery, the author's).
+- Timing (`sim.mjs`, level review): the plate sits on row 1, next to the
+  shared fence, so the hop from the plate (over the frozen bug, which is a
+  1-high step) lands north of the crate; the bug's patrol is x 9-10, so a
+  freeze never lies at the wall end where it cannot be pushed west. The crate
+  enters the gate cell about 185 ticks after a cast made inside the pen (a
+  sloppy run; 300 is the freeze), about 1 s spare for a cast from outside.
+  The first placement (plate on row 3) left 0.5 s on a clean run. A miss is
+  fair: the bug walks off, he re-casts (25 of 50 energy) or leaves and
+  re-enters. The whole solve to the fragment is 14 s.
+- Lattice abilities: fragment 9 and the west exit are `scan+fork or
+  scan+pause`; `zap+scan` is `never`; the double jump still skips the chain for
+  the exit (a revisit shortcut, D187); the east exit still waits for Compile
+  and Warp.
+- No watchdog: with the stairs gone there is no slow way round.
+- Fork can hold the plate (a decoy for 10 s): a second holder, accepted.
+**Why:** the room's trick (the way on is hidden, and a chain carries him
+there) was not enforced; a wall built as scenery is a route, and the
+mutation test finds it.
