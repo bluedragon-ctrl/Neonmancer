@@ -56,6 +56,11 @@ docs/decisions.md).
   wait only for them are checker warnings.
 
 ### Changed
+- Docs pass (plan review): the README status, the decision log's order
+  (D183/D184, D196/D197), the dev rooms table, architecture notes for
+  D198–D200 and the design tooling, the `level-review` agent knows the
+  new locks and the solver, and `docs/lattice-plan.md` gains a Plan
+  review with proposed aims for the Fork-skip rooms.
 - Relay Loft is rebuilt (D196, step 5.17): a small Sokoban on the loft
   (Microban 45, 14 pushes) gets two crates into the sockets that run the
   east ferry and the third onto it; he rides the ferry standing on that

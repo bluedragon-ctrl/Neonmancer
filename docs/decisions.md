@@ -1241,6 +1241,21 @@ ellipse under the fixed camera.
 deep indigo palette, a clean void edge instead of drifting debris, and a
 black hole. Low gravity and the light round the wizard stay in Phase 7.
 
+### D183 — 2026-10-06 — Exits into the Outer Buffer look different
+An exit that leads into a biome with the look field `starExits` (only the
+Outer Buffer) shows small stars drifting out through it, fading in and
+out and twinkling, instead of the usual dashes (back doorways) and
+arrows (front exits); and a locked one (switches or access level) has a
+dark indigo glass pane, a frame in the biome's color, instead of white
+glass (`GLASS.darkGate`). The lights and the numeral keep their red and
+green. It follows the destination biome, so no room data changes and
+any biome may turn it on later. A door's own color is still the
+destination's (D99); the effect is the hint that the rooms beyond are
+different and meant for later (D67).
+**Why:** the author wanted the doors into the Outer Buffer to read as
+different at a glance; only the stars, not a portal frame, and dark
+glass for the switchable ones.
+
 ### D184 — 2026-10-06 — The Outer Buffer entrances: five secret doors, each needing a later spell (5.11a)
 Step 5.11 starts with the five secret rooms' entrances; the rooms
 themselves (`buffer_1`–`buffer_5`, 8×8, Outer Buffer, one exit each, width 1)
@@ -1281,21 +1296,6 @@ Compile" in `buffer_5`'s and `buffer_4`'s reports means three or more
 Compile casts (at least three crates: a step, then two stacked beside the ledge; over the 100 energy ceiling) and is no real way in; Cut &
 Paste and Pull routes are for the author to judge when those spells
 arrive. Nothing here edits an authored room (none is flagged).
-### D183 — 2026-10-06 — Exits into the Outer Buffer look different
-An exit that leads into a biome with the look field `starExits` (only the
-Outer Buffer) shows small stars drifting out through it, fading in and
-out and twinkling, instead of the usual dashes (back doorways) and
-arrows (front exits); and a locked one (switches or access level) has a
-dark indigo glass pane, a frame in the biome's color, instead of white
-glass (`GLASS.darkGate`). The lights and the numeral keep their red and
-green. It follows the destination biome, so no room data changes and
-any biome may turn it on later. A door's own color is still the
-destination's (D99); the effect is the hint that the rooms beyond are
-different and meant for later (D67).
-**Why:** the author wanted the doors into the Outer Buffer to read as
-different at a glance; only the stars, not a portal frame, and dark
-glass for the switchable ones.
-
 ### D185 — 2026-10-06 — The world map checks run on idle; `pending` rooms only warn
 The world map tool ran validation twice and the whole reachability
 search on every redraw (each drag, click and panel update), which made
@@ -1516,37 +1516,6 @@ Loft) a north crate was a step to the plinth, so the fragment needed
 nothing; the author: the crate that bridges the pit should be his
 step to the targets first.
 
-### D197 — 2026-10-09 — Push puzzles: a solver, motifs and classic levels
-The `sokoban-design` skill sits beside `room-design` for rooms whose
-trick is pushing crates. A puzzle is sketched as XSB text (the plain
-Sokoban format, with Neonmancer characters for holes, sockets, fences,
-wall heights and ledge crates), solved breadth first over every crate
-configuration with the reachability checker's own movement and push
-rules (`scripts/solve.mjs`: fewest pushes, the share of configurations
-that can no longer reach the goal, the sharp steps along the
-solution, the shortest way into a trap), and converted into a room
-draft (`scripts/xsb.mjs`), with walls built as blocks of any height,
-ledges or holes and goals as plates or sockets. A state is the crates
-and where he is (after a push he stands where the crate was).
-`scripts/survey.mjs` runs a whole collection under classic rules and
-in five builds; Microban (David W. Skinner, 155 levels) is in the skill
-with its survey and picks per rung. What it showed: he climbs crates,
-so levels whose trick is the player's own route collapse (29 of 104
-solved need half the pushes or fewer); levels whose trick is the
-crates' routes play the same; wall height never changed a result, so a
-puzzle's walls can be 1-high ledges that hide nothing; holes for walls
-add sharp steps; sockets cut routes over goals. `reach.js` exports `RoomModel`, `standsIn`
-and `collect` for it; `analyzeRoom` behaves as before.
-Classic Sokoban layouts may be used as they are or adapted, with the
-author and collection credited in the room's decision: they are
-public puzzles, like chess problems (the author's call; CLAUDE.md §1
-amended). Under Neonmancer's rules they play differently (the wizard
-climbs crates and 1-high walls and jumps 1-tile holes), so each is
-re-solved before use.
-**Why:** the author: push puzzles are the core (D186), and a skill that
-designs and checks them, starting from proven classics, gives rooms a
-real trick faster than drawing them by hand; the checker only says
-whether a goal is reachable, not how hard or how forgiving the puzzle is.
 ### D196 — 2026-10-09 — Relay Loft: he rides the ferry on his crate (5.17)
 `relay_loft` is rebuilt round one trick: the fragment sits on a 3-high
 pillar by the east ferry's far dock, and the only way up is to ride
@@ -1592,6 +1561,37 @@ both sockets are still needed.
 **Why:** a crate pushed once from the east door gave the fragment, and
 a decoy stood in for every ferry plate; the author asked for a small
 Sokoban on the loft in which the order of pushes matters.
+### D197 — 2026-10-09 — Push puzzles: a solver, motifs and classic levels
+The `sokoban-design` skill sits beside `room-design` for rooms whose
+trick is pushing crates. A puzzle is sketched as XSB text (the plain
+Sokoban format, with Neonmancer characters for holes, sockets, fences,
+wall heights and ledge crates), solved breadth first over every crate
+configuration with the reachability checker's own movement and push
+rules (`scripts/solve.mjs`: fewest pushes, the share of configurations
+that can no longer reach the goal, the sharp steps along the
+solution, the shortest way into a trap), and converted into a room
+draft (`scripts/xsb.mjs`), with walls built as blocks of any height,
+ledges or holes and goals as plates or sockets. A state is the crates
+and where he is (after a push he stands where the crate was).
+`scripts/survey.mjs` runs a whole collection under classic rules and
+in five builds; Microban (David W. Skinner, 155 levels) is in the skill
+with its survey and picks per rung. What it showed: he climbs crates,
+so levels whose trick is the player's own route collapse (29 of 104
+solved need half the pushes or fewer); levels whose trick is the
+crates' routes play the same; wall height never changed a result, so a
+puzzle's walls can be 1-high ledges that hide nothing; holes for walls
+add sharp steps; sockets cut routes over goals. `reach.js` exports `RoomModel`, `standsIn`
+and `collect` for it; `analyzeRoom` behaves as before.
+Classic Sokoban layouts may be used as they are or adapted, with the
+author and collection credited in the room's decision: they are
+public puzzles, like chess problems (the author's call; CLAUDE.md §1
+amended). Under Neonmancer's rules they play differently (the wizard
+climbs crates and 1-high walls and jumps 1-tile holes), so each is
+re-solved before use.
+**Why:** the author: push puzzles are the core (D186), and a skill that
+designs and checks them, starting from proven classics, gives rooms a
+real trick faster than drawing them by hand; the checker only says
+whether a goal is reachable, not how hard or how forgiving the puzzle is.
 ### D198 — 2026-10-09 — The crate stream: a fence only crates pass
 A block type `stream` extends `fence` with `passes: ["crate"]`, in the
 wizard's magenta (D98): a field keyed to him. Crates and frozen
@@ -1778,7 +1778,6 @@ cell, the reward in plain view.
 solve, convert, hand-wire, check, play) to copy from.
 
 ### D202 — 2026-10-09 — The cage: a pickup locked behind a switched, see-through gate
-(D201 is taken by the open Socket Yard PR; this is the next free number.)
 A new block type, `cage` (`kind: "gate"`, `look: "cage"`, `seeThrough`),
 a one-cell gate with a fence-like look that holds a pickup in plain view.
 Locking a pickup behind switches took a whole pocket (a gate, a block on

@@ -62,7 +62,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `data/validate.js` | Semantic checks and readable error messages (Ajv schema pass is dev/CI) |
 | `world/boot-key.js` | The boot key (D101): the 8×8 code whose modules are the 64 fragments (`BOOT_KEY`) |
 | `world/exits.js` | Which exit the wizard left through; where he arrives in the connected room |
-| `world/grid.js` | 3D occupancy grid: a block type code per cell (`typeAt()` gives its properties), room sides with exit openings (a locked exit's opening closes with `setOpening()`), hole tiles (`fillHole()`, `openHole()`); a fake block a scan revealed leaves (`clearCell()`) |
+| `world/grid.js` | 3D occupancy grid: a block type code per cell (`typeAt()` gives its properties), room sides with exit openings (a locked exit's opening closes with `setOpening()`), hole tiles (`fillHole()`, `openHole()`); a fake block a scan revealed leaves (`clearCell()`); `forBody(kind)` is the grid as one kind of body sees it (D198: a crate stream is open to crates and frozen enemies, shut to him and active enemies) |
 | `world/map.js` | The world map (D66): `nearestFreeCell()` for new rooms, `roomDistances()` from the start, `mapWarnings()` (rooms the start can't reach, D178) (pure, tested) |
 | `world/path.js` | Shared path format: legs from `at` through `points`, `advance()` / `positionOf()` on a small path state, swept cells |
 | `world/pickup-report.js` | The world map tool's pickup report: every permanent item by save bit, the rooms it lies in, refills per type, unknown types (pure, tested) |
@@ -87,8 +87,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `entities/pickup.js` | A pickup in a room: its box, save bit, state (idle, ghost, taken) and pick-up ticks (pure, tested) |
 | `entities/platform.js` | Moving platform: follows its path, carries riders, waits when blocked, shoves or squeezes the wizard (D46); a spiked one hurts on touch (D82) |
 | `entities/player.js` | Movement, jump, gravity, turning, pushing, integrity, invulnerability after a hit, death (hole or damage), respawn; one wizard for the whole game |
-| `entities/pushable.js` | Rest → slide → fall → land / plug-a-hole state machine; destructible ones break (`hit()` → `broken`); a compiled crate (D125, `lifetime`) derezzes when its time is up (`expire()`, a plugged hole opens again) |
-| `entities/switch.js` | Switches (D75): `Target` (a fixed body a bolt switches over) `Plate` (a floor tile, no body, on while something stands on it) and `Socket` (a hole, on while filled, D194); a type's `timer` makes either go off by itself (D140, `countdown`); `SWITCH_KINDS` (pure, tested) |
+| `entities/pushable.js` | Rest → slide → fall → land / plug-a-hole state machine; destructible ones break (`hit()` → `broken`); a compiled crate (D125, `lifetime`) derezzes when its time is up (`expire()`, a plugged hole opens again); a spiked one (`topDamage`, D199) hurts and shoves him off when his feet touch its top, unless something covers it; it sees the grid through `forBody('crate')` |
+| `entities/switch.js` | Switches (D75): `Target` (a fixed body a bolt switches over) `Plate` (a floor tile, no body, on while something stands on it) and `Socket` (a hole, on while filled, D194); a plate's `weight` (D200, a heavy plate) is the number of bodies in its column it needs, counted up the stack (`load`, `partlyLoaded`); a type's `timer` makes either go off by itself (D140, `countdown`); `SWITCH_KINDS` (pure, tested) |
 | `entities/gate.js` | Gate blocks (D140, D141): `Gate`, a block that comes and goes by its `trigger`: switch (solid until powered, `power()`; one with `start: "gone"`, a bridge, only while powered) or step (a collapsing block: solid → shake → gone → optional regrow); it never comes back on a body (pure, tested) |
 | `entities/warp.js` | Where Blink and Warp take the wizard (D86): `warpTarget()` sweeps his box along his aim through open space, stops at blocks, objects and the room's side, lands short of enemies, reports the enemies passed (pure, tested) |
 | `ai/behaviors.js` | Movement behaviors by name (`BEHAVIORS`: `patrol`, `stationary`, `chase`), as enemy templates refer to them |
@@ -219,6 +219,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `tools/room-save.js` | Dev only: checks edited rooms, `world.json` and `defs.json` with the rest of `data/` and writes them; deletes rooms the world map removed |
 | `tools/run-tests.js` | `npm test`: runs `node --test` on an explicit list of `tests/*.test.js` (works on Node 20 and 22+, Windows and Linux) |
 | `tools/showcase.html`, `tools/showcase.js` | Asset showcase page: every look on a turntable with the real renderer (also deployed) |
+| `.claude/skills/`, `.claude/agents/` | Design tooling for Claude Code (D132, D161, D197): `room-design` (with `scripts/mutate.mjs`, `scripts/sim.mjs`), `sokoban-design` (`scripts/xsb.mjs`, `solve.mjs`, `survey.mjs`; they use `RoomModel`, `standsIn` and `collect` from `world/reach.js`), `enemy-design`, and the read-only `level-review` agent |
 | `tools/check-reach.js` | Dev only: `npm run check:reach` for CI: the reachability checker (`<room>`, `--with`, `--from`, `--rooms`, `--json`) |
 | `tools/validate-data.js` | Dev only: `npm run validate:data` for CI |
 | `tools/vite-plugin-data.js` | Dev only: runs the check in the dev server and fails the build on errors |

@@ -61,15 +61,15 @@ Rules for the lines (D186, D187):
 |---|---|---|---|---|---|
 | 8 | `bolt_gallery` | hybrid | develop: crates into a pit, targets, under towers | The bridge crate is his step first: two targets two blocks up take a jump shot from its top, pushed under one (the cage and the fragment's pocket), one cell back under the other (the door), then on to the pit with the freed crate. | Reworked (D195): only a crate reaches the targets; from the north the fragment costs the crossing both ways; the towers' pressure is judged by play. |
 | 9 | `relay_loft` | puzzle | teach: powered platforms | Ferries carry crates: a small Sokoban on the loft (Microban 45, 1-high walls, 14 pushes) gets two crates into the sockets that run the east ferry and the third onto it; he rides on top, his step to the fragment's 3-high pillar at the far dock. | Reworked (D196): two sockets, not plates, run the ferry to the fragment; the west ferry's plate (the way in) may be held by his own weight or a decoy and the ferry parked. |
-| 10 | `ledger_cell` | puzzle | develop: plate chains, gates | A relay: crate 1 holds gate 1 while crate 2 comes out, then crate 2 takes over plate 1 so crate 1 can go on, and both plates end held. Order and swaps are the puzzle. | Fork replaces either crate. |
+| 10 | `ledger_cell` | puzzle | develop: plate chains, gates | A relay: crate 1 holds gate 1 while crate 2 comes out, then crate 2 takes over plate 1 so crate 1 can go on, and both plates end held. Order and swaps are the puzzle. | Mutation test (plan review, 2026-10-10): with Fork the fragment is free, every crate is NO EFFECT and gate 1 is a bypass. Proposed: see Plan review. |
 
 ### Scan wing
 
 | # | Room | Type | Rung | Trick to aim for | Now |
 |---|---|---|---|---|---|
-| 11 | `scan_lab` | puzzle | teach: Scan, fake blocks | The crate that lifts him to the disk is needed again past the fake wall: pushed into the plinth's corner, it is lost. Past the wall a scan drops a second crate off a fake pillar, and both fill one row of the pit. | Holds. |
+| 11 | `scan_lab` | puzzle | teach: Scan, fake blocks | The crate that lifts him to the disk is needed again past the fake wall: pushed into the plinth's corner, it is lost. Past the wall a scan drops a second crate off a fake pillar, and both fill one row of the pit. | Holds. The disk's pocket (gate and fences) could be a `cage`. |
 | 12 | `mirror_stacks` | puzzle | develop: Scan's range | Where he casts: the far cage's target hides behind a fake column beyond a scan's 6 units from the near side, so the second scan is cast after crossing. The fragment also needs Fork (the author's move): a revisit. | Holds with Scan and Fork; every crate shows NO EFFECT and the search truncates: check by hand. |
-| 13 | `ghost_exit` | puzzle | twist: Scan hides the way out | The way on is hidden: a frozen bug on the plate opens the crate's pen, the crate holds the gate open as it passes and is the step to the plateau, where a scan shows the fragment and the exit. | Fork holds the plate instead of the bug. |
+| 13 | `ghost_exit` | puzzle | twist: Scan hides the way out | The way on is hidden: a frozen bug on the plate opens the crate's pen, the crate holds the gate open as it passes and is the step to the plateau, where a scan shows the fragment and the exit. | Fork holds the plate instead of the bug, and the crate, the bug and the gate are NO EFFECT for the fragment: blocks `[2,0,6]` and `[3,0,6]` guard it, not the chain. Check by hand. |
 | 14 | `junction` | hybrid | develop: Pause on a moving enemy, timed plates | The shot's timing: the bug must be frozen two cells before the pillar while it walks towards him, then pushed twice. The fence gate is a one-way shortcut home. | Holds (Pause). |
 | 15 | `drift_bay` | action | develop: Shield, enemies as steps | The fight leaves him his step: he rides the ferry under the sentinel's fire, and the virus that meets him is the only step to the fragment, so he freezes it instead of killing it. | Holds; the enemies' roles are judged by play. |
 
@@ -77,9 +77,9 @@ Rules for the lines (D186, D187):
 
 | # | Room | Type | Rung | Trick to aim for | Now |
 |---|---|---|---|---|---|
-| 16 | `cold_stairs` | puzzle | develop: Pause with a push and a clock | Two bugs, two jobs, two casts: one frozen and pushed onto the plate holds the bridge for 5 s, the other frozen at the ledge is the step; the energy refill across is the cast home. | Fork holds the plate instead of the key bug. |
+| 16 | `cold_stairs` | puzzle | develop: Pause with a push and a clock | Two bugs, two jobs, two casts: one frozen and pushed onto the plate holds the bridge for 5 s, the other frozen at the ledge is the step; the energy refill across is the cast home. | Fork holds the plate instead of the key bug, and `bug_stair` is NO EFFECT (`crate_spare` is the step): the second bug does no job. Proposed: see Plan review. |
 | 17 | `warden_pit` | boss | Null Pointer | Cover bars and refills set the fight's rhythm; its teleports break cover. As hard as it should be. Drops fragment 7. | Boss. |
-| 18 | `idle_cache` | puzzle | twist: two holders that move differently | The order: the crate slides only along the wall, the frozen bug only along its lane, and the bug's 5 s starts the run, so the crate goes first. | Fork replaces the bug. |
+| 18 | `idle_cache` | puzzle | twist: two holders that move differently | The order: the crate slides only along the wall, the frozen bug only along its lane, and the bug's 5 s starts the run, so the crate goes first. | Fork replaces the bug; `crate_back` is NO EFFECT (spare). Proposed: see Plan review. |
 
 ### Fork wing
 
@@ -87,7 +87,7 @@ Rules for the lines (D186, D187):
 |---|---|---|---|---|---|
 | 19 | `fork_lab` | puzzle | teach: Fork holds a plate | The crate that opens the disk's cage is then his step into a pen only a decoy can hold: one push too many loses it. | Holds. |
 | 20 | `twin_plates` | puzzle | develop: Fork plus Pause, two clocks | The order of clocks: the decoy (10 s) first, the frozen bug (5 s) second, both plates under the bridge; past it a zapped target frees the crate that is the step to the fragment. | Holds (Fork, Pause and Zap). |
-| 21 | `guard_loop` | hybrid | develop: Fork as a lure | The decoy does two jobs at once: it holds the gate's plate and pulls two viruses off the crate's route. Cast too early and they are back; too late and they guard the crate. | A frozen virus is the step instead of the crate; the lure isn't needed. |
+| 21 | `guard_loop` | hybrid | develop: Fork as a lure | The decoy does two jobs at once: it holds the gate's plate and pulls two viruses off the crate's route. Cast too early and they are back; too late and they guard the crate. | A frozen virus is the step instead of the crate; the lure isn't needed (the viruses are NO EFFECT; the checker ignores enemies). Proposed: see Plan review. |
 | 22 | `split_vault` | hybrid | twist: one decoy, two needs | The decoy can't do both: the crate holds the way back while the decoy holds the cage's second plate, with a virus after him as he runs. | Holds for fragment 15; fragment 14 by crate or decoy is fine. |
 
 ### The deep end
@@ -143,8 +143,73 @@ Ideas from the author for the reviews to come (5.17):
   fills it. A decoy can't fill a hole and a frozen enemy pushed in is
   lost, so only a crate powers it: a Sokoban goal no spell fakes.
 
+- The heavy plate (built, D200): a plate that needs a stack of two. A
+  decoy or a frozen enemy adds one weight but lasts 10 s or 5 s, so a
+  crate stack is the lock; he counts one while he stands on it.
+- The cage (built, D202): one cell that locks a pickup in plain view
+  behind switches; a Zap passes through the bars. Replaces the pockets
+  of gates and fences (`fork_lab`, `twin_plates`, `split_vault`,
+  `ledger_cell`).
+- The spiked crate and the crate stream (built, D199, D198): they give a
+  classic level back its player routing (he can't stand on the crate,
+  or can't follow it through the field).
+
 Reviews needed for the Fork skips above: `ledger_cell`,
-`ghost_exit`, `cold_stairs`, `idle_cache`, `guard_loop`.
+`ghost_exit`, `cold_stairs`, `idle_cache`, `guard_loop`. Proposals
+for them are in Plan review below.
+
+## Plan review (2026-10-10, for the author's OK)
+
+A read of the plan against the tools (mutation test with
+`--with zap,scan,fork,pause`) and the mechanics built since D194. Each
+line is an aim, not a layout; a review may change it with the author's
+OK, and the ladder's rows change only when it does.
+
+### What the plan was missing
+
+1. **Fakeable plates were the common flaw.** All five Fork skips are a
+   plate a decoy or a frozen enemy holds. Replace the fakeable lock with
+   one a spell can't fake: a socket (a crate, spent), a heavy plate (a
+   stack), a cage over the pickup, or a plate in a fenced lane (bolts
+   pass a fence, he and a decoy don't, D167).
+2. **Stacking has no home** (above). The heavy plate is its home.
+3. **A socket is met before it is taught.** `relay_loft` (#9) is the
+   first room with sockets, and its rung says "teach: powered
+   platforms". Options: the next review (`ledger_cell`) is moved before
+   it in the order, or a short socket lesson goes into an earlier room
+   (the Atrium's ledge puzzle is already full; `first_steps` is signed
+   off).
+4. **How many new mechanics the Lattice carries.** Teach three, all of
+   one family, the locks: socket, heavy plate, cage. Keep the spiked
+   crate and the stream for the five Outer Buffer secret rooms
+   (step 5.11): they are optional, complex by design, still empty, and
+   the place for the hard classics (Microban 8, 19 and 63 with spiked
+   crates, streams).
+5. **The Fork wing is one verb.** `fork_lab`, `twin_plates`,
+   `guard_loop` and `split_vault` are all plates and a decoy; sockets
+   and heavy plates vary them. The Pause wing has no hybrid
+   (a puzzle under pressure) between its puzzles and the boss; one
+   there would help pacing.
+6. **Sokoban is used once** (`relay_loft`) though the author wants it
+   often. The next rooms below take a classic or a Microban-style small
+   level each.
+
+### Proposed aims for the rooms with findings
+
+| Room | Proposed type and aim |
+|---|---|
+| `ledger_cell` | puzzle, develop: socket and heavy plate (a classic 3-crate level). One crate is spent in a socket (gate 1, for good); the other two stack on a heavy plate (gate 2). Which crate is spent is the puzzle. The fragment sits in a cage on the same switches. Taught first if it moves before `relay_loft` (item 3). |
+| `cold_stairs` | puzzle: the plate in the key bug's fenced lane (a decoy can't enter); the second bug gets a job (a 2-high stack needs it and the spare crate) or goes. |
+| `idle_cache` | hybrid: a Microban-sized push with the patrolling bug on it; the idle plate as a heavy plate, the frozen bug as the base of a stack the crate is dropped on. Keeps the "two holders that move differently" idea. |
+| `ghost_exit` | puzzle, twist: find why the crate, bug and gate are not enforced, then make the chain the lock and Scan the reveal. Hand check first. |
+| `guard_loop` | hybrid: Sokoban under attack. The step is a 2-high stack, so a frozen virus alone is not enough; the decoy stays a lure, not a shortcut. |
+| `split_vault` | hybrid, twist: crates handed through a stream wall while he goes round (D198's "vault"), a cage on fragment 15. |
+| `fork_lab`, `twin_plates` | tidy only: the pocket of gate and fences becomes a `cage`. |
+| `scan_lab`, `junction`, `drift_bay` | no change. `junction` holds from `--from east` (its north spawn is the one-way side); `drift_bay` is judged by play. |
+
+Order of reviews: `ledger_cell` first (it settles item 3), then
+`cold_stairs`, `idle_cache`, `ghost_exit`, `guard_loop`,
+`split_vault`, then the tidy-ups.
 
 ## Settled with the author
 

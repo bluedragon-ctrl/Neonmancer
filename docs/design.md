@@ -1832,6 +1832,11 @@ rooms, never to a Lattice or authored room.
 | `fence_yard` | 10×10 | fences (D167): a target zapped through a 2-high fence raises a bridge; a 1-high pen with a crate |
 | `stream_lab` | 10×9 | the crate stream (D198): Microban 3 rebuilt with streams; he cannot follow the crates through it |
 | `watchdog_run` | 12×8 | a watchdog timer (D172), 25 s: a 1-wide path through a pit to a refill and back |
+| `socket_lab` | 9×8 | the socket (D194): a hole that is a switch once a crate fills it |
+| `spiked_lab` | 6×10 | the spiked crate (D199): Microban 8 (David W. Skinner) with spiked crates and two plates, 32 pushes |
+| `heavy_lab` | 10×8 | the heavy plate (D200): a ledge crate dropped on a crate on the plate, 6 pushes |
+| `socket_yard` | 9×8 | a classic level end to end with the `sokoban-design` skill (D201): Microban 24, two sockets opening a cage |
+| `cage_lab` | 8×10 | the cage (D202): a pickup behind a crate plate's cage and behind a Zap target's cage |
 
 ### Room design checklist
 
