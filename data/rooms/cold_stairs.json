@@ -14,17 +14,23 @@
   "blocks": [
     { "at": [0, 0, 0], "to": [1, 2, 6] },
     { "at": [0, 0, 7], "to": [1, 1, 11] },
-    { "type": "bridge", "at": [6, 0, 4], "to": [7, 0, 6], "switches": ["plate_cold"] }
+    { "type": "fence", "at": [2, 2, 0] },
+    { "type": "fence", "at": [2, 2, 3] },
+    { "type": "fence", "at": [2, 0, 1], "to": [3, 2, 2] },
+    { "type": "stream", "at": [3, 0, 0], "to": [3, 1, 0] },
+    { "type": "stream", "at": [3, 0, 3], "to": [3, 1, 3] },
+    { "type": "bridge", "at": [6, 0, 4], "to": [7, 0, 6] }
   ],
   "holes": [{ "at": [2, 4], "to": [9, 6] }],
   "objects": [
     { "id": "screen_stairs", "type": "screen", "at": [9, 0, 3], "text": "tut_stairs", "overrides": { "face": "+x" } },
-    { "id": "plate_cold", "type": "plate", "at": [2, 0, 2] },
+    { "id": "plate_a", "type": "plate", "at": [2, 0, 0] },
+    { "id": "plate_b", "type": "plate", "at": [2, 0, 3] },
     { "id": "crate_spare", "type": "crate", "at": [4, 0, 9] }
   ],
   "enemies": [
-    { "id": "bug_key", "template": "bug", "at": [3, 0, 0], "path": { "points": [[3, 0, 3]] } },
-    { "id": "bug_stair", "template": "bug", "at": [2, 0, 11], "path": { "points": [[2, 0, 7]] } }
+    { "id": "bug_a", "template": "bug", "at": [4, 0, 0], "path": { "points": [[4, 0, 1]] } },
+    { "id": "bug_b", "template": "bug", "at": [4, 0, 3], "path": { "points": [[4, 0, 2]] } }
   ],
   "pickups": [
     { "id": "fragment_6", "type": "fragment_6", "at": [0, 2, 10] },

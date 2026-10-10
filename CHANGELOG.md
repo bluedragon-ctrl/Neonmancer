@@ -9,6 +9,10 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
+- Cold Stairs is rebuilt (D204, step 5.17): each of the two bugs is frozen and pushed
+  through a stream cell onto a plate in a sealed pocket a decoy cannot reach;
+  both plates hold the bridge for good. The second bug now has a job, and Fork
+  no longer holds the plate. The help screen mentions the stream.
 - Ledger Cell is rebuilt (D203, step 5.17): two sockets and a heavy plate on one
   cage over the fragment. Four crates: one in a socket in the open, two in
   a walled lane (the first fills the lane's socket, the second goes onto the

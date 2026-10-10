@@ -1860,3 +1860,34 @@ three locks on one cage over fragment 5:
   `mutate.mjs` and the checker's full search (no truncation warning).
 **Why:** stacking has no home in the wings and a plate pair is no lock;
 sockets are the lock no spell fakes.
+
+### D204 — 2026-10-10 — Cold Stairs: two bugs parked behind a stream (5.17)
+`cold_stairs` rebuilt (id, exits, fragment, refill, pit and bridge stay):
+the bridge now needs two plates, each at the back of a one-cell pocket
+behind a stream cell (D198) in a fenced wall. He and Fork's decoy can't
+enter; a frozen bug pushed from the lane through the stream lands on its
+plate and stays there for good (a thawed bug in a sealed cell holds it).
+Two bugs patrol disjoint halves of the lane (rows 0–1 and 2–3), so each
+needs its own freeze, a push along the lane to the pocket's row if it was
+frozen on the middle one, and the push through. The two casts are all his
+50 energy. The south half is as it was: the spare crate is the step up to
+the 2-high ledge. Rules found:
+- **A pocket a decoy can't reach is the Fork answer for a plate.** The
+  stream is what separates a frozen body (it passes) from a decoy (it is
+  him). A lane's end rows are dead cells for a frozen bug (no way to push
+  it along z), so the pockets sit at the lane's end rows.
+- **The clock moves into the push.** A sealed pocket holds its plate for
+  good, so the 5 s run is what is tight (freeze, align, push), not the
+  hold; the old cast-home refill is only a bonus now.
+- **The stack was dropped.** A crate on a shelf one cell from a 3-high
+  ledge is itself a step (a jump over a 1-cell gap and 1 up works), so
+  "bug plus crate" as the step has no honest layout in this room.
+- **Roof the pockets.** The wall tops form a walkway at y=3; an open pocket
+  column beside it is a drop he cannot climb out of (a soft-lock with no
+  death). Each pocket has a fence cell over it (y=2), level with the tops.
+- Lattice abilities: every key piece is `never` without Pause; Fork
+  replaces nothing. The double jump skips the room only for exits, with a
+  frozen bug as a step up to the fence top (fine under D187).
+**Why:** the plate was Fork's and the second bug had no job; a barrier only
+a frozen body crosses gives Pause a role no spell fakes, and the stream is
+now taught in the Pause wing before `split_vault`.

@@ -180,6 +180,13 @@ Lessons from the reviews (D188 on):
 - **A plate is one weight for Fork.** A decoy cast from a ledge onto the
   first crate of a stack holds a heavy plate; only sockets are fake-proof.
   Give every crate a job a decoy can't take (a socket on its route).
+- **A stream pocket is the plate Fork can't fake.** Put a plate in a sealed
+  one-cell pocket behind a `stream` cell: a frozen body passes, a decoy is
+  stopped, and the body stays on it for good (`cold_stairs`, D204). Pockets
+  sit at the lane's end rows, since a frozen bug cannot be pushed along a
+  lane against its wall. Time the freeze, align and push with `sim.mjs`:
+  the bolt only hits a bug whose box crosses his line (cast on a bug a few
+  ticks short of the row), and the 5 s run is the clock.
 - **Walls keep the crate search small.** Three or four free crates on
   open floor blow `MAX_CONFIGS` and a truncated search is a false
   "never" (it also hides bypasses: it stops at the first one it finds).
