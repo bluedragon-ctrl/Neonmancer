@@ -170,6 +170,23 @@ Lessons from the reviews (D188 on):
   crates meet: the pushes together must beat the sum of each crate
   alone, or each crate has its own easy route (Microban 24 did); count
   the dead ends, and play it with `sim.mjs` (D196).
+- **Low walls are roads for crates.** A 1-high wall is a step for him
+  and a road for a crate pushed off a ledge: it slides along the tops at
+  height 1 and drops onto another crate, a 2-stack next to a 3-high
+  fence is a way over it (`ledger_cell`, D203). Guard with a `cage`, a
+  2-high `fence` rail, a 4-high wall or no wall there; run the mutation
+  test with the lane walls in. A wall in front (+z) of a plate or socket
+  hides it: use a `fence` there, and keep sockets off the back-corner edge.
+- **A plate is one weight for Fork.** A decoy cast from a ledge onto the
+  first crate of a stack holds a heavy plate; only sockets are fake-proof.
+  Give every crate a job a decoy can't take (a socket on its route).
+- **Walls keep the crate search small.** Three or four free crates on
+  open floor blow `MAX_CONFIGS` and a truncated search is a false
+  "never" (it also hides bypasses: it stops at the first one it finds).
+  A 1-high wall on the side a crate can only be pushed from (he can't
+  push from a wall top, one level up) keeps it in its lane; ledger_cell
+  searches in full with three crates and two lane walls. Check for the
+  "search stopped" warning on every run.
 
 ## Skeleton
 ```json
@@ -458,9 +475,9 @@ depth a room needs; each is reviewed in step 5.17.
   blocks up (the cage and the fragment's pocket, then the door) before it
   bridges (D195; the cage's gates show NO EFFECT one at a time only because each
   side is a way out).
-- `ledger_cell.json`: a chain of two plates and two gates; the guarded crate
-  cell and the fragment alcove lie on the camera side of their 3-high walls,
-  so everything shows; plates in corners (D160, D165).
+- `ledger_cell.json`: a socket and a heavy plate on one cage over the
+  fragment; three crates (socket, base, ledge stack), lane walls keep them
+  in the checker's search (D203).
 - `relay_loft.json`: a loft flush with the ferries' tops, so crates ride them; a
   Sokoban pen of 1-high walls on it (Microban 45) feeds two sockets in the pit and the
   ferry he rides on his crate (D196; power judged with `sim.mjs`).
