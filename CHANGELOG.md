@@ -9,6 +9,9 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
+- Ghost Exit is tuned (D206, step 5.17): the low stair blocks on the z=6 wall are
+  gone, so the plateau needs the crate, which needs the gate, which needs the
+  bug (or a decoy) on the plate; Scan then reveals the fragment and the exit.
 - Idle Cache is rebuilt (D205, step 5.17): a frozen bug is the base of a stack. He
   freezes the patrolling bug, pushes it onto the heavy plate and drops the
   ledge crate on it, and the cage over fragment 8 goes for the rest of the 5 s.
