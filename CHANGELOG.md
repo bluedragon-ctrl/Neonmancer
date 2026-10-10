@@ -9,6 +9,8 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
+- Fork Lab's disk door is a cage instead of a white gate (D209, step 5.17): bars
+  of light in the room's color with the disk in plain view; same plate, same crate.
 - Split Vault is rebuilt (D208, step 5.17): two crates are handed through a stream
   wall into a vault and spent in sockets; fragment 15's cage opens while a decoy holds
   a plate in a fenced pocket, a 10 s run with a virus after him.

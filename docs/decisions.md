@@ -2018,3 +2018,27 @@ NE corner while the decoy holds the plate (10 s).
 - Checks: `solve.mjs` finds 8 pushes with Fork, UNSOLVABLE without.
 **Why:** the plan's aim (a vault the crates are handed into, a cage on
 fragment 15) and the Fork finding: the old plate pocket skipped by a spell.
+
+### D209 — 2026-10-10 — Fork Lab: the gate becomes a cage (5.17)
+`fork_lab`'s pocket door, a 3-high white gate `[1,0,2]-[1,2,2]` on
+`plate_cage`, is now a `cage` (D202) of the same size and switch: bars of
+light in the room's color, the Fork disk in plain view behind it, a sink while
+the crate holds the plate. Nothing else changes (the crate is still the step
+into the pen for `plate_bridge`, the east exit still needs Fork).
+- **Why not a one-cell cage on the disk and no pocket** (the plan's "tidy"):
+  tried first. With the gate and the two fences gone and a cage at the disk's
+  cell, `check:reach` finds the east exit with Fork alone, no crate and no
+  `plate_bridge` pen: the closed cage is standable (like any gate), and
+  standing on it counts as being in the pickup's cell, which the model takes as
+  collected; the whole bank then opens. The real game would not let him
+  collect through a closed cage (D202), so this may be the checker only, but
+  I did not chase it: a door-sized cage keeps the old profile (mutation
+  test: east needs `crate_1` and bridge z=1 as before, the disk needs the
+  crate with Fork).
+- **Lesson** (room-design skill): a `cage` is standable when closed; put one
+  where he cannot stand on its top, or the checker may count its pickup as
+  taken.
+- Played headless: the crate onto the plate opens all three cage cells and
+  the disk is taken (`sim.mjs`, 6 s).
+**Why:** the plan's tidy (the pocket of gates and fences replaced by a
+cage) as far as the checker allows.

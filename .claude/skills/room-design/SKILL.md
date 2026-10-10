@@ -204,6 +204,11 @@ Lessons from the reviews (D188 on):
   lanes keep the crate's cells few, but two pushable frozen guards still make the
   single-room check and the mutation test take over a minute: fine for CI
   (`check:reach` of the world stays seconds), say so.
+- **A closed cage is standable.** Like a gate it is a block he can stand on;
+  the checker counts standing on a cage over a pickup's cell as being in that
+  cell. In the open it can open a whole bank for Fork (`fork_lab`, D209): keep
+  the cage where its top can't be reached (walls round it, a roof), or size it
+  like the gate it replaces.
 - **Walls keep the crate search small.** Three or four free crates on
   open floor blow `MAX_CONFIGS` and a truncated search is a false
   "never" (it also hides bypasses: it stops at the first one it finds).

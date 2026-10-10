@@ -13,7 +13,7 @@
   "blocks": [
     { "type": "fence", "at": [2, 0, 0], "to": [2, 2, 2] },
     { "type": "fence", "at": [0, 0, 2], "to": [0, 2, 2] },
-    { "type": "gate", "at": [1, 0, 2], "to": [1, 2, 2], "switches": ["plate_cage"] },
+    { "type": "cage", "at": [1, 0, 2], "to": [1, 2, 2], "switches": ["plate_cage"] },
     { "type": "fence", "at": [0, 0, 8], "to": [2, 1, 8] },
     { "type": "fence", "at": [2, 0, 9], "to": [2, 1, 11] },
     { "at": [0, 0, 9] },
