@@ -7,7 +7,7 @@
 export const VOLUME_STEPS = 10;
 
 /** The audio data when a game has no audio.json. */
-export const NO_AUDIO = { music: {}, sounds: {} };
+export const NO_AUDIO = { music: {}, sounds: {}, playlists: {} };
 
 /**
  * Gain of a slider step. Squared, so the lower steps are quiet enough to

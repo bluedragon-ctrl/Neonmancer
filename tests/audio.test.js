@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { AudioEngine } from '../src/audio/audio.js';
 import { lookup, stepGain } from '../src/audio/audio-data.js';
@@ -166,7 +166,7 @@ test('audio.json: the real file is valid and loads; a game without one has no au
   const schemas = readSchemas(fileURLToPath(new URL('..', import.meta.url)));
   const real = JSON.parse(readFileSync(new URL('../data/audio.json', import.meta.url), 'utf8'));
   const files = dataFiles({ rooms: [roomFile('alpha', { name: 'Alpha' })], connections: [] });
-  assert.deepEqual(loadGameData(files).audio, { music: {}, sounds: {} });
+  assert.deepEqual(loadGameData(files).audio, { music: {}, sounds: {}, playlists: {} });
   files['audio.json'] = real;
   assert.deepEqual(checkFiles(files, schemas), []);
   assert.deepEqual(Object.keys(loadGameData(files).audio.sounds), Object.keys(real.sounds));
@@ -230,4 +230,67 @@ test('loops: setLoop starts a looping sound once and stops it again; quiet witho
   sound.setLoop('hum', false);
   sound.setLoop('hum', false);
   assert.equal(sound.loops.size, 0);
+});
+
+test('playlist: tracks play one after the other and round again; the same playlist does nothing', () => {
+  const audio = { ...AUDIO, playlists: { lat: ['lattice', 'boss'], solo: ['boss'] } };
+  const { sound, log } = engine(audio);
+  sound.playPlaylist('lat');
+  sound.playPlaylist('lat');
+  assert.equal(log.howls.length, 1);
+  assert.equal(log.howls[0].options.loop, false);
+  log.howls[0].options.onend();
+  assert.equal(log.howls.length, 2);
+  assert.equal(sound.track.name, 'boss');
+  log.howls[1].options.onend();
+  assert.equal(sound.track.name, 'lattice');
+  // A stale track's end (already replaced) does nothing.
+  log.howls[0].options.onend();
+  assert.equal(log.howls.length, 3);
+  // A playlist of one track loops it.
+  sound.playPlaylist('solo');
+  assert.equal(sound.track.howl.options.loop, true);
+  assert.equal(sound.track.howl.options.onend, undefined);
+});
+
+test('playlist: a missing file is skipped, an unknown playlist is silence with one warning', () => {
+  const audio = { ...AUDIO, playlists: { skip: ['gone', 'boss'], none: ['gone'] } };
+  const { sound, log } = engine(audio);
+  assert.equal(sound.hasPlaylist('skip'), true);
+  assert.equal(sound.hasPlaylist('nope'), false);
+  sound.playPlaylist('skip');
+  assert.equal(sound.track.name, 'boss');
+  assert.equal(log.warnings.length, 0);
+  sound.playPlaylist('none');
+  assert.equal(sound.track, null);
+  sound.playPlaylist('nope');
+  sound.playPlaylist('nope');
+  assert.equal(sound.track, null);
+  assert.equal(log.warnings.length, 2);
+});
+
+test('playlist: a track that fails to load moves on; playMusic leaves the playlist', () => {
+  const audio = { ...AUDIO, playlists: { lat: ['lattice', 'boss'] } };
+  const { sound, log } = engine(audio);
+  sound.playPlaylist('lat');
+  log.howls[0].options.onloaderror();
+  assert.equal(sound.track.name, 'boss');
+  sound.playMusic('lattice');
+  log.howls.at(-2).options.onend?.();
+  assert.equal(sound.track.name, 'lattice');
+  assert.equal(sound.list, null);
+});
+
+test('audio.json: playlists are named like biomes and list tracks that exist, with their files', () => {
+  const root = fileURLToPath(new URL('..', import.meta.url));
+  const real = JSON.parse(readFileSync(new URL('../data/audio.json', import.meta.url), 'utf8'));
+  const biomes = JSON.parse(readFileSync(new URL('../data/biomes.json', import.meta.url), 'utf8'));
+  const biomeIds = Object.keys(biomes.biomes ?? biomes);
+  for (const [name, tracks] of Object.entries(real.playlists ?? {})) {
+    assert.ok(biomeIds.includes(name), `playlist "${name}" is not a biome`);
+    for (const track of tracks) {
+      assert.ok(real.music[track], `playlist "${name}": no music "${track}"`);
+      assert.ok(existsSync(`${root}assets/audio/${real.music[track].file}`), `file of "${track}" is missing`);
+    }
+  }
 });

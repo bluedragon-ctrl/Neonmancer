@@ -254,6 +254,8 @@ function boot() {
     const shield = flow.playing && !hud.winShown ? game.player.shield?.spell : null;
     audio.setLoop('hum_shield', shield === 'shield');
     audio.setLoop('hum_firewall', shield === 'firewall');
+    // The music follows the biome's playlist (D210); a biome with none lets the song play on.
+    if (audio.hasPlaylist(game.room.biome)) audio.playPlaylist(game.room.biome);
     if (!wasPlaying || !flow.playing) {
       readout.countTick();
       return;

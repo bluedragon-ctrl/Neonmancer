@@ -24,6 +24,17 @@
         }
       }
     },
+    "playlists": {
+      "type": "object",
+      "description": "Playlist id → track ids of \"music\", played one after the other and round again. A playlist is named like a biome and plays in that biome's rooms (D210); one track simply loops.",
+      "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
+      "additionalProperties": {
+        "type": "array",
+        "minItems": 1,
+        "uniqueItems": true,
+        "items": { "$ref": "common.schema.json#/$defs/id" }
+      }
+    },
     "sounds": {
       "type": "object",
       "description": "Sound id → sound effect. A name \"type:detail\" (\"cast:zap\", \"pickup:disk\", \"die:void\") plays on that event when its spell, pickup kind or cause matches, else the plain \"type\" does (D139).",

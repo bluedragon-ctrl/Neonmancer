@@ -43,6 +43,8 @@ export class AudioEngine {
     this.track = null;
     /** The track asked for last, even if it is a stub: asking again is a no-op. */
     this.wanted = null;
+    /** @type {{ key: string, tracks: string[], index: number } | null} the playlist running */
+    this.list = null;
     /** @type {Map<string, any>} sound effect files already loaded, by name */
     this.fileSounds = new Map();
     /** @type {Map<string, { source: any, gain: any }>} looping sounds running (setLoop) */
@@ -166,32 +168,99 @@ export class AudioEngine {
   playMusic(name, fade = MUSIC_FADE) {
     if (this.wanted === name) return;
     this.wanted = name;
+    this.list = null;
+    this.startTrack(name, fade);
+  }
+
+  /**
+   * Play a playlist of audio.json "playlists": its tracks one after the
+   * other, the first again after the last. Asking for the playlist that
+   * is playing changes nothing, so rooms of one biome share a song. An
+   * unknown playlist fades the old music out and leaves silence.
+   * @param {string} name a key of audio.json "playlists"
+   * @param {number} [fade] seconds
+   */
+  playPlaylist(name, fade = MUSIC_FADE) {
+    const key = `playlist:${name}`;
+    if (this.wanted === key) return;
+    this.wanted = key;
+    const tracks = Object.hasOwn(this.audio.playlists ?? {}, name) ? this.audio.playlists[name] : [];
+    if (tracks.length === 0) {
+      this.list = null;
+      this.dropTrack(fade);
+      return this.stub(key, `no playlist "${name}" in audio.json`);
+    }
+    this.list = { key, tracks, index: 0 };
+    this.startListTrack(fade, 0);
+  }
+
+  /** Does a playlist of this name exist (with a track)? */
+  hasPlaylist(name) {
+    return Object.hasOwn(this.audio.playlists ?? {}, name) && this.audio.playlists[name].length > 0;
+  }
+
+  /** Start the current track of the playlist; a track that cannot play is skipped. */
+  startListTrack(fade, skipped) {
+    const { key, tracks, index } = this.list;
+    const next = (afterFade) => {
+      if (this.wanted !== key || this.list?.tracks !== tracks) return;
+      this.list.index = (index + 1) % tracks.length;
+      this.startListTrack(afterFade, skipped + 1);
+    };
+    // A playlist of one track loops it; longer ones play each track once.
+    const many = tracks.length > 1;
+    const started = this.startTrack(tracks[index], fade, {
+      loop: many ? false : undefined,
+      onend: many ? () => next(MUSIC_FADE) : undefined,
+      onerror: () => skipped + 1 < tracks.length && next(0),
+      quiet: skipped + 1 < tracks.length,
+    });
+    if (!started && skipped + 1 < tracks.length) next(fade);
+  }
+
+  /** Fade the playing track out, leaving silence. */
+  dropTrack(fade) {
     const old = this.track;
     this.track = null;
     if (old) this.fadeOut(old, fade);
+  }
+
+  /**
+   * Start a track now, fading the old one out.
+   * @param {string} name
+   * @param {number} fade seconds
+   * @param {{ loop?: boolean, onend?: () => void, onerror?: () => void, quiet?: boolean }} [extra]
+   * @returns {boolean} false when there is no such track or file (silence)
+   */
+  startTrack(name, fade, { loop, onend, onerror, quiet = false } = {}) {
+    this.dropTrack(fade);
+    const warn = (message) => (quiet ? undefined : this.stub(`music:${name}`, message));
     const music = lookup(this.audio, 'music', name);
-    if (!music) return this.stub(`music:${name}`, `no music "${name}" in audio.json`);
+    if (!music) return warn(`no music "${name}" in audio.json`) ?? false;
     const src = music.file && this.backend.urlOf(music.file);
-    if (!src) return this.stub(`music:${name}`, `music "${name}": file "${music.file}" is missing from assets/audio/`);
+    if (!src) return warn(`music "${name}": file "${music.file}" is missing from assets/audio/`) ?? false;
     const howl = new this.backend.Howl({
       src: [src],
-      loop: music.loop,
+      loop: loop ?? music.loop,
       volume: 0,
+      onend: onend && (() => this.track?.howl === howl && onend()),
       onloaderror: () => {
         if (this.track?.howl === howl) this.track = null;
-        this.stub(`music:${name}`, `music "${name}": could not load "${music.file}"`);
+        warn(`music "${name}": could not load "${music.file}"`);
+        onerror?.();
       },
     });
     this.track = { name, howl, volume: music.volume };
     howl.play();
     howl.fade(0, stepGain(this.volume.music) * music.volume, fade * 1000);
+    return true;
   }
 
   /** Fade the music out. @param {number} [fade] seconds */
   stopMusic(fade = MUSIC_FADE) {
     this.wanted = null;
-    if (this.track) this.fadeOut(this.track, fade);
-    this.track = null;
+    this.list = null;
+    this.dropTrack(fade);
   }
 
   /** Fade a track to nothing, then release it. */

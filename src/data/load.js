@@ -23,7 +23,7 @@ export class DataError extends Error {
  *   passes false and gets the world without it
  * @returns {{ score: { bit: number, secret: number, accessLevel: number }, objectTypes: object, blockTypes: object, enemyTemplates: object, spells: object, pickupTypes: object, biomes: object, world: object, strings: Record<string, string>,
  *   lore: Record<string, { title?: string, lines: string[] }>,
- *   audio: { music: object, sounds: object },
+ *   audio: { music: object, sounds: object, playlists: object },
  *   rooms: Map<string, object>,
  *   links: Map<string, { room: string, exit: string }> }} `links` maps "room.exit" to the exit
  *   it is connected to (both ways round)
@@ -53,7 +53,7 @@ export function loadGameData(files, { dev = true } = {}) {
     // Screen texts (D118).
     lore: files['lore.json']?.texts ?? {},
     // Music and sound effects (D138); the file is optional.
-    audio: { music: files['audio.json']?.music ?? {}, sounds: files['audio.json']?.sounds ?? {} },
+    audio: { music: files['audio.json']?.music ?? {}, sounds: files['audio.json']?.sounds ?? {}, playlists: files['audio.json']?.playlists ?? {} },
     rooms,
     links: linkMap(files['world.json'].connections),
   };
