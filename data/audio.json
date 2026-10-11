@@ -1,7 +1,12 @@
 {
   "$schema": "../schemas/audio.schema.json",
   "schemaVersion": 1,
-  "music": {},
+  "music": {
+    "underground": { "file": "underground.ogg" }
+  },
+  "playlists": {
+    "home_lattice": ["underground"]
+  },
   "sounds": {
     "jump": { "zzfx": [0.3,0.02,170,0.01,0.02,0.09,1,1,5,0,0,0,0,0,0,0,0,0.7,0.03,0,-2500] },
     "airjump": { "zzfx": [0.3,0.02,240,0.01,0.02,0.1,1,1,5,0,60,0.04,0,0,0,0,0,0.7,0.03,0,-2500] },

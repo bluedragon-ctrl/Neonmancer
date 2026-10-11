@@ -235,8 +235,12 @@ Options sliders on every `settings` command, unlocks the Web Audio context
 on the first key or click, and passes each tick's game events to
 `playEvents()`: an event plays the sound named like it (`pickup`, `hurt`,
 `die`...), so the effects pass (5.2, D139) is data only; a sound named `type:detail` (spell, pickup kind, death cause) wins over the plain one, and menus play `ui_*` sounds through `MenuFlow.onSound`. Music is switched with
-`playMusic(name)` (crossfade) and `stopMusic()`; room and boss mapping
-comes with 5.3.
+`playMusic(name)` (crossfade) and `stopMusic()`; `playPlaylist(name)` plays a
+`playlists` entry of audio.json (D210): its tracks in turn, the first again after
+the last, a one-track list looping. Playlists are named like biomes and `main.js`
+asks for the current room's biome every tick (no change while it is the same, so
+rooms of a biome share a song); a biome without a playlist lets the music play
+on. Boss and title mapping comes with 5.3.
 
 ## Input
 

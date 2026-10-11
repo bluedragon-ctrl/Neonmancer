@@ -2043,6 +2043,17 @@ into the pen for `plate_bridge`, the east exit still needs Fork).
 **Why:** the plan's tidy (the pocket of gates and fences replaced by a
 cage) as far as the checker allows.
 
+### D211 — 2026-10-11 — Music playlists, by biome (5.3)
+`data/audio.json` gets `playlists`: a list of `music` track ids per name,
+the name being a biome id. `AudioEngine.playPlaylist()` plays them in turn
+and round again (crossfading in at each track's end; a one-track list just
+loops), skips a track whose file is missing, and does nothing when asked
+for the list already playing, so walking between rooms of one biome never
+restarts the song. `main.js` asks every tick for the room's biome; a biome
+with no playlist lets the music play on. `home_lattice` plays
+`underground` (the first track, `assets/audio/underground.ogg`).
+**Why:** more songs are coming; the author wants them to follow each other
+without a menu, and the music to belong to the place, not to a room.
 ### D210 — 2026-10-11 — Twin Plates stays as it is (5.17)
 `twin_plates` is reviewed and kept: no room change. The plan's tidy ("the pocket
 of gate and fences becomes a cage") does not fit: the pocket holds a crate, the
