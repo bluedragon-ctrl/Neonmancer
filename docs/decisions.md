@@ -2178,3 +2178,49 @@ base for the fragment's stack, so the step is a bridge on a clock instead.
 **Why:** a 3-high sill in a room of 1-high walls was a hop from anywhere; a
 4-high one needs a step, and a bridge on a far target turns it into a run
 that a decoy cannot shorten.
+
+### D215 — 2026-10-11 — Event Horizon's door in Mirror Stacks needs a third piece (5.11)
+`buffer_4` (Event Horizon) in `mirror_stacks`, the fourth Outer Buffer door
+under D212. The door `east_2` sits on the 3-high column `(11,0)` in the corner
+of the fragment's pocket and needs `target_1`. It was a double-jump shot and a
+double jump: a sim sweep landed on the column from the fence tops `(10..11,2)`
+(height 3, a hop across one cell), from the x=7 wall top (3) and from the two
+floating blocks `[8,3,1]-[8,3,3]` and `[9,4,2]-[9,4,4]` (tops 4 and 5), and all
+of them are a double jump from a crate or the 1-high ledge `(8..9,5)`.
+- **The pocket's walls are 4 high:** the x=7 wall `[7,0,0]-[7,3,2]`, the z=2
+  fences `[8,2,2]-[9,3,2]` and `[10,1,2]-[11,3,2]` (still fence, so the
+  fragment and anything in the pocket stay in view). The two floating blocks
+  are removed: they were the author's (2026-10-06), and with 4-high walls
+  their only effect was a step down onto the door's column.
+- **The trick:** the only step to the door is a crate in the pocket, and it
+  gets in only through the gate, which needs both plates. The fragment needs
+  two pieces on them (a crate and a decoy); the door needs a third at once.
+  Played headless (`sim.mjs`, the target set on): crate_3 north to `(10,3)`
+  and west to `(9,3)`, below the gate; crate_4 west to `(7,4)` and south onto
+  `plate_2`; a decoy onto `plate_1` from `(7,10)`; crate_3 pushed north
+  through the gate to `(9,1)` 3.5 s into the decoy's 10 s; inside, east to
+  `(11,1)`; onto it, a double jump onto the column (y 3.00), out of the door.
+  A crate left in the open gate is a doorstop (a gate never closes on what is
+  in its cell), so the decoy's clock is loose either way; a west crate brought
+  over the bridge can stand in for the decoy, still three pieces.
+- **Never without it:** a sweep of double jumps (8 directions, 3 run-ups,
+  6 timings, 9 starting points a cell) from crate-height tops round the pocket
+  (`(7..11,3)`, `(7,4)`, `(10,4)`, the ledge `(8..9,5)`) lands on no wall top
+  `(7,0)`, `(7,1)`, `(7,2)`, `(8,2)`, `(9,2)`, `(10,2)`, `(11,2)` nor on the
+  column, and from the pocket floor none reaches the column. The east side
+  has no ledge a crate can fall from, so no 2-high stack.
+- **Unchanged:** the door, `target_1`, the crates, plates, gate, bridge,
+  holes, fakes, fragment 0 and the other exits. The fragment is still
+  `scan + fork` with `zap,scan,fork,pause`; the walls only grew.
+- Level review: keep. Coming back from `buffer_4` puts him on the column, from
+  where he can drop into the pocket for the fragment; fine while `buffer_4` is a
+  dead end (its only door is this one), a second way into it would skip the
+  fragment's lock.
+- Checks: `validate:data`; `check:reach` (east_2: `never` with
+  `zap,scan,fork,pause` and with `zap,scan,pause,double_jump`, reachable with
+  all five; the crate search stops at 2000 configurations, as before this
+  change); the mutation test with the Lattice abilities (east_2 needs crate_3,
+  crate_4, the gate and the column; truncated as before); `npm test`.
+**Why:** every top round the pocket was a step to the door; with 4-high walls
+the only step is a crate the plates let in, and the plates take more pieces
+than the fragment did.

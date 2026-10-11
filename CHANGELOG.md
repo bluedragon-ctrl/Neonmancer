@@ -9,6 +9,10 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
+- Event Horizon's door in Mirror Stacks needs a third piece (D215, step 5.11): the
+  fragment pocket's walls are 4 high and the floating blocks are gone, so the only
+  step to the door is a crate pushed in through the gate while a crate and a decoy
+  hold its plates.
 - Null Orbit's door in Guard Loop is a timed run under a Zap (D214, step 5.11): the
   hidden east door is raised to a 4-high sill; a far timed target raises a one-block
   bridge beside it for 5.5 s, the only step for the double jump.
