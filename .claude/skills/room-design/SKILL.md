@@ -209,6 +209,9 @@ Lessons from the reviews (D188 on):
   cell. In the open it can open a whole bank for Fork (`fork_lab`, D209): keep
   the cage where its top can't be reached (walls round it, a roof), or size it
   like the gate it replaces.
+- **A crate's pocket is a gate, a pickup's pocket is a cage.** A `cage` is for
+  a pickup in plain view (D202); a crate behind a switch stays behind a white
+  gate and fences (`twin_plates`, D210).
 - **Walls keep the crate search small.** Three or four free crates on
   open floor blow `MAX_CONFIGS` and a truncated search is a false
   "never" (it also hides bypasses: it stops at the first one it finds).
