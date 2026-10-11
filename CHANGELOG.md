@@ -9,6 +9,8 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
+- Twin Plates is reviewed and kept as it is (D210, step 5.17): its pocket holds a
+  crate, not a pickup, so the gate stays; no data changed.
 - Fork Lab's disk door is a cage instead of a white gate (D209, step 5.17): bars
   of light in the room's color with the disk in plain view; same plate, same crate.
 - Split Vault is rebuilt (D208, step 5.17): two crates are handed through a stream
