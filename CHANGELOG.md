@@ -9,6 +9,9 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
+- Null Orbit's door in Guard Loop is a timed run under a Zap (D214, step 5.11): the
+  hidden east door is raised to a 4-high sill; a far timed target raises a one-block
+  bridge beside it for 5.5 s, the only step for the double jump.
 - Stray Byte's door in Warden Pit is a gallery push (D213, step 5.11): the ledge
   under the west door is 4 high; a crate on a 1-high gallery, stepped out of its lane
   and back in past a gap, is the step for the double jump.

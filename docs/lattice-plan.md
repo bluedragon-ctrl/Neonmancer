@@ -108,10 +108,12 @@ stay look-only and outside the ladder (D186).
   gallery to the 4-high ledge, D213) to `buffer_2`;
   `scan_lab` north (with Scan; a 5 s run from the far plate to the bridge,
   then a double jump off it, D212) to `buffer_1`; `mirror_stacks` east (with
-  Zap) to `buffer_4`; `guard_loop` east (with Scan) to `buffer_3`.
+  Zap) to `buffer_4`; `guard_loop` east (with Scan; a 5.5 s run from a far
+  timed target to a one-block bridge, then a double jump to the 4-high sill, D214)
+  to `buffer_3`.
   `ghost_exit` east to `buffer_5` waits for a later sector's spell.
   Each Outer Buffer door gets a trick of its own, never open on the first
-  arrival (D212); reviewed one a PR, `buffer_1` and `buffer_2` done.
+  arrival (D212); reviewed one a PR, `buffer_1` to `buffer_3` done.
 - Shortcuts: `junction`'s fence gate home, and the Gatekeeper once beaten.
 
 ### Mix and gaps
@@ -274,6 +276,6 @@ Waits for the core (D186): the secret rooms' contents.
 |---|---|---|
 | `buffer_1` Dead Pixel (5.11) | 8x8 | Secret, a Scan hidden exit in `scan_lab`; entrance built (D183), contents to come |
 | `buffer_2` Stray Byte (5.11) | 8x8 | Secret, a crate pushed along a gallery and a double jump up to a 4-high ledge in `warden_pit` (D213); entrance built, an extra fragment to come |
-| `buffer_3` Null Orbit (5.11) | 8x8 | Secret, a Blink across a caged gap in `guard_loop`; entrance built, an extra fragment to come |
+| `buffer_3` Null Orbit (5.11) | 8x8 | Secret, a timed target, a sprint over the crate lane and a double jump off a bridge to a 4-high sill in `guard_loop` (D214); entrance built, an extra fragment to come |
 | `buffer_4` Event Horizon (5.11) | 8x8 | Secret, a Warp to a high doorway in `mirror_stacks`; entrance built |
 | `buffer_5` Cache Miss (5.11) | 8x8 | Secret, Warp plus Compile or Fork onto a plate in `ghost_exit`; entrance built |
