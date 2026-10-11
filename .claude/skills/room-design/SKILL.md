@@ -218,6 +218,14 @@ Lessons from the reviews (D188 on):
 - **A block overhead stops a jump.** He can't jump up a step that lies
   under a ledge (his head hits it); a diagonal jump from beside it works.
   The checker misses that, so play it (`scan_lab`, D212).
+- **A double jump reaches three cells round a top.** From a top of height h
+  a diagonal double jump lands on h + 2 up to about three cells away (from
+  2 high onto 4: `(3,4)` to a ledge at `(1,2)`), and the checker sees none
+  of it. A ledge that wants one step (a crate) clears every other top of
+  that height in that ring: cover blocks, data pillars (3 high), lofts.
+  Sweep it with `sim.mjs` (directions, run-ups, timings, starting points)
+  from every top near it, and from the crate at each cell of its route:
+  the puzzle ends where the sweep first lands (`warden_pit`, D213).
 - **Walls keep the crate search small.** Three or four free crates on
   open floor blow `MAX_CONFIGS` and a truncated search is a false
   "never" (it also hides bypasses: it stops at the first one it finds).

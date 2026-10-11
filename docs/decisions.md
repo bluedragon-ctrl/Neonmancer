@@ -2098,3 +2098,42 @@ there for the door.
   the double jump) says it needs `crate_1` (across the pit) and the bridge.
 **Why:** the author wants every secret door to cost a trick, not just the
 double jump; the bridge was a step already, and a far plate makes it a run.
+
+### D213 — 2026-10-11 — Stray Byte's door in Warden Pit is a gallery push (5.11)
+`buffer_2` (Stray Byte) in `warden_pit`, the second Outer Buffer door under
+D212. It was a plain double-jump hop up a 2-high ledge. Now the ledge under the
+west door is 4 high (the doorway at y 4, the room 6 high), so he needs a
+height-2 top beside it plus the double jump. The only one he can make is a
+crate on a 1-high gallery.
+- **The trick:** the crate starts in the gallery's lane at `(1,1,9)`, but the
+  cell behind it `(1,10)` is a gap, so it can't be pushed straight down the
+  lane. Step it out of the lane (+x from `(0,9)`), slide it along (-z from
+  `(2,10)`), push it back in one cell further on (-x from `(3,8)`), and its old
+  cell becomes the place to push from: five pushes down the lane to the
+  ledge, then onto the crate and a diagonal double jump onto the ledge.
+- **Solver** (`solve.mjs --with zap,scan,fork,pause,double_jump`): 8 pushes,
+  3 sharp steps (1/3, 1/2, 1/3 safe), 95% of the states are traps; a crate
+  pushed off the gallery is lost (a floor crate is 1 high, too low), and
+  leaving the room resets it.
+- **Never without it:** the double jump from the floor reaches 2, from the
+  gallery 3, from a floor crate 3; the crate on the gallery without the
+  double jump reaches 3. With `zap,scan,fork,pause` the door is `never`; no
+  enemy can be a step (the boss is never paused and stays away once
+  fragment 7 is found, which comes before the double jump).
+- **Played headless** (`sim.mjs`): from the spawn, the walk, the 8 pushes,
+  the hop onto the crate, a diagonal double jump (y 4.00) and the door. A
+  sweep of double jumps (5 directions, 3 run-ups, 6 timings, 9 starting
+  points a cell) finds no way onto the ledge from the gallery, the floor,
+  the cover blocks, or the crate anywhere along its route before `(1,6)`.
+- **Moved so they are no step:** the 2-high cover block `(3,4..5)` to
+  `(3,6..7)` and the data pillar `pillar_west` (3 high) from the corner
+  `(0,0,0)` to `(0,0,12)`: from either top a diagonal double jump landed on
+  the ledge. The checker missed both (it misses diagonal jumps); the sim
+  found them. The fight keeps six cover bars, one shifted two cells.
+- **Removed:** nothing else; the boss, fragment 7 and the refills stay.
+- Level review: keep.
+- Checks: `validate:data`, `check:reach` (west: `double_jump`; `never`
+  without it; everything from the west door), the mutation test (the door
+  needs the crate, the ledge and every gallery block), `npm test`.
+**Why:** a 2-high ledge was only a hop; a 4-high one needs a step only the
+gallery crate gives, and its gap makes the push a puzzle.
