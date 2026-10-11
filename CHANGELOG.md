@@ -9,6 +9,9 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
+- Dead Pixel's door in Scan Lab is a timed run (D212, step 5.11): the bridge's
+  plate moves to the far corner (5 s), so he sprints to the bridge and double-jumps
+  off it to the hidden door; every Outer Buffer door now asks for a trick.
 - Twin Plates is reviewed and kept as it is (D210, step 5.17): its pocket holds a
   crate, not a pickup, so the gate stays; no data changed.
 - Fork Lab's disk door is a cage instead of a white gate (D209, step 5.17): bars

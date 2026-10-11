@@ -105,9 +105,12 @@ stay look-only and outside the ladder (D186).
 
 - `mirror_stacks`: fragment 0 needs Fork, from the Fork wing.
 - Double jump, after Level 1: `warden_pit` west to `buffer_2`;
-  `scan_lab` north (with Scan) to `buffer_1`; `mirror_stacks` east (with
+  `scan_lab` north (with Scan; a 5 s run from the far plate to the bridge,
+  then a double jump off it, D212) to `buffer_1`; `mirror_stacks` east (with
   Zap) to `buffer_4`; `guard_loop` east (with Scan) to `buffer_3`.
   `ghost_exit` east to `buffer_5` waits for a later sector's spell.
+  Each Outer Buffer door gets a trick of its own, never open on the first
+  arrival (D212); reviewed one a PR, `buffer_1` done.
 - Shortcuts: `junction`'s fence gate home, and the Gatekeeper once beaten.
 
 ### Mix and gaps

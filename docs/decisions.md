@@ -2068,3 +2068,33 @@ step to fragment 12, and a `cage` (D202) holds a pickup.
 - **Lesson** (room-design skill): a pocket for a crate is a gate, a pocket for
   a pickup is a cage.
 **Why:** the review's verdict is keep; the tidy is a rule for pickups.
+
+### D212 — 2026-10-11 — Outer Buffer doors need a trick; Dead Pixel's is a timed run (5.11)
+The author's rule for the five Outer Buffer entrances (`buffer_1`–`buffer_5`,
+D184): each is reachable with the Lattice's abilities (the double jump
+included, D187), never on the first arrival in its host room, and each asks for
+one trick of its own (a timed run, a harder push, a piece used twice), not
+only a hop. The doors are reviewed one a PR; the host room's puzzle and
+pickups stay as they are.
+
+`buffer_1` (Dead Pixel) in `scan_lab`: `plate_back`, the timed plate of the
+bridge home over the pit, moves from beside the bridge `(11,0,0)` to the far
+corner `(11,0,11)`, its timer from 3 to 5 s. The bridge stands a block high in
+the pit, the only 1-high step on the east side, and from its top a double jump
+reaches the memory stack under the hidden door (3 up). So the way in is: the
+plate, a sprint the length of the room, a diagonal jump onto the bridge (the
+stack overhead blocks a straight one), a double jump onto the sill, a scan
+there for the door.
+- Played headless (`sim.mjs`): plate to sill 3.30 s, through the door at
+  5.8 s; with 5 s that is about 1.5x. Fork (a decoy on the plate) takes the
+  clock away: then the trick is the decoy and seeing the way home as a step.
+- The bridge is still the way home over the pit (plate to the bridge's west
+  end about 3.7 s). The checker, from the east door, finds neither the bridge
+  nor the west exit, the same as before this change (it misses the diagonal
+  jump); the sim boards it. He can always leave by the east door again.
+- Level review: keep.
+- Checks: `north_2` is `never` with `zap,scan,fork,pause` and with Scan
+  alone, `scan + double_jump` with the double jump; the mutation test (with
+  the double jump) says it needs `crate_1` (across the pit) and the bridge.
+**Why:** the author wants every secret door to cost a trick, not just the
+double jump; the bridge was a step already, and a far plate makes it a run.

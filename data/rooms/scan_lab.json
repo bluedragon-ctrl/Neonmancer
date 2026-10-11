@@ -26,7 +26,7 @@
     { "id": "screen_scan", "type": "screen", "at": [0, 0, 4], "text": "help_scan", "overrides": { "face": "+x" } },
     { "id": "crate_1", "type": "crate", "at": [3, 0, 9] },
     { "id": "crate_2", "type": "crate", "at": [7, 1, 9] },
-    { "id": "plate_back", "type": "plate_timed", "at": [11, 0, 0] },
+    { "id": "plate_back", "type": "plate_timed", "at": [11, 0, 11], "overrides": { "timer": 5 } },
     { "id": "data_pillar_2", "type": "data_pillar", "at": [6, 0, 0] },
     { "id": "memory_stack_1", "type": "memory_stack", "at": [11, 2, 0] },
     { "id": "data_pillar_1", "type": "data_pillar", "at": [3, 0, 0] }
