@@ -212,6 +212,12 @@ Lessons from the reviews (D188 on):
 - **A crate's pocket is a gate, a pickup's pocket is a cage.** A `cage` is for
   a pickup in plain view (D202); a crate behind a switch stays behind a white
   gate and fences (`twin_plates`, D210).
+- **Fork beats a plate race.** A timed plate is a race only without Fork: a
+  decoy holds it for 10 s. Say so in the decision, or use a target or socket
+  if the race must hold (`scan_lab`'s secret door, D212).
+- **A block overhead stops a jump.** He can't jump up a step that lies
+  under a ledge (his head hits it); a diagonal jump from beside it works.
+  The checker misses that, so play it (`scan_lab`, D212).
 - **Walls keep the crate search small.** Three or four free crates on
   open floor blow `MAX_CONFIGS` and a truncated search is a false
   "never" (it also hides bypasses: it stops at the first one it finds).
