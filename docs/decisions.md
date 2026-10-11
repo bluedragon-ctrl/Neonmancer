@@ -2137,3 +2137,44 @@ crate on a 1-high gallery.
   needs the crate, the ledge and every gallery block), `npm test`.
 **Why:** a 2-high ledge was only a hop; a 4-high one needs a step only the
 gallery crate gives, and its gap makes the push a puzzle.
+
+### D214 — 2026-10-11 — Null Orbit's door in Guard Loop is a timed run under a Zap (5.11)
+`buffer_3` (Null Orbit) in `guard_loop`, the third Outer Buffer door under
+D212. It was a Scan and one double jump: the hidden east door sat on a 3-high
+column at `(11,5)`, and the room is full of 1-high tops (the lane walls, the
+fakes, the slab), each 2 below it. Now the doorway is at y 4 (the column
+`[11,1,5]-[11,3,5]` on the 1-high wall, the room 6 high), so he needs a height-2
+top beside it. A third crate for a second stack was tried on paper: every
+place it could start was either a 2-high step by the door at once or a cheap
+base for the fragment's stack, so the step is a bridge on a clock instead.
+- **The trick:** a one-block bridge at `(11,1,4)` (top 2, beside
+  the sill), stands while `target_door` is on: a timed target (5.5 s) in the
+  south-west corner `(0,0,8)`, shielded by a 1-high block `(1,0,8)` so it is
+  shot only from the west end of the entry hall (a sweep of 32 directions
+  from every cell: from the floor at `(0..3, 9..11)`, `(4,11)`, `(6,11)` and
+  `(7,10)`; never from a wall or crate top, never with a jump shot). So: Scan
+  by the door first (the door and the fakes stay revealed), shoot the target,
+  sprint east, over the lane's south wall, up onto its north wall at `(10,5)`,
+  a hop onto the bridge (step right first: the column blocks a straight
+  diagonal) and a double jump onto the sill.
+- **Played headless** (`sim.mjs`): from `(7,10)`, the nearest shot, to the
+  door in 3.72 s (an L-shaped scripted run); 5.5 s is about 1.5x. Fork cannot
+  hold a target, so the clock always runs; `virus_a` patrols the row under the
+  bridge.
+- **Never without it:** a sweep of double jumps (8 directions, 3 run-ups,
+  6 timings, 9 starting points a cell) finds no way onto the sill from the
+  lane walls, the fakes, crate or frozen-virus tops anywhere round the door
+  (`(9..11,3..6)`, `(11,2)`), or the floor with the fakes gone. The fragment
+  column (top 3) and the stack cell are 5 cells away. Without the double
+  jump the bridge (2) is two short of the sill.
+- **Unchanged:** both crates, the slab and ledges, both viruses, fragment 13,
+  the fakes and the other two exits.
+- Level review: keep (check the target reads well past its shield block in play).
+- Checks: `validate:data`, `check:reach` (east: `never` with
+  `zap,scan,fork,pause`, with `scan,double_jump` and with
+  `scan,fork,pause,double_jump`; it needs Zap, Scan and the double jump), the
+  mutation test with the Lattice abilities (the door needs the column and the
+  bridge; the fragment's dependencies as in D207), `npm test`.
+**Why:** a 3-high sill in a room of 1-high walls was a hop from anywhere; a
+4-high one needs a step, and a bridge on a far target turns it into a run
+that a decoy cannot shorten.
