@@ -2042,3 +2042,18 @@ into the pen for `plate_bridge`, the east exit still needs Fork).
   the disk is taken (`sim.mjs`, 6 s).
 **Why:** the plan's tidy (the pocket of gates and fences replaced by a
 cage) as far as the checker allows.
+
+### D210 — 2026-10-11 — Twin Plates stays as it is (5.17)
+`twin_plates` is reviewed and kept: no room change. The plan's tidy ("the pocket
+of gate and fences becomes a cage") does not fit: the pocket holds a crate, the
+step to fragment 12, and a `cage` (D202) holds a pickup.
+- **Checked** with the Lattice abilities (`zap,scan,fork,pause`): the fragment
+  needs the crate, the frozen bug, the gate and the x=4 bridge; the north exit
+  needs the bug and the bridge. The x=10 bridge (timed plate, the way back from
+  the north door) shows no effect because the checker ignores timing.
+- **Why not a cage:** on the fragment with a free crate it would lose the beat
+  where the zapped target frees the crate and leave the pocket as decoration;
+  round the crate it holds no pickup, and a closed cage is standable (D209).
+- **Lesson** (room-design skill): a pocket for a crate is a gate, a pocket for
+  a pickup is a cage.
+**Why:** the review's verdict is keep; the tidy is a rule for pickups.

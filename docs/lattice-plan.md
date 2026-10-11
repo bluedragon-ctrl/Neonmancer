@@ -86,7 +86,7 @@ Rules for the lines (D186, D187):
 | # | Room | Type | Rung | Trick to aim for | Now |
 |---|---|---|---|---|---|
 | 19 | `fork_lab` | puzzle | teach: Fork holds a plate | The crate that opens the disk's cage is then his step into a pen only a decoy can hold: one push too many loses it. | Holds; the pocket's gate is a cage (D209). |
-| 20 | `twin_plates` | puzzle | develop: Fork plus Pause, two clocks | The order of clocks: the decoy (10 s) first, the frozen bug (5 s) second, both plates under the bridge; past it a zapped target frees the crate that is the step to the fragment. | Holds (Fork, Pause and Zap). |
+| 20 | `twin_plates` | puzzle | develop: Fork plus Pause, two clocks | The order of clocks: the decoy (10 s) first, the frozen bug (5 s) second, both plates under the bridge; past it a zapped target frees the crate that is the step to the fragment. | Holds (Fork, Pause and Zap); reviewed, kept (D210). |
 | 21 | `guard_loop` | hybrid | develop: Fork as a lure | The step is two crates high: one is pushed through two guards, the other waits on the ledge and drops on it. The decoy pulls the guards off the lane; cast too early and they are back, too late and they block the crate. | Reworked (D207): the plate, bridge and pocket are gone; a 2-high stack (a crate through the guards' lane, a ledge crate dropped on it) is the lock, Fork is a lure and a frozen virus may be the base. |
 | 22 | `split_vault` | hybrid | twist: one decoy, two needs | Two crates are handed through a stream wall (he goes round over a divider) into sockets; the cage opens only while a decoy holds a plate in a fenced pocket, with a virus after him as he runs. | Reworked (D208): crates handed through a stream wall into a vault and spent in sockets; a cage on fragment 15 that a decoy keeps open while he runs. |
 
@@ -204,7 +204,7 @@ OK, and the ladder's rows change only when it does.
 | `ghost_exit` | puzzle, twist: find why the crate, bug and gate are not enforced, then make the chain the lock and Scan the reveal. Hand check first. |
 | `guard_loop` | hybrid: Sokoban under attack. The step is a 2-high stack, so a frozen virus alone is not enough; the decoy stays a lure, not a shortcut. |
 | `split_vault` | hybrid, twist: crates handed through a stream wall while he goes round (D198's "vault"), a cage on fragment 15. |
-| `fork_lab`, `twin_plates` | tidy only: the pocket of gate and fences becomes a `cage`. |
+| `fork_lab`, `twin_plates` | tidy only: the pocket of gate and fences becomes a `cage`. Done for `fork_lab` (D209); `twin_plates` stays, its pocket holds a crate (D210). |
 | `scan_lab`, `junction`, `drift_bay` | no change. `junction` holds from `--from east` (its north spawn is the one-way side); `drift_bay` is judged by play. |
 
 Order of reviews: `ledger_cell` first (it settles item 3), then
