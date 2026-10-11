@@ -9,6 +9,9 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
+- Stray Byte's door in Warden Pit is a gallery push (D213, step 5.11): the ledge
+  under the west door is 4 high; a crate on a 1-high gallery, stepped out of its lane
+  and back in past a gap, is the step for the double jump.
 - Dead Pixel's door in Scan Lab is a timed run (D212, step 5.11): the bridge's
   plate moves to the far corner (5 s), so he sprints to the bridge and double-jumps
   off it to the hidden door; every Outer Buffer door now asks for a trick.
