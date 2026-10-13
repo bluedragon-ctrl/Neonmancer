@@ -15,7 +15,7 @@
     "socket_yard",
     "cage_lab"
   ],
-  "later": ["compile", "blink", "warp"],
+  "later": ["compile", "warp"],
   "fragments": { "required": 64, "access": [16, 32, 48] },
   "connections": [
     ["first_steps.east", "zap_port.west"],

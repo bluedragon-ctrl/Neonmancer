@@ -28,7 +28,8 @@ measured against:
    shortcut once its pickup is found); it never reaches a pickup without
    the trick that guards it. A pickup may need an ability as its gate
    (secrets do). In the Lattice only its own abilities count: Zap,
-   Scan, Fork and Pause. Pull, Compile, Cut & Paste, Blink,
+   Scan, Fork and Pause, and Blink, the Level 1 reward in `dj_vault`
+   (D217), for exits and secrets only. Pull, Compile, Cut & Paste,
    Warp and Firewall belong to later sectors (maybe dropped or kept for
    development) and are left out of Lattice design and checks. The
    Lattice's wings open in any order, so a pickup's trick holds against
@@ -1029,7 +1030,8 @@ The fourth spell (D85), from a data disk in `freeze_hall` (slot 3).
 ## Blink and Warp
 
 Two teleport spells (D86): Blink (slot 4) and Warp (slot 5), from data
-disks; neither is placed in the Lattice (D133).
+disks. Warp is not placed in the Lattice (D133); Blink is its Level 1
+reward, in `dj_vault` (D217).
 
 - Both go the way he aims (the way he last walked), level at his height,
   through open space only: over holes, hazard and void floors, and
@@ -1042,8 +1044,10 @@ disks; neither is placed in the Lattice (D133).
 - Right against a wall (no spot at least `WARP.minDistance`, 0.1, away)
   the cast fizzles (a `fizzle` event): he stays, the energy comes back
   and there is no cooldown.
-- **Blink:** 15 energy, at most 3 units (`range`): over a 2-tile gap,
-  never a 3-tile one. Every enemy it passes through takes 2
+- **Blink:** 15 energy, at most 3 units (`range`): from standing over a
+  2-tile gap, never a 3-tile one; cast near the top of a running jump it
+  keeps the jump's arc and crosses a 4-tile gap along an axis (never 5),
+  even onto a 1-high ledge, and a 2-tile one diagonally (D217). Every enemy it passes through takes 2
   (`hitDamage`), a spell hit (provokes, alarms, D81). Cut short by a
   wall, an object or the room's side, he takes 1 (`damage`) after
   landing, as a hit (invulnerability after it; no ring blocks it).
@@ -1414,7 +1418,8 @@ a need for.
   Upgrades). Found, an upgrade replaces its base spell in the Tab cycle
   (ZAP becomes ZAP+), so the cycle stays short.
 - **Order in the world:** Home Lattice gives Zap, Shield, Pause, Scan,
-  Fork (D133); the rest come in later sectors.
+  Fork (D133) and, as the Level 1 reward in `dj_vault`, Blink (D217);
+  the rest come in later sectors.
 - **Turned down for now:** spells Decrypt (dissolves an encrypted
   wall type), Rollback (back to where he was 3 s ago); upgrades Halt
   (Pause freezing the whole room), Lift (Warp landing on top of what
@@ -1943,7 +1948,8 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
   mutation test with `--with` that set, D186). In the Lattice the sets
   come from its own abilities only; pickups are checked with `--with
   zap,scan,fork,pause` (any route: a wing room may be met with any of
-  them), exits and secrets with the same set (D187, D216); the
+  them), exits and secrets with `--with zap,scan,fork,pause,blink`
+  (Blink is the Level 1 reward, D187, D216, D217); the
   later sectors' spells are not counted.
 - Temporary pickups come back with the room and death resets the wizard
   (D67): a refill a detour away is a choice for the player; place it so

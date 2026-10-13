@@ -353,6 +353,13 @@ export class RoomModel {
           const n = this.sweep(x, y, z, dir, limit, cfg);
           if (n > 0) land(x + dx * n, y, z + dz * n);
         }
+        // Blink from a running jump (D217): cast near the top, he keeps the jump's
+        // arc, so it carries two cells further and a block up (sim: a 4-tile pit,
+        // onto a 1-high ledge beyond it); he lands anywhere along the way.
+        if (abilities.has('blink') && !this.blocked(x, y + 2, z, cfg)) {
+          const n = this.sweep(x, y + 1, z, dir, this.blinkRange + 2, cfg);
+          for (let k = 1; k <= n; k++) land(x + dx * k, y + 1, z + dz * k);
+        }
         // Compile: a crate in the free cell in front; he steps up on it, or walks over the hole it plugs.
         if (abilities.has('compile') && this.grid.isInside(nx, nz) && !this.blockedCrate(nx, y, nz, cfg)) {
           const rest = this.settle(nx, y, nz, cfg);

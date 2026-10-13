@@ -37,9 +37,9 @@ For each room:
    - **Later abilities and pickups**: in Home Lattice only its own
      abilities count, so run the checker and the mutation test with
      `--with zap,scan,fork,pause` for pickups (any route: the wings open
-     in any order) and the same set for exits and secrets (D187; the
-     double jump is gone, D216), not the default; Pull, Compile, Cut & Paste,
-     Blink, Warp and Firewall belong to later sectors and are not
+     in any order) and `--with zap,scan,fork,pause,blink` for exits and
+     secrets (Blink is the Level 1 reward, D187, D217), not the default;
+     Pull, Compile, Cut & Paste, Warp and Firewall belong to later sectors and are not
      findings there. For each
      pickup, every ability set in the mutation test's first lines that
      is not the room's own: rerun
