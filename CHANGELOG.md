@@ -15,6 +15,9 @@ docs/decisions.md).
   round it, have no Lattice way in for now; each is redone in its own PR.
 
 ### Added
+- Dead Pixel's door in Scan Lab is a Blink walk along the back wall (D218, step 5.11):
+  four Blinks from the screen to the disk's block, the two data pillars and the
+  memory stack under the hidden door, then a Scan. No room data changed.
 - Event Horizon's door in Mirror Stacks needs a third piece (D215, step 5.11): the
   fragment pocket's walls are 4 high and the floating blocks are gone, so the only
   step to the door is a crate pushed in through the gate while a crate and a decoy

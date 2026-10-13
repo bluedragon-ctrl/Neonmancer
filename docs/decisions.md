@@ -2290,3 +2290,31 @@ comes off `world.json`'s `later` list.
 **Why:** a reward with no extra height leaves the game's puzzle language,
 height, intact in every later room; Blink is already built (spell, look,
 sound, checker), and its gap reach is small and now modelled.
+
+### D218 — 2026-10-13 — Dead Pixel's door in Scan Lab is a Blink walk (5.11)
+`buffer_1` (Dead Pixel), the first Outer Buffer door redone round Blink (D216,
+D217). With the double jump gone, D212's route (the timed plate, the bridge,
+a double jump to the sill) no longer reaches the door; the checker found one
+with Blink, and it is the trick as it stands: the back wall's pieces are
+stepping stones, crossed high up with both kinds of Blink. No room data
+changed.
+- **Route** (played end to end with `sim.mjs`, about 7 s):
+  1. onto the screen `(0,0,4)`, 1 high; a jump and a Blink along −z onto the
+     disk's corner block (2 high);
+  2. a jump and a Blink east onto `data_pillar_1` (3 high, lands at x 3.33);
+  3. a standing Blink east over the 2-tile gap onto `data_pillar_2`;
+  4. a jump and a Blink east over the pit, 4 tiles, onto `memory_stack_1`
+     under the door (lands at x 10.97);
+  5. a Scan there, and out through north_2.
+- **Energy:** four Blinks (15 each) and a Scan are more than his 50, so he
+  waits on a pillar or the sill for a second or three (5 a second). A crate
+  pushed to the corner block first saves the first cast.
+- The stepping stones are decorations (the screen, both pillars, the memory
+  stack): moving one breaks the route. The author playtests every room.
+- `plate_back` stays in the far corner (D212): it is still the bridge home.
+- Checks: `north_2` is `never` with `zap,scan,fork,pause` and `scan + blink`
+  with Blink; the mutation test with Blink names no single piece (the screen
+  and a crate are two ways onto the corner block).
+**Why:** the author's rule (D212) and their idea of Blink as a key to secrets:
+a chain of exact Blinks, ending in the 4-tile leap only a jump and a Blink
+make, is a trick of its own.
