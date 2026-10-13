@@ -8,6 +8,12 @@ docs/decisions.md).
 
 ## [Unreleased]
 
+### Removed
+- The double jump upgrade (D216): the mid-air jump, its rings, sound, help text and
+  pickup, and the checker's `double_jump` ability. His jump is 1 up and a one-tile
+  gap everywhere. The five Outer Buffer doors and `dj_vault`'s east door, built
+  round it, have no Lattice way in for now; each is redone in its own PR.
+
 ### Added
 - Event Horizon's door in Mirror Stacks needs a third piece (D215, step 5.11): the
   fragment pocket's walls are 4 high and the floating blocks are gone, so the only

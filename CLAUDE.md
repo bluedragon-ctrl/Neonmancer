@@ -83,9 +83,7 @@ mobile/touch support, backend or accounts.
 - Coordinates: y is up; room size is [x, y, z] = [width, height, depth];
   the floor is at y = 0; back walls are the x = 0 and z = 0 planes.
 - 1 block = 1 unit (1x1x1). Player jump height: 1 unit (clears exactly one
-  block, never two). The double jump upgrade (D92, D95) adds a second
-  jump in mid-air (2 blocks up, wider gaps), to skip easier rooms or
-  reach areas closed before (D68).
+  block, never two), everywhere: there is no double jump (removed, D216).
 - Player hitbox 0.6 x 1.5 x 0.6 (the hat is visual only), so the wizard
   needs 2 blocks of headroom.
 - Blocks snap to the grid; player and enemies move freely (sub-grid).
@@ -253,7 +251,7 @@ Added in Phase 4 (the roster, D88):
 - **Pull** — pulls the first crate or enemy in line (6 cells) one tile
   towards the wizard, an enemy even into a hole (D89, D124; built)
 
-Upgrades (Zap+, Shield+, the double jump, D95) have their own save
+Upgrades (Zap+, Shield+, D95) have their own save
 bits; a spell upgrade replaces its base spell in the Tab cycle (ZAP
 becomes ZAP+). Up to 16 spells and 16 upgrades; the spare ones wait for
 what content production needs (D88). Buff items make the wizard himself
@@ -269,7 +267,7 @@ the wizard pass through easier rooms without their puzzles, but never
 reach a pickup without the trick that guards it (D186; in the Lattice
 only its own abilities count, not the later sectors' spells, and a
 pickup's trick holds against every Lattice spell, since the wings open
-in any order; the double jump comes after all its fragments, D187).
+in any order, D187).
 The world is a
 maze, not a line: a room need not be fully solvable on first arrival,
 and some exits and pickups wait for a spell or buff found later
@@ -504,7 +502,7 @@ not critical.
   game's models, variants in colors of their own, rename (rooms follow),
   delete. Dev server only; the room editor only picks templates.
 - **Reachability checker** (`tools/check-reach.js`, `npm run check:reach`,
-  D131): searches every room's grid with jump height, the double jump,
+  D131): searches every room's grid with jump height,
   crates (pushed, pulled, pasted), frozen enemies (pushed, D166) and the
   spells found so far, and the
   world as a fixpoint, flagging exits, pickups and rooms that stay out of

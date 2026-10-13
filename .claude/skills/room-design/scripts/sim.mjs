@@ -23,7 +23,7 @@ const ROOT = fileURLToPath(new URL('../../../../', import.meta.url));
  * A game in room `id`, the wizard at its spawn point (or `at`).
  * @param {string} id room id
  * @param {object} [options]
- * @param {string[]} [options.abilities] spell ids (defs.json spells) and/or 'double_jump'
+ * @param {string[]} [options.abilities] spell ids (defs.json spells)
  * @param {number[]} [options.at] feet-center point to place him at instead of the spawn
  */
 export function startRoom(id, { abilities = [], at } = {}) {

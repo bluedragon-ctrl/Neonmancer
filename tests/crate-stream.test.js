@@ -165,14 +165,13 @@ function reach(props, abilities = []) {
 const across = (x, height, type) => ({ type, at: [x, 0, 0], to: [x, height - 1, 7] });
 const far = { id: 'far', type: 'refill_energy', at: [10, 0, 2] };
 
-test('stream: the checker never lets him over it, with the double jump or from a crate', () => {
+test('stream: the checker never lets him over it, from a crate or with spells', () => {
   const room = (type, abilities, objects = []) => reach({ blocks: [across(6, 2, type)], pickups: [far], objects }, abilities).pickups.has('far');
   const crate = [{ id: 'c', type: 'crate', at: [5, 0, 2] }];
-  assert.equal(room('block', ['double_jump']), true, 'the double jump clears a plain 2-high wall');
   assert.equal(room('block', [], crate), true, 'a crate is a step up it');
-  assert.equal(room('stream', ['double_jump']), false);
-  assert.equal(room('stream', ['double_jump'], crate), false);
-  assert.equal(room('stream', ['double_jump', 'compile', 'warp', 'blink'], crate), false, 'nor with spells');
+  assert.equal(room('stream', []), false);
+  assert.equal(room('stream', [], crate), false);
+  assert.equal(room('stream', ['compile', 'warp', 'blink'], crate), false, 'nor with spells');
   const one = reach({ blocks: [{ ...across(6, 1, 'stream') }], pickups: [far] }).pickups.has('far');
   assert.equal(one, false, 'a 1-high one too: its field reaches the ceiling');
 });

@@ -40,17 +40,14 @@ test('open floor: every pickup and the exit within reach', () => {
   assert.equal(r.exits.west, true);
 });
 
-test('a pickup high in the air needs a jump, two jumps if higher', () => {
+test('a pickup high in the air needs a jump; higher is out of reach', () => {
   assert.equal(reached(reach({ pickups: [pickup('far', [3, 2, 3])] })), true);
   assert.equal(reached(reach({ pickups: [pickup('far', [3, 3, 3])] })), false);
-  assert.equal(reached(reach({ pickups: [pickup('far', [3, 3, 3])] }, ['double_jump'])), true);
 });
 
-test('one block is a step, two a wall for the double jump', () => {
+test('one block is a step, two a wall', () => {
   assert.equal(reached(reach({ blocks: [wall(4, 1)], pickups: [far] })), true);
   assert.equal(reached(reach({ blocks: [wall(4, 2)], pickups: [far] })), false);
-  assert.equal(reached(reach({ blocks: [wall(4, 2)], pickups: [far] }, ['double_jump'])), true);
-  assert.equal(reached(reach({ blocks: [wall(4, 3)], pickups: [far] }, ['double_jump'])), false);
 });
 
 test('Pause: a frozen enemy on its path is a step up a 2-high wall', () => {
@@ -103,13 +100,11 @@ test('Pause: a frozen enemy pushed across the floor is a step up a far ledge (D1
   assert.equal(room(['pause'], [{ at: [0, 5], to: [11, 5] }]), false); // he jumps the hole, a pushed enemy pops in it
 });
 
-test('pits: one tile is jumped, two need the double jump or Blink, more Warp or Compile', () => {
+test('pits: one tile is jumped, two need Blink, more Warp or Compile', () => {
   const room = (width, abilities) => reached(reach({ holes: [pit(width)], pickups: [far] }, abilities));
   assert.equal(room(1), true);
   assert.equal(room(2), false);
-  assert.equal(room(2, ['double_jump']), true);
   assert.equal(room(2, ['blink']), true); // 3 cells ahead
-  assert.equal(room(3, ['double_jump']), false);
   assert.equal(room(3, ['blink']), false);
   assert.equal(room(3, ['warp']), true);
   assert.equal(room(5, ['compile']), true); // plug a cell, step on, again
@@ -209,30 +204,30 @@ function row(rooms, extra) {
 
 test('world: what one room gives opens the next, and the order is in rounds', () => {
   const content = row([
-    roomFile('a', { exits: [EAST], pickups: [pickup('jump', [3, 0, 1], 'upgrade_double_jump')] }),
-    roomFile('b', { exits: [WEST, EAST], blocks: [{ at: [4, 0, 0], to: [4, 1, 7] }] }),
+    roomFile('a', { exits: [EAST], pickups: [pickup('blink', [3, 0, 1], 'disk_blink')] }),
+    roomFile('b', { exits: [WEST, EAST], holes: [{ at: [3, 0], to: [4, 7] }] }),
     roomFile('c', { exits: [WEST], pickups: [pickup('z', [3, 0, 3])] }),
   ]);
   const report = analyzeWorld(content);
   assert.deepEqual(report.errors, []);
   assert.deepEqual(report.rounds.map((r) => r.rooms), [['a'], ['b'], ['c']]);
-  assert.deepEqual(report.abilities, ['double_jump']);
+  assert.deepEqual(report.abilities, ['blink']);
   const needs = Object.fromEntries(report.targets.map((t) => [`${t.room}.${t.id}`, describeNeeds(t.needs)]));
-  assert.equal(needs['b.east'], 'double_jump');
+  assert.equal(needs['b.east'], 'blink');
   assert.equal(needs['a.east'], 'free');
-  assert.match(formatReach(report, { rooms: true }), /b exit east: double_jump/);
+  assert.match(formatReach(report, { rooms: true }), /b exit east: blink/);
 });
 
 test('world: needs for one room only match the full report and skip the other rooms', () => {
   const content = row([
-    roomFile('a', { exits: [EAST], pickups: [pickup('jump', [3, 0, 1], 'upgrade_double_jump')] }),
-    roomFile('b', { exits: [WEST, EAST], blocks: [{ at: [4, 0, 0], to: [4, 1, 7] }] }),
+    roomFile('a', { exits: [EAST], pickups: [pickup('blink', [3, 0, 1], 'disk_blink')] }),
+    roomFile('b', { exits: [WEST, EAST], holes: [{ at: [3, 0], to: [4, 7] }] }),
     roomFile('c', { exits: [WEST], blocks: [{ at: [4, 0, 0], to: [4, 1, 7] }], pickups: [pickup('z', [3, 0, 3])] }),
   ]);
   const needs = (report, room) => Object.fromEntries(report.targets.filter((t) => t.room === room).map((t) => [t.id, describeNeeds(t.needs)]));
   const all = analyzeWorld(content);
   const one = analyzeWorld(content, { needs: 'b' });
-  assert.equal(needs(one, 'b').east, 'double_jump');
+  assert.equal(needs(one, 'b').east, 'blink');
   assert.deepEqual(needs(one, 'b'), needs(all, 'b'));
   assert.deepEqual(one.errors, all.errors);
   // Another room keeps the plain "reachable" it was found with, its sets not worked out.
@@ -331,11 +326,11 @@ test('describeNeeds', () => {
   assert.equal(describeNeeds([['warp'], ['blink', 'pull']]), 'warp or blink + pull');
 });
 
-/** a (with the double jump) → b (a two-high wall before its east exit). */
+/** a (with Blink) → b (a two-tile pit before its east exit). */
 function wallWorld() {
   return row([
-    roomFile('a', { exits: [EAST], pickups: [pickup('jump', [3, 0, 1], 'upgrade_double_jump')] }),
-    roomFile('b', { exits: [WEST, EAST], blocks: [{ at: [4, 0, 0], to: [4, 1, 7] }] }),
+    roomFile('a', { exits: [EAST], pickups: [pickup('blink', [3, 0, 1], 'disk_blink')] }),
+    roomFile('b', { exits: [WEST, EAST], holes: [{ at: [3, 0], to: [4, 7] }] }),
     roomFile('c', { exits: [WEST] }),
   ]);
 }
@@ -344,16 +339,16 @@ test('one room of the world report: its targets, round and messages', () => {
   const part = roomOfReport(analyzeWorld(wallWorld()), 'b');
   assert.equal(part.round, 2);
   assert.deepEqual(part.errors, []);
-  assert.equal(describeNeeds(part.targets.find((t) => t.id === 'east').needs), 'double_jump');
-  assert.match(formatRoom('b', part), /^b: first entered in round 2[^]*exit east: double_jump[^]*b: everything in it is reachable\.$/);
+  assert.equal(describeNeeds(part.targets.find((t) => t.id === 'east').needs), 'blink');
+  assert.match(formatRoom('b', part), /^b: first entered in round 2[^]*exit east: blink[^]*b: everything in it is reachable\.$/);
 });
 
 test('one room on its own: with the abilities given, from the spawn or an exit', () => {
   const content = wallWorld();
   const east = (options) => analyzeRoomAlone(content, 'b', options).targets.find((t) => t.id === 'east');
-  // from the spawn point at x 1 the east exit is behind the wall
+  // from the spawn point at x 1 the east exit is beyond the pit
   assert.equal(east({ abilities: [] }).needs, null);
-  assert.equal(describeNeeds(east({ abilities: ['double_jump'] }).needs), 'double_jump');
+  assert.equal(describeNeeds(east({ abilities: ['blink'] }).needs), 'blink');
   assert.equal(describeNeeds(east({ abilities: [], from: 'east' }).needs), 'free');
   assert.equal(analyzeRoomAlone(content, 'b').errors.length, 1);
   assert.throws(() => analyzeRoomAlone(content, 'b', { from: 'nope' }), /no exit "nope"/);

@@ -1,6 +1,5 @@
 /**
- * The wizard: movement along the grid axes, jump (a double jump with its
- * upgrade, D95), gravity, pushing, integrity (health), backups,
+ * The wizard: movement along the grid axes, jump, gravity, pushing, integrity (health), backups,
  * invulnerability after a hit, energy (mana) for spells, installing a
  * pickup, the Shield and Firewall rings, Blink and Warp (D86), the
  * Cut & Paste clipboard (D87), death (in a hole, on a void block, or with
@@ -41,11 +40,6 @@ export const PLAYER = {
   pushDelay: 8,
   /** A jump pressed this many ticks before landing still happens on landing. */
   jumpBufferTicks: 6,
-  /**
-   * Ticks the kick-off effect of a double jump lasts (D95, render/jump-fx.js).
-   * The air jump itself is as strong as a jump from the ground.
-   */
-  airJumpTicks: 18,
   /** Share of the remaining turn done each tick. */
   turnRate: 0.35,
   /** Ticks between dying and respawning. */
@@ -148,8 +142,6 @@ export class Player {
     this.spell = null;
     /** Upgrades found (D95), by what they do → their pickup type; the Game sets them (Game.applyUpgrades()). */
     this.upgrades = new Map();
-    /** Jumps he has in mid-air: 1 with the double jump upgrade (D95); the Game sets it. */
-    this.airJumps = 0;
     /**
      * A spell or buff being installed, for its animation (D73, D93), or
      * null: { item, at, tick }; item is the pickup type id (a data disk or a
@@ -312,8 +304,6 @@ export class Player {
     this.grounded = false;
     this.coyote = 0;
     this.jumpBuffer = 0;
-    // A new time in the air: the double jump is there again.
-    this.airJumpsLeft = this.airJumps;
   }
 
   /**
@@ -407,11 +397,6 @@ export class Player {
     this.deathTimer = 0;
     this.coyote = 0;
     this.jumpBuffer = 0;
-    /** Air jumps left before he lands again (D95). */
-    this.airJumpsLeft = this.airJumps;
-    /** Ticks since his last air jump (for its effect), or null; where he kicked off (feet center). */
-    this.airJumpTicks = null;
-    this.airJumpFrom = null;
     /** Object being walked into, and for how many ticks. */
     this.pushTarget = null;
     this.pushTicks = 0;
@@ -444,7 +429,7 @@ export class Player {
    * @param {Iterable<{ box(): number[][] }>} [options.bodies] pushable objects
    * @param {boolean} [options.invincible] debug mode: holes and void blocks never kill
    * @param {'grid'|'screen'} [options.movementMode] which key → direction mapping to use (D38)
-   * @returns {string|null} event: 'jump', 'airjump', 'land', 'die', 'respawn' or null
+   * @returns {string|null} event: 'jump', 'land', 'die', 'respawn' or null
    */
   update(input, grid, { bodies = [], invincible = false, movementMode = 'grid' } = {}) {
     this.savePrevious();
@@ -481,7 +466,6 @@ export class Player {
     if (this.compile && ++this.compile.tick > PLAYER.compileTicks) this.compile = null;
     if (this.scan && ++this.scan.tick > PLAYER.scanTicks) this.scan = null;
     if (this.fork && ++this.fork.tick > PLAYER.forkTicks) this.fork = null;
-    if (this.airJumpTicks !== null && ++this.airJumpTicks > PLAYER.airJumpTicks) this.airJumpTicks = null;
 
     // Walk along the grid axes, or screen-relative (D38); diagonals are normalised.
     const directions = movementMode === 'screen' ? SCREEN_DIRECTIONS : GRID_DIRECTIONS;
@@ -510,11 +494,7 @@ export class Player {
     this.facing += turn * PLAYER.turnRate;
 
     // Jump, with a little forgiveness on both sides of the ground contact.
-    // With the double jump (D95), a jump pressed in mid-air (after a jump,
-    // walking off a ledge or a bounce) kicks off again, as strong as from
-    // the ground, once until he lands.
     this.coyote = this.grounded ? PLAYER.coyoteTicks : Math.max(0, this.coyote - 1);
-    if (this.grounded) this.airJumpsLeft = this.airJumps;
     this.jumpBuffer = input.pressed('jump') ? PLAYER.jumpBufferTicks : Math.max(0, this.jumpBuffer - 1);
     if (this.jumpBuffer > 0 && this.coyote > 0) {
       this.vy = JUMP_SPEED;
@@ -522,13 +502,6 @@ export class Player {
       this.coyote = 0;
       this.grounded = false;
       event = 'jump';
-    } else if (input.pressed('jump') && !this.grounded && this.airJumpsLeft > 0) {
-      this.vy = JUMP_SPEED;
-      this.jumpBuffer = 0;
-      this.airJumpsLeft--;
-      this.airJumpTicks = 0;
-      this.airJumpFrom = [...this.pos];
-      event = 'airjump';
     }
 
     // Gravity. Integrate the move first so a jump peaks at jumpHeight.

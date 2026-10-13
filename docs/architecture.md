@@ -136,7 +136,6 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/holo.js` | Hologram look for characters: rim-glow material, inverted-hull outline, eyes, shared clock; sharp parts with hard edges (`sharpPart()`) |
 | `render/install-fx.js`, `render/install-view.js` | Installing a spell from a data disk (D73): the look (pure, tested) and its meshes, shown by `PlayerView` |
 | `render/interp.js` | Tick interpolation (positions, angles) and drop-shadow sizing (pure, tested) |
-| `render/jump-fx.js`, `render/jump-view.js` | The double jump's kick-off (D95): hexagonal rings in his magenta where he jumped in mid-air, the look (pure, tested) and its meshes, shown by `PlayerView` |
 | `render/marks.js` | Face-mark line patterns for object styles, including the data bits, whole (`bits`) or with holes for destructible objects (`bitsBroken`, `bitLayout()`); pure, tested |
 | `render/mist.js` | Void blocks as black mist (D99): opaque black cubes with sinking gray wisps, a patchy fog shell and a dim frame, `MIST` tuning |
 | `render/neon.js` | Palette, line and face materials; line widths scaled by render height; `neonLines()`, `fadingLines()`, `shadedFaces()` builders; `disposeTree()` |

@@ -121,7 +121,6 @@ export const PICKUPS = {
   buff_recharge: { kind: 'buff', slot: 9, stat: 'recharge', amount: 4 },
   upgrade_zap_plus: { kind: 'upgrade', upgrade: 'zap_plus', slot: 0, spell: 'zap', color: '#00f0ff', bounces: 3 },
   upgrade_shield_plus: { kind: 'upgrade', upgrade: 'shield_plus', slot: 1, spell: 'shield', color: '#cfe8ff' },
-  upgrade_double_jump: { kind: 'upgrade', upgrade: 'double_jump', slot: 2, color: '#ff2bd6' },
   secret_0: { kind: 'secret', slot: 0 },
   secret_1: { kind: 'secret', slot: 1 },
   fragment_0: { kind: 'fragment', slot: 0 },

@@ -29,9 +29,8 @@ Rules for the lines (D186, D187):
   Gatekeeper's doors never lock), so a wing room may be met with any of
   Zap, Shield, Pause, Scan and Fork. Every pickup's trick holds against
   all of them; the trick may use them.
-- **Not the double jump.** It comes only once all 16 fragments are
-  found, so it never skips a Lattice fragment or disk. It matters for
-  exits and secrets only.
+- **No double jump.** It was removed (D216): his jump is 1 up and a
+  one-tile gap everywhere.
 - **Plates are no lock on their own.** A decoy holds any one plate, a
   frozen enemy any plate on or beside its lane. A trick that rests on a
   plate needs what they can't give: two plates at once, weight that must
@@ -51,7 +50,7 @@ Rules for the lines (D186, D187):
 
 | # | Room | Type | Rung | Trick to aim for | Now |
 |---|---|---|---|---|---|
-| 5 | `atrium` | puzzle | teach: a crate as a step, a crate dropped off a ledge, a plate, a bridge | The crate he climbs on is not the one for the plate: it lifts him to a ledge, and from there he pushes a second crate off onto the plate, which raises a bridge to the Rainbow hat (a boost). The doors stay free. | Reworked (D188): every piece matters; a decoy or the double jump skips it for the boost only. |
+| 5 | `atrium` | puzzle | teach: a crate as a step, a crate dropped off a ledge, a plate, a bridge | The crate he climbs on is not the one for the plate: it lifts him to a ledge, and from there he pushes a second crate off onto the plate, which raises a bridge to the Rainbow hat (a boost). The doors stay free. | Reworked (D188): every piece matters; a decoy skips it for the boost only. |
 | 6 | `shield_hall` | action | teach: Shield | The disk is easy to reach behind cover; the way on is not: the north door sits on a 3-high ledge, and the only lift up runs while two crates hold two plates. Pushing and riding are slow, and an arc hits what stands still, so the two sentinels bite there: he shields, dodges or fights. | Reworked (D190): the plates and the lift are judged by play (the checker runs every platform). |
 | 7 | `freeze_hall` | puzzle | teach: Pause, a frozen enemy as a block | The bug walks a caged lane with one gap across it: freeze it as it passes the gap in front of him, push it out across the hall to the ledge's foot and climb it, inside a 15 s watchdog. | Reworked (D191, D192): freezing it elsewhere in the cage costs time the watchdog barely gives. |
 
@@ -96,7 +95,7 @@ Rules for the lines (D186, D187):
 |---|---|---|---|---|---|
 | 23 | `gatekeeper` | boss | the Gatekeeper | Lure it onto the overload plates, recharge behind cover; as hard as it should be. Drops the energy buff. | Boss. |
 | 24 | `core_hall` | goal | the core, the Level 1 locks | No puzzle: the core is the beat. | Outside the mix. |
-| 25 | `dj_vault` | reward | teach: the double jump | The reward's first use: the way on is a 2-high door. | Outside the mix. |
+| 25 | `dj_vault` | reward | none yet (its double jump is gone, D216) | To redo: no pickup now, and its 2-high east door to Frostbyte has no Lattice way up. | Outside the mix. |
 
 The teasers (`frost_gate`, `frost_edge`, `glitch_gate`, `glitch_edge`)
 stay look-only and outside the ladder (D186).
@@ -104,25 +103,20 @@ stay look-only and outside the ladder (D186).
 ### Revisits
 
 - `mirror_stacks`: fragment 0 needs Fork, from the Fork wing.
-- Double jump, after Level 1: `warden_pit` west (a crate pushed along the
-  gallery to the 4-high ledge, D213) to `buffer_2`;
-  `scan_lab` north (with Scan; a 5 s run from the far plate to the bridge,
-  then a double jump off it, D212) to `buffer_1`; `mirror_stacks` east (with
-  Zap; a crate pushed into the fragment pocket while a crate and a decoy hold
-  both plates, then a double jump off it, D215) to `buffer_4`; `guard_loop` east (with Scan; a 5.5 s run from a far
-  timed target to a one-block bridge, then a double jump to the 4-high sill, D214)
-  to `buffer_3`.
-  `ghost_exit` east to `buffer_5` waits for a later sector's spell.
-  Each Outer Buffer door gets a trick of its own, never open on the first
-  arrival (D212); reviewed one a PR, `buffer_1` to `buffer_4` done.
+- Outer Buffer doors (D212): each gets a trick of its own, never open on the
+  first arrival. They were built round the double jump (D212–D215); with it
+  gone (D216) none of the five has a Lattice way in, so each is redone in its
+  own PR: `scan_lab` north_2 (`buffer_1`), `warden_pit` west (`buffer_2`),
+  `guard_loop` east (`buffer_3`), `mirror_stacks` east_2 (`buffer_4`),
+  `ghost_exit` east (`buffer_5`).
 - Shortcuts: `junction`'s fence gate home, and the Gatekeeper once beaten.
 
 ### Mix and gaps
 
 In the mix, 21 rooms: 12 puzzle (57 %), 5 hybrid (24 %), 4 action (19 %),
 near the 60/25/15 aim; action runs high because the tutorial teaches
-movement. Outside the mix: two bosses, the core hall and the double-jump
-vault. Every mechanic is taught before a hybrid uses it; timed plates
+movement. Outside the mix: two bosses, the core hall and the
+`dj_vault`. Every mechanic is taught before a hybrid uses it; timed plates
 first appear as ways home (`relay_loft`, `scan_lab`) before `junction`
 makes one the puzzle.
 
@@ -224,7 +218,8 @@ Order of reviews: `ledger_cell` first (it settles item 3), then
   and the central core behind the second boss.
 - Spells of the Lattice: Zap, Shield, Pause, Scan, Fork. Pull, Compile,
   Blink, Warp, Cut & Paste and Firewall wait for later sectors.
-- The double jump is the reward for access Level 1 (16 fragments).
+- Level 1 (16 fragments) opens the core's locks; its reward in `dj_vault`
+  was the double jump, removed (D216), a new one to come.
 - 16 fragments in normal rooms, all reachable without Level 1; two secret
   rooms carry an extra one each (18 in the Lattice). Boss 1 drops a
   fragment, boss 2 the +10 energy buff.
@@ -235,7 +230,7 @@ Order of reviews: `ledger_cell` first (it settles item 3), then
 ## Shape
 
 ```
-              [Vault]  double jump, Level 1 lock
+              [Vault]  reward to come (D216), Level 1 lock
  Frostbyte~ [  CORE  ] ~Glitchmire      Level 1 locks
               [Gatekeeper]   boss 2 (drops an energy buff)
    [Scan wing]     |     [Fork wing]    both end at the Gatekeeper
@@ -264,7 +259,7 @@ the Gatekeeper joins the two wings as a shortcut.
 | Scan wing (D168, D170) | `scan_lab` (Scan), `mirror_stacks`, `ghost_exit`, `junction`, `drift_bay` |
 | Fork wing (D171, D173) | `fork_lab` (Fork), `twin_plates`, `guard_loop`, `split_vault` |
 | Boss 2 (D174) | `gatekeeper` (the Gatekeeper; doors north to `drift_bay`, south to `split_vault`, east to `core_hall`) |
-| Core (D177) | `core_hall` (the core; Level 1 locks north and east), `dj_vault` (the double jump; its ledge door leads on to Frostbyte) |
+| Core (D177) | `core_hall` (the core; Level 1 locks north and east), `dj_vault` (its reward, the double jump, is gone, D216; its ledge door leads on to Frostbyte) |
 | Teasers (D177) | Frostbyte: `frost_gate`, `frost_edge`; Glitchmire: `glitch_gate`, `glitch_edge` (look only) |
 
 Fragments 0–15 are all placed.
@@ -276,7 +271,7 @@ Waits for the core (D186): the secret rooms' contents.
 | Room | Size | What it is |
 |---|---|---|
 | `buffer_1` Dead Pixel (5.11) | 8x8 | Secret, a Scan hidden exit in `scan_lab`; entrance built (D183), contents to come |
-| `buffer_2` Stray Byte (5.11) | 8x8 | Secret, a crate pushed along a gallery and a double jump up to a 4-high ledge in `warden_pit` (D213); entrance built, an extra fragment to come |
-| `buffer_3` Null Orbit (5.11) | 8x8 | Secret, a timed target, a sprint over the crate lane and a double jump off a bridge to a 4-high sill in `guard_loop` (D214); entrance built, an extra fragment to come |
-| `buffer_4` Event Horizon (5.11) | 8x8 | Secret, a third piece in `mirror_stacks`: a crate pushed through the fragment pocket's gate while a crate and a decoy hold its plates, a double jump off it (D215); entrance built |
+| `buffer_2` Stray Byte (5.11) | 8x8 | Secret, in `warden_pit` behind a 4-high ledge (D213), no Lattice way in since D216, to redo; entrance built, an extra fragment to come |
+| `buffer_3` Null Orbit (5.11) | 8x8 | Secret, in `guard_loop` on a 4-high sill (D214), no Lattice way in since D216, to redo; entrance built, an extra fragment to come |
+| `buffer_4` Event Horizon (5.11) | 8x8 | Secret, in `mirror_stacks` above the 4-high fragment pocket (D215), no Lattice way in since D216, to redo; entrance built |
 | `buffer_5` Cache Miss (5.11) | 8x8 | Secret, Warp plus Compile or Fork onto a plate in `ghost_exit`; entrance built |

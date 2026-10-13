@@ -705,7 +705,7 @@ test('objectTypeText: what an object or pickup type does, for the Object tool\'s
   assert.equal(objectTypeText({ kind: 'platform' }), 'rides its path');
   assert.equal(objectTypeText({ kind: 'platform', damage: 1 }), 'spiked, hurts 1');
   assert.equal(objectTypeText({ kind: 'disk', spell: 'zap' }), 'spell zap');
-  assert.equal(objectTypeText({ kind: 'upgrade', upgrade: 'double_jump', slot: 2 }), 'upgrade');
+  assert.equal(objectTypeText({ kind: 'upgrade', upgrade: 'shield_plus', slot: 1 }), 'upgrade');
   assert.equal(objectTypeText({ kind: 'upgrade', upgrade: 'zap_plus', slot: 0, spell: 'zap' }), 'upgrade of zap');
   assert.equal(objectTypeText({ kind: 'buff', slot: 4, stat: 'energy', amount: 10 }), '+10 energy');
   assert.equal(objectTypeText({ kind: 'buff', slot: 9, stat: 'recharge', amount: 4 }), 'faster recharge');

@@ -127,14 +127,6 @@
         "SENTINELS FIRE AT THEIR OWN RISK."
       ]
     },
-    "help_double_jump": {
-      "title": "DRIVER DOUBLE_JUMP.SYS",
-      "lines": [
-        "JUMP IN MID-AIR: SECOND IMPULSE GRANTED.",
-        "REACH: 2 BLOCKS UP, WIDER GAPS.",
-        "NOTE: PRIOR SECTORS MAY NOW HAVE NEW PATHS."
-      ]
-    },
     "help_watchdog": {
       "title": "WATCHDOG.SYS // TIMER",
       "lines": [

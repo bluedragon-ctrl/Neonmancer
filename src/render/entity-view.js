@@ -61,7 +61,6 @@ import { warpFlash } from './warp-fx.js';
 import { createWarpTrail, dashPose, placeWarpTrail } from './warp-view.js';
 import { ClipView } from './clip-view.js';
 import { PullView } from './pull-view.js';
-import { createJumpRings, placeJumpRings } from './jump-view.js';
 import { arrivalLook, gatherPixels } from './boot-fx.js';
 
 /**
@@ -172,9 +171,7 @@ export class PlayerView {
     this.shadow = createDropShadow(PALETTE.magenta);
     this.pixels = createDerez(HIT_FX.body, [PALETTE.cyan, PALETTE.magenta]);
     this.flare = createCastFlare();
-    /** The double jump's kick-off rings (D95). */
-    this.jumpRings = createJumpRings();
-    this.group.add(this.wizard, this.shadow, this.pixels, this.flare, this.jumpRings);
+    this.group.add(this.wizard, this.shadow, this.pixels, this.flare);
     /** The boosts' looks (D152): the sparkle trail, and the patch's ring (a gold Shield look) made when first taken. */
     this.sparkle = new SparkleTrail();
     this.patchRing = null;
@@ -279,7 +276,6 @@ export class PlayerView {
     const { install, shield } = player;
     for (const [item, view] of this.installs) view.visible = install?.item === item;
     if (install) placeInstall(this.installView(install.item), this.wizard, pos, install.tick + alpha, install.at.map((v, i) => v - pos[i]));
-    placeJumpRings(this.jumpRings, player.airJumpFrom, player.airJumpTicks === null ? null : player.airJumpTicks + alpha);
     const ring = shield?.reflects ? 'shield_plus' : shield?.spell;
     for (const [spell, view] of this.rings) view.visible = ring === spell;
     if (shield) {
