@@ -232,7 +232,8 @@ bit on its disk (D71).
   are harmless solid platforms, still hittable (D85), and can be pushed
 - **Blink** — a super-speed dash up to 3 units forward through open
   space, over gaps and hazards; it hits enemies it passes through, and
-  hurts the wizard if a wall cuts it short (D86)
+  hurts the wizard if a wall cuts it short (D86); the Lattice's
+  Level 1 reward, in `dj_vault` (D217)
 - **Warp** — a teleport forward as far as the first wall or object, over
   gaps of any width; safe, a later and stronger spell (D86)
 - **Cut & Paste** — cut a crate or a frozen enemy in front of the wizard
@@ -267,7 +268,8 @@ the wizard pass through easier rooms without their puzzles, but never
 reach a pickup without the trick that guards it (D186; in the Lattice
 only its own abilities count, not the later sectors' spells, and a
 pickup's trick holds against every Lattice spell, since the wings open
-in any order, D187).
+in any order, D187; Blink, the Level 1 reward, counts for exits and
+secrets only, D217).
 The world is a
 maze, not a line: a room need not be fully solvable on first arrival,
 and some exits and pickups wait for a spell or buff found later

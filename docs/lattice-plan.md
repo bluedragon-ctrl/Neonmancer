@@ -31,6 +31,8 @@ Rules for the lines (D186, D187):
   all of them; the trick may use them.
 - **No double jump.** It was removed (D216): his jump is 1 up and a
   one-tile gap everywhere.
+- **Blink after Level 1.** The Level 1 reward in `dj_vault` (D217), so it
+  never skips a Lattice fragment; it counts for exits and secrets only.
 - **Plates are no lock on their own.** A decoy holds any one plate, a
   frozen enemy any plate on or beside its lane. A trick that rests on a
   plate needs what they can't give: two plates at once, weight that must
@@ -95,7 +97,7 @@ Rules for the lines (D186, D187):
 |---|---|---|---|---|---|
 | 23 | `gatekeeper` | boss | the Gatekeeper | Lure it onto the overload plates, recharge behind cover; as hard as it should be. Drops the energy buff. | Boss. |
 | 24 | `core_hall` | goal | the core, the Level 1 locks | No puzzle: the core is the beat. | Outside the mix. |
-| 25 | `dj_vault` | reward | none yet (its double jump is gone, D216) | To redo: no pickup now, and its 2-high east door to Frostbyte has no Lattice way up. | Outside the mix. |
+| 25 | `dj_vault` | reward | teach: Blink | The reward's first use: a 2-tile pit, the room's full depth, between the disk and the east door; a jump crosses one tile, never two. | Reworked (D217). Outside the mix. |
 
 The teasers (`frost_gate`, `frost_edge`, `glitch_gate`, `glitch_edge`)
 stay look-only and outside the ladder (D186).
@@ -105,8 +107,9 @@ stay look-only and outside the ladder (D186).
 - `mirror_stacks`: fragment 0 needs Fork, from the Fork wing.
 - Outer Buffer doors (D212): each gets a trick of its own, never open on the
   first arrival. They were built round the double jump (D212–D215); with it
-  gone (D216) none of the five has a Lattice way in, so each is redone in its
-  own PR: `scan_lab` north_2 (`buffer_1`), `warden_pit` west (`buffer_2`),
+  gone (D216) each is redone in its own PR, round Blink (D217; the checker
+  already finds `scan_lab` north_2 and `guard_loop` east with `scan + blink`,
+  not yet played; the other three are `never`): `scan_lab` north_2 (`buffer_1`), `warden_pit` west (`buffer_2`),
   `guard_loop` east (`buffer_3`), `mirror_stacks` east_2 (`buffer_4`),
   `ghost_exit` east (`buffer_5`).
 - Shortcuts: `junction`'s fence gate home, and the Gatekeeper once beaten.
@@ -216,10 +219,11 @@ Order of reviews: `ledger_cell` first (it settles item 3), then
 
 - A web, not a line: a tutorial, an Atrium hub, four wings that cross-link,
   and the central core behind the second boss.
-- Spells of the Lattice: Zap, Shield, Pause, Scan, Fork. Pull, Compile,
-  Blink, Warp, Cut & Paste and Firewall wait for later sectors.
+- Spells of the Lattice: Zap, Shield, Pause, Scan, Fork, and Blink as
+  the Level 1 reward (D217). Pull, Compile, Warp, Cut & Paste and
+  Firewall wait for later sectors.
 - Level 1 (16 fragments) opens the core's locks; its reward in `dj_vault`
-  was the double jump, removed (D216), a new one to come.
+  is Blink (D217; the double jump before it, removed, D216).
 - 16 fragments in normal rooms, all reachable without Level 1; two secret
   rooms carry an extra one each (18 in the Lattice). Boss 1 drops a
   fragment, boss 2 the +10 energy buff.
@@ -230,7 +234,7 @@ Order of reviews: `ledger_cell` first (it settles item 3), then
 ## Shape
 
 ```
-              [Vault]  reward to come (D216), Level 1 lock
+              [Vault]  Blink, Level 1 lock
  Frostbyte~ [  CORE  ] ~Glitchmire      Level 1 locks
               [Gatekeeper]   boss 2 (drops an energy buff)
    [Scan wing]     |     [Fork wing]    both end at the Gatekeeper
@@ -259,7 +263,7 @@ the Gatekeeper joins the two wings as a shortcut.
 | Scan wing (D168, D170) | `scan_lab` (Scan), `mirror_stacks`, `ghost_exit`, `junction`, `drift_bay` |
 | Fork wing (D171, D173) | `fork_lab` (Fork), `twin_plates`, `guard_loop`, `split_vault` |
 | Boss 2 (D174) | `gatekeeper` (the Gatekeeper; doors north to `drift_bay`, south to `split_vault`, east to `core_hall`) |
-| Core (D177) | `core_hall` (the core; Level 1 locks north and east), `dj_vault` (its reward, the double jump, is gone, D216; its ledge door leads on to Frostbyte) |
+| Core (D177) | `core_hall` (the core; Level 1 locks north and east), `dj_vault` (Blink, D217; its door over a pit leads on to Frostbyte) |
 | Teasers (D177) | Frostbyte: `frost_gate`, `frost_edge`; Glitchmire: `glitch_gate`, `glitch_edge` (look only) |
 
 Fragments 0–15 are all placed.

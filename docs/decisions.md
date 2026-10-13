@@ -2250,3 +2250,43 @@ left free; an old key with it set still loads (the bit names no item).
   stays as decor).
 - Replaces the double jump parts of D68, D92, D95, D187 and D212; the 4-high
   ledges and walls of D213–D215 are now just walls.
+
+### D217 — 2026-10-13 — Blink is the Level 1 reward; Skip Ahead
+`dj_vault` (renamed Skip Ahead) is reworked round Blink, now the Lattice's
+Level 1 reward in place of the double jump (D216). The 2-high corner ledge
+is gone and the east door (to the Frostbyte teaser `frost_gate`) is lowered
+to the floor; a 2-tile pit (`x 5..6`) runs the room's full depth between it
+and the rest of the room. The Blink disk lies in the back corner `(1,0,1)`,
+and the author's screen now carries `help_blink`. The trick (teach): a jump
+crosses one tile, never two, so the reward's first use is the way on. Blink
+comes off `world.json`'s `later` list.
+- **Where it counts:** behind the core's Level 1 lock, after every Lattice
+  fragment (as D187 had it for the double jump), so pickups are still checked
+  with `zap,scan,fork,pause` and exits and secrets with `+blink`. Blink adds no
+  height, so the walls, ledges and stacks the puzzles use keep holding; it
+  makes pits passable.
+- **Reach, measured with `sim.mjs`** (pits 2–6 tiles wide, run-ups, jump
+  timings): from standing, a 2-tile pit, never 3 (as the checker had it);
+  cast near the top of a running jump he keeps the arc and crosses 4 tiles
+  along an axis (never 5), also onto a 1-high ledge beyond; diagonally 2,
+  never 3 (with a jump).
+- **Checker:** a new move, Blink from a running jump: with headroom over the
+  takeoff, a level sweep one block up, up to `range + 2` cells, landing
+  anywhere along it; no run-up needed (a standing jump with the direction
+  held carried him 4.64 units too). Tests: a 4-tile pit with Blink, onto a 1-high ledge,
+  never 2 up, never 5 tiles, and a low ceiling over the run-up stops it.
+- **Played** (`sim.mjs`): from the south door, the disk, Blink east from the
+  pit's edge (lands at x 7.65), out the east door. A sweep of plain jumps
+  (15 starts, 3 directions, 50 run-ups) never crosses the pit.
+- **Outer Buffer doors with Blink:** the checker finds `scan_lab` north_2 and
+  `guard_loop` east with `scan + blink`; the other three stay `never`. Both are
+  for their door reviews.
+- Level review: keep. Coming back from `frost_gate`, a standing Blink west
+  from the one-cell strip lands at x 4.38, clear of the pit.
+- Checks: `validate:data`; `check:reach` (world: everything reachable;
+  `dj_vault` east `never` with `zap,scan,fork,pause` and `blink` with
+  `+blink`, from the east door the room needs Blink back); the mutation test
+  (no helpers, nothing to lose); `npm test`.
+**Why:** a reward with no extra height leaves the game's puzzle language,
+height, intact in every later room; Blink is already built (spell, look,
+sound, checker), and its gap reach is small and now modelled.

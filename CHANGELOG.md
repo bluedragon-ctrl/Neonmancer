@@ -105,6 +105,9 @@ docs/decisions.md).
   wait only for them are checker warnings.
 
 ### Changed
+- Blink is the Lattice's Level 1 reward (D217): `dj_vault`, now Skip Ahead, holds its
+  disk and a 2-tile pit before the lowered east door to Frostbyte; the checker knows a
+  Blink cast from a running jump (a 4-tile pit, or onto a 1-high ledge).
 - Docs pass (plan review): the README status, the decision log's order
   (D183/D184, D196/D197), the dev rooms table, architecture notes for
   D198–D200 and the design tooling, the `level-review` agent knows the

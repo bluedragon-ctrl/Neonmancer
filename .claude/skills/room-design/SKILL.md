@@ -47,11 +47,13 @@ worth playing.
 - **Lattice abilities only.** In Home Lattice only its own abilities
   count: `zap,scan,fork,pause` (the checker doesn't model
   Shield). The wings open in any order, so a pickup's trick holds
-  against all of them, not only those found after the room; pickups,
-  exits and secrets are checked with `--with zap,scan,fork,pause`
-  (D187, D216). Each room's type, rung and trick to aim for
+  against all of them, not only those found after the room; pickups
+  are checked with `--with zap,scan,fork,pause`, exits and secrets
+  with `--with zap,scan,fork,pause,blink`: Blink is the Level 1 reward
+  (`dj_vault`), after every Lattice fragment (D187, D216, D217). Each
+  room's type, rung and trick to aim for
   is its line in the ladder (`docs/lattice-plan.md`). Pull, Compile,
-  Cut & Paste, Blink, Warp and Firewall belong to later sectors (strong
+  Cut & Paste, Warp and Firewall belong to later sectors (strong
   on purpose, maybe dropped or kept for development): don't design
   Lattice rooms around them or against them, and run every check below
   with the Lattice abilities (for an exit's first arrival, the subset
@@ -329,6 +331,7 @@ Edit existing files with small text edits, not a JSON dump.
 | Frozen enemy | a 1-high step (1×1×1), pushed like a crate |
 | Spiked crate (`crate_spiked`, D199) | a crate whose top is no place to stand: his feet on it hurt 2 and shove him off (even while he blinks); a crate on it covers the spikes. A jump in line over a 1-high one always touches it (no hop over). A frozen enemy on a bare top is impaled, the decoy derezzes, active enemies cross unhurt |
 | Zap bolt | flies level, 0.48 above his feet; a bug is 0.6 high. From the floor it hits bugs and 1-high blocks; from a 1-high top it flies over both and hits a target standing a block up; a jump shot near the apex does too (D189) |
+| Blink (Level 1 reward, D217) | 3 units level, through open space; stops at blocks, objects, fences and streams (hurts 1 if cut short). From standing: a 2-tile pit, never 3. Cast near the top of a running jump: a 4-tile pit along an axis (never 5), even onto a 1-high ledge beyond; 2 tiles diagonally. Never higher than his jump. The checker models both (axes only): sweep diagonals with `sim.mjs` |
 | Walk | 4.5 u/s, ~13 ticks (0.22 s) a cell; a jump ~34 ticks (0.57 s) |
 | Push | ~28 ticks (0.47 s) a cell |
 | Collapsing block | goes 30 ticks (0.5 s) after a step: never make him stand still on one |

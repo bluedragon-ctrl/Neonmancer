@@ -100,12 +100,17 @@ test('Pause: a frozen enemy pushed across the floor is a step up a far ledge (D1
   assert.equal(room(['pause'], [{ at: [0, 5], to: [11, 5] }]), false); // he jumps the hole, a pushed enemy pops in it
 });
 
-test('pits: one tile is jumped, two need Blink, more Warp or Compile', () => {
-  const room = (width, abilities) => reached(reach({ holes: [pit(width)], pickups: [far] }, abilities));
+test('pits: one tile is jumped, up to four need Blink, more Warp or Compile', () => {
+  const room = (width, abilities, blocks = [], target = far) => reached(reach({ holes: [pit(width)], blocks, pickups: [target] }, abilities));
   assert.equal(room(1), true);
   assert.equal(room(2), false);
   assert.equal(room(2, ['blink']), true); // 3 cells ahead
-  assert.equal(room(3, ['blink']), false);
+  // A running jump, then Blink near the top (D217): two cells further, even a block up.
+  assert.equal(room(4, ['blink']), true);
+  assert.equal(room(4, ['blink'], [{ at: [8, 0, 0], to: [11, 0, 7] }], pickup('far', [11, 1, 2])), true, 'onto a 1-high ledge beyond the pit');
+  assert.equal(room(4, ['blink'], [{ at: [8, 0, 0], to: [11, 1, 7] }], pickup('far', [11, 2, 2])), false, 'never 2 up');
+  assert.equal(room(5, ['blink']), false);
+  assert.equal(room(3, ['blink'], [{ at: [0, 2, 0], to: [3, 2, 7] }]), false, 'a low ceiling over the run-up stops the jump');
   assert.equal(room(3, ['warp']), true);
   assert.equal(room(5, ['compile']), true); // plug a cell, step on, again
 });
