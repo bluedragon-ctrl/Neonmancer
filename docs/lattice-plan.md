@@ -108,8 +108,9 @@ stay look-only and outside the ladder (D186).
 - Outer Buffer doors (D212): each gets a trick of its own, never open on the
   first arrival. They were built round the double jump (D212–D215); with it
   gone (D216) each is redone in its own PR, round Blink (D217; the checker
-  already finds `scan_lab` north_2 and `guard_loop` east with `scan + blink`,
-  not yet played; the other three are `never`): `scan_lab` north_2 (`buffer_1`), `warden_pit` west (`buffer_2`),
+  already finds `guard_loop` east with `scan + blink`, not yet played; the
+  other three are `never`): `scan_lab` north_2 (`buffer_1`, done: a Blink walk
+  along the back wall, D218), `warden_pit` west (`buffer_2`),
   `guard_loop` east (`buffer_3`), `mirror_stacks` east_2 (`buffer_4`),
   `ghost_exit` east (`buffer_5`).
 - Shortcuts: `junction`'s fence gate home, and the Gatekeeper once beaten.
