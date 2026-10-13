@@ -37,9 +37,8 @@ For each room:
    - **Later abilities and pickups**: in Home Lattice only its own
      abilities count, so run the checker and the mutation test with
      `--with zap,scan,fork,pause` for pickups (any route: the wings open
-     in any order, and the double jump comes after every Lattice
-     fragment) and `--with double_jump,zap,scan,fork,pause` for exits
-     and secrets (D187), not the default; Pull, Compile, Cut & Paste,
+     in any order) and the same set for exits and secrets (D187; the
+     double jump is gone, D216), not the default; Pull, Compile, Cut & Paste,
      Blink, Warp and Firewall belong to later sectors and are not
      findings there. For each
      pickup, every ability set in the mutation test's first lines that
@@ -48,7 +47,7 @@ For each room:
      matter, that set skips the trick: a BLOCKER for a fragment, a
      PROBLEM for other pickups. The same for exits is fine (a NOTE).
 4. Walk the checklist against the actual coordinates, not the intent:
-   - **Reach**: every step <= 1 block (2 with double jump), gaps <= 1 tile,
+   - **Reach**: every step <= 1 block, gaps <= 1 tile,
      2 free cells of headroom above every standing surface, a bouncy
      enemy clears a 2-high ledge (never 3), a crate or frozen enemy beside
      a 2-high wall is a way over it.

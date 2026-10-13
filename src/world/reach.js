@@ -50,20 +50,16 @@ import { DECO_LOOKS, exitCells } from '../data/room-data.js';
 import { Grid } from './grid.js';
 import { pathCells } from './path.js';
 
-/** The abilities the search knows how to use: spells by id, the double jump by its upgrade id. */
-export const ABILITIES = ['double_jump', 'zap', 'scan', 'pull', 'compile', 'fork', 'cut_paste', 'blink', 'warp', 'pause'];
+/** The abilities the search knows how to use, spells by id. */
+export const ABILITIES = ['zap', 'scan', 'pull', 'compile', 'fork', 'cut_paste', 'blink', 'warp', 'pause'];
 
 /**
  * Jump tuning in cells, from PLAYER (apex 1.2 above take-off, ~1.65 units of
- * air travel): a single jump clears one block and a one-tile gap; the
- * double jump (D95) adds a second jump at any time, so twice the height
- * and twice the gap.
+ * air travel): a jump clears one block and a one-tile gap.
  */
 export const JUMP = {
   up: 1,
   gap: 1,
-  doubleUp: 2,
-  doubleGap: 2,
 };
 
 /** How far Blink goes, from defs.json; the search takes the spell's `range` from its `spells` when given. */
@@ -104,9 +100,8 @@ export class RoomModel {
     this.scanRange = scanRange;
     this.blinkRange = blinkRange;
     [this.w, this.h, this.d] = room.size;
-    const doubleJump = abilities.has('double_jump');
-    this.up = doubleJump ? JUMP.doubleUp : JUMP.up;
-    this.gap = doubleJump ? JUMP.doubleGap : JUMP.gap;
+    this.up = JUMP.up;
+    this.gap = JUMP.gap;
 
     // A scan derezzes every fake block (optimistically: wherever he stands).
     const blocks = {};
@@ -346,13 +341,11 @@ export class RoomModel {
         // Jump a gap: the cells over it are free; he lands level or lower.
         for (let width = 1; width <= gap; width++) {
           let over = true;
-          for (let k = 1; k <= width; k++) for (let dy = 0; dy <= (up > 1 ? 3 : 2); dy++) over &&= !this.blocked(x + dx * k, y + dy, z + dz * k, cfg);
+          for (let k = 1; k <= width; k++) for (let dy = 0; dy <= 2; dy++) over &&= !this.blocked(x + dx * k, y + dy, z + dz * k, cfg);
           if (!over) break;
           const lx = x + dx * (width + 1);
           const lz = z + dz * (width + 1);
           land(lx, y, lz);
-          // With a double jump, one block up as well over a one-tile gap.
-          if (up > 1 && width === 1 && this.landing(lx, y + 1, lz, cfg) === y + 1 && !this.blocked(x, y + 2, z, cfg)) add(lx, y + 1, lz);
         }
         // Blink and Warp: level through open space, as far as it goes.
         for (const [spell, limit] of [['blink', this.blinkRange], ['warp', Infinity]]) {
@@ -694,8 +687,7 @@ export function collect(model, cfg, stands, reach) {
     if (reach.pickups.has(pickup.id)) continue;
     const [x, y, z] = pickup.at;
     if (!model.grid.isInside(x, z) || model.blocked(x, y, z, cfg)) continue;
-    const jump = abilities.has('double_jump') ? 3 : 2;
-    for (let lift = 0; lift <= jump; lift++) {
+    for (let lift = 0; lift <= 2; lift++) {
       const base = y - lift;
       if (base < 0 || !standAt(x, base, z)) continue;
       let free = true;

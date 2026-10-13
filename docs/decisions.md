@@ -2224,3 +2224,29 @@ of them are a double jump from a crate or the 1-high ledge `(8..9,5)`.
 **Why:** every top round the pocket was a step to the door; with 4-high walls
 the only step is a crate the plates let in, and the plates take more pieces
 than the fragment did.
+
+### D216 — 2026-10-13 — The double jump is gone
+The double jump upgrade (D95) is removed: the pickup type
+`upgrade_double_jump`, the mid-air jump in `Player` (`airJumps`, the
+`airjump` event and sound), its kick-off rings (`render/jump-fx.js`,
+`render/jump-view.js`) and showcase entries, its help text, and the
+checker's `double_jump` ability. His jump is 1 up and a one-tile gap
+everywhere, for good; Zap+ and Shield+ stay. Upgrade slot 2 (save bit 34) is
+left free; an old key with it set still loads (the bit names no item).
+- **Why:** a global movement upgrade that comes after the Lattice is on in
+  every later room, so each one would have to be designed against a reach
+  of 2 up and about 3 cells diagonally (wider than its "2 wide", and
+  invisible to the checker). In the Outer Buffer reviews (D212–D215) the
+  doors it was meant to open turned into plain hops that each needed a
+  second trick to stop it.
+- **Left open by this change**, each to be redone in its own PR (concept
+  first): the five Outer Buffer doors (`scan_lab` north_2, `warden_pit` west,
+  `guard_loop` east, `mirror_stacks` east_2, `ghost_exit` east) and
+  `dj_vault`, which held the upgrade and whose east door, on a 2-high ledge,
+  leads to the Frostbyte teaser `frost_gate`. With `zap,scan,fork,pause`
+  every one of them is `never` now. The world check still passes because the
+  dev room `hidden_layer` hands out Blink and Warp; the room layouts are
+  unchanged, only the upgrade and `dj_vault`'s help text are gone (its screen
+  stays as decor).
+- Replaces the double jump parts of D68, D92, D95, D187 and D212; the 4-high
+  ledges and walls of D213–D215 are now just walls.

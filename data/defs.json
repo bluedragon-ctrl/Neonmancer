@@ -317,7 +317,6 @@
       "spell": "shield",
       "color": "#cfe8ff"
     },
-    "upgrade_double_jump": { "kind": "upgrade", "upgrade": "double_jump", "slot": 2, "color": "#ff2bd6" },
     "secret_0": { "kind": "secret", "slot": 0 },
     "secret_1": { "kind": "secret", "slot": 1 },
     "secret_2": { "kind": "secret", "slot": 2 },

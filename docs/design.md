@@ -21,19 +21,18 @@ measured against:
    puzzle whose parts were already taught.
 4. **Spells are verbs or keys.** Puzzle verbs make new kinds of puzzles;
    world keys open new routes and secrets. In the Lattice: Zap, Pause and
-   Fork are verbs, Scan explores, Shield is for action, the double jump
-   is a key.
+   Fork are verbs, Scan explores, Shield is for action (the double jump
+   is gone, D216).
 5. **Later abilities skip rooms, not pickups.** A spell or upgrade found
    later may take the wizard through a room without its puzzle (a
    shortcut once its pickup is found); it never reaches a pickup without
    the trick that guards it. A pickup may need an ability as its gate
-   (secrets do). In the Lattice only its own abilities count: the double
-   jump, Zap, Scan, Fork and Pause. Pull, Compile, Cut & Paste, Blink,
+   (secrets do). In the Lattice only its own abilities count: Zap,
+   Scan, Fork and Pause. Pull, Compile, Cut & Paste, Blink,
    Warp and Firewall belong to later sectors (maybe dropped or kept for
    development) and are left out of Lattice design and checks. The
    Lattice's wings open in any order, so a pickup's trick holds against
-   every Lattice spell; the double jump comes once all 16 fragments are
-   found and counts only for exits and secrets (D187). Each room's type
+   every Lattice spell (D187). Each room's type
    and trick to aim for: the ladder in docs/lattice-plan.md.
 
 | Room type | What it is | Rough share |
@@ -265,7 +264,7 @@ the ones it gives:
   enemies' sight pass through (`seeThrough`, `Grid.blocksSight()`).
   Blink and Warp stop at it as at a block. Height is the
   design tool: 1 high keeps crates and enemies in and he jumps it; 2 high
-  stops him until the double jump; 3 high for good. A target behind a
+  stops him for good (no double jump, D216). A target behind a
   fence is switched with a Zap through it; a tower behind one still
   shoots him (no cover). Look: no faces; two beams per unit of height (at
   half and full height) through the middle of the cell, along its run;
@@ -1259,18 +1258,18 @@ The third Phase 4 spell (D88, D128), from a data disk in Hidden Layer
 ## Upgrades
 
 An upgrade (D95) is a permanent pickup with its own
-bit in the upgrade block (bits 32–47); the engine knows three.
+bit in the upgrade block (bits 32–47); the engine knows two (the double
+jump, slot 2, was removed, D216; its slot stays free).
 
 | Upgrade | Type | Slot | Of | Color | What it does |
 |---|---|---|---|---|---|
 | Zap+ | `upgrade_zap_plus` | 0 | Zap | cyan | The bolt bounces three times off blocks and the room's sides |
 | Shield+ | `upgrade_shield_plus` | 1 | Shield | ice blue `#cfe8ff` | The ring sends enemy bolts back the way they came |
-| Double jump | `upgrade_double_jump` | 2 | the wizard | magenta | One more jump in mid-air |
 
 - **Data:** a pickup type `{ "kind": "upgrade", "upgrade", "slot",
   "spell", "color" }`, Zap+ with `bounces`. `Progress.upgrades()` maps
   what was found by `upgrade`; `Game.applyUpgrades()` gives them to the
-  wizard (`player.upgrades`, `player.airJumps`) at the start and when he
+  wizard (`player.upgrades`) at the start and when he
   takes one.
 - **Replacing the spell:** the spell keeps its id, slot and place in the
   Tab cycle; the HUD tag shows the upgrade's name (`Game.spellNameKey()`,
@@ -1289,13 +1288,6 @@ bit in the upgrade block (bits 32–47); the engine knows three.
   where it turned (`ricochet`), the ring flares and `reflect` is
   reported. Arcs and bursts are only blocked, as by the Shield. Firewall
   doesn't reflect. The ring is the Shield's in Shield+'s color.
-- **Double jump:** a jump pressed in mid-air (after a jump, after
-  walking off a ledge once the coyote time is over, after a bounce)
-  kicks him up again at the jump's speed, once until he lands
-  (`airJumpsLeft`); `airjump` is reported. From a jump's top he
-  reaches 2.4: over a 2-high wall, and across wider gaps. Hexagonal
-  rings in his magenta burst flat from where he kicked off and fade
-  (`JUMP_FX` in `src/render/jump-fx.js`, `PLAYER.airJumpTicks`).
 - **Look:** an expansion card (`createCard()` in `src/render/card.js`,
   tuning `CARD`): a white landscape card as thin as a disk, hovering and
   spinning like one; contact fingers along its bottom edge in the
@@ -1305,10 +1297,9 @@ bit in the upgrade block (bits 32–47); the engine knows three.
   plays the install animation in its color, the banner reads e.g.
   `ZAP+ / UPGRADE INSTALLED`, the terminal `> UPGRADE INSTALLED: ZAP+`.
   Showcase `?asset=upgrades` (the cards, the row beside the Zap disk,
-  `shield-plus`, `double-jump`).
+  `shield-plus`).
 - **Validation:** upgrade slots unique; one pickup type per upgrade;
-  Zap+ upgrades Zap and has `bounces`, Shield+ upgrades the Shield,
-  the double jump no spell.
+  Zap+ upgrades Zap and has `bounces`, Shield+ upgrades the Shield.
 
 ## Score and secrets
 
@@ -1418,11 +1409,12 @@ a need for.
 | Scan | 9 | A wave that reveals fake blocks (and pickups inside them) and hidden exits | Phase 4 (D128) |
 | Pull | 10 | Pulls the first crate or enemy in line one tile towards the wizard | Phase 4 (D124) |
 
-- **Upgrades:** Zap+, Shield+ and the double jump, built in Phase 3 (see
+- **Upgrades:** Zap+ and Shield+, built in Phase 3 (the double jump
+  was removed, D216; see
   Upgrades). Found, an upgrade replaces its base spell in the Tab cycle
   (ZAP becomes ZAP+), so the cycle stays short.
 - **Order in the world:** Home Lattice gives Zap, Shield, Pause, Scan,
-  Fork and the double jump (D133); the rest come in later sectors.
+  Fork (D133); the rest come in later sectors.
 - **Turned down for now:** spells Decrypt (dissolves an encrypted
   wall type), Rollback (back to where he was 3 s ago); upgrades Halt
   (Pause freezing the whole room), Lift (Warp landing on top of what
@@ -1515,8 +1507,7 @@ usual, so half behind a wall he is half ghost (D55).
   spiked columns: with 3-high walls all 104 levels solved match their
   classic push count; 1-high walls don't, he walks over them). A jump in line over a 1-high crate always touches the
   top (a jump spends 0.23 s above 1.0 and covers 0.67 units sideways,
-  clearing needs 1.6): no bypass, no taller hurt zone. The double jump
-  does clear it, like any 2-high obstacle.
+  clearing needs 1.6): no bypass, no taller hurt zone.
 - Checker (`src/world/reach.js`): a configuration knows which crates are
   spiked (`config(crates, plugged, spiked)`); `below()` says `'bad'`
   under a bare spiked top (a crate on it is the surface instead), so he
@@ -1952,8 +1943,7 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
   mutation test with `--with` that set, D186). In the Lattice the sets
   come from its own abilities only; pickups are checked with `--with
   zap,scan,fork,pause` (any route: a wing room may be met with any of
-  them; the double jump comes after every Lattice fragment), exits and
-  secrets with `--with double_jump,zap,scan,fork,pause` (D187); the
+  them), exits and secrets with the same set (D187, D216); the
   later sectors' spells are not counted.
 - Temporary pickups come back with the room and death resets the wizard
   (D67): a refill a detour away is a choice for the player; place it so

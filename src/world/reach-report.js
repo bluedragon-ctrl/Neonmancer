@@ -5,7 +5,7 @@
 
 const list = (abilities) => (abilities.length === 0 ? 'nothing' : abilities.join(' + '));
 
-/** "needs" of a target as words: "free", "double_jump", "warp or blink + pull", "several", "never". */
+/** "needs" of a target as words: "free", "zap", "warp or blink + pull", "several", "never". */
 export function describeNeeds(needs) {
   if (needs === null) return 'never';
   if (needs.length === 0) return 'several';

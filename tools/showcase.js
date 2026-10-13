@@ -83,7 +83,6 @@ import { streamCount } from '../src/render/stream-fx.js';
 import { createWave, placeWave, revealBody } from '../src/render/scan-view.js';
 import { SCAN, cellReach, exitReach } from '../src/entities/scan.js';
 import { clipIcon } from '../src/ui/clip-icon.js';
-import { createJumpRings, placeJumpRings } from '../src/render/jump-view.js';
 import { createShrine } from '../src/render/shrine-view.js';
 import { WARDEN_MODEL } from '../src/render/warden.js';
 import { DAEMON_MODEL } from '../src/render/daemon.js';
@@ -307,16 +306,13 @@ const ALL_ASSETS = [
   { label: 'chips-row', group: 'chips', span: 4, spin: false, build: buildChipRow },
   // Upgrades (D95): an upgrade is an expansion card, its
   // contact fingers in the upgrade's color and its slot lit in the bit grid;
-  // a found one as a gray ghost; the three in a row beside the Zap disk.
-  // Shield+ is the Shield's ring in its color; the double jump kicks
-  // off hexagonal rings in mid-air.
+  // a found one as a gray ghost; the two in a row beside the Zap disk.
+  // Shield+ is the Shield's ring in its color.
   { label: 'upgrade-zap-plus', group: 'upgrades', spin: false, build: () => buildCard(defs.pickups.upgrade_zap_plus) },
   { label: 'upgrade-shield-plus', group: 'upgrades', spin: false, build: () => buildCard(defs.pickups.upgrade_shield_plus) },
-  { label: 'upgrade-jump', group: 'upgrades', spin: false, build: () => buildCard(defs.pickups.upgrade_double_jump) },
   { label: 'upgrade-ghost', group: 'upgrades', spin: false, build: () => buildCard({ ...defs.pickups.upgrade_shield_plus, ghost: true }) },
   { label: 'upgrades-row', group: 'upgrades', span: 4, spin: false, build: buildUpgradeRow },
   { label: 'shield-plus', group: 'upgrades', spin: false, shadow: PALETTE.magenta, build: () => buildShield(defs.pickups.upgrade_shield_plus.color) },
-  { label: 'double-jump', group: 'upgrades', span: 4, spin: false, build: buildDoubleJump },
   // Secrets (D100): a star in the wizard's magenta; a
   // found one as a gray ghost; beside a disk, a chip and the energy refill.
   { label: 'secret', group: 'secrets', spin: false, build: () => buildSecret({}) },
@@ -1118,43 +1114,17 @@ function buildCard(options) {
   return asset;
 }
 
-/** The three upgrade cards in a row along the screen's horizontal, the Zap disk first to compare. */
+/** The upgrade cards in a row along the screen's horizontal, the Zap disk first to compare. */
 function buildUpgradeRow() {
-  const upgrades = ['upgrade_zap_plus', 'upgrade_shield_plus', 'upgrade_double_jump'].map((id) => createCard(defs.pickups[id]));
+  const upgrades = ['upgrade_zap_plus', 'upgrade_shield_plus'].map((id) => createCard(defs.pickups[id]));
   const models = [createDisk(defs.spells.zap), ...upgrades];
   const asset = new Group();
   models.forEach((model, i) => {
-    const along = (i - 1.5) * 0.9;
+    const along = (i - 1) * 0.9;
     model.position.set(along, 0, -along);
     asset.add(model);
   });
   asset.userData.update = (dt, time) => models.forEach((model, i) => poseDisk(model, diskMotion({ time: time + i * 0.7 })));
-  return asset;
-}
-
-/**
- * The wizard double jumping on the spot (D95): a jump, a second one at its
- * top (the kick-off rings stay where he was), down again, a pause.
- */
-function buildDoubleJump() {
-  const wizard = createWizard();
-  wizard.rotation.y = Math.PI / 4;
-  const rings = createJumpRings();
-  const asset = new Group().add(wizard, rings);
-  const g = PLAYER.gravity / 3600;
-  const v = JUMP_SPEED / 60;
-  // Second jump at the top of the first; each is v per tick, less g per tick.
-  const top = v / g;
-  const height = (t) => (t <= top ? v * t - (g * t * t) / 2 : Math.max(0, PLAYER.jumpHeight + v * (t - top) - (g * (t - top) ** 2) / 2));
-  const land = top + (v + Math.sqrt(v * v + 2 * g * PLAYER.jumpHeight)) / g;
-  const loop = land + 40;
-  let tick = 0;
-  asset.userData.update = (dt) => {
-    tick = (tick + dt * 60) % loop;
-    wizard.position.y = height(tick);
-    const since = tick - top;
-    placeJumpRings(rings, [0, PLAYER.jumpHeight, 0], since >= 0 && since <= PLAYER.airJumpTicks ? since : null);
-  };
   return asset;
 }
 

@@ -22,8 +22,6 @@
     { "id": "disk_fork_1", "type": "disk_fork", "at": [8, 0, 0] },
     { "id": "disk_scan_1", "type": "disk_scan", "at": [9, 0, 0] },
     { "id": "disk_pull_1", "type": "disk_pull", "at": [10, 0, 0] },
-    { "id": "upgrade_double_jump_1", "type": "upgrade_double_jump", "at": [0, 0, 11] },
-    { "id": "upgrade_shield_plus_1", "type": "upgrade_shield_plus", "at": [0, 0, 9] },
-    { "id": "upgrade_double_jump_2", "type": "upgrade_double_jump", "at": [0, 0, 7] }
+    { "id": "upgrade_shield_plus_1", "type": "upgrade_shield_plus", "at": [0, 0, 9] }
   ]
 }

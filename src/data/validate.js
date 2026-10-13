@@ -185,8 +185,8 @@ function validateBoss(values, path, report) {
   });
 }
 
-/** The spell each upgrade improves (D95); the jump improves none. */
-const UPGRADE_SPELLS = { zap_plus: 'zap', shield_plus: 'shield', double_jump: null };
+/** The spell each upgrade improves (D95). */
+const UPGRADE_SPELLS = { zap_plus: 'zap', shield_plus: 'shield' };
 
 /**
  * Spell, buff, upgrade, secret and fragment slots are unique (each is a save bit, D71), a
@@ -230,8 +230,7 @@ function validateSpellsAndPickups(spells, pickupTypes, objectTypes, report) {
       if (upgrades.has(type.upgrade)) report('defs.json', `pickups.${id}.upgrade`, `upgrade "${type.upgrade}" is "${upgrades.get(type.upgrade)}" already`);
       else upgrades.set(type.upgrade, id);
       const needsSpell = UPGRADE_SPELLS[type.upgrade];
-      if (needsSpell && type.spell !== needsSpell) report('defs.json', `pickups.${id}.spell`, `${type.upgrade} upgrades "${needsSpell}"`);
-      if (!needsSpell && type.spell !== undefined) report('defs.json', `pickups.${id}.spell`, `${type.upgrade} upgrades no spell`);
+      if (type.spell !== needsSpell) report('defs.json', `pickups.${id}.spell`, `${type.upgrade} upgrades "${needsSpell}"`);
       if (type.bounces !== undefined && type.upgrade !== 'zap_plus') report('defs.json', `pickups.${id}.bounces`, 'only zap_plus bounces');
       if (type.upgrade === 'zap_plus' && type.bounces === undefined) report('defs.json', `pickups.${id}`, 'missing bounces');
     }

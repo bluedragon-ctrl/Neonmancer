@@ -5,7 +5,6 @@ import { PLAYER, Player } from '../src/entities/player.js';
 import { Game } from '../src/game.js';
 import { CARD, createCard } from '../src/render/card.js';
 import { createPickupModel } from '../src/render/pickup-model.js';
-import { JUMP_FX, jumpRings } from '../src/render/jump-fx.js';
 import { Progress, pickupBit, saveBit } from '../src/world/progress.js';
 import { BUG, PICKUPS, SPELLS, dataFiles, eventTypes, gameData, grid, idle, roomFile } from './helpers.js';
 
@@ -47,7 +46,7 @@ function run(game, ticks) {
 
 test('upgrades have their own save bits, 32–47, by their slot (D88, D95)', () => {
   assert.equal(upgradeBit('upgrade_zap_plus'), 32);
-  assert.equal(upgradeBit('upgrade_double_jump'), 34);
+  assert.equal(upgradeBit('upgrade_shield_plus'), 33);
   const found = new Progress([saveBit('upgrades', 1)]).upgrades(PICKUPS);
   assert.deepEqual([...found.keys()], ['shield_plus']);
   assert.equal(found.get('shield_plus').spell, 'shield');
@@ -124,55 +123,12 @@ function peak(player, room, presses, ticks = 90) {
   return top;
 }
 
-/** A standing wizard on an empty floor, with `airJumps`. */
-function standing(airJumps) {
+test('no jump in mid-air: a second press at the top changes nothing (the double jump is gone, D216)', () => {
   const room = grid({ size: [8, 6, 8] });
   const player = new Player([4, 0, 4]);
-  player.airJumps = airJumps;
   player.update(idle, room); // lands
-  return { player, room };
-}
-
-test('double jump: a second jump at the top reaches about twice as high, clearing 2 blocks (D95)', () => {
-  const single = standing(0);
-  const one = peak(single.player, single.room, [0, 20]);
-  assert.ok(Math.abs(one - PLAYER.jumpHeight) < 0.05, 'no air jump without the upgrade');
-  const double = standing(1);
-  const two = peak(double.player, double.room, [0, 20]);
-  assert.ok(two > 2.2 && two < 2.5, `apex ${two}`);
-});
-
-test('double jump: once per time in the air, back on landing; also when falling without a jump', () => {
-  const { player, room } = standing(1);
-  player.update(press('jump'), room);
-  for (let i = 0; i < 10; i++) player.update(idle, room);
-  assert.equal(player.update(press('jump'), room), 'airjump');
-  assert.equal(player.airJumpsLeft, 0);
-  assert.deepEqual(player.airJumpFrom.map((v) => Math.round(v)), [4, 1, 4], 'where he kicked off, for the rings');
-  player.update(idle, room);
-  const vy = player.vy;
-  player.update(press('jump'), room);
-  assert.ok(player.vy < vy, 'no third jump');
-  for (let i = 0; i < 90; i++) player.update(idle, room);
-  assert.equal(player.grounded, true);
-  assert.equal(player.airJumpsLeft, 1, 'back after landing');
-  // Falling without a jump (placed in the air): the air jump is there.
-  player.place([4, 3, 4]);
-  for (let i = 0; i < PLAYER.coyoteTicks + 1; i++) player.update(idle, room);
-  assert.equal(player.update(press('jump'), room), 'airjump');
-});
-
-test('the game gives him the double jump from the save', () => {
-  assert.equal(gameWith().player.airJumps, 0);
-  assert.equal(gameWith({ upgrades: ['upgrade_double_jump'] }).player.airJumps, 1);
-});
-
-test('jump look: rings grow and fade, gone after airJumpTicks', () => {
-  const [first] = jumpRings(0);
-  assert.ok(first.glow > 0 && Math.abs(first.radius - JUMP_FX.from) < 1e-9);
-  const later = jumpRings(8);
-  assert.ok(later[0].radius > first.radius && later[0].glow < first.glow);
-  assert.ok(jumpRings(PLAYER.airJumpTicks + 1).every((ring) => ring.glow === 0));
+  const top = peak(player, room, [0, 20]);
+  assert.ok(Math.abs(top - PLAYER.jumpHeight) < 0.05, `apex ${top}`);
 });
 
 test('upgrade card model: a white card, fingers and lit bit in its color, gray once found; the model of an upgrade pickup', () => {
@@ -192,12 +148,10 @@ test('defs: upgrade slots and upgrades unique, each upgrading its own spell; Zap
   pickups.upgrade_shield_plus.slot = 0;
   pickups.upgrade_shield_plus.spell = 'zap';
   delete pickups.upgrade_zap_plus.bounces;
-  pickups.upgrade_double_jump.spell = 'zap';
-  pickups.upgrade_twice = { kind: 'upgrade', upgrade: 'double_jump', slot: 5, color: '#ffffff' };
+  pickups.upgrade_twice = { kind: 'upgrade', upgrade: 'zap_plus', slot: 5, spell: 'zap', color: '#ffffff', bounces: 3 };
   const errors = validateData(files).join('\n');
   assert.match(errors, /pickups\.upgrade_shield_plus\.slot: upgrade slot 0 is taken by "upgrade_zap_plus"/);
   assert.match(errors, /pickups\.upgrade_shield_plus\.spell: shield_plus upgrades "shield"/);
   assert.match(errors, /pickups\.upgrade_zap_plus: missing bounces/);
-  assert.match(errors, /pickups\.upgrade_double_jump\.spell: double_jump upgrades no spell/);
-  assert.match(errors, /pickups\.upgrade_twice\.upgrade: upgrade "double_jump" is "upgrade_double_jump" already/);
+  assert.match(errors, /pickups\.upgrade_twice\.upgrade: upgrade "zap_plus" is "upgrade_zap_plus" already/);
 });

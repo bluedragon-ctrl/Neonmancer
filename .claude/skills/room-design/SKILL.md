@@ -34,7 +34,8 @@ worth playing.
   or it reads "push the crate onto the plate": redraw.
 - **Spell roles (Lattice).** Puzzle verbs: Zap (targets), Pause (enemy as
   block), Fork (plate holder, lure). Explore: Scan (secrets, hidden
-  exits). Action: Shield. World key: the double jump.
+  exits). Action: Shield. No double jump (removed, D216): his jump is
+  1 up and a one-tile gap everywhere.
 - **Later abilities skip rooms, not pickups.** An ability found later may
   take him through the room to its exits without the puzzle (a shortcut
   on revisits); it never reaches a pickup without the trick that guards
@@ -44,12 +45,11 @@ worth playing.
   one cell of them, D202), 3-high walls, fence roofs,
   pits too wide to cross.
 - **Lattice abilities only.** In Home Lattice only its own abilities
-  count: `double_jump,zap,scan,fork,pause` (the checker doesn't model
+  count: `zap,scan,fork,pause` (the checker doesn't model
   Shield). The wings open in any order, so a pickup's trick holds
-  against all of them, not only those found after the room; the double
-  jump comes once all 16 fragments are found, so pickups are checked
-  with `--with zap,scan,fork,pause` and the double jump counts only for
-  exits and secrets (D187). Each room's type, rung and trick to aim for
+  against all of them, not only those found after the room; pickups,
+  exits and secrets are checked with `--with zap,scan,fork,pause`
+  (D187, D216). Each room's type, rung and trick to aim for
   is its line in the ladder (`docs/lattice-plan.md`). Pull, Compile,
   Cut & Paste, Blink, Warp and Firewall belong to later sectors (strong
   on purpose, maybe dropped or kept for development): don't design
@@ -117,7 +117,7 @@ so draft the idea, not the last cell.
 Lessons from the reviews (D188 on):
 - **A hub keeps its doors.** The floor between a hub's doors stays free;
   its puzzle sits to one side and pays a temporary reward (a boost), so
-  a decoy or the double jump skipping it later costs nothing.
+  a decoy skipping it later costs nothing.
 - **Fence a plate with holes, not with low walls.** A 1-high pen beside
   a 2-high ledge is a step onto it (walls are steps too); holes keep
   floor crates off a plate and leave a drop from above as the way in.
@@ -218,14 +218,6 @@ Lessons from the reviews (D188 on):
 - **A block overhead stops a jump.** He can't jump up a step that lies
   under a ledge (his head hits it); a diagonal jump from beside it works.
   The checker misses that, so play it (`scan_lab`, D212).
-- **A double jump reaches three cells round a top.** From a top of height h
-  a diagonal double jump lands on h + 2 up to about three cells away (from
-  2 high onto 4: `(3,4)` to a ledge at `(1,2)`), and the checker sees none
-  of it. A ledge that wants one step (a crate) clears every other top of
-  that height in that ring: cover blocks, data pillars (3 high), lofts.
-  Sweep it with `sim.mjs` (directions, run-ups, timings, starting points)
-  from every top near it, and from the crate at each cell of its route:
-  the puzzle ends where the sweep first lands (`warden_pit`, D213).
 - **Walls keep the crate search small.** Three or four free crates on
   open floor blow `MAX_CONFIGS` and a truncated search is a false
   "never" (it also hides bypasses: it stops at the first one it finds).
@@ -279,7 +271,7 @@ Edit existing files with small text edits, not a JSON dump.
   nothing and lets bolts and sight through: wall off or raise a wall
   without blocking the view; a target behind it takes a Zap; a tower
   behind it still shoots (no cover). 1 high pens crates, 2 high stops him
-  until the double jump, 3 high for good. A `stream` (D198) is a fence in
+  for good. A `stream` (D198) is a fence in
   magenta that crates and frozen enemies pass and he does not, with no
   top: no jump or crate gets him over or onto it, so build it 2 high.
   A crate is pushed into it from the near side only (he cannot stand in
@@ -332,11 +324,10 @@ Edit existing files with small text edits, not a JSON dump.
 | What | Number |
 |---|---|
 | Jump | clears 1 block up (apex 1.2), never 2; crosses a 1-tile gap, never 2, but from a 1-high top (crate, frozen enemy) beside a floor pit it crosses 2 (D162) |
-| Double jump (upgrade) | 2 up, 2 wide |
 | Headroom | wizard 1.5 high: 2 free cells over every standing surface. A block above is a ceiling, the room's height is not (he stands on top of a 2-high wall in a 3-high room); keep standing surfaces 2 below the room height for the look |
 | Bouncy enemy (bug, glowbug) | launches 2.2 above its top (0.6), so 2.8: clears a 2-high ledge, never 3 |
 | Frozen enemy | a 1-high step (1×1×1), pushed like a crate |
-| Spiked crate (`crate_spiked`, D199) | a crate whose top is no place to stand: his feet on it hurt 2 and shove him off (even while he blinks); a crate on it covers the spikes. A jump in line over a 1-high one always touches it (no hop over); the double jump clears it. A frozen enemy on a bare top is impaled, the decoy derezzes, active enemies cross unhurt |
+| Spiked crate (`crate_spiked`, D199) | a crate whose top is no place to stand: his feet on it hurt 2 and shove him off (even while he blinks); a crate on it covers the spikes. A jump in line over a 1-high one always touches it (no hop over). A frozen enemy on a bare top is impaled, the decoy derezzes, active enemies cross unhurt |
 | Zap bolt | flies level, 0.48 above his feet; a bug is 0.6 high. From the floor it hits bugs and 1-high blocks; from a 1-high top it flies over both and hits a target standing a block up; a jump shot near the apex does too (D189) |
 | Walk | 4.5 u/s, ~13 ticks (0.22 s) a cell; a jump ~34 ticks (0.57 s) |
 | Push | ~28 ticks (0.47 s) a cell |
@@ -437,8 +428,7 @@ Edit existing files with small text edits, not a JSON dump.
   the same or higher difficulty (a harder jump, a tighter race) is not a
   bypass; one that skips the room's idea for less effort is. Say which in
   the review.
-- **Later abilities and pickups** (D186). A later spell or the double jump
-  may open the room's exits without its puzzle; it may never reach a
+- **Later abilities and pickups** (D186). A later spell may open the room's exits without its puzzle; it may never reach a
   pickup without the trick. Check it: the mutation test's first lines
   (in the Lattice `--with zap,scan,fork,pause` for pickups, D187) list each
   pickup's ability sets, e.g. `pickup fragment_6: fork or pause`. For every set
