@@ -352,7 +352,7 @@ const ALL_ASSETS = [
   { label: 'star-exits', group: 'switches', span: 6, spin: false, build: buildStarExits },
   // Timed switches (D140): a target and a plate switched on, blinking ever
   // faster as their time runs out, then off; a gate and a bridge on one
-  // plate: the gate sinks as the bridge rises, and back.
+  // plate: the gate sinks as the bridge's sheets spread over a pit (D224), and back.
   { label: 'timed-switches', group: 'switches', span: 4, spin: false, build: buildTimedSwitches },
   { label: 'gates', group: 'switches', span: 4.5, spin: false, build: buildGates },
   // The cage (D202): a pickup behind bars of light, in plain view; the plate opens it (a gate), the pickup is then free.
@@ -697,23 +697,31 @@ function buildTimedSwitches() {
   return asset;
 }
 
-/** A gate and a bridge (D140) on one plate: pressed, the gate sinks and the bridge rises. */
+/**
+ * A gate and a bridge (D140) on one plate: pressed, the gate sinks and the
+ * bridge's sheets (D224) spread over a 2-wide pit.
+ */
 function buildGates() {
   const plate = createPlate(SWITCH_COLOR);
   plate.position.set(-2, 0, -0.5);
   const gate = createGate(SWITCH_COLOR, { lights: 1 });
   gate.position.set(-0.5, 0, -0.5);
-  const bridge = createGate(SWITCH_COLOR, { lights: 1, closed: false });
-  bridge.position.set(1, 0, -0.5);
-  const asset = new Group().add(plate, gate, bridge);
+  const pit = createHoleView([[0, 0], [1, 0]], PALETTE.amber);
+  pit.position.set(1, 0, -0.5);
+  const sheets = [0, 1].map((x) => {
+    const sheet = createGate(SWITCH_COLOR, { lights: 1, closed: false, sheet: true });
+    sheet.position.set(1 + x, 0, -0.5);
+    return sheet;
+  });
+  const asset = new Group().add(plate, gate, pit, ...sheets);
   let time = 0;
   asset.userData.update = (dt) => {
     time = (time + dt) % 6;
     const on = time > 1 && time < 4;
     plate.userData.set(on);
     gate.userData.set({ closed: !on, lit: Number(on) });
-    bridge.userData.set({ closed: on, lit: Number(on) });
-    for (const view of [plate, gate, bridge]) view.userData.update(dt);
+    for (const sheet of sheets) sheet.userData.set({ closed: on, lit: Number(on) });
+    for (const view of [plate, gate, ...sheets]) view.userData.update(dt);
   };
   return asset;
 }

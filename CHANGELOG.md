@@ -8,6 +8,13 @@ docs/decisions.md).
 
 ## [Unreleased]
 
+### Changed
+- The bridge is a single sheet of white glass at floor level, not a block
+  (D224): over a hole it covers the hole while it is there, so he and crates
+  cross at floor level, and it is a hole again once it goes; it grows out of
+  its middle as it comes. Validation wants a hole under a floor-level bridge;
+  the checker and the showcase know the sheet.
+
 ### Removed
 - The double jump upgrade (D216): the mid-air jump, its rings, sound, help text and
   pickup, and the checker's `double_jump` ability. His jump is 1 up and a one-tile

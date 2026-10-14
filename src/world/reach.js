@@ -27,7 +27,9 @@
  * crates stacked on it, then a placed crate, a frozen enemy or the decoy (one
  * each, on top of the stack) and him on a timed one.
  * A gate that can be both closed and open there counts as both: never in
- * the way, and floor to stand on.
+ * the way, and floor to stand on. A bridge is a sheet (D224): never in the
+ * way; while it can be there it is floor at its cell's level, over a hole
+ * a cover that makes the tile floor.
  *
  * Pause (D85, D155): a frozen enemy is a 1×1×1 block he can stand on, so
  * with the spell every cell a pausable (non-boss) enemy walks counts as
@@ -160,6 +162,8 @@ export class RoomModel {
     this.gateSolid = new Set();
     /** Gate cells that can be closed or open there: floor, never in the way. */
     this.gateFloor = new Set();
+    /** Hole tiles a bridge's sheet can cover in the configuration searched now (D224): floor. */
+    this.covered = new Set();
     this.core = null;
     this.crates = [];
     /** The cells of the crates with a spiked top (D199, a topDamage), before any push; a configuration follows them (config()). */
@@ -186,7 +190,12 @@ export class RoomModel {
       else if (object.kind === 'platform') for (const [px, py, pz] of pathCells(object.at, object.path)) this.floors.add(this.index(px, py, pz));
       else if (object.kind === 'plate' || object.kind === 'socket') this.switches.push(object);
       else if (object.kind === 'pad') this.pads.set(this.index(x, y, z), Math.floor((object.launch ?? 2.2) + 1e-9));
-      else if (object.kind === 'gate' && (object.trigger ?? 'switch') === 'switch') this.gates.push({ index: this.index(x, y, z), startsGone: object.start === 'gone', switches: object.switches ?? null });
+      else if (object.kind === 'gate' && (object.trigger ?? 'switch') === 'switch') {
+        // A sheet (D224) is the top of the cell under it, or the cover of the hole tile it lies on.
+        const sheet = object.look === 'sheet';
+        const index = sheet ? (y > 0 ? this.index(x, y - 1, z) : null) : this.index(x, y, z);
+        this.gates.push({ index, tile: sheet && y === 0 ? z * this.w + x : null, sheet, startsGone: object.start === 'gone', switches: object.switches ?? null });
+      }
       else if (object.kind === 'target') {
         this.switches.push(object);
         this.bodies.add(this.index(x, y, z));
@@ -291,7 +300,7 @@ export class RoomModel {
    */
   below(x, y, z, cfg, crate = false) {
     const grid = crate ? this.crateGrid : this.grid;
-    if (y === 0) return this.grid.isHole(x, z) && !cfg.plugged.has(z * this.w + x) ? 'hole' : 'floor';
+    if (y === 0) return this.grid.isHole(x, z) && !cfg.plugged.has(z * this.w + x) && !this.covered.has(z * this.w + x) ? 'hole' : 'floor';
     if (y > this.h) return 'air';
     if (grid.isSolid(x, y - 1, z)) {
       const type = grid.typeAt(x, y - 1, z);
@@ -621,17 +630,24 @@ export class RoomModel {
   setGates(cfg, stands) {
     const solid = new Set();
     const floor = new Set();
+    const covered = new Set();
     for (const gate of this.gates) {
       const on = this.canPower(gate.switches, cfg, stands);
       const off = !this.forcedOn(gate.switches, cfg);
       const [closed, open] = gate.startsGone ? [on, off] : [off, on];
-      if (closed && open) floor.add(gate.index);
+      // A sheet (D224) is never in the way: while it can be there it is floor, or covers its hole.
+      if (gate.sheet && closed) {
+        if (gate.tile !== null) covered.add(gate.tile);
+        else floor.add(gate.index);
+      } else if (gate.sheet) continue;
+      else if (closed && open) floor.add(gate.index);
       else if (closed) solid.add(gate.index);
     }
     const same = (a, b) => a.size === b.size && [...a].every((i) => b.has(i));
-    const changed = !same(solid, this.gateSolid) || !same(floor, this.gateFloor);
+    const changed = !same(solid, this.gateSolid) || !same(floor, this.gateFloor) || !same(covered, this.covered);
     this.gateSolid = solid;
     this.gateFloor = floor;
+    this.covered = covered;
     return changed;
   }
 }

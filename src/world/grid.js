@@ -99,6 +99,8 @@ export class Grid {
 
     /** Floor tiles: 1 where there is a hole, index z * w + x. */
     this.holes = new Uint8Array(w * d);
+    /** Floor tiles a bridge's sheet covers while it is there (D224): 1 where one does. */
+    this.covers = new Uint8Array(w * d);
     for (const [x, z] of holes) if (this.isInside(x, z)) this.holes[z * w + x] = 1;
   }
 
@@ -194,7 +196,7 @@ export class Grid {
   isHole(x, z) {
     const tx = Math.floor(x);
     const tz = Math.floor(z);
-    return this.isInside(tx, tz) && this.holes[tz * this.w + tx] === 1;
+    return this.isInside(tx, tz) && this.holes[tz * this.w + tx] === 1 && this.covers[tz * this.w + tx] === 0;
   }
 
   /**
@@ -222,5 +224,15 @@ export class Grid {
   /** The block plugging the hole tile [x, z] is gone (a compiled crate derezzed, D125): a hole again. */
   openHole(x, z) {
     if (this.isInside(x, z)) this.holes[z * this.w + x] = 1;
+  }
+
+  /**
+   * A bridge's sheet over the tile [x, z] is there or gone (D224): while
+   * there a hole under it is floor, after that a hole again (a crate that
+   * plugged it meanwhile keeps it floor).
+   * @param {boolean} on
+   */
+  coverHole(x, z, on) {
+    if (this.isInside(x, z)) this.covers[z * this.w + x] = on ? 1 : 0;
   }
 }

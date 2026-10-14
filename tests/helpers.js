@@ -148,7 +148,7 @@ export const BLOCK_TYPES = {
   collapsing: { kind: 'gate', trigger: 'step' },
   collapsing_regrow: { extends: 'collapsing', regrow: 3 },
   gate: { kind: 'gate', color: '#eef3ff' },
-  bridge: { extends: 'gate', start: 'gone' },
+  bridge: { extends: 'gate', start: 'gone', look: 'sheet' },
   cage: { kind: 'gate', look: 'cage', seeThrough: true },
   stair_x: { look: 'stair', rise: '+x' },
   stair_nx: { extends: 'stair_x', rise: '-x' },

@@ -305,14 +305,16 @@ function validateBlockTypes(blocks, report) {
       }
     }
     const type = resolved[id];
-    // The cage (D202) is a switch gate with a look: the one kind that takes one.
+    // The cage (D202) and the bridge's sheet (D224) are switch gates with a look: the one kind that takes one.
     const cage = type.kind === 'gate' && type.look === 'cage';
+    const sheet = type.kind === 'gate' && type.look === 'sheet';
     if (type.look === undefined && type.kind === undefined) report('defs.json', path, 'needs a "look" (a static block) or a "kind" (runs as room objects)');
-    else if (type.look !== undefined && type.kind !== undefined && !cage) report('defs.json', path, 'has both a "look" and a "kind"; a block type is one or the other');
+    else if (type.look !== undefined && type.kind !== undefined && !cage && !sheet) report('defs.json', path, 'has both a "look" and a "kind"; a block type is one or the other');
     else if (type.kind !== undefined) {
-      const wrong = STATIC_BLOCK_VALUES.filter((key) => key in own && !(cage && (key === 'look' || key === 'seeThrough')));
+      const wrong = STATIC_BLOCK_VALUES.filter((key) => key in own && !(cage && (key === 'look' || key === 'seeThrough')) && !(sheet && key === 'look'));
       if (wrong.length > 0) report('defs.json', path, `${wrong.join(', ')}: only for static blocks (with a "look"), not a ${type.kind} block`);
       if (cage && (type.trigger ?? 'switch') !== 'switch') report('defs.json', `${path}.look`, 'a cage is a switch gate: no step trigger');
+      if (sheet && (type.trigger ?? 'switch') !== 'switch') report('defs.json', `${path}.look`, 'a sheet is a switch gate (a bridge): no step trigger');
       if (type.seeThrough !== undefined && !cage) report('defs.json', `${path}.seeThrough`, 'only the cage look (a gate) is see-through');
       // A bridge is a switch gate; only a step gate (a collapsing block) grows back (D141).
       const trigger = type.trigger ?? 'switch';
@@ -371,12 +373,15 @@ function validateRoom(file, room, { objectTypes, pickupTypes, blockTypes, enemyT
     plates: new Map(),
     /** "x,y,z" → path of the jump pad in that cell (D221) */
     pads: new Map(),
+    /** "x,z" → path of a bridge's sheet at floor level (D224): it must cover a hole */
+    sheets: new Map(),
   };
   const exits = (room.exits ?? []).map(withExitDefaults);
   const exitFits = validateExitBounds(checks, exits);
   validateBlocks(checks, blockTypes);
   validateObjects(checks, objectTypes, texts);
   validateHoles(checks);
+  validateSheets(checks);
   validateShrine(checks);
   validateEnemies(checks, enemyTemplates);
   validatePickups(checks, pickupTypes);
@@ -457,6 +462,7 @@ function validateBlocks(checks, blockTypes) {
       // Gates (collapsing blocks too, D141) go: they don't hold up the player or a hole.
       if (type.kind === 'gate') checks.collapsing.add(cellKey(cell));
       if (type.fake || type.look === 'cage') checks.fake.add(cellKey(cell));
+      if (type.kind === 'gate' && type.look === 'sheet' && cell[1] === 0) checks.sheets.set(cellKey([cell[0], cell[2]]), path);
     }
   });
 }
@@ -772,6 +778,11 @@ function validateHoles({ room, report, filled, holes, pathCells, collapsing, pla
       holes.set(key, path);
     }
   });
+}
+
+/** A bridge's sheet at floor level (D224) covers a hole: on plain floor it would be nothing. */
+function validateSheets({ report, holes, sheets }) {
+  for (const [key, path] of sheets) if (!holes.has(key)) report(path, `a bridge at floor level lies over a hole; tile ${key.replace(',', ', ')} is floor`);
 }
 
 /** The backup shrine (D97): a floor tile inside the room, on no hole, plate, block or object. */

@@ -324,7 +324,11 @@ Edit existing files with small text edits, not a JSON dump.
   so a Zap can't take it and nothing else needs hiding. The mutation test
   lists it as a `sealed cage`. `gate`/`bridge` take `switches`
   (default: every switch in the room): a gate goes, a bridge appears while
-  all are on. In a hole they stand a block high (top 1.0): a step, not floor.
+  all are on. A gate in a hole stands a block high (top 1.0): a step, not
+  floor. A bridge is a white glass sheet at its cell's floor (D224): at y 0
+  it must lie over a hole and is floor there while powered (crates roll
+  over it; gone, he falls in and a crate on it plugs the hole); higher up a
+  walkway level with 1-high ledge tops.
   A gone bridge shows no outline: the room that first shows bridges says
   what one is in a screen text (see Screen texts below).
   Stairs `stair_x stair_nx stair_z stair_nz` (D221; one editor entry,
