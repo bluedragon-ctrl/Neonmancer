@@ -2373,3 +2373,79 @@ when he recompiles (`Game.restartRoom()`).
 - Debug invincibility makes it free.
 **Why:** a stuck player should not have to quit, and the cost keeps it from
 being a free undo for Sokoban rooms.
+### D221 — 2026-10-14 — Prototype: the jump only on pads, with stairs and slabs
+Much of the room design fights the free jump: the spiked crate (D199) stops
+hops over crates, fences and 2-high walls keep him out of places, Dead
+Pixel's fence roof (D220) stops jump-Blinks, and all of them make rooms hard
+to read. Without the jump a 1-high wall is a wall, Sokoban is honest again
+(he gets behind a crate only by walking round it), every change of height is
+one the room places, and a ledge is a one-way drop. Turned off for the whole
+game, though, it cuts the world at once: with the checker, 23 of 45 rooms lose an
+exit or a pickup, 19 of them game rooms, `boot_up`'s east exit among them.
+So it is a prototype, room by room:
+- **Room rule:** `"jump": "pads"` in a room's data (editor: Jump, "only on
+  pads"); the default stays `free`. In such a room the jump key does
+  nothing; bouncing off a bouncy enemy still works.
+- **Jump pad** (object kind `pad`): a magenta tile (his own, D98) on the
+  floor or on top of a block, no body, a square of light rising off it. The
+  moment he stands on it, it throws him up by itself, in any room: its
+  `launch` (2.2, a bouncy enemy's bounce, D48), so 2 blocks up, and over a
+  1-tile gap from anywhere on the pad (2.2 units of air travel); he steers in
+  the air. Standing still on it he bounces on the spot. (First built as the
+  one place the jump key works; the author found it unclear when to press
+  it, so it launches by itself.)
+- **Stair** (look `stair`, `rise` the way it climbs; types `stair_x`,
+  `stair_nx`, `stair_z`, `stair_nz`): from the cell at its foot he walks up
+  onto a ledge one block higher, and down again. He walks a slope
+  (`Grid.span()`, collision steps him onto it from up to 0.2 below his feet
+  and keeps him on it going down); its sides and back are walls. To crates,
+  enemies and the checker it is a block. Drawn as four steps.
+- **Slab** (look `slab`): a thin walkway at the top of its cell, level
+  with a ledge one block up; a cell up it leaves him headroom under it, so a
+  bridge can cross over a path. To crates it is a block. A single sheet of
+  glass (0.04 thick) in the room color (`GLASS.slab`), outlined round its top.
+- **Checker:** a pad's cell climbs the whole blocks of its launch (2) and
+  crosses a 1-tile gap, in any room; in a pads room there is no other climb,
+  gap, Blink from a jump or step onto a compiled crate, and a pickup two
+  cells up needs a pad; a stair links its foot to its top; he walks under a
+  slab.
+  `check:reach -- --pads` tries the rule on every room as it is.
+- **Space casts** in a pads room (the cast key E still does): the jump key
+  has nothing else to do there. Once the rule is the game's, the jump
+  action goes and Space is the cast key.
+- **Debug:** J (debug mode) makes every room pads-only, to play the rooms as
+  they are without the jump; the readout shows the rule.
+- **Test room:** `stair_lab` (dev wing, off `cage_lab`'s new west door): two
+  stairs up to a 2-high plateau, a slab bridge from it over a walkway to a
+  second plateau, a 1-high corral with a crate for a plate that opens the
+  first stair's gate, and two pads to jump a trench.
+Not decided yet, for after playing it: whether the rule becomes the game's
+(then rooms are reworked one per PR with the 5.17 reviews, starting with
+`boot_up`, and the free jump, spiked crates and fence walls go), the pad's
+height and look, and crates on stairs. Stairs are settled as they are.
+**Why:** the author asked for an analysis of removing the jump except on
+jumping blocks, with stairs and flat bridges, and to prototype it in the dev
+wing before deciding.
+### D222 — 2026-10-14 — The jump goes: pads, stairs and slabs for the whole game
+The author played the prototype (D221) and keeps it as it is now: no jump
+key, pads that throw him up by themselves, stairs, glass-sheet slabs. It
+becomes the game's rule, reached in three stages so `main` stays playable
+and the checker green after every PR:
+1. **Prep (step 5.18):** the design checklist, the room-design and
+   sokoban-design skills and the level-review agent learn the rule; the
+   checker reports which rooms still have the free jump; editor and sound
+   touches for building pads rooms.
+2. **Room reviews (step 5.17, widened):** in play order, one room a PR,
+   each review moves its room to `"jump": "pads"` and rebuilds what the
+   jump carried (lattice-plan.md, Pads-only migration: 19 game rooms lose an
+   exit, a crossing or a pickup without it; the rest are checked by play).
+   Until the last one, Space jumps in rooms not yet moved and casts in the
+   moved ones.
+3. **The jump goes (step 5.19):** once every room is a pads room, the rule
+   is the engine's: the `jump` field, the jump action, the free-jump code
+   in the player and the checker, debug J and `--pads` go; Space is the
+   cast key; what only fought the jump is retired or kept on its own merit
+   (the spiked crate, fence roofs, hop-proof 2-high walls).
+**Why:** the author likes the prototype; one room at a time keeps every
+step small, reviewable and playable, and reuses the room reviews already
+planned rather than a separate pass.

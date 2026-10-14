@@ -296,10 +296,15 @@ Edit existing files with small text edits, not a JSON dump.
   all are on. In a hole they stand a block high (top 1.0): a step, not floor.
   A gone bridge shows no outline: the room that first shows bridges says
   what one is in a screen text (see Screen texts below).
+  Prototype (D221), for rooms with `"jump": "pads"` only: `stair_x
+  stair_nx stair_z stair_nz` (a stair rising +x, −x, +z, −z: he walks up
+  it from the cell at its foot onto a ledge one higher; sides and back are
+  walls; a block to crates) and `slab` (a thin walkway at the top of its
+  cell; a cell up he walks under it).
 - **Objects** (`defs.json` objects): crates `crate crate_plain crate_cross
   crate_dashed crate_spiked`; switches `plate plate_timed plate_heavy target target_timed socket`; `platform
   spiked_platform` (need `path`, may take `switches`: run only while all on);
-  decorations `screen data_pillar memory_stack` (`overrides: { "face":
+  the jump pad `pad` (D221: on the floor or a block's top; standing on it throws him 2.2 up by itself, over a 1-tile gap, in any room; the only way up in a `"jump": "pads"` room; don't put one where he must walk across); decorations `screen data_pillar memory_stack` (`overrides: { "face":
   "+x"|"+z" }`; a screen may name a `text` in `data/lore.json`: title <= 32,
   lines <= 48 characters, only as help, see Screen texts below); `core`. `overrides` change only existing type
   values (e.g. a timer). Plates and sockets lie at y = 0 (validated): on a
@@ -333,7 +338,7 @@ Edit existing files with small text edits, not a JSON dump.
 ## Tuning (from the checklist; 60 ticks a second)
 | What | Number |
 |---|---|
-| Jump | clears 1 block up (apex 1.2), never 2; crosses a 1-tile gap, never 2, but from a 1-high top (crate, frozen enemy) beside a floor pit it crosses 2 (D162) |
+| Jump | clears 1 block up (apex 1.2), never 2; crosses a 1-tile gap, never 2, but from a 1-high top (crate, frozen enemy) beside a floor pit it crosses 2 (D162). In a `"jump": "pads"` room (prototype, D221) no jump key: a pad throws him up, elsewhere a 1-high wall is a wall and a stair the way up |
 | Headroom | wizard 1.5 high: 2 free cells over every standing surface. A block above is a ceiling, the room's height is not (he stands on top of a 2-high wall in a 3-high room); keep standing surfaces 2 below the room height for the look |
 | Bouncy enemy (bug, glowbug) | launches 2.2 above its top (0.6), so 2.8: clears a 2-high ledge, never 3 |
 | Frozen enemy | a 1-high step (1×1×1), pushed like a crate |

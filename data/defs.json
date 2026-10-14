@@ -15,6 +15,7 @@
     "plate_timed": { "extends": "plate", "timer": 3 },
     "plate_heavy": { "extends": "plate", "weight": 2 },
     "socket": { "kind": "socket", "color": "#eef3ff" },
+    "pad": { "kind": "pad", "color": "#ff2bd6", "launch": 2.2 },
     "platform": { "kind": "platform", "color": "#00f0ff", "mark": "brackets", "faces": "tinted" },
     "spiked_platform": { "kind": "platform", "color": "#ff2a3a", "shape": "spiked", "damage": 1 },
     "data_pillar": { "kind": "deco", "look": "data_pillar" },
@@ -409,6 +410,11 @@
     "collapsing_regrow": { "extends": "collapsing", "regrow": 3 },
     "gate": { "kind": "gate", "color": "#eef3ff" },
     "cage": { "kind": "gate", "look": "cage", "seeThrough": true },
-    "bridge": { "extends": "gate", "start": "gone" }
+    "bridge": { "extends": "gate", "start": "gone" },
+    "stair_x": { "look": "stair", "rise": "+x" },
+    "stair_nx": { "extends": "stair_x", "rise": "-x" },
+    "stair_z": { "extends": "stair_x", "rise": "+z" },
+    "stair_nz": { "extends": "stair_x", "rise": "-z" },
+    "slab": { "look": "slab" }
   }
 }

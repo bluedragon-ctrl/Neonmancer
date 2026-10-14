@@ -58,6 +58,8 @@ export const GLASS = {
   darkGate: { alpha: 0.85, tint: 0.6, milk: 0, rim: 0.35, frost: 0.2 },
   /** Wall panels (D179): windows, the clearest glass, so the grid outside shows. */
   panel: { alpha: 0.25, tint: 0.06, milk: 0.1, rim: 0.1, frost: 0.1 },
+  /** Slabs (D221): a bridge, one sheet of glass in the room color, clear enough to show what passes under it. */
+  slab: { alpha: 0.5, tint: 0.3, milk: 0.15, rim: 0.3 },
 };
 
 // Local position in the unit cell (the geometry runs 0..1) and the face

@@ -84,6 +84,14 @@ mobile/touch support, backend or accounts.
   the floor is at y = 0; back walls are the x = 0 and z = 0 planes.
 - 1 block = 1 unit (1x1x1). Player jump height: 1 unit (clears exactly one
   block, never two), everywhere: there is no double jump (removed, D216).
+- Prototype (D221): a room with `"jump": "pads"` has no jump key (Space
+  casts there); jump
+  pads (object kind `pad`) throw him up by themselves (2 blocks, a 1-tile
+  gap); stairs (look `stair`, a `rise`) take him a block up, slabs (look
+  `slab`) are thin glass walkways with headroom under them. Default
+  `free` while rooms move over one by one in their reviews, then the
+  jump goes for good (D222; lattice-plan.md, Pads-only migration); test
+  room `stair_lab`.
 - Player hitbox 0.6 x 1.5 x 0.6 (the hat is visual only), so the wizard
   needs 2 blocks of headroom.
 - Blocks snap to the grid; player and enemies move freely (sub-grid).
@@ -484,7 +492,8 @@ not critical.
 ## 9. Tooling
 
 - **Debug mode** (toggle key): collision boxes, FPS, room jump,
-  invincibility, test damage, finding fragments (K).
+  invincibility, test damage, finding fragments (K), jump only on pads in
+  every room (J, D221).
 - **Access pass** (D113): a test pickup (kind `access`) that raises the
   access level at once; one (level 3) lies in `boot_up`, the start, for
   testing. Not for real game content.
@@ -512,7 +521,8 @@ not critical.
   spells found so far, and the
   world as a fixpoint, flagging exits, pickups and rooms that stay out of
   reach; `<room>` checks one room (`--with` abilities, `--from` an exit),
-  `--rooms` lists what each exit and pickup needs. Used by CI, the
+  `--rooms` lists what each exit and pickup needs, `--pads` tries the
+  pads-only jump (D221) on every room. Used by CI, the
   world map tool, and design skills/subagents. Knows nothing of enemies
   or timing.
 - **Claude Code skills and subagents** (D132, `.claude/`): the
@@ -620,6 +630,8 @@ sounding Home Lattice and ship it to testers.
   secret rooms (entrances built; their contents wait, D186). The
   Lattice's ambience (data flows, glass panels, D179) and the Outer
   Buffer's look are done.
+- Pads only (D222): prep (5.18), each room review moves its room to
+  pads (5.17), then the jump goes (5.19).
 - Core first (D186): a Lattice ladder (each room's type, rung and trick
   in docs/lattice-plan.md), then every Lattice room reviewed one by one
   with the room-design skill and the author's tuning.

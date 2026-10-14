@@ -25,6 +25,7 @@ export const ACTIONS = [
   'debugInvincible',
   'debugDamage',
   'debugFragments',
+  'debugJumpRule',
   'fullscreen',
   'editor',
   'confirm',
@@ -50,6 +51,7 @@ export const DEFAULT_BINDINGS = {
   debugInvincible: ['KeyI'],
   debugDamage: ['KeyH'],
   debugFragments: ['KeyK'],
+  debugJumpRule: ['KeyJ'],
   fullscreen: ['KeyF'],
   // The room editor (src/editor/); its own keys are in src/editor/editor.js.
   editor: ['F2'],

@@ -96,6 +96,7 @@ export function validateData(files) {
     if (type.timer !== undefined && !TIMED_SWITCH_KINDS.includes(type.kind)) report('defs.json', `objects.${id}.timer`, `only switches (targets and plates) are timed, not a ${type.kind}`);
     // Only plates have a weight (D200).
     if (type.weight !== undefined && type.kind !== 'plate') report('defs.json', `objects.${id}.weight`, `only plates have a weight, not a ${type.kind}`);
+    if (type.launch !== undefined && type.kind !== 'pad') report('defs.json', `objects.${id}.launch`, `only jump pads launch, not a ${type.kind}`);
     // Only a decoration has a look (D117); every other kind needs a color.
     if (type.kind === 'deco' && !DECO_LOOKS[type.look]) report('defs.json', `objects.${id}.look`, `a decoration needs a look: ${Object.keys(DECO_LOOKS).join(', ')}`);
     if (type.kind !== 'deco' && type.look !== undefined) report('defs.json', `objects.${id}.look`, `only decorations have a look, not a ${type.kind}`);
@@ -319,6 +320,9 @@ function validateBlockTypes(blocks, report) {
       if (type.regrow !== undefined && trigger !== 'step') report('defs.json', `${path}.regrow`, 'only step gates (collapsing blocks) grow back; a switch gate comes back with its switches');
     } else {
       if (type.passes !== undefined && type.look !== 'fence') report('defs.json', `${path}.passes`, 'only the fence look (see-through) can let bodies pass');
+      // A stair climbs one way (D221).
+      if (type.look === 'stair' && type.rise === undefined) report('defs.json', path, 'a stair needs a "rise": the way it climbs');
+      if (type.rise !== undefined && type.look !== 'stair') report('defs.json', `${path}.rise`, 'only the stair look has a "rise"');
       const wrong = KIND_BLOCK_VALUES.filter((key) => key in own);
       if (wrong.length > 0) report('defs.json', path, `${wrong.join(', ')}: only for blocks with a "kind", not a static block`);
     }
@@ -365,6 +369,8 @@ function validateRoom(file, room, { objectTypes, pickupTypes, blockTypes, enemyT
     ids: new Set(),
     /** "x,z" → path of the plate on that floor tile (D75) */
     plates: new Map(),
+    /** "x,y,z" → path of the jump pad in that cell (D221) */
+    pads: new Map(),
   };
   const exits = (room.exits ?? []).map(withExitDefaults);
   const exitFits = validateExitBounds(checks, exits);
@@ -474,6 +480,8 @@ function validateObjects(checks, objectTypes, texts) {
     // A plate is a floor tile, no body (D75): things may stand on it. A
     // socket is a floor tile too, a hole until a crate fills it (D194).
     if (type?.kind === 'plate' || type?.kind === 'socket') return validatePlate(checks, path, object.at, type.kind);
+    // A jump pad (D221) is a tile too, on the floor or on top of a block.
+    if (type?.kind === 'pad') return validatePad(checks, path, object.at);
     const inside = fillCell(checks, object.at, path);
     // The core stands 2 high (D101), a decoration as high as its look
     // (D117): the cells above are theirs too.
@@ -694,6 +702,19 @@ function validatePlate({ room, report, filled, plates, holes }, path, [x, y, z],
     plates.set(cellKey([x, z]), path);
     if (kind === 'socket') holes.set(cellKey([x, z]), path);
   }
+}
+
+/**
+ * A jump pad (D221): a tile in a free cell, on the floor or on a static
+ * block, one to a cell.
+ */
+function validatePad({ room, report, filled, pads }, path, [x, y, z]) {
+  const [w, h, d] = room.size;
+  if (x < 0 || z < 0 || y < 0 || x >= w || y >= h || z >= d) report(`${path}.at`, `cell ${cellText([x, y, z])} is outside size ${cellText(room.size)}`);
+  else if (filled.has(cellKey([x, y, z]))) report(`${path}.at`, `cell ${cellText([x, y, z])} is filled by ${filled.get(cellKey([x, y, z]))}`);
+  else if (pads.has(cellKey([x, y, z]))) report(`${path}.at`, `cell ${cellText([x, y, z])} has ${pads.get(cellKey([x, y, z]))} already`);
+  else if (y > 0 && !filled.get(cellKey([x, y - 1, z]))?.startsWith('blocks')) report(`${path}.at`, `a pad lies on the floor or on top of a block: nothing under ${cellText([x, y, z])}`);
+  else pads.set(cellKey([x, y, z]), path);
 }
 
 /**

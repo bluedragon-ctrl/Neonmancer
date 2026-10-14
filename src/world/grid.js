@@ -22,11 +22,34 @@
  * A type with `passes` (the crate stream, D198) is solid to every kind of
  * body but those it names: forBody() gives the grid as a kind of body sees
  * it. isSolid() itself is the wizard's and the active enemies' view.
+ *
+ * Two looks fill only part of their cell (D221), for movers that ask
+ * span(): a stair is a slope rising across the cell the way of its
+ * `rise`, a slab a thin walkway at the top of its cell, with room under
+ * it. isSolid() still says the whole cell, so crates, enemies and the
+ * reachability checker treat them as blocks.
  */
 import { exitCells } from '../data/room-data.js';
 
 /** Cell codes that aren't a block type from the room's data. */
 export const CELL = { empty: 0, edge: 1 };
+
+/**
+ * How thick a slab is (D221): a single sheet of glass. Under one a cell up
+ * the wizard (1.5 high) walks upright; he is taller than a tick's fall, so
+ * he never drops through it.
+ */
+export const SLAB_HEIGHT = 0.04;
+
+/** A stair's `rise` (the way it climbs, D221) as [axis, sign]. */
+export const RISES = { '+x': [0, 1], '-x': [0, -1], '+z': [2, 1], '-z': [2, -1] };
+
+/** What part of its cell a block type fills (D221): null for the whole cell. */
+function shapeOf(type) {
+  if (type?.look === 'stair') return { rise: RISES[type.rise] };
+  if (type?.look === 'slab') return { bottom: 1 - SLAB_HEIGHT };
+  return null;
+}
 
 /** What typeAt() returns beyond the room's sides and below its floor: solid, nothing else. */
 export const EDGE_TYPE = Object.freeze({ id: 'edge', static: true, look: 'plain' });
@@ -67,6 +90,10 @@ export class Grid {
         if (blockTypes[id].passes) for (let above = y + 1; above < h; above++) this.cells[this.index(x, above, z)] ||= code;
       }
     }
+    /** What part of its cell each cell code fills (D221): null for the whole cell. */
+    this.shapes = this.types.map(shapeOf);
+    /** Does any cell fill only part of itself (a stair or a slab)? Collision asks span() only then. */
+    this.shaped = this.shapes.some(Boolean);
     /** The grid as each kind of body sees it, made when first asked for (forBody()). */
     this.views = new Map();
 
@@ -102,6 +129,27 @@ export class Grid {
   /** Is the cell with integer coordinates [x, y, z] solid? */
   isSolid(x, y, z) {
     return this.cellAt(x, y, z) !== CELL.empty;
+  }
+
+  /**
+   * The heights [bottom, top] a solid cell [x, y, z] fills under `box`
+   * (D221): the whole cell for a block; a slab only its top SLAB_HEIGHT; a
+   * stair from its foot up to its slope's highest point under the box's
+   * footprint, so a box standing on it rests on its front edge.
+   * @param {number} x
+   * @param {number} y
+   * @param {number} z
+   * @param {number[][]} box the mover's box (physics/collision.js bodyBox())
+   * @returns {number[]}
+   */
+  span(x, y, z, box) {
+    const shape = this.shapes[this.cellAt(x, y, z)];
+    if (!shape) return [y, y + 1];
+    if (shape.bottom !== undefined) return [y + shape.bottom, y + 1];
+    const [axis, sign] = shape.rise;
+    const start = axis === 0 ? x : z;
+    const reach = sign > 0 ? box[axis][1] - start : start + 1 - box[axis][0];
+    return [y, y + Math.min(1, Math.max(0, reach))];
   }
 
   /**

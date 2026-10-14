@@ -24,6 +24,7 @@ import { createRoomView } from './room-view.js';
 import { pickPanels } from './walls.js';
 import { createShrine } from './shrine-view.js';
 import { LockView, PlateView, SocketView, TargetView } from './switch-view.js';
+import { PadView } from './pad-view.js';
 import { DecoyView } from './decoy-view.js';
 import { ScanView } from './scan-view.js';
 import { ZapView } from './zap-view.js';
@@ -41,6 +42,7 @@ export const OBJECT_VIEWS = {
   core: CoreView,
   deco: DecoView,
   gate: GateView,
+  pad: PadView,
 };
 
 /**

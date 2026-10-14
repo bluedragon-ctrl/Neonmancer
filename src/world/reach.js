@@ -38,6 +38,13 @@
  * one enemy may count in several cells at once (optimistic, like the
  * timing), but it holds one plate at most.
  *
+ * Jump rule (D221): a jump pad throws him up its `launch` (2 blocks and
+ * a one-tile gap by default) in any room; in a room with `"jump": "pads"`
+ * that is his only jump: elsewhere no climb, no gap, no Blink from a jump,
+ * no step onto a compiled crate, and a pickup two cells up is out of reach.
+ * A stair takes him from the cell at its foot onto its top, one up; down
+ * again is a step off a ledge.
+ *
  * What it knows nothing about, on purpose: enemies and their fire (combat
  * is a different check), timing (collapsing blocks, platforms waiting,
  * spell durations, how long a timed switch stays on), energy, and which
@@ -47,7 +54,7 @@
  * unreachable is a real problem, a verdict of reachable is not a promise.
  */
 import { DECO_LOOKS, exitCells } from '../data/room-data.js';
-import { Grid } from './grid.js';
+import { Grid, RISES } from './grid.js';
 import { pathCells } from './path.js';
 
 /** The abilities the search knows how to use, spells by id. */
@@ -102,6 +109,10 @@ export class RoomModel {
     [this.w, this.h, this.d] = room.size;
     this.up = JUMP.up;
     this.gap = JUMP.gap;
+    /** Does he jump anywhere, or only on pads (D221)? */
+    this.freeJump = (room.jump ?? 'free') === 'free';
+    /** The jump pads (D221): cell index → the whole blocks a launch lifts him. */
+    this.pads = new Map();
 
     // A scan derezzes every fake block (optimistically: wherever he stands).
     const blocks = {};
@@ -109,6 +120,18 @@ export class RoomModel {
     this.grid = new Grid({ size: room.size, blocks, blockTypes: room.blockTypes, holes: room.holes });
     /** The grid as a crate sees it: a crate stream's cells are open (D198). */
     this.crateGrid = this.grid.forBody('crate');
+
+    /** The way each stair cell climbs (D221), by cell index: [dx, dz]. */
+    this.stairs = new Map();
+    /** Slab cells (D221), by cell index: his head passes under one. */
+    this.slabs = new Set();
+    for (const [id, cells] of Object.entries(blocks)) {
+      const type = room.blockTypes[id];
+      if (type.look === 'slab') for (const [x, y, z] of cells) this.slabs.add(this.index(x, y, z));
+      if (type.look !== 'stair') continue;
+      const [axis, sign] = RISES[type.rise];
+      for (const [x, y, z] of cells) this.stairs.set(this.index(x, y, z), axis === 0 ? [sign, 0] : [0, sign]);
+    }
 
     /** Cell indices of fixed bodies: they block, and he can stand on them. */
     this.bodies = new Set();
@@ -147,6 +170,7 @@ export class RoomModel {
       }
       else if (object.kind === 'platform') for (const [px, py, pz] of pathCells(object.at, object.path)) this.floors.add(this.index(px, py, pz));
       else if (object.kind === 'plate' || object.kind === 'socket') this.switches.push(object);
+      else if (object.kind === 'pad') this.pads.set(this.index(x, y, z), Math.floor((object.launch ?? 2.2) + 1e-9));
       else if (object.kind === 'gate' && (object.trigger ?? 'switch') === 'switch') this.gates.push({ index: this.index(x, y, z), startsGone: object.start === 'gone', switches: object.switches ?? null });
       else if (object.kind === 'target') {
         this.switches.push(object);
@@ -206,6 +230,14 @@ export class RoomModel {
     return changed;
   }
 
+  /**
+   * How many blocks up he gets from the cell he stands in (D221): a pad's
+   * launch, his jump in a room with a free jump, else 0.
+   */
+  climbFrom(x, y, z) {
+    return this.pads.get(this.index(x, y, z)) ?? (this.freeJump ? this.up : 0);
+  }
+
   /** Index of a cell inside the room (y up to the room's height). */
   index(x, y, z) {
     return (y * this.d + z) * this.w + x;
@@ -256,9 +288,10 @@ export class RoomModel {
     return 'air';
   }
 
-  /** Room for his body: two free cells. */
+  /** Room for his body: two free cells, or a slab over the first (D221: he is 1.5 high). */
   clear(x, y, z, cfg) {
-    return !this.blocked(x, y, z, cfg) && !this.blocked(x, y + 1, z, cfg);
+    if (this.blocked(x, y, z, cfg)) return false;
+    return !this.blocked(x, y + 1, z, cfg) || (y + 1 < this.h && this.grid.isInside(x, z) && this.slabs.has(this.index(x, y + 1, z)));
   }
 
   /**
@@ -321,15 +354,22 @@ export class RoomModel {
     };
     for (const [x, y, z] of starts) land(x, y, z);
 
-    const { up, gap, abilities } = this;
+    const { abilities } = this;
     while (queue.length > 0) {
       const [x, y, z] = queue.pop();
+      // A pad throws him up; without a free jump (D221) nothing else does.
+      const up = this.climbFrom(x, y, z);
+      const jumps = up > 0;
+      const gap = jumps ? this.gap : 0;
       for (const dir of DIRS) {
         const [dx, dz] = dir;
         const nx = x + dx;
         const nz = z + dz;
         // Walk on or step off a ledge.
         land(nx, y, nz);
+        // Walk up a stair (D221) from its foot onto its top.
+        const rise = this.grid.isInside(nx, nz) && y < this.h ? this.stairs.get(this.index(nx, y, nz)) : undefined;
+        if (rise && rise[0] === dx && rise[1] === dz && this.landing(nx, y + 1, nz, cfg) === y + 1) add(nx, y + 1, nz);
         // Jump up: the cell is a block (or a body) he can stand on top of.
         for (let climb = 1; climb <= up; climb++) {
           // Headroom for the rise, then the landing cell on top of what he climbs.
@@ -356,7 +396,7 @@ export class RoomModel {
         // Blink from a running jump (D217): cast near the top, he keeps the jump's
         // arc, so it carries two cells further and a block up (sim: a 4-tile pit,
         // onto a 1-high ledge beyond it); he lands anywhere along the way.
-        if (abilities.has('blink') && !this.blocked(x, y + 2, z, cfg)) {
+        if (jumps && abilities.has('blink') && !this.blocked(x, y + 2, z, cfg)) {
           const n = this.sweep(x, y + 1, z, dir, this.blinkRange + 2, cfg);
           for (let k = 1; k <= n; k++) land(x + dx * k, y + 1, z + dz * k);
         }
@@ -694,9 +734,9 @@ export function collect(model, cfg, stands, reach) {
     if (reach.pickups.has(pickup.id)) continue;
     const [x, y, z] = pickup.at;
     if (!model.grid.isInside(x, z) || model.blocked(x, y, z, cfg)) continue;
-    for (let lift = 0; lift <= 2; lift++) {
+    for (let lift = 0; lift <= 3; lift++) {
       const base = y - lift;
-      if (base < 0 || !standAt(x, base, z)) continue;
+      if (base < 0 || !standAt(x, base, z) || lift > 1 + model.climbFrom(x, base, z)) continue;
       let free = true;
       for (let dy = 1; dy <= lift; dy++) free &&= !model.blocked(x, base + dy, z, cfg);
       if (free) {

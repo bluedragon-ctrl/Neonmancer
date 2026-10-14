@@ -11,6 +11,7 @@
 //   --from exit_id: with --with, arrive through that exit instead of at the spawn point
 //   --rooms: all rooms: also list what each exit and pickup needs
 //   --json: print the report as JSON instead
+//   --pads: as if every room had "jump": "pads" (D221): he jumps only on pads
 import { fileURLToPath } from 'node:url';
 import { checkData, readDataFiles } from './check-data.js';
 import { loadGameData } from '../src/data/load.js';
@@ -32,6 +33,8 @@ if (dataErrors.length > 0) {
   process.exit(1);
 }
 const content = loadGameData(readDataFiles(root).files);
+// Try the pads-only jump (D221) on every room as it is.
+if (args.has('--pads')) for (const room of content.rooms.values()) room.jump = 'pads';
 if (roomId && !content.rooms.has(roomId)) {
   console.error(`No room "${roomId}". Rooms: ${[...content.rooms.keys()].join(', ')}`);
   process.exit(1);

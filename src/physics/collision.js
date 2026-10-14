@@ -9,6 +9,11 @@
  *
  * Bodies are anything with `box()` returning [[minX, maxX], [minY, maxY],
  * [minZ, maxZ]] (room objects and the wizard); the mover never collides with itself.
+ *
+ * A stair or a slab fills only part of its cell (D221, Grid.span()): a
+ * mover collides with that part. Walking into a stair's slope no higher
+ * than `stepUp` above the feet is no collision: the next vertical move
+ * lifts him onto it (that is how the wizard climbs a stair).
  */
 
 /** Overlaps smaller than this don't count, so touching faces never collide. */
@@ -108,8 +113,10 @@ export function touchedCell(box, grid, test, reach = 0.02) {
  * @param {{ isSolid(x: number, y: number, z: number): boolean }} grid
  * @param {Iterable<{ box(): number[][] }>} [bodies] moving bodies
  * @param {object} [self] the mover itself, skipped among the bodies
+ * @param {number} [stepUp] how far below its feet a stair's slope may rise
+ *   on a level move and still be walked onto (D221); 0 for all but the wizard
  */
-export function moveAxis(pos, size, axis, delta, grid, bodies = [], self = null) {
+export function moveAxis(pos, size, axis, delta, grid, bodies = [], self = null, stepUp = 0) {
   if (delta === 0) return false;
   pos[axis] += delta;
 
@@ -122,12 +129,18 @@ export function moveAxis(pos, size, axis, delta, grid, bodies = [], self = null)
     for (let y = ranges[1][0]; y <= ranges[1][1]; y++) {
       for (let z = ranges[2][0]; z <= ranges[2][1]; z++) {
         if (!grid.isSolid(x, y, z)) continue;
-        const cell = [x, y, z][axis];
+        let faces = [[x, y, z][axis], [x, y, z][axis] + 1];
+        // A stair or a slab (D221): only the part it fills; a low slope is walked onto.
+        if (grid.shaped) {
+          const span = grid.span(x, y, z, box);
+          if (!overlaps(box[1], span) || (axis !== 1 && box[1][0] >= span[1] - stepUp)) continue;
+          if (axis === 1) faces = span;
+        }
         // Offset from the body's reference point to the face that touches.
         const [min, max] = box[axis];
         const toMin = pos[axis] - min;
         const toMax = max - pos[axis];
-        const stop = delta > 0 ? cell - toMax : cell + 1 + toMin;
+        const stop = delta > 0 ? faces[0] - toMax : faces[1] + toMin;
         limit = delta > 0 ? Math.min(limit, stop) : Math.max(limit, stop);
         blocked = true;
       }
@@ -165,14 +178,19 @@ export function surfaceBelow(box, grid, bodies = [], self = null) {
   const [z0, z1] = cellRange(box[2]);
   const bottom = box[1][0];
   let top = 0;
-  search: for (let y = Math.floor(bottom + EPS) - 1; y >= 0; y--) {
+  // A stair's slope (D221) may lie in the cell of the feet: start there.
+  for (let y = Math.floor(bottom + EPS) - (grid.shaped ? 0 : 1); y >= 0; y--) {
+    let found = -1;
     for (let x = x0; x <= x1; x++) {
       for (let z = z0; z <= z1; z++) {
-        if (grid.isSolid(x, y, z)) {
-          top = y + 1;
-          break search;
-        }
+        if (!grid.isSolid(x, y, z)) continue;
+        const height = grid.shaped ? grid.span(x, y, z, box)[1] : y + 1;
+        if (height <= bottom + EPS) found = Math.max(found, height);
       }
+    }
+    if (found >= 0) {
+      top = found;
+      break;
     }
   }
   for (const body of bodies) {

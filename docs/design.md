@@ -51,8 +51,8 @@ The shares are a guide, tuned in playtests.
 | Action | Keys |
 |---|---|
 | Move | WASD / arrow keys; grid-aligned by default: Right ↗, Up ↖, Left ↙, Down ↘ |
-| Jump | Space |
-| Cast (the selected spell) | E / Numpad 0 |
+| Jump | Space (in a pads-only room, D221: casts instead) |
+| Cast (the selected spell) | E / Numpad 0; Space in a pads-only room (D221) |
 | Switch spell | Tab (next) / Q (previous) |
 | Pause menu (and back, in a menu) | Esc / P |
 | Map (and back) | M |
@@ -71,6 +71,7 @@ Debug mode only, once toggled on with F3:
 | Toggle invincibility | I |
 | Test damage (−1 integrity) | H |
 | Find the next 8 fragments | K |
+| No jump key, only pads, every room (D221) | J |
 
 Keys are physical positions (`KeyboardEvent.code`), so the layout is the
 same on QWERTY, QWERTZ and AZERTY keyboards.
@@ -84,6 +85,11 @@ same on QWERTY, QWERTZ and AZERTY keyboards.
   height (no short hops), so the block rule never depends on timing (D19).
 - Forgiveness: a jump still works 6 ticks after walking off a ledge, and a
   jump pressed up to 6 ticks before landing happens on landing.
+- Pads-only jump (prototype, D221): in a room with `"jump": "pads"` the jump
+  key does nothing. A jump pad throws him up by itself the moment he stands
+  on it (any room; 2.2 above it, over a 1-tile gap). Stairs take him one
+  block up (he walks their slope; their sides are walls), slabs are thin
+  glass walkways with headroom under them. Test room: `stair_lab` (dev wing).
 - Turns smoothly towards the walking direction; starts facing the camera.
 - Tuning values live in `PLAYER` in `src/entities/player.js`.
 
@@ -2440,8 +2446,10 @@ decisions before the code lands. Every step also (D43):
 - updates `docs/design.md`, `docs/architecture.md` and CHANGELOG, and
   records new decisions.
 
-**Next: Phase 5, step 5.17, the room reviews against the Lattice
-ladder** (D186, D187; 5.3 music waits for the author's tracks).
+**Next: Phase 5, step 5.18, the prep for the pads-only rule (D222), then
+step 5.17, the room reviews against the Lattice ladder, each moving its
+room to the rule** (D186, D187, D222; 5.3 music waits for the author's
+tracks).
 
 ### Phase 5 (v0.5) steps: Home Lattice playtest
 
@@ -2457,10 +2465,12 @@ author flags them authored (D90). Room plan: [lattice-plan.md](lattice-plan.md).
 | # | Branch | Delivers |
 |---|---|---|
 | 5.3 | `feat/music` | The author's tracks trimmed for seamless loops: Lattice, boss, title; room and biome mapping, a boss switch and a crossfade back. |
-| 5.17 | `rooms/<id>` | The room reviews, one room a session and a PR, in play order: the room-design skill's rework workflow against its ladder line, then the author's tuning in the editor. |
+| 5.18 | `chore/pads-rule-prep` | Prep for the pads-only rule (D222): the room design checklist, the room-design and sokoban-design skills and the level-review agent learn pads, stairs and slabs (heights, 1-high walls, one-way drops, where a pad may lie, `xsb.mjs` walls 1 high); `check:reach` lists the rooms still on the free jump; editor: one stair entry turned with a key, a lower pad variant if reviews need one; a launch sound of its own. |
+| 5.17 | `rooms/<id>` | The room reviews, one room a session and a PR, in play order: the room-design skill's rework workflow against its ladder line, then the author's tuning in the editor. Each review moves its room to `"jump": "pads"` and rebuilds what the jump carried (lattice-plan.md, Pads-only migration), the Outer Buffer doors (5.11) with their host rooms. |
+| 5.19 | `feat/no-jump` | After the last room review (D222): the pads-only rule is the engine's. The room `jump` field (and its editor box), the jump action, the free-jump code in the player (key, coyote time, buffer) and the checker, debug J and `check:reach --pads` go; Space casts; the controls screen and help follow. The spiked crate, fence roofs and hop-proof walls are retired or kept on their own merit; CLAUDE.md, design.md, the ladder rules and the skills lose the free jump. |
 | 5.11 | `feat/outer-buffer-secrets` | In progress: the secret cluster's contents, one room a PR, hard push puzzles (D173, D186). Done: Dead Pixel (D219). |
 | 5.12 | `feat/quality-presets` | Quality presets, auto fallback and render scale wired up (D76), a check on a weaker GPU. |
-| 5.13 | `feat/onboarding-feedback` | The first minute from title to the first disk, the controls screen, the pause entry that copies debug info (version, room, key) for feedback. |
+| 5.13 | `feat/onboarding-feedback` | The first minute from title to the first disk (stairs and a pad before any spell, D222), the controls screen (Space casts), the pause entry that copies debug info (version, room, key) for feedback. |
 | 5.14 | `chore/balance-pass` | Difficulty, energy, backups and shrines across the Lattice from full playthroughs. |
 | 5.15 | `chore/release-0.5.0` | Docs pass, tag `v0.5.0`, the GitHub Release: **Playtest 1**. |
 

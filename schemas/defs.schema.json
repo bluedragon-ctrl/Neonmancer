@@ -329,8 +329,8 @@
           "description": "Variant: the base block type (one without \"extends\") whose values it takes; its own values replace the base's."
         },
         "look": {
-          "enum": ["plain", "hazard", "void", "fence", "cage"],
-          "description": "Static blocks: plain (dark faces, neon edges), hazard (red pixels switching on and off, flares when it hurts), void (black mist with gray wisps sinking inside it, D99) or fence (no faces: horizontal data streams through the middle of the cell, linked with the fences next to it, D167; goes with \"seeThrough\"). cage (a switch gate only, D202: a one-cell box of light bars round a pickup, see-through, with \"seeThrough\"). Looks are built into the engine (src/render/block-fx.js, src/render/fence.js, src/render/cage-view.js)."
+          "enum": ["plain", "hazard", "void", "fence", "cage", "stair", "slab"],
+          "description": "Static blocks: plain (dark faces, neon edges), hazard (red pixels switching on and off, flares when it hurts), void (black mist with gray wisps sinking inside it, D99) or fence (no faces: horizontal data streams through the middle of the cell, linked with the fences next to it, D167; goes with \"seeThrough\"). cage (a switch gate only, D202: a one-cell box of light bars round a pickup, see-through, with \"seeThrough\"). stair (D221, with \"rise\"): steps up across the cell; the wizard walks up it from its foot onto a ledge one block higher, and down again; its sides and its back are a wall, and to crates and enemies it is a block. slab (D221): a single sheet of glass at the top of the cell, a walkway level with a ledge one block up, with room under it for the wizard when it is two blocks up; to crates it is a block. Looks are built into the engine (src/render/block-fx.js, src/render/fence.js, src/render/cage-view.js)."
         },
         "kind": {
           "enum": ["gate"],
@@ -350,6 +350,7 @@
           "$ref": "common.schema.json#/$defs/color",
           "description": "Edges (and lit pixels or grains). Without a color, plain blocks and gates take the room color (structure, D99); switch gates are white (a mechanism), the cage (D202) the room color."
         },
+        "rise": { "enum": ["+x", "-x", "+z", "-z"], "description": "The stair look only (D221): the way it climbs. The wizard walks onto it from the cell on the other side, at its foot." },
         "damage": { "type": "integer", "minimum": 1, "description": "Static blocks: integrity the wizard loses when he touches it (stands on it or walks into it)." },
         "lethal": { "type": "boolean", "description": "Static blocks: landing on top kills the wizard and enemies instantly; touching a side is safe." },
         "seeThrough": { "type": "boolean", "description": "Static blocks, and the cage (a gate with the cage look, D202; the pickup in it shows, a bolt passes): solid to bodies (the wizard, enemies, crates; he can stand on top), but bolts (his Zap, enemies' shots) and enemies' sight pass through it (D167). Blink and Warp stop at it as at any block." },
@@ -521,8 +522,8 @@
           "description": "Variant (D145): the base object type (one without \"extends\") whose values it takes; its own values replace the base's. It keeps the base's kind."
         },
         "kind": {
-          "enum": ["pushable", "platform", "target", "plate", "socket", "core", "deco"],
-          "description": "Which engine behavior the object uses. pushable: the wizard pushes it; platform: follows its path (room data \"path\") carrying the wizard and pushables (with \"damage\" it hurts him instead, a spiked platform, D82); target: a fixed block a Zap switches on and off; plate: a floor tile (y 0) that is on while a crate, an enemy or the wizard stands on it. Targets and plates are switches: they power the room's locked exits, gate blocks and platforms that link them (room data \"switches\", by default every switch in the room), each powered while all its switches are on (D75, D140); their look is fixed (render/switch-view.js), only the color comes from here. Gates are block types (\"blocks\", D141). core: the central core (D101), a fixed block that takes the key fragments: touching it raises the wizard's access level to what his fragments earn (world.json \"fragments\"), and with all of them the Grid reboots; at most one in the world. deco: a decoration (D117), a fixed body as big as its \"look\" that does nothing; it has no color of its own and takes the room's. Collapsing blocks are block types (\"blocks\", D60)."
+          "enum": ["pushable", "platform", "target", "plate", "socket", "core", "deco", "pad"],
+          "description": "Which engine behavior the object uses. pushable: the wizard pushes it; platform: follows its path (room data \"path\") carrying the wizard and pushables (with \"damage\" it hurts him instead, a spiked platform, D82); target: a fixed block a Zap switches on and off; plate: a floor tile (y 0) that is on while a crate, an enemy or the wizard stands on it. Targets and plates are switches: they power the room's locked exits, gate blocks and platforms that link them (room data \"switches\", by default every switch in the room), each powered while all its switches are on (D75, D140); their look is fixed (render/switch-view.js), only the color comes from here. Gates are block types (\"blocks\", D141). core: the central core (D101), a fixed block that takes the key fragments: touching it raises the wizard's access level to what his fragments earn (world.json \"fragments\"), and with all of them the Grid reboots; at most one in the world. deco: a decoration (D117), a fixed body as big as its \"look\" that does nothing; it has no color of its own and takes the room's. pad: a jump pad (D221), a tile on the floor or on top of a block, no body: it throws the wizard into the air (\"launch\") the moment he stands on it, in any room; in a room without a free jump (room \"jump\": \"pads\") it is his only way up. Collapsing blocks are block types (\"blocks\", D60)."
         },
         "look": {
           "enum": ["data_pillar", "screen", "memory_stack"],
@@ -590,6 +591,12 @@
           "minimum": 1,
           "maximum": 4,
           "description": "Plates only (D200): the weight it needs, default 1. Every body resting in its column counts 1 (a crate, a frozen enemy, the decoy, the wizard, and bodies stacked on one another); it is pressed once their number is at least this. Under too little weight it flickers half-lit."
+        },
+        "launch": {
+          "type": "number",
+          "minimum": 1.2,
+          "maximum": 4.2,
+          "description": "Jump pads only (D221): how high above the pad it throws the wizard (units, apex of his feet), the moment he stands on it. 2.2, a bouncy enemy's bounce: 2 blocks up, over a 1-tile gap from anywhere on the pad; the checker counts the whole blocks below it as his climb from the pad."
         }
       }
     }
