@@ -5,6 +5,7 @@
   "name": "Boot Up",
   "biome": "home_lattice",
   "size": [8, 4, 8],
+  "jump": "pads",
   "spawn": [2.5, 0, 1.5],
   "exits": [
     { "id": "east", "side": "+x", "at": 3, "y": 2 },
@@ -13,12 +14,14 @@
   "blocks": [
     { "at": [1, 0, 4] },
     { "at": [0, 0, 3], "to": [2, 0, 3] },
-    { "at": [3, 0, 2], "to": [3, 0, 4] },
-    { "at": [4, 0, 2], "to": [4, 1, 4] },
+    { "type": "stair_x", "at": [3, 0, 2] },
+    { "at": [3, 0, 3], "to": [4, 0, 4] },
+    { "at": [4, 0, 2] },
     { "at": [6, 0, 2], "to": [7, 1, 4] }
   ],
   "shrine": [4, 6],
   "objects": [
+    { "id": "pad_1", "type": "pad", "at": [4, 1, 4] },
     { "id": "screen_1", "type": "screen", "at": [0, 0, 0], "text": "tut_move" },
     { "id": "data_pillar_1", "type": "data_pillar", "at": [6, 0, 0] },
     { "id": "screen_2", "type": "screen", "at": [0, 0, 7], "overrides": { "face": "+x" } }

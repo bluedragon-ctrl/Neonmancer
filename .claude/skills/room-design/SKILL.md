@@ -377,7 +377,7 @@ Edit existing files with small text edits, not a JSON dump.
 | What | Number |
 |---|---|
 | Pads room (D222) | no jump: a 1-high wall is a wall, a crate a box he walks round; every ledge a one-way drop |
-| Pad | 2.2 above it the moment he stands on it: a 2-high ledge from the floor (3-high from a pad on a block), over a 1-tile gap; the pad's cell and three above free; up to a 2-high ledge ~30 ticks (0.5 s), back down to its level ~46 (0.77 s) |
+| Pad | 2.2 above it the moment he stands on it: a 2-high ledge from the floor (3-high from a pad on a block), over a 1-tile gap onto a ledge level or 1 higher, never 2 (D225); the pad's cell and three above free; up to a 2-high ledge ~30 ticks (0.5 s), back down to its level ~46 (0.77 s) |
 | Stair | 1 up from its foot, the way it rises; walked at walking speed; a block to crates |
 | Bug bounce in a pads room (D223) | only when he falls onto it: 2.8 over its lane, a 2-high ledge, never 3; the checker counts the whole lane |
 | Free jump (rooms not yet reviewed) | clears 1 block up (apex 1.2), never 2; crosses a 1-tile gap, never 2, but from a 1-high top (crate, frozen enemy) beside a floor pit it crosses 2 (D162) |
