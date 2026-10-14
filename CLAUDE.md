@@ -181,6 +181,9 @@ mobile/touch support, backend or accounts.
 - No fall damage. The only instant death is falling onto void blocks.
 - On death the wizard derezzes into pixels and recompiles at the room
   entrance — quick and non-punishing.
+- Restart room (pause menu, D219): a voluntary death for a stuck puzzle.
+  Costs one backup in every room; refused with none left (he leaves the
+  way he came).
 - A room may have a watchdog timer (`timer`, seconds, set in the room
   editor, D172): it starts once the room has faded in, stands still
   behind menus, and at zero kills the wizard (a death like any other: a

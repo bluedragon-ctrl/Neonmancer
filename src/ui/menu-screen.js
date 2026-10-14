@@ -16,7 +16,7 @@ import { formatText, scrambleText } from './text.js';
 export const CONTROL_ROWS = ['move', 'jump', 'cast', 'spell', 'pause', 'map', 'movementMode', 'fullscreen'];
 
 /** Menus with text under the heading: `menu.<id>Text`, the controls table, the key field, or the pause menu's key. */
-const BODIES = ['controls', 'quit', 'options', 'visuals', 'enterKey', 'pause'];
+const BODIES = ['controls', 'quit', 'restart', 'options', 'visuals', 'enterKey', 'pause'];
 
 /**
  * A setting's value as shown: a range of 0–10 as a bar of ten cells
