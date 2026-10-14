@@ -42,7 +42,7 @@ export function riseTurn(rise) {
  * The boxes a stair rising +x is made of in its unit cell: one slice per
  * step, from its nosing to the back, as [lo, hi] corners.
  */
-export function stairSlices(steps = STAIR.steps) {
+function stairSlices(steps = STAIR.steps) {
   return Array.from({ length: steps }, (_, i) => [
     [i / steps, i / steps, 0],
     [1, (i + 1) / steps, 1],

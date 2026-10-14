@@ -4,6 +4,7 @@
  * The data bits are a grid of small squares (`bits`); a destructible
  * object shows them with some missing (`bitsBroken`, bitLayout()).
  */
+import { square2d } from './edges.js';
 import { hash } from './hash.js';
 
 /** Patterns in face coordinates (0..1 on both axes), as 2D segments. */
@@ -33,15 +34,9 @@ const PATTERNS = {
   bitsBroken: (face) => bitSquares(face),
 };
 
+/** A face's square outline inset `margin` from its edges. */
 function square(margin) {
-  const a = margin;
-  const b = 1 - margin;
-  return [
-    [[a, a], [b, a]],
-    [[b, a], [b, b]],
-    [[b, b], [a, b]],
-    [[a, b], [a, a]],
-  ];
+  return square2d(margin, 1 - margin);
 }
 
 /**

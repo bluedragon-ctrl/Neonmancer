@@ -38,7 +38,7 @@ import {
   MeshBasicMaterial,
   PlaneGeometry,
 } from 'three';
-import { blockEdges } from './edges.js';
+import { blockEdges, square2d } from './edges.js';
 import { fadingDrops } from './hole-view.js';
 import { GLASS, glassBox } from './glass.js';
 import { PALETTE, lineMaterial, neonLines, roomLook } from './neon.js';
@@ -129,15 +129,6 @@ const WHITE = new Color(0xffffff);
 const LOCK_RED = new Color(PALETTE.danger);
 const LOCK_GREEN = new Color(PALETTE.neonGreen);
 
-/** Square outline in 2D from (a, a) to (b, b), as four segments. */
-function square2d(a, b) {
-  return [
-    [[a, a], [b, a]],
-    [[b, a], [b, b]],
-    [[b, b], [a, b]],
-    [[a, b], [a, a]],
-  ];
-}
 
 /**
  * The bull's-eye (outer and inner square) on the faces of the unit cube
@@ -386,7 +377,7 @@ export function createPlate(color, { timed = false, heavy = false } = {}) {
   line(marks.outer, outerMat);
   // A heavy plate has two squares overlapping in a corner where a plain one has one (D200).
   const pairMat = lineMaterial({ color: base, width: 1.8 });
-  if (heavy) for (const square of marks.pair) line([square], pairMat);
+  if (heavy) line(marks.pair.flat(), pairMat);
   else line(marks.inner, markMat);
   line(marks.brackets, bracketMat);
   const fillMat = glowMaterial(base);

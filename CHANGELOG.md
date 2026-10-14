@@ -442,6 +442,16 @@ docs/decisions.md).
   collapsing block no longer derezzes.
 
 ### Fixed
+- The jump pad no longer builds new line geometry every frame: its mesh and
+  streaks rewrite their points in buffers they keep (a new GPU buffer per pad
+  per frame before, never freed by three.js), and it is five draws instead of
+  thirteen (the rim's glass instanced, the six streaks one line set). Its rim
+  is four strips round the mesh as D226 describes: two strips were mirrored
+  boxes that covered the mesh with glass.
+- The heavy plate (D200) draws its two overlapping squares: they were passed
+  nested one level too deep, so their points were NaN and nothing showed.
+- Square outlines (pad, shrine, gate lights, bridge sheet, plate and face
+  marks) come from two shared helpers in `edges.js` instead of five copies.
 - `check:reach <room>` without `--with` finished in minutes on some rooms: it
   worked out the ability sets of every room of the world (mirror_stacks,
   bolt_gallery and scan_lab alone take over a minute) to report one. It now

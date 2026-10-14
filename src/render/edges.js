@@ -172,3 +172,35 @@ function isCorner([a, e, f, d]) {
 export function flattenSegments(segments) {
   return segments.flatMap(([from, to]) => [...from, ...to]);
 }
+
+/**
+ * Outline of a square from (a, a) to (b, b) in a face's 2D coordinates, as
+ * four segments [[u, v], [u, v]] (face marks, plate marks).
+ * @param {number} a
+ * @param {number} b
+ */
+export function square2d(a, b) {
+  const c = [[a, a], [b, a], [b, b], [a, b]];
+  return c.map((p, i) => [p, c[(i + 1) % 4]]);
+}
+
+/**
+ * Outline of a level square from [x0, z0] to [x1, z1] at height `y`, as
+ * four segments (pads, the shrine, gate lights, a bridge's sheet).
+ * @param {number[]} lo [x0, z0]
+ * @param {number[]} hi [x1, z1]
+ * @param {number} y
+ */
+export function squareOutline([x0, z0], [x1, z1], y) {
+  const c = [[x0, y, z0], [x1, y, z0], [x1, y, z1], [x0, y, z1]];
+  return c.map((p, i) => [p, c[(i + 1) % 4]]);
+}
+
+/**
+ * squareOutline() inset `m` from the unit cell's edges.
+ * @param {number} m
+ * @param {number} y
+ */
+export function insetSquare(m, y) {
+  return squareOutline([m, m], [1 - m, 1 - m], y);
+}

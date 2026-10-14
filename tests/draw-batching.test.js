@@ -4,6 +4,7 @@ import { createDataPillar } from '../src/render/data-pillar.js';
 import { boxFaces } from '../src/render/deco.js';
 import { CUBE, UNIT_BOX } from '../src/render/geometry.js';
 import { glassBoxes } from '../src/render/glass.js';
+import { createPad } from '../src/render/pad-view.js';
 import { createMemoryStack } from '../src/render/memory-stack.js';
 import { createScreen } from '../src/render/screen.js';
 import { createPixelBurst, placePixels } from '../src/render/pixels.js';
@@ -66,6 +67,33 @@ test('pixel bursts share one cube, scaled to their pixel size; hidden ones are l
   const version = a.instanceMatrix.version;
   placePixels(a, [], [0, 0, 0]);
   assert.equal(a.instanceMatrix.version, version, 'no upload for a burst that stays hidden');
+});
+
+test('a jump pad is five draws and animates in place: no new buffers per frame', () => {
+  const pad = createPad('#ffb020');
+  assert.equal(draws(pad).count, 5, 'rim glass (instanced), dark sheet, rim lines, mesh, streaks');
+  const lines = [];
+  pad.traverse((node) => node.isLineSegments2 && lines.push(node));
+  const buffers = lines.map((line) => line.geometry.getAttribute('instanceStart').data);
+  const versions = buffers.map((buffer) => buffer.version);
+  pad.userData.launch();
+  pad.userData.update(1 / 60);
+  lines.forEach((line, i) => assert.equal(line.geometry.getAttribute('instanceStart').data, buffers[i], 'the same buffer'));
+  assert.ok(buffers.some((buffer, i) => buffer.version > versions[i]), 'the moving lines are uploaded again');
+});
+
+test("a jump pad's rim is four strips round the cell, none over its middle", () => {
+  let strips = null;
+  createPad('#ffb020').traverse((node) => node.isInstancedMesh && (strips = node));
+  assert.equal(strips.count, 4);
+  const m = strips.instanceMatrix.array;
+  for (let i = 0; i < 4; i++) {
+    const [sx, sz, x, z] = [m[16 * i], m[16 * i + 10], m[16 * i + 12], m[16 * i + 14]];
+    assert.ok(sx > 0 && sz > 0, 'not mirrored');
+    assert.ok(x >= 0 && z >= 0 && x + sx <= 1 + 1e-6 && z + sz <= 1 + 1e-6, 'inside the cell');
+    const covers = x < 0.5 && x + sx > 0.5 && z < 0.5 && z + sz > 0.5;
+    assert.ok(!covers, 'the mesh in the middle stays open');
+  }
 });
 
 test('multisampling is off on a high-DPI buffer, on otherwise (D169)', () => {
