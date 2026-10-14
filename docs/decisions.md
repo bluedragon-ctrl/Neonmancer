@@ -2510,3 +2510,25 @@ author asked for a single sheet instead:
   `never` since D216 anyway and is redone in the room's review.
 **Why:** a bridge should read and play as a way across a pit; a block in
 a pads room was a step nobody could climb.
+
+### D225 — 2026-10-14 — Boot Up on pads: a stair, a pad, a drop (5.17)
+`boot_up` is the first room moved to `"jump": "pads"`. The east door
+still sits on the 2-high ledge past the 1-wide gap (D193); the way up is
+now a stair beside the spawn (`stair_x` at x 3) onto a 1-high step (the
+old 2-high column at x 4 came down to 1), and a pad on the step's corner
+by the gap (`pad_1` at [4, 1, 4]) that throws him over the gap onto the
+ledge. Coming back from `first_steps` he drops off the ledge: drops are
+one way. A missed throw lands in the gap's plain floor and he walks out;
+nothing can hurt him. Played headless, spawn to the east door takes 2.2 s.
+The mutation test shows every piece matters (the stair, the step, the
+pad, the ledge). The screen (`tut_move`) no longer names a jump key:
+"INPUT DRIVERS: WASD OR ARROWS." and "STAIRS CLIMB ONE BLOCK. PADS THROW
+TWO." The access pass and its pocket, the shrine, doors and decorations
+are unchanged.
+The checker learned that a launch higher than one block (a pad, a bug
+bounce) also lands up to a block short of it across its gap: played,
+a pad over a 1-tile pit lands on a 1-high ledge and never on a 2-high
+one (a test each for the game and the checker). It only adds reach in
+pads rooms; the world's verdicts are unchanged.
+**Why:** the start room must teach how he gets up without the jump: one
+block by stair, two by pad, before anything can hurt him.

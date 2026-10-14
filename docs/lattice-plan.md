@@ -47,7 +47,7 @@ Rules for the lines (D186, D187):
 
 | # | Room | Type | Rung | Trick to aim for | Now |
 |---|---|---|---|---|---|
-| 1 | `boot_up` | action | teach: move, jump | The way to the door is up: a 1-high step, then a 1-tile gap, so he learns the jump's height and reach before anything can hurt him. | Reworked (D193): the east door sits on a 2-high ledge past a 1-wide gap; a short jump drops him safely into it. Start room and shrine; the access pass is test-only. |
+| 1 | `boot_up` | action | teach: move, jump | The way to the door is up: a 1-high step, then a 1-tile gap, so he learns the jump's height and reach before anything can hurt him. | Reworked (D193), on pads (D225): the east door sits on a 2-high ledge past a 1-wide gap; a stair beside the spawn onto a 1-high step, a pad on it throws him over the gap; a miss drops him safely into it. Start room and shrine; the access pass is test-only. |
 | 2 | `first_steps` | puzzle | teach: push, plug a hole | One push fills one cell of the 2-wide hole: the second crate needs a push from a new side, which he reaches across the first. | Holds; signed off unchanged (5.17): a micro-Sokoban, pushing crate B straight in is the one dead end, and the west door resets it. |
 | 3 | `zap_port` | hybrid | teach: Zap (a target, an enemy, bolts fly level) | The target sits a block up: a floor shot hits the block under it or the bug crossing the line, and the stair he climbed for the disk is his firing step (a jump shot also reaches it). | Reworked (D189). |
 | 4 | `first_light` | action | teach: the watchdog, fragments | The straight line is a pit: a zigzag of single jumps round the pits' open ends, inside 10 s. | Holds; signed off unchanged (5.17). |
@@ -299,7 +299,7 @@ moves it to `"jump": "pads"` and ticks it off here.
 
 | # | Room | Lost without the jump | Tags | Note |
 |---|---|---|---|---|
-| 1 | `boot_up` | the east door (from the spawn and the west door) | | The start: teach move, a stair, a pad, a drop. First review. |
+| 1 | `boot_up` | the east door (from the spawn and the west door) | | Done (D225): a stair, a pad over the gap, a drop back. |
 | 2 | `first_steps` | crossing west→east | | Signed off before; re-review. |
 | 3 | `zap_port` | `disk_zap_1` | bouncy | The firing step to the raised target becomes a stair; no jump shot. |
 | 4 | `first_light` | play | | Its trick is a zigzag of jumps under the watchdog: rebuild with pads. |

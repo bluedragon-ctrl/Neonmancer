@@ -41,7 +41,7 @@
  * timing), but it holds one plate at most.
  *
  * Jump rule (D221): a jump pad throws him up its `launch` (2 blocks and
- * a one-tile gap by default) in any room; in a room with `"jump": "pads"`
+ * a one-tile gap, landing up to a block higher across it) in any room; in a room with `"jump": "pads"`
  * that is his only jump: elsewhere no climb, no gap, no Blink from a jump,
  * no step onto a compiled crate, and a pickup two cells up is out of reach.
  * A stair takes him from the cell at its foot onto its top, one up; down
@@ -407,7 +407,7 @@ export class RoomModel {
           if (!free) break;
           if (this.grid.isInside(nx, nz) && this.landing(nx, y + climb, nz, cfg) === y + climb) add(nx, y + climb, nz);
         }
-        // Jump a gap: the cells over it are free; he lands level or lower.
+        // Jump a gap: the cells over it are free; he lands level or lower (or higher, below).
         for (let width = 1; width <= gap; width++) {
           let over = true;
           for (let k = 1; k <= width; k++) for (let dy = 0; dy <= 2; dy++) over &&= !this.blocked(x + dx * k, y + dy, z + dz * k, cfg);
@@ -415,6 +415,14 @@ export class RoomModel {
           const lx = x + dx * (width + 1);
           const lz = z + dz * (width + 1);
           land(lx, y, lz);
+          // A launch higher than one block (a pad, a bounce) also lands up to a block
+          // short of it across the gap (sim: a pad over a 1-tile pit onto a 1-high ledge, never 2).
+          for (let rise = 1; rise < up; rise++) {
+            over &&= !this.blocked(x, y + rise + 1, z, cfg);
+            for (let k = 0; k <= width; k++) over &&= !this.blocked(x + dx * k, y + rise + 2, z + dz * k, cfg);
+            if (!over || !this.grid.isInside(lx, lz)) break;
+            if (this.landing(lx, y + rise, lz, cfg) === y + rise) add(lx, y + rise, lz);
+          }
         }
         // Blink and Warp: level through open space, as far as it goes.
         for (const [spell, limit] of [['blink', this.blinkRange], ['warp', Infinity]]) {
