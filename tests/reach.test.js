@@ -4,7 +4,7 @@ import { OPPOSITE_SIDE } from '../src/data/room-data.js';
 import { buildRoom } from '../src/world/room.js';
 import { analyzeRoom, arrivalCells } from '../src/world/reach.js';
 import { analyzeRoomAlone, analyzeWorld } from '../src/world/reach-world.js';
-import { describeNeeds, formatReach, formatRoom, roomOfReport } from '../src/world/reach-report.js';
+import { describeNeeds, formatReach, formatRoom, freeJumpRooms, roomOfReport } from '../src/world/reach-report.js';
 import { LIFT, gameData, roomFile } from './helpers.js';
 
 /** Object types the tests use besides the crate. */
@@ -250,6 +250,16 @@ test('world: what he can never reach is an error', () => {
   assert.ok(report.errors.some((e) => e.includes('a: pickup "walled"')));
   assert.ok(report.errors.some((e) => e.startsWith('b: no way in')));
   assert.equal(formatReach(report).split('\n').at(-1), '3 reachability problem(s).');
+});
+
+test('world: the rooms still on the free jump are listed, game and dev wing apart (D222)', () => {
+  const rooms = new Map([['b', {}], ['a', { jump: 'free' }], ['pads', { jump: 'pads' }], ['lab', {}]]);
+  const freeJump = freeJumpRooms({ rooms, world: { dev: ['lab'] } });
+  assert.deepEqual(freeJump, { game: ['a', 'b'], dev: ['lab'] });
+  const report = { rounds: [], targets: [], warnings: [], errors: [] };
+  assert.match(formatReach(report, { freeJump }), /Still on the free jump \(D222\), 3 room\(s\):\n {2}game: a, b\n {2}dev wing: lab\nEverything is reachable\.$/);
+  assert.match(formatReach(report, { freeJump: { game: [], dev: [] } }), /Every room is a pads room/);
+  assert.deepEqual(formatReach(report, { json: true, freeJump }).freeJump, freeJump);
 });
 
 test('world: a room that waits for a spell listed as later is a warning, not an error (D183)', () => {

@@ -47,10 +47,24 @@ For each room:
      matter, that set skips the trick: a BLOCKER for a fragment, a
      PROBLEM for other pickups. The same for exits is fine (a NOTE).
 4. Walk the checklist against the actual coordinates, not the intent:
-   - **Reach**: every step <= 1 block, gaps <= 1 tile,
-     2 free cells of headroom above every standing surface, a bouncy
-     enemy clears a 2-high ledge (never 3), a crate or frozen enemy beside
-     a 2-high wall is a way over it.
+   - **Jump rule** (D222): is the room a pads room (`"jump": "pads"`)? A
+     room reviewed in step 5.17 or new must be (a PROBLEM if not), and
+     its line in `docs/lattice-plan.md` (Pads-only migration) is ticked
+     off. Pieces that only fought the jump (spiked crates, fence roofs,
+     2-high walls against hops) and do no job of their own: a NOTE.
+   - **Reach in a pads room**: every way up is a stair (from its foot,
+     the way it rises), a pad (2 up, a 1-tile gap; its cell and three
+     above free) or a bouncy enemy he falls onto (2 up from its lane,
+     never from its own level, D223); 1-high walls and crates stop him;
+     every ledge is a one-way drop, so check the way back to each door
+     he came in by. A pad where he must walk across or stand (a doorway,
+     a 1-wide lane, a push cell) is a PROBLEM; a crate that can be pushed
+     onto a pad or to a stair's foot is a trap to name.
+   - **Reach with the free jump** (rooms not yet moved): every step <= 1
+     block, gaps <= 1 tile, a bouncy enemy clears a 2-high ledge (never
+     3), a crate or frozen enemy beside a 2-high wall is a way over it.
+   - **Headroom**: 2 free cells above every standing surface (a slab
+     overhead is fine, D221).
    - **Timing**: collapsing blocks never under a stop (push, wait, lining
      up); platform pauses long enough; `reset` safe (not collapsing, not
      in a platform path). Timed switches (a type or override with
@@ -85,7 +99,8 @@ For each room:
      only way out is an enemy step traps him when it is killed.
    - **Push puzzles** (D197–D202): for a room whose trick is pushing
      crates, run `node .claude/skills/sokoban-design/scripts/solve.mjs
-     <room_id> [--from <exit>] [--with zap,fork,pause]` and quote the
+     <room_id> [--from <exit>] [--with zap,fork,pause]` (it follows the
+     room's jump rule) and quote the
      fewest pushes, the share of traps and the sharp steps (none: only a
      walk; past ~25 pushes: a chore). Know the locks: a plate is faked by
      a decoy or a frozen enemy; a **socket** (only a crate fills it, for
@@ -94,7 +109,8 @@ For each room:
      pickup (switch-locked, see-through: a Zap passes through) and a
      3-high wall are real locks. A **stream** stops him and passes crates
      (no top), a **spiked crate** is no step (its top hurts 2 and shoves
-     him off; a plain crate on it covers it). A classic level is credited
+     him off; a plain crate on it covers it; in a pads room no crate is a
+     step, so it adds nothing there). A classic level is credited
      in the room's decision and re-solved under these rules.
    - **Timing by play**: where a race or bounce decides the room, play it
      with `.claude/skills/room-design/scripts/sim.mjs` from a scratch

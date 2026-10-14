@@ -88,10 +88,11 @@ mobile/touch support, backend or accounts.
   casts there); jump
   pads (object kind `pad`) throw him up by themselves (2 blocks, a 1-tile
   gap); stairs (look `stair`, a `rise`) take him a block up, slabs (look
-  `slab`) are thin glass walkways with headroom under them. Default
-  `free` while rooms move over one by one in their reviews, then the
-  jump goes for good (D222; lattice-plan.md, Pads-only migration); test
-  room `stair_lab`.
+  `slab`) are thin glass walkways with headroom under them; a bouncy
+  enemy he falls onto throws him 2 up, a moving pad (D223). New rooms
+  are pads rooms; the default stays `free` while rooms move over one by
+  one in their reviews, then the jump goes for good (D222;
+  lattice-plan.md, Pads-only migration); test room `stair_lab`.
 - Player hitbox 0.6 x 1.5 x 0.6 (the hat is visual only), so the wizard
   needs 2 blocks of headroom.
 - Blocks snap to the grid; player and enemies move freely (sub-grid).
@@ -522,7 +523,8 @@ not critical.
   world as a fixpoint, flagging exits, pickups and rooms that stay out of
   reach; `<room>` checks one room (`--with` abilities, `--from` an exit),
   `--rooms` lists what each exit and pickup needs, `--pads` tries the
-  pads-only jump (D221) on every room. Used by CI, the
+  pads-only jump (D221) on every room; it lists the rooms still on the
+  free jump (D223). Used by CI, the
   world map tool, and design skills/subagents. Knows nothing of enemies
   or timing.
 - **Claude Code skills and subagents** (D132, `.claude/`): the

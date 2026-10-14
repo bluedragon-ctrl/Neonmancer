@@ -15,6 +15,13 @@ docs/decisions.md).
   round it, have no Lattice way in for now; each is redone in its own PR.
 
 ### Added
+- Pads-rule prep (D223, step 5.18): new rooms (editor, `xsb.mjs` drafts) are
+  pads rooms, `xsb.mjs` builds walls 1 high (`--free` for the old rule);
+  `check:reach` lists the rooms still on the free jump; in a pads room a
+  bouncy enemy he falls onto throws him up like a pad, and the checker knows
+  it; the editor's stairs are one entry turned with R; a pad's launch has a
+  sound of its own (`bounce:pad`); the design checklist, the room-design and
+  sokoban-design skills and the level-review agent learn the rule.
 - Prototype of a pads-only jump (D221): a room with `"jump": "pads"` (editor:
   Jump, "only on pads") has no jump key; jump pads, a new magenta floor tile,
   throw him 2 blocks up by themselves the moment he stands on one; there Space casts. New blocks:

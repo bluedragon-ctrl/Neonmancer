@@ -2449,3 +2449,36 @@ and the checker green after every PR:
 **Why:** the author likes the prototype; one room at a time keeps every
 step small, reviewable and playable, and reuses the room reviews already
 planned rather than a separate pass.
+### D223 — 2026-10-14 — Pads-rule prep (5.18): the tools learn the rule, a bouncy enemy is a moving pad
+Step 5.18 of D222 readies the tools for the room reviews that move the rooms
+to `"jump": "pads"`:
+- **New rooms are pads rooms** (the author's call): the editor's new room
+  and `xsb.mjs` drafts get `"jump": "pads"`; `xsb.mjs` builds `#` walls 1
+  high by default (any height stops him now, and 1 high hides least);
+  `--free` in `xsb.mjs` and `solve.mjs` drafts the old rule for comparing.
+  The Microban survey stays a free-jump record: in a pads room he climbs
+  neither crates nor walls, so a level of plain crates plays as its classic
+  count (Microban 8: 32 pushes, 4 with the free jump).
+- **`check:reach` lists the rooms still on the free jump** after the world
+  report, the game's and the dev wing's apart; a one-room report says so
+  first. The list empties as the reviews (5.17) move rooms; 5.19 starts when
+  it is empty.
+- **A bouncy enemy is a moving pad** (the author's idea). In a pads room he
+  can't get on top of a bug from its own level; falling onto it (off a
+  ledge or a stair's top, or from a pad's launch) throws him 2.2 above its
+  top, 2.8 over its lane's floor: a 2-high ledge, never 3, and a lane that
+  moves the way up. Freezing it makes it a 1-high block again. The checker
+  counts every cell of a bouncy enemy's lane in a pads room that he falls
+  onto from above as a pad (2 up, a one-tile gap), whenever (optimistic,
+  like Pause); free-jump rooms are checked as before.
+- **Editor:** the four stairs are one Block tool entry, "stair", turned a
+  quarter with R (+x, +z, −x, −z); the entry names the way it rises.
+- **Sound:** a pad's launch plays `bounce:pad`, a rising springy whoosh of
+  its own; a bouncy enemy keeps `bounce`.
+- **Docs:** the design checklist (Reach), the room-design and sokoban-design
+  skills and the level-review agent learn pads, stairs and slabs: heights,
+  1-high walls, one-way drops, where a pad may lie, crates that block him.
+- **Not now:** the lower pad (1 up) waits for a review that needs one.
+**Why:** each review (5.17) should start from tools and rules that already
+speak the new rule; the bounce gives pads rooms a moving way up the author
+wanted, and the checker must see it or it reports false `never`s.

@@ -12,21 +12,30 @@ concept in room-design (step 3), design the push puzzle here, then go
 back to room-design for the draft, checks and review.
 
 ## Neonmancer is not flat Sokoban
-The grid looks like Sokoban, but the wizard is not a Sokoban player.
-Read a classic level with these differences in mind:
+The grid looks like Sokoban. In a **pads room** (D222, every new and every
+reviewed room) the wizard is nearly a Sokoban player: no jump, so he can't
+climb a crate or a 1-high wall, and he gets behind a crate only by walking
+round it. A classic level of plain crates and 1-high walls plays at its
+classic push count (Microban 8: 32 pushes; the free jump made it 4).
+What Neonmancer adds is height the room places: stairs and pads up to
+ledges, crates falling off them, stacks, holes and sockets that spend a
+crate, streams. The table below is the **free jump** (rooms not yet
+reviewed, until step 5.19); in a pads room read every "he climbs" as "he
+walks round":
 
 | Sokoban | Neonmancer |
 |---|---|
 | Boxes block the player | He **climbs** a crate (1 high) and walks over crates: they block crates, not him. A **spiked crate** (`crate_spiked`, D199, `!` in XSB) is the exception: its top hurts him and shoves him off, so it blocks him like a Sokoban box (no hop over it in line) |
 | Walls block the player | He climbs anything 1 high, and anything 2 high from a crate top. Only **3-high walls** stop him for good; a 2-high wall beside a crate is a road (room-design, "Walls are steps too") |
-| Floor is flat | **Ledges**: a crate pushed off a ledge falls; a crate on a crate is a **stack** (only the top moves); a crate's top is a step 1 up, a stack's top 2 up |
+| Floor is flat | **Ledges** (in a pads room he reaches one by a stair or a pad only, and steps off one way): a crate pushed off a ledge falls; a crate on a crate is a **stack** (only the top moves); a crate's top is a step 1 up, a stack's top 2 up |
 | Goals are marks | **Plates** (anything holds them: crate, frozen enemy, decoy, him), **sockets** (only a crate fills one, for good, D194), **holes** (a crate plugs it into floor) and **exits/pickups** he must reach |
 | No pits | **Holes** eat crates (the crate is gone, the hole becomes floor). He jumps a 1-tile hole, never 2 (3 from a crate top beside a floor pit, D162) |
 | Push from anywhere adjacent | He pushes from the cell behind, **at the crate's own level** (standing on a ledge for a ledge crate) |
 | Deadlock = restart | A trap costs a reset: leave and come back, or die. A trap that blocks every exit needs a way to die (a hole) or it is a soft-lock |
 
-So the player-routing knots of classic Sokoban mostly vanish (he walks
-over crates and short walls). What stays is **the crates' own routes**:
+So with the free jump the player-routing knots of classic Sokoban mostly
+vanish (he walks over crates and short walls); in a pads room they are all
+back. What stays is **the crates' own routes**:
 a crate moves only away from a cell he can stand on at its level; walls,
 corners, holes and other crates stop it. Neonmancer adds height (steps,
 drops, stacks) and crates that are spent (holes, sockets).
@@ -39,7 +48,10 @@ drops, stacks) and crates that are spent (holes, sockets).
 2. **Sketch** the puzzle as XSB text in the scratchpad (the characters
    are listed in `scripts/xsb.mjs`). The top-left of the text is the
    back corner (x 0, z 0); the bottom-right faces the camera. Keep tall
-   walls top and left (room-design rule 1).
+   walls top and left (room-design rule 1). `xsb.mjs` and `solve.mjs`
+   build a pads room with `#` walls 1 high (D223; `--free` for the old
+   jump). A ledge crate (`&`) needs a stair or pad up to its ledge: add
+   it by hand and solve the room JSON.
 3. **Solve** it and read the numbers (below). Iterate on the sketch
    until the trick is the only way and the traps are fair:
    ```
@@ -102,10 +114,11 @@ a Neonmancer room:
 |---|---|---|
 | Wall | **3-high block** | Stops crates and him. Heavy: keep it at the back (camera) |
 | | **2-high block** | Stops crates; a crate beside it is his step onto it, and its top a road |
-| | **1-high ledge or fence** | Stops crates; he walks over it. The same puzzle as a 3-high wall in every Microban level solved, and hides nothing: the default |
+| | **1-high ledge or fence** | Stops crates. In a pads room it stops him too: a classic wall that hides nothing, the default. With the free jump he walks over it (the same puzzle as a 3-high wall in every Microban level solved) |
 | | **Crate stream** (`~`, 2 high, D198) | Crates pass, he is stopped (no top: a jump or a crate under him never gets him over). A wall between two floors he cannot cross but a crate can: Sokoban's player routing is back, since he must go round to push the crate on from the far side. A 1-thick stream hands a crate over, one cell beyond; in a thicker one it stops in the last cell (he cannot stand in a stream to push on) |
 | | **Hole** | A crate pushed in is spent and the hole becomes floor: a wall that can be "opened" by sacrificing a crate. He jumps one, falls in two |
-| Box | **Spiked crate** | He can't stand on it or use it as a step: the player's route around the boxes matters again, so a classic keeps its push count (Microban 8: 32 spiked, 4 plain) |
+| Box | **Plain crate** (pads room) | He can't climb it: a Sokoban box, the classic push count (Microban 8: 32) |
+| | **Spiked crate** (free jump) | He can't stand on it or use it as a step: the player's route around the boxes matters again, so a classic keeps its push count (Microban 8: 32 spiked, 4 plain). A pads room needs none |
 | | **Crate on a spiked crate** | A plain crate dropped on one covers the spikes: a safe 2-high step |
 | | **Ledge edge** (floor one lower) | A crate pushed off falls, and can't come back up: a one-way wall |
 | Goal | **Plate** | Anything holds it (a crate can leave it again; a decoy or a frozen enemy can fake it) |
@@ -128,7 +141,9 @@ a classic level as it is or adapted (the author's call, D197). Credit
 the author and collection in the room's decision entry. Before use:
 - **Read the survey.** `levels/microban-survey.md` (made by
   `scripts/survey.mjs`) lists every level's fewest pushes under classic
-  rules and in each translation. Since he climbs crates, a classic whose
+  rules and in each translation, all with the free jump. In a pads room
+  a level of plain crates and walls of any height plays as the classic
+  column; holes and sockets still change it (a crate can be spent). Since he climbs crates, a classic whose
   difficulty is the player's own route (getting behind a box) collapses:
   Microban 8 drops from 32 pushes to 4, and 29 of the 104 levels solved
   need half the pushes or fewer. Pick levels where the game's pushes
@@ -158,6 +173,12 @@ the author and collection in the room's decision entry. Before use:
   the survey page).
 
 ## Patterns (Neonmancer push tricks)
+- **Uncover the pad** (pads room): a crate stands on the pad that is the
+  way up; pushing it off is the first move, and pushing it back on (or
+  another crate onto it) is a trap the player sees.
+- **Blocked stair** (pads room): a stair is a block to crates, so a crate
+  pushed into the cell at its foot shuts the way up until he pushes it on
+  (a trap where he can't get behind it, a lock where the trick says so).
 - **Wall slide** (teach): a crate against a wall moves only along it;
   the plate is on that wall. A crate in a corner is lost.
 - **Bridge and weight** (`motifs.xsb` 1): a hole row a crate can't cross;

@@ -1864,7 +1864,41 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
   on mechanics taught in earlier rooms; an action room keeps the layout
   simple.
 
-**Reach**
+**Reach in a pads room** (D222, D223: every room once its review moves
+it, and every new room)
+- No jump. A pad (`pad`, on the floor or on top of a block) throws him
+  2.2 above it the moment he stands on it: from the floor onto a 2-high
+  ledge, never 3; from a pad on a 1-high block onto a 3-high one; and
+  over a 1-tile gap from anywhere on it (he steers in the air). Keep the
+  pad's cell and the three above it free, or the launch hits a ceiling.
+- A pad fires whenever he stands on it, so never put one where he must
+  walk across or stand still: a doorway, a 1-wide lane, the cell he
+  pushes a crate from. A crate pushed onto a pad stands on it and covers it until the
+  room resets: a trap, or a trick.
+- A stair takes him one block up, from its foot only, the way it rises;
+  its sides and back are walls, and down is a step off its top. To crates,
+  enemies and the checker it is a block. A slab is a walkway at the top of
+  its cell, level with a 1-high ledge; he walks under it a cell down.
+- A 1-high wall is a wall: the cheapest one, it hides nothing. Every ledge
+  is a one-way drop: he steps off any height, and only a stair or a pad
+  takes him back. He can always leave the way he came (rule 3): every drop
+  on the way in from a door has a way back, or another door is his way out.
+- A crate is no step: he can't get onto it, so it blocks him like a
+  Sokoban box, and he gets behind one only by walking round it (spiked
+  crates add nothing here). He stands on a crate only by walking onto it
+  level (from a 1-high ledge or stair top) or landing on it from a pad. A
+  frozen enemy is the same 1-high block.
+- A bouncy enemy is a moving pad (D223): falling onto it (off a ledge, a
+  stair's top, from a pad's launch) throws him 2.8 over its lane's floor:
+  a 2-high ledge, never 3. From its own level he never gets on top. The
+  checker counts any cell of its lane, any time: time the drop with
+  `sim.mjs`.
+- A pickup one cell up he takes standing; two cells up needs a pad (or a
+  bounce) under it.
+- Headroom, frozen enemies pushed, gates in holes, other solutions: as
+  below.
+
+**Reach with the free jump** (rooms not yet reviewed, until step 5.19)
 - A jump clears exactly 1 block up, never 2 (apex 1.2). A 2-high step
   needs a crate, a platform or a step in between.
 - A running jump crosses a 1-tile gap, never a 2-tile one (~1.65 units of
@@ -2446,10 +2480,9 @@ decisions before the code lands. Every step also (D43):
 - updates `docs/design.md`, `docs/architecture.md` and CHANGELOG, and
   records new decisions.
 
-**Next: Phase 5, step 5.18, the prep for the pads-only rule (D222), then
-step 5.17, the room reviews against the Lattice ladder, each moving its
-room to the rule** (D186, D187, D222; 5.3 music waits for the author's
-tracks).
+**Next: Phase 5, step 5.17, the room reviews against the Lattice ladder,
+each moving its room to the pads-only rule, from `boot_up` on** (D186,
+D187, D222, D223; 5.3 music waits for the author's tracks).
 
 ### Phase 5 (v0.5) steps: Home Lattice playtest
 
@@ -2457,7 +2490,8 @@ Done: 5.1 audio engine (D138), 5.2 sound effects (D139), 5.4 dev wing
 (D147), 5.5 tutorial (D148), 5.6a–h the Atrium and the four wings
 (D151, D156–D173), 5.7 the Gatekeeper's hall (D174), 5.8 the core hall, the Level 1 locks and the teasers (D177), 5.9 the
 Lattice's ambience (D179), 5.10 the Outer Buffer look (D182, D183), 5.11a
-the secret rooms' entrances (D184), the gameplay direction (D186). The Lattice steps are two or three rooms each, the hub
+the secret rooms' entrances (D184), the gameplay direction (D186), 5.18
+the pads-rule prep (D223). The Lattice steps are two or three rooms each, the hub
 before the wings (D149); every batch goes through the reachability
 checker and the review subagent; rooms are drafted unflagged and the
 author flags them authored (D90). Room plan: [lattice-plan.md](lattice-plan.md).
@@ -2465,7 +2499,6 @@ author flags them authored (D90). Room plan: [lattice-plan.md](lattice-plan.md).
 | # | Branch | Delivers |
 |---|---|---|
 | 5.3 | `feat/music` | The author's tracks trimmed for seamless loops: Lattice, boss, title; room and biome mapping, a boss switch and a crossfade back. |
-| 5.18 | `chore/pads-rule-prep` | Prep for the pads-only rule (D222): the room design checklist, the room-design and sokoban-design skills and the level-review agent learn pads, stairs and slabs (heights, 1-high walls, one-way drops, where a pad may lie, `xsb.mjs` walls 1 high); `check:reach` lists the rooms still on the free jump; editor: one stair entry turned with a key, a lower pad variant if reviews need one; a launch sound of its own. |
 | 5.17 | `rooms/<id>` | The room reviews, one room a session and a PR, in play order: the room-design skill's rework workflow against its ladder line, then the author's tuning in the editor. Each review moves its room to `"jump": "pads"` and rebuilds what the jump carried (lattice-plan.md, Pads-only migration), the Outer Buffer doors (5.11) with their host rooms. |
 | 5.19 | `feat/no-jump` | After the last room review (D222): the pads-only rule is the engine's. The room `jump` field (and its editor box), the jump action, the free-jump code in the player (key, coyote time, buffer) and the checker, debug J and `check:reach --pads` go; Space casts; the controls screen and help follow. The spiked crate, fence roofs and hop-proof walls are retired or kept on their own merit; CLAUDE.md, design.md, the ladder rules and the skills lose the free jump. |
 | 5.11 | `feat/outer-buffer-secrets` | In progress: the secret cluster's contents, one room a PR, hard push puzzles (D173, D186). Done: Dead Pixel (D219). |

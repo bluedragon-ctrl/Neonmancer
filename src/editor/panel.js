@@ -55,6 +55,7 @@ const HELP = [
   'Esc: drop the selection · Del: remove it',
   'Switch tool: place or pick a switch (or a gate, platform, exit), tick or click its links · Alt+click (Block tool): copy a block',
   'Hover a switch, gate or locked exit: its links light up',
+  'R (Block tool, a stair): turn it',
   'Ctrl+Z / Ctrl+Y: undo / redo · Ctrl+S: save',
   'F2: play the room · F3: debug',
 ];
@@ -87,15 +88,47 @@ export function blockTypeText(type) {
   return does.join(', ') || type.look;
 }
 
+/** The way a stair turns with R (D222): a quarter turn each time. */
+const STAIR_TURNS = ['+x', '+z', '-x', '-z'];
+
+/**
+ * The stair types (look `stair`, D221), in the order R turns them: rising
+ * +x, +z, -x, -z.
+ * @param {Record<string, { look?: string, rise?: string }>} types resolved block types
+ * @returns {string[]} type ids
+ */
+export function stairTypes(types) {
+  const stairs = Object.entries(types).filter(([, type]) => type.look === 'stair');
+  return STAIR_TURNS.flatMap((rise) => stairs.filter(([, type]) => type.rise === rise).map(([id]) => id));
+}
+
+/**
+ * The stair after `id` turned a quarter (R in the Block tool, D222); a
+ * type that is no stair stays as it is.
+ * @param {Record<string, { look?: string, rise?: string }>} types
+ * @param {string} id
+ */
+export function turnStair(types, id) {
+  const stairs = stairTypes(types);
+  const at = stairs.indexOf(id);
+  return at < 0 ? id : stairs[(at + 1) % stairs.length];
+}
+
 /**
  * The Block tool's type list in groups (D141): static blocks, then the
- * gate blocks that come and go, by their trigger.
- * @param {Record<string, { kind?: string, trigger?: string }>} types resolved block types
+ * gate blocks that come and go, by their trigger. The stairs are one
+ * entry (the first, D222), turned with R.
+ * @param {Record<string, { kind?: string, trigger?: string, look?: string }>} types resolved block types
  * @returns {[string, [string, string][]][]} [group label, [id, label] options]
  */
 export function blockTypeGroups(types) {
   const groups = { Static: [], 'Switch gates': [], 'Collapsing (step) gates': [] };
+  const [stair] = stairTypes(types);
   for (const [id, type] of Object.entries(types)) {
+    if (type.look === 'stair') {
+      if (id === stair) groups.Static.push([id, 'stair (R turns it)']);
+      continue;
+    }
     const group = type.kind !== 'gate' ? 'Static' : type.trigger === 'step' ? 'Collapsing (step) gates' : 'Switch gates';
     groups[group].push([id, `${id} (${blockTypeText(type)})`]);
   }
@@ -352,7 +385,7 @@ export class EditorPanel {
     this.authoredInput.addEventListener('change', () => on.authored(this.authoredInput.checked));
     const authored = el('label', 'editor-check');
     authored.append(this.authoredInput, ' real game room');
-    // Jump only on pads (D221), the prototype rule.
+    // Jump only on pads (D221); new rooms start so (D222), the rest move in their reviews.
     this.padJumpInput = Object.assign(el('input'), { type: 'checkbox', title: 'The wizard jumps only standing on a jump pad in this room (D221)' });
     this.padJumpInput.addEventListener('change', () => on.padJump(this.padJumpInput.checked));
     const padJump = el('label', 'editor-check');
@@ -422,6 +455,10 @@ export class EditorPanel {
   typeGroups(blockTypes, objectTypes, switchTypes) {
     const { on } = this;
     this.blockSelect = groupedSelect(blockTypeGroups(blockTypes));
+    // The stairs' one entry (D222): its value is the first stair, its text the way the painted one climbs.
+    this.blockTypes = blockTypes;
+    this.stairs = stairTypes(blockTypes);
+    this.stairOption = [...this.blockSelect.querySelectorAll('option')].find((o) => o.value === this.stairs[0]) ?? null;
     this.blockSelect.addEventListener('change', () => on.blockType(this.blockSelect.value));
     this.blockRows = el('div', 'editor-group');
     // A switch gate's switches (D140, D141): the gate cells placed get them.
@@ -735,7 +772,9 @@ export class EditorPanel {
     for (const [id, button] of this.toolButtons) button.classList.toggle('active', id === tool);
 
     this.blockRows.hidden = tool !== 'block';
-    this.blockSelect.value = blockType;
+    const stair = this.stairs.includes(blockType);
+    this.blockSelect.value = stair ? this.stairs[0] : blockType;
+    if (this.stairOption) this.stairOption.textContent = `stair (rises ${this.blockTypes[stair ? blockType : this.stairs[0]].rise}, R turns it)`;
     this.blockSwitchesRow.hidden = !blockSwitches;
     if (blockSwitches && document.activeElement !== this.blockSwitches) this.blockSwitches.value = blockSwitches.join(' ');
     this.objectRows.hidden = tool !== 'object';

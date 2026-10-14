@@ -174,8 +174,8 @@ test('audio.json: the real file is valid and loads; a game without one has no au
   assert.ok(checkFiles(files, schemas).length >= 2);
 });
 
-test('effects: "type:detail" sounds win over the plain one (spell, pickup kind, death cause)', () => {
-  const audio = { music: {}, sounds: { cast: { zzfx: [1] }, 'cast:zap': { zzfx: [1] }, 'pickup:disk': { zzfx: [1] }, pickup: { zzfx: [1] } } };
+test('effects: "type:detail" sounds win over the plain one (spell, pickup kind, death cause, a pad launch)', () => {
+  const audio = { music: {}, sounds: { cast: { zzfx: [1] }, 'cast:zap': { zzfx: [1] }, 'pickup:disk': { zzfx: [1] }, pickup: { zzfx: [1] }, bounce: { zzfx: [1] }, 'bounce:pad': { zzfx: [1] } } };
   const { sound, log } = engine(audio);
   sound.unlock();
   const played = [];
@@ -190,9 +190,11 @@ test('effects: "type:detail" sounds win over the plain one (spell, pickup kind, 
     { type: 'cast', spell: 'pause' },
     { type: 'pickup', pickup: { data: { kind: 'disk' } } },
     { type: 'pickup', pickup: { data: { kind: 'refill' } } },
+    { type: 'bounce', pad: {} },
+    { type: 'bounce', enemy: { data: { attack: 'touch' } } },
   ]);
-  assert.deepEqual(played, ['cast:zap', 'cast', 'pickup:disk', 'pickup']);
-  assert.equal(log.sources, 4);
+  assert.deepEqual(played, ['cast:zap', 'cast', 'pickup:disk', 'pickup', 'bounce:pad', 'bounce']);
+  assert.equal(log.sources, 6);
 });
 
 test('effects: every sound of audio.json is a game event (or detail of one) or a UI sound', () => {

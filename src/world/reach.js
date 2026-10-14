@@ -43,7 +43,11 @@
  * that is his only jump: elsewhere no climb, no gap, no Blink from a jump,
  * no step onto a compiled crate, and a pickup two cells up is out of reach.
  * A stair takes him from the cell at its foot onto its top, one up; down
- * again is a step off a ledge.
+ * again is a step off a ledge. In a pads room a bouncy enemy is a moving
+ * pad (D223): where he falls onto a cell of its lane (from a ledge or a
+ * launch) he is thrown up as from a pad, BOUNCE_UP blocks and a one-tile
+ * gap; any cell of the lane, whenever (optimistic, like Pause). He can't
+ * get on top of it from its own level.
  *
  * What it knows nothing about, on purpose: enemies and their fire (combat
  * is a different check), timing (collapsing blocks, platforms waiting,
@@ -68,6 +72,12 @@ export const JUMP = {
   up: 1,
   gap: 1,
 };
+
+/**
+ * Whole blocks a bounce off a bouncy enemy lifts him (D48: 2.2 above its
+ * 0.6 top, so 2.8 over the floor of its lane): a 2-high ledge, never 3.
+ */
+export const BOUNCE_UP = 2;
 
 /** How far Blink goes, from defs.json; the search takes the spell's `range` from its `spells` when given. */
 const BLINK_RANGE = 3;
@@ -113,6 +123,11 @@ export class RoomModel {
     this.freeJump = (room.jump ?? 'free') === 'free';
     /** The jump pads (D221): cell index → the whole blocks a launch lifts him. */
     this.pads = new Map();
+    /** In a pads room, the lane cells of bouncy enemies (D223): falling onto one throws him up. */
+    this.bounceLanes = new Set();
+    if (!this.freeJump)
+      for (const enemy of room.enemies ?? [])
+        if (enemy.bounce) for (const [px, py, pz] of enemy.path ? pathCells(enemy.at, enemy.path) : [enemy.at]) this.bounceLanes.add(this.index(px, py, pz));
 
     // A scan derezzes every fake block (optimistically: wherever he stands).
     const blocks = {};
@@ -234,8 +249,9 @@ export class RoomModel {
    * How many blocks up he gets from the cell he stands in (D221): a pad's
    * launch, his jump in a room with a free jump, else 0.
    */
-  climbFrom(x, y, z) {
-    return this.pads.get(this.index(x, y, z)) ?? (this.freeJump ? this.up : 0);
+  climbFrom(x, y, z, bounced = false) {
+    const own = this.pads.get(this.index(x, y, z)) ?? (this.freeJump ? this.up : 0);
+    return bounced ? Math.max(own, BOUNCE_UP) : own;
   }
 
   /** Index of a cell inside the room (y up to the room's height). */
@@ -336,11 +352,14 @@ export class RoomModel {
    */
   flood(starts, cfg) {
     const stands = new Set();
+    /** Cells he lands in from above on a bouncy enemy's lane (D223): he is thrown up from there. */
+    const bounced = new Set();
     const queue = [];
-    const add = (x, y, z) => {
+    const add = (x, y, z, bounce = false) => {
       if (y < 0 || y >= this.h) return;
       const i = this.index(x, y, z);
-      if (stands.has(i)) return;
+      if (bounce && !bounced.has(i)) bounced.add(i);
+      else if (stands.has(i)) return;
       stands.add(i);
       queue.push([x, y, z]);
     };
@@ -348,7 +367,8 @@ export class RoomModel {
       if (!this.grid.isInside(x, z)) return;
       // A frozen enemy or a platform may not be there: he lands on it, or falls past it.
       for (let ly = this.landing(x, y, z, cfg); ly >= 0; ly = this.landing(x, ly - 1, z, cfg)) {
-        add(x, ly, z);
+        // Falling onto a bouncy enemy's lane (D223): he lands on it, so he is thrown up.
+        add(x, ly, z, ly < y && this.bounceLanes.has(this.index(x, ly, z)));
         if (ly === 0 || !this.floors.has(this.index(x, ly - 1, z)) || this.blocked(x, ly - 1, z, cfg)) break;
       }
     };
@@ -357,8 +377,8 @@ export class RoomModel {
     const { abilities } = this;
     while (queue.length > 0) {
       const [x, y, z] = queue.pop();
-      // A pad throws him up; without a free jump (D221) nothing else does.
-      const up = this.climbFrom(x, y, z);
+      // A pad (or a bouncy enemy he fell onto, D223) throws him up; without a free jump (D221) nothing else does.
+      const up = this.climbFrom(x, y, z, bounced.has(this.index(x, y, z)));
       const jumps = up > 0;
       const gap = jumps ? this.gap : 0;
       for (const dir of DIRS) {
