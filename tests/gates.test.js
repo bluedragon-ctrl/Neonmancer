@@ -5,6 +5,7 @@ import { validateData } from '../src/data/validate.js';
 import { Game } from '../src/game.js';
 import { gateLightSpots } from '../src/render/gate-view.js';
 import { SWITCH_FX, switchLight } from '../src/render/switch-view.js';
+import { SLAB_HEIGHT } from '../src/world/grid.js';
 import { exitOpen, powered, switchesOn } from '../src/switches.js';
 import { buildRoom } from '../src/world/room.js';
 import { analyzeRoom } from '../src/world/reach.js';
@@ -29,10 +30,10 @@ const cast = { down: (a) => a === 'cast', pressed: (a) => a === 'cast' };
  * BLOCK_TYPES, D141) and `exits`, joined to beta through its east exit if
  * it has one.
  */
-function files({ objects = [], blocks = [], exits = [] } = {}) {
+function files({ objects = [], blocks = [], exits = [], holes = [] } = {}) {
   const east = exits.some((exit) => exit.id === 'east');
   return dataFiles({
-    rooms: [roomFile('alpha', { exits, objects, blocks }), roomFile('beta', { spawn: [1, 0, 4], exits: east ? [{ id: 'west', side: '-x', at: 3 }] : [] })],
+    rooms: [roomFile('alpha', { exits, objects, blocks, holes }), roomFile('beta', { spawn: [1, 0, 4], exits: east ? [{ id: 'west', side: '-x', at: 3 }] : [] })],
     objects: TYPES,
     connections: east ? [['alpha.east', 'beta.west']] : [],
   });
@@ -97,7 +98,7 @@ test('a gate is solid until its switches are on, then open; it never closes on t
 });
 
 test('a bridge is there only while its switches are on', () => {
-  const game = gameWith({ objects: [{ id: 't', type: 'target', at: [3, 0, 3] }], blocks: [{ type: 'bridge', at: [5, 0, 5], to: [5, 0, 6], switches: ['t'] }] });
+  const game = gameWith({ objects: [{ id: 't', type: 'target', at: [3, 0, 3] }], blocks: [{ type: 'bridge', at: [5, 0, 5], to: [5, 0, 6], switches: ['t'] }], holes: [{ at: [5, 5], to: [5, 6] }] });
   const bridge = gateAt(game, 'bridge', [5, 0, 5]);
   assert.deepEqual(gateAt(game, 'bridge', [5, 0, 6]).switches, ['t'], 'every cell of the box takes its switches');
   game.update(idle);
@@ -107,6 +108,30 @@ test('a bridge is there only while its switches are on', () => {
   assert.equal(bridge.solid, true);
   zap(game);
   assert.equal(bridge.solid, false);
+});
+
+test('a bridge is a sheet over its hole: floor while there, a hole again once it goes (D224)', () => {
+  const game = gameWith({ objects: [{ id: 'p', type: 'plate_timed', at: [2, 0, 2] }], blocks: [{ type: 'bridge', at: [5, 0, 5], switches: ['p'] }], holes: [{ at: [5, 5] }] });
+  const bridge = gateAt(game, 'bridge', [5, 0, 5]);
+  assert.deepEqual(bridge.box()[1], [-SLAB_HEIGHT, 0], 'a thin sheet, its top the floor');
+  assert.equal(game.grid.isHole(5.5, 5.5), true);
+  game.player.place([2.5, 0, 2.5]);
+  run(game, idle, 5);
+  assert.equal(bridge.solid, true);
+  assert.equal(game.grid.isHole(5.5, 5.5), false, 'covered: floor');
+  game.player.place([5.5, 0, 5.5]);
+  run(game, idle, 5);
+  assert.equal(game.player.dead, false, 'he stands on it at floor level');
+  run(game, idle, 60);
+  assert.equal(bridge.solid, false, 'the timed plate ran out');
+  assert.equal(game.player.dead, true, 'a hole again under him');
+});
+
+test('validation: a bridge at floor level lies over a hole (D224)', () => {
+  const errors = (props) => validateData(files({ objects: [{ id: 'p', type: 'plate', at: [2, 0, 2] }], ...props }));
+  assert.deepEqual(errors({ blocks: [{ type: 'bridge', at: [5, 0, 5] }], holes: [{ at: [5, 5] }] }), []);
+  assert.match(errors({ blocks: [{ type: 'bridge', at: [5, 0, 5] }] }).join(), /a bridge at floor level lies over a hole; tile 5, 5 is floor/);
+  assert.deepEqual(errors({ blocks: [{ at: [4, 0, 5] }, { at: [6, 0, 5] }, { type: 'bridge', at: [5, 1, 5] }] }), [], 'a raised one bridges ledges');
 });
 
 test('a platform with switches runs only while they are on and stops where it is', () => {

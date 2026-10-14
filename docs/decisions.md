@@ -2482,3 +2482,31 @@ to `"jump": "pads"`:
 **Why:** each review (5.17) should start from tools and rules that already
 speak the new rule; the bounce gives pads rooms a moving way up the author
 wanted, and the checker must see it or it reports false `never`s.
+### D224 — 2026-10-14 — The bridge is a glass sheet at floor level
+Under the pads rule (D222) a bridge block in a hole is a 1-high step he
+can't climb, and as a block it reads as a wall, not a way across. The
+author asked for a single sheet instead:
+- **Look `sheet`** (the `bridge` type; a switch gate with a look, like the
+  cage): one sheet of white glass (`GLASS.gate`, a mechanism, D99) at the
+  bottom of its cell, its top flush with the floor under it, outlined round
+  its top, with the same switch lights. It grows out of its middle as it
+  comes and shrinks back as it goes; in the editor a gone one is a dashed
+  square on the floor.
+- **At floor level it covers a hole** (the author's choice over a sheet at
+  the top of the cell): validation wants a hole under it. While it is there
+  the tile is floor (`Grid.coverHole()`): he, crates and enemies cross at
+  floor level, nothing climbs. Once it goes the tile is a hole again: he
+  falls in, a crate on it plugs it, as with the block before. Higher up it is
+  a thin walkway level with 1-high ledge tops (a body 0.04 thick).
+- **Checker:** a sheet is never in the way; while it can be there it is
+  floor at its level, over a hole a cover that makes the tile floor.
+- **All bridges at once** (the author's choice): the nine rooms with
+  bridges (`atrium`, `cold_stairs`, `fence_yard`, `fork_lab`, `guard_loop`,
+  `mirror_stacks`, `relay_loft`, `scan_lab`, `twin_plates`; none authored)
+  keep their data. The checker reports the same for each of them, with the
+  Lattice abilities and in the world, with the free jump and under `--pads`.
+  `guard_loop`'s raised bridge `(11,1,4)`, the double-jump step to the
+  Outer Buffer door (D214), now tops out at 1 instead of 2; that door is
+  `never` since D216 anyway and is redone in the room's review.
+**Why:** a bridge should read and play as a way across a pit; a block in
+a pads room was a step nobody could climb.

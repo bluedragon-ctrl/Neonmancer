@@ -16,12 +16,17 @@
  *
  *   solid ──trigger──► (shake, a step block) ──► gone ──back──► solid
  *
+ * A bridge is a sheet (look `sheet`, D224): a thin glass walkway at the
+ * bottom of its cell, level with the floor under it; in a hole at y 0 it
+ * covers the hole while it is there (the game tells the grid, coverHole()).
+ *
  * Coming back it never traps anything: while the wizard, his decoy, a
  * crate or an enemy is in its cell it waits, and comes back once the cell
  * is clear. While gone it is no body at all (`solid` false: the game
  * leaves it out of the bodies others collide with).
  */
 import { cellBox, overlapsBox, restsOn } from '../physics/collision.js';
+import { SLAB_HEIGHT } from '../world/grid.js';
 
 /** Tuning values (ticks, 60 per second). */
 export const GATE = {
@@ -45,6 +50,8 @@ export class Gate {
     this.trigger = object.trigger ?? 'switch';
     /** A cage (D202) lets bolts and sight through, like a fence (D167). */
     this.seeThrough = object.seeThrough === true;
+    /** A bridge's sheet (D224): a thin walkway at the bottom of its cell, not a block. */
+    this.sheet = object.look === 'sheet';
     /** Its state while unpowered: 'solid' (a gate) or 'gone' (a bridge, there only while powered; switch gates only). */
     this.start = object.start ?? 'solid';
     /** Ids of the switches that power it, or null for every switch in the room (switch gates only). */
@@ -71,7 +78,19 @@ export class Gate {
   savePrevious() {}
 
   box() {
-    return cellBox(this.pos);
+    if (!this.sheet) return cellBox(this.pos);
+    // Its top is the cell's floor: it fills the top of the cell below.
+    const [x, y, z] = this.pos;
+    return [
+      [x, x + 1],
+      [y - SLAB_HEIGHT, y],
+      [z, z + 1],
+    ];
+  }
+
+  /** The hole tile [x, z] it covers while there (D224): a sheet at floor level; else null. */
+  get coveredTile() {
+    return this.sheet && this.pos[1] === 0 ? [this.pos[0], this.pos[2]] : null;
   }
 
   /** Go to `state`, starting its timer. */

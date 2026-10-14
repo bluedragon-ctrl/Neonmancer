@@ -77,6 +77,9 @@ export function updateSwitches(game) {
     if (object.kind === 'gate' && object.trigger === 'switch') {
       const event = object.power(powered(game, object.switches), [...game.bodies, ...(game.decoy?.active ? [game.decoy] : [])]);
       if (event) game.emit('gate', { object, open: event === 'open' });
+      // A bridge's sheet over a hole (D224): floor while it is there.
+      const tile = object.coveredTile;
+      if (event && tile) game.grid.coverHole(tile[0], tile[1], object.solid);
       changed ||= event !== null;
     } else if (object.kind === 'platform' && object.switches) object.powered = powered(game, object.switches);
   }

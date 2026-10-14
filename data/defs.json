@@ -410,7 +410,7 @@
     "collapsing_regrow": { "extends": "collapsing", "regrow": 3 },
     "gate": { "kind": "gate", "color": "#eef3ff" },
     "cage": { "kind": "gate", "look": "cage", "seeThrough": true },
-    "bridge": { "extends": "gate", "start": "gone" },
+    "bridge": { "extends": "gate", "start": "gone", "look": "sheet" },
     "stair_x": { "look": "stair", "rise": "+x" },
     "stair_nx": { "extends": "stair_x", "rise": "-x" },
     "stair_z": { "extends": "stair_x", "rise": "+z" },

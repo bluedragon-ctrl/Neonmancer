@@ -247,7 +247,7 @@ the ones it gives:
 | `collapsing` | kind `gate`, `trigger: step`; room color, dashed edges, faces barely tinted (D98, D99) | gives way (see Gate blocks) |
 | `collapsing_regrow` | extends `collapsing` | `regrow: 3` |
 | `gate` | kind `gate` (switch trigger), white, bars on its seen sides (D140) | solid until its switches are on (see Gate blocks) |
-| `bridge` | extends `gate` | `start: gone`: there only while its switches are on (D144) |
+| `bridge` | extends `gate` | `start: gone`: there only while its switches are on (D144); `look: sheet`: a glass sheet at its cell's floor, not a block (D224) |
 | `cage` | kind `gate` (switch trigger), `look: cage`: bars of light round one cell, room color (D202) | `seeThrough: true`: bolts and sight pass; a pickup may lie inside (see Gate blocks) |
 
 - **Static types** have a `look` (`plain`, `hazard`, `void`, `fence`) and live in
@@ -438,10 +438,18 @@ running as its own room object (D40). What makes one go is its type's
   coming back, it rises. Gone, a collapsing block that will come back
   leaves a dim dashed outline; a switch gate leaves nothing in play, only
   in the room editor (D142).
-- **Over a hole:** a gate block may stand in a hole tile (a bridge over
-  a pit, a trapdoor); when it goes, the wizard drops into the pit and a
+- **Over a hole:** a gate block may stand in a hole tile (a trapdoor, a
+  collapsing bridge); when it goes, the wizard drops into the pit and a
   crate plugs it. Spawn and reset points don't count one as holding the
   wizard up over a hole.
+- **The bridge is a sheet** (look `sheet`, D224): a single sheet of white
+  glass at the bottom of its cell, level with the floor under it, not a
+  block. At floor level it must lie over a hole and covers it while it is
+  there: the tile is floor (he and crates cross at floor level, nothing
+  climbs), and a hole again once it goes (he falls in, a crate on it
+  plugs it). Higher up it is a thin walkway level with 1-high ledge tops.
+  It grows out of its middle as it comes and shrinks as it goes; in the
+  editor a gone one shows a dashed square on the floor.
 
 The two triggers:
 
@@ -1739,7 +1747,8 @@ before D140 work as they did). Switch types in `defs.json` are placed in
   gate is a white block with three bars across each seen side and one
   light per linked switch on top; it sinks into its floor to open, and
   open it leaves a dim dashed outline where it will rise again. A bridge
-  looks the same.
+  is a sheet of the same glass flush with its cell's floor, with the same
+  lights (D224).
 - Events: `switch` (a switch went on or off), `tick` (a timed one
   counting down), `gate` (a gate opened or closed), `unlock` and `lock`
   (a locked exit opened or closed).
@@ -1920,7 +1929,8 @@ it, and every new room)
   him to 2.8, so only a 3-high ledge stops both, and the bounce carries
   him ~3 cells sideways (keep the lane 2+ cells from a gap). An enemy
   he needs as a step can be killed: give the area a second way out.
-- Gate and bridge blocks in a hole stand a block high: a step up, not floor.
+- Gate blocks in a hole stand a block high: a step up, not floor. A
+  bridge is a sheet (D224): over a hole it is floor while it is there.
 - A second solution of the same or higher difficulty is fine; only an
   easier one that skips the room's idea is a bypass (D166).
 - A crate or a frozen enemy beside a 2-high wall is a step over it: an
