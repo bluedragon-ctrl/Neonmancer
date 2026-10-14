@@ -2318,3 +2318,17 @@ changed.
 **Why:** the author's rule (D212) and their idea of Blink as a key to secrets:
 a chain of exact Blinks, ending in the 4-tile leap only a jump and a Blink
 make, is a trick of its own.
+
+### D219 — 2026-10-14 — Restart room: a voluntary death from the pause menu
+A puzzle can leave the wizard stuck (a crate in a corner, a plate out of
+reach) with no way out and no way to die. The pause menu gets
+`RESTART ROOM (-1 BACKUP)`: after a confirm it kills him with cause
+`restart`, which costs one backup exactly like any death and resets the room
+when he recompiles (`Game.restartRoom()`).
+- Always costs one backup, in every room: no free resets, no per-room flag.
+- With no backups left it is refused with a notice: he can always leave the
+  way he came (D67), and a death with none left would crash him to a shrine.
+- Pause menu only, no quick key, so it is never pressed by accident.
+- Debug invincibility makes it free.
+**Why:** a stuck player should not have to quit, and the cost keeps it from
+being a free undo for Sokoban rooms.

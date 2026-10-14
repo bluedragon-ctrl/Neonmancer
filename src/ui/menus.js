@@ -20,7 +20,8 @@ import { SETTINGS, Settings } from './settings.js';
  */
 export const MENUS = {
   title: ['continue', 'start', 'enterKey', 'options', 'controls'],
-  pause: ['resume', 'map', 'save', 'copyKey', 'copyLink', 'options', 'controls', 'quit'],
+  pause: ['resume', 'restart', 'map', 'save', 'copyKey', 'copyLink', 'options', 'controls', 'quit'],
+  restart: ['restartNo', 'restartYes'],
   enterKey: ['loadKey', 'back'],
   options: ['music', 'sound', 'visuals', 'back'],
   visuals: ['quality', 'renderScale', 'effects', 'back'],
@@ -39,7 +40,9 @@ const SUBMENUS = ['options', 'visuals', 'controls', 'quit', 'enterKey', 'map'];
  * (the game starts over, D105: nothing saves on its own), or store the
  * settings after a change. main.js answers a save or a load with saved(),
  * loaded() or refused().
- * @typedef {'start' | 'continue' | 'loadKey' | 'save' | 'copyKey' | 'copyLink' | 'quit' | 'settings'} MenuCommand
+ * Restart recompiles the room at the cost of one backup (a voluntary
+ * death, main.js asks the game).
+ * @typedef {'start' | 'continue' | 'loadKey' | 'save' | 'copyKey' | 'copyLink' | 'quit' | 'restart' | 'settings'} MenuCommand
  */
 
 /** @param {string} item @returns {boolean} whether it is a setting */
@@ -62,6 +65,8 @@ export class MenuFlow {
     this.key = null;
     /** Is a save stored (localStorage)? The title offers Continue then. */
     this.canContinue = false;
+    /** The wizard's backups left, kept by main.js; Restart room needs one. */
+    this.backups = 0;
     /** @type {(name: string) => void} Called with a UI sound name (ui_move, ui_open, ui_back, ui_choose, ui_adjust, ui_deny); main.js plays it (D139). */
     this.onSound = () => {};
     if (screen === 'title') this.open('title');
@@ -194,12 +199,23 @@ export class MenuFlow {
         this.notice = 'menu.saveFirst';
         this.onSound('ui_deny');
         return null;
+      case 'restart':
+        // Always costs one backup (no free resets); with none, the way he came is the way out.
+        if (this.backups > 0) this.open('restart');
+        else {
+          this.notice = 'menu.noBackups';
+          this.onSound('ui_deny');
+        }
+        return null;
+      case 'restartYes':
+        this.stack = [];
+        return 'restart';
       case 'quitYes':
         this.stack = [];
         this.key = null;
         this.open('title');
         return 'quit';
-      default: // back, quitNo
+      default: // back, quitNo, restartNo
         this.back();
         return null;
     }
