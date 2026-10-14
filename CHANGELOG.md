@@ -452,6 +452,11 @@ docs/decisions.md).
   nested one level too deep, so their points were NaN and nothing showed.
 - Square outlines (pad, shrine, gate lights, bridge sheet, plate and face
   marks) come from two shared helpers in `edges.js` instead of five copies.
+- Movement code without copies (no behaviour change): one gravity and fall
+  speed for the wizard, enemies and crates (`core/rules.js`), one fall step
+  for enemies and crates (`fallStep()` in `physics/collision.js`), the
+  wizard's timed effects in one table, an enemy's step started in one
+  place; stale comments fixed.
 - `check:reach <room>` without `--with` finished in minutes on some rooms: it
   worked out the ability sets of every room of the world (mirror_stacks,
   bolt_gallery and scan_lab alone take over a minute) to report one. It now

@@ -8,7 +8,7 @@
  * energy carry over.
  */
 import { DT } from '../core/loop.js';
-import { PLAYER_HITBOX } from '../core/rules.js';
+import { GRAVITY, MAX_FALL, PLAYER_HITBOX } from '../core/rules.js';
 import { BOOST } from './boost.js';
 import { bodyBox, moveAxis } from '../physics/collision.js';
 
@@ -21,7 +21,7 @@ export const PLAYER = {
    * it covers ~1.65 units: over a 1-tile gap, never a 2-tile one (D36).
    */
   airSpeed: 0.65,
-  gravity: 30,
+  gravity: GRAVITY,
   /**
    * Apex of every jump above the take-off height: clears 1 block, never 2
    * (D3). Jumps have a fixed height (no short hops), like the block rule.
@@ -33,7 +33,7 @@ export const PLAYER = {
    */
   bounceHeight: 2.2,
   /** Fastest fall in units per second (below 1 unit per tick, see collision.js). */
-  maxFall: 18,
+  maxFall: MAX_FALL,
   /** A jump still works this many ticks after walking off a ledge (where he may jump, D221). */
   coyoteTicks: 6,
   /**
@@ -96,9 +96,6 @@ export const PLAYER = {
 /** Take-off speed that reaches exactly jumpHeight: v = √(2gh). */
 export const JUMP_SPEED = Math.sqrt(2 * PLAYER.gravity * PLAYER.jumpHeight);
 
-/** Speed a bounce launches him up with, reaching bounceHeight. */
-export const BOUNCE_SPEED = Math.sqrt(2 * PLAYER.gravity * PLAYER.bounceHeight);
-
 /**
  * Movement [dx, dz] per action along the grid axes, the default (D23):
  * Right = −z (screen up-right), Up = −x (screen up-left), Left = +z, Down = +x.
@@ -113,6 +110,21 @@ const GRID_DIRECTIONS = Object.entries({ up: [-1, 0], down: [1, 0], left: [0, 1]
  * to a single grid axis, as classic isometric controls do.
  */
 const SCREEN_DIRECTIONS = Object.entries({ up: [-1, -1], down: [1, 1], left: [-1, 1], right: [1, -1] });
+
+/**
+ * The effects of what he just did that show for a while and then end, as
+ * the property holding each ({ tick, ... } or null) → the PLAYER value of
+ * how many ticks it lasts. None holds him up; dying or arriving clears them.
+ */
+const EFFECT_TICKS = {
+  install: 'installTicks',
+  warp: 'warpTicks',
+  clip: 'clipTicks',
+  pull: 'pullTicks',
+  compile: 'compileTicks',
+  scan: 'scanTicks',
+  fork: 'forkTicks',
+};
 
 /** Feet this close to y = 0 count as standing on the floor. */
 const FLOOR_EPS = 1e-4;
@@ -280,25 +292,29 @@ export class Player {
 
   /**
    * Die: all integrity gone; he respawns after PLAYER.deathTicks.
-   * @param {'hole'|'void'|'damage'|'timeout'} cause a hole drops him into the pit;
-   *   otherwise he derezzes where he is
+   * @param {'hole'|'void'|'damage'|'timeout'|'restart'} cause a hole drops him into the pit;
+   *   otherwise he derezzes where he is ('restart': the pause menu's restart room, D219)
    */
   die(cause) {
     this.integrity = 0;
     this.dead = true;
-    /** Why he died, while dead: 'hole', 'void', 'damage' or 'timeout' (a room's watchdog, D172). */
+    /** Why he died, while dead: 'hole', 'void', 'damage', 'timeout' (a room's watchdog, D172) or 'restart' (D219). */
     this.deathCause = cause;
     this.deathTimer = PLAYER.deathTicks;
     this.grounded = false;
     this.vy = 0;
-    this.install = null;
     this.shield = null;
     this.clipboard = null;
-    this.clip = null;
-    this.pull = null;
-    this.compile = null;
-    this.scan = null;
-    this.fork = null;
+    // A Blink's or Warp's afterimage plays out.
+    this.clearEffects('warp');
+  }
+
+  /**
+   * End the effects of EFFECT_TICKS at once (dying, arriving somewhere).
+   * @param {string} [keep] one that runs on
+   */
+  clearEffects(keep = null) {
+    for (const effect of Object.keys(EFFECT_TICKS)) if (effect !== keep) this[effect] = null;
   }
 
   /**
@@ -309,7 +325,7 @@ export class Player {
    */
   bounce(top, height = PLAYER.bounceHeight) {
     this.pos[1] = top;
-    this.vy = height === PLAYER.bounceHeight ? BOUNCE_SPEED : Math.sqrt(2 * PLAYER.gravity * height);
+    this.vy = Math.sqrt(2 * PLAYER.gravity * height);
     this.grounded = false;
     this.coyote = 0;
     this.jumpBuffer = 0;
@@ -350,7 +366,6 @@ export class Player {
    */
   cast(cost, cooldownTicks) {
     if (this.dead || this.cooldown > 0) return null;
-    // Recharging adds up small float steps: allow for the rounding.
     if (this.energy < cost) return 'deny';
     this.energy -= cost;
     this.cooldown = cooldownTicks;
@@ -411,12 +426,8 @@ export class Player {
     this.pushTicks = 0;
     /** Set when a push is due this tick: { body, dir: [dx, dz] }; the game carries it out. */
     this.pushIntent = null;
-    this.warp = null;
-    this.clip = null;
-    this.pull = null;
-    this.compile = null;
-    this.scan = null;
-    this.fork = null;
+    // An install plays on through a room change (respawn() ends it).
+    this.clearEffects('install');
   }
 
   /** Keep this tick's start for render interpolation (copied in place: no new array every tick). */
@@ -470,13 +481,9 @@ export class Player {
     this.rechargeEnergy();
     for (const effect of Object.keys(this.boosts)) if (--this.boosts[effect] <= 0) delete this.boosts[effect];
     if (this.shield && ++this.shield.tick >= this.shield.ticks) this.shield = null;
-    if (this.install && ++this.install.tick > PLAYER.installTicks) this.install = null;
-    if (this.warp && ++this.warp.tick > PLAYER.warpTicks) this.warp = null;
-    if (this.clip && ++this.clip.tick > PLAYER.clipTicks) this.clip = null;
-    if (this.pull && ++this.pull.tick > PLAYER.pullTicks) this.pull = null;
-    if (this.compile && ++this.compile.tick > PLAYER.compileTicks) this.compile = null;
-    if (this.scan && ++this.scan.tick > PLAYER.scanTicks) this.scan = null;
-    if (this.fork && ++this.fork.tick > PLAYER.forkTicks) this.fork = null;
+    for (const [effect, ticks] of Object.entries(EFFECT_TICKS)) {
+      if (this[effect] && ++this[effect].tick > PLAYER[ticks]) this[effect] = null;
+    }
 
     // Walk along the grid axes, or screen-relative (D38); diagonals are normalised.
     const directions = movementMode === 'screen' ? SCREEN_DIRECTIONS : GRID_DIRECTIONS;

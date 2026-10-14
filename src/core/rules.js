@@ -6,6 +6,14 @@
 /** Player collision box [x, y, z]; the hat is visual only (D3). */
 export const PLAYER_HITBOX = [0.6, 1.5, 0.6];
 
+/**
+ * Gravity in units per second², the same for the wizard, enemies and
+ * crates, and the fastest fall in units per second (below 1 unit per tick,
+ * see physics/collision.js).
+ */
+export const GRAVITY = 30;
+export const MAX_FALL = 18;
+
 /** Largest allowed room width + depth, so every room fits the fixed camera. */
 export const MAX_ROOM_FOOTPRINT = 32;
 

@@ -11,14 +11,15 @@
  *   any ──its lifetime is up (a compiled crate, D125)──► broken (a plugged hole opens again)
  */
 import { DT } from '../core/loop.js';
-import { REST_EPS, cellBox, overlapsBox, restsOn, surfaceBelow } from '../physics/collision.js';
+import { GRAVITY, MAX_FALL } from '../core/rules.js';
+import { REST_EPS, cellBox, fallStep, overlapsBox, restsOn, surfaceBelow } from '../physics/collision.js';
 
 /** Tuning values (units, seconds). */
 export const PUSHABLE = {
   /** Sliding speed in units per second; slower than walking, so the wizard visibly pushes. */
   slideSpeed: 3,
-  gravity: 30,
-  maxFall: 18,
+  gravity: GRAVITY,
+  maxFall: MAX_FALL,
   /** Ticks a derezzed compiled crate stays (its pixels fly) before the game drops it (D125). */
   expiredTicks: 60,
 };
@@ -183,14 +184,7 @@ export class Pushable {
 
     if (this.state === 'fall') {
       const support = this.support(grid, bodies);
-      this.vy = Math.max(this.vy - PUSHABLE.gravity * DT, -PUSHABLE.maxFall);
-      const y = this.pos[1] + this.vy * DT;
-      if (y > support) {
-        this.pos[1] = y;
-        return null;
-      }
-      this.pos[1] = support;
-      this.vy = 0;
+      if (!fallStep(this, support)) return null;
       if (support < 0) {
         // Dropped into a hole: it fills it and becomes floor (D18).
         this.state = 'plugged';

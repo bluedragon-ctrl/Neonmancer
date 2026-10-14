@@ -15,6 +15,8 @@
  * than `stepUp` above the feet is no collision: the next vertical move
  * lifts him onto it (that is how the wizard climbs a stair).
  */
+import { DT } from '../core/loop.js';
+import { GRAVITY, MAX_FALL } from '../core/rules.js';
 
 /** Overlaps smaller than this don't count, so touching faces never collide. */
 const EPS = 1e-6;
@@ -124,32 +126,31 @@ export function moveAxis(pos, size, axis, delta, grid, bodies = [], self = null,
   const ranges = box.map(cellRange);
   let blocked = false;
   let limit = pos[axis];
+  // Offsets from the reference point to the box faces on this axis.
+  const toMin = pos[axis] - box[axis][0];
+  const toMax = box[axis][1] - pos[axis];
 
   for (let x = ranges[0][0]; x <= ranges[0][1]; x++) {
     for (let y = ranges[1][0]; y <= ranges[1][1]; y++) {
       for (let z = ranges[2][0]; z <= ranges[2][1]; z++) {
         if (!grid.isSolid(x, y, z)) continue;
-        let faces = [[x, y, z][axis], [x, y, z][axis] + 1];
+        // The cell's faces across the axis: [low, high].
+        const at = axis === 0 ? x : axis === 1 ? y : z;
+        let low = at;
+        let high = at + 1;
         // A stair or a slab (D221): only the part it fills; a low slope is walked onto.
         if (grid.shaped) {
           const span = grid.span(x, y, z, box);
           if (!overlaps(box[1], span) || (axis !== 1 && box[1][0] >= span[1] - stepUp)) continue;
-          if (axis === 1) faces = span;
+          if (axis === 1) [low, high] = span;
         }
-        // Offset from the body's reference point to the face that touches.
-        const [min, max] = box[axis];
-        const toMin = pos[axis] - min;
-        const toMax = max - pos[axis];
-        const stop = delta > 0 ? faces[0] - toMax : faces[1] + toMin;
+        const stop = delta > 0 ? low - toMax : high + toMin;
         limit = delta > 0 ? Math.min(limit, stop) : Math.max(limit, stop);
         blocked = true;
       }
     }
   }
 
-  // Offsets from the reference point to the box faces on this axis.
-  const toMin = pos[axis] - box[axis][0];
-  const toMax = box[axis][1] - pos[axis];
   for (const body of bodies) {
     if (body === self) continue;
     const other = body.box();
@@ -162,6 +163,26 @@ export function moveAxis(pos, size, axis, delta, grid, bodies = [], self = null,
   }
   pos[axis] = limit;
   return blocked;
+}
+
+/**
+ * One tick of falling for a body that falls straight down (an enemy, a
+ * crate): gravity speeds up `vy` (capped at MAX_FALL), and it drops, down
+ * to the surface at `support` at most. Changes `body.pos[1]` and `body.vy`.
+ * @param {{ pos: number[], vy: number }} body
+ * @param {number} support height of the surface under it
+ * @returns {boolean} whether it landed there (its fall speed then 0)
+ */
+export function fallStep(body, support) {
+  body.vy = Math.max(body.vy - GRAVITY * DT, -MAX_FALL);
+  const y = body.pos[1] + body.vy * DT;
+  if (y > support) {
+    body.pos[1] = y;
+    return false;
+  }
+  body.pos[1] = support;
+  body.vy = 0;
+  return true;
 }
 
 /**
