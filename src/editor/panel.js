@@ -81,9 +81,12 @@ export function blockTypeText(type) {
   if (type.kind === 'gate') {
     if (type.trigger === 'step') return type.regrow ? `collapses, back in ${type.regrow} s` : 'collapses';
     if (type.look === 'cage') return 'see-through, holds a pickup, gone while powered';
+    // The bridge's sheet (D224) lies over a hole: validation wants one under it.
+    if (type.look === 'sheet') return 'a sheet over a hole, floor while powered';
     return type.start === 'gone' ? 'gone, there while powered' : 'solid, gone while powered';
   }
   if (type.kind) return type.kind;
+  if (type.look === 'slab') return 'a walkway at the top of its cell, headroom under it';
   const does = [type.damage && `hurts ${type.damage}`, type.lethal && 'lethal', type.fake && 'a scan derezzes it', type.passes && `${type.passes.join(', ')} pass`].filter(Boolean);
   return does.join(', ') || type.look;
 }
@@ -139,6 +142,7 @@ export function blockTypeGroups(types) {
 const OBJECT_GROUPS = [
   ['Crates', 'pushable'],
   ['Platforms', 'platform'],
+  ['Pads', 'pad'],
   ['Decorations', 'deco'],
   ['Core', 'core'],
   ['Spells', 'disk'],
@@ -171,6 +175,9 @@ export function objectTypeText(type) {
     }
     case 'platform':
       return type.damage ? `spiked, hurts ${type.damage}` : 'rides its path';
+    case 'pad':
+      // A launch of 2.2 clears 2 whole blocks (D221).
+      return `throws him ${Math.floor(type.launch ?? 0)} up, over a 1-tile gap`;
     case 'deco':
       return 'decoration';
     case 'core':
@@ -386,7 +393,7 @@ export class EditorPanel {
     const authored = el('label', 'editor-check');
     authored.append(this.authoredInput, ' real game room');
     // Jump only on pads (D221); new rooms start so (D222), the rest move in their reviews.
-    this.padJumpInput = Object.assign(el('input'), { type: 'checkbox', title: 'The wizard jumps only standing on a jump pad in this room (D221)' });
+    this.padJumpInput = Object.assign(el('input'), { type: 'checkbox', title: 'No jump key in this room: only pads, stairs and bounces take him up (D221, D222)' });
     this.padJumpInput.addEventListener('change', () => on.padJump(this.padJumpInput.checked));
     const padJump = el('label', 'editor-check');
     padJump.append(this.padJumpInput, ' only on pads');
