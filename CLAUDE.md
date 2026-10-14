@@ -86,8 +86,9 @@ mobile/touch support, backend or accounts.
   block, never two), everywhere: there is no double jump (removed, D216).
 - Prototype (D221): a room with `"jump": "pads"` has no jump key (Space
   casts there); jump
-  pads (object kind `pad`) throw him up by themselves (2 blocks, a 1-tile
-  gap); stairs (look `stair`, a `rise`) take him a block up, slabs (look
+  pads (object kind `pad`, a trampoline in the room's color: a rim round a
+  mesh with light streaking up, D226) throw him up by themselves (2 blocks,
+  a 1-tile gap); stairs (look `stair`, a `rise`) take him a block up, slabs (look
   `slab`) are thin glass walkways with headroom under them; a bouncy
   enemy he falls onto throws him 2 up, a moving pad (D223). New rooms
   are pads rooms; the default stays `free` while rooms move over one by

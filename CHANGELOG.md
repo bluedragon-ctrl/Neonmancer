@@ -9,6 +9,11 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Changed
+- The jump pad is a trampoline in the room's color (D226): a glass rim round a
+  taut mesh over a dark sheet that breathes, ripples and dips and rebounds on a
+  launch, with streaks of light rising off it. It no longer looks like the
+  magenta backup shrine. The asset showcase (`?asset=pad`) shows it in three room
+  colors beside the shrine and a crate.
 - The bridge is a single sheet of white glass at floor level, not a block
   (D224): over a hole it covers the hole while it is there, so he and crates
   cross at floor level, and it is a hole again once it goes; it grows out of

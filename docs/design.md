@@ -87,7 +87,10 @@ same on QWERTY, QWERTZ and AZERTY keyboards.
   jump pressed up to 6 ticks before landing happens on landing.
 - Pads-only jump (prototype, D221): in a room with `"jump": "pads"` the jump
   key does nothing. A jump pad throws him up by itself the moment he stands
-  on it (any room; 2.2 above it, over a 1-tile gap). Stairs take him one
+  on it (any room; 2.2 above it, over a 1-tile gap). It is a trampoline in
+  the room's color (D226): a glass rim round a taut mesh that dips and
+  rebounds on a launch, light streaking up off it; magenta stays the
+  backup shrine's. Stairs take him one
   block up (he walks their slope; their sides are walls), slabs are thin
   glass walkways with headroom under them. Test room: `stair_lab` (dev wing).
 - Turns smoothly towards the walking direction; starts facing the camera.
