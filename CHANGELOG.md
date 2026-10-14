@@ -15,6 +15,10 @@ docs/decisions.md).
   round it, have no Lattice way in for now; each is redone in its own PR.
 
 ### Added
+- Dead Pixel (`buffer_1`), the first Outer Buffer secret room (D219, step 5.11):
+  Microban 86 by David W. Skinner with four spiked crates and four sockets under a
+  fence roof; a Blink over the empty sockets gets him in, 23 pushes open the cage on
+  `secret_0`. The room is 8x6 and its door moves to the west end of the south side.
 - Dead Pixel's door in Scan Lab is a Blink walk along the back wall (D218, step 5.11):
   four Blinks from the screen to the disk's block, the two data pillars and the
   memory stack under the hidden door, then a Scan. No room data changed.

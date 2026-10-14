@@ -2319,6 +2319,47 @@ changed.
 a chain of exact Blinks, ending in the 4-tile leap only a jump and a Blink
 make, is a trick of its own.
 
+### D220 — 2026-10-14 — Dead Pixel: Microban 86 with spiked crates under a fence roof (5.11)
+The first Outer Buffer room gets its contents. The author's brief for the
+secret rooms: hard Sokoban, spiked crates welcome, spells only for small
+steps. `buffer_1` (Dead Pixel) is **Microban 86 by David W. Skinner**: four
+spiked crates (D199), its four goals as sockets (D194) in the front-left
+corner, walls 2 high (blocks at the back, fences elsewhere so nothing is
+hidden), and `secret_0` in a cage (D202) on the four sockets in the east
+wall. The room is 8×6 (the level fills it), not 8×8 (D184); the door moves
+to the west end of the south side (`at` 0); `scan_lab` is unchanged.
+- **Trick:** the empty sockets are pits between the door and the floor, so
+  he Blinks over them to get in (the only spell); then the crates fill them
+  in a strict order, the last pushed in from the doorway itself.
+- **A fence roof at y 2** over the whole room. Without it a jump against a
+  spiked crate and a Blink at the top carries him over it (played: 1 high
+  is low enough), so the solution needed about ten jump-Blinks, most cut
+  short by a fence (1 damage each; he derezzed before push 9 in the sim).
+  Under the roof he can't jump, Blink stays level and stops at crates, and
+  his route round the crates is the classic's again.
+- **Solver** (`solve.mjs`, from the door, `zap,scan,fork,pause,blink`):
+  23 pushes (the classic needs 25), 91 % of the 2 040 states are traps, 10
+  sharp steps; unsolvable without Blink. With him placed inside and no
+  spells it is still 23: the two pushes saved come from starting at the door
+  rather than the classic's start square, not from a spell. Fork, Zap, Scan and Pause change
+  nothing (sockets only take crates; no enemies or targets).
+- **Played** headless (`sim.mjs`): the Blink over the sockets, all 23
+  pushes, the cage opens, `secret_0` taken and out to `scan_lab`, about
+  43 s, no damage. Pushing a crate into a socket: let go once it drops, or
+  he follows it into the pit.
+- **Checker:** `check:reach -- buffer_1` on its own says `never` for
+  `secret_0`, even with Blink and a raised `MAX_CONFIGS`: it floods from the
+  door in every configuration, and here the crates shut him away from the
+  door mid-solution (true Sokoban). The solver tracks where he stands and
+  the sim plays it; the world check stays green. The mutation test is
+  misleading for the same reason (every crate and the cage show NO
+  EFFECT against a baseline of `never`).
+- **Soft-locks:** in 76 of the 2 040 states (4 %) a push shuts him away
+  from the door with no empty socket to drop into. The author is adding a
+  reset option in its own PR; the puzzle is not changed for it.
+**Why:** the author asked for hard push puzzles in the secret rooms, with
+spiked crates and spells only as small steps; Microban 86 keeps its push
+count with spiked crates, and the roof keeps Blink to the one step in.
 ### D219 — 2026-10-14 — Restart room: a voluntary death from the pause menu
 A puzzle can leave the wizard stuck (a crate in a corner, a plate out of
 reach) with no way out and no way to die. The pause menu gets

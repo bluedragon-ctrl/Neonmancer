@@ -192,6 +192,10 @@ the author and collection in the room's decision entry. Before use:
   Paste, Compile) a spiked one is a step; two spiked crates cannot be
   stood on at all. Keep a free side around any spiked crate he can fall
   onto.
+- **Sockets as a moat** (`buffer_1`, D219): the goals sit between the door and
+  the floor; empty, they are pits he Blinks over to get in, and the last crate
+  is pushed in from the doorway. Put a fence roof over a spiked-crate level, or
+  a jump-Blink hops the crates (room-design).
 - **Deadlocks to read**: a crate in a corner; two crates side by side
   along a wall; a crate on a wall line with no goal on it; the bottom of
   a stack; a crate pushed onto a ledge it can't be pushed back from.
