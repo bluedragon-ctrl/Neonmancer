@@ -88,7 +88,7 @@ same on QWERTY, QWERTZ and AZERTY keyboards.
 - Pads-only jump (prototype, D221): in a room with `"jump": "pads"` the jump
   key does nothing. A jump pad throws him up by itself the moment he stands
   on it (any room; 2.2 above it, over a 1-tile gap). It is a trampoline in
-  the room's color (D225): a glass rim round a taut mesh that dips and
+  the room's color (D226): a glass rim round a taut mesh that dips and
   rebounds on a launch, light streaking up off it; magenta stays the
   backup shrine's. Stairs take him one
   block up (he walks their slope; their sides are walls), slabs are thin
@@ -2494,8 +2494,8 @@ decisions before the code lands. Every step also (D43):
   records new decisions.
 
 **Next: Phase 5, step 5.17, the room reviews against the Lattice ladder,
-each moving its room to the pads-only rule, from `boot_up` on** (D186,
-D187, D222, D223; 5.3 music waits for the author's tracks).
+each moving its room to the pads-only rule, from `first_steps` on** (`boot_up`
+done, D225; D186, D187, D222, D223; 5.3 music waits for the author's tracks).
 
 ### Phase 5 (v0.5) steps: Home Lattice playtest
 

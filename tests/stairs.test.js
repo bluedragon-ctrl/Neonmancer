@@ -159,6 +159,23 @@ test('reach: a pad throws him as high as its launch: 2 blocks by default', () =>
   assert.equal(with2('pad_low'), false);
 });
 
+test('pads: a throw over a 1-tile pit lands a block up, never two', () => {
+  for (const [high, lands] of [[0, true], [1, false]]) {
+    const game = padGame([5.5, 0, 3.5], { jump: 'pads', blocks: [{ at: [0, 0, 0], to: [3, high, 7] }] });
+    for (let i = 0; i < 10; i++) game.update(idle);
+    for (let i = 0; i < 120 && game.player.pos[0] > 2.5 && !game.player.dead; i++) game.update(hold('up'));
+    for (let i = 0; i < 30; i++) game.update(idle);
+    assert.equal(!game.player.dead && game.player.pos[1] === 1, lands, `a ${high + 1}-high ledge`);
+  }
+});
+
+test('reach: a pad throws him over a 1-tile gap onto a ledge a block up, never two', () => {
+  const pit = { at: [4, 0], to: [4, 7] };
+  const reached = (high) => reach({ jump: 'pads', holes: [pit], blocks: [{ at: [5, 0, 0], to: [7, high, 7] }], objects: [{ id: 'pad', type: 'pad', at: [3, 0, 3] }], pickups: [{ ...FAR, at: [6, high + 1, 6] }] }).pickups.has('far');
+  assert.equal(reached(0), true);
+  assert.equal(reached(1), false);
+});
+
 test('reach: in a pads room a pickup two cells up needs a pad', () => {
   const high = { id: 'far', type: 'refill_energy', at: [3, 2, 3] };
   assert.equal(reach({ pickups: [high] }).pickups.has('far'), true);

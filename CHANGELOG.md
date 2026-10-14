@@ -9,7 +9,7 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Changed
-- The jump pad is a trampoline in the room's color (D225): a glass rim round a
+- The jump pad is a trampoline in the room's color (D226): a glass rim round a
   taut mesh over a dark sheet that breathes, ripples and dips and rebounds on a
   launch, with streaks of light rising off it. It no longer looks like the
   magenta backup shrine. The asset showcase (`?asset=pad`) shows it in three room
@@ -19,6 +19,10 @@ docs/decisions.md).
   cross at floor level, and it is a hole again once it goes; it grows out of
   its middle as it comes. Validation wants a hole under a floor-level bridge;
   the checker and the showcase know the sheet.
+- `boot_up` is a pads room (D225, step 5.17): a stair beside the spawn and a
+  pad on the step throw him over the gap to the east door; its screen no
+  longer names a jump key. The checker lets a pad or bounce land a block up
+  across its gap, as it plays.
 
 ### Removed
 - The double jump upgrade (D216): the mid-air jump, its rings, sound, help text and

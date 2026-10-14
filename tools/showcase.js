@@ -2421,7 +2421,7 @@ function buildStairsInRoom() {
 }
 
 /**
- * Jump pads (D221, D225), the trampoline, in three room colors (amber,
+ * Jump pads (D221, D226), the trampoline, in three room colors (amber,
  * Glitchmire pink, Phantom violet) with the backup shrine and a crate beside
  * them to tell them apart. The pads are launched in turn every 2 s as if
  * they just threw the wizard up.

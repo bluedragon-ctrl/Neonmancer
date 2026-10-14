@@ -1,5 +1,5 @@
 /**
- * A jump pad (D221, look D225): a trampoline in the room's color: a low
+ * A jump pad (D221, look D226): a trampoline in the room's color: a low
  * glass rim round a taut mesh of light over a dark sheet, with short
  * streaks of light rising off it. Idle, the mesh breathes and a faint
  * ripple crosses it now and then; a launch presses it down and it rebounds
