@@ -6,7 +6,10 @@
   "biome": "home_lattice",
   "size": [8, 4, 10],
   "spawn": [4.5, 0, 9.5],
-  "exits": [{ "id": "south", "side": "+z", "at": 4 }],
+  "exits": [
+    { "id": "south", "side": "+z", "at": 4 },
+    { "id": "west", "side": "-x", "at": 6 }
+  ],
   "blocks": [
     { "type": "cage", "at": [1, 0, 1], "switches": ["plate_1"] },
     { "type": "cage", "at": [6, 0, 4], "switches": ["target_1"] }

@@ -13,6 +13,7 @@
 import { Core } from './core.js';
 import { Deco } from './deco.js';
 import { Gate } from './gate.js';
+import { Pad } from './pad.js';
 import { Platform } from './platform.js';
 import { Pushable } from './pushable.js';
 import { Plate, Socket, Target } from './switch.js';
@@ -26,6 +27,7 @@ export const OBJECT_KINDS = {
   core: Core,
   deco: Deco,
   gate: Gate,
+  pad: Pad,
 };
 
 /**

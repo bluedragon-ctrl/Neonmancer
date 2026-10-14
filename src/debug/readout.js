@@ -46,12 +46,12 @@ export class DebugReadout {
     const actions = input.activeActions().join(' ') || '-';
     const quality = autoQuality === null ? 'MANUAL' : autoQuality.done ? 'AUTO, SETTLED' : 'AUTO';
     this.element.textContent =
-      `> ROOM ${game.room.id}${game.invincible ? '  INVINCIBLE' : ''}\n` +
+      `> ROOM ${game.room.id}${game.invincible ? '  INVINCIBLE' : ''}  JUMP ${game.jumpRule().toUpperCase()}\n` +
       `> TICK/S ${this.tps}  FPS ${this.fps}  ALPHA ${alpha.toFixed(2)}\n` +
       `> BUFFER ${renderer.bufferWidth}x${renderer.bufferHeight}  MSAA ${renderer.multisampling}  SCALE ${renderer.renderScale.toFixed(2)} (${quality})\n` +
       `> GPU SHADERS ${info.programs.length}  GEOMETRIES ${info.memory.geometries}  TEXTURES ${info.memory.textures}\n` +
       `> ACTIONS ${actions}\n` +
       `> POS ${player.pos.map((v) => v.toFixed(2)).join(' ')}${player.grounded ? '  GROUNDED' : ''}\n` +
-      `> [/] ROOM  I INVINCIBLE  H DAMAGE`;
+      `> [/] ROOM  I INVINCIBLE  H DAMAGE  J PADS-ONLY JUMP`;
   }
 }

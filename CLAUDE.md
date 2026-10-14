@@ -84,6 +84,10 @@ mobile/touch support, backend or accounts.
   the floor is at y = 0; back walls are the x = 0 and z = 0 planes.
 - 1 block = 1 unit (1x1x1). Player jump height: 1 unit (clears exactly one
   block, never two), everywhere: there is no double jump (removed, D216).
+- Prototype (D221): a room with `"jump": "pads"` allows the jump only on
+  jump pads (object kind `pad`); stairs (look `stair`, a `rise`) take him
+  a block up, slabs (look `slab`) are thin walkways with headroom under
+  them. Default `free` until the author decides; test room `stair_lab`.
 - Player hitbox 0.6 x 1.5 x 0.6 (the hat is visual only), so the wizard
   needs 2 blocks of headroom.
 - Blocks snap to the grid; player and enemies move freely (sub-grid).
@@ -484,7 +488,8 @@ not critical.
 ## 9. Tooling
 
 - **Debug mode** (toggle key): collision boxes, FPS, room jump,
-  invincibility, test damage, finding fragments (K).
+  invincibility, test damage, finding fragments (K), jump only on pads in
+  every room (J, D221).
 - **Access pass** (D113): a test pickup (kind `access`) that raises the
   access level at once; one (level 3) lies in `boot_up`, the start, for
   testing. Not for real game content.
@@ -512,7 +517,8 @@ not critical.
   spells found so far, and the
   world as a fixpoint, flagging exits, pickups and rooms that stay out of
   reach; `<room>` checks one room (`--with` abilities, `--from` an exit),
-  `--rooms` lists what each exit and pickup needs. Used by CI, the
+  `--rooms` lists what each exit and pickup needs, `--pads` tries the
+  pads-only jump (D221) on every room. Used by CI, the
   world map tool, and design skills/subagents. Knows nothing of enemies
   or timing.
 - **Claude Code skills and subagents** (D132, `.claude/`): the

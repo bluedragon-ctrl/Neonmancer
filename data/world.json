@@ -13,7 +13,8 @@
     "spiked_lab",
     "heavy_lab",
     "socket_yard",
-    "cage_lab"
+    "cage_lab",
+    "stair_lab"
   ],
   "later": ["compile", "warp"],
   "fragments": { "required": 64, "access": [16, 32, 48] },
@@ -52,6 +53,7 @@
     ["socket_lab.east", "heavy_lab.west"],
     ["room_2.north", "socket_yard.south"],
     ["heavy_lab.north", "cage_lab.south"],
+    ["cage_lab.west", "stair_lab.east"],
     ["room_1.north", "spiked_lab.south"],
     ["fence_yard.east", "room_2.west"],
     ["watchdog_run.east", "fence_yard.west"],
@@ -101,6 +103,7 @@
     "heavy_lab": [6, -1],
     "socket_yard": [3, -2],
     "cage_lab": [6, -2],
+    "stair_lab": [5, -2],
     "spiked_lab": [4, -2],
     "room_2": [3, -1],
     "fence_yard": [2, -1],

@@ -34,8 +34,16 @@ export const PLAYER = {
   bounceHeight: 2.2,
   /** Fastest fall in units per second (below 1 unit per tick, see collision.js). */
   maxFall: 18,
-  /** A jump still works this many ticks after walking off a ledge. */
+  /** A jump still works this many ticks after walking off a ledge (where he may jump: off a pad, D221). */
   coyoteTicks: 6,
+  /**
+   * How far a stair's slope may rise above his feet within one tick's walk
+   * and still be walked onto (D221): more than a tick's climb, even with
+   * Overdrive, far less than a block.
+   */
+  stepUp: 0.2,
+  /** How far below his feet he keeps to the ground walking down a stair, instead of falling off it every tick (D221). */
+  stepDown: 0.25,
   /** Ticks of walking into an object before it moves (a short, deliberate shove). */
   pushDelay: 8,
   /** A jump pressed this many ticks before landing still happens on landing. */
@@ -429,9 +437,11 @@ export class Player {
    * @param {Iterable<{ box(): number[][] }>} [options.bodies] pushable objects
    * @param {boolean} [options.invincible] debug mode: holes and void blocks never kill
    * @param {'grid'|'screen'} [options.movementMode] which key → direction mapping to use (D38)
+   * @param {boolean} [options.canJump] may he jump where he stands: anywhere
+   *   in a room with a free jump, only on a jump pad in one without (D221)
    * @returns {string|null} event: 'jump', 'land', 'die', 'respawn' or null
    */
-  update(input, grid, { bodies = [], invincible = false, movementMode = 'grid' } = {}) {
+  update(input, grid, { bodies = [], invincible = false, movementMode = 'grid', canJump = true } = {}) {
     this.savePrevious();
     this.pushIntent = null;
 
@@ -482,8 +492,8 @@ export class Player {
       // Overdrive (D152) speeds him up on the ground only, so a jump never carries further.
       const speed = this.grounded ? PLAYER.speed * (this.boosts.overdrive > 0 ? BOOST.overdriveSpeed : 1) : PLAYER.speed * PLAYER.airSpeed;
       const step = (speed * DT) / Math.hypot(dx, dz);
-      const hitX = moveAxis(this.pos, this.size, 0, dx * step, grid, bodies, this);
-      const hitZ = moveAxis(this.pos, this.size, 2, dz * step, grid, bodies, this);
+      const hitX = moveAxis(this.pos, this.size, 0, dx * step, grid, bodies, this, PLAYER.stepUp);
+      const hitZ = moveAxis(this.pos, this.size, 2, dz * step, grid, bodies, this, PLAYER.stepUp);
       this.targetFacing = Math.atan2(dx, dz);
       this.trackPush(dx === 0 ? hitZ : dz === 0 ? hitX : null, [dx, dz]);
     } else {
@@ -493,8 +503,9 @@ export class Player {
     const turn = Math.atan2(Math.sin(this.targetFacing - this.facing), Math.cos(this.targetFacing - this.facing));
     this.facing += turn * PLAYER.turnRate;
 
-    // Jump, with a little forgiveness on both sides of the ground contact.
-    this.coyote = this.grounded ? PLAYER.coyoteTicks : Math.max(0, this.coyote - 1);
+    // Jump, with a little forgiveness on both sides of the ground contact;
+    // on ground where he can't jump (off the pads, D221) there is none.
+    this.coyote = this.grounded ? (canJump ? PLAYER.coyoteTicks : 0) : Math.max(0, this.coyote - 1);
     this.jumpBuffer = input.pressed('jump') ? PLAYER.jumpBufferTicks : Math.max(0, this.jumpBuffer - 1);
     if (this.jumpBuffer > 0 && this.coyote > 0) {
       this.vy = JUMP_SPEED;
@@ -514,6 +525,15 @@ export class Player {
       this.vy = 0;
     } else {
       this.grounded = false;
+      // Walking down a stair (D221): keep to its slope.
+      if (wasGrounded && this.vy <= 0 && grid.shaped) {
+        const probe = [...this.pos];
+        if (moveAxis(probe, this.size, 1, -PLAYER.stepDown, grid, bodies, this)) {
+          this.pos[1] = probe[1];
+          this.grounded = true;
+          this.vy = 0;
+        }
+      }
     }
     if (this.grounded && !wasGrounded) event = 'land';
 

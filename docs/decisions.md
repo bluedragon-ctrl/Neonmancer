@@ -2373,3 +2373,46 @@ when he recompiles (`Game.restartRoom()`).
 - Debug invincibility makes it free.
 **Why:** a stuck player should not have to quit, and the cost keeps it from
 being a free undo for Sokoban rooms.
+### D221 — 2026-10-14 — Prototype: the jump only on pads, with stairs and slabs
+Much of the room design fights the free jump: the spiked crate (D199) stops
+hops over crates, fences and 2-high walls keep him out of places, Dead
+Pixel's fence roof (D220) stops jump-Blinks, and all of them make rooms hard
+to read. Without the jump a 1-high wall is a wall, Sokoban is honest again
+(he gets behind a crate only by walking round it), every change of height is
+one the room places, and a ledge is a one-way drop. Turned off for the whole
+game, though, it cuts the world at once: with the checker, 23 of 45 rooms lose an
+exit or a pickup, 19 of them game rooms, `boot_up`'s east exit among them.
+So it is a prototype, room by room:
+- **Room rule:** `"jump": "pads"` in a room's data (editor: Jump, "only on
+  pads"); the default stays `free`. In such a room he jumps only standing on
+  a **jump pad** (object kind `pad`): a magenta tile (his own, D98) on the
+  floor or on top of a block, no body, a square of light rising off it. The
+  jump itself is unchanged (1 up, a one-tile gap; coyote time only off a
+  pad). Bouncing off a bouncy enemy is no jump and still works.
+- **Stair** (look `stair`, `rise` the way it climbs; types `stair_x`,
+  `stair_nx`, `stair_z`, `stair_nz`): from the cell at its foot he walks up
+  onto a ledge one block higher, and down again. He walks a slope
+  (`Grid.span()`, collision steps him onto it from up to 0.2 below his feet
+  and keeps him on it going down); its sides and back are walls. To crates,
+  enemies and the checker it is a block. Drawn as four steps.
+- **Slab** (look `slab`): a 0.2-thin walkway at the top of its cell, level
+  with a ledge one block up; a cell up it leaves him headroom under it, so a
+  bridge can cross over a path. To crates it is a block.
+- **Checker:** in a pads room no climb, gap, Blink from a jump or step onto a
+  compiled crate except from a pad's cell, and a pickup two cells up needs a
+  pad; a stair links its foot to its top; he walks under a slab.
+  `check:reach -- --pads` tries the rule on every room as it is.
+- **Debug:** J (debug mode) makes every room pads-only, to play the rooms as
+  they are without the jump; the readout shows the rule.
+- **Test room:** `stair_lab` (dev wing, off `cage_lab`'s new west door): two
+  stairs up to a 2-high plateau, a slab bridge from it over a walkway to a
+  second plateau, a 1-high corral with a crate for a plate that opens the
+  first stair's gate, and two pads to jump a trench.
+Not decided yet, for after playing it: whether the rule becomes the game's
+(then rooms are reworked one per PR with the 5.17 reviews, starting with
+`boot_up`, and the free jump, spiked crates and fence walls go), the pad's
+behavior (jump key, or a launch by itself) and look, stairs or a ramp look,
+and crates on stairs.
+**Why:** the author asked for an analysis of removing the jump except on
+jumping blocks, with stairs and flat bridges, and to prototype it in the dev
+wing before deciding.

@@ -70,6 +70,7 @@ import { warpFlash } from '../src/render/warp-fx.js';
 import { createWarpTrail, dashPose, placeWarpTrail } from '../src/render/warp-view.js';
 import { createHoleView } from '../src/render/hole-view.js';
 import { createLock, createPlate, createSocket, createTarget, switchLight } from '../src/render/switch-view.js';
+import { createPad } from '../src/render/pad-view.js';
 import { GateView, createGate } from '../src/render/gate-view.js';
 import { SWITCH_KINDS } from '../src/entities/switch.js';
 import { FRAGMENT_COLOR } from '../src/entities/pickup.js';
@@ -150,7 +151,7 @@ const ALL_ASSETS = [
   // a data core, or empty thinner glass in a destructible one, D99);
   // switches have their own looks (below), and so have the core (D101) and
   // decorations (D117).
-  ...Object.entries(OBJECT_TYPES).filter(([, props]) => !SWITCH_KINDS.includes(props.kind) && props.kind !== 'core' && props.kind !== 'deco').map(([type, props]) => ({
+  ...Object.entries(OBJECT_TYPES).filter(([, props]) => !SWITCH_KINDS.includes(props.kind) && !['core', 'deco', 'pad'].includes(props.kind)).map(([type, props]) => ({
     label: type,
     build: () => {
       const view = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...props, at: [0, 0, 0] });
@@ -169,6 +170,10 @@ const ALL_ASSETS = [
   { label: 'fence-in-room', span: 5.5, build: buildFenceInRoom },
   // The crate stream (D198): a fence only crates cross, in the wizard's magenta, 2 high, a crate inside.
   { label: 'stream-in-room', span: 5.5, build: buildStreamInRoom },
+  // Stairs and a slab (D221): the wizard walks up a stair onto a ledge, along a slab bridge and back.
+  { label: 'stairs-in-room', span: 5.5, build: buildStairsInRoom },
+  // A jump pad (D221): where he may jump in a room without a free jump; it flashes every 2 s as if he jumped off it.
+  { label: 'pad', span: 2, spin: false, build: buildPad },
   // Glass (D96): every crate type is glass (above). Hazard blocks as glass
   // are an option not used yet; then a room corner with glass crates
   // stacked beside the old tinted crate, the wizard walking behind them.
@@ -2361,6 +2366,64 @@ function buildBlocksInRoom() {
   );
   room.position.set(-2, 0, -2);
   return new Group().add(room);
+}
+
+/**
+ * Stairs and a slab (D221) in a 4×4 room corner: a 1-high ledge along the
+ * back with a stair up to it, a 2-high tower in the corner with a stair
+ * from the ledge, a slab bridge from the tower over the floor, and a stair
+ * of each other rise on the floor; the wizard walks up the first stair,
+ * along the ledge and back down.
+ */
+function buildStairsInRoom() {
+  const size = [4, 3, 4];
+  const room = new Group().add(
+    createRoomView({
+      size,
+      blocks: {
+        block: [[0, 0, 0], [0, 1, 0], [1, 0, 0], [2, 0, 0], [3, 0, 0], [0, 0, 1], [0, 0, 2]],
+        stair_nz: [[2, 0, 1]],
+        stair_nx: [[1, 1, 0]],
+        slab: [[0, 1, 1], [0, 1, 2]],
+        stair_x: [[1, 0, 3]],
+        stair_z: [[3, 0, 2]],
+      },
+      blockTypes: BLOCK_TYPES,
+      color: PALETTE.amber,
+    }),
+  );
+  const wizard = createWizard();
+  addXray(wizard);
+  room.add(wizard);
+  room.position.set(-2, 0, -2);
+  const asset = new Group().add(room);
+  const loop = 360;
+  let tick = 0;
+  asset.userData.update = (dt) => {
+    tick = (tick + dt * 60) % loop;
+    const t = tick / loop;
+    // Up the stair (−z) and back down, as the slope Grid.span() gives.
+    const leg = t < 0.5 ? t * 2 : 2 - t * 2;
+    const z = 2.8 - leg * 2.2;
+    const front = z - 0.3;
+    wizard.position.set(2.5, Math.min(1, Math.max(0, 2 - front)), z);
+    wizard.rotation.y = t < 0.5 ? Math.PI : 0;
+  };
+  return asset;
+}
+
+/** A jump pad (D221), flashing every 2 s as if the wizard jumped off it. */
+function buildPad() {
+  const pad = createPad(PALETTE.magenta);
+  pad.position.set(-0.5, 0, -0.5);
+  const asset = new Group().add(pad);
+  let time = 0;
+  asset.userData.update = (dt) => {
+    if (Math.floor(time / 2) !== Math.floor((time + dt) / 2)) pad.userData.launch();
+    time += dt;
+    pad.userData.update(dt);
+  };
+  return asset;
 }
 
 /**

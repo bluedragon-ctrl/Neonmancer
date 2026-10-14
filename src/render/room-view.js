@@ -10,7 +10,8 @@
  * share with plain blocks (or a lethal type with a hurting one) is drawn
  * once, by the more dangerous look, so the seam is theirs alone. Fences
  * (D167, fence-view.js) have no faces and draw their own lines, outside the
- * mass: blocks next to them keep their outline. Only
+ * mass: blocks next to them keep their outline; so do stairs and slabs
+ * (D221, stair-view.js), which fill only part of their cell. Only
  * the back walls (x = 0 and z = 0) are drawn; the front sides stay open
  * (CLAUDE.md §4). Exits are doorways in the back walls and gaps in the
  * front edges (render/walls.js); a biome may set glass panels into the
@@ -19,6 +20,7 @@
 import { BufferGeometry, Color, DoubleSide, Float32BufferAttribute, Group, InstancedMesh, Matrix4, Mesh } from 'three';
 import { BLOCK_FX, createActiveBlockView, flareHazard, hazardFaceMaterial } from './block-fx.js';
 import { STREAM_STYLE, createFenceView } from './fence-view.js';
+import { createSlabView, createStairView } from './stair-view.js';
 import { createPanelGlow } from './panel-glow.js';
 import { UNIT_BOX } from './geometry.js';
 import { blockEdges, edgeUnitKeys, groupedBlockEdges } from './edges.js';
@@ -63,7 +65,8 @@ export function createRoomView({ size, blocks, blockTypes, exits = [], color = P
   // one (D64): lethal types first, then those that hurt; each leaves out
   // the lines already claimed, and plain blocks come last.
   const danger = (type) => (type.lethal ? 2 : type.damage ? 1 : 0);
-  const active = types.filter((type) => type.look !== 'plain' && type.look !== 'fence').sort((a, b) => danger(b) - danger(a));
+  const own = ['plain', 'fence', 'stair', 'slab'];
+  const active = types.filter((type) => !own.includes(type.look)).sort((a, b) => danger(b) - danger(a));
   const claimed = new Set();
   for (const type of active) {
     const cells = blocks[type.id];
@@ -75,6 +78,11 @@ export function createRoomView({ size, blocks, blockTypes, exits = [], color = P
   // In defs.json order: where plain types meet, the later one's color wins the edge.
   const plain = types.filter((type) => type.look === 'plain');
   if (plain.length > 0) group.add(createBlockView(plain.map((type) => ({ cells: blocks[type.id], color: type.color ?? color })), claimed));
+  // Stairs and slabs (D221) draw themselves.
+  for (const type of types) {
+    if (type.look === 'stair') group.add(createStairView(blocks[type.id], type.rise, type.color ?? color));
+    if (type.look === 'slab') group.add(createSlabView(blocks[type.id], type.color ?? color));
+  }
   // Fences (D167): a run ending at another block or a back wall needs no post.
   const fences = types.filter((type) => type.look === 'fence');
   if (fences.length > 0) {

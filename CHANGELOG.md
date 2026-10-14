@@ -15,6 +15,13 @@ docs/decisions.md).
   round it, have no Lattice way in for now; each is redone in its own PR.
 
 ### Added
+- Prototype of a pads-only jump (D221): a room with `"jump": "pads"` (editor:
+  Jump, "only on pads") lets the wizard jump only on a jump pad, a new magenta
+  floor tile. New blocks: stairs (`stair_x`, `stair_nx`, `stair_z`,
+  `stair_nz`), which he walks up a block, and the slab, a thin walkway with
+  headroom under it. The checker knows all three (`check:reach -- --pads` tries
+  the rule on every room); debug J makes every room pads-only. Test room:
+  `stair_lab` in the dev wing, through a new west door in `cage_lab`.
 - Dead Pixel (`buffer_1`), the first Outer Buffer secret room (D219, step 5.11):
   Microban 86 by David W. Skinner with four spiked crates and four sockets under a
   fence roof; a Blink over the empty sockets gets him in, 23 pushes open the cage on

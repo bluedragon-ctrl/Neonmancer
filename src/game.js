@@ -103,6 +103,11 @@ export class Game {
     this.invincible = false;
     /** 'grid' (default, D23) or 'screen' (D38); toggled with G, not saved. */
     this.movementMode = 'grid';
+    /**
+     * Debug (D221): jump only on pads in every room, not just in rooms with
+     * `"jump": "pads"`, to try the rule out on the rooms as they are.
+     */
+    this.padJumpOnly = false;
     this.reset(options);
   }
 
@@ -180,6 +185,8 @@ export class Game {
     this.updateOrder = [...this.objects];
     /** The room's switches (entities/switch.js): targets and plates, all off; they power exits, gates and platforms (D140). */
     this.switches = this.objects.filter((object) => SWITCH_KINDS.includes(object.kind));
+    /** Jump pads (D221): where he may jump in a room without a free jump. */
+    this.pads = this.objects.filter((object) => object.kind === 'pad');
     /** Objects that hurt the wizard on touch: spiked platforms (D82). */
     this.spiked = this.objects.filter((object) => object.damage > 0);
     /** Screens with a text (D118); the ones read on this visit stay read. */
@@ -579,6 +586,21 @@ export class Game {
   }
 
   /**
+   * The room's jump rule (D221): 'free' (anywhere) or 'pads' (only on a
+   * jump pad); debug can make it 'pads' everywhere (padJumpOnly).
+   * @returns {'free'|'pads'}
+   */
+  jumpRule() {
+    return this.padJumpOnly ? 'pads' : this.room.jump;
+  }
+
+  /** Debug (D221): toggle jumping only on pads in every room, announced in the terminal. */
+  togglePadJumpOnly() {
+    this.padJumpOnly = !this.padJumpOnly;
+    say(this.padJumpOnly ? 'msg.padJumpOn' : 'msg.padJumpOff');
+  }
+
+  /**
    * Debug mode: jump straight to another room, skipping the exit transition.
    * Ignored mid-transition, so it never interrupts a fade.
    * @param {1|-1} direction next or previous room, in load order
@@ -606,11 +628,15 @@ export class Game {
     if (this.transition && ++this.transition.tick >= TRANSITION.inTicks) this.transition = null;
 
     const { player } = this;
+    // Without a free jump (D221) he jumps only standing on a pad.
+    const pad = player.grounded ? this.pads.find((object) => object.under(player.pos)) : null;
     const playerEvent = player.update(input, this.grid, {
       bodies: this.solids,
       invincible: this.invincible,
       movementMode: this.movementMode,
+      canJump: this.jumpRule() === 'free' || Boolean(pad),
     });
+    if (playerEvent === 'jump' && pad) pad.jumps++;
 
     // Dying drained his integrity (Player). Respawning restores it and
     // resets the room, so no puzzle stays broken.
