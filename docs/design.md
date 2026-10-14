@@ -85,14 +85,15 @@ same on QWERTY, QWERTZ and AZERTY keyboards.
   height (no short hops), so the block rule never depends on timing (D19).
 - Forgiveness: a jump still works 6 ticks after walking off a ledge, and a
   jump pressed up to 6 ticks before landing happens on landing.
-- Pads-only jump (prototype, D221): in a room with `"jump": "pads"` the jump
-  key does nothing. A jump pad throws him up by itself the moment he stands
+- Pads only (D221; the game's rule since D222, reached room by room): in a
+  room with `"jump": "pads"` the jump key does nothing (Space casts). A jump pad throws him up by itself the moment he stands
   on it (any room; 2.2 above it, over a 1-tile gap). It is a trampoline in
   the room's color (D226): a glass rim round a taut mesh that dips and
   rebounds on a launch, light streaking up off it; magenta stays the
   backup shrine's. Stairs take him one
   block up (he walks their slope; their sides are walls), slabs are thin
   glass walkways with headroom under them. Test room: `stair_lab` (dev wing).
+  See Stairs, slabs and pads.
 - Turns smoothly towards the walking direction; starts facing the camera.
 - Tuning values live in `PLAYER` in `src/entities/player.js`.
 
@@ -252,8 +253,11 @@ the ones it gives:
 | `gate` | kind `gate` (switch trigger), white, bars on its seen sides (D140) | solid until its switches are on (see Gate blocks) |
 | `bridge` | extends `gate` | `start: gone`: there only while its switches are on (D144); `look: sheet`: a glass sheet at its cell's floor, not a block (D224) |
 | `cage` | kind `gate` (switch trigger), `look: cage`: bars of light round one cell, room color (D202) | `seeThrough: true`: bolts and sight pass; a pickup may lie inside (see Gate blocks) |
+| `stair_x` | stair (room color): four steps rising across the cell (D221) | `rise: "+x"`, the way it climbs; `stair_nx`, `stair_z`, `stair_nz` extend it with `-x`, `+z`, `-z` (see Stairs, slabs and pads) |
+| `slab` | slab (room color): one sheet of glass at the top of its cell (D221) | a walkway level with a 1-high ledge, headroom under it (see Stairs, slabs and pads) |
 
-- **Static types** have a `look` (`plain`, `hazard`, `void`, `fence`) and live in
+- **Static types** have a `look` (`plain`, `hazard`, `void`, `fence`,
+  `stair`, `slab`) and live in
   the room grid: each cell holds its type's code, and the rules ask about
   properties, never names: a cell with `damage` hurts on touch, a
   `lethal` one kills whoever lands on it. A plain type may have its own
@@ -273,8 +277,9 @@ the ones it gives:
   but bolts (his Zap and Pause, enemies' shots, Zap+ bounces too) and
   enemies' sight pass through (`seeThrough`, `Grid.blocksSight()`).
   Blink and Warp stop at it as at a block. Height is the
-  design tool: 1 high keeps crates and enemies in and he jumps it; 2 high
-  stops him for good (no double jump, D216). A target behind a
+  design tool: in a pads room any height stops him, and 1 high keeps
+  crates and enemies in too; in a free-jump room he jumps a 1-high one and
+  only 2 high stops him for good (no double jump, D216). A target behind a
   fence is switched with a Zap through it; a tower behind one still
   shoots him (no cover). Look: no faces; two beams per unit of height (at
   half and full height) through the middle of the cell, along its run;
@@ -1376,7 +1381,7 @@ Collecting the key fragments is the goal of the game (D101).
 - **The core** (`defs.json` `core`, kind `core`, white: a mechanism,
   D99): a room object placed with the room editor, at most one in the
   world (validation); in `core_hall`, east of the Gatekeeper (D177). A
-  fixed body 1×2×1, too high to jump onto with one jump, so he walks up
+  fixed body 1×2×1, too high to get onto, so he walks up
   to it (both cells must be free). Touching it (`Game.touchCore()`, once until he steps away): the
   level rises to what his fragments earn (`Progress.earnedAccess()`),
   with the banner `ACCESS LEVEL n / GRANTED BY THE CORE` and `> CORE:
@@ -1564,6 +1569,45 @@ usual, so half behind a wall he is half ghost (D55).
   the pit's own (objects are never drawn below the floor, so a crate
   dropping in sinks out of sight). Puzzle idea: push the crate into the pit to cross it.
 - No way down: holes are only a look plus a rule, never a real lower level.
+
+## Stairs, slabs and pads
+
+Without the free jump (D221, D222) every change of height is one the room
+places. Three pieces take the wizard up or across; the room rule and how
+to build with them are in Player and the Room design checklist (Reach in
+a pads room).
+
+- **Room rule:** `"jump": "pads"` in a room's data (editor: Jump, "only
+  on pads"). There the jump key does nothing and Space casts. New rooms
+  start with it (D223); old rooms move over in their reviews (5.17), then
+  the rule is the engine's (5.19). Debug J makes every room pads-only.
+- **Jump pad** (`defs.json` `pad`, object kind `pad`, D221): a tile on the
+  floor or on top of a block (validation), no body. The moment he stands
+  on it, it throws him `launch` (2.2) above it, in any room: 2 blocks up,
+  over a 1-tile gap from anywhere on it, or a block short across the gap
+  (D225); he steers in the air, and standing still he bounces on the
+  spot. A crate pushed onto it covers it. Look (D226): a trampoline in
+  the room's color (`render/pad-view.js`); sound `bounce:pad` (D223).
+- **Stair** (look `stair`, types `stair_x`, `stair_nx`, `stair_z`,
+  `stair_nz` by their `rise`, D221): from the cell at its foot he walks up
+  its slope onto a ledge one block higher, and down again; its sides and
+  back are walls. In code `Grid.span()` gives the slope, and collision
+  steps him onto it from up to 0.2 below his feet. To crates, enemies and
+  the checker it is a whole block. Drawn as four steps outlined on their
+  own (`render/stair-view.js`).
+- **Slab** (look `slab`, D221): a sheet of glass 0.04 thick at the top of
+  its cell (`GLASS.slab`, the room color, outlined round its top), level
+  with a 1-high ledge; a cell up it leaves him headroom under it, so a
+  bridge can cross over a path. To crates it is a block.
+- **Bridge** (`bridge`, D224): a white glass sheet at its cell's floor
+  over a hole, floor while powered (`Grid.coverHole()`); see Gate blocks.
+- **Bouncy enemy** (D223): falling onto one throws him 2.2 above its top;
+  in a pads room it is a moving pad.
+- **Checker:** a pad's cell climbs 2 and crosses a 1-tile gap; a stair
+  links its foot to its top; he walks under a slab; a bouncy enemy's lane
+  counts as pads. `check:reach -- --pads` tries the rule on every room;
+  the report lists the rooms still on the free jump.
+- Showcase `?asset=pad`, `?asset=stairs-in-room`; dev room `stair_lab`.
 
 ## Decorations
 
@@ -1985,8 +2029,8 @@ it, and every new room)
   mechanic (D163).
 - A plate on an enemy's patrol path flickers as it walks over: keep it
   beside the path when only a frozen enemy should hold it.
-- A gate that needs a stronger spell or a buff (a ledge too high for the
-  base jump, D68) should look like a gate: the player should recognise it
+- A gate that needs a stronger spell or a buff (a pit too wide to cross
+  without Blink, D217) should look like a gate: the player should recognise it
   and come back later, not think the room is unsolvable.
 
 **Spells and backtracking** (D67, D186)
@@ -2196,6 +2240,9 @@ F3 toggles debug mode; off by default. While it's on:
   to be touched to raise the level.
 - `H` calls `Game.hurt(1)`, the same path as every damage source: the
   wizard blinks while invulnerable, and at 0 integrity he derezzes.
+- `J` makes every room pads-only (D221): no jump key, Space casts, to play
+  rooms not yet reviewed under the new rule; again, each room's own rule.
+  The readout shows the rule in force.
 
 Rooms fully reset on a debug room jump, same as walking through an exit.
 
@@ -2216,6 +2263,7 @@ list switches to another room; New room makes an empty one (D57).
 | Right click / drag | Erase with the current tool |
 | Mouse wheel, PgUp / PgDn | Height layer up / down (a grid shows it; with **hide above**, on by default, blocks, objects and enemies above it aren't drawn) |
 | 1–9, 0 | Tool: Block, Hole, Object, Enemy, Path, Exit, Spawn, Reset, Shrine, Switch |
+| R | Block tool with the stair picked: turn it a quarter (rises +x, +z, −x, −z, D223) |
 | Alt + left click | Block tool: take the type and switches of the block clicked (an eyedropper, D142) |
 | Esc | Drop the picked enemy, platform or exit |
 | Delete, Backspace | Remove the picked object, enemy or exit |
@@ -2239,7 +2287,10 @@ floor.
   (step) gates (D144), each with what it does: `hazard (hurts 1)`,
   `collapsing_regrow (collapses, back in 3 s)`, `bridge (gone, there
   while powered)`) in the cell clicked (see above), replacing whatever is
-  there; erasing empties the cell (D60). For a switch gate the panel has
+  there; erasing empties the cell (D60). The four stairs are one entry,
+  `stair`, that names the way the painted one rises; R turns it (D223).
+  A bridge is a sheet over a hole (D224): make the hole first, or
+  validation reports the tile as floor. For a switch gate the panel has
   a **Switches** field: the ids the gates placed take (blank: every
   switch). Cells merge into boxes only with the same type and switches.
 - **Hole** works on floor tiles, whatever the layer: place makes a hole,
@@ -2253,7 +2304,8 @@ floor.
   to erase it first. A new platform is picked, ready for its path. A
   picked platform shows its **Switches** field, a picked switch what it
   powers and, a timed one, its **Timer** (blank: its type's). Its type
-  list is in groups (D146): Crates, Platforms, Decorations, Core, then
+  list is in groups (D146): Crates, Platforms, Pads (`pad (throws him 2
+  up, over a 1-tile gap)`), Decorations, Core, then
   the pickups: Spells, Upgrades, Buffs, Refills, Fragments, Secrets,
   Test; each type says what it does (`crate_cross (breaks after 1 hit)`,
   `buff_energy_2 (+10 energy)`), and a permanent pickup where it lies in
@@ -2336,8 +2388,9 @@ floor.
   the mouse, whatever the layer, moving it if there is one; right click
   removes it.
 - The panel, from the top, picks the room (or makes a new one: an id,
-  then New; it starts empty, 12x4x12, in the current biome), sets the
-  room's name, biome and size (applied on Enter or leaving the field; 2–6
+  then New; it starts empty, 12x4x12, in the current biome, a pads room,
+  D223), sets the room's name, **Authored** (D90), **Jump** ("only on
+  pads": the room's `jump` rule, D221), biome and size (applied on Enter or leaving the field; 2–6
   high, width + depth at most 32; a smaller room drops what ends up
   outside, listed in the status line, and moves spawn and reset inside),
   its watchdog timer (**Timer (s)**: whole seconds 3–600, blank for none,
@@ -2690,6 +2743,9 @@ Example room:
   however he entered it (D39). Optional, defaults to `spawn`.
 - `authored` — the author's real game room (D90); development steps never
   touch it.
+- `jump` — `"pads"`: no jump key, only pads, stairs and bounces take him up
+  (D221, D222); absent: the free jump, until step 5.19.
+- `timer` — a watchdog timer in whole seconds (D172); absent: none.
 - `exits` — `side` is `-x`, `+x`, `-z` or `+z`; `at` is the first cell along
   that side; `width` (default 2), `y` floor level (default 0), `height`
   (default 2); `requires`, the conditions that open it (D175):

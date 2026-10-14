@@ -683,7 +683,8 @@ test('blockTypeText: what a block type does, for the Block tool\'s type list', (
   assert.equal(blockTypeText(types.collapsing), 'collapses');
   assert.equal(blockTypeText(types.collapsing_regrow), 'collapses, back in 3 s');
   assert.equal(blockTypeText(types.gate), 'solid, gone while powered');
-  assert.equal(blockTypeText(types.bridge), 'gone, there while powered');
+  assert.equal(blockTypeText(types.bridge), 'a sheet over a hole, floor while powered');
+  assert.equal(blockTypeText(types.slab), 'a walkway at the top of its cell, headroom under it');
 });
 
 test('blockTypeGroups: the Block tool\'s types, static blocks first, then gates by trigger (D141)', () => {
@@ -718,6 +719,7 @@ test('objectTypeText: what an object or pickup type does, for the Object tool\'s
   assert.equal(objectTypeText({ ...crate, mark: 'none', integrity: 2, edges: 'dashed' }), 'breaks after 2 hits, dashed edges');
   assert.equal(objectTypeText({ kind: 'platform' }), 'rides its path');
   assert.equal(objectTypeText({ kind: 'platform', damage: 1 }), 'spiked, hurts 1');
+  assert.equal(objectTypeText({ kind: 'pad', launch: 2.2 }), 'throws him 2 up, over a 1-tile gap');
   assert.equal(objectTypeText({ kind: 'disk', spell: 'zap' }), 'spell zap');
   assert.equal(objectTypeText({ kind: 'upgrade', upgrade: 'shield_plus', slot: 1 }), 'upgrade');
   assert.equal(objectTypeText({ kind: 'upgrade', upgrade: 'zap_plus', slot: 0, spell: 'zap' }), 'upgrade of zap');
@@ -739,20 +741,21 @@ test('objectTypeGroups: objects then pickups by kind, labels with where pickups 
     crate: { kind: 'pushable', color: '#b6ff3c' },
     disk_zap: { kind: 'disk', spell: 'zap' },
     lift: { kind: 'platform', color: '#00f0ff' },
+    pad: { kind: 'pad', launch: 2.2 },
     fragment_0: { kind: 'fragment', slot: 0 },
     fragment_1: { kind: 'fragment', slot: 1 },
     refill_energy: { kind: 'refill', stat: 'energy', amount: 30 },
   };
   const places = new Map([['disk_zap', ['boot']], ['fragment_0', []], ['fragment_1', ['a', 'b']]]);
   const groups = objectTypeGroups(types, places);
-  assert.deepEqual(groups.map(([label]) => label), ['Crates', 'Platforms', 'Spells', 'Refills', 'Fragments']);
+  assert.deepEqual(groups.map(([label]) => label), ['Crates', 'Platforms', 'Pads', 'Spells', 'Refills', 'Fragments']);
   const labels = Object.fromEntries(groups.flatMap(([, options]) => options));
   assert.equal(labels.crate, 'crate (plain)');
   assert.equal(labels.disk_zap, 'disk_zap (spell zap · in boot)');
   assert.equal(labels.fragment_0, 'fragment_0 (slot 0 · not placed)');
   assert.equal(labels.fragment_1, 'fragment_1 (slot 1 · in a, b)');
   assert.equal(labels.refill_energy, 'refill_energy (refills 30 energy)', 'refills are not permanent: no places');
-  assert.equal(objectTypeGroups(types)[2][1][0][1], 'disk_zap (spell zap)', 'without places, only what it does');
+  assert.equal(objectTypeGroups(types)[3][1][0][1], 'disk_zap (spell zap)', 'without places, only what it does');
 });
 
 test('templateText: what an enemy template does, for the Enemy tool (D119)', () => {

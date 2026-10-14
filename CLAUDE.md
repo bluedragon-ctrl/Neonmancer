@@ -84,8 +84,8 @@ mobile/touch support, backend or accounts.
   the floor is at y = 0; back walls are the x = 0 and z = 0 planes.
 - 1 block = 1 unit (1x1x1). Player jump height: 1 unit (clears exactly one
   block, never two), everywhere: there is no double jump (removed, D216).
-- Prototype (D221): a room with `"jump": "pads"` has no jump key (Space
-  casts there); jump
+- Pads only (D221, the game's rule since D222): a room with
+  `"jump": "pads"` has no jump key (Space casts there); jump
   pads (object kind `pad`, a trampoline in the room's color: a rim round a
   mesh with light streaking up, D226) throw him up by themselves (2 blocks,
   a 1-tile gap); stairs (look `stair`, a `rise`) take him a block up, slabs (look
@@ -102,8 +102,8 @@ mobile/touch support, backend or accounts.
 - Every room fits the fixed camera framing without scrolling.
 - World target: towards 128 rooms, more small rooms rather than a few
   very complex ones (D68). Some areas are locked behind an access level,
-  probably linked to fragments; others open only to a stronger spell or
-  an upgrade (e.g. the jump upgrade).
+  probably linked to fragments; others open only to a stronger spell, an
+  upgrade or a buff (e.g. Blink over a 2-tile pit, D217).
 
 ### Engine
 - Fixed-timestep loop: 60 logic updates per second, rendering
@@ -138,6 +138,16 @@ mobile/touch support, backend or accounts.
   the room's color: structure that opens, the exception to white gates):
   a pickup lies inside it, in plain view, and it goes while the room's
   switches are on; bolts and sight pass, so a Zap can't take it.
+- The ways up in a pads room (D221, D224): the stair (types `stair_x`,
+  `stair_nx`, `stair_z`, `stair_nz`, look `stair`) he walks up from its
+  foot onto a ledge one block higher, its sides and back walls; the slab
+  (look `slab`), a thin glass walkway at the top of its cell, level with
+  a 1-high ledge, that he walks under a cell down; the jump pad (object
+  kind `pad`), no body, throws him 2 up. To crates, enemies and the
+  checker a stair and a slab are blocks. The bridge (`bridge`) is a white
+  glass sheet at the floor of its cell over a hole: floor while powered,
+  a hole again once it goes (D224). Every ledge is a one-way drop; a
+  crate is no step (he can't get onto it from its own level).
 - The spiked crate (`crate_spiked`, D199): a crate that pushes, falls,
   stacks and plugs a hole like any other, but its top is spiked
   (`topDamage` 2): touching it hurts him (the usual blink) and shoves him
@@ -147,7 +157,8 @@ mobile/touch support, backend or accounts.
   plain floor. A frozen enemy on a bare top is impaled (pops), the
   decoy derezzes, active enemies cross it unhurt. A hop over a 1-high
   crate in line is impossible (D199: always touches the top), so it
-  brings Sokoban's "can't get behind the box" back. Look: the glass crate
+  brings Sokoban's "can't get behind the box" back to free-jump rooms
+  (in a pads room every crate does; kept or retired in 5.19, D222). Look: the glass crate
   with square vents in the top, aurora jets and shafts down to the core
   (hidden while covered).
 - Decorations (kind `deco`, D117): fixed bodies that dress a room and do
@@ -256,7 +267,8 @@ bit on its disk (D71).
 
 Added in Phase 4 (the roster, D88):
 - **Compile** — a crate in the free cell in front of the wizard for 7 s:
-  a step up, or a hole plugged to walk over (D125; built)
+  a hole plugged to walk over, or a step up in a free-jump room (in a
+  pads room he can't climb it) (D125; built)
 - **Fork** — a hologram decoy of the wizard in the free cell in front of
   him for 10 s: it holds floor plates down and draws hostile enemies,
   which go for the nearer of it and him (D129; built)
@@ -507,7 +519,9 @@ not critical.
   with the mouse, preview in the real neon look, export room JSON. The
   Switch tool places switches (the Object tool does not) and links them
   to gates, platforms and exits, from either side, with checklists in the
-  panel; hovering shows any thing's switch links (D142).
+  panel; hovering shows any thing's switch links (D142). The room's Jump
+  box sets the pads rule (new rooms start with it, D223); the stairs are
+  one Block tool entry turned with R; pads have their own Object group.
 - **World map tool** (`tools/world-map.html`, D66, D77): every room on a
   map grid with its connections; move, add and remove rooms and
   connections; flags rooms out of reach; opens a room in the room editor;

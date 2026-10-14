@@ -62,13 +62,13 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `data/validate.js` | Semantic checks and readable error messages (Ajv schema pass is dev/CI) |
 | `world/boot-key.js` | The boot key (D101): the 8×8 code whose modules are the 64 fragments (`BOOT_KEY`) |
 | `world/exits.js` | Which exit the wizard left through; where he arrives in the connected room |
-| `world/grid.js` | 3D occupancy grid: a block type code per cell (`typeAt()` gives its properties), room sides with exit openings (a locked exit's opening closes with `setOpening()`), hole tiles (`fillHole()`, `openHole()`); a fake block a scan revealed leaves (`clearCell()`); `forBody(kind)` is the grid as one kind of body sees it (D198: a crate stream is open to crates and frozen enemies, shut to him and active enemies) |
+| `world/grid.js` | 3D occupancy grid: a block type code per cell (`typeAt()` gives its properties), room sides with exit openings (a locked exit's opening closes with `setOpening()`), hole tiles (`fillHole()`, `openHole()`; a bridge's sheet covers one while it is there, `coverHole()`, D224); stairs and slabs fill only part of their cell (D221): `span()` is the part a mover meets (a stair's slope, a slab's sheet), while `isSolid()` still says the whole cell, for crates, enemies and the checker; a fake block a scan revealed leaves (`clearCell()`); `forBody(kind)` is the grid as one kind of body sees it (D198: a crate stream is open to crates and frozen enemies, shut to him and active enemies) |
 | `world/map.js` | The world map (D66): `nearestFreeCell()` for new rooms, `roomDistances()` from the start, `mapWarnings()` (rooms the start can't reach, D178) (pure, tested) |
 | `world/path.js` | Shared path format: legs from `at` through `points`, `advance()` / `positionOf()` on a small path state, swept cells |
 | `world/pickup-report.js` | The world map tool's pickup report: every permanent item by save bit, the rooms it lies in, refills per type, unknown types (pure, tested) |
 | `world/progress.js` | What the wizard has for the whole game (D71): save bits in blocks (`SAVE_BLOCKS`, `saveBit()`, `pickupBit()`), `Progress` (bits found, known spells, a block's count); blocks: spells, buffs, upgrades, fragments, secrets (D100) (pure, tested) |
 | `world/room.js` | Runtime room built fresh from data on every entry (type defaults + overrides; static block cells by type; cells of block types with a kind become room objects) |
-| `world/reach.js` | The reachability of one room (D131): standing cells, jumps, gaps, abilities, crates as a bounded puzzle; what he reaches (pure, tested) |
+| `world/reach.js` | The reachability of one room (D131): standing cells, jumps (or, in a pads room, D221–D223, only pads, stairs and bug bounces), gaps, abilities, crates as a bounded puzzle; what he reaches (pure, tested) |
 | `world/reach-world.js` | The reachability of the world (D131): the fixpoint of abilities, access and rooms, the order it opens in, what each exit and pickup needs (pure, tested) |
 | `world/reach-report.js` | The reachability report as text and as plain data (pure, tested) |
 | `world/run-map.js` | The player's map (D112): `RunMap` (rooms visited, rooms a shrine revealed), `roomsAround()` a shrine, `mapModel()` what the map screen draws (pure, tested) |
@@ -86,10 +86,11 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `entities/kinds.js` | Object kind → logic class (`OBJECT_KINDS`); the room's objects are built from it |
 | `entities/pickup.js` | A pickup in a room: its box, save bit, state (idle, ghost, taken) and pick-up ticks (pure, tested) |
 | `entities/platform.js` | Moving platform: follows its path, carries riders, waits when blocked, shoves or squeezes the wizard (D46); a spiked one hurts on touch (D82) |
-| `entities/player.js` | Movement, jump, gravity, turning, pushing, integrity, invulnerability after a hit, death (hole or damage), respawn; one wizard for the whole game |
+| `entities/player.js` | Movement, jump (only where the room's rule allows, `canJump`, D221), launches off a pad or a bouncy enemy, walking a stair's slope, gravity, turning, pushing, integrity, invulnerability after a hit, death (hole or damage), respawn; one wizard for the whole game |
 | `entities/pushable.js` | Rest → slide → fall → land / plug-a-hole state machine; destructible ones break (`hit()` → `broken`); a compiled crate (D125, `lifetime`) derezzes when its time is up (`expire()`, a plugged hole opens again); a spiked one (`topDamage`, D199) hurts and shoves him off when his feet touch its top, unless something covers it; it sees the grid through `forBody('crate')` |
 | `entities/switch.js` | Switches (D75): `Target` (a fixed body a bolt switches over) `Plate` (a floor tile, no body, on while something stands on it) and `Socket` (a hole, on while filled, D194); a plate's `weight` (D200, a heavy plate) is the number of bodies in its column it needs, counted up the stack (`load`, `partlyLoaded`); a type's `timer` makes either go off by itself (D140, `countdown`); `SWITCH_KINDS` (pure, tested) |
-| `entities/gate.js` | Gate blocks (D140, D141): `Gate`, a block that comes and goes by its `trigger`: switch (solid until powered, `power()`; one with `start: "gone"`, a bridge, only while powered) or step (a collapsing block: solid → shake → gone → optional regrow); it never comes back on a body (pure, tested) |
+| `entities/pad.js` | A jump pad (D221): a floor tile with no body that throws the wizard `launch` up (2.2: two blocks, a 1-tile gap) the moment he stands on it, in any room (pure) |
+| `entities/gate.js` | Gate blocks (D140, D141): `Gate`, a block that comes and goes by its `trigger`: switch (solid until powered, `power()`; one with `start: "gone"`, a bridge, only while powered; a bridge is a sheet at the floor of its cell that covers a hole, D224) or step (a collapsing block: solid → shake → gone → optional regrow); it never comes back on a body (pure, tested) |
 | `entities/warp.js` | Where Blink and Warp take the wizard (D86): `warpTarget()` sweeps his box along his aim through open space, stops at blocks, objects and the room's side, lands short of enemies, reports the enemies passed (pure, tested) |
 | `ai/behaviors.js` | Movement behaviors by name (`BEHAVIORS`: `patrol`, `stationary`, `chase`), as enemy templates refer to them |
 | `ai/chase.js` | Chase (D78, D80): calm → chase → search → return, greedy steps towards the wizard, routes (round walls) to where it last saw him and home, searches when his Zap hits it, patrols while calm if it has a path (pure, tested) |
@@ -151,6 +152,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/rails.js` | Guide line along a platform's path, `RAILS` tuning (pure, tested) |
 | `render/renderer.js` | WebGLRenderer, 16:9 stage + HUD overlay, DPR cap, render scale, MSAA (off on a high-DPI buffer), resize, shader precompile, frames kept while the game stands still (`invalidate()`, D169) |
 | `render/room-scene.js` | The current room's views, object views by kind (`OBJECT_VIEWS`); rebuilds only the objects on a respawn; `showShape()`: the empty room behind the title (D109) |
+| `render/stair-view.js` | Stairs and slabs (D221): a stair's steps rising the way of its `rise`, outlined on their own; a slab as one sheet of glass (`GLASS.slab`) outlined round its top; `STAIR` tuning |
+| `render/pad-view.js` | The jump pad's look (D226): a trampoline in the room color, a glass rim round a breathing mesh of light, pressed down and ringing out on a launch; `PAD_FX` (the mesh shape is pure) |
 | `render/room-view.js` | Static blocks (merged edges + instanced occluder faces), back walls, styled object views |
 | `render/secret.js` | Secret look (D100): a thick five-pointed star in the wizard's magenta, ghost |
 | `render/sentinel.js` | Sentinel model (D78): sharp octahedron, visor eye, shards gathering like a barrel, recoil, pop pixels, `SENTINEL` tuning; `SENTINEL_MODEL` |
@@ -158,7 +161,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/shrine-view.js` | Backup shrine look (D97): floor tile, rune, glow, motes and rings, flare on use, `SHRINE_FX` (layout and timing pure, tested) |
 | `render/spikes.js` | The spiked object shape (D82): pyramids on a core cube inside the cell, as face triangles and outline segments, `SPIKES` tuning; pure, tested |
 | `render/switch-view.js` | Switch and locked-exit looks (`SWITCH_FX`): target and plate with their square bull's-eye (a timed one's outer square dashed, blinking as it counts down: `switchLight()`, D140), the lock's panel with one light per linked switch and an access lock's Roman numeral (D101); `TargetView`, `PlateView`, `LockView` (marks pure, tested) |
-| `render/gate-view.js` | Gate block look (`GATE_FX`, D140–D142): a switch gate is a white glass box with a light per switch on top of a stack (gone: hidden in play, an outline in the editor), a step gate its type's look with a rattle (`gateShake()`); both sink to go and leave a dashed outline if they come back; `GateView` (pure parts tested) |
+| `render/gate-view.js` | Gate block look (`GATE_FX`, D140–D142): a switch gate is a white glass box with a light per switch on top of a stack (gone: hidden in play, an outline in the editor), a bridge a white glass sheet at its cell's floor that grows out of its middle (D224), a step gate its type's look with a rattle (`gateShake()`); both sink to go and leave a dashed outline if they come back; `GateView` (pure parts tested) |
 | `render/viewport.js` | Letterbox, buffer size and 1080p-relative sizing math (pure, tested) |
 | `render/virus.js` | Virus model (D78): sharp tipped cube, orbiting bits, glide, charge pose, pop pixels, `VIRUS` tuning; `VIRUS_MODEL` |
 | `render/panel-glow.js` | The glass panels' glow (D181): breathing, a flicker now and then, one instanced quad per panel animated in its shader, `PANEL_FX` (placement pure, tested) |
@@ -268,7 +271,12 @@ The player is an AABB moved one axis at a time (x, z, then y). For each axis
 the solids are gathered from overlapped grid cells, the room boundary
 (except exit openings) and moving bodies, and the movement is clamped.
 Landing sets `grounded`. Speeds stay below 0.35 units per tick, so no swept
-collision is needed. No auto step-up: the wizard jumps.
+collision is needed. No general auto step-up: a block's side is a wall.
+The one step-up is a stair (D221): where `Grid.span()` says a cell is only
+partly filled, the wizard is stepped onto the stair's slope from up to 0.2
+below his feet and kept on it going down; a slab is solid only as its thin
+sheet at the top of the cell, so he walks under it a cell down. Crates and
+enemies see both as whole blocks.
 
 Solid for the player: static blocks, the room sides (x/z outside the room)
 and everything below y = 0 (the grid), plus room objects as moving bodies;

@@ -23,6 +23,16 @@ docs/decisions.md).
   pad on the step throw him over the gap to the east door; its screen no
   longer names a jump key. The checker lets a pad or bounce land a block up
   across its gap, as it plays.
+- Room editor for pads rooms: the jump pad has its own Object group, Pads
+  (`throws him 2 up, over a 1-tile gap`), instead of "Other" at the end of
+  the list; the slab and the bridge say what they are in the Block list; the
+  Jump box's tooltip no longer speaks of a jump key on pads.
+- Docs catch up with the pads rule (D221–D226): a Stairs, slabs and pads
+  section and the stair and slab block types in design.md, the editor's
+  Jump box, stair turning, the debug J key and the room `jump` and `timer`
+  fields; architecture.md gains the pad and stair modules and the stair
+  step-up in collision; CLAUDE.md drops the "prototype" label and the jump
+  upgrade.
 
 ### Removed
 - The double jump upgrade (D216): the mid-air jump, its rings, sound, help text and
