@@ -173,7 +173,7 @@ const ALL_ASSETS = [
   // Stairs and a slab (D221): the wizard walks up a stair onto a ledge, along a slab bridge and back.
   { label: 'stairs-in-room', span: 5.5, build: buildStairsInRoom },
   // A jump pad (D221): it throws him up by itself; it flashes every 2 s as if it just did.
-  { label: 'pad', span: 2, spin: false, build: buildPad },
+  { label: 'pad', span: 7, spin: false, build: buildPad },
   // Glass (D96): every crate type is glass (above). Hazard blocks as glass
   // are an option not used yet; then a room corner with glass crates
   // stacked beside the old tinted crate, the wizard walking behind them.
@@ -2420,16 +2420,31 @@ function buildStairsInRoom() {
   return asset;
 }
 
-/** A jump pad (D221), flashing every 2 s as if it just threw the wizard up. */
+/**
+ * Jump pads (D221, D225), the trampoline, in three room colors (amber,
+ * Glitchmire pink, Phantom violet) with the backup shrine and a crate beside
+ * them to tell them apart. The pads are launched in turn every 2 s as if
+ * they just threw the wizard up.
+ */
 function buildPad() {
-  const pad = createPad(PALETTE.magenta);
-  pad.position.set(-0.5, 0, -0.5);
-  const asset = new Group().add(pad);
+  const colors = [PALETTE.amber, 0xff4fa3, 0xb79cff];
+  const cell = (col) => [(col - 2) * 1.4 - 0.5, -(col - 2) * 1.4 - 0.5];
+  const place = (view, col) => {
+    const [x, z] = cell(col);
+    view.position.set(x, 0, z);
+    return view;
+  };
+  const pads = colors.map((color, i) => place(createPad(color), i));
+  const shrine = place(createShrine(), 3);
+  const crate = place(createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...OBJECT_TYPES.crate, at: [0, 0, 0] }), 4);
+  const asset = new Group().add(...pads, shrine, crate);
   let time = 0;
   asset.userData.update = (dt) => {
-    if (Math.floor(time / 2) !== Math.floor((time + dt) / 2)) pad.userData.launch();
+    const step = Math.floor(time / 2);
+    if (step !== Math.floor((time + dt) / 2)) pads[(step + 1) % pads.length].userData.launch();
     time += dt;
-    pad.userData.update(dt);
+    for (const pad of pads) pad.userData.update(dt);
+    shrine.userData.update(dt);
   };
   return asset;
 }

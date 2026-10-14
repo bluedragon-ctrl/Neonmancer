@@ -2386,8 +2386,9 @@ So it is a prototype, room by room:
 - **Room rule:** `"jump": "pads"` in a room's data (editor: Jump, "only on
   pads"); the default stays `free`. In such a room the jump key does
   nothing; bouncing off a bouncy enemy still works.
-- **Jump pad** (object kind `pad`): a magenta tile (his own, D98) on the
-  floor or on top of a block, no body, a square of light rising off it. The
+- **Jump pad** (object kind `pad`; look since D225: a trampoline in the room's
+  color, first a magenta tile) on the
+  floor or on top of a block, no body. The
   moment he stands on it, it throws him up by itself, in any room: its
   `launch` (2.2, a bouncy enemy's bounce, D48), so 2 blocks up, and over a
   1-tile gap from anywhere on the pad (2.2 units of air travel); he steers in
@@ -2510,3 +2511,26 @@ author asked for a single sheet instead:
   `never` since D216 anyway and is redone in the room's review.
 **Why:** a bridge should read and play as a way across a pit; a block in
 a pads room was a step nobody could climb.
+
+### D225 — 2026-10-14 — The jump pad is a trampoline in the room's color
+The pad (D221) was a magenta floor tile with a square outline, corner posts
+and a square ring floating up: nearly the backup shrine's look (D97), and a
+shrine refills while a pad throws him, so the two must never be confused.
+The author asked for the room's color with a rising effect:
+- **Room color, not magenta:** magenta stays the wizard's and the shrine's
+  (D98, D99); the pad is structure of the room it lies in, and room colors
+  stay clear of crate green. `PadView` takes `game.room.color`; the `pad`
+  type's `color` in `defs.json` is only the fallback (validation wants
+  one on every object).
+- **A trampoline, not a vent or a spring** (three drafts were shown beside
+  the shrine and a crate in the showcase; the author chose it): a low glass
+  rim round a taut 5×5 mesh of light over a dark sheet (a very dark tint,
+  not black: black is a pit, D99). Idle it breathes and a faint ripple
+  crosses it; a launch presses it down and it rebounds past flat, flashing.
+- **Rising streaks** (from the vent draft): short dashes of light rise off
+  the mesh and fade, shooting up faster on a launch. No rune, no corner
+  light, no ring floating up: those are the shrine's.
+- **Same footprint and rules:** the rim is 0.1 high and has no body; launch,
+  the checker and the rooms are untouched, nothing authored is affected.
+**Why:** a pad and a shrine are opposites in play and must differ at a
+glance; shape and motion separate them, the room color keeps magenta rare.
