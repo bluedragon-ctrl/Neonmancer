@@ -111,6 +111,7 @@ function boot() {
       audio.applySettings(settings);
     }
     if (command === 'start') newGame();
+    if (command === 'restart') game.restartRoom();
     // The title shows the start room behind it again.
     if (command === 'quit') newGame({ quiet: true });
     if (command === 'save') {
@@ -249,6 +250,7 @@ function boot() {
     const wasPlaying = flow.playing;
     if (blurred && !hud.winShown) flow.pause();
     blurred = false;
+    flow.backups = game.player.backups;
     run(flow.update(input));
     // The shield and firewall hum while they are up and the game is not held.
     const shield = flow.playing && !hud.winShown ? game.player.shield?.spell : null;

@@ -30,7 +30,7 @@ import { completion, placedBits, scoreOf } from './world/score.js';
 /** Tuning of the shove off a spiked crate's top (D199): the gap left beyond its edge, the hop's launch speed. */
 const KNOCK_OFF = { gap: 0.02, hop: 4 };
 
-const DEATH_MESSAGES = { hole: 'msg.die', void: 'msg.void', damage: 'msg.derez', timeout: 'msg.timeout' };
+const DEATH_MESSAGES = { hole: 'msg.die', void: 'msg.void', damage: 'msg.derez', timeout: 'msg.timeout', restart: 'msg.restart' };
 
 /** Banner color of a system crash (D97): alarm red. */
 const CRASH_COLOR = '#ff3b5c';
@@ -372,6 +372,22 @@ export class Game {
     if (this.crashing) say('msg.noBackups');
     else player.backups--;
     this.emit('die', { cause, ...(this.crashing && { crash: true }) });
+  }
+
+  /**
+   * Restart room (pause menu): a voluntary death for a puzzle he has stuck
+   * himself in. It costs one backup like any death, resets the room when
+   * he recompiles, and is refused with none left (he can leave the way he
+   * came) or while dead or between rooms. Debug invincibility makes it free.
+   * @returns {boolean} whether it started
+   */
+  restartRoom() {
+    const { player } = this;
+    if (player.dead || this.transition || player.backups < 1) return false;
+    player.die('restart');
+    this.died();
+    if (this.invincible) player.backups++;
+    return true;
   }
 
   /**
