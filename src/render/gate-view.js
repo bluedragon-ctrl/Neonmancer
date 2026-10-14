@@ -22,7 +22,7 @@
  * `?asset=collapsing-cycle`).
  */
 import { Color, DoubleSide, Group, Mesh, MeshBasicMaterial, PlaneGeometry } from 'three';
-import { blockEdges } from './edges.js';
+import { blockEdges, insetSquare, squareOutline } from './edges.js';
 import { createCageBody } from './cage-view.js';
 import { glassBox, GLASS } from './glass.js';
 import { lineMaterial, neonLines } from './neon.js';
@@ -106,7 +106,7 @@ export function createGate(color, { style = null, lights = 0, closed = true, cag
   else if (cage) body.add(createCageBody(base));
   else if (sheet) {
     body.add(glassBox([-0.5, lift - SLAB_HEIGHT, -0.5], [0.5, lift, 0.5], base, GLASS.gate));
-    const edges = neonLines(squareAt(0, lift, 0.5), edgeMat);
+    const edges = neonLines(squareOutline([-0.5, -0.5], [0.5, 0.5], lift), edgeMat);
     edges.renderOrder = 2;
     body.add(edges);
   }
@@ -122,12 +122,7 @@ export function createGate(color, { style = null, lights = 0, closed = true, cag
   const top = sheet ? lift + 0.002 : 1.002;
   // On a sheet the body's origin is the cell's middle.
   const at = ([x, z]) => (sheet ? [x - 0.5, z - 0.5] : [x, z]);
-  const square = ([x, z], k) => [
-    [[x - k, top, z - k], [x + k, top, z - k]],
-    [[x + k, top, z - k], [x + k, top, z + k]],
-    [[x + k, top, z + k], [x - k, top, z + k]],
-    [[x - k, top, z + k], [x - k, top, z - k]],
-  ];
+  const square = ([x, z], k) => squareOutline([x - k, z - k], [x + k, z + k], top);
   const lightMat = lineMaterial({ color: base, width: 1.5 });
   const spots = gateLightSpots(lights).map(at);
   if (spots.length > 0) {
@@ -146,7 +141,7 @@ export function createGate(color, { style = null, lights = 0, closed = true, cag
   });
   // Where it rises again: a dim dashed outline of its cell (a sheet's square on the floor).
   const ghostMat = lineMaterial({ color: base, width: 1.5, dashed: true });
-  const ghost = neonLines(sheet ? squareAt(0.5, lift, 0.5, 0.5) : blockEdges([[0, 0, 0]]), ghostMat);
+  const ghost = neonLines(sheet ? insetSquare(0, lift) : blockEdges([[0, 0, 0]]), ghostMat);
   group.add(ghost);
 
   let shut = closed ? 1 : 0;
@@ -177,19 +172,6 @@ export function createGate(color, { style = null, lights = 0, closed = true, cag
   };
   group.userData.update(0);
   return group;
-}
-
-/**
- * The four sides of a square at height `y`, centered on [c, cz] with half
- * size `k`: a sheet's outline (D224).
- */
-function squareAt(c, y, k, cz = c) {
-  return [
-    [[c - k, y, cz - k], [c + k, y, cz - k]],
-    [[c + k, y, cz - k], [c + k, y, cz + k]],
-    [[c + k, y, cz + k], [c - k, y, cz + k]],
-    [[c - k, y, cz + k], [c - k, y, cz - k]],
-  ];
 }
 
 /**

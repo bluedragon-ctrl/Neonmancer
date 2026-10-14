@@ -13,10 +13,14 @@
  * showcase (`?asset=pad`).
  *
  * The mesh's shape is pure (meshHeight(), meshPositions()); createPad()
- * animates it.
+ * animates it, writing the points into buffers it keeps (no new geometry
+ * per frame).
  */
 import { Color, DoubleSide, Group, Mesh, MeshBasicMaterial, PlaneGeometry } from 'three';
-import { glassBox } from './glass.js';
+import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
+import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
+import { insetSquare } from './edges.js';
+import { glassBoxes } from './glass.js';
 import { lineMaterial, neonLines } from './neon.js';
 
 /** Tuning (units, seconds). */
@@ -65,7 +69,7 @@ const PAD_GLASS = { alpha: 0.5, tint: 0.4, milk: 0.15 };
  * @param {number} [since] seconds since the last launch (Infinity: not lately)
  * @returns {number} height above the mesh's rest height
  */
-export function meshHeight(x, z, time, since = Infinity) {
+function meshHeight(x, z, time, since = Infinity) {
   const half = 0.5 - PAD_FX.rimWidth;
   const u = (x - 0.5) / half;
   const v = (z - 0.5) / half;
@@ -82,18 +86,27 @@ export function meshHeight(x, z, time, since = Infinity) {
   return bowl * (breath + rebound) + ripple * bowl;
 }
 
+/** Points of the mesh: `lines` lines each way, `steps` segments each, two points per segment. */
+const MESH_POINTS = PAD_FX.lines * PAD_FX.steps * 4;
+
 /**
- * The mesh's line segments at the given moment (pure): `lines` lines along
- * x and along z across the open middle, each cut into `steps` pieces.
+ * The mesh's line segments at the given moment, written into `out` (pure
+ * but for `out`): `lines` lines along x and along z across the open middle,
+ * each cut into `steps` pieces.
+ * @param {Float32Array} out MESH_POINTS × 3 numbers, two points per segment
  * @param {number} time seconds
  * @param {number} [since] seconds since the last launch
- * @returns {number[]} flat positions, two points per segment
+ * @returns {Float32Array} `out`
  */
-export function meshPositions(time, since = Infinity) {
+function meshPositions(out, time, since = Infinity) {
   const { lines, steps, rimWidth, sheet } = PAD_FX;
   const [a, b] = [rimWidth, 1 - rimWidth];
-  const out = [];
-  const point = (x, z) => out.push(x, sheet + meshHeight(x, z, time, since), z);
+  let k = 0;
+  const point = (x, z) => {
+    out[k++] = x;
+    out[k++] = sheet + meshHeight(x, z, time, since);
+    out[k++] = z;
+  };
   for (let i = 0; i < lines; i++) {
     const fixed = a + ((b - a) * i) / (lines - 1);
     for (let s = 0; s < steps; s++) {
@@ -107,15 +120,17 @@ export function meshPositions(time, since = Infinity) {
   return out;
 }
 
-/** A square outline inset `m` from the unit cell's edges, at height y. */
-function square(m, y) {
-  const [a, b] = [m, 1 - m];
-  const c = [[a, y, a], [b, y, a], [b, y, b], [a, y, b]];
-  return c.map((p, i) => [p, c[(i + 1) % 4]]);
+/** Tell the GPU a line set's points (and colors) changed in place. */
+function linesChanged(line) {
+  line.geometry.getAttribute('instanceStart').data.needsUpdate = true;
+  const colors = line.geometry.getAttribute('instanceColorStart');
+  if (colors) colors.data.needsUpdate = true;
 }
 
 /**
- * A pad's look, at the origin (the lower corner of its cell).
+ * A pad's look, at the origin (the lower corner of its cell). Five draws:
+ * the rim's glass (instanced), the dark sheet, the rim's lines, the mesh and
+ * the streaks; mesh and streaks move by rewriting their points in place.
  * @param {number|string|Color} color the room's color
  * @returns {Group} with `userData.update(dt)` and `userData.launch()` (it threw him up)
  */
@@ -123,18 +138,21 @@ export function createPad(color) {
   const base = new Color(color);
   const group = new Group();
   const { rim, rimWidth: w } = PAD_FX;
-  // The rim: four glass strips round the mesh, with a neon edge on top.
-  group.add(
-    glassBox([0, 0, 0], [1, rim, w], base, PAD_GLASS),
-    glassBox([0, 0, 1 - w], [1, rim, w], base, PAD_GLASS),
-    glassBox([0, 0, w], [w, rim, 1 - 2 * w], base, PAD_GLASS),
-    glassBox([1 - w, 0, w], [w, rim, 1 - 2 * w], base, PAD_GLASS),
-  );
+  // The rim: four glass strips round the mesh, one draw, with a neon edge on top.
+  const strips = [
+    [[0, 0, 0], [1, rim, w]],
+    [[0, 0, 1 - w], [1, rim, 1]],
+    [[0, 0, w], [w, rim, 1 - w]],
+    [[1 - w, 0, w], [1, rim, 1 - w]],
+  ];
+  group.add(glassBoxes(strips, base, PAD_GLASS));
   const rimMat = lineMaterial({ color: base, width: 2.4, brightness: PAD_FX.glow });
-  const rimLines = neonLines([...square(0.02, rim + 0.003), ...square(w, rim + 0.003)], rimMat);
+  const rimLines = neonLines([...insetSquare(0.02, rim + 0.003), ...insetSquare(w, rim + 0.003)], rimMat);
   rimLines.renderOrder = 2;
+  // The mesh: its points live in one buffer, rewritten each frame.
   const meshMat = lineMaterial({ color: base, width: 3, brightness: PAD_FX.meshGlow });
-  const mesh = neonLines([], meshMat);
+  const meshPoints = new Float32Array(MESH_POINTS * 3);
+  const mesh = new LineSegments2(new LineSegmentsGeometry().setPositions(meshPoints), meshMat);
   mesh.renderOrder = 2;
   // A dark sheet under the mesh (a very dark tint, not black: black is a pit,
   // D99) so the grid stands out from the floor's own lines.
@@ -144,18 +162,26 @@ export function createPad(color) {
   );
   dark.rotation.x = -Math.PI / 2;
   dark.position.set(0.5, 0.012, 0.5);
-  group.add(dark, rimLines, mesh);
 
-  // Streaks: short bright dashes rising off the mesh, each at its own place and phase.
-  const streaks = Array.from({ length: PAD_FX.streaks }, (_, i) => {
-    const x = 0.3 + 0.4 * ((i * 0.618034 + 0.2) % 1);
-    const z = 0.3 + 0.4 * ((i * 0.381966 + 0.5) % 1);
-    const material = lineMaterial({ color: base, width: 2.2, brightness: PAD_FX.streakGlow });
-    const line = neonLines([[[x, 0, z], [x, PAD_FX.streakLength, z]]], material);
-    line.renderOrder = 2;
-    group.add(line);
-    return { line, material, phase: (i * 0.618034) % 1 };
-  });
+  // Streaks: short bright dashes rising off the mesh, each at its own place
+  // and phase, one line set whose points and colors are rewritten each frame.
+  const streaks = Array.from({ length: PAD_FX.streaks }, (_, i) => ({
+    x: 0.3 + 0.4 * ((i * 0.618034 + 0.2) % 1),
+    z: 0.3 + 0.4 * ((i * 0.381966 + 0.5) % 1),
+    phase: (i * 0.618034) % 1,
+  }));
+  const streakMat = lineMaterial({ color: base, width: 2.2, brightness: PAD_FX.streakGlow });
+  streakMat.vertexColors = true;
+  const streakPoints = new Float32Array(PAD_FX.streaks * 6);
+  const streakColors = new Float32Array(PAD_FX.streaks * 6);
+  const streakLines = new LineSegments2(new LineSegmentsGeometry().setPositions(streakPoints).setColors(streakColors), streakMat);
+  streakLines.renderOrder = 2;
+  // Both move within the pad's cell and the streaks' reach; the bounds
+  // computed from their first points would be wrong, so they are never
+  // culled (a room always fits the view anyway).
+  mesh.frustumCulled = false;
+  streakLines.frustumCulled = false;
+  group.add(dark, rimLines, mesh, streakLines);
 
   let time = 0;
   let since = Infinity;
@@ -165,20 +191,22 @@ export function createPad(color) {
   group.userData.update = (dt) => {
     time += dt;
     since += dt;
-    mesh.geometry.setPositions(meshPositions(time, since));
+    meshPositions(meshPoints, time, since);
     const lit = since < PAD_FX.flash ? 1 - since / PAD_FX.flash : 0;
     rimMat.color.copy(base).multiplyScalar(PAD_FX.glow * (1 + PAD_FX.flashGlow * lit));
     meshMat.color.copy(base).multiplyScalar(PAD_FX.meshGlow * (1 + PAD_FX.flashGlow * 1.5 * lit));
+    streakMat.color.copy(base).multiplyScalar(PAD_FX.streakGlow * (1 + PAD_FX.flashGlow * lit));
     // A launch sends them up faster and brighter.
     const speed = 1 + 2 * lit;
-    for (const streak of streaks) {
+    streaks.forEach((streak, i) => {
       streak.phase = (streak.phase + (dt * speed) / PAD_FX.streakTime) % 1;
       const t = streak.phase;
-      streak.line.position.y = PAD_FX.sheet + t * PAD_FX.reach;
-      streak.material.color
-        .copy(base)
-        .multiplyScalar(PAD_FX.streakGlow * Math.min(1, t * 6) * (1 - t) * (1 + PAD_FX.flashGlow * lit));
-    }
+      const y = PAD_FX.sheet + t * PAD_FX.reach;
+      streakPoints.set([streak.x, y, streak.z, streak.x, y + PAD_FX.streakLength, streak.z], i * 6);
+      streakColors.fill(Math.min(1, t * 6) * (1 - t), i * 6, i * 6 + 6);
+    });
+    linesChanged(mesh);
+    linesChanged(streakLines);
   };
   group.userData.update(0);
   return group;

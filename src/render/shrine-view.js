@@ -13,6 +13,7 @@
  * createShrine() animates them.
  */
 import { AdditiveBlending, Color, DoubleSide, Group, Mesh, MeshBasicMaterial, PlaneGeometry } from 'three';
+import { insetSquare } from './edges.js';
 import { createPixelBurst, placePixels } from './pixels.js';
 import { PALETTE, fadingLines, lineMaterial, neonLines } from './neon.js';
 
@@ -102,22 +103,12 @@ export function shrinePulse(time, since = Infinity) {
   return { pulse, flare };
 }
 
-/** The outline of a square inset `m` from the tile's edges, at height y. */
-function square(m, y) {
-  const [a, b] = [m, 1 - m];
-  return [
-    [[a, y, a], [b, y, a]],
-    [[b, y, a], [b, y, b]],
-    [[b, y, b], [a, y, b]],
-    [[a, y, b], [a, y, a]],
-  ];
-}
 
 /** The rune: a diamond touching the middle of each side, round a small square. */
 function rune(y) {
   const { diamond: d, core: c } = SHRINE_FX;
   const [n, s, w, e] = [[0.5, y, d], [0.5, y, 1 - d], [d, y, 0.5], [1 - d, y, 0.5]];
-  return [[n, e], [e, s], [s, w], [w, n], ...square(0.5 - c, y)];
+  return [[n, e], [e, s], [s, w], [w, n], ...insetSquare(0.5 - c, y)];
 }
 
 /**
@@ -131,7 +122,7 @@ export function createShrine() {
 
   const outlineMat = lineMaterial({ color: base, width: 2.5 });
   const runeMat = lineMaterial({ color: base, width: 1.8 });
-  const outline = neonLines(square(SHRINE_FX.inset, y), outlineMat);
+  const outline = neonLines(insetSquare(SHRINE_FX.inset, y), outlineMat);
   const runeLines = neonLines(rune(y), runeMat);
   // Light rising from the outline's corners, fading as it goes up.
   const m = SHRINE_FX.inset;
@@ -150,7 +141,7 @@ export function createShrine() {
   // Rings: a few reused squares, placed and lit each frame.
   const rings = Array.from({ length: SHRINE_FX.useRings + 1 }, () => {
     const material = lineMaterial({ color: base, width: 2 });
-    const line = neonLines(square(SHRINE_FX.inset, 0), material);
+    const line = neonLines(insetSquare(SHRINE_FX.inset, 0), material);
     line.renderOrder = 2;
     return { line, material };
   });

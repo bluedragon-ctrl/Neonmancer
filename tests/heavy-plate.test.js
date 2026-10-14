@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { loadGameData } from '../src/data/load.js';
 import { validateData } from '../src/data/validate.js';
 import { Game } from '../src/game.js';
-import { partialLight, plateMarks, SWITCH_FX, heavyPairSquares } from '../src/render/switch-view.js';
+import { createPlate, partialLight, plateMarks, SWITCH_FX, heavyPairSquares } from '../src/render/switch-view.js';
 import { buildRoom } from '../src/world/room.js';
 import { analyzeRoom } from '../src/world/reach.js';
 import { Progress, saveBit } from '../src/world/progress.js';
@@ -235,4 +235,12 @@ test('reach: the wizard counts only on a timed heavy plate, and then with one mo
   assert.equal(reachFar({ objects: [heavy, at('c1', 2, 0, 4)] }), false, 'he cannot hold a plain one and pass');
   assert.equal(reachFar({ objects: [timed, at('c1', 2, 0, 4)] }), true, 'a crate and he runs on while it counts down');
   assert.equal(reachFar({ objects: [timed] }), false, 'he alone is one');
+});
+
+test('heavy plate look: its two squares are drawn, every point a number', () => {
+  const lines = [];
+  createPlate('#ffffff', { heavy: true }).traverse((node) => node.isLineSegments2 && lines.push(node));
+  const points = lines.flatMap((line) => [...line.geometry.getAttribute('instanceStart').data.array]);
+  assert.ok(points.length > 0);
+  assert.ok(points.every(Number.isFinite), 'no NaN: the pair squares are segments, not nested ones');
 });
