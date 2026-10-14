@@ -15,7 +15,7 @@ import { cutRoom } from '../src/render/room-scene.js';
 import { validateData } from '../src/data/validate.js';
 import { loadGameData } from '../src/data/load.js';
 import { resolveBlockTypes, resolveEnemyTemplates, templateChain } from '../src/data/room-data.js';
-import { blockTypeGroups, blockTypeText, objectTypeGroups, objectTypeText, placesText, templateText } from '../src/editor/panel.js';
+import { blockTypeGroups, blockTypeText, objectTypeGroups, objectTypeText, placesText, stairTypes, templateText, turnStair } from '../src/editor/panel.js';
 import { buildRoom } from '../src/world/room.js';
 import { checkSchemas, readSchemas } from '../tools/check-data.js';
 import { refuseSaveRequest, saveEdits } from '../tools/room-save.js';
@@ -523,6 +523,7 @@ test('RoomEdit opens, edits and removes exits, with their connections', () => {
 test('newRoom is a valid empty room; roomIdProblem refuses bad and taken ids', () => {
   const room = newRoom('data_vault', 'home');
   assert.equal(room.name, 'Data Vault');
+  assert.equal(room.jump, 'pads', 'new rooms are pads rooms (D222)');
   assert.deepEqual(validateData(dataFiles({ rooms: [room] })), []);
   const edit = new RoomEdit(room, { fresh: true });
   assert.equal(edit.dirty, true, 'a new room is unsaved');
@@ -693,6 +694,19 @@ test('blockTypeGroups: the Block tool\'s types, static blocks first, then gates 
   assert.deepEqual(ids['Collapsing (step) gates'], ['collapsing', 'collapsing_regrow']);
   assert.ok(!ids.Static.includes('gate'));
   assert.deepEqual(blockTypeGroups({ block: { look: 'plain' } }).map(([label]) => label), ['Static'], 'empty groups are left out');
+});
+
+test('blockTypeGroups: the stairs are one entry, R turns it a quarter each time (D222)', () => {
+  const types = resolveBlockTypes(BLOCK_TYPES);
+  assert.deepEqual(stairTypes(types), ['stair_x', 'stair_z', 'stair_nx', 'stair_nz']);
+  const statics = blockTypeGroups(types).find(([label]) => label === 'Static')[1];
+  assert.deepEqual(statics.filter(([id]) => id.startsWith('stair')), [['stair_x', 'stair (R turns it)']]);
+  assert.ok(statics.some(([id]) => id === 'slab'));
+  let id = 'stair_x';
+  const turns = [];
+  for (let i = 0; i < 4; i++) turns.push((id = turnStair(types, id)));
+  assert.deepEqual(turns, ['stair_z', 'stair_nx', 'stair_nz', 'stair_x']);
+  assert.equal(turnStair(types, 'block'), 'block', 'only a stair turns');
 });
 
 

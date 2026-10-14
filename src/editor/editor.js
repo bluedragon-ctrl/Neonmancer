@@ -24,7 +24,7 @@ import { errorTarget, groupErrors } from './errors.js';
 import { formatJson } from './format-json.js';
 import { idProblem } from './ids.js';
 import { EditorOverlay } from './overlay.js';
-import { EditorPanel, TOOLS } from './panel.js';
+import { EditorPanel, TOOLS, turnStair } from './panel.js';
 import { isSwitchGate, linksAt, poweredBy, poweredThings, roomSwitches, switchTimer, switchesOf } from './links.js';
 import { RoomEdit, newRoom, resizeText, roomIdProblem, sizeProblem } from './room-edit.js';
 import { downloadFile, saveFiles } from './save.js';
@@ -771,6 +771,16 @@ export class Editor {
     this.refresh();
   }
 
+  /** R: the stair the Block tool paints turns a quarter (D222). */
+  turnStair() {
+    if (this.tool !== 'block') return;
+    const turned = turnStair(this.blockTypes, this.blockType);
+    if (turned === this.blockType) return;
+    this.blockType = turned;
+    this.status = `Painting ${turned} (rises ${this.blockTypes[turned].rise}).`;
+    this.refresh();
+  }
+
   /** The picked platform for the panel (D140): its switches; or null. */
   linksState() {
     const item = this.selectedItem;
@@ -1191,6 +1201,7 @@ export class Editor {
       const tool = TOOLS.find(({ key }) => e.code === `Digit${key}`);
       if (tool) this.setTool(tool.id);
       if (e.code === 'Escape') this.select(null);
+      if (e.code === 'KeyR') this.turnStair();
       if ((e.code === 'Delete' || e.code === 'Backspace') && !this.stroke) this.removeSelected();
       if (e.code === 'PageUp' || e.code === 'PageDown') {
         e.preventDefault();

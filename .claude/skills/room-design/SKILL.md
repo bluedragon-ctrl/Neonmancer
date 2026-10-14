@@ -34,8 +34,16 @@ worth playing.
   or it reads "push the crate onto the plate": redraw.
 - **Spell roles (Lattice).** Puzzle verbs: Zap (targets), Pause (enemy as
   block), Fork (plate holder, lure). Explore: Scan (secrets, hidden
-  exits). Action: Shield. No double jump (removed, D216): his jump is
-  1 up and a one-tile gap everywhere.
+  exits). Action: Shield.
+- **No jump: pads, stairs, slabs** (D222, D223). Every new room and every
+  reviewed room is a pads room (`"jump": "pads"`): a pad throws him 2 up
+  and over a 1-tile gap, a stair takes him 1 up, a slab bridges, a bug he
+  falls onto bounces him 2 up; nothing else lifts him. A 1-high wall is a
+  wall and a crate is a Sokoban box again (he walks round it), every ledge
+  is a one-way drop. Every height change is one the room places: that is
+  the puzzle's third dimension now. Rooms not yet reviewed keep the free
+  jump (1 up, a one-tile gap) until step 5.19; `npm run check:reach` lists
+  them.
 - **Later abilities skip rooms, not pickups.** An ability found later may
   take him through the room to its exits without the puzzle (a shortcut
   on revisits); it never reaches a pickup without the trick that guards
@@ -43,7 +51,7 @@ worth playing.
   ability may make its trick unnecessary. Guard pickups with what jumps
   and spells can't replace: gates on switches (a `cage` over the pickup is
   one cell of them, D202), 3-high walls, fence roofs,
-  pits too wide to cross.
+  pits too wide to cross, ledges with no stair or pad up.
 - **Lattice abilities only.** In Home Lattice only its own abilities
   count: `zap,scan,fork,pause` (the checker doesn't model
   Shield). The wings open in any order, so a pickup's trick holds
@@ -112,7 +120,14 @@ so draft the idea, not the last cell.
    PR says what changed and why, and what to tune by hand.
 6. A changed trick, rung or type updates the room's ladder line, and
    the "Now" column says it was reworked.
-7. **Lessons.** The author signs each room off before the next; a rule
+7. **Move it to pads** (D222): set `"jump": "pads"`, rebuild what its
+   line in `docs/lattice-plan.md` (Pads-only migration) says the jump
+   carried, with stairs, pads, slabs or bug bounces, and tick the line off
+   there. What only fought the jump (spiked crates, fence roofs, 2-high
+   walls against hops) may go: keep a piece only for its own job. Run
+   every check of step 5 on the moved room; `check:reach -- <room>` says
+   "still on the free jump" until it is moved.
+8. **Lessons.** The author signs each room off before the next; a rule
    the review found (a trap, a check, a better way to say it) goes into
    this skill or `craft.md` in the same PR.
 
@@ -236,6 +251,21 @@ Lessons from the reviews (D188 on):
   a roof) it says `never` and the mutation test lists every piece as NO EFFECT.
   Prove such a room with `solve.mjs` (it tracks where he stands) and `sim.mjs`.
 
+Lessons for pads rooms (D222 on):
+- **A pad is a one-way lift.** It fires the moment he stands on it, so a
+  pad in a doorway, a 1-wide lane or behind a crate he must push throws
+  him about; put it at the foot of what it climbs, off the walking lines.
+  A crate pushed onto it covers it until the room resets.
+- **A bug is a moving pad** (D223). He can't get on top of a bouncy enemy
+  from its level; dropped onto it from a ledge, a stair's top or a pad's
+  launch, it throws him 2.8 up: a 2-high ledge, never 3. The way up walks
+  with it, so the trick is timing the drop; Pause turns it back into a
+  1-high block (a step down from, not up to). The checker counts every lane
+  cell at any time: time the drop with `sim.mjs`.
+- **Drops are one way.** A ledge he steps off is gone for him unless a
+  stair or pad leads back: draw the way back from every door first, then
+  the puzzle.
+
 ## Skeleton
 ```json
 {
@@ -245,6 +275,7 @@ Lessons from the reviews (D188 on):
   "name": "Short Funny Name",
   "biome": "home_lattice",
   "size": [10, 4, 10],
+  "jump": "pads",
   "spawn": [8.5, 0, 8.5],
   "exits": [{ "id": "west", "side": "-x", "at": 4 }],
   "blocks": [{ "at": [0, 0, 0], "to": [1, 1, 3] }],
@@ -296,15 +327,18 @@ Edit existing files with small text edits, not a JSON dump.
   all are on. In a hole they stand a block high (top 1.0): a step, not floor.
   A gone bridge shows no outline: the room that first shows bridges says
   what one is in a screen text (see Screen texts below).
-  Prototype (D221), for rooms with `"jump": "pads"` only: `stair_x
-  stair_nx stair_z stair_nz` (a stair rising +x, −x, +z, −z: he walks up
-  it from the cell at its foot onto a ledge one higher; sides and back are
-  walls; a block to crates) and `slab` (a thin walkway at the top of its
-  cell; a cell up he walks under it).
+  Stairs `stair_x stair_nx stair_z stair_nz` (D221; one editor entry,
+  R turns it): a stair rising +x, −x, +z, −z: he walks up it from the
+  cell at its foot onto a ledge one higher; sides and back are walls; a
+  block to crates and enemies. `slab`: a thin glass walkway at the top
+  of its cell, level with a 1-high ledge; a cell down he walks under it.
+- **Jump rule** (`jump`, D221, D222): `"pads"` in every new and reviewed
+  room (no jump key; Space casts there), `"free"` (the default, going in
+  step 5.19) in rooms not yet reviewed.
 - **Objects** (`defs.json` objects): crates `crate crate_plain crate_cross
   crate_dashed crate_spiked`; switches `plate plate_timed plate_heavy target target_timed socket`; `platform
   spiked_platform` (need `path`, may take `switches`: run only while all on);
-  the jump pad `pad` (D221: on the floor or a block's top; standing on it throws him 2.2 up by itself, over a 1-tile gap, in any room; the only way up in a `"jump": "pads"` room; don't put one where he must walk across); decorations `screen data_pillar memory_stack` (`overrides: { "face":
+  the jump pad `pad` (D221: on the floor or a block's top; standing on it throws him 2.2 up by itself, over a 1-tile gap, in any room; with stairs and bug bounces the only way up in a pads room; never where he must walk across or stand; a crate on it covers it); decorations `screen data_pillar memory_stack` (`overrides: { "face":
   "+x"|"+z" }`; a screen may name a `text` in `data/lore.json`: title <= 32,
   lines <= 48 characters, only as help, see Screen texts below); `core`. `overrides` change only existing type
   values (e.g. a timer). Plates and sockets lie at y = 0 (validated): on a
@@ -338,7 +372,11 @@ Edit existing files with small text edits, not a JSON dump.
 ## Tuning (from the checklist; 60 ticks a second)
 | What | Number |
 |---|---|
-| Jump | clears 1 block up (apex 1.2), never 2; crosses a 1-tile gap, never 2, but from a 1-high top (crate, frozen enemy) beside a floor pit it crosses 2 (D162). In a `"jump": "pads"` room (prototype, D221) no jump key: a pad throws him up, elsewhere a 1-high wall is a wall and a stair the way up |
+| Pads room (D222) | no jump: a 1-high wall is a wall, a crate a box he walks round; every ledge a one-way drop |
+| Pad | 2.2 above it the moment he stands on it: a 2-high ledge from the floor (3-high from a pad on a block), over a 1-tile gap; the pad's cell and three above free; up to a 2-high ledge ~30 ticks (0.5 s), back down to its level ~46 (0.77 s) |
+| Stair | 1 up from its foot, the way it rises; walked at walking speed; a block to crates |
+| Bug bounce in a pads room (D223) | only when he falls onto it: 2.8 over its lane, a 2-high ledge, never 3; the checker counts the whole lane |
+| Free jump (rooms not yet reviewed) | clears 1 block up (apex 1.2), never 2; crosses a 1-tile gap, never 2, but from a 1-high top (crate, frozen enemy) beside a floor pit it crosses 2 (D162) |
 | Headroom | wizard 1.5 high: 2 free cells over every standing surface. A block above is a ceiling, the room's height is not (he stands on top of a 2-high wall in a 3-high room); keep standing surfaces 2 below the room height for the look |
 | Bouncy enemy (bug, glowbug) | launches 2.2 above its top (0.6), so 2.8: clears a 2-high ledge, never 3 |
 | Frozen enemy | a 1-high step (1×1×1), pushed like a crate |
@@ -384,7 +422,9 @@ Edit existing files with small text edits, not a JSON dump.
   not wall in his own path with crates (a 2-wide island with crates across
   it is a knot). A crate lost in a corner is fine (rooms reset) if you
   checked it.
-- **Spiked crates (D199)** take the climb out of a crate: he can't use one as
+- **Spiked crates (D199)** belong to free-jump rooms: in a pads room no
+  crate is a step, so a plain crate does the same job without the hurt.
+  There they take the climb out of a crate: he can't use one as
   a step, so a push puzzle plays like classic Sokoban (his route around the
   crates matters again). A plain crate dropped or pasted on one covers it:
   that is a 2-high step, so check stacks (a spiked crate pushed onto a
@@ -490,7 +530,7 @@ import { startRoom, pauseEnemy } from '<checkout>/.claude/skills/room-design/scr
 const sim = startRoom('cold_stairs', { abilities: ['zap', 'pause'] }); // or { at: [x, y, z] }
 sim.walkTo([8.5, 0, 3.5]);         // along x, then z, to within 0.1
 sim.cast('pause'); sim.run(30);    // selects via Tab, casts, waits 30 ticks
-sim.step(['up'], ['jump']);        // hold up, tap jump, one tick
+sim.step(['up'], ['jump']);        // hold up, tap jump, one tick (in a pads room Space casts: just walk onto a pad)
 sim.until(() => sim.game.player.pos[1] >= 2, ['up']);  // throws when stuck
 sim.log('on ledge');               // tick, seconds, pos, integrity, energy, gates, pickups
 ```

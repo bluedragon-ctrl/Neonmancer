@@ -14,12 +14,27 @@ export function describeNeeds(needs) {
 }
 
 /**
- * @param {import('./reach-world.js').WorldReach} report
- * @param {{ rooms?: boolean, json?: boolean }} [options] `rooms`: list what each target needs; `json`: plain data instead of text
+ * The rooms still on the free jump (D222): every room without `"jump":
+ * "pads"`, the game's apart from the dev wing's (D147). The room reviews
+ * (step 5.17) move them one by one; the jump goes when both lists are empty.
+ * @param {{ rooms: Map<string, { jump?: string }>, world: { dev?: string[] } }} content
+ * @returns {{ game: string[], dev: string[] }} room ids, sorted
  */
-export function formatReach(report, { rooms = false, json = false } = {}) {
+export function freeJumpRooms({ rooms, world }) {
+  const dev = new Set(world.dev ?? []);
+  const free = [...rooms.entries()].filter(([, room]) => (room.jump ?? 'free') === 'free').map(([id]) => id).sort();
+  return { game: free.filter((id) => !dev.has(id)), dev: free.filter((id) => dev.has(id)) };
+}
+
+/**
+ * @param {import('./reach-world.js').WorldReach} report
+ * @param {{ rooms?: boolean, json?: boolean, freeJump?: { game: string[], dev: string[] }|null }} [options] `rooms`: list what each
+ *   target needs; `json`: plain data instead of text; `freeJump`: freeJumpRooms(), listed before the warnings
+ */
+export function formatReach(report, { rooms = false, json = false, freeJump = null } = {}) {
   if (json) {
     return {
+      ...(freeJump && { freeJump }),
       errors: report.errors,
       warnings: report.warnings,
       abilities: report.abilities,
@@ -43,6 +58,12 @@ export function formatReach(report, { rooms = false, json = false } = {}) {
       const text = describeNeeds(needs);
       if (text !== 'free' || access) lines.push(`  ${room} ${kind} ${id}: ${text}${access ? `, access ${access}` : ''}`);
     }
+  }
+  if (freeJump) {
+    const { game, dev } = freeJump;
+    lines.push('', game.length + dev.length === 0 ? 'Every room is a pads room (D222).' : `Still on the free jump (D222), ${game.length + dev.length} room(s):`);
+    if (game.length) lines.push(`  game: ${game.join(', ')}`);
+    if (dev.length) lines.push(`  dev wing: ${dev.join(', ')}`);
   }
   for (const warning of report.warnings) lines.push(`warning: ${warning}`);
   for (const error of report.errors) lines.push(`error: ${error}`);

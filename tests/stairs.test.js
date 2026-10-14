@@ -166,6 +166,20 @@ test('reach: in a pads room a pickup two cells up needs a pad', () => {
   assert.equal(reach({ jump: 'pads', objects: [{ id: 'pad', type: 'pad', at: [3, 0, 3] }], pickups: [high] }).pickups.has('far'), true);
 });
 
+test('reach: in a pads room a bouncy enemy he falls onto is a pad (D223)', () => {
+  // A 2-high wall at x 5, the bug's lane along x 4; a 1-high ledge at x 3 (z 0..3) with a stair up to it.
+  const wall = { at: [5, 0, 0], to: [5, 1, 7] };
+  const ledge = { at: [3, 0, 0], to: [3, 0, 3] };
+  const stair = { type: 'stair_x', at: [2, 0, 1] };
+  const bug = { id: 'bug', template: 'bug', at: [4, 0, 0], path: { points: [[4, 0, 7]] } };
+  const over = (props) => reach({ jump: 'pads', pickups: [FAR], ...props }).pickups.has('far');
+  assert.equal(over({ blocks: [wall, ledge, stair], enemies: [bug] }), true, 'off the ledge onto the bug, thrown over the wall');
+  assert.equal(over({ blocks: [wall, ledge, stair] }), false, 'no bug, no way over');
+  assert.equal(over({ blocks: [wall, ledge], enemies: [bug] }), false, 'from its own level he never gets on top of it');
+  const high = { at: [5, 0, 0], to: [5, 2, 7] };
+  assert.equal(over({ blocks: [high, ledge, stair], enemies: [bug] }), false, 'a 3-high wall stops the bounce');
+});
+
 test('reach: he walks under a slab a cell up', () => {
   // A full-height wall with a gap at [4, 0, 3], closed a cell up by a block or a slab.
   const through = (type) => {

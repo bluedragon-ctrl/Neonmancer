@@ -951,7 +951,8 @@ export function roomFileData(data) {
 }
 
 /**
- * A new, empty room: 12x4x12, the wizard starting in the middle.
+ * A new, empty room: 12x4x12, the wizard starting in the middle, the jump
+ * only on pads (D222).
  * @param {string} id
  * @param {string} biome biome id
  */
@@ -970,6 +971,8 @@ export function newRoom(id, biome) {
     biome,
     size: [...NEW_ROOM_SIZE],
     spawn: [w / 2 + 0.5, 0, d / 2 + 0.5],
+    // The jump only on pads (D222): new rooms are built for the rule from the start.
+    jump: 'pads',
   };
 }
 
