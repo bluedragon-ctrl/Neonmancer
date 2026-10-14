@@ -34,7 +34,7 @@ export const PLAYER = {
   bounceHeight: 2.2,
   /** Fastest fall in units per second (below 1 unit per tick, see collision.js). */
   maxFall: 18,
-  /** A jump still works this many ticks after walking off a ledge (where he may jump: off a pad, D221). */
+  /** A jump still works this many ticks after walking off a ledge (where he may jump, D221). */
   coyoteTicks: 6,
   /**
    * How far a stair's slope may rise above his feet within one tick's walk
@@ -302,13 +302,14 @@ export class Player {
   }
 
   /**
-   * Bounce off the top of a bouncy enemy at height `top`: launched up to
-   * PLAYER.bounceHeight above it, whatever the jump key does.
+   * Bounce off the top of a bouncy enemy at height `top`, or off a jump pad
+   * (D221): launched up to `height` above it, whatever the jump key does.
    * @param {number} top
+   * @param {number} [height] apex above `top`; PLAYER.bounceHeight by default
    */
-  bounce(top) {
+  bounce(top, height = PLAYER.bounceHeight) {
     this.pos[1] = top;
-    this.vy = BOUNCE_SPEED;
+    this.vy = height === PLAYER.bounceHeight ? BOUNCE_SPEED : Math.sqrt(2 * PLAYER.gravity * height);
     this.grounded = false;
     this.coyote = 0;
     this.jumpBuffer = 0;
@@ -437,8 +438,8 @@ export class Player {
    * @param {Iterable<{ box(): number[][] }>} [options.bodies] pushable objects
    * @param {boolean} [options.invincible] debug mode: holes and void blocks never kill
    * @param {'grid'|'screen'} [options.movementMode] which key → direction mapping to use (D38)
-   * @param {boolean} [options.canJump] may he jump where he stands: anywhere
-   *   in a room with a free jump, only on a jump pad in one without (D221)
+   * @param {boolean} [options.canJump] may he jump with the jump key: not in
+   *   a room without a free jump, where only pads throw him up (D221)
    * @returns {string|null} event: 'jump', 'land', 'die', 'respawn' or null
    */
   update(input, grid, { bodies = [], invincible = false, movementMode = 'grid', canJump = true } = {}) {
@@ -503,8 +504,8 @@ export class Player {
     const turn = Math.atan2(Math.sin(this.targetFacing - this.facing), Math.cos(this.targetFacing - this.facing));
     this.facing += turn * PLAYER.turnRate;
 
-    // Jump, with a little forgiveness on both sides of the ground contact;
-    // on ground where he can't jump (off the pads, D221) there is none.
+    // Jump, with a little forgiveness on both sides of the ground contact
+    // (none where he can't jump, D221).
     this.coyote = this.grounded ? (canJump ? PLAYER.coyoteTicks : 0) : Math.max(0, this.coyote - 1);
     this.jumpBuffer = input.pressed('jump') ? PLAYER.jumpBufferTicks : Math.max(0, this.jumpBuffer - 1);
     if (this.jumpBuffer > 0 && this.coyote > 0) {

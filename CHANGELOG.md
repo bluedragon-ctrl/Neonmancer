@@ -16,10 +16,10 @@ docs/decisions.md).
 
 ### Added
 - Prototype of a pads-only jump (D221): a room with `"jump": "pads"` (editor:
-  Jump, "only on pads") lets the wizard jump only on a jump pad, a new magenta
-  floor tile. New blocks: stairs (`stair_x`, `stair_nx`, `stair_z`,
-  `stair_nz`), which he walks up a block, and the slab, a thin walkway with
-  headroom under it. The checker knows all three (`check:reach -- --pads` tries
+  Jump, "only on pads") has no jump key; jump pads, a new magenta floor tile,
+  throw him 2 blocks up by themselves the moment he stands on one; there Space casts. New blocks:
+  stairs (`stair_x`, `stair_nx`, `stair_z`, `stair_nz`), which he walks up
+  a block, and the slab, a thin glass walkway with headroom under it. The checker knows all three (`check:reach -- --pads` tries
   the rule on every room); debug J makes every room pads-only. Test room:
   `stair_lab` in the dev wing, through a new west door in `cage_lab`.
 - Dead Pixel (`buffer_1`), the first Outer Buffer secret room (D219, step 5.11):

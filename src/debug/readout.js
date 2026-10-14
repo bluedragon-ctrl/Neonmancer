@@ -52,6 +52,6 @@ export class DebugReadout {
       `> GPU SHADERS ${info.programs.length}  GEOMETRIES ${info.memory.geometries}  TEXTURES ${info.memory.textures}\n` +
       `> ACTIONS ${actions}\n` +
       `> POS ${player.pos.map((v) => v.toFixed(2)).join(' ')}${player.grounded ? '  GROUNDED' : ''}\n` +
-      `> [/] ROOM  I INVINCIBLE  H DAMAGE  J PADS-ONLY JUMP`;
+      `> [/] ROOM  I INVINCIBLE  H DAMAGE  J PADS ONLY`;
   }
 }

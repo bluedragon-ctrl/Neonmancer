@@ -2384,24 +2384,35 @@ game, though, it cuts the world at once: with the checker, 23 of 45 rooms lose a
 exit or a pickup, 19 of them game rooms, `boot_up`'s east exit among them.
 So it is a prototype, room by room:
 - **Room rule:** `"jump": "pads"` in a room's data (editor: Jump, "only on
-  pads"); the default stays `free`. In such a room he jumps only standing on
-  a **jump pad** (object kind `pad`): a magenta tile (his own, D98) on the
+  pads"); the default stays `free`. In such a room the jump key does
+  nothing; bouncing off a bouncy enemy still works.
+- **Jump pad** (object kind `pad`): a magenta tile (his own, D98) on the
   floor or on top of a block, no body, a square of light rising off it. The
-  jump itself is unchanged (1 up, a one-tile gap; coyote time only off a
-  pad). Bouncing off a bouncy enemy is no jump and still works.
+  moment he stands on it, it throws him up by itself, in any room: its
+  `launch` (2.2, a bouncy enemy's bounce, D48), so 2 blocks up, and over a
+  1-tile gap from anywhere on the pad (2.2 units of air travel); he steers in
+  the air. Standing still on it he bounces on the spot. (First built as the
+  one place the jump key works; the author found it unclear when to press
+  it, so it launches by itself.)
 - **Stair** (look `stair`, `rise` the way it climbs; types `stair_x`,
   `stair_nx`, `stair_z`, `stair_nz`): from the cell at its foot he walks up
   onto a ledge one block higher, and down again. He walks a slope
   (`Grid.span()`, collision steps him onto it from up to 0.2 below his feet
   and keeps him on it going down); its sides and back are walls. To crates,
   enemies and the checker it is a block. Drawn as four steps.
-- **Slab** (look `slab`): a 0.2-thin walkway at the top of its cell, level
+- **Slab** (look `slab`): a thin walkway at the top of its cell, level
   with a ledge one block up; a cell up it leaves him headroom under it, so a
-  bridge can cross over a path. To crates it is a block.
-- **Checker:** in a pads room no climb, gap, Blink from a jump or step onto a
-  compiled crate except from a pad's cell, and a pickup two cells up needs a
-  pad; a stair links its foot to its top; he walks under a slab.
+  bridge can cross over a path. To crates it is a block. A single sheet of
+  glass (0.04 thick) in the room color (`GLASS.slab`), outlined round its top.
+- **Checker:** a pad's cell climbs the whole blocks of its launch (2) and
+  crosses a 1-tile gap, in any room; in a pads room there is no other climb,
+  gap, Blink from a jump or step onto a compiled crate, and a pickup two
+  cells up needs a pad; a stair links its foot to its top; he walks under a
+  slab.
   `check:reach -- --pads` tries the rule on every room as it is.
+- **Space casts** in a pads room (the cast key E still does): the jump key
+  has nothing else to do there. Once the rule is the game's, the jump
+  action goes and Space is the cast key.
 - **Debug:** J (debug mode) makes every room pads-only, to play the rooms as
   they are without the jump; the readout shows the rule.
 - **Test room:** `stair_lab` (dev wing, off `cage_lab`'s new west door): two
@@ -2411,8 +2422,7 @@ So it is a prototype, room by room:
 Not decided yet, for after playing it: whether the rule becomes the game's
 (then rooms are reworked one per PR with the 5.17 reviews, starting with
 `boot_up`, and the free jump, spiked crates and fence walls go), the pad's
-behavior (jump key, or a launch by itself) and look, stairs or a ramp look,
-and crates on stairs.
+height and look, and crates on stairs. Stairs are settled as they are.
 **Why:** the author asked for an analysis of removing the jump except on
 jumping blocks, with stairs and flat bridges, and to prototype it in the dev
 wing before deciding.

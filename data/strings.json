@@ -182,7 +182,7 @@
     "controls.fullscreenKeys": "F",
     "msg.movementGrid": "> MOVEMENT: GRID-ALIGNED",
     "msg.movementScreen": "> MOVEMENT: SCREEN-RELATIVE",
-    "msg.padJumpOn": "> DEBUG: JUMP ONLY ON PADS, EVERY ROOM",
+    "msg.padJumpOn": "> DEBUG: NO JUMP KEY, ONLY PADS, EVERY ROOM",
     "msg.padJumpOff": "> DEBUG: JUMP AS EACH ROOM SAYS"
   }
 }

@@ -30,7 +30,7 @@
     { "id": "crate_1", "type": "crate_plain", "at": [8, 0, 5] },
     { "id": "plate_1", "type": "plate", "at": [7, 0, 4] },
     { "id": "pad_out", "type": "pad", "at": [5, 0, 9] },
-    { "id": "pad_in", "type": "pad", "at": [3, 0, 9] }
+    { "id": "pad_in", "type": "pad", "at": [3, 0, 10] }
   ],
   "pickups": [
     { "id": "energy", "type": "refill_energy", "at": [9, 2, 1] },

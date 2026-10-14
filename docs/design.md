@@ -51,8 +51,8 @@ The shares are a guide, tuned in playtests.
 | Action | Keys |
 |---|---|
 | Move | WASD / arrow keys; grid-aligned by default: Right ↗, Up ↖, Left ↙, Down ↘ |
-| Jump | Space |
-| Cast (the selected spell) | E / Numpad 0 |
+| Jump | Space (in a pads-only room, D221: casts instead) |
+| Cast (the selected spell) | E / Numpad 0; Space in a pads-only room (D221) |
 | Switch spell | Tab (next) / Q (previous) |
 | Pause menu (and back, in a menu) | Esc / P |
 | Map (and back) | M |
@@ -71,7 +71,7 @@ Debug mode only, once toggled on with F3:
 | Toggle invincibility | I |
 | Test damage (−1 integrity) | H |
 | Find the next 8 fragments | K |
-| Jump only on pads, every room (D221) | J |
+| No jump key, only pads, every room (D221) | J |
 
 Keys are physical positions (`KeyboardEvent.code`), so the layout is the
 same on QWERTY, QWERTZ and AZERTY keyboards.
@@ -85,10 +85,11 @@ same on QWERTY, QWERTZ and AZERTY keyboards.
   height (no short hops), so the block rule never depends on timing (D19).
 - Forgiveness: a jump still works 6 ticks after walking off a ledge, and a
   jump pressed up to 6 ticks before landing happens on landing.
-- Pads-only jump (prototype, D221): in a room with `"jump": "pads"` he jumps
-  only standing on a jump pad (coyote time only off a pad). Stairs take him
-  one block up (he walks their slope; their sides are walls), slabs are thin
-  walkways with headroom under them. Test room: `stair_lab` (dev wing).
+- Pads-only jump (prototype, D221): in a room with `"jump": "pads"` the jump
+  key does nothing. A jump pad throws him up by itself the moment he stands
+  on it (any room; 2.2 above it, over a 1-tile gap). Stairs take him one
+  block up (he walks their slope; their sides are walls), slabs are thin
+  glass walkways with headroom under them. Test room: `stair_lab` (dev wing).
 - Turns smoothly towards the walking direction; starts facing the camera.
 - Tuning values live in `PLAYER` in `src/entities/player.js`.
 

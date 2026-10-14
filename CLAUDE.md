@@ -84,10 +84,12 @@ mobile/touch support, backend or accounts.
   the floor is at y = 0; back walls are the x = 0 and z = 0 planes.
 - 1 block = 1 unit (1x1x1). Player jump height: 1 unit (clears exactly one
   block, never two), everywhere: there is no double jump (removed, D216).
-- Prototype (D221): a room with `"jump": "pads"` allows the jump only on
-  jump pads (object kind `pad`); stairs (look `stair`, a `rise`) take him
-  a block up, slabs (look `slab`) are thin walkways with headroom under
-  them. Default `free` until the author decides; test room `stair_lab`.
+- Prototype (D221): a room with `"jump": "pads"` has no jump key (Space
+  casts there); jump
+  pads (object kind `pad`) throw him up by themselves (2 blocks, a 1-tile
+  gap); stairs (look `stair`, a `rise`) take him a block up, slabs (look
+  `slab`) are thin glass walkways with headroom under them. Default
+  `free` until the author decides; test room `stair_lab`.
 - Player hitbox 0.6 x 1.5 x 0.6 (the hat is visual only), so the wizard
   needs 2 blocks of headroom.
 - Blocks snap to the grid; player and enemies move freely (sub-grid).

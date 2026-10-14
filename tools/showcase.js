@@ -172,7 +172,7 @@ const ALL_ASSETS = [
   { label: 'stream-in-room', span: 5.5, build: buildStreamInRoom },
   // Stairs and a slab (D221): the wizard walks up a stair onto a ledge, along a slab bridge and back.
   { label: 'stairs-in-room', span: 5.5, build: buildStairsInRoom },
-  // A jump pad (D221): where he may jump in a room without a free jump; it flashes every 2 s as if he jumped off it.
+  // A jump pad (D221): it throws him up by itself; it flashes every 2 s as if it just did.
   { label: 'pad', span: 2, spin: false, build: buildPad },
   // Glass (D96): every crate type is glass (above). Hazard blocks as glass
   // are an option not used yet; then a room corner with glass crates
@@ -2412,7 +2412,7 @@ function buildStairsInRoom() {
   return asset;
 }
 
-/** A jump pad (D221), flashing every 2 s as if the wizard jumped off it. */
+/** A jump pad (D221), flashing every 2 s as if it just threw the wizard up. */
 function buildPad() {
   const pad = createPad(PALETTE.magenta);
   pad.position.set(-0.5, 0, -0.5);

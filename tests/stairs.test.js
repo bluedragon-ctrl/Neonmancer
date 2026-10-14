@@ -9,7 +9,7 @@ import { buildRoom } from '../src/world/room.js';
 import { BLOCK_TYPES, dataFiles, gameData, grid, hold, idle, input, roomFile } from './helpers.js';
 
 /** Object types the tests use: a jump pad (D221). */
-const OBJECTS = { pad: { kind: 'pad', color: '#ff2bd6' } };
+const OBJECTS = { pad: { kind: 'pad', color: '#ff2bd6' }, pad_low: { kind: 'pad', color: '#ff2bd6', launch: 1.2 } };
 
 /** A 1-high ledge over x 4..7 and a stair rising +x up to it at x 3, along z 0..7. */
 function stairGrid(extra = {}) {
@@ -79,22 +79,46 @@ test('jump: no jump where he may not (D221), a jump where he may', () => {
   }
 });
 
-/** A game in one 8×4×8 room with `"jump": "pads"` and a pad at [4, 0, 4]. */
-function padGame(spawn) {
-  const room = roomFile('r', { spawn, jump: 'pads', objects: [{ id: 'pad', type: 'pad', at: [4, 0, 4] }] });
-  const game = new Game(gameData({ rooms: [room], objects: OBJECTS }));
-  for (let i = 0; i < 10; i++) game.update(idle);
-  return game;
+/** A game in one 8×4×8 room with a pad at [5, 0, 3] and a pit at x 4 (`props`: more room data). */
+function padGame(spawn, props = { jump: 'pads' }) {
+  const room = roomFile('r', { spawn, objects: [{ id: 'pad', type: 'pad', at: [5, 0, 3] }], holes: [{ at: [4, 0], to: [4, 7] }], ...props });
+  return new Game(gameData({ rooms: [room], objects: OBJECTS }));
 }
 
 /** Does a tap of the jump key make him jump this tick? */
 const jumps = (game) => game.update(input([], ['jump'])).some((event) => event.type === 'jump');
 
-test('pads: in a pads room he jumps only standing on a pad, and the pad counts it', () => {
-  assert.equal(jumps(padGame([1.5, 0, 1.5])), false);
-  const game = padGame([4.5, 0, 4.5]);
-  assert.equal(jumps(game), true);
-  assert.equal(game.pads[0].jumps, 1);
+test('pads: in a pads room the jump key casts instead', () => {
+  const game = padGame([6.5, 0, 6.5]);
+  game.player.spells = ['zap'];
+  game.player.spell = 'zap';
+  for (let i = 0; i < 10; i++) game.update(idle);
+  const events = game.update(input([], ['jump'])).map((event) => event.type);
+  assert.equal(events.includes('jump'), false);
+  assert.equal(events.includes('cast'), true);
+});
+
+test('pads: standing on one throws him 2 blocks up, no key needed, in any room', () => {
+  for (const props of [{ jump: 'pads' }, {}]) {
+    const game = padGame([5.5, 0, 3.5], props);
+    let top = 0;
+    let bounces = 0;
+    for (let i = 0; i < 40; i++) {
+      bounces += game.update(idle).filter((event) => event.type === 'bounce').length;
+      top = Math.max(top, game.player.pos[1]);
+    }
+    assert.ok(bounces >= 1 && game.pads[0].launches === bounces, 'a bounce for each launch');
+    assert.ok(top > 2 && top < 2.3, `up to 2.2 (${top})`);
+  }
+});
+
+test('pads: walking onto one from its far edge carries him over a 1-tile pit', () => {
+  const game = padGame([7.5, 0, 3.5]);
+  for (let i = 0; i < 10; i++) game.update(idle);
+  for (let i = 0; i < 90 && game.player.pos[0] > 3.3; i++) game.update(hold('up'));
+  for (let i = 0; i < 30; i++) game.update(idle);
+  assert.equal(game.player.dead, false);
+  assert.ok(game.player.pos[0] < 4, `he landed beyond the pit (x ${game.player.pos[0]})`);
 });
 
 test('pads: the debug rule makes every room pads-only', () => {
@@ -126,6 +150,13 @@ test('reach: in a pads room a 1-high wall is a wall, a stair or a pad gets him o
   assert.equal(reach({ jump: 'pads', blocks: [WALL, backwards], pickups: [FAR] }).pickups.has('far'), false, 'a stair climbs one way');
   const pad = { id: 'pad', type: 'pad', at: [3, 0, 3] };
   assert.equal(reach({ jump: 'pads', blocks: [WALL], objects: [pad], pickups: [FAR] }).pickups.has('far'), true);
+});
+
+test('reach: a pad throws him as high as its launch: 2 blocks by default', () => {
+  const wall = { at: [4, 0, 0], to: [4, 1, 7] };
+  const with2 = (type) => reach({ jump: 'pads', blocks: [wall], objects: [{ id: 'pad', type, at: [3, 0, 3] }], pickups: [{ ...FAR, at: [4, 2, 3] }] }).pickups.has('far');
+  assert.equal(with2('pad'), true);
+  assert.equal(with2('pad_low'), false);
 });
 
 test('reach: in a pads room a pickup two cells up needs a pad', () => {

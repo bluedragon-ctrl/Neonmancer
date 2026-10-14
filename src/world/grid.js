@@ -34,8 +34,12 @@ import { exitCells } from '../data/room-data.js';
 /** Cell codes that aren't a block type from the room's data. */
 export const CELL = { empty: 0, edge: 1 };
 
-/** How thick a slab is (D221): under one a cell up, the wizard (1.5 high) walks upright. */
-export const SLAB_HEIGHT = 0.2;
+/**
+ * How thick a slab is (D221): a single sheet of glass. Under one a cell up
+ * the wizard (1.5 high) walks upright; he is taller than a tick's fall, so
+ * he never drops through it.
+ */
+export const SLAB_HEIGHT = 0.04;
 
 /** A stair's `rise` (the way it climbs, D221) as [axis, sign]. */
 export const RISES = { '+x': [0, 1], '-x': [0, -1], '+z': [2, 1], '-z': [2, -1] };

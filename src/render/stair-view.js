@@ -1,19 +1,20 @@
 /**
  * The blocks that fill only part of their cell (D221): the stair and the
- * slab. Like plain blocks they are room structure in the room color, dark
- * faces with neon edges, but each draws its own outline, outside the plain
- * blocks' mass (room-view.js), so a stair beside a ledge still reads as
- * steps.
+ * slab. Like plain blocks they are room structure in the room color, but
+ * each draws its own outline, outside the plain blocks' mass
+ * (room-view.js), so a stair beside a ledge still reads as steps.
  *
  * - Stair: STAIR.steps steps rising across the cell the way of its `rise`
  *   (the wizard walks a slope over them, Grid.span()); edges along every
- *   step's nosing and both side profiles.
- * - Slab: a thin walkway at the top of its cell (SLAB_HEIGHT), with a
- *   dashed center line along it so it reads as a path, not a block.
+ *   step's nosing and both side profiles; dark faces, like a block.
+ * - Slab: a single sheet of glass at the top of its cell (SLAB_HEIGHT), in
+ *   the room color (GLASS.slab), outlined round its top, so it reads as a
+ *   bridge, not a block, and what passes under it shows.
  */
 import { BoxGeometry, BufferGeometry, Float32BufferAttribute, Group, Mesh } from 'three';
 import { RISES, SLAB_HEIGHT } from '../world/grid.js';
 import { blockEdges } from './edges.js';
+import { GLASS, glassBoxes } from './glass.js';
 import { faceMaterial, lineMaterial, neonLines } from './neon.js';
 
 /** Tuning. */
@@ -108,60 +109,24 @@ export function createStairView(cells, rise, color) {
 }
 
 /**
- * The slabs of one block type: thin walkways at the tops of their cells,
- * neighbours drawn as one (no edge between them), with a dashed line down
- * the middle of each.
+ * The slabs of one block type: glass sheets at the tops of their cells,
+ * neighbours outlined as one (no edge between them), only round the top.
  * @param {number[][]} cells [x, y, z]
  * @param {number|string} color
  */
 export function createSlabView(cells, color) {
-  const group = new Group();
   const thin = SLAB_HEIGHT;
-  const geometry = new BoxGeometry(1, thin, 1).translate(0.5, 1 - thin / 2, 0.5).toNonIndexed();
-  const unit = geometry.getAttribute('position').array;
-  const positions = [];
-  for (const [x, y, z] of cells) for (let i = 0; i < unit.length; i += 3) positions.push(unit[i] + x, unit[i + 1] + y, unit[i + 2] + z);
-  geometry.dispose();
-  const faces = new BufferGeometry();
-  faces.setAttribute('position', new Float32BufferAttribute(positions, 3));
-  group.add(new Mesh(faces, faceMaterial()));
-
-  // The outline of the slabs as one mass: block edges, squashed into the slab's height.
-  const squash = ([x, y, z]) => [x, isTop(y, cells) ? y : y + 1 - thin, z];
-  const segments = blockEdges(cells).map(([a, b]) => [squash(a), squash(b)]);
+  const group = new Group();
+  group.add(glassBoxes(cells.map(([x, y, z]) => [[x, y + 1 - thin, z], [x + 1, y + 1, z + 1]]), color, GLASS.slab));
+  // The outline of the slabs as one mass: the block edges round their tops.
+  const segments = blockEdges(cells).filter(([a, b]) => a[1] === b[1] && isTop(a[1], cells));
   const edges = neonLines(segments, lineMaterial({ color, width: STAIR.width, brightness: STAIR.brightness }));
   edges.renderOrder = 2;
   group.add(edges);
-  const middle = neonLines(slabCenterLines(cells), lineMaterial({ color, width: 1.5, brightness: 0.9, dashed: true }));
-  middle.renderOrder = 2;
-  group.add(middle);
   return group;
 }
 
 /** Is height `y` the top of some slab cell (rather than its bottom)? */
 function isTop(y, cells) {
   return cells.some((cell) => cell[1] + 1 === y);
-}
-
-/**
- * A short dashed mark across the middle of each slab's top, along the way
- * the run of slabs goes (along x unless it runs along z).
- * @param {number[][]} cells
- */
-export function slabCenterLines(cells) {
-  const keys = new Set(cells.map((cell) => cell.join()));
-  const lift = 0.004;
-  return cells.map(([x, y, z]) => {
-    const alongZ = keys.has(`${x},${y},${z - 1}`) || keys.has(`${x},${y},${z + 1}`);
-    const top = y + 1 + lift;
-    return alongZ
-      ? [
-          [x + 0.5, top, z],
-          [x + 0.5, top, z + 1],
-        ]
-      : [
-          [x, top, z + 0.5],
-          [x + 1, top, z + 0.5],
-        ];
-  });
 }

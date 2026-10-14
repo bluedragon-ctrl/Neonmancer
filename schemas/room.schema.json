@@ -47,7 +47,7 @@
     "jump": {
       "enum": ["free", "pads"],
       "default": "free",
-      "description": "Where the wizard may jump (D221): free, anywhere; pads, only standing on a jump pad (an object of kind pad). A prototype: rooms try the rule out one by one."
+      "description": "Where the wizard may jump (D221): free, anywhere with the jump key; pads, never: only a jump pad (an object of kind pad) throws him up. A prototype: rooms try the rule out one by one."
     },
     "exits": {
       "type": "array",

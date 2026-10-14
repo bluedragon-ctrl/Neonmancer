@@ -15,7 +15,7 @@
     "plate_timed": { "extends": "plate", "timer": 3 },
     "plate_heavy": { "extends": "plate", "weight": 2 },
     "socket": { "kind": "socket", "color": "#eef3ff" },
-    "pad": { "kind": "pad", "color": "#ff2bd6" },
+    "pad": { "kind": "pad", "color": "#ff2bd6", "launch": 2.2 },
     "platform": { "kind": "platform", "color": "#00f0ff", "mark": "brackets", "faces": "tinted" },
     "spiked_platform": { "kind": "platform", "color": "#ff2a3a", "shape": "spiked", "damage": 1 },
     "data_pillar": { "kind": "deco", "look": "data_pillar" },

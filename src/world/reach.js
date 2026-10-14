@@ -38,11 +38,12 @@
  * one enemy may count in several cells at once (optimistic, like the
  * timing), but it holds one plate at most.
  *
- * Jump rule (D221): in a room with `"jump": "pads"` he jumps only from a jump pad's
- * cell: elsewhere no climb, no gap, no Blink from a jump, no step onto a
- * compiled crate, and a pickup two cells up is out of reach. A stair takes
- * him from the cell at its foot onto its top, one up; down again is a step
- * off a ledge.
+ * Jump rule (D221): a jump pad throws him up its `launch` (2 blocks and
+ * a one-tile gap by default) in any room; in a room with `"jump": "pads"`
+ * that is his only jump: elsewhere no climb, no gap, no Blink from a jump,
+ * no step onto a compiled crate, and a pickup two cells up is out of reach.
+ * A stair takes him from the cell at its foot onto its top, one up; down
+ * again is a step off a ledge.
  *
  * What it knows nothing about, on purpose: enemies and their fire (combat
  * is a different check), timing (collapsing blocks, platforms waiting,
@@ -110,8 +111,8 @@ export class RoomModel {
     this.gap = JUMP.gap;
     /** Does he jump anywhere, or only on pads (D221)? */
     this.freeJump = (room.jump ?? 'free') === 'free';
-    /** Cell indices of the jump pads (D221). */
-    this.pads = new Set();
+    /** The jump pads (D221): cell index → the whole blocks a launch lifts him. */
+    this.pads = new Map();
 
     // A scan derezzes every fake block (optimistically: wherever he stands).
     const blocks = {};
@@ -169,7 +170,7 @@ export class RoomModel {
       }
       else if (object.kind === 'platform') for (const [px, py, pz] of pathCells(object.at, object.path)) this.floors.add(this.index(px, py, pz));
       else if (object.kind === 'plate' || object.kind === 'socket') this.switches.push(object);
-      else if (object.kind === 'pad') this.pads.add(this.index(x, y, z));
+      else if (object.kind === 'pad') this.pads.set(this.index(x, y, z), Math.floor((object.launch ?? 2.2) + 1e-9));
       else if (object.kind === 'gate' && (object.trigger ?? 'switch') === 'switch') this.gates.push({ index: this.index(x, y, z), startsGone: object.start === 'gone', switches: object.switches ?? null });
       else if (object.kind === 'target') {
         this.switches.push(object);
@@ -229,9 +230,12 @@ export class RoomModel {
     return changed;
   }
 
-  /** May he jump from the cell he stands in (D221): anywhere, or only on a pad? */
-  canJump(x, y, z) {
-    return this.freeJump || this.pads.has(this.index(x, y, z));
+  /**
+   * How many blocks up he gets from the cell he stands in (D221): a pad's
+   * launch, his jump in a room with a free jump, else 0.
+   */
+  climbFrom(x, y, z) {
+    return this.pads.get(this.index(x, y, z)) ?? (this.freeJump ? this.up : 0);
   }
 
   /** Index of a cell inside the room (y up to the room's height). */
@@ -353,9 +357,9 @@ export class RoomModel {
     const { abilities } = this;
     while (queue.length > 0) {
       const [x, y, z] = queue.pop();
-      // Without a free jump (D221), only from a pad.
-      const jumps = this.canJump(x, y, z);
-      const up = jumps ? this.up : 0;
+      // A pad throws him up; without a free jump (D221) nothing else does.
+      const up = this.climbFrom(x, y, z);
+      const jumps = up > 0;
       const gap = jumps ? this.gap : 0;
       for (const dir of DIRS) {
         const [dx, dz] = dir;
@@ -730,9 +734,9 @@ export function collect(model, cfg, stands, reach) {
     if (reach.pickups.has(pickup.id)) continue;
     const [x, y, z] = pickup.at;
     if (!model.grid.isInside(x, z) || model.blocked(x, y, z, cfg)) continue;
-    for (let lift = 0; lift <= 2; lift++) {
+    for (let lift = 0; lift <= 3; lift++) {
       const base = y - lift;
-      if (base < 0 || !standAt(x, base, z) || (lift === 2 && !model.canJump(x, base, z))) continue;
+      if (base < 0 || !standAt(x, base, z) || lift > 1 + model.climbFrom(x, base, z)) continue;
       let free = true;
       for (let dy = 1; dy <= lift; dy++) free &&= !model.blocked(x, base + dy, z, cfg);
       if (free) {

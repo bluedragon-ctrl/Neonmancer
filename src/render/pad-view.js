@@ -2,7 +2,7 @@
  * A jump pad (D221): a thin glass tile in the wizard's magenta (his own,
  * D98), flush with what it lies on, with a square inside and four short
  * posts at its corners; a square of light keeps rising off it and fading,
- * so it reads as "up from here" at a glance. Jumping off it flashes it.
+ * so it reads as "up from here" at a glance. A launch flashes it.
  * Reviewed in the asset showcase (`?asset=pad`).
  */
 import { Color, Group } from 'three';
@@ -47,7 +47,7 @@ function square(inset, y) {
 /**
  * A pad's look, at the origin (the lower corner of its cell).
  * @param {number|string|Color} color
- * @returns {Group} with `userData.update(dt)` and `userData.launch()` (a jump off it)
+ * @returns {Group} with `userData.update(dt)` and `userData.launch()` (it threw him up)
  */
 export function createPad(color) {
   const base = new Color(color);
@@ -92,7 +92,7 @@ export class PadView {
     this.pad = pad;
     this.group = createPad(pad.object.color);
     this.group.position.set(...pad.pos);
-    this.jumps = pad.jumps;
+    this.launches = pad.launches;
   }
 
   /**
@@ -100,8 +100,8 @@ export class PadView {
    * @param {number} [dt] seconds since the last frame
    */
   sync(alpha, dt = 0) {
-    if (this.pad.jumps !== this.jumps) this.group.userData.launch();
-    this.jumps = this.pad.jumps;
+    if (this.pad.launches !== this.launches) this.group.userData.launch();
+    this.launches = this.pad.launches;
     this.group.userData.update(dt);
   }
 }
