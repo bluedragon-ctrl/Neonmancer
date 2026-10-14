@@ -5,7 +5,7 @@ import { ENEMY } from '../src/entities/enemy.js';
 import { Game } from '../src/game.js';
 import { overlapsBox } from '../src/physics/collision.js';
 import { BUG as BUG_LOOK, bugPose } from '../src/render/bug.js';
-import { BOUNCE_SPEED, PLAYER } from '../src/entities/player.js';
+import { PLAYER } from '../src/entities/player.js';
 import { CRATE, LIFT, eventTypes, gameData, hold, idle, roomFile } from './helpers.js';
 
 /** Ticks a bug takes for one cell at 3 units per second. */
@@ -138,7 +138,6 @@ test('landing on a bug bounces the wizard up, clearing 2 blocks, without hurting
   }
   const bugTop = ENEMY.size[1];
   assert.ok(top > bugTop + 2 && top <= bugTop + PLAYER.bounceHeight + 0.05, `apex ${top}`);
-  assert.ok(BOUNCE_SPEED > 0);
 });
 
 test('a hostile bug still hurts from the side; one without bounce hurts from the top', () => {

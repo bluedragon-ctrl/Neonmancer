@@ -52,14 +52,15 @@ import { BEHAVIORS } from '../ai/behaviors.js';
 import { CHARGED_ATTACKS, DISCHARGES, bossPhases } from '../data/room-data.js';
 import { seededRandom, stringSeed } from '../core/random.js';
 import { boxCenter, lineOfSight, reach } from '../ai/sight.js';
-import { REST_EPS, moveAxis, overlapsBox, overlapsSolid, restsOn, shoveClear, surfaceBelow } from '../physics/collision.js';
+import { GRAVITY, MAX_FALL } from '../core/rules.js';
+import { REST_EPS, fallStep, moveAxis, overlapsBox, overlapsSolid, restsOn, shoveClear, surfaceBelow } from '../physics/collision.js';
 
 /** Tuning values (units, ticks). */
 export const ENEMY = {
   /** Hitbox; centered in its cell, standing on the cell's floor. */
   size: [0.6, 0.6, 0.6],
-  gravity: 30,
-  maxFall: 18,
+  gravity: GRAVITY,
+  maxFall: MAX_FALL,
   /** Ticks it waits after its way was blocked, before heading on. */
   turnTicks: 12,
   /** Farthest a solid enemy shoves the wizard in one tick (as platforms do). */
@@ -180,7 +181,7 @@ export class Enemy {
      * has stepped out of it, so freezing never traps him (updateFrozen() in combat.js).
      */
     this.passable = false;
-    /** How it died: 'hole' | 'void' | 'zap' | 'discharge' | 'bolt' | 'firewall' | 'blink'; null while alive. */
+    /** How it died: 'hole' | 'void' | 'zap' | 'discharge' | 'bolt' | 'firewall' | 'blink' | 'spikes' (frozen on a spiked crate, D199); null while alive. */
     this.deathCause = null;
     /** Ticks since it died, for the pop. */
     this.timer = 0;
@@ -327,11 +328,25 @@ export class Enemy {
 
   /** Slide from where it is to the cell `target`, at the pull's speed. */
   pullTo(target) {
+    this.startStep(target, ENEMY.pullSpeed / (Math.hypot(target[0] - this.pos[0], target[2] - this.pos[2]) || 1));
+  }
+
+  /**
+   * Start walking from where it is into the cell `target`.
+   * @param {number[]} target
+   * @param {number} speed share of the step per second
+   */
+  startStep(target, speed) {
     this.state = 'walk';
     this.from = [...this.pos];
     this.target = target;
     this.walked = 0;
-    this.stepSpeed = ENEMY.pullSpeed / (Math.hypot(target[0] - this.pos[0], target[2] - this.pos[2]) || 1);
+    this.stepSpeed = speed;
+  }
+
+  /** Does it stand in a whole cell (not riding a platform between stops)? */
+  get onWholeCell() {
+    return this.pos.every(Number.isInteger);
   }
 
   /** Is its attack charged (a burst, an arc or a bolt)? */
@@ -551,7 +566,7 @@ export class Enemy {
       this.wait--;
       return null;
     }
-    if (!this.pos.every(Number.isInteger)) return null; // riding a platform between stops
+    if (!this.onWholeCell) return null; // riding a platform between stops
     if (this.solid && this.loaded(game)) return null; // a crate on top holds it down
     const [x, y, z] = this.pos;
     const found = this.behavior.next(x, z, this, (column) => this.route(column, game));
@@ -569,12 +584,7 @@ export class Enemy {
       this.wait = ENEMY.turnTicks;
       return null;
     }
-    const target = [x + dx, y, z + dz];
-    this.stepSpeed = this.behavior.chasing ? this.data.chaseSpeed : this.speed;
-    this.state = 'walk';
-    this.from = [...this.pos];
-    this.target = target;
-    this.walked = 0;
+    this.startStep([x + dx, y, z + dz], this.behavior.chasing ? this.data.chaseSpeed : this.speed);
     return this.walk(game); // no standing still between cells
   }
 
@@ -585,7 +595,7 @@ export class Enemy {
    * @returns {boolean} whether a teleport started
    */
   teleportDue(game) {
-    if (!this.awake || this.teleportTicks === 0 || !this.pos.every(Number.isInteger)) return false;
+    if (!this.awake || this.teleportTicks === 0 || !this.onWholeCell) return false;
     if (--this.teleportClock > 0) return false;
     const to = this.teleportCell(game);
     if (!to) {
@@ -723,18 +733,10 @@ export class Enemy {
    * @returns {boolean} whether it landed there
    */
   drop(support) {
-    this.vy = Math.max(this.vy - ENEMY.gravity * DT, -ENEMY.maxFall);
-    const y = this.pos[1] + this.vy * DT;
-    if (y > support) {
-      this.pos[1] = y;
-      return false;
-    }
-    this.pos[1] = support;
-    this.vy = 0;
-    return true;
+    return fallStep(this, support);
   }
 
-  /** @param {'hole'|'void'|'zap'|'discharge'|'bolt'|'firewall'|'blink'} cause */
+  /** @param {'hole'|'void'|'zap'|'discharge'|'bolt'|'firewall'|'blink'|'spikes'} cause */
   die(cause) {
     this.state = 'dead';
     this.frozen = null;
