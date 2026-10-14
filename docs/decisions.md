@@ -2426,3 +2426,26 @@ height and look, and crates on stairs. Stairs are settled as they are.
 **Why:** the author asked for an analysis of removing the jump except on
 jumping blocks, with stairs and flat bridges, and to prototype it in the dev
 wing before deciding.
+### D222 — 2026-10-14 — The jump goes: pads, stairs and slabs for the whole game
+The author played the prototype (D221) and keeps it as it is now: no jump
+key, pads that throw him up by themselves, stairs, glass-sheet slabs. It
+becomes the game's rule, reached in three stages so `main` stays playable
+and the checker green after every PR:
+1. **Prep (step 5.18):** the design checklist, the room-design and
+   sokoban-design skills and the level-review agent learn the rule; the
+   checker reports which rooms still have the free jump; editor and sound
+   touches for building pads rooms.
+2. **Room reviews (step 5.17, widened):** in play order, one room a PR,
+   each review moves its room to `"jump": "pads"` and rebuilds what the
+   jump carried (lattice-plan.md, Pads-only migration: 19 game rooms lose an
+   exit, a crossing or a pickup without it; the rest are checked by play).
+   Until the last one, Space jumps in rooms not yet moved and casts in the
+   moved ones.
+3. **The jump goes (step 5.19):** once every room is a pads room, the rule
+   is the engine's: the `jump` field, the jump action, the free-jump code
+   in the player and the checker, debug J and `--pads` go; Space is the
+   cast key; what only fought the jump is retired or kept on its own merit
+   (the spiked crate, fence roofs, hop-proof 2-high walls).
+**Why:** the author likes the prototype; one room at a time keeps every
+step small, reviewable and playable, and reuses the room reviews already
+planned rather than a separate pass.

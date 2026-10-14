@@ -22,6 +22,9 @@ docs/decisions.md).
   a block, and the slab, a thin glass walkway with headroom under it. The checker knows all three (`check:reach -- --pads` tries
   the rule on every room); debug J makes every room pads-only. Test room:
   `stair_lab` in the dev wing, through a new west door in `cage_lab`.
+  The roadmap to make it the game's rule (D222): prep (5.18), each room review
+  (5.17) moves its room over, then the jump goes (5.19); the rooms and what
+  each loses are in docs/lattice-plan.md.
 - Dead Pixel (`buffer_1`), the first Outer Buffer secret room (D219, step 5.11):
   Microban 86 by David W. Skinner with four spiked crates and four sockets under a
   fence roof; a Blink over the empty sockets gets him in, 23 pushes open the cage on

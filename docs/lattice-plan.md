@@ -31,6 +31,9 @@ Rules for the lines (D186, D187):
   all of them; the trick may use them.
 - **No double jump.** It was removed (D216): his jump is 1 up and a
   one-tile gap everywhere.
+- **Pads only** (D222). Each review moves its room to `"jump": "pads"`:
+  no jump key, pads throw him 2 up and over a 1-tile gap, stairs take him a
+  block up, slabs bridge. See Pads-only migration below.
 - **Blink after Level 1.** The Level 1 reward in `dj_vault` (D217), so it
   never skips a Lattice fragment; it counts for exits and secrets only.
 - **Plates are no lock on their own.** A decoy holds any one plate, a
@@ -280,3 +283,44 @@ Waits for the core (D186): the secret rooms' contents.
 | `buffer_3` Null Orbit (5.11) | 8x8 | Secret, in `guard_loop` on a 4-high sill (D214), no Lattice way in since D216, to redo; entrance built, an extra fragment to come |
 | `buffer_4` Event Horizon (5.11) | 8x8 | Secret, in `mirror_stacks` above the 4-high fragment pocket (D215), no Lattice way in since D216, to redo; entrance built |
 | `buffer_5` Cache Miss (5.11) | 8x8 | Secret, Warp plus Compile or Fork onto a plate in `ghost_exit`; entrance built |
+
+## Pads-only migration (D222)
+
+What each room loses without the free jump, worked out with the checker
+(`--with zap,scan,fork,pause`, from every door) on 2026-10-14: a pickup it
+no longer reaches, or a crossing from one door to another. "Play" means the
+checker sees nothing lost, but the trick or the tempo leaned on the jump
+and the review checks it by playing. Tags: rooms with spiked crates or
+fences (often there only to stop hops: candidates to simplify) and bouncy
+enemies (a bounce now needs a fall onto them). Each room's review (5.17)
+moves it to `"jump": "pads"` and ticks it off here.
+
+| # | Room | Lost without the jump | Tags | Note |
+|---|---|---|---|---|
+| 1 | `boot_up` | the east door (from the spawn and the west door) | | The start: teach move, a stair, a pad, a drop. First review. |
+| 2 | `first_steps` | crossing west→east | | Signed off before; re-review. |
+| 3 | `zap_port` | `disk_zap_1` | bouncy | The firing step to the raised target becomes a stair; no jump shot. |
+| 4 | `first_light` | play | | Its trick is a zigzag of jumps under the watchdog: rebuild with pads. |
+| 5 | `atrium` | `boost_rainbow_1` | | The crate as a step is gone; the crate off a ledge stays. |
+| 6 | `shield_hall` | crossing south→north | | |
+| 7 | `freeze_hall` | `fragment_1_1` | bouncy | A frozen enemy as a step needs a new use (a plug, a weight, a pad's landing). |
+| 8 | `bolt_gallery` | crossings south↔north | fence | |
+| 9 | `relay_loft` | `fragment_4`; crossings to and from east | | |
+| 10 | `ledger_cell` | `fragment_5` | fence | |
+| 11 | `scan_lab` | `disk_scan`; crossings west/south→east | fence | Host of Dead Pixel's door (Blink walk, D218). |
+| 12 | `mirror_stacks` | crossings west↔south | fence | Host of Event Horizon's door (D215). |
+| 13 | `ghost_exit` | crossings north/east→west | fence, bouncy | Host of Cache Miss's door. |
+| 14 | `junction` | `fragment_11` | fence, bouncy | |
+| 15 | `drift_bay` | `fragment_10`; crossings north↔south | | Enemies as steps. |
+| 16 | `cold_stairs` | `fragment_6`; crossings north↔south, north↔east | fence, bouncy | |
+| 17 | `warden_pit` | play | | Boss: dodging without a jump. Host of Stray Byte's door (D213). |
+| 18 | `idle_cache` | play | bouncy | A frozen enemy at the base of a stack. |
+| 19 | `fork_lab` | crossings west↔east | fence | |
+| 20 | `twin_plates` | `fragment_12`; crossings west↔north | fence, bouncy | |
+| 21 | `guard_loop` | `fragment_13` | | Host of Null Orbit's door (D214). |
+| 22 | `split_vault` | `fragment_15` | fence | |
+| 23 | `gatekeeper` | play | | Boss. |
+| 24 | `core_hall` | play | | |
+| 25 | `dj_vault` | play | | Teaches Blink with a Blink from a jump (D217): from a pad now. |
+| – | `buffer_1`–`buffer_5` | play | buffer_1: spiked, fence | The secret rooms (5.11) with their host rooms' doors; Dead Pixel can lose its fence roof (D220). |
+| – | teasers (`frost_*`, `glitch_*`) | nothing | glitch_gate: bouncy | Moved over in 5.19 as they are. |

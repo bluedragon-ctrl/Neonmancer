@@ -89,7 +89,9 @@ mobile/touch support, backend or accounts.
   pads (object kind `pad`) throw him up by themselves (2 blocks, a 1-tile
   gap); stairs (look `stair`, a `rise`) take him a block up, slabs (look
   `slab`) are thin glass walkways with headroom under them. Default
-  `free` until the author decides; test room `stair_lab`.
+  `free` while rooms move over one by one in their reviews, then the
+  jump goes for good (D222; lattice-plan.md, Pads-only migration); test
+  room `stair_lab`.
 - Player hitbox 0.6 x 1.5 x 0.6 (the hat is visual only), so the wizard
   needs 2 blocks of headroom.
 - Blocks snap to the grid; player and enemies move freely (sub-grid).
@@ -628,6 +630,8 @@ sounding Home Lattice and ship it to testers.
   secret rooms (entrances built; their contents wait, D186). The
   Lattice's ambience (data flows, glass panels, D179) and the Outer
   Buffer's look are done.
+- Pads only (D222): prep (5.18), each room review moves its room to
+  pads (5.17), then the jump goes (5.19).
 - Core first (D186): a Lattice ladder (each room's type, rung and trick
   in docs/lattice-plan.md), then every Lattice room reviewed one by one
   with the room-design skill and the author's tuning.
