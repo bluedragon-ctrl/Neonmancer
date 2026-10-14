@@ -227,6 +227,14 @@ Lessons from the reviews (D188 on):
   push from a wall top, one level up) keeps it in its lane; ledger_cell
   searches in full with three crates and two lane walls. Check for the
   "search stopped" warning on every run.
+- **A jump-Blink hops a spiked crate.** He jumps against it and Blinks at the
+  top: 1 high is low enough to pass over, so Blink undoes the spiked crate's
+  routing. A fence roof at y 2 stops the jump (Blink stays level and stops at
+  crates); a Blink cut short by a fence costs 1 integrity (`buffer_1`, D219).
+- **`check:reach` floods from the door.** It assumes he can walk back to the
+  door between pushes; where crates shut him away mid-solution (spiked crates,
+  a roof) it says `never` and the mutation test lists every piece as NO EFFECT.
+  Prove such a room with `solve.mjs` (it tracks where he stands) and `sim.mjs`.
 
 ## Skeleton
 ```json

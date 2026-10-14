@@ -275,7 +275,7 @@ Waits for the core (D186): the secret rooms' contents.
 
 | Room | Size | What it is |
 |---|---|---|
-| `buffer_1` Dead Pixel (5.11) | 8x8 | Secret, a Scan hidden exit in `scan_lab`; entrance built (D183), contents to come |
+| `buffer_1` Dead Pixel (5.11) | 8x6 | Secret, a Scan hidden exit in `scan_lab` (Blink walk, D218); done: Microban 86, spiked crates into sockets under a fence roof, `secret_0` in a cage (D219) |
 | `buffer_2` Stray Byte (5.11) | 8x8 | Secret, in `warden_pit` behind a 4-high ledge (D213), no Lattice way in since D216, to redo; entrance built, an extra fragment to come |
 | `buffer_3` Null Orbit (5.11) | 8x8 | Secret, in `guard_loop` on a 4-high sill (D214), no Lattice way in since D216, to redo; entrance built, an extra fragment to come |
 | `buffer_4` Event Horizon (5.11) | 8x8 | Secret, in `mirror_stacks` above the 4-high fragment pocket (D215), no Lattice way in since D216, to redo; entrance built |
