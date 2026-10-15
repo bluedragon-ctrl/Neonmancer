@@ -2774,3 +2774,116 @@ a crate pushed to the south wall row or onto the stair foot is a reset by
 leaving.
 **Why:** crates are no step in a pads room (D222); a platform reached by
 stairs is the third dimension the room places, as in `zap_port`.
+
+### D238 — 2026-10-15 — Relay Loft on pads: a pad onto the crate, a stair off it (5.17)
+`relay_loft` is a pads room, widened from 14 to 15 so the east end has
+room for a stair. The trick of D196 stays: the pen's three crates (Microban
+45, the same 14 pushes) put one crate on the waiting east ferry and two
+into the sockets, and he rides the ferry on that crate to the fragment.
+What the jump carried is rebuilt with what the rule gives him.
+- **West ferry.** A `stair_x` at (1,0,1) takes him onto the ferry's
+  west dock (1 high); the ferry runs on its own, with no plate and no
+  crate. The west crate and plate are gone: the checker's crate search is
+  capped (2000 configurations) and a fourth free crate beside the pen's
+  three made it stop, a false "never" (a plate held by his own weight or a
+  decoy was only the way in anyway). The sockets are now the room's one
+  switch, so the room still teaches powered platforms, one lesson at a
+  time.
+- **Boarding the crate.** A 1-high block at (10,0,0) with a jump pad on
+  it lies at the east ferry's north side, level with the loft. With the
+  ferry docked there and a crate on it, the crate's top is 1 above him
+  and the pad throws him onto it; he walks onto a bare ferry. The pad
+  fires the moment he steps on it: he waits at (9,1,0) for the ferry
+  (it waits 2 s at each end), steps east, and moves south at the top of
+  the throw (about 0.5 s later). Played headless: landing on the crate
+  works over a window of several ticks; moving at once overshoots it. With
+  the ferry away the pad lands him back on the pad, or in the pit if he
+  walks south: a trap, Restart room.
+- **The pillar.** The ferry docks at (12,0,1) on the east floor. A
+  2-high column carries a `stair_x` at (13,2,1) up to a 3-high ledge with
+  `fragment_4`. The stair's foot is the crate's top (2 up), so only the
+  rider crate reaches it; the bare ferry (1 up) lets him step off sideways
+  onto the floor, the east door's way, and the ledge is a 3-high wall from
+  the floor.
+- **Row 7, the way home.** The loft's row-7 cells at x = 5 and x = 9 are
+  a `stair_x` and a `stair_nx`: without them the floor-level bridges can't
+  reach the 1-high loft. The timed plate moved to (14,0,7); the run to the
+  west floor takes 2.7 s of its 5.
+- **The 1-high peninsula** shrinks the hole at (10,0) to the ferry's
+  one cell. A crate pushed along row 0 slides onto the pad's cell and on
+  into the hole at (11,0): a lost crate, like one pushed off the loft
+  anywhere else. A fence column over that hole, (11,1..3,0), stops the
+  pad's throw east: the review swept it and a throw held towards +x landed
+  on the east floor at (12.7,0,0.5), about 8 s in with no puzzle. Now he
+  bounces on the pad against it, and only the throw south, onto the crate,
+  works. The ferries wait 3 s at their ends (was 2): the review's sweep
+  gave the pad step about 0.7 s of the old dock, and holding south while
+  the ferry is away drops him into the pit (a trap, Restart room).
+Played with `sim.mjs`: the west ride; the 14 pushes from the loft's west
+dock (a scratch solver for the pen in the real model, ferry first, then
+the sockets) in 33 s; the pad throw onto the crate; the ride and the
+stair to the fragment, 42.8 s in all; the 5 s plate and the way home in
+2.7 s. The checker (Lattice abilities, from every door) says everything is
+reachable; the mutation test warns "crate search truncated" because three roaming crates
+and the pen's 14 pushes need more than 2000 configurations (the
+single-room check and the world check pass). It takes ferries and bridges
+as floor, so the sockets and bridges show NO EFFECT and the east exit
+needs nothing in its view; the sim is the proof of power and of riding.
+**Why:** crates are no step in a pads room (D222), so the crate on the
+ferry needs a pad to board it and a stair to leave it, the third dimension
+the room places; a stair at the dock beats a hop onto the ferry (D228).
+
+### D239 — 2026-10-15 — Ledger Cell on pads: a stair to the ledge, a gap into the lane (5.17)
+`ledger_cell` is a pads room. The trick of D203 stays (four crates, two
+sockets and a heavy plate: the lane's first crate fills socket B, its
+second goes onto the plate, the ledge crate is dropped on it, a fourth
+fills socket A). The jump carried three things, each rebuilt:
+- **The ledge.** A `stair_nx` in the ledge's rail at (2,0,2) takes him
+  from the floor at (3,2) up to the landing (1,1,2); the rail cell above
+  it is gone for headroom. The ledge crate moved to (0,1,1) and the
+  heavy plate to (0,0,4) in the lane's west end, so its push column
+  (x = 0) misses the landing: the checker floods from the door between
+  pushes, and a crate on the landing shut the stair mid-push and read
+  "never" (the lesson `check:reach` floods from the door, again). The
+  wall block that ended the lane at (0,4) is gone, the plate's cell is
+  the lane's end.
+- **The pocket (rows 1–2).** The row-2 fence is gone: he walks in along
+  row 2 and pushes `crate_2` east into socket A from (3,1). The walls
+  above and below row 1 still keep the crate in its row. A crate pushed
+  west along row 1 to (3,1) is dead (nothing else fills socket A); the
+  ledge crate stays in column x = 0 and can't leave it.
+- **The pocket under the ledge's south edge.** Walking off the ledge's
+  south end dropped him into lane cells (0..2,4), sealed by fences and
+  socket B's hole: the review found the soft-lock (death or Restart
+  room). A `stair_nz` at (1,0,3), where the ledge's south-east cell was,
+  leads from (1,4) back up to the landing; the drop at (0,3) stays a drop
+  and the crate's push column is untouched.
+- **The lane.** A one-cell gap in the south fence at (5,5) lets him in
+  behind `crate_1`, since `crate_3` at the mouth blocks the east end. The
+  lane's walls are fences now: a plain 1-high wall in front hides row 2
+  and the stair's foot from the camera (D227).
+Checked: `check:reach` and the mutation test (Lattice abilities): every
+crate, the ledge and the stair are `never` when taken away (without Fork); with Fork one
+plate body (the stack's top) is replaced, as in D203; no truncation. The
+sim plays the whole solve in 27.5 s: the lane's first crate, `crate_2`,
+the stair, two pushes of the ledge crate to the edge, `crate_3` six cells
+to the plate, back up, the drop, the cage.
+Level review: tune, done (the pocket stair above). Accepted: the lane's
+mouth crate pushed once west jams against `crate_1` (leave and re-enter:
+the door is beside it); `crate_5` dropped before `crate_3` is on the plate
+is the half-lit reset; Fork cast from the ledge replaces the stack's top
+(the cage then stays open for good), still needing both sockets, the stair
+and the drop. With the default all-ability search the mutation test is
+truncated (Compile and Cut & Paste, not Lattice abilities).
+**Why:** crates are no step in a pads room (D222); a stair is the ledge's
+way up, as in `zap_port` and `atrium`.
+
+Level review (relay_loft, D238): tune, done. The trick holds against the
+fragment (no bypass by the bare ferry, Fork, Pause, Blink or a spare
+crate); the two findings above (the pad's free crossing east, the dock
+time) are fixed. Known and accepted: a crate pushed west out of the pen
+along row 1 rides the west ferry out and jams it at x = 3 (recoverable,
+push it sideways from the dock's sides); filling the sockets before the
+rider crate is on the ferry drops a late crate into the pit (the solve
+order is ferry first); the pad is partly hidden behind the rider crate
+once it is loaded, and shows as an amber tile beside the pen before.

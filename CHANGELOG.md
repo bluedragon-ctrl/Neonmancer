@@ -28,6 +28,14 @@ docs/decisions.md).
   cross at floor level, and it is a hole again once it goes; it grows out of
   its middle as it comes. Validation wants a hole under a floor-level bridge;
   the checker and the showcase know the sheet.
+- `ledger_cell` is a pads room (D239, step 5.17): a stair up to the ledge, the
+  pocket opened along its second row and a gap in the lane's south fence; the
+  ledge crate and the heavy plate moved west so a mid-push crate never shuts
+  the stair.
+- `relay_loft` is a pads room (D238, step 5.17), widened to 15: a stair onto the
+  west ferry (which now runs on its own), a pad that throws him onto the
+  rider crate and a stair from it up to the fragment; stairs link the
+  row-7 bridges to the loft.
 - `bolt_gallery` is a pads room (D237, step 5.17), redesigned: a 2-high firing
   platform with two stairs replaces the step crate; the pit is 2 deep.
 - `freeze_hall` is a pads room (D236, step 5.17), redesigned: the frozen bug

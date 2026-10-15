@@ -65,8 +65,8 @@ Rules for the lines (D186, D187):
 | # | Room | Type | Rung | Trick to aim for | Now |
 |---|---|---|---|---|---|
 | 8 | `bolt_gallery` | hybrid | develop: crates into a pit, targets, under towers | Two targets two blocks up take a shot from a 2-high platform reached by two stairs (the cage and the fragment's pocket, the door); the freed crate and the free one then plug the 2-deep pit, the towers watching the north bank and the x = 5 column. | Reworked (D195), on pads (D237): only a 2-high platform reaches the targets; from the north the fragment costs the crossing both ways; the towers' pressure is judged by play. |
-| 9 | `relay_loft` | puzzle | teach: powered platforms | Ferries carry crates: a small Sokoban on the loft (Microban 45, 1-high walls, 14 pushes) gets two crates into the sockets that run the east ferry and the third onto it; he rides on top, his step to the fragment's 3-high pillar at the far dock. | Reworked (D196): two sockets, not plates, run the ferry to the fragment; the west ferry's plate (the way in) may be held by his own weight or a decoy and the ferry parked. |
-| 10 | `ledger_cell` | puzzle | develop: sockets, heavy plate, stacking | Which crate goes where: one fills a socket in the open, the lane's first crate fills a second socket, the next goes west onto the heavy plate and the ledge crate is dropped on it (a stack of two). All three switch the cage over the fragment. | Reworked (D203): a decoy is one weight, so Fork replaces one plate body, never a socket. |
+| 9 | `relay_loft` | puzzle | teach: powered platforms | Ferries carry crates: a small Sokoban on the loft (Microban 45, 1-high walls, 14 pushes) gets two crates into the sockets that run the east ferry and the third onto it; he rides on top, his step to the fragment's 3-high pillar at the far dock. | Reworked (D196), on pads (D238): two sockets run the ferry to the fragment; a pad throws him onto the rider crate, a stair leads off it to the pillar; the west ferry runs freely. |
+| 10 | `ledger_cell` | puzzle | develop: sockets, heavy plate, stacking | Which crate goes where: one fills a socket in the open, the lane's first crate fills a second socket, the next goes west onto the heavy plate and the ledge crate is dropped on it (a stack of two). All three switch the cage over the fragment. | Reworked (D203), on pads (D239): a stair to the ledge, a gap into the lane; a decoy is one weight, so Fork replaces one plate body, never a socket. |
 
 ### Scan wing
 
@@ -307,8 +307,8 @@ moves it to `"jump": "pads"` and ticks it off here.
 | 6 | `shield_hall` | crossing south→north | | Done (D235): a stair to the lift; the checker rides lifts. |
 | 7 | `freeze_hall` | `fragment_1_1` | bouncy | Done (D236): the frozen bug is a stepping stone in a slot. |
 | 8 | `bolt_gallery` | crossings south↔north | fence | Done (D237): a firing platform and a 2-deep pit. |
-| 9 | `relay_loft` | `fragment_4`; crossings to and from east | | |
-| 10 | `ledger_cell` | `fragment_5` | fence | |
+| 9 | `relay_loft` | `fragment_4`; crossings to and from east | | Done (D238): a pad onto the rider crate, stairs onto the ferry and up to the fragment; widened to 15. |
+| 10 | `ledger_cell` | `fragment_5` | fence | Done (D239): a stair to the ledge, the pocket's row 2 open, a gap in the lane's fence. |
 | 11 | `scan_lab` | `disk_scan`; crossings west/south→east | fence | Host of Dead Pixel's door (Blink walk, D218). |
 | 12 | `mirror_stacks` | crossings west↔south | fence | Host of Event Horizon's door (D215). |
 | 13 | `ghost_exit` | crossings north/east→west | fence, bouncy | Host of Cache Miss's door. |
