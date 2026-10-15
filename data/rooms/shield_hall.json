@@ -5,6 +5,7 @@
   "name": "Shield Hall",
   "biome": "home_lattice",
   "size": [12, 5, 12],
+  "jump": "pads",
   "spawn": [4.5, 0, 10.5],
   "exits": [
     { "id": "south", "side": "+z", "at": 4 },
@@ -15,7 +16,8 @@
     { "at": [1, 0, 9], "to": [1, 1, 11] },
     { "at": [4, 0, 4] },
     { "at": [8, 0, 3] },
-    { "at": [3, 0, 1] }
+    { "at": [3, 0, 1] },
+    { "type": "stair_nz", "at": [6, 0, 2] }
   ],
   "holes": [
     { "at": [9, 0], "to": [11, 0] },

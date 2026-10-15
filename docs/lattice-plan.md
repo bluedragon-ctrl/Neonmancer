@@ -48,23 +48,23 @@ Rules for the lines (D186, D187):
 | # | Room | Type | Rung | Trick to aim for | Now |
 |---|---|---|---|---|---|
 | 1 | `boot_up` | action | teach: move, jump | The way to the door is up: a 1-high step, then a 1-tile gap, so he learns the jump's height and reach before anything can hurt him. | Reworked (D193), on pads (D225): the east door sits on a 2-high ledge past a 1-wide gap; a stair beside the spawn onto a 1-high step, a pad on it throws him over the gap; a miss drops him safely into it. Start room and shrine; the access pass is test-only. |
-| 2 | `first_steps` | puzzle | teach: push, plug a hole | One push fills one cell of the 2-wide hole: the second crate needs a push from a new side, which he reaches across the first. | Holds; signed off unchanged (5.17): a micro-Sokoban, pushing crate B straight in is the one dead end, and the west door resets it. |
-| 3 | `zap_port` | hybrid | teach: Zap (a target, an enemy, bolts fly level) | The target sits a block up: a floor shot hits the block under it or the bug crossing the line, and the stair he climbed for the disk is his firing step (a jump shot also reaches it). | Reworked (D189). |
-| 4 | `first_light` | action | teach: the watchdog, fragments | The straight line is a pit: a zigzag of single jumps round the pits' open ends, inside 10 s. | Holds; signed off unchanged (5.17). |
+| 2 | `first_steps` | puzzle | teach: push, plug a hole | One push fills one cell of the 2-wide hole: the second crate needs a push from a new side, which he reaches across the first. | Holds, on pads (D231): the hole is 2 wide, so two crates cross it; a micro-Sokoban, pushing crate B straight in is the one dead end, and the west door resets it. |
+| 3 | `zap_port` | hybrid | teach: Zap (a target, an enemy, bolts fly level) | The target sits a block up: a floor shot hits the block under it or the bug crossing the line, and the stair he climbed for the disk is his firing step (a jump shot also reaches it). | Reworked (D189), on pads (D232): two stairs to the disk replace the pile; the firing step is on the way; no jump shot. |
+| 4 | `first_light` | action | teach: the watchdog, fragments | The straight line is a pit: a zigzag round the pits' open ends, inside 10 s. | Holds, on pads (D233): 2-deep pits were always walked round; 7.8 s of the 10. |
 
 ### Hub
 
 | # | Room | Type | Rung | Trick to aim for | Now |
 |---|---|---|---|---|---|
-| 5 | `atrium` | puzzle | teach: a crate as a step, a crate dropped off a ledge, a plate, a bridge | The crate he climbs on is not the one for the plate: it lifts him to a ledge, and from there he pushes a second crate off onto the plate, which raises a bridge to the Rainbow hat (a boost). The doors stay free. | Reworked (D188): every piece matters; a decoy skips it for the boost only. |
-| 6 | `shield_hall` | action | teach: Shield | The disk is easy to reach behind cover; the way on is not: the north door sits on a 3-high ledge, and the only lift up runs while two crates hold two plates. Pushing and riding are slow, and an arc hits what stands still, so the two sentinels bite there: he shields, dodges or fights. | Reworked (D190): the plates and the lift are judged by play (the checker runs every platform). |
-| 7 | `freeze_hall` | puzzle | teach: Pause, a frozen enemy as a block | The bug walks a caged lane with one gap across it: freeze it as it passes the gap in front of him, push it out across the hall to the ledge's foot and climb it, inside a 15 s watchdog. | Reworked (D191, D192): freezing it elsewhere in the cage costs time the watchdog barely gives. |
+| 5 | `atrium` | puzzle | teach: a crate dropped off a ledge, a plate, a bridge | The plate sits behind holes, so only a crate from above reaches it: he climbs the stair and pushes the ledge crate off onto it, which raises a bridge to the Rainbow hat (a boost). The doors stay free. | Reworked (D188), on pads (D234): a stair to a 1-high ledge, the ledge crate pushed onto the plate; no crate step; a decoy skips it for the boost only. |
+| 6 | `shield_hall` | action | teach: Shield | The disk is easy to reach behind cover; the way on is not: the north door sits on a 3-high ledge, and the only lift up runs while two crates hold two plates. Pushing and riding are slow, and an arc hits what stands still, so the two sentinels bite there: he shields, dodges or fights. | Reworked (D190), on pads (D235): a stair onto the lift's bottom stop; the plates and the lift are judged by play (the checker runs every platform). |
+| 7 | `freeze_hall` | puzzle | teach: Pause, a frozen enemy as a block | The bug walks a caged lane with one gap across it: freeze it as it passes the gap in front of him, push it down the hall into a slot in the walkway and cross over it to the ledge, inside a 5 s freeze and a 15 s watchdog. | Reworked (D191, D192), on pads (D236): the frozen bug fills a one-cell slot in a walkway between two stairs; freezing it elsewhere in the cage costs time the watchdog barely gives. |
 
 ### Shield wing
 
 | # | Room | Type | Rung | Trick to aim for | Now |
 |---|---|---|---|---|---|
-| 8 | `bolt_gallery` | hybrid | develop: crates into a pit, targets, under towers | The bridge crate is his step first: two targets two blocks up take a jump shot from its top, pushed under one (the cage and the fragment's pocket), one cell back under the other (the door), then on to the pit with the freed crate. | Reworked (D195): only a crate reaches the targets; from the north the fragment costs the crossing both ways; the towers' pressure is judged by play. |
+| 8 | `bolt_gallery` | hybrid | develop: crates into a pit, targets, under towers | Two targets two blocks up take a shot from a 2-high platform reached by two stairs (the cage and the fragment's pocket, the door); the freed crate and the free one then plug the 2-deep pit, the towers watching the north bank and the x = 5 column. | Reworked (D195), on pads (D237): only a 2-high platform reaches the targets; from the north the fragment costs the crossing both ways; the towers' pressure is judged by play. |
 | 9 | `relay_loft` | puzzle | teach: powered platforms | Ferries carry crates: a small Sokoban on the loft (Microban 45, 1-high walls, 14 pushes) gets two crates into the sockets that run the east ferry and the third onto it; he rides on top, his step to the fragment's 3-high pillar at the far dock. | Reworked (D196): two sockets, not plates, run the ferry to the fragment; the west ferry's plate (the way in) may be held by his own weight or a decoy and the ferry parked. |
 | 10 | `ledger_cell` | puzzle | develop: sockets, heavy plate, stacking | Which crate goes where: one fills a socket in the open, the lane's first crate fills a second socket, the next goes west onto the heavy plate and the ledge crate is dropped on it (a stack of two). All three switch the cage over the fragment. | Reworked (D203): a decoy is one weight, so Fork replaces one plate body, never a socket. |
 
@@ -300,13 +300,13 @@ moves it to `"jump": "pads"` and ticks it off here.
 | # | Room | Lost without the jump | Tags | Note |
 |---|---|---|---|---|
 | 1 | `boot_up` | the east door (from the spawn and the west door) | | Done (D225): a stair, a pad over the gap, a drop back. |
-| 2 | `first_steps` | crossing west→east | | Signed off before; re-review. |
-| 3 | `zap_port` | `disk_zap_1` | bouncy | The firing step to the raised target becomes a stair; no jump shot. |
-| 4 | `first_light` | play | | Its trick is a zigzag of jumps under the watchdog: rebuild with pads. |
-| 5 | `atrium` | `boost_rainbow_1` | | The crate as a step is gone; the crate off a ledge stays. |
-| 6 | `shield_hall` | crossing south→north | | |
-| 7 | `freeze_hall` | `fragment_1_1` | bouncy | A frozen enemy as a step needs a new use (a plug, a weight, a pad's landing). |
-| 8 | `bolt_gallery` | crossings south↔north | fence | |
+| 2 | `first_steps` | crossing west→east | | Done (D231): the hole narrowed from 3 to 2 wide. |
+| 3 | `zap_port` | `disk_zap_1` | bouncy | Done (D232): two stairs, the firing step on the way. |
+| 4 | `first_light` | play | | Done (D233): no jump was involved; cells unchanged. |
+| 5 | `atrium` | `boost_rainbow_1` | | Done (D234): one stair to a 1-high ledge. |
+| 6 | `shield_hall` | crossing south→north | | Done (D235): a stair to the lift; the checker rides lifts. |
+| 7 | `freeze_hall` | `fragment_1_1` | bouncy | Done (D236): the frozen bug is a stepping stone in a slot. |
+| 8 | `bolt_gallery` | crossings south↔north | fence | Done (D237): a firing platform and a 2-deep pit. |
 | 9 | `relay_loft` | `fragment_4`; crossings to and from east | | |
 | 10 | `ledger_cell` | `fragment_5` | fence | |
 | 11 | `scan_lab` | `disk_scan`; crossings west/south→east | fence | Host of Dead Pixel's door (Blink walk, D218). |

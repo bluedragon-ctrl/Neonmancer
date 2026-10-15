@@ -2625,3 +2625,152 @@ the checker is unchanged.
 crates; one rule for everything a cell wide keeps stairs readable, and
 pads stay the wizard's own way up. Crates pushed up stairs would undo the
 ledge as a one-way drop for the push puzzle, so they only come down.
+
+### D231 — 2026-10-15 — First Steps on pads: the hole is 2 wide (5.17)
+`first_steps` is a pads room. Its hole was 3 wide (`"to"` is inclusive:
+x 3–5) although the ladder always said 2-wide: two crates filled two tiles
+and the free jump crossed the last. Without the jump the crossing was lost
+(the checker: east door needs Compile, Blink or Warp). The hole is now 2
+wide (x 3–4), so the two crates are exactly enough and the trick stands
+unchanged: crate A fills one cell; crate B is pushed -z from (2,7) onto
+the row, then +x twice from (1,5). Pushing B straight in first is the one
+dead end; the west door resets it. No pad: `boot_up` teaches pads one room
+earlier. Checks: `check:reach` west and east free; mutation test: both
+crates needed; from the east door the west door is out of reach (he came
+that way and leaves it, rule 3); played with `sim.mjs`.
+**Why:** the review's verdict is *keep*; only the hole's width came from
+the jump.
+
+### D232 — 2026-10-15 — Zap Port on pads: two stairs to the disk (5.17)
+`zap_port` is a pads room. The diagonal pile of 1- and 2-high blocks (a
+hopping staircase) is gone; the corner now holds a stair (`stair_nx` at
+[5,0,14]) from the floor onto a 1-high firing step ([4,0,14]) and a second
+(`stair_nx` at [3,1,14]) from the step onto a 2-high ledge (x 0–2) with
+`disk_zap_1` at [0,2,14]. The trick of D189 is unchanged: bolts fly level;
+the target at [4,1,0] is switched only from the 1-high step (the line
+x = 4 is clear to it), a floor shot hits the block under it or the bug
+crossing at z 9. He passes the firing step on his way to the disk, before
+he has Zap, so the climb is the lesson. The jump shot is gone with the jump.
+Checks: `check:reach` with `--with zap` from every door; mutation test: the
+blocks and both stairs gate the disk; played with `sim.mjs` (climb, a shot
+from the step switches the target, shots from the floor do not).
+**Why:** the pile was only steps for hops; stairs keep the same shape of
+the lesson with the pads rule's own pieces.
+
+### D233 — 2026-10-15 — Watchdog Kennel on pads: unchanged (5.17)
+`first_light` is a pads room with no change to its cells. The ladder said
+its trick was a zigzag of jumps, but the three pit bars are 2 deep (z 2–3,
+5–6, 8–9), which no jump crossed: the zigzag was always a walk round the
+bars' open ends (x 7, x 0, x 7) inside the 10 s watchdog. Checks:
+`check:reach` fragment and exit free; mutation test: nothing to remove;
+played with `sim.mjs`: spawn to the fragment in 7.8 s, 2.2 s spare, the
+clock stopping on the pickup. Tight enough to make the watchdog felt, loose
+enough for one wrong turn.
+**Why:** the review's verdict is *keep*; only the ladder's wording was off.
+
+### D234 — 2026-10-15 — The Atrium on pads: one stair to the ledge (5.17)
+`atrium` is a pads room. The east ledge came down from 2 to 1 high
+(x 8–11, z 0–2) and a stair (`stair_x` at [7,0,1]) leads onto it from the
+floor; `crate_ledge` moved down with it ([11,1,1]) and is pushed +z twice
+off the ledge onto the plate at [11,0,3], which the holes still keep floor
+crates off. `crate_step` is gone: in a pads room a crate is no step (D222),
+so the floor crate had no job. The plate, the bridge, the hat, the doors,
+the shrine and `tut_plates` are unchanged; the stair stays off the first
+row inside the north door and off the lane between the doors. The lesson is
+now: a plate behind holes is reached from above, with a crate that falls.
+Fork still skips it for the boost (the hub's rule, D188). Checks:
+`check:reach` with `zap,scan,fork,pause` from every door, mutation test
+(the crate, ledge and stair gate the hat, only Fork replaces them), and
+`sim.mjs`: climb, push, he steps off the ledge at x 9, cross the bridge.
+Two known dead ends, both reset by leaving through a door: pushing the
+ledge crate -z into the corner, or -x down the stair to the floor (the
+holes keep it off the plate). Stepping off the ledge at x 11 puts him in the
+plate's pocket (holes west and south), where only a hole gets him out: a
+voluntary misstep that costs a backup, as before.
+**Why:** the 2-high ledge needed two stairs; a 1-high one keeps the hub
+light, as its rung asks.
+
+### D235 — 2026-10-15 — Shield Hall on pads: a stair to the lift; the checker rides lifts (5.17)
+`shield_hall` is a pads room. The lift's bottom stop is a platform whose
+top is 1 above the floor, so boarding it was a hop; D228 wants a dock he
+reaches on foot, so a stair (`stair_nz` at [6,0,2]) leads onto it from the
+floor south of it, and at the top the platform is level with the 3-high
+ledge of the north door. Nothing else changes: the two crate lanes, the
+plates, the two sentinels and the Shield disk are as in D190. Crates
+stopped by the 1-high blocks past the plates were walls and lanes already.
+The checker now models a lift (`RoomModel.lifts`): a platform whose path
+stays in one column carries him from any stop he stands on to its others,
+which is how the room's north door is reached; before, a platform was only
+a floor along its path, and the ride up needed the jump. The plates still
+power the lift only in play (the checker runs every platform): judged with
+`sim.mjs` (about 20 s: crate A four pushes, crate B two pushes and a turn,
+stair, ride, ledge). Test added: a lift from a stair to a 3-high ledge. Level review: keep. He
+can step off the stair into the lift's column while the platform is up; it
+comes down to head height and waits there (no crush, played), so he walks
+out east. The checker rides a lift whether or not its plates are held.
+**Why:** the pads rule needs every dock reachable on foot; the checker had
+to know that a lift lifts, since no jump replaces the ride any more.
+
+### D236 — 2026-10-15 — Freeze Hall on pads: the frozen bug is a stepping stone (5.17)
+`freeze_hall` is a pads room, redesigned: a frozen bug is no step up
+(nothing is, D222), so it fills a gap instead. The cage moved one row
+north (lane z 5, walls z 4 and 6) with its gap on x = 4, the line of the
+doors. South of it a walkway at height 1 crosses a one-cell floor slot
+at [4,0,8]: a stair (`stair_nx` [6,0,8]) from the floor onto a fence
+landing, the slot, a block, a second stair (on a block, [2,1,8]) onto the
+2-high ledge with `fragment_1_1` at [1,2,9]. A drop into the slot leaves
+him on the floor, so only a body 1 high fills it: freeze the bug as it
+passes the gap, push it three cells south down x = 4 (a fence at [4,0,9]
+stops it in the slot), cross over it. The fences (landing and stopper, and the
+cage's camera-side wall at z 6) keep the slot and the bug in view from the
+camera. Played: bolts at a bug frozen at
+x 4.15–4.4 pass the gap; push 1.4–1.6 s, foot of the first stair 2.4–2.6 s,
+across the bug 3.3–3.5 s, on the ledge 3.7–3.9 s after the bolt, inside
+the 5 s freeze (1.1 s spare); the watchdog, 15 s, keeps 1.5× the worst
+run (a wait of one lane cycle, about 10 s). Only Pause fills the slot
+(`check:reach` with `zap,scan,fork`: never; Blink alone crosses it, which
+the Lattice rule allows for exits and secrets only). `tut_pause`'s last
+line is now "A FROZEN BUG IS A BLOCK. PUSH IT LIKE A CRATE."
+Level review: keep. Notes: a bolt cast from inside the gap (z 4) is far
+more forgiving than one from z 3; a recast of Pause restarts the 5 s clock;
+if the bug thaws while he is on it or in the slot it walks out north and he
+drops to the floor unhurt (no soft-lock, no bounce skip).
+**Why:** the old climb was a hop onto a 1-high bug and a hop onto the
+ledge; the stepping stone keeps the room's idea (freezing a walker on the
+right cell, then pushing it) with the pads rule's own pieces.
+
+### D237 — 2026-10-15 — Bolt Gallery on pads: a firing platform (5.17)
+`bolt_gallery` is a pads room, redesigned. The targets still stand two
+blocks up on the pillar row ([1,2,4] and [2,2,4]); a bolt flies at feet +
+0.48, so only feet at 2 or higher hit them. Without a crate step or a jump
+that is a 2-high platform on the south bank (x 1–2, z 8) reached by two
+stairs: `stair_nz` [4,0,9] from the spawn's foot onto a 1-high landing
+[4,0,8], then `stair_nx` [3,1,8] (on a block) onto the platform. From it a
+bolt along column x = 1 or x = 2 flies over the pit to `target_2` (cage
+and fragment pocket) or `target_1` (the north door). The pit is 2 deep
+(z 5–6; it was 3 with the jump over the last tile), so `crate_3` and the
+caged `crate_1` plug the pit (the x = 5 column is under `tower_bridge`'s fire; the
+x = 6 route is out of every tower's range); `crate_1` waits for `target_2`. From the north, `crate_e` and
+`crate_2` plug the pit, he climbs the south platform, shoots `target_2`
+and walks back for the fragment: the crossing both ways stays. The old
+order (the step crate shoots first, is spent last) is gone with crate
+steps: both targets are shot from one platform, the pressure is the three
+towers on the north bank (rows z 1 and 4, columns x 5, 6, 8) and on the
+x = 5 push; the stairs and the platform are quiet. Proven by sim:
+shots from every floor cell of both banks in eight directions switch no
+target (the only hits come from cells placed inside the pillar row); from
+the platform each column switches its target; the whole solve from the
+spawn takes 14.8 s and one tower hit. `check:reach` and the mutation test
+need Zap; both stairs' blocks, `crate_1`, `crate_3` and the gate matter
+(from the north: `crate_e`, `crate_2`). The checker counts every target as
+hit with Zap, so the lines are the sim's job.
+Level review: keep. Known and accepted: a diagonal shot from the upper
+stair (x 3.3–3.7, facing about 190–215 degrees) also reaches the targets
+(it still needs both stairs, so it only skips the platform's last cells);
+Blink crosses the 2-wide pit for the exit without crates, as the Lattice
+rule allows, but the fragment still needs `target_2` shot; crate_1's cage
+is ordinary gates, so its +x and +z faces are hidden (its top shows, D164);
+a crate pushed to the south wall row or onto the stair foot is a reset by
+leaving.
+**Why:** crates are no step in a pads room (D222); a platform reached by
+stairs is the third dimension the room places, as in `zap_port`.

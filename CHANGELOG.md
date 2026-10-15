@@ -28,6 +28,22 @@ docs/decisions.md).
   cross at floor level, and it is a hole again once it goes; it grows out of
   its middle as it comes. Validation wants a hole under a floor-level bridge;
   the checker and the showcase know the sheet.
+- `bolt_gallery` is a pads room (D237, step 5.17), redesigned: a 2-high firing
+  platform with two stairs replaces the step crate; the pit is 2 deep.
+- `freeze_hall` is a pads room (D236, step 5.17), redesigned: the frozen bug
+  is a stepping stone over a slot in a walkway, not a step up; two stairs
+  lead to and from it.
+- `shield_hall` is a pads room (D235, step 5.17): a stair leads onto the
+  lift's bottom stop. The reachability checker models a lift in one column
+  (a platform carries him to its other stops).
+- `atrium` is a pads room (D234, step 5.17): the ledge is 1 high with a stair
+  up to it; the floor crate that served as a step is gone.
+- `first_light` is a pads room (D233, step 5.17), cells unchanged: its pit
+  bars never needed the jump.
+- `zap_port` is a pads room (D232, step 5.17): two stairs replace the block
+  pile to the disk; the 1-high firing step to the target is on the way.
+- `first_steps` is a pads room (D231, step 5.17): its hole is 2 wide, not 3,
+  so its two crates cross it without the jump; the trick is unchanged.
 - `boot_up` is a pads room (D225, step 5.17): a stair beside the spawn and a
   pad on the step throw him over the gap to the east door; its screen no
   longer names a jump key. The checker lets a pad or bounce land a block up
