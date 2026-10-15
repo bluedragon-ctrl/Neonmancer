@@ -4,7 +4,8 @@
   "id": "relay_loft",
   "name": "Relay Loft",
   "biome": "home_lattice",
-  "size": [14, 5, 8],
+  "size": [15, 5, 8],
+  "jump": "pads",
   "spawn": [0.5, 0, 6.5],
   "exits": [
     { "id": "south", "side": "+z", "at": 1 },
@@ -12,30 +13,29 @@
     { "id": "east", "side": "+x", "at": 3 }
   ],
   "blocks": [
-    { "at": [5, 0, 0], "to": [9, 0, 7] },
+    { "at": [5, 0, 0], "to": [9, 0, 6] },
+    { "at": [6, 0, 7], "to": [8, 0, 7] },
+    { "type": "stair_x", "at": [5, 0, 7] },
+    { "type": "stair_nx", "at": [9, 0, 7] },
     { "at": [7, 1, 0] },
     { "at": [7, 1, 2] },
     { "at": [5, 1, 4], "to": [9, 1, 4] },
-    { "at": [12, 0, 0], "to": [13, 2, 0] },
+    { "at": [10, 0, 0] },
+    { "type": "stair_x", "at": [1, 0, 1] },
+    { "at": [13, 0, 0], "to": [13, 1, 1] },
+    { "type": "stair_x", "at": [13, 2, 1] },
+    { "at": [14, 0, 0], "to": [14, 2, 1] },
     { "type": "bridge", "at": [3, 0, 7], "to": [4, 0, 7], "switches": ["plate_home"] },
     { "type": "bridge", "at": [10, 0, 7], "to": [11, 0, 7], "switches": ["plate_home"] }
   ],
   "holes": [
     { "at": [3, 0], "to": [4, 7] },
-    { "at": [10, 0], "to": [10, 1] },
+    { "at": [10, 1], "to": [10, 1] },
     { "at": [10, 4], "to": [10, 7] },
     { "at": [11, 0], "to": [11, 7] }
   ],
   "objects": [
-    { "id": "crate_w", "type": "crate", "at": [1, 0, 4] },
-    { "id": "plate_w", "type": "plate", "at": [1, 0, 1] },
-    {
-      "id": "ferry_w",
-      "type": "platform",
-      "at": [2, 0, 1],
-      "path": { "points": [[4, 0, 1]], "pause": 2 },
-      "switches": ["plate_w"]
-    },
+    { "id": "ferry_w", "type": "platform", "at": [2, 0, 1], "path": { "points": [[4, 0, 1]], "pause": 2 } },
     { "id": "crate_1", "type": "crate", "at": [6, 1, 1] },
     { "id": "crate_2", "type": "crate", "at": [7, 1, 1] },
     { "id": "crate_3", "type": "crate", "at": [8, 1, 1] },
@@ -48,7 +48,8 @@
       "path": { "points": [[12, 0, 1]], "pause": 2 },
       "switches": ["socket_1", "socket_2"]
     },
-    { "id": "plate_home", "type": "plate_timed", "at": [13, 0, 7], "overrides": { "timer": 5 } }
+    { "id": "plate_home", "type": "plate_timed", "at": [14, 0, 7], "overrides": { "timer": 5 } },
+    { "id": "pad_1", "type": "pad", "at": [10, 1, 0] }
   ],
-  "pickups": [{ "id": "fragment_4", "type": "fragment_4", "at": [12, 3, 0] }]
+  "pickups": [{ "id": "fragment_4", "type": "fragment_4", "at": [14, 3, 1] }]
 }
