@@ -169,6 +169,13 @@ Lessons from the reviews (D188 on):
   falls to a floor jump shot; two blocks up needs a crate top and a
   jump (D195). A target by a side wall keeps the crate under it
   there for good: one cell off, it can be pushed back out.
+- **Platforms are reachable without a jump** (D228). A platform's dock
+  (every stop he boards or leaves it at) is level with a floor, stair
+  top or ledge he reaches on foot, or he steps on it from a stair or
+  slab; never a hop up from the floor. Only a hard or secret room may
+  need a trick lift (a bouncy enemy or a pad at one given spot), and the
+  room says so in its notes. The checker takes platforms as free floor,
+  so check boarding by hand or with `sim.mjs`.
 - **Crates board ferries flush.** A platform is a 1-high block, its
   top 1 above the floor it docks on, so a floor crate never gets on;
   docks on a 1-high loft let crates roll on and off. He rides on top of

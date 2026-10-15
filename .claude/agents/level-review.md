@@ -52,6 +52,11 @@ For each room:
      its line in `docs/lattice-plan.md` (Pads-only migration) is ticked
      off. Pieces that only fought the jump (spiked crates, fence roofs,
      2-high walls against hops) and do no job of their own: a NOTE.
+   - **Platforms in a pads room** (D228): each stop he boards or leaves
+     a platform at is on foot level (floor, stair top, ledge), never a
+     jump up; a platform only a pad or bounce reaches is fine in a
+     hard or secret room that means it (NOTE), a PROBLEM elsewhere. The
+     checker counts platforms as free floor, so verify by hand.
    - **Reach in a pads room**: every way up is a stair (from its foot,
      the way it rises), a pad (2 up, a 1-tile gap; its cell and three
      above free) or a bouncy enemy he falls onto (2 up from its lane,

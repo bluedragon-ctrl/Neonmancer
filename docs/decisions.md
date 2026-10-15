@@ -2566,3 +2566,12 @@ a clear line of fire. Added to the room-design checklist (rule 1) and the
 level-review Readability check; the reachability checker knows nothing of
 the camera, so it stays a review rule.
 **Why:** a mechanic he can't see is a guess, the same as a hidden crate.
+
+### D228 — 2026-10-15 — Platforms are reachable without a jump
+With the jump gone (D222), a moving platform must be boardable on foot:
+its stops sit level with a floor, stair top or ledge he reaches, or beside
+a stair or slab. Only hard or secret rooms may need a trick (a bouncy
+enemy or a pad at one spot). Review rule in room-design and level-review;
+the checker takes platforms as free floor and does not model it.
+**Why:** a platform he can't board is a dead mechanic, and the old hop
+onto a 1-high platform no longer exists.
