@@ -169,6 +169,10 @@ Lessons from the reviews (D188 on):
   falls to a floor jump shot; two blocks up needs a crate top and a
   jump (D195). A target by a side wall keeps the crate under it
   there for good: one cell off, it can be pushed back out.
+- **Enemies do not use stairs** (D229). A stair or slab is a block to
+  them: an enemy stays on its level, so a stair is no way for it up or
+  down. A powered bridge is floor to them; check no patrol or chase
+  lane crosses one by accident.
 - **Platforms are reachable without a jump** (D228). A platform's dock
   (every stop he boards or leaves it at) is level with a floor, stair
   top or ledge he reaches on foot, or he steps on it from a stair or

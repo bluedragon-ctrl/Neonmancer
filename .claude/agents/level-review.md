@@ -95,6 +95,10 @@ For each room:
      he can leave the way he came, shortcuts not blocked by accident.
    - **No soft-locks**: every one-shot change (collapse, crate in a corner
      or hole, spent Compile/Fork) leaves a way out or a way to reset.
+   - **Enemies and levels** (D229): enemies stay on their level and treat
+     stairs and slabs as blocks; flag a patrol or chase lane over a bridge
+     (it pops the enemy when the bridge goes, and lets it cross while
+     powered) and any plan that has an enemy following him up a stair.
    - **Enemies**: templates only (no overrides), paths level, no patrol
      over holes, hostile ones not on the entry spot, peaceful ones not
      breaking a puzzle (the checker ignores enemies). Bouncy ones (bug,

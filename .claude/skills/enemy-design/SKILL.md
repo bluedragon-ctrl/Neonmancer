@@ -65,6 +65,12 @@ table, roster, AI rules). Prefer the monster editor
   freeze (Pause), bounce over or shoot them.
 - Enemies never step into holes or onto void, and pop if ground goes: don't
   put a patrol over a hole it would treat as a wall.
+- Enemies stay on their level (D229): a stair and a slab are blocks to
+  them, so no enemy climbs one or follows him up; ledges are one-way
+  drops for them too. A powered bridge is floor they may cross, and one
+  that goes again leaves a hole under them (they pop): keep patrols off
+  bridges unless that is the idea, and never rely on a bridge to keep an
+  enemy out (it opens to them as to him while powered).
 - A hostile enemy sees through open cells only: blocks and crates hide the
   wizard, so cover is a puzzle tool.
 - Introduce a new enemy where it is harmless or alone (a safe first look),

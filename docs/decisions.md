@@ -2575,3 +2575,12 @@ enemy or a pad at one spot). Review rule in room-design and level-review;
 the checker takes platforms as free floor and does not model it.
 **Why:** a platform he can't board is a dead mechanic, and the old hop
 onto a 1-high platform no longer exists.
+
+### D229 — 2026-10-15 — Enemies stay on their level; bridges are floor while powered
+Stairs and slabs are blocks to enemies (as to crates and the checker), so
+they do not climb them; ledges are one-way drops. A powered bridge is
+floor an enemy may cross, and it pops if the bridge goes under it. Review
+rule in enemy-design, room-design and level-review. Whether enemies should
+learn to use stairs is left to the author.
+**Why:** with stairs in every room, the question "can monsters follow
+him?" needs one written answer for room designers.
