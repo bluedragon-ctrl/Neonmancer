@@ -2640,3 +2640,19 @@ crates needed; from the east door the west door is out of reach (he came
 that way and leaves it, rule 3); played with `sim.mjs`.
 **Why:** the review's verdict is *keep*; only the hole's width came from
 the jump.
+
+### D232 — 2026-10-15 — Zap Port on pads: two stairs to the disk (5.17)
+`zap_port` is a pads room. The diagonal pile of 1- and 2-high blocks (a
+hopping staircase) is gone; the corner now holds a stair (`stair_nx` at
+[5,0,14]) from the floor onto a 1-high firing step ([4,0,14]) and a second
+(`stair_nx` at [3,1,14]) from the step onto a 2-high ledge (x 0–2) with
+`disk_zap_1` at [0,2,14]. The trick of D189 is unchanged: bolts fly level;
+the target at [4,1,0] is switched only from the 1-high step (the line
+x = 4 is clear to it), a floor shot hits the block under it or the bug
+crossing at z 9. He passes the firing step on his way to the disk, before
+he has Zap, so the climb is the lesson. The jump shot is gone with the jump.
+Checks: `check:reach` with `--with zap` from every door; mutation test: the
+blocks and both stairs gate the disk; played with `sim.mjs` (climb, a shot
+from the step switches the target, shots from the floor do not).
+**Why:** the pile was only steps for hops; stairs keep the same shape of
+the lesson with the pads rule's own pieces.

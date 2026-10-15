@@ -28,6 +28,8 @@ docs/decisions.md).
   cross at floor level, and it is a hole again once it goes; it grows out of
   its middle as it comes. Validation wants a hole under a floor-level bridge;
   the checker and the showcase know the sheet.
+- `zap_port` is a pads room (D232, step 5.17): two stairs replace the block
+  pile to the disk; the 1-high firing step to the target is on the way.
 - `first_steps` is a pads room (D231, step 5.17): its hole is 2 wide, not 3,
   so its two crates cross it without the jump; the trick is unchanged.
 - `boot_up` is a pads room (D225, step 5.17): a stair beside the spawn and a
