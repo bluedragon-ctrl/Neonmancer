@@ -2749,13 +2749,14 @@ stairs: `stair_nz` [4,0,9] from the spawn's foot onto a 1-high landing
 bolt along column x = 1 or x = 2 flies over the pit to `target_2` (cage
 and fragment pocket) or `target_1` (the north door). The pit is 2 deep
 (z 5–6; it was 3 with the jump over the last tile), so `crate_3` and the
-caged `crate_1` plug the x = 5 column under `tower_bridge`'s fire, as
-before; `crate_1` waits for `target_2`. From the north, `crate_e` and
+caged `crate_1` plug the pit (the x = 5 column is under `tower_bridge`'s fire; the
+x = 6 route is out of every tower's range); `crate_1` waits for `target_2`. From the north, `crate_e` and
 `crate_2` plug the pit, he climbs the south platform, shoots `target_2`
 and walks back for the fragment: the crossing both ways stays. The old
 order (the step crate shoots first, is spent last) is gone with crate
 steps: both targets are shot from one platform, the pressure is the three
-towers on the stairs, the platform and the crate pushes. Proven by sim:
+towers on the north bank (rows z 1 and 4, columns x 5, 6, 8) and on the
+x = 5 push; the stairs and the platform are quiet. Proven by sim:
 shots from every floor cell of both banks in eight directions switch no
 target (the only hits come from cells placed inside the pillar row); from
 the platform each column switches its target; the whole solve from the
@@ -2763,5 +2764,13 @@ spawn takes 14.8 s and one tower hit. `check:reach` and the mutation test
 need Zap; both stairs' blocks, `crate_1`, `crate_3` and the gate matter
 (from the north: `crate_e`, `crate_2`). The checker counts every target as
 hit with Zap, so the lines are the sim's job.
+Level review: keep. Known and accepted: a diagonal shot from the upper
+stair (x 3.3–3.7, facing about 190–215 degrees) also reaches the targets
+(it still needs both stairs, so it only skips the platform's last cells);
+Blink crosses the 2-wide pit for the exit without crates, as the Lattice
+rule allows, but the fragment still needs `target_2` shot; crate_1's cage
+is ordinary gates, so its +x and +z faces are hidden (its top shows, D164);
+a crate pushed to the south wall row or onto the stair foot is a reset by
+leaving.
 **Why:** crates are no step in a pads room (D222); a platform reached by
 stairs is the third dimension the room places, as in `zap_port`.
