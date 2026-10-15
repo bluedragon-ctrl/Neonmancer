@@ -13,9 +13,9 @@ docs/decisions.md).
   stair from its foot and down off its top, a chaser that sees the wizard
   on another level finds its way there by stairs, and one off its path or
   post comes back by them. A crate or a frozen enemy pushed (or pulled)
-  into a stair from its foot slides up it onto the ledge, and off the
-  ledge over its top down to its foot, in one push; into a stair's side,
-  or onto its top from the side, it doesn't move. The reachability checker
+  off a ledge over a stair's top slides down it to its foot in one push;
+  it is never pushed up a stair (its foot is a wall to it), and into a
+  stair's side, or onto its top from the side, it doesn't move. The reachability checker
   and the Sokoban solver push crates the same way; the world report is
   unchanged. Patrol paths stay level.
 - The jump pad is a trampoline in the room's color (D226): a glass rim round a

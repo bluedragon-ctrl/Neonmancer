@@ -101,8 +101,9 @@ For each room:
      reaches, a chaser that can reach a pickup's pocket or a timed run by
      stairs, a patrol or chase lane over a bridge (it pops the enemy when
      the bridge goes, and lets it cross while powered), and a crate or
-     frozen enemy that can be pushed up or down a stair where the plan
-     doesn't expect it (one push, two cells).
+     frozen enemy that can be pushed down a stair where the plan doesn't
+     expect it (one push, two cells; they never go up one), and a crate
+     brought down that shuts the stair's foot.
    - **Enemies**: templates only (no overrides), paths level, no patrol
      over holes, hostile ones not on the entry spot, peaceful ones not
      breaking a puzzle (the checker ignores enemies). Bouncy ones (bug,

@@ -23,8 +23,8 @@
  * cell another enemy is walking into, and something in its way mid-step
  * turns it back to the cell it left, where it waits turnTicks (D80).
  * Stairs (D230): it walks up one from its foot and down one from its
- * top, two cells on in one step (Grid.stairStep()), and is pushed and
- * pulled up and down them too; it never stands on a stair, and a stair's
+ * top, two cells on in one step (Grid.stairStep()); pushed or pulled
+ * (frozen, Pull) it only goes down one, like a crate. It never stands on a stair, and a stair's
  * sides and back are walls to it.
  * Seeing: a hostile enemy with an aggro range notices the wizard within it
  * when nothing blocks the line between them (ai/sight.js); a "!" pops up
@@ -308,8 +308,8 @@ export class Enemy {
     if (!Number.isInteger(base[0]) || !Number.isInteger(base[2])) return false; // riding a platform between stops
     const [x, y, z] = [base[0], this.pos[1], base[2]];
     if (!Number.isInteger(y)) return false; // on its way up or down a stair
-    // Up or down a stair it slides the stair's way (D230), level anywhere else.
-    const step = game.grid.stairStep(x, y, z, dx, dz);
+    // Off a ledge over a stair's top it slides down it (D230), never up one; level anywhere else.
+    const step = game.grid.stairStep(x, y, z, dx, dz, false); // pushed or pulled, down a stair only
     if (!step) return false;
     const { to: target, via } = step;
     if (!game.grid.isInside(target[0], target[2]) || this.claimed(target, game)) return false;

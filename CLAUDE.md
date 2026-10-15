@@ -146,7 +146,7 @@ mobile/touch support, backend or accounts.
   kind `pad`), no body, throws him 2 up. To crates, enemies and the
   checker a slab is a block; a stair they use too, up from its foot and
   down off its top, never stopping on it: enemies walk it, crates and
-  frozen enemies are pushed up and down it (D230). Pads are his alone.
+  frozen enemies are pushed down it, never up (D230). Pads are his alone.
   The bridge (`bridge`) is a white
   glass sheet at the floor of its cell over a hole: floor while powered,
   a hole again once it goes (D224). Every ledge is a one-way drop; a

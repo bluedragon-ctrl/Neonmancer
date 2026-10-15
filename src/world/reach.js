@@ -46,8 +46,8 @@
  * no step onto a compiled crate, and a pickup two cells up is out of reach.
  * A stair takes him from the cell at its foot onto its top, one up; down
  * again is a step off a ledge. A crate or a frozen enemy pushed or pulled
- * into a stair the way it rises slides up it, and off its top down it, to
- * the cell beyond (D230, Grid.stairStep()); never onto a stair otherwise. In a pads room a bouncy enemy is a moving
+ * off a ledge over a stair's top slides down it to its foot (D230,
+ * Grid.stairStep()); it never goes up one, nor onto one otherwise. In a pads room a bouncy enemy is a moving
  * pad (D223): where he falls onto a cell of its lane (from a ledge or a
  * launch) he is thrown up as from a pad, BOUNCE_UP blocks and a one-tile
  * gap; any cell of the lane, whenever (optimistic, like Pause). He can't
@@ -290,13 +290,13 @@ export class RoomModel {
 
   /**
    * Where a crate (or a frozen enemy) pushed or pulled from (x, y, z) along
-   * [dx, dz] goes before it falls: the next cell, or up or down a stair
-   * (D230, Grid.stairStep()), with the cells it passes free; null if it
+   * [dx, dz] goes before it falls: the next cell, or down a stair (D230,
+   * Grid.stairStep(); never up one), with the cells it passes free; null if it
    * can't move.
    * @returns {number[]|null} [x, y, z]
    */
   crateStep(x, y, z, dx, dz, cfg) {
-    const step = this.grid.stairStep(x, y, z, dx, dz);
+    const step = this.grid.stairStep(x, y, z, dx, dz, false);
     if (!step) return null;
     if (step.via && this.blockedCrate(...step.via, cfg)) return null;
     return this.blockedCrate(...step.to, cfg) ? null : step.to;

@@ -234,13 +234,16 @@ export class Grid {
    * stair entered from its side or back, or a stair's top entered other
    * than down it: such a body never rests on a stair. Whether the cells
    * are free is the caller's to ask, of its own view of the grid.
+   * Pushed or pulled (`climbs` false: crates, frozen enemies, Pull) a body
+   * only goes down a stair: to it a stair's foot is a wall (D230).
+   * @param {boolean} [climbs] can it go up a stair (an enemy walking)?
    * @returns {{ to: number[], via: number[]|null, rise: number }|null}
    */
-  stairStep(x, y, z, dx, dz) {
+  stairStep(x, y, z, dx, dz, climbs = true) {
     const nx = x + dx;
     const nz = z + dz;
     const up = this.stairAt(nx, y, nz);
-    if (up) return up[0] === dx && up[1] === dz ? { to: [nx + dx, y + 1, nz + dz], via: [nx, y + 1, nz], rise: 1 } : null;
+    if (up) return climbs && up[0] === dx && up[1] === dz ? { to: [nx + dx, y + 1, nz + dz], via: [nx, y + 1, nz], rise: 1 } : null;
     const down = y > 0 ? this.stairAt(nx, y - 1, nz) : null;
     if (down) return down[0] === -dx && down[1] === -dz ? { to: [nx + dx, y - 1, nz + dz], via: [nx, y, nz], rise: -1 } : null;
     return { to: [nx, y, nz], via: null, rise: 0 };

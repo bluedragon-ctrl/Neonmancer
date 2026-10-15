@@ -625,7 +625,7 @@ own, each in its own color.
   until the room resets. Hazard blocks don't hurt it; it never triggers
   collapsing blocks. **Stairs** (D230): it walks up one from its foot and
   down one off its top, a two-cell step at half its cell rate, and is
-  pushed or pulled up and down them like a crate; it never stops on a
+  pushed or pulled down them (never up) like a crate; it never stops on a
   stair, its sides and back are walls, and its slope is never its ground
   (`Grid.asBlocks()`). A patrol's path stays level (validation), so only
   finding its way (a chaser, going back to its path or home) or a push
@@ -1487,13 +1487,12 @@ usual, so half behind a wall he is half ghost (D55).
 - One object at a time; an object with something on top (another object or
   the wizard) cannot be pushed (D4). No chain pushing.
 - The target cell must be free: no block, room side, object or wizard.
-- **Stairs** (D230): pushed into a stair from its foot the way it rises,
-  the object slides up it onto the cell beyond its top; pushed off a
-  ledge onto a stair's top the way it falls, down it to the cell at its
-  foot; one push, two cells, its bottom on the slope, the cell over the
-  stair free too. Into a stair's side or back, or onto its top any other
-  way, it doesn't move: a crate never stands on a stair (one dropped onto
-  its top from higher up rests there).
+- **Stairs** (D230): pushed off a ledge onto a stair's top the way it
+  falls, the object slides down it to the cell at its foot (free too):
+  one push, two cells, its bottom on the slope. It is never pushed up a
+  stair: to it the stair's foot is a wall, as are its sides and back, and
+  onto its top any other way it doesn't move. A crate never stands on a
+  stair (one dropped onto its top from higher up rests there).
 - A pushed object slides one cell, then falls at once if nothing supports
   it; it lands on blocks, other objects or the floor, so objects stack.
   Falling objects' drop shadow (in their own color) is switched off for
@@ -1609,15 +1608,16 @@ a pads room).
   `stair_nz` by their `rise`, D221): from the cell at its foot he walks up
   its slope onto a ledge one block higher, and down again; its sides and
   back are walls. In code `Grid.span()` gives the slope, and collision
-  steps him onto it from up to 0.2 below his feet. Crates, frozen enemies
-  and enemies use it too (D230, `Grid.stairStep()`): pushed, pulled or
-  walking into it the way it rises from its foot, they go up it to the
-  cell on its top beyond, and off that cell down it to its foot, in one
-  move two cells long with their bottom on the slope (a crate at its
-  slide speed, an enemy at its pace along the ground). They never stop on
-  a stair: into its side or back, or onto its top any other way, they
-  don't move, and a crate falling onto its top rests there like on a
-  block. The checker moves crates and frozen enemies the same way. For
+  steps him onto it from up to 0.2 below his feet. Enemies walk it too
+  (D230, `Grid.stairStep()`): up from its foot the way it rises to the
+  cell beyond its top, and off that cell down it to its foot, in one move
+  two cells long with their bottom on the slope, at their pace along the
+  ground. Crates and frozen enemies, pushed or pulled, only come down:
+  off the ledge over its top to its foot in one push; to them its foot is
+  a wall. Nothing but him stops on a stair: into its side or back, or
+  onto its top any other way, nothing moves, and a crate falling onto its
+  top rests there like on a block. The checker moves crates and frozen
+  enemies the same way. For
   standing on it they see it as a whole block (`Grid.asBlocks()`), so
   nothing but him ever stands on its slope. Drawn as four steps outlined
   on their own (`render/stair-view.js`).

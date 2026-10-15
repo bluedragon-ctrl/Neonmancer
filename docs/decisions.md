@@ -2590,14 +2590,16 @@ him?" needs one written answer for room designers.
 Replaces D229's "enemies stay on their level". With stairs in every pads
 room, a stair was a safe place from every ground enemy and a chaser
 pressed against the ledge's wall below him; the author chose that enemies
-use stairs, and asked for crates pushed up and down them too:
+use stairs, and asked for crates on stairs too; crates come down a stair
+but are never pushed up one (the author's call):
 - **One rule for bodies a cell wide** (`Grid.stairStep()`): stepping from
   a stair's foot the way it rises takes it to the cell beyond the stair's
   top, a block up; stepping off a ledge over a stair's top the way it
   falls takes it to the cell at its foot, a block down. One move two
   cells long, its bottom on the slope (`stairHeight()`), the cell over
   the stair free too. Into a stair's side or back, or onto its top any
-  other way: no move. Nothing but him stops on a stair.
+  other way: no move. Nothing but him stops on a stair. Pushed or pulled
+  bodies (`climbs` false) only go down: to them a stair's foot is a wall.
 - **Enemies** walk stairs both ways at their pace along the ground (half
   their cell rate, two cells a step); a stair's foot the way it rises is
   no step up. Finding its way (`Enemy.route()`) climbs and descends them,
@@ -2607,9 +2609,11 @@ use stairs, and asked for crates pushed up and down them too:
   he can still hide behind blocks. Patrol paths stay level (validation,
   the editor and the checker read them as level); a path across levels is
   for later if a room needs one.
-- **Crates and frozen enemies** (pushed, or pulled by Pull) go up and down
-  stairs the same way, in one push. The checker and the Sokoban solver
-  (which uses the checker's moves) know it.
+- **Crates and frozen enemies** (pushed, or pulled by Pull, an active
+  enemy too) go down stairs the same way, in one push from the ledge, and
+  never up: a ledge's crates come from the ledge, so a crate below stays
+  below and Sokoban keeps its one-way ledges. The checker and the Sokoban
+  solver (which uses the checker's moves) know it.
 - **Pads and bounces are his alone**: a ledge reached only by pads is the
   one place ground enemies can't follow him.
 - **Not changed:** a slab is a block to enemies and crates; bolts and sight
@@ -2619,4 +2623,5 @@ No authored room has an enemy or a crate by a stair; the world report of
 the checker is unchanged.
 **Why:** stairs were a free escape from every chaser and a dead end for
 crates; one rule for everything a cell wide keeps stairs readable, and
-pads stay the wizard's own way up.
+pads stay the wizard's own way up. Crates pushed up stairs would undo the
+ledge as a one-way drop for the push puzzle, so they only come down.

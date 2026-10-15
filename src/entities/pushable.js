@@ -4,7 +4,7 @@
  * with `integrity` (destructible) breaks when spells have taken all of it.
  * Pure logic, one call to update() per fixed tick.
  *
- *   rest ──push──► slide ──arrive──► rest   (up or down a stair: two cells on, a block up or down, D230)
+ *   rest ──push──► slide ──arrive──► rest   (down a stair: two cells on, a block down, D230)
  *   rest ──no support──► fall ──land──► rest
  *                               └─into a hole──► plugged (floor from now on)
  *   rest, slide, fall ──last integrity hit away──► broken (gone until the room resets)
@@ -50,7 +50,7 @@ export class Pushable {
     this.vy = 0;
     /** While sliding: the cell it slides into. */
     this.target = null;
-    /** While sliding up (1) or down (−1) a stair (D230): the cell it left, and how far it got (0..1); rise 0 on a level slide. */
+    /** While sliding down a stair (rise −1, D230): the cell it left, and how far it got (0..1); rise 0 on a level slide. */
     this.rise = 0;
     this.from = null;
     this.walked = 0;
@@ -129,10 +129,9 @@ export class Pushable {
   /**
    * Try to push the object one cell along [dx, dz]. Only a resting,
    * supported object with nothing on top moves, into a free cell (D4).
-   * Into a stair the way it rises, or off a ledge down a stair from its
-   * top, it slides up or down it to the cell beyond (D230,
-   * Grid.stairStep()), the stair's cell free above it; into a stair's side
-   * or back, or onto its top any other way, it doesn't move: a crate never
+   * Off a ledge over a stair's top, the way it falls, it slides down it to
+   * the cell at its foot (D230, Grid.stairStep()); never up a stair: into
+   * a stair, or onto its top any other way, it doesn't move. A crate never
    * rests on a stair.
    * @param {number[]} dir [dx, dz], one of them ±1
    * @param {{ grid: import('../world/grid.js').Grid, bodies: Iterable<{ box(): number[][] }> }} world
@@ -145,7 +144,7 @@ export class Pushable {
     // Resting objects sit on whole cells, except on top of the player or
     // on a platform between its stops.
     if (!this.pos.every(Number.isInteger)) return false;
-    const step = grid.stairStep(x, y, z, dx, dz);
+    const step = grid.stairStep(x, y, z, dx, dz, false);
     if (!step) return false;
     const { to: target, via } = step;
     if (grid.isSolid(...target) || (via && grid.isSolid(...via))) return false;
@@ -218,7 +217,7 @@ export class Pushable {
   }
 
   /**
-   * Where a slide up or down a stair (D230) takes it this tick, `step`
+   * Where a slide down a stair (D230) takes it this tick, `step`
    * units on along the ground: two cells in all, its bottom on the slope.
    * @param {number} step
    * @returns {number[]}
