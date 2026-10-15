@@ -21,6 +21,7 @@
     { "at": [7, 1, 2] },
     { "at": [5, 1, 4], "to": [9, 1, 4] },
     { "at": [10, 0, 0] },
+    { "type": "fence", "at": [11, 1, 0], "to": [11, 3, 0] },
     { "type": "stair_x", "at": [1, 0, 1] },
     { "at": [13, 0, 0], "to": [13, 1, 1] },
     { "type": "stair_x", "at": [13, 2, 1] },
@@ -45,7 +46,7 @@
       "id": "ferry_e",
       "type": "platform",
       "at": [10, 0, 1],
-      "path": { "points": [[12, 0, 1]], "pause": 2 },
+      "path": { "points": [[12, 0, 1]], "pause": 3 },
       "switches": ["socket_1", "socket_2"]
     },
     { "id": "plate_home", "type": "plate_timed", "at": [14, 0, 7], "overrides": { "timer": 5 } },

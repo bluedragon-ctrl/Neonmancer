@@ -2810,12 +2810,19 @@ What the jump carried is rebuilt with what the rule gives him.
   reach the 1-high loft. The timed plate moved to (14,0,7); the run to the
   west floor takes 2.7 s of its 5.
 - **The 1-high peninsula** shrinks the hole at (10,0) to the ferry's
-  one cell; a crate pushed along row 0 stops at x = 9 (dead, as a crate in
-  the pit was).
+  one cell. A crate pushed along row 0 slides onto the pad's cell and on
+  into the hole at (11,0): a lost crate, like one pushed off the loft
+  anywhere else. A fence column over that hole, (11,1..3,0), stops the
+  pad's throw east: the review swept it and a throw held towards +x landed
+  on the east floor at (12.7,0,0.5), about 8 s in with no puzzle. Now he
+  bounces on the pad against it, and only the throw south, onto the crate,
+  works. The ferries wait 3 s at their ends (was 2): the review's sweep
+  gave the pad step about 0.7 s of the old dock, and holding south while
+  the ferry is away drops him into the pit (a trap, Restart room).
 Played with `sim.mjs`: the west ride; the 14 pushes from the loft's west
 dock (a scratch solver for the pen in the real model, ferry first, then
 the sockets) in 33 s; the pad throw onto the crate; the ride and the
-stair to the fragment, 40.8 s in all; the 5 s plate and the way home in
+stair to the fragment, 42.8 s in all; the 5 s plate and the way home in
 2.7 s. The checker (Lattice abilities, from every door) says everything is
 reachable; the mutation test warns "crate search truncated" because three roaming crates
 and the pen's 14 pushes need more than 2000 configurations (the
@@ -2858,3 +2865,13 @@ to the plate, back up, the drop, the cage.
 Level review: see the notes below.
 **Why:** crates are no step in a pads room (D222); a stair is the ledge's
 way up, as in `zap_port` and `atrium`.
+
+Level review (relay_loft, D238): tune, done. The trick holds against the
+fragment (no bypass by the bare ferry, Fork, Pause, Blink or a spare
+crate); the two findings above (the pad's free crossing east, the dock
+time) are fixed. Known and accepted: a crate pushed west out of the pen
+along row 1 rides the west ferry out and jams it at x = 3 (recoverable,
+push it sideways from the dock's sides); filling the sockets before the
+rider crate is on the ferry drops a late crate into the pit (the solve
+order is ferry first); the pad is partly hidden behind the rider crate
+once it is loaded, and shows as an amber tile beside the pen before.
