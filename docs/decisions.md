@@ -2656,3 +2656,14 @@ blocks and both stairs gate the disk; played with `sim.mjs` (climb, a shot
 from the step switches the target, shots from the floor do not).
 **Why:** the pile was only steps for hops; stairs keep the same shape of
 the lesson with the pads rule's own pieces.
+
+### D233 — 2026-10-15 — Watchdog Kennel on pads: unchanged (5.17)
+`first_light` is a pads room with no change to its cells. The ladder said
+its trick was a zigzag of jumps, but the three pit bars are 2 deep (z 2–3,
+5–6, 8–9), which no jump crossed: the zigzag was always a walk round the
+bars' open ends (x 7, x 0, x 7) inside the 10 s watchdog. Checks:
+`check:reach` fragment and exit free; mutation test: nothing to remove;
+played with `sim.mjs`: spawn to the fragment in 7.8 s, 2.2 s spare, the
+clock stopping on the pickup. Tight enough to make the watchdog felt, loose
+enough for one wrong turn.
+**Why:** the review's verdict is *keep*; only the ladder's wording was off.
