@@ -144,7 +144,10 @@ mobile/touch support, backend or accounts.
   (look `slab`), a thin glass walkway at the top of its cell, level with
   a 1-high ledge, that he walks under a cell down; the jump pad (object
   kind `pad`), no body, throws him 2 up. To crates, enemies and the
-  checker a stair and a slab are blocks. The bridge (`bridge`) is a white
+  checker a slab is a block; a stair they use too, up from its foot and
+  down off its top, never stopping on it: enemies walk it, crates and
+  frozen enemies are pushed up and down it (D230). Pads are his alone.
+  The bridge (`bridge`) is a white
   glass sheet at the floor of its cell over a hole: floor while powered,
   a hole again once it goes (D224). Every ledge is a one-way drop; a
   crate is no step (he can't get onto it from its own level).

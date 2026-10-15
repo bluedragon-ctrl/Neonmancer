@@ -2584,3 +2584,39 @@ rule in enemy-design, room-design and level-review. Whether enemies should
 learn to use stairs is left to the author.
 **Why:** with stairs in every room, the question "can monsters follow
 him?" needs one written answer for room designers.
+*The stair rule is replaced by D230 (enemies use stairs); the bridge rule stands.*
+
+### D230 — 2026-10-15 — Stairs are for everyone, pads only for him
+Replaces D229's "enemies stay on their level". With stairs in every pads
+room, a stair was a safe place from every ground enemy and a chaser
+pressed against the ledge's wall below him; the author chose that enemies
+use stairs, and asked for crates pushed up and down them too:
+- **One rule for bodies a cell wide** (`Grid.stairStep()`): stepping from
+  a stair's foot the way it rises takes it to the cell beyond the stair's
+  top, a block up; stepping off a ledge over a stair's top the way it
+  falls takes it to the cell at its foot, a block down. One move two
+  cells long, its bottom on the slope (`stairHeight()`), the cell over
+  the stair free too. Into a stair's side or back, or onto its top any
+  other way: no move. Nothing but him stops on a stair.
+- **Enemies** walk stairs both ways at their pace along the ground (half
+  their cell rate, two cells a step); a stair's foot the way it rises is
+  no step up. Finding its way (`Enemy.route()`) climbs and descends them,
+  so a chaser gets home and back to its path. A chaser that sees him half
+  a block or more above or below it finds its way to him instead of
+  stepping greedily (`levelApart`); on its own level it stays greedy, so
+  he can still hide behind blocks. Patrol paths stay level (validation,
+  the editor and the checker read them as level); a path across levels is
+  for later if a room needs one.
+- **Crates and frozen enemies** (pushed, or pulled by Pull) go up and down
+  stairs the same way, in one push. The checker and the Sokoban solver
+  (which uses the checker's moves) know it.
+- **Pads and bounces are his alone**: a ledge reached only by pads is the
+  one place ground enemies can't follow him.
+- **Not changed:** a slab is a block to enemies and crates; bolts and sight
+  treat a stair's and a slab's cell as solid; bosses and tall enemies use
+  stairs like the rest (their box must fit the cells they pass).
+No authored room has an enemy or a crate by a stair; the world report of
+the checker is unchanged.
+**Why:** stairs were a free escape from every chaser and a dead end for
+crates; one rule for everything a cell wide keeps stairs readable, and
+pads stay the wizard's own way up.

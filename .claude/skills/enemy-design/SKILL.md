@@ -65,9 +65,13 @@ table, roster, AI rules). Prefer the monster editor
   freeze (Pause), bounce over or shoot them.
 - Enemies never step into holes or onto void, and pop if ground goes: don't
   put a patrol over a hole it would treat as a wall.
-- Enemies stay on their level (D229): a stair and a slab are blocks to
-  them, so no enemy climbs one or follows him up; ledges are one-way
-  drops for them too. A powered bridge is floor they may cross, and one
+- Stairs are for everyone, pads only for him (D230): enemies walk up a
+  stair from its foot and down off its top (never stopping on it); a
+  chaser that sees him on another level finds its way there by stairs,
+  and one off its path or post comes back by them. Pads and bounces are
+  his alone, so only a ledge without a stair up is safe from them; a
+  ledge is still a one-way drop for them. Patrol paths stay level. A slab
+  is a block to them. A powered bridge is floor they may cross, and one
   that goes again leaves a hole under them (they pop): keep patrols off
   bridges unless that is the idea, and never rely on a bridge to keep an
   enemy out (it opens to them as to him while powered).

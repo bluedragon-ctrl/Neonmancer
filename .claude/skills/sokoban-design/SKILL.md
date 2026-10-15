@@ -176,9 +176,17 @@ the author and collection in the room's decision entry. Before use:
 - **Uncover the pad** (pads room): a crate stands on the pad that is the
   way up; pushing it off is the first move, and pushing it back on (or
   another crate onto it) is a trap the player sees.
-- **Blocked stair** (pads room): a stair is a block to crates, so a crate
-  pushed into the cell at its foot shuts the way up until he pushes it on
-  (a trap where he can't get behind it, a lock where the trick says so).
+- **Blocked stair** (pads room): a crate in the cell at a stair's foot
+  shuts the way up. Pushed on along the stair it goes up it onto the
+  ledge (D230), where it may block the top; pushed in from the side it
+  can't leave by the stair's side, so where he can't get behind it, it
+  is a trap (a lock where the trick says so).
+- **Crate up the stair** (pads room, D230): the ledge's crate comes from
+  the floor: pushed up the stair from its foot in one push, then across
+  the ledge and off its far side (a hole, a plate, a stack below). Down is
+  one push too: from the ledge's cell over the stair's top to its foot.
+  He follows a crate up; to bring one down he must stand beyond it on the
+  ledge. A crate never stops on a stair.
 - **Wall slide** (teach): a crate against a wall moves only along it;
   the plate is on that wall. A crate in a corner is lost.
 - **Bridge and weight** (`motifs.xsb` 1): a hole row a crate can't cross;
