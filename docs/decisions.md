@@ -2689,3 +2689,21 @@ plate's pocket (holes west and south), where only a hole gets him out: a
 voluntary misstep that costs a backup, as before.
 **Why:** the 2-high ledge needed two stairs; a 1-high one keeps the hub
 light, as its rung asks.
+
+### D235 — 2026-10-15 — Shield Hall on pads: a stair to the lift; the checker rides lifts (5.17)
+`shield_hall` is a pads room. The lift's bottom stop is a platform whose
+top is 1 above the floor, so boarding it was a hop; D228 wants a dock he
+reaches on foot, so a stair (`stair_nz` at [6,0,2]) leads onto it from the
+floor south of it, and at the top the platform is level with the 3-high
+ledge of the north door. Nothing else changes: the two crate lanes, the
+plates, the two sentinels and the Shield disk are as in D190. Crates
+stopped by the 1-high blocks past the plates were walls and lanes already.
+The checker now models a lift (`RoomModel.lifts`): a platform whose path
+stays in one column carries him from any stop he stands on to its others,
+which is how the room's north door is reached; before, a platform was only
+a floor along its path, and the ride up needed the jump. The plates still
+power the lift only in play (the checker runs every platform): judged with
+`sim.mjs` (about 20 s: crate A four pushes, crate B two pushes and a turn,
+stair, ride, ledge). Test added: a lift from a stair to a 3-high ledge.
+**Why:** the pads rule needs every dock reachable on foot; the checker had
+to know that a lift lifts, since no jump replaces the ride any more.

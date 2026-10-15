@@ -57,7 +57,8 @@
  * is a different check), timing (collapsing blocks, platforms waiting,
  * spell durations, how long a timed switch stays on), energy, and which
  * way he faces. Moving platforms
- * count as floor along their whole path and crates compiled by a spell
+ * count as floor along their whole path (a lift in one column also carries
+ * him to its other stops) and crates compiled by a spell
  * last as long as needed. So it errs towards "reachable": a verdict of
  * unreachable is a real problem, a verdict of reachable is not a promise.
  */
@@ -156,6 +157,8 @@ export class RoomModel {
     this.bodies = new Set();
     /** Cell indices a moving platform passes: floor to stand on, never in the way (optimistic). */
     this.floors = new Set();
+    /** A platform's cells in one column (a lift): cell index → the other cells of its path above and below, which he rides to standing on it. */
+    this.lifts = new Map();
     /** The room's switches: targets, plates and sockets (D194). */
     this.switches = [];
     /** Gates (D140): cell index, startsGone (a bridge) and the switch ids that power it (null: all). */
@@ -189,7 +192,13 @@ export class RoomModel {
         this.crates.push(this.index(x, y, z));
         if (object.topDamage > 0) this.spiked.add(this.index(x, y, z));
       }
-      else if (object.kind === 'platform') for (const [px, py, pz] of pathCells(object.at, object.path)) this.floors.add(this.index(px, py, pz));
+      else if (object.kind === 'platform') {
+        const cells = pathCells(object.at, object.path);
+        for (const [px, py, pz] of cells) this.floors.add(this.index(px, py, pz));
+        // A lift runs up and down one column: waiting on it carries him to every stop.
+        if (cells.length > 1 && cells.every(([px, , pz]) => px === cells[0][0] && pz === cells[0][2]))
+          for (const [px, py, pz] of cells) this.lifts.set(this.index(px, py, pz), cells.filter(([, qy]) => qy !== py));
+      }
       else if (object.kind === 'plate' || object.kind === 'socket') this.switches.push(object);
       else if (object.kind === 'pad') this.pads.set(this.index(x, y, z), Math.floor((object.launch ?? 2.2) + 1e-9));
       else if (object.kind === 'gate' && (object.trigger ?? 'switch') === 'switch') {
@@ -406,6 +415,8 @@ export class RoomModel {
       const up = this.climbFrom(x, y, z, bounced.has(this.index(x, y, z)));
       const jumps = up > 0;
       const gap = jumps ? this.gap : 0;
+      // Riding a lift (D228): standing on its platform he goes to its other stops.
+      if (y > 0) for (const [lx, ly, lz] of this.lifts.get(this.index(x, y - 1, z)) ?? []) if (this.landing(lx, ly + 1, lz, cfg) === ly + 1) add(lx, ly + 1, lz);
       for (const dir of DIRS) {
         const [dx, dz] = dir;
         const nx = x + dx;

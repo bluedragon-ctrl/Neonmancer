@@ -195,6 +195,15 @@ test('a moving platform over a pit is a floor to cross on', () => {
   assert.equal(reached(reach({ holes: [pit(5)], objects: [lift], pickups: [far] })), false);
 });
 
+test('a lift carries him from a stair up to a 3-high ledge (D228)', () => {
+  const lift = { id: 'lift', type: 'platform', at: [4, 0, 2], path: { points: [[4, 2, 2]] } };
+  const props = { jump: 'pads', blocks: [{ at: [5, 0, 2], to: [5, 2, 2] }], pickups: [pickup('far', [5, 3, 2])] };
+  assert.equal(reached(reach({ ...props, objects: [lift] })), false, 'no stair to board it');
+  const stair = { type: 'stair_x', at: [3, 0, 2] };
+  assert.equal(reached(reach({ ...props, blocks: [...props.blocks, stair] })), false, 'no lift');
+  assert.equal(reached(reach({ ...props, blocks: [...props.blocks, stair], objects: [lift] })), true);
+});
+
 test('arrival cells: the first row inside an exit at its floor level', () => {
   const content = gameData({ rooms: [roomFile('r', { exits: [WEST] }), roomFile('o', { exits: [{ id: 'east', side: '+x', at: 3 }] })], connections: [['r.west', 'o.east']] });
   const room = buildRoom(content.rooms.get('r'), content);
