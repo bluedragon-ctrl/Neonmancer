@@ -2710,3 +2710,26 @@ comes down to head height and waits there (no crush, played), so he walks
 out east. The checker rides a lift whether or not its plates are held.
 **Why:** the pads rule needs every dock reachable on foot; the checker had
 to know that a lift lifts, since no jump replaces the ride any more.
+
+### D236 — 2026-10-15 — Freeze Hall on pads: the frozen bug is a stepping stone (5.17)
+`freeze_hall` is a pads room, redesigned: a frozen bug is no step up
+(nothing is, D222), so it fills a gap instead. The cage moved one row
+north (lane z 5, walls z 4 and 6) with its gap on x = 4, the line of the
+doors. South of it a walkway at height 1 crosses a one-cell floor slot
+at [4,0,8]: a stair (`stair_nx` [6,0,8]) from the floor onto a fence
+landing, the slot, a block, a second stair (on a block, [2,1,8]) onto the
+2-high ledge with `fragment_1_1` at [1,2,9]. A drop into the slot leaves
+him on the floor, so only a body 1 high fills it: freeze the bug as it
+passes the gap, push it three cells south down x = 4 (a fence at [4,0,9]
+stops it in the slot), cross over it. The fences (landing and stopper)
+keep the slot in view from the camera. Played: bolts at a bug frozen at
+x 4.15–4.4 pass the gap; push 1.4–1.6 s, foot of the first stair 2.4–2.6 s,
+across the bug 3.3–3.5 s, on the ledge 3.7–3.9 s after the bolt, inside
+the 5 s freeze (1.1 s spare); the watchdog, 15 s, keeps 1.5× the worst
+run (a wait of one lane cycle, about 10 s). Only Pause fills the slot
+(`check:reach` with `zap,scan,fork`: never; Blink alone crosses it, which
+the Lattice rule allows for exits and secrets only). `tut_pause`'s last
+line is now "A FROZEN BUG IS A BLOCK. PUSH IT LIKE A CRATE."
+**Why:** the old climb was a hop onto a 1-high bug and a hop onto the
+ledge; the stepping stone keeps the room's idea (freezing a walker on the
+right cell, then pushing it) with the pads rule's own pieces.

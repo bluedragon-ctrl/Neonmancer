@@ -28,6 +28,9 @@ docs/decisions.md).
   cross at floor level, and it is a hole again once it goes; it grows out of
   its middle as it comes. Validation wants a hole under a floor-level bridge;
   the checker and the showcase know the sheet.
+- `freeze_hall` is a pads room (D236, step 5.17), redesigned: the frozen bug
+  is a stepping stone over a slot in a walkway, not a step up; two stairs
+  lead to and from it.
 - `shield_hall` is a pads room (D235, step 5.17): a stair leads onto the
   lift's bottom stop. The reachability checker models a lift in one column
   (a platform carries him to its other stops).

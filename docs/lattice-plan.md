@@ -58,7 +58,7 @@ Rules for the lines (D186, D187):
 |---|---|---|---|---|---|
 | 5 | `atrium` | puzzle | teach: a crate dropped off a ledge, a plate, a bridge | The plate sits behind holes, so only a crate from above reaches it: he climbs the stair and pushes the ledge crate off onto it, which raises a bridge to the Rainbow hat (a boost). The doors stay free. | Reworked (D188), on pads (D234): a stair to a 1-high ledge, the ledge crate pushed onto the plate; no crate step; a decoy skips it for the boost only. |
 | 6 | `shield_hall` | action | teach: Shield | The disk is easy to reach behind cover; the way on is not: the north door sits on a 3-high ledge, and the only lift up runs while two crates hold two plates. Pushing and riding are slow, and an arc hits what stands still, so the two sentinels bite there: he shields, dodges or fights. | Reworked (D190), on pads (D235): a stair onto the lift's bottom stop; the plates and the lift are judged by play (the checker runs every platform). |
-| 7 | `freeze_hall` | puzzle | teach: Pause, a frozen enemy as a block | The bug walks a caged lane with one gap across it: freeze it as it passes the gap in front of him, push it out across the hall to the ledge's foot and climb it, inside a 15 s watchdog. | Reworked (D191, D192): freezing it elsewhere in the cage costs time the watchdog barely gives. |
+| 7 | `freeze_hall` | puzzle | teach: Pause, a frozen enemy as a block | The bug walks a caged lane with one gap across it: freeze it as it passes the gap in front of him, push it down the hall into a slot in the walkway and cross over it to the ledge, inside a 5 s freeze and a 15 s watchdog. | Reworked (D191, D192), on pads (D236): the frozen bug fills a one-cell slot in a walkway between two stairs; freezing it elsewhere in the cage costs time the watchdog barely gives. |
 
 ### Shield wing
 
@@ -305,7 +305,7 @@ moves it to `"jump": "pads"` and ticks it off here.
 | 4 | `first_light` | play | | Done (D233): no jump was involved; cells unchanged. |
 | 5 | `atrium` | `boost_rainbow_1` | | Done (D234): one stair to a 1-high ledge. |
 | 6 | `shield_hall` | crossing south→north | | Done (D235): a stair to the lift; the checker rides lifts. |
-| 7 | `freeze_hall` | `fragment_1_1` | bouncy | A frozen enemy as a step needs a new use (a plug, a weight, a pad's landing). |
+| 7 | `freeze_hall` | `fragment_1_1` | bouncy | Done (D236): the frozen bug is a stepping stone in a slot. |
 | 8 | `bolt_gallery` | crossings south↔north | fence | |
 | 9 | `relay_loft` | `fragment_4`; crossings to and from east | | |
 | 10 | `ledger_cell` | `fragment_5` | fence | |
