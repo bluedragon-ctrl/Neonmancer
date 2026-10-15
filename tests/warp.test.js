@@ -229,7 +229,7 @@ test('the Blink dash is drawn shooting forward, stretched, then settles (D86)', 
   assert.deepEqual(dashPose({ ...warp, spell: 'warp' }, [3, 0, 0], 0), { pos: [3, 0, 0], stretch: 1 }, 'Warp is no dash');
 });
 
-test('the Blink kick and the Warp flash are over in time (the Warp pixels: stream.test.js)', () => {
+test('the Blink kick and the Warp flash are over in time (the Warp pixels: fx.test.js)', () => {
   assert.deepEqual(kickPixels(PLAYER.warpTicks, [1, 0]), []);
   assert.ok(warpFlash(0) > 0.5);
   assert.equal(warpFlash(WARP_FX.flashTicks), 0);

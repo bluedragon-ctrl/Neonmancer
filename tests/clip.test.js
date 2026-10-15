@@ -192,7 +192,7 @@ test('dying loses what he holds', () => {
   assert.equal(game.player.clipboard, null);
 });
 
-test('the effect: the marquee snaps on, a pasted thing grows in (the pixels: stream.test.js)', () => {
+test('the effect: the marquee snaps on, a pasted thing grows in (the pixels: fx.test.js)', () => {
   const { snapTicks } = CLIP_FX;
   assert.ok(marqueeLook('cut', 0).visible);
   assert.ok(marqueeLook('cut', 0).scale > marqueeLook('cut', snapTicks).scale, 'it snaps in');
