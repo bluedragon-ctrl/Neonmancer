@@ -2575,8 +2575,8 @@ decisions before the code lands. Every step also (D43):
   records new decisions.
 
 **Next: Phase 5, step 5.17, the room reviews against the Lattice ladder,
-each moving its room to the pads-only rule, from `ledger_cell` on** (`boot_up`,
-`first_steps`, `zap_port`, `first_light`, `atrium`, `shield_hall`, `freeze_hall`, `bolt_gallery` and `relay_loft` done, D225, D231–D238; D186, D187, D222, D223; 5.3 music waits for the author's tracks).
+each moving its room to the pads-only rule, from `scan_lab` on** (`boot_up`,
+`first_steps`, `zap_port`, `first_light`, `atrium`, `shield_hall`, `freeze_hall`, `bolt_gallery`, `relay_loft` and `ledger_cell` done, D225, D231–D239; D186, D187, D222, D223; 5.3 music waits for the author's tracks).
 
 ### Phase 5 (v0.5) steps: Home Lattice playtest
 

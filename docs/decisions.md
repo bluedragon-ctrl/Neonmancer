@@ -2825,3 +2825,36 @@ needs nothing in its view; the sim is the proof of power and of riding.
 **Why:** crates are no step in a pads room (D222), so the crate on the
 ferry needs a pad to board it and a stair to leave it, the third dimension
 the room places; a stair at the dock beats a hop onto the ferry (D228).
+
+### D239 — 2026-10-15 — Ledger Cell on pads: a stair to the ledge, a gap into the lane (5.17)
+`ledger_cell` is a pads room. The trick of D203 stays (four crates, two
+sockets and a heavy plate: the lane's first crate fills socket B, its
+second goes onto the plate, the ledge crate is dropped on it, a fourth
+fills socket A). The jump carried three things, each rebuilt:
+- **The ledge.** A `stair_nx` in the ledge's rail at (2,0,2) takes him
+  from the floor at (3,2) up to the landing (1,1,2); the rail cell above
+  it is gone for headroom. The ledge crate moved to (0,1,1) and the
+  heavy plate to (0,0,4) in the lane's west end, so its push column
+  (x = 0) misses the landing: the checker floods from the door between
+  pushes, and a crate on the landing shut the stair mid-push and read
+  "never" (the lesson `check:reach` floods from the door, again). The
+  wall block that ended the lane at (0,4) is gone, the plate's cell is
+  the lane's end.
+- **The pocket (rows 1–2).** The row-2 fence is gone: he walks in along
+  row 2 and pushes `crate_2` east into socket A from (3,1). The walls
+  above and below row 1 still keep the crate in its row. A crate pushed
+  west to the stair's foot, or east off the ledge down the stair into the
+  pocket, is a reset.
+- **The lane.** A one-cell gap in the south fence at (5,5) lets him in
+  behind `crate_1`, since `crate_3` at the mouth blocks the east end. The
+  lane's walls are fences now: a plain 1-high wall in front hides row 2
+  and the stair's foot from the camera (D227).
+Checked: `check:reach` and the mutation test (Lattice abilities): every
+crate, the ledge and the stair are `never` when taken away; with Fork one
+plate body (the stack's top) is replaced, as in D203; no truncation. The
+sim plays the whole solve in 27.5 s: the lane's first crate, `crate_2`,
+the stair, two pushes of the ledge crate to the edge, `crate_3` six cells
+to the plate, back up, the drop, the cage.
+Level review: see the notes below.
+**Why:** crates are no step in a pads room (D222); a stair is the ledge's
+way up, as in `zap_port` and `atrium`.
