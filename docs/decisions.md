@@ -2704,6 +2704,9 @@ which is how the room's north door is reached; before, a platform was only
 a floor along its path, and the ride up needed the jump. The plates still
 power the lift only in play (the checker runs every platform): judged with
 `sim.mjs` (about 20 s: crate A four pushes, crate B two pushes and a turn,
-stair, ride, ledge). Test added: a lift from a stair to a 3-high ledge.
+stair, ride, ledge). Test added: a lift from a stair to a 3-high ledge. Level review: keep. He
+can step off the stair into the lift's column while the platform is up; it
+comes down to head height and waits there (no crush, played), so he walks
+out east. The checker rides a lift whether or not its plates are held.
 **Why:** the pads rule needs every dock reachable on foot; the checker had
 to know that a lift lifts, since no jump replaces the ride any more.
