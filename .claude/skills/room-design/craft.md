@@ -20,7 +20,7 @@ every room earns its place with one trick.
    rung before drafting. A twist room whose parts he has not met is a bug.
 2. **Show the ingredients first.** The goal (exit, pickup, plate) and every
    tool (crate, switch, ledge) are seen from the entrance or one step in;
-   a crate is never hidden, not even for a secret (D164).
+   a crate is never hidden, not even for a secret (D164), and neither is a stair, plate, socket or target (D227).
    Secrets are the exception, and even they get a hint (a lone block, a
    strange gap), never a screen text.
 3. **Planning beats reflexes.** A room is a puzzle room (enemies only as

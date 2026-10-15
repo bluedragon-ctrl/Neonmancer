@@ -2556,3 +2556,31 @@ The author asked for the room's color with a rising effect:
   the checker and the rooms are untouched, nothing authored is affected.
 **Why:** a pad and a shrine are opposites in play and must differ at a
 glance; shape and motion separate them, the room color keeps magenta rare.
+
+### D227 — 2026-10-15 — Stairs, plates and targets are visible too
+Like crates (D164), every stair, floor plate, heavy plate, socket and bolt
+target must show a face from the camera (+x +y +z) and be reachable by
+eye: not behind tall blocks, ledges, pillars, decorations or memory walls,
+not under a bridge or slab, not in a walled-in pocket. A target also needs
+a clear line of fire. Added to the room-design checklist (rule 1) and the
+level-review Readability check; the reachability checker knows nothing of
+the camera, so it stays a review rule.
+**Why:** a mechanic he can't see is a guess, the same as a hidden crate.
+
+### D228 — 2026-10-15 — Platforms are reachable without a jump
+With the jump gone (D222), a moving platform must be boardable on foot:
+its stops sit level with a floor, stair top or ledge he reaches, or beside
+a stair or slab. Only hard or secret rooms may need a trick (a bouncy
+enemy or a pad at one spot). Review rule in room-design and level-review;
+the checker takes platforms as free floor and does not model it.
+**Why:** a platform he can't board is a dead mechanic, and the old hop
+onto a 1-high platform no longer exists.
+
+### D229 — 2026-10-15 — Enemies stay on their level; bridges are floor while powered
+Stairs and slabs are blocks to enemies (as to crates and the checker), so
+they do not climb them; ledges are one-way drops. A powered bridge is
+floor an enemy may cross, and it pops if the bridge goes under it. Review
+rule in enemy-design, room-design and level-review. Whether enemies should
+learn to use stairs is left to the author.
+**Why:** with stairs in every room, the question "can monsters follow
+him?" needs one written answer for room designers.

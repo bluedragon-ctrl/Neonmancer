@@ -169,6 +169,17 @@ Lessons from the reviews (D188 on):
   falls to a floor jump shot; two blocks up needs a crate top and a
   jump (D195). A target by a side wall keeps the crate under it
   there for good: one cell off, it can be pushed back out.
+- **Enemies do not use stairs** (D229). A stair or slab is a block to
+  them: an enemy stays on its level, so a stair is no way for it up or
+  down. A powered bridge is floor to them; check no patrol or chase
+  lane crosses one by accident.
+- **Platforms are reachable without a jump** (D228). A platform's dock
+  (every stop he boards or leaves it at) is level with a floor, stair
+  top or ledge he reaches on foot, or he steps on it from a stair or
+  slab; never a hop up from the floor. Only a hard or secret room may
+  need a trick lift (a bouncy enemy or a pad at one given spot), and the
+  room says so in its notes. The checker takes platforms as free floor,
+  so check boarding by hand or with `sim.mjs`.
 - **Crates board ferries flush.** A platform is a 1-high block, its
   top 1 above the floor it docks on, so a floor crate never gets on;
   docks on a 1-high loft let crates roll on and off. He rides on top of
@@ -401,7 +412,13 @@ Edit existing files with small text edits, not a JSON dump.
    visible** (D164): never hidden behind a tall block, a ledge, a pillar or
    a memory wall from the camera (+x +y +z), never inside a fake block or
    walled in where no cell of it shows; one face in view (its top, +x or
-   +z) is enough.
+   +z) is enough. **Stairs, plates and targets are visible too** (D227):
+   every stair (foot and slope), floor plate, heavy plate, socket and bolt
+   target shows a face from the camera and can be aimed at or walked to:
+   never behind a tall block, ledge, pillar, decoration or memory wall,
+   never under a bridge or slab, never in a pocket walled in on the +x/+z
+   sides. Check each from the entrance; a bolt target also needs a clear
+   line of fire.
 2. **Gates look like gates** (a too-high ledge, a locked door): he should
    come back later, not think it is broken (D67).
 3. **He can always leave the way he came** with what he has; a room needn't

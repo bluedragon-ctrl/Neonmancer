@@ -52,6 +52,11 @@ For each room:
      its line in `docs/lattice-plan.md` (Pads-only migration) is ticked
      off. Pieces that only fought the jump (spiked crates, fence roofs,
      2-high walls against hops) and do no job of their own: a NOTE.
+   - **Platforms in a pads room** (D228): each stop he boards or leaves
+     a platform at is on foot level (floor, stair top, ledge), never a
+     jump up; a platform only a pad or bounce reaches is fine in a
+     hard or secret room that means it (NOTE), a PROBLEM elsewhere. The
+     checker counts platforms as free floor, so verify by hand.
    - **Reach in a pads room**: every way up is a stair (from its foot,
      the way it rises), a pad (2 up, a 1-tile gap; its cell and three
      above free) or a bouncy enemy he falls onto (2 up from its lane,
@@ -80,7 +85,9 @@ For each room:
      same way; shorter is a BLOCKER, less than ~2 s to spare a PROBLEM.
    - **Readability**: tall blocks vs the +x/+z camera, each mechanic
      visible from the entrance, every crate visible (none behind tall
-     blocks or decor, none inside fake blocks; D164), gates look like gates.
+     blocks or decor, none inside fake blocks; D164), every stair, plate,
+     socket and target visible and aimable from the camera (D227: a
+     hidden one is a PROBLEM, a hidden one the puzzle needs a BLOCKER), gates look like gates.
    - **Other solutions** (D166): a second way of the same or higher
      difficulty is fine (say so as a NOTE); only an easier one that skips
      the room's idea is a bypass (PROBLEM or BLOCKER).
@@ -88,6 +95,10 @@ For each room:
      he can leave the way he came, shortcuts not blocked by accident.
    - **No soft-locks**: every one-shot change (collapse, crate in a corner
      or hole, spent Compile/Fork) leaves a way out or a way to reset.
+   - **Enemies and levels** (D229): enemies stay on their level and treat
+     stairs and slabs as blocks; flag a patrol or chase lane over a bridge
+     (it pops the enemy when the bridge goes, and lets it cross while
+     powered) and any plan that has an enemy following him up a stair.
    - **Enemies**: templates only (no overrides), paths level, no patrol
      over holes, hostile ones not on the entry spot, peaceful ones not
      breaking a puzzle (the checker ignores enemies). Bouncy ones (bug,
