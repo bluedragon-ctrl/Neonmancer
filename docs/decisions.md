@@ -2850,19 +2850,31 @@ fills socket A). The jump carried three things, each rebuilt:
 - **The pocket (rows 1–2).** The row-2 fence is gone: he walks in along
   row 2 and pushes `crate_2` east into socket A from (3,1). The walls
   above and below row 1 still keep the crate in its row. A crate pushed
-  west to the stair's foot, or east off the ledge down the stair into the
-  pocket, is a reset.
+  west along row 1 to (3,1) is dead (nothing else fills socket A); the
+  ledge crate stays in column x = 0 and can't leave it.
+- **The pocket under the ledge's south edge.** Walking off the ledge's
+  south end dropped him into lane cells (0..2,4), sealed by fences and
+  socket B's hole: the review found the soft-lock (death or Restart
+  room). A `stair_nz` at (1,0,3), where the ledge's south-east cell was,
+  leads from (1,4) back up to the landing; the drop at (0,3) stays a drop
+  and the crate's push column is untouched.
 - **The lane.** A one-cell gap in the south fence at (5,5) lets him in
   behind `crate_1`, since `crate_3` at the mouth blocks the east end. The
   lane's walls are fences now: a plain 1-high wall in front hides row 2
   and the stair's foot from the camera (D227).
 Checked: `check:reach` and the mutation test (Lattice abilities): every
-crate, the ledge and the stair are `never` when taken away; with Fork one
+crate, the ledge and the stair are `never` when taken away (without Fork); with Fork one
 plate body (the stack's top) is replaced, as in D203; no truncation. The
 sim plays the whole solve in 27.5 s: the lane's first crate, `crate_2`,
 the stair, two pushes of the ledge crate to the edge, `crate_3` six cells
 to the plate, back up, the drop, the cage.
-Level review: see the notes below.
+Level review: tune, done (the pocket stair above). Accepted: the lane's
+mouth crate pushed once west jams against `crate_1` (leave and re-enter:
+the door is beside it); `crate_5` dropped before `crate_3` is on the plate
+is the half-lit reset; Fork cast from the ledge replaces the stack's top
+(the cage then stays open for good), still needing both sockets, the stair
+and the drop. With the default all-ability search the mutation test is
+truncated (Compile and Cut & Paste, not Lattice abilities).
 **Why:** crates are no step in a pads room (D222); a stair is the ledge's
 way up, as in `zap_port` and `atrium`.
 
