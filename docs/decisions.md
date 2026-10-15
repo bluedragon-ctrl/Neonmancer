@@ -2738,3 +2738,30 @@ drops to the floor unhurt (no soft-lock, no bounce skip).
 **Why:** the old climb was a hop onto a 1-high bug and a hop onto the
 ledge; the stepping stone keeps the room's idea (freezing a walker on the
 right cell, then pushing it) with the pads rule's own pieces.
+
+### D237 — 2026-10-15 — Bolt Gallery on pads: a firing platform (5.17)
+`bolt_gallery` is a pads room, redesigned. The targets still stand two
+blocks up on the pillar row ([1,2,4] and [2,2,4]); a bolt flies at feet +
+0.48, so only feet at 2 or higher hit them. Without a crate step or a jump
+that is a 2-high platform on the south bank (x 1–2, z 8) reached by two
+stairs: `stair_nz` [4,0,9] from the spawn's foot onto a 1-high landing
+[4,0,8], then `stair_nx` [3,1,8] (on a block) onto the platform. From it a
+bolt along column x = 1 or x = 2 flies over the pit to `target_2` (cage
+and fragment pocket) or `target_1` (the north door). The pit is 2 deep
+(z 5–6; it was 3 with the jump over the last tile), so `crate_3` and the
+caged `crate_1` plug the x = 5 column under `tower_bridge`'s fire, as
+before; `crate_1` waits for `target_2`. From the north, `crate_e` and
+`crate_2` plug the pit, he climbs the south platform, shoots `target_2`
+and walks back for the fragment: the crossing both ways stays. The old
+order (the step crate shoots first, is spent last) is gone with crate
+steps: both targets are shot from one platform, the pressure is the three
+towers on the stairs, the platform and the crate pushes. Proven by sim:
+shots from every floor cell of both banks in eight directions switch no
+target (the only hits come from cells placed inside the pillar row); from
+the platform each column switches its target; the whole solve from the
+spawn takes 14.8 s and one tower hit. `check:reach` and the mutation test
+need Zap; both stairs' blocks, `crate_1`, `crate_3` and the gate matter
+(from the north: `crate_e`, `crate_2`). The checker counts every target as
+hit with Zap, so the lines are the sim's job.
+**Why:** crates are no step in a pads room (D222); a platform reached by
+stairs is the third dimension the room places, as in `zap_port`.

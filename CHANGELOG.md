@@ -28,6 +28,8 @@ docs/decisions.md).
   cross at floor level, and it is a hole again once it goes; it grows out of
   its middle as it comes. Validation wants a hole under a floor-level bridge;
   the checker and the showcase know the sheet.
+- `bolt_gallery` is a pads room (D237, step 5.17), redesigned: a 2-high firing
+  platform with two stairs replaces the step crate; the pit is 2 deep.
 - `freeze_hall` is a pads room (D236, step 5.17), redesigned: the frozen bug
   is a stepping stone over a slot in a walkway, not a step up; two stairs
   lead to and from it.
