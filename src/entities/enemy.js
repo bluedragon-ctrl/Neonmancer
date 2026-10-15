@@ -851,9 +851,13 @@ export class Enemy {
     return null;
   }
 
-  /** The grid as it sees it: frozen, it is a block like a crate, which a crate stream lets through (D198). */
+  /**
+   * The grid as it sees it: frozen, it is a block like a crate, which a
+   * crate stream lets through (D198); stairs and slabs are whole blocks
+   * (D229), so it never sinks onto a stair's slope.
+   */
   gridView(grid) {
-    return grid.forBody(this.frozen !== null ? 'crate' : 'wizard');
+    return grid.forBody(this.frozen !== null ? 'crate' : 'wizard').asBlocks();
   }
 
   /** Would its box at `pos` run into a block, a solid object or another enemy (of `bodies`)? */
@@ -879,7 +883,7 @@ export class Enemy {
   supportAt(pos, { grid, obstacles, player }, bodies = obstacles) {
     const box = enemyBox(pos, this.size);
     let top = surfaceBelow(box, this.gridView(grid), bodies, this);
-    if (this.solid && !this.passable && !player.dead) top = Math.max(top, surfaceBelow(box, grid, [player], this));
+    if (this.solid && !this.passable && !player.dead) top = Math.max(top, surfaceBelow(box, grid.asBlocks(), [player], this));
     const [x, , z] = pos;
     if (top === 0 && grid.isHole(x + 0.5, z + 0.5)) return -1;
     return top;

@@ -6,7 +6,7 @@ import { Game } from '../src/game.js';
 import { riseTurn, stairSegments } from '../src/render/stair-view.js';
 import { analyzeRoom } from '../src/world/reach.js';
 import { buildRoom } from '../src/world/room.js';
-import { BLOCK_TYPES, dataFiles, gameData, grid, hold, idle, input, roomFile } from './helpers.js';
+import { BLOCK_TYPES, BUG, dataFiles, gameData, grid, hold, idle, input, roomFile } from './helpers.js';
 
 /** Object types the tests use: a jump pad (D221). */
 const OBJECTS = { pad: { kind: 'pad', color: '#ff2bd6' }, pad_low: { kind: 'pad', color: '#ff2bd6', launch: 1.2 } };
@@ -226,4 +226,36 @@ test('stair look: the profile climbs the way of its rise', () => {
   assert.ok(tops('-x').every(([x]) => x <= 0.25 + 1e-9));
   assert.ok(tops('+z').every(([, , z]) => z >= 0.75 - 1e-9));
   assert.ok(tops('-z').every(([, , z]) => z <= 0.25 + 1e-9));
+});
+
+/**
+ * A game with a 1-high ledge over x 4..7 (z 0..7), a stair rising +x up to
+ * it at [3, 0, 2], a bug and the wizard far off at [0.5, 0, 7.5].
+ */
+function stairGame(enemy) {
+  const room = roomFile('r', {
+    spawn: [0.5, 0, 7.5],
+    blocks: [{ at: [4, 0, 0], to: [7, 0, 7] }, { type: 'stair_x', at: [3, 0, 2] }],
+    enemies: [{ id: 'b', template: 'bug', ...enemy }],
+  });
+  return new Game(gameData({ rooms: [room], enemies: { bug: BUG } }));
+}
+
+test('stair: an enemy walking off the ledge crosses its top as a block and drops off its foot (D229)', () => {
+  const game = stairGame({ at: [6, 1, 2], path: { points: [[0, 1, 2]] } });
+  const [bug] = game.enemies;
+  for (let i = 0; i < 180; i++) game.update(idle);
+  assert.ok(bug.pos[0] < 3, `it got past the stair (x ${bug.pos[0]})`);
+  assert.equal(bug.pos[1], 0, 'and stands on the floor');
+});
+
+test('stair: a frozen enemy pushed onto its top rests there, and stays a whole cell up once it thaws (D229)', () => {
+  const game = stairGame({ at: [4, 1, 2], variant: { movement: 'stationary' } });
+  const [bug] = game.enemies;
+  bug.freeze(30);
+  assert.ok(bug.push([-1, 0], game));
+  for (let i = 0; i < 90; i++) game.update(idle);
+  assert.equal(bug.frozen, null, 'it thawed');
+  assert.deepEqual(bug.pos, [3, 1, 2]);
+  assert.equal(bug.state, 'rest');
 });

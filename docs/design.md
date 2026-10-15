@@ -620,7 +620,10 @@ own, each in its own color.
   collapses, a crate breaks), it drops as it walks on (D80). Falling into
   a hole or onto a void block anyway pops it into pixels; it stays gone
   until the room resets. Hazard blocks don't hurt it; it never triggers
-  collapsing blocks.
+  collapsing blocks. A stair or a slab is a whole block to it (D229,
+  `Grid.asBlocks()`): it never climbs one, and off a ledge it crosses a
+  stair's top level with the ledge and drops off its foot, never onto
+  the slope; jump pads do nothing to it.
 - **The wizard** walks through enemies unless they are **solid**. A solid
   enemy blocks him like a crate; he can stand on it (if it doesn't bounce)
   and it carries him as it walks, walls scraping him off; walking into him

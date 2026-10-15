@@ -187,6 +187,22 @@ export class Grid {
     return view;
   }
 
+  /**
+   * The grid with every stair and slab a whole block (D229): what an enemy
+   * stands on. Its box is narrower than a cell, so on a stair's slope it
+   * would rest between whole heights; as a block it stands on the top.
+   * Made when first asked for, on each view (forBody()) on its own.
+   * @returns {Grid}
+   */
+  asBlocks() {
+    if (!this.shaped) return this;
+    if (!Object.hasOwn(this, 'blockView')) {
+      this.blockView = Object.create(this);
+      this.blockView.shaped = false;
+    }
+    return this.blockView;
+  }
+
   /** Is the column [x, z] (integers) inside the room's sides? */
   isInside(x, z) {
     return x >= 0 && z >= 0 && x < this.w && z < this.d;

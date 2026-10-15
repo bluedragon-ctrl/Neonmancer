@@ -442,6 +442,10 @@ docs/decisions.md).
   collapsing block no longer derezzes.
 
 ### Fixed
+- An enemy walking off a ledge onto a stair's top, or a frozen one pushed
+  there, sank onto the slope and stuck mid-step for good. A stair is a whole
+  block to enemies (D229): they cross its top and drop off its foot, and a
+  frozen one rests on it like a crate.
 - The jump pad no longer builds new line geometry every frame: its mesh and
   streaks rewrite their points in buffers they keep (a new GPU buffer per pad
   per frame before, never freed by three.js), and it is five draws instead of
