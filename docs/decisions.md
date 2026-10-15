@@ -2721,8 +2721,9 @@ landing, the slot, a block, a second stair (on a block, [2,1,8]) onto the
 2-high ledge with `fragment_1_1` at [1,2,9]. A drop into the slot leaves
 him on the floor, so only a body 1 high fills it: freeze the bug as it
 passes the gap, push it three cells south down x = 4 (a fence at [4,0,9]
-stops it in the slot), cross over it. The fences (landing and stopper)
-keep the slot in view from the camera. Played: bolts at a bug frozen at
+stops it in the slot), cross over it. The fences (landing and stopper, and the
+cage's camera-side wall at z 6) keep the slot and the bug in view from the
+camera. Played: bolts at a bug frozen at
 x 4.15–4.4 pass the gap; push 1.4–1.6 s, foot of the first stair 2.4–2.6 s,
 across the bug 3.3–3.5 s, on the ledge 3.7–3.9 s after the bolt, inside
 the 5 s freeze (1.1 s spare); the watchdog, 15 s, keeps 1.5× the worst
@@ -2730,6 +2731,10 @@ run (a wait of one lane cycle, about 10 s). Only Pause fills the slot
 (`check:reach` with `zap,scan,fork`: never; Blink alone crosses it, which
 the Lattice rule allows for exits and secrets only). `tut_pause`'s last
 line is now "A FROZEN BUG IS A BLOCK. PUSH IT LIKE A CRATE."
+Level review: keep. Notes: a bolt cast from inside the gap (z 4) is far
+more forgiving than one from z 3; a recast of Pause restarts the 5 s clock;
+if the bug thaws while he is on it or in the slot it walks out north and he
+drops to the floor unhurt (no soft-lock, no bounce skip).
 **Why:** the old climb was a hop onto a 1-high bug and a hop onto the
 ledge; the stepping stone keeps the room's idea (freezing a walker on the
 right cell, then pushing it) with the pads rule's own pieces.
