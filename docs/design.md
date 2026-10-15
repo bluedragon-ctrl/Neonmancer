@@ -2020,7 +2020,9 @@ it, and every new room)
 - Each mechanic should be seen before it matters: a pit, a hazard or a
   collapsing bridge in view from where the wizard enters. Every crate is
   visible to the player: never hidden from the camera behind tall blocks,
-  ledges or decorations, never inside a fake block (D164). A bridge that
+  ledges or decorations, never inside a fake block (D164). Stairs, plates, sockets
+  and targets are in view too: nothing hides them from the camera or from
+  the player's aim (D227). A bridge that
   starts gone shows no outline: the room that first shows bridges says
   what one is in a screen text.
 - Screen texts are help for a spell or concept met for the first time,

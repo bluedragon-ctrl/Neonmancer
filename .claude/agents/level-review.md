@@ -80,7 +80,9 @@ For each room:
      same way; shorter is a BLOCKER, less than ~2 s to spare a PROBLEM.
    - **Readability**: tall blocks vs the +x/+z camera, each mechanic
      visible from the entrance, every crate visible (none behind tall
-     blocks or decor, none inside fake blocks; D164), gates look like gates.
+     blocks or decor, none inside fake blocks; D164), every stair, plate,
+     socket and target visible and aimable from the camera (D227: a
+     hidden one is a PROBLEM, a hidden one the puzzle needs a BLOCKER), gates look like gates.
    - **Other solutions** (D166): a second way of the same or higher
      difficulty is fine (say so as a NOTE); only an easier one that skips
      the room's idea is a bypass (PROBLEM or BLOCKER).

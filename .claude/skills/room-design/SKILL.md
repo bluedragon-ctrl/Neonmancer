@@ -401,7 +401,13 @@ Edit existing files with small text edits, not a JSON dump.
    visible** (D164): never hidden behind a tall block, a ledge, a pillar or
    a memory wall from the camera (+x +y +z), never inside a fake block or
    walled in where no cell of it shows; one face in view (its top, +x or
-   +z) is enough.
+   +z) is enough. **Stairs, plates and targets are visible too** (D227):
+   every stair (foot and slope), floor plate, heavy plate, socket and bolt
+   target shows a face from the camera and can be aimed at or walked to:
+   never behind a tall block, ledge, pillar, decoration or memory wall,
+   never under a bridge or slab, never in a pocket walled in on the +x/+z
+   sides. Check each from the entrance; a bolt target also needs a clear
+   line of fire.
 2. **Gates look like gates** (a too-high ledge, a locked door): he should
    come back later, not think it is broken (D67).
 3. **He can always leave the way he came** with what he has; a room needn't

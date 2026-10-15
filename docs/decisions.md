@@ -2556,3 +2556,13 @@ The author asked for the room's color with a rising effect:
   the checker and the rooms are untouched, nothing authored is affected.
 **Why:** a pad and a shrine are opposites in play and must differ at a
 glance; shape and motion separate them, the room color keeps magenta rare.
+
+### D227 — 2026-10-15 — Stairs, plates and targets are visible too
+Like crates (D164), every stair, floor plate, heavy plate, socket and bolt
+target must show a face from the camera (+x +y +z) and be reachable by
+eye: not behind tall blocks, ledges, pillars, decorations or memory walls,
+not under a bridge or slab, not in a walled-in pocket. A target also needs
+a clear line of fire. Added to the room-design checklist (rule 1) and the
+level-review Readability check; the reachability checker knows nothing of
+the camera, so it stays a review rule.
+**Why:** a mechanic he can't see is a guess, the same as a hidden crate.
