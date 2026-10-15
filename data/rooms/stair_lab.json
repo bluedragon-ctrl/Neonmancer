@@ -32,6 +32,7 @@
     { "id": "pad_out", "type": "pad", "at": [5, 0, 9] },
     { "id": "pad_in", "type": "pad", "at": [3, 0, 10] }
   ],
+  "enemies": [{ "id": "virus_1", "template": "virus", "at": [7, 0, 10] }],
   "pickups": [
     { "id": "energy", "type": "refill_energy", "at": [9, 2, 1] },
     { "id": "integrity", "type": "refill_integrity", "at": [1, 0, 9] }

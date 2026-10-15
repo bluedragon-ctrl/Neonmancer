@@ -11,8 +11,10 @@
  * Chasing is greedy: towards him along the axis where he is farther, else
  * along the other one; the enemy takes the first of these steps that is
  * free and safe. So a wall between them stops it: the wizard can hide
- * behind blocks and trap it with crates. While he is within its attack
- * range it holds its ground (it attacks from there). Searching and going
+ * behind blocks and trap it with crates. On another level than its own
+ * (up a stair, on a ledge, D230) it finds its way to him instead, up and
+ * down stairs, and goes greedy again where there is no way. While he is
+ * within its attack range it holds its ground (it attacks from there). Searching and going
  * home it finds its way round walls (the enemy's route(), a shortest
  * walk); going home it gives up only when there is no way back.
  */
@@ -67,16 +69,16 @@ export class Chase {
    * stay put.
    * @param {number} x
    * @param {number} z
-   * @param {{ lastSeen: number[]|null, inRange: boolean }} senses where it last saw
-   *   him (a column), and whether he is within its attack range
+   * @param {{ lastSeen: number[]|null, inRange: boolean, levelApart?: boolean }} senses where it last saw
+   *   him (a column), whether he is within its attack range, and whether he stands on another level
    * @param {(column: number[]) => number[]|null} [route] first step of a
    *   shortest walk to a column, null if there or no way (Enemy.route());
    *   without it, it steps greedily
    * @returns {number[]|number[][]|null}
    */
   next(x, z, senses, route) {
-    const { lastSeen, inRange } = senses;
-    if (this.mode === 'chase') return inRange ? null : towards(x, z, lastSeen);
+    const { lastSeen, inRange, levelApart } = senses;
+    if (this.mode === 'chase') return inRange ? null : (levelApart && route && lastSeen && route(lastSeen)) || towards(x, z, lastSeen);
     // Searching: to where he was, round walls if it can, then it waits there, looking.
     if (this.mode === 'search') return (route && lastSeen && route(lastSeen)) || towards(x, z, lastSeen);
     if (this.mode === 'return') {

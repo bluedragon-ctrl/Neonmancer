@@ -22,6 +22,10 @@
  * walking too: it drops as it walks on). It never starts a step into a
  * cell another enemy is walking into, and something in its way mid-step
  * turns it back to the cell it left, where it waits turnTicks (D80).
+ * Stairs (D230): it walks up one from its foot and down one from its
+ * top, two cells on in one step (Grid.stairStep()); pushed or pulled
+ * (frozen, Pull) it only goes down one, like a crate. It never stands on a stair, and a stair's
+ * sides and back are walls to it.
  * Seeing: a hostile enemy with an aggro range notices the wizard within it
  * when nothing blocks the line between them (ai/sight.js); a "!" pops up
  * over it then, when a provoked one turns hostile, and when anything hits
@@ -44,7 +48,7 @@
  * him (turning back if he is pinned), like a moving platform. Touching a
  * hostile one with a touch attack hurts him, and landing on a bouncy one
  * bounces him up (Game.update()). Crates, platforms, walls, other
- * enemies and a step up block it. Pushables rest on it and can't be pushed
+ * enemies and a step up (but a stair) block it. Pushables rest on it and can't be pushed
  * into it; platforms carry it and wait for it (entities/platform.js).
  */
 import { DT } from '../core/loop.js';
@@ -53,6 +57,7 @@ import { CHARGED_ATTACKS, DISCHARGES, bossPhases } from '../data/room-data.js';
 import { seededRandom, stringSeed } from '../core/random.js';
 import { boxCenter, lineOfSight, reach } from '../ai/sight.js';
 import { GRAVITY, MAX_FALL } from '../core/rules.js';
+import { stairHeight } from '../world/grid.js';
 import { REST_EPS, fallStep, moveAxis, overlapsBox, overlapsSolid, restsOn, shoveClear, surfaceBelow } from '../physics/collision.js';
 
 /** Tuning values (units, ticks). */
@@ -135,6 +140,8 @@ export class Enemy {
     this.from = null;
     this.target = null;
     this.walked = 0;
+    /** While walking: 0 for a level step, 1 up a stair, −1 down one (D230; Grid.stairStep()). */
+    this.rise = 0;
     /** Scratch position for the step being tried (walk()), reused every tick. */
     this.next = [0, 0, 0];
     /** Direction it faces, radians around y (0 looks along +z, like the models). */
@@ -300,12 +307,17 @@ export class Enemy {
     const base = this.state === 'walk' ? (this.walked < 0.5 ? this.from : this.target) : this.pos;
     if (!Number.isInteger(base[0]) || !Number.isInteger(base[2])) return false; // riding a platform between stops
     const [x, y, z] = [base[0], this.pos[1], base[2]];
-    const target = [x + dx, y, z + dz];
+    if (!Number.isInteger(y)) return false; // on its way up or down a stair
+    // Off a ledge over a stair's top it slides down it (D230), never up one; level anywhere else.
+    const step = game.grid.stairStep(x, y, z, dx, dz, false); // pushed or pulled, down a stair only
+    if (!step) return false;
+    const { to: target, via } = step;
     if (!game.grid.isInside(target[0], target[2]) || this.claimed(target, game)) return false;
-    if (this.blockedAt(target, game, [...game.obstacles, game.player])) return false;
+    const bodies = [...game.obstacles, game.player];
+    if (this.blockedAt(target, game, bodies) || (via && this.blockedAt(via, game, bodies))) return false;
     if (this.attackTick !== null) this.endAttack();
     this.pulled = [x, y, z];
-    this.pullTo(target);
+    this.pullTo(target, step.rise);
     return true;
   }
 
@@ -326,22 +338,24 @@ export class Enemy {
     return this.pushable && !this.pulled && this.pull(dir, game);
   }
 
-  /** Slide from where it is to the cell `target`, at the pull's speed. */
-  pullTo(target) {
-    this.startStep(target, ENEMY.pullSpeed / (Math.hypot(target[0] - this.pos[0], target[2] - this.pos[2]) || 1));
+  /** Slide from where it is to the cell `target` (up or down a stair by `rise`), at the pull's speed. */
+  pullTo(target, rise = 0) {
+    this.startStep(target, ENEMY.pullSpeed / (Math.hypot(target[0] - this.pos[0], target[2] - this.pos[2]) || 1), rise);
   }
 
   /**
    * Start walking from where it is into the cell `target`.
    * @param {number[]} target
    * @param {number} speed share of the step per second
+   * @param {number} [rise] 1 up a stair, −1 down one, 0 level (D230)
    */
-  startStep(target, speed) {
+  startStep(target, speed, rise = 0) {
     this.state = 'walk';
     this.from = [...this.pos];
     this.target = target;
     this.walked = 0;
     this.stepSpeed = speed;
+    this.rise = rise;
   }
 
   /** Does it stand in a whole cell (not riding a platform between stops)? */
@@ -437,6 +451,14 @@ export class Enemy {
     if (!this.sees || saw) return false;
     this.alert = 0;
     return true;
+  }
+
+  /**
+   * Does what it sees stand on another level, half a block or more up or
+   * down? A chaser then finds its way to him, up or down stairs (D230).
+   */
+  get levelApart() {
+    return this.focus !== null && Math.abs(this.focus.pos[1] - this.pos[1]) >= 0.5;
   }
 
   /** What it looks at and attacks: what it sees (the wizard or his decoy), else the wizard. */
@@ -576,15 +598,18 @@ export class Enemy {
       return null;
     }
     const steps = Array.isArray(found[0]) ? found : [found];
-    const step = steps.find(([dx, dz]) => this.canStep([x + dx, y, z + dz], game)) ?? null;
-    const [dx, dz] = step ?? steps[0];
+    let move = null;
+    for (const dir of steps) if ((move = this.stepTo(this.pos, dir, game))) break;
+    const [dx, dz] = move?.dir ?? steps[0];
     this.facing = Math.atan2(dx, dz);
-    if (!step) {
+    if (!move) {
       this.behavior.turnBack();
       this.wait = ENEMY.turnTicks;
       return null;
     }
-    this.startStep([x + dx, y, z + dz], this.behavior.chasing ? this.data.chaseSpeed : this.speed);
+    // A stair step goes two cells on (D230): the same pace along the ground.
+    const speed = this.behavior.chasing ? this.data.chaseSpeed : this.speed;
+    this.startStep(move.to, move.rise === 0 ? speed : speed / 2, move.rise);
     return this.walk(game); // no standing still between cells
   }
 
@@ -665,8 +690,8 @@ export class Enemy {
    * crate breaks), it drops as it walks on.
    */
   walk(game) {
-    const { from, target, next } = this;
-    const support = this.support(game);
+    const { from, target, next, rise } = this;
+    const support = rise === 0 ? this.support(game) : this.pos[1]; // on a stair it keeps to the slope (D230)
     if (this.vy !== 0 || support < this.pos[1] - REST_EPS) {
       if (this.drop(support) && support < 0) return this.die('hole');
       from[1] = target[1] = this.pos[1];
@@ -678,10 +703,13 @@ export class Enemy {
     const walked = Math.min(this.walked + this.stepSpeed * DT, 1);
     const arrived = walked >= 1 - SNAP;
     for (let i = 0; i < 3; i++) next[i] = arrived ? target[i] : from[i] + (target[i] - from[i]) * walked;
+    if (rise !== 0 && !arrived) next[1] = from[1] + stairHeight(rise, walked);
     // Something in the way, or (solid) the wizard pinned: turn back instead of crushing him.
-    if (this.blockedAt(next, game) || (this.solid && !this.carryPlayer(next, game))) {
-      // Pulled: back to the whole cell it was pulled from (or wait there on the way).
+    // On a stair only bodies can be in the way: the cells were free when it set off.
+    if (this.blockedAt(next, game, game.obstacles, rise === 0) || (this.solid && !this.carryPlayer(next, game))) {
+      // Pulled: back to the whole cell it was pulled from (or wait there on the way); on a stair, back the way it came.
       if (!this.pulled) this.turnAround();
+      else if (rise !== 0) this.reverse();
       else if (!target.every((v, i) => v === this.pulled[i])) this.pullTo([...this.pulled]);
       return null;
     }
@@ -690,6 +718,7 @@ export class Enemy {
     if (arrived) {
       this.state = 'rest';
       this.from = this.target = null;
+      this.rise = 0;
       this.pulled = null;
       // Off a ledge or onto a hole: fall right away.
       if (!this.startFalling(game) && this.onLethal(game.grid)) return this.die('void');
@@ -703,11 +732,17 @@ export class Enemy {
    * forth for ever.
    */
   turnAround() {
-    [this.from, this.target] = [this.target, this.from];
-    this.walked = 1 - this.walked;
+    this.reverse();
     this.facing = Math.atan2(this.target[0] - this.from[0], this.target[2] - this.from[2]);
     this.behavior.turnBack();
     this.wait = ENEMY.turnTicks;
+  }
+
+  /** Swap the cells it walks between, keeping where it is: back up a stair it was going down, and the other way round. */
+  reverse() {
+    [this.from, this.target] = [this.target, this.from];
+    this.walked = 1 - this.walked;
+    this.rise = -this.rise;
   }
 
   /** Start falling if nothing holds it up (keeping its fall speed off a step). @returns {boolean} whether it did */
@@ -739,6 +774,7 @@ export class Enemy {
   /** @param {'hole'|'void'|'zap'|'discharge'|'bolt'|'firewall'|'blink'|'spikes'} cause */
   die(cause) {
     this.state = 'dead';
+    this.rise = 0;
     this.frozen = null;
     this.pulled = null;
     this.warp = null;
@@ -779,12 +815,28 @@ export class Enemy {
   }
 
   /**
-   * Can it step into the cell `target` now: inside the room, clear of
-   * blocks and bodies, no other enemy walking into it (D80), and safe
-   * there (see landing())?
+   * Where a step along `dir` from the whole cell `cell` takes it now, or
+   * null if it can't go: into the next cell, or up or down a stair two
+   * cells on (D230, Grid.stairStep()); inside the room, clear of blocks
+   * and `bodies`, the stair's cell too, no other enemy walking into it
+   * (D80, not asked when `claims` is false), and safe there (see landing()).
+   * @param {number[]} cell [x, y, z]
+   * @param {number[]} dir [dx, dz]
+   * @param {import('../game.js').Game} game
+   * @param {object[]} [bodies] what can be in the way; `game.obstacles` by default
+   * @param {boolean} [claims] whether another enemy walking into the cell stops it
+   * @returns {{ to: number[], ground: number, rise: number, dir: number[] }|null} `to` the cell it
+   *   walks into, `ground` the height it stands at there (lower off a ledge, where it falls)
    */
-  canStep(target, game) {
-    return !this.claimed(target, game) && this.landing(target, game) !== null;
+  stepTo([x, y, z], dir, game, bodies = game.obstacles, claims = true) {
+    const step = game.grid.stairStep(x, y, z, dir[0], dir[1]);
+    if (!step) return null;
+    const { to, via, rise } = step;
+    if (claims && this.claimed(to, game)) return null;
+    if (via && (!game.grid.isInside(via[0], via[2]) || this.blockedAt(via, game, bodies))) return null;
+    const ground = this.landing(to, game, bodies);
+    if (ground === null) return null;
+    return { to, ground, rise, dir };
   }
 
   /** Is another enemy walking into the cell `target`? */
@@ -816,7 +868,8 @@ export class Enemy {
    * The first step [dx, dz] of a shortest walk from its cell to the column
    * `[tx, tz]` (at whatever height it ends up), round blocks, holes, lethal
    * blocks, objects and enemies standing still (walking ones will have
-   * moved on), down ledges but never up a step (D80). Null when it is
+   * moved on), down ledges and up and down stairs but never up a step
+   * (D80, D230). Null when it is
    * there or can't get there. A breadth-first search over the room's
    * cells, only asked for from a whole cell when a behavior wants it.
    * @param {number[]} column [x, z]
@@ -836,10 +889,9 @@ export class Enemy {
     for (let i = 0; i < queue.length; i++) {
       const cell = queue[i];
       for (const [dx, dz] of steps) {
-        const next = [cell[0] + dx, cell[1], cell[2] + dz];
-        const ground = this.landing(next, game, bodies);
-        if (ground === null) continue;
-        next[1] = ground;
+        const move = this.stepTo(cell, [dx, dz], game, bodies, false);
+        if (!move) continue;
+        const next = [move.to[0], move.ground, move.to[2]];
         const key = next.join();
         if (first.has(key)) continue;
         const step = first.get(cell.join()) ?? [dx, dz];
@@ -851,15 +903,20 @@ export class Enemy {
     return null;
   }
 
-  /** The grid as it sees it: frozen, it is a block like a crate, which a crate stream lets through (D198). */
+  /**
+   * The grid as it sees it: frozen, it is a block like a crate, which a
+   * crate stream lets through (D198); to stand on, stairs and slabs are
+   * whole blocks (D230): it never rests on a slope (it goes up and down
+   * stairs by stairStep()).
+   */
   gridView(grid) {
-    return grid.forBody(this.frozen !== null ? 'crate' : 'wizard');
+    return grid.forBody(this.frozen !== null ? 'crate' : 'wizard').asBlocks();
   }
 
-  /** Would its box at `pos` run into a block, a solid object or another enemy (of `bodies`)? */
-  blockedAt(pos, { grid, obstacles }, bodies = obstacles) {
+  /** Would its box at `pos` run into a block (unless `blocks` is false), a solid object or another enemy (of `bodies`)? */
+  blockedAt(pos, { grid, obstacles }, bodies = obstacles, blocks = true) {
     const box = enemyBox(pos, this.size);
-    if (overlapsSolid(box, this.gridView(grid))) return true;
+    if (blocks && overlapsSolid(box, this.gridView(grid))) return true;
     for (const body of bodies) {
       if (body !== this && overlapsBox(box, body.box())) return true;
     }
@@ -879,7 +936,7 @@ export class Enemy {
   supportAt(pos, { grid, obstacles, player }, bodies = obstacles) {
     const box = enemyBox(pos, this.size);
     let top = surfaceBelow(box, this.gridView(grid), bodies, this);
-    if (this.solid && !this.passable && !player.dead) top = Math.max(top, surfaceBelow(box, grid, [player], this));
+    if (this.solid && !this.passable && !player.dead) top = Math.max(top, surfaceBelow(box, grid.asBlocks(), [player], this));
     const [x, , z] = pos;
     if (top === 0 && grid.isHole(x + 0.5, z + 0.5)) return -1;
     return top;

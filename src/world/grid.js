@@ -44,15 +44,32 @@ export const SLAB_HEIGHT = 0.04;
 /** A stair's `rise` (the way it climbs, D221) as [axis, sign]. */
 export const RISES = { '+x': [0, 1], '-x': [0, -1], '+z': [2, 1], '-z': [2, -1] };
 
-/** What part of its cell a block type fills (D221): null for the whole cell. */
+/** What part of its cell a block type fills (D221): null for the whole cell. A stair's `step` is its rise as [dx, dz]. */
 function shapeOf(type) {
-  if (type?.look === 'stair') return { rise: RISES[type.rise] };
+  if (type?.look === 'stair') {
+    const [axis, sign] = RISES[type.rise];
+    return { rise: [axis, sign], step: axis === 0 ? [sign, 0] : [0, sign] };
+  }
   if (type?.look === 'slab') return { bottom: 1 - SLAB_HEIGHT };
   return null;
 }
 
 /** What typeAt() returns beyond the room's sides and below its floor: solid, nothing else. */
 export const EDGE_TYPE = Object.freeze({ id: 'edge', static: true, look: 'plain' });
+
+/**
+ * How far up a body is on a stair move (D230, Grid.stairStep()), `walked`
+ * (0..1) of the way from its cell to the cell beyond the stair: going up
+ * it climbs over the first half (onto the stair's cell) and walks level
+ * onto the top in the second; going down the other way round. A whole
+ * cell wide body (a crate) rests on the slope all the way.
+ * @param {number} rise 1 up, −1 down
+ * @param {number} walked
+ * @returns {number} height above (up) or below (down) where it started
+ */
+export function stairHeight(rise, walked) {
+  return rise > 0 ? Math.min(1, 2 * walked) : -Math.max(0, 2 * walked - 1);
+}
 
 export class Grid {
   /**
@@ -185,6 +202,51 @@ export class Grid {
       this.views.set(kind, view);
     }
     return view;
+  }
+
+  /**
+   * The grid with every stair and slab a whole block (D230): what an enemy
+   * stands on. Its box is narrower than a cell, so on a stair's slope it
+   * would rest between whole heights; as a block it stands on the top.
+   * Made when first asked for, on each view (forBody()) on its own.
+   * @returns {Grid}
+   */
+  asBlocks() {
+    if (!this.shaped) return this;
+    if (!Object.hasOwn(this, 'blockView')) {
+      this.blockView = Object.create(this);
+      this.blockView.shaped = false;
+    }
+    return this.blockView;
+  }
+
+  /** The way the stair in the cell [x, y, z] rises, as [dx, dz], or null if no stair is there. */
+  stairAt(x, y, z) {
+    return this.shapes[this.cellAt(x, y, z)]?.step ?? null;
+  }
+
+  /**
+   * Where a body a cell wide (a crate, an enemy) goes stepping from the
+   * cell [x, y, z] along [dx, dz] (D230): into the next cell, level; or by
+   * a stair, the way it rises from its foot or down it from its top, two
+   * cells on and a block up or down (`rise`), passing over the stair's
+   * cell (`via`, which must be free too). Null when the next cell is a
+   * stair entered from its side or back, or a stair's top entered other
+   * than down it: such a body never rests on a stair. Whether the cells
+   * are free is the caller's to ask, of its own view of the grid.
+   * Pushed or pulled (`climbs` false: crates, frozen enemies, Pull) a body
+   * only goes down a stair: to it a stair's foot is a wall (D230).
+   * @param {boolean} [climbs] can it go up a stair (an enemy walking)?
+   * @returns {{ to: number[], via: number[]|null, rise: number }|null}
+   */
+  stairStep(x, y, z, dx, dz, climbs = true) {
+    const nx = x + dx;
+    const nz = z + dz;
+    const up = this.stairAt(nx, y, nz);
+    if (up) return climbs && up[0] === dx && up[1] === dz ? { to: [nx + dx, y + 1, nz + dz], via: [nx, y + 1, nz], rise: 1 } : null;
+    const down = y > 0 ? this.stairAt(nx, y - 1, nz) : null;
+    if (down) return down[0] === -dx && down[1] === -dz ? { to: [nx + dx, y - 1, nz + dz], via: [nx, y, nz], rise: -1 } : null;
+    return { to: [nx, y, nz], via: null, rise: 0 };
   }
 
   /** Is the column [x, z] (integers) inside the room's sides? */

@@ -9,6 +9,15 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Changed
+- Stairs are for everyone, pads only for him (D230). Enemies walk up a
+  stair from its foot and down off its top, a chaser that sees the wizard
+  on another level finds its way there by stairs, and one off its path or
+  post comes back by them. A crate or a frozen enemy pushed (or pulled)
+  off a ledge over a stair's top slides down it to its foot in one push;
+  it is never pushed up a stair (its foot is a wall to it), and into a
+  stair's side, or onto its top from the side, it doesn't move. The reachability checker
+  and the Sokoban solver push crates the same way; the world report is
+  unchanged. Patrol paths stay level.
 - The jump pad is a trampoline in the room's color (D226): a glass rim round a
   taut mesh over a dark sheet that breathes, ripples and dips and rebounds on a
   launch, with streaks of light rising off it. It no longer looks like the
@@ -442,6 +451,9 @@ docs/decisions.md).
   collapsing block no longer derezzes.
 
 ### Fixed
+- An enemy walking off a ledge onto a stair's top, or a frozen one pushed
+  there, no longer sinks onto the slope and sticks mid-step for good: its
+  slope is never an enemy's ground (`Grid.asBlocks()`).
 - The jump pad no longer builds new line geometry every frame: its mesh and
   streaks rewrite their points in buffers they keep (a new GPU buffer per pad
   per frame before, never freed by three.js), and it is five draws instead of

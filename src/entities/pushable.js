@@ -4,7 +4,7 @@
  * with `integrity` (destructible) breaks when spells have taken all of it.
  * Pure logic, one call to update() per fixed tick.
  *
- *   rest ──push──► slide ──arrive──► rest
+ *   rest ──push──► slide ──arrive──► rest   (down a stair: two cells on, a block down, D230)
  *   rest ──no support──► fall ──land──► rest
  *                               └─into a hole──► plugged (floor from now on)
  *   rest, slide, fall ──last integrity hit away──► broken (gone until the room resets)
@@ -13,6 +13,7 @@
 import { DT } from '../core/loop.js';
 import { GRAVITY, MAX_FALL } from '../core/rules.js';
 import { REST_EPS, cellBox, fallStep, overlapsBox, restsOn, surfaceBelow } from '../physics/collision.js';
+import { stairHeight } from '../world/grid.js';
 
 /** Tuning values (units, seconds). */
 export const PUSHABLE = {
@@ -49,6 +50,10 @@ export class Pushable {
     this.vy = 0;
     /** While sliding: the cell it slides into. */
     this.target = null;
+    /** While sliding down a stair (rise −1, D230): the cell it left, and how far it got (0..1); rise 0 on a level slide. */
+    this.rise = 0;
+    this.from = null;
+    this.walked = 0;
     /**
      * A compiled crate's lifetime in ticks (Compile, D125), and the ticks
      * left of it; both null for an ordinary crate, which stays.
@@ -124,6 +129,10 @@ export class Pushable {
   /**
    * Try to push the object one cell along [dx, dz]. Only a resting,
    * supported object with nothing on top moves, into a free cell (D4).
+   * Off a ledge over a stair's top, the way it falls, it slides down it to
+   * the cell at its foot (D230, Grid.stairStep()); never up a stair: into
+   * a stair, or onto its top any other way, it doesn't move. A crate never
+   * rests on a stair.
    * @param {number[]} dir [dx, dz], one of them ±1
    * @param {{ grid: import('../world/grid.js').Grid, bodies: Iterable<{ box(): number[][] }> }} world
    * @returns {boolean} whether it started sliding
@@ -132,16 +141,22 @@ export class Pushable {
     const grid = crateGrid(wizardGrid);
     if (this.state !== 'rest' || this.hasLoad(bodies)) return false;
     const [x, y, z] = this.pos;
-    const target = [x + dx, y, z + dz];
     // Resting objects sit on whole cells, except on top of the player or
     // on a platform between its stops.
-    if (!this.pos.every(Number.isInteger) || grid.isSolid(...target)) return false;
+    if (!this.pos.every(Number.isInteger)) return false;
+    const step = grid.stairStep(x, y, z, dx, dz, false);
+    if (!step) return false;
+    const { to: target, via } = step;
+    if (grid.isSolid(...target) || (via && grid.isSolid(...via))) return false;
     // Objects never leave through an exit: rooms reset, so they would be lost.
     if (!grid.isInside(target[0], target[2])) return false;
     if (this.support(grid, bodies) < y - REST_EPS) return false; // about to fall
-    if (overlapsAny(cellBox(target), bodies, this)) return false;
+    if (overlapsAny(cellBox(target), bodies, this) || (via && overlapsAny(cellBox(via), bodies, this))) return false;
     this.state = 'slide';
     this.target = target;
+    this.rise = step.rise;
+    this.from = [...this.pos];
+    this.walked = 0;
     return true;
   }
 
@@ -162,16 +177,19 @@ export class Pushable {
 
     if (this.state === 'slide') {
       const step = PUSHABLE.slideSpeed * DT;
-      const next = this.pos.map((p, i) => {
+      const next = this.rise === 0 ? this.pos.map((p, i) => {
         const t = this.target[i];
         return Math.abs(t - p) <= step ? t : p + Math.sign(t - p) * step;
-      });
+      }) : this.stairSlide(step);
       // Something stepped into the way (the player jumping in): wait.
       if (overlapsAny(cellBox(next), bodies, this)) return null;
       this.pos = next;
+      if (this.rise !== 0) this.walked = Math.min(1, this.walked + step / 2);
       if (next.every((p, i) => p === this.target[i])) {
         this.state = 'rest';
         this.target = null;
+        this.rise = 0;
+        this.from = null;
         this.startFalling(grid, bodies); // off a ledge or onto a hole: fall right away
       }
       return null;
@@ -196,6 +214,19 @@ export class Pushable {
     }
 
     return null; // plugged: part of the floor now
+  }
+
+  /**
+   * Where a slide down a stair (D230) takes it this tick, `step`
+   * units on along the ground: two cells in all, its bottom on the slope.
+   * @param {number} step
+   * @returns {number[]}
+   */
+  stairSlide(step) {
+    const walked = Math.min(1, this.walked + step / 2);
+    if (walked >= 1) return [...this.target];
+    const { from, target } = this;
+    return [from[0] + (target[0] - from[0]) * walked, from[1] + stairHeight(this.rise, walked), from[2] + (target[2] - from[2]) * walked];
   }
 
   /**

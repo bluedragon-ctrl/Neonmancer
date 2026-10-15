@@ -6,10 +6,10 @@ import { Game } from '../src/game.js';
 import { riseTurn, stairSegments } from '../src/render/stair-view.js';
 import { analyzeRoom } from '../src/world/reach.js';
 import { buildRoom } from '../src/world/room.js';
-import { BLOCK_TYPES, dataFiles, gameData, grid, hold, idle, input, roomFile } from './helpers.js';
+import { BLOCK_TYPES, BUG, CRATE, VIRUS, dataFiles, gameData, grid, hold, idle, input, roomFile } from './helpers.js';
 
 /** Object types the tests use: a jump pad (D221). */
-const OBJECTS = { pad: { kind: 'pad', color: '#ff2bd6' }, pad_low: { kind: 'pad', color: '#ff2bd6', launch: 1.2 } };
+const OBJECTS = { pad: { kind: 'pad', color: '#ff2bd6' }, pad_low: { kind: 'pad', color: '#ff2bd6', launch: 1.2 }, crate: CRATE };
 
 /** A 1-high ledge over x 4..7 and a stair rising +x up to it at x 3, along z 0..7. */
 function stairGrid(extra = {}) {
@@ -197,6 +197,25 @@ test('reach: in a pads room a bouncy enemy he falls onto is a pad (D223)', () =>
   assert.equal(over({ blocks: [high, ledge, stair], enemies: [bug] }), false, 'a 3-high wall stops the bounce');
 });
 
+test('reach: a crate pushed down a stair plugs the pit at its foot, never up one (D230)', () => {
+  // A 1-high ledge over z 0..4 he starts on, a stair down from it at [4, 0, 5] (rising −z), a pit along z 6, the pickup beyond.
+  const room = (crate) => ({
+    jump: 'pads',
+    spawn: [1.5, 1, 1.5],
+    blocks: [{ at: [0, 0, 0], to: [7, 0, 4] }, { type: 'stair_nz', at: [4, 0, 5] }],
+    holes: [{ at: [0, 6], to: [7, 6] }],
+    pickups: [{ ...FAR, at: [4, 0, 7] }],
+    objects: crate ? [{ id: 'c', type: 'crate', at: crate }] : [],
+  });
+  const far = (crate) => {
+    const content = gameData({ rooms: [roomFile('r', room(crate))], objects: OBJECTS });
+    return analyzeRoom(buildRoom(content.rooms.get('r'), content), { abilities: [], starts: [[1, 1, 1]], tuning: { scanRange: 6, blinkRange: 3 } }).pickups.has('far');
+  };
+  assert.equal(far([4, 1, 3]), true, 'down the stair into the pit');
+  assert.equal(far(null), false, 'no crate, no way over');
+  assert.equal(far([2, 0, 5]), false, 'a crate on the floor below never goes up the stair to the ledge');
+});
+
 test('reach: he walks under a slab a cell up', () => {
   // A full-height wall with a gap at [4, 0, 3], closed a cell up by a block or a slab.
   const through = (type) => {
@@ -226,4 +245,117 @@ test('stair look: the profile climbs the way of its rise', () => {
   assert.ok(tops('-x').every(([x]) => x <= 0.25 + 1e-9));
   assert.ok(tops('+z').every(([, , z]) => z >= 0.75 - 1e-9));
   assert.ok(tops('-z').every(([, , z]) => z <= 0.25 + 1e-9));
+});
+
+/**
+ * A game with a 1-high ledge over x 4..7 (z 0..7), a stair rising +x up to
+ * it at [3, 0, 2], the given enemies and crates, and the wizard at `pos`
+ * (far off by default).
+ */
+function stairGame({ enemies = [], crates = [], blocks = [], pos = [0.5, 0, 7.5] } = {}) {
+  const room = roomFile('r', {
+    spawn: [0.5, 0, 7.5],
+    blocks: [{ at: [4, 0, 0], to: [7, 0, 7] }, { type: 'stair_x', at: [3, 0, 2] }, ...blocks],
+    enemies: enemies.map((enemy, i) => ({ id: `e${i}`, template: 'bug', ...enemy })),
+    objects: crates.map((at, i) => ({ id: `c${i}`, type: 'crate', at })),
+  });
+  const game = new Game(gameData({ rooms: [room], objects: { crate: CRATE }, enemies: { bug: BUG, virus: { ...VIRUS, attack: 'touch' } } }));
+  game.player.place(pos);
+  return game;
+}
+
+/** Run the game until `done()` (at most `limit` ticks); fails if it never is. */
+function runUntil(game, done, what, limit = 600) {
+  for (let i = 0; i < limit; i++) {
+    if (done()) return;
+    game.update(idle);
+  }
+  assert.fail(what);
+}
+
+test('stair: an enemy walks down it off the ledge and back up it, never resting on it (D230)', () => {
+  const game = stairGame({ enemies: [{ at: [6, 1, 2], path: { points: [[0, 1, 2]] } }] });
+  game.invincible = true;
+  const [bug] = game.enemies;
+  let onStair = false;
+  const watch = () => {
+    if (bug.state === 'rest' && bug.pos[0] === 3) onStair = true;
+    return false;
+  };
+  runUntil(game, () => watch() || (bug.state === 'rest' && bug.pos[0] === 0), 'it walked down to the far end');
+  assert.equal(bug.pos[1], 0, 'on the floor');
+  runUntil(game, () => watch() || (bug.state === 'rest' && bug.pos[0] === 6), 'and back up to the start');
+  assert.equal(bug.pos[1], 1, 'on the ledge');
+  assert.equal(onStair, false, 'never standing on the stair');
+});
+
+test('stair: its side is a wall to an enemy, and so is its top from the side (D230)', () => {
+  const game = stairGame({ enemies: [{ at: [1, 0, 5], variant: { movement: 'stationary' } }] });
+  const [bug] = game.enemies;
+  assert.equal(bug.stepTo([3, 0, 3], [0, -1], game), null, 'into its side');
+  assert.equal(bug.stepTo([3, 0, 1], [0, 1], game), null, 'into its other side');
+  assert.equal(game.grid.stairStep(3, 1, 3, 0, -1), null, 'onto its top from the side');
+  assert.equal(bug.stepTo([2, 0, 2], [1, 0], game).rise, 1, 'up from its foot');
+  assert.equal(bug.stepTo([4, 1, 2], [-1, 0], game).rise, -1, 'down from the ledge');
+});
+
+test('stair: a chaser goes up it after the wizard on the ledge (D230)', () => {
+  const game = stairGame({ enemies: [{ template: 'virus', at: [1, 0, 2] }], pos: [5.5, 1, 4.5] });
+  game.invincible = true;
+  const [virus] = game.enemies;
+  runUntil(game, () => virus.pos[1] === 1 && virus.state === 'rest', 'it climbed onto the ledge');
+  assert.ok(virus.pos[0] >= 4, `on the ledge (x ${virus.pos[0]})`);
+});
+
+test('stair: a frozen enemy pushed off the ledge slides down it to its foot, never up it (D230)', () => {
+  const game = stairGame({ enemies: [{ at: [4, 1, 2], variant: { movement: 'stationary' } }, { at: [2, 0, 5], variant: { movement: 'stationary' } }] });
+  const [bug, low] = game.enemies;
+  low.pos = [2, 0, 2];
+  low.freeze(600);
+  assert.equal(low.push([1, 0], game), false, 'into its foot: a wall');
+  low.pos = [2, 0, 5];
+  bug.freeze(600);
+  assert.ok(bug.push([-1, 0], game));
+  runUntil(game, () => bug.state === 'rest', 'it arrived');
+  assert.deepEqual(bug.pos, [2, 0, 2]);
+});
+
+test("stair: a crate is never pushed up it; pushed off the ledge over its top it slides down to its foot (D230)", () => {
+  const game = stairGame({ crates: [[2, 0, 2], [5, 1, 2]] });
+  const [low, high] = game.objects.filter((o) => o.kind === 'pushable');
+  assert.equal(low.push([1, 0], game), false, 'into its foot: a wall');
+  assert.ok(high.push([-1, 0], game));
+  runUntil(game, () => high.state === 'rest', 'it arrived', 120);
+  assert.deepEqual(high.pos, [4, 1, 2], 'one cell along the ledge first');
+  // The low crate is in the foot cell: down is blocked until it moves.
+  assert.equal(high.push([-1, 0], game), false, 'its foot is taken');
+  low.pos = [1, 0, 5];
+  let lowest = Infinity;
+  assert.ok(high.push([-1, 0], game));
+  runUntil(
+    game,
+    () => {
+      // Its bottom stays on the slope: never below the highest point of it under the crate.
+      lowest = Math.min(lowest, high.pos[1] - Math.min(1, Math.max(0, high.pos[0] - 2)));
+      return high.state === 'rest';
+    },
+    'it came down',
+    120,
+  );
+  assert.deepEqual(high.pos, [2, 0, 2]);
+  assert.ok(lowest >= -1e-9, 'on the slope, not in it');
+});
+
+test("stair: a crate pushed into its side or onto its top from the side doesn't move (D230)", () => {
+  const game = stairGame({ crates: [[3, 0, 3], [3, 1, 1]], blocks: [{ at: [3, 0, 1] }] });
+  const [side, top] = game.objects.filter((o) => o.kind === 'pushable');
+  assert.equal(side.push([0, -1], game), false, 'into its side');
+  assert.equal(top.push([0, 1], game), false, 'onto its top, from a block beside it');
+});
+
+test("stair: the wizard can't push a crate up it (D230)", () => {
+  const game = stairGame({ crates: [[2, 0, 2]], pos: [1.5, 0, 2.5] });
+  const [crate] = game.objects.filter((o) => o.kind === 'pushable');
+  for (let i = 0; i < 90; i++) game.update(hold('down')); // +x, into the stair
+  assert.deepEqual(crate.pos, [2, 0, 2]);
 });

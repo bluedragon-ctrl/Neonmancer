@@ -45,7 +45,9 @@
  * that is his only jump: elsewhere no climb, no gap, no Blink from a jump,
  * no step onto a compiled crate, and a pickup two cells up is out of reach.
  * A stair takes him from the cell at its foot onto its top, one up; down
- * again is a step off a ledge. In a pads room a bouncy enemy is a moving
+ * again is a step off a ledge. A crate or a frozen enemy pushed or pulled
+ * off a ledge over a stair's top slides down it to its foot (D230,
+ * Grid.stairStep()); it never goes up one, nor onto one otherwise. In a pads room a bouncy enemy is a moving
  * pad (D223): where he falls onto a cell of its lane (from a ledge or a
  * launch) he is thrown up as from a pad, BOUNCE_UP blocks and a one-tile
  * gap; any cell of the lane, whenever (optimistic, like Pause). He can't
@@ -233,10 +235,10 @@ export class RoomModel {
       const [x, y, z] = this.cell(from);
       for (const [dx, dz] of DIRS) {
         if (!this.grid.isInside(x - dx, z - dz) || !stands.has(this.index(x - dx, y, z - dz))) continue;
-        const tx = x + dx;
-        const tz = z + dz;
-        if (!this.grid.isInside(tx, tz) || this.blockedCrate(tx, y, tz, cfg)) continue;
-        let ty = y;
+        const to = this.crateStep(x, y, z, dx, dz, cfg);
+        if (!to) continue;
+        const [tx, , tz] = to;
+        let ty = to[1];
         let under = this.below(tx, ty, tz, cfg, true);
         while (under === 'air') under = this.below(tx, --ty, tz, cfg, true);
         if (under === 'hole' || under === 'bad') continue;
@@ -284,6 +286,20 @@ export class RoomModel {
   /** Is the cell blocked for a crate (or a frozen enemy pushed like one): the same, but a crate stream is open (D198)? */
   blockedCrate(x, y, z, cfg) {
     return this.blockedIn(this.crateGrid, x, y, z, cfg);
+  }
+
+  /**
+   * Where a crate (or a frozen enemy) pushed or pulled from (x, y, z) along
+   * [dx, dz] goes before it falls: the next cell, or down a stair (D230,
+   * Grid.stairStep(); never up one), with the cells it passes free; null if it
+   * can't move.
+   * @returns {number[]|null} [x, y, z]
+   */
+  crateStep(x, y, z, dx, dz, cfg) {
+    const step = this.grid.stairStep(x, y, z, dx, dz, false);
+    if (!step) return null;
+    if (step.via && this.blockedCrate(...step.via, cfg)) return null;
+    return this.blockedCrate(...step.to, cfg) ? null : step.to;
   }
 
   blockedIn(grid, x, y, z, cfg) {
@@ -495,12 +511,12 @@ export class RoomModel {
         // Push: he stands behind it, level, and the cell beyond is free.
         const px = x - dx;
         const pz = z - dz;
-        if (this.grid.isInside(px, pz) && stands.has(this.index(px, y, pz)) && !this.blockedCrate(x + dx, y, z + dz, cfg)) move(c, x + dx, y, z + dz);
+        const pushed = this.grid.isInside(px, pz) && stands.has(this.index(px, y, pz)) && this.crateStep(x, y, z, dx, dz, cfg);
+        if (pushed) move(c, ...pushed);
         // Pull: he stands in line up to `range` cells away, level, and the cell towards him is free.
         if (abilities.has('pull')) {
-          const tx = x - dx;
-          const tz = z - dz;
-          if (this.grid.isInside(tx, tz) && !this.blockedCrate(tx, y, tz, cfg)) {
+          const pulled = this.crateStep(x, y, z, -dx, -dz, cfg);
+          if (pulled) {
             for (let k = 2; k <= 6; k++) {
               const sx = x - dx * k;
               const sz = z - dz * k;
@@ -509,7 +525,7 @@ export class RoomModel {
                 // The cells between must be open (a block or crate in line stops the beam).
                 let open = true;
                 for (let j = 1; j < k; j++) open &&= !this.blockedCrate(x - dx * j, y, z - dz * j, cfg);
-                if (open) move(c, tx, y, tz);
+                if (open) move(c, ...pulled);
                 break;
               }
             }
