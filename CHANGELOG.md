@@ -28,6 +28,8 @@ docs/decisions.md).
   cross at floor level, and it is a hole again once it goes; it grows out of
   its middle as it comes. Validation wants a hole under a floor-level bridge;
   the checker and the showcase know the sheet.
+- `atrium` is a pads room (D234, step 5.17): the ledge is 1 high with a stair
+  up to it; the floor crate that served as a step is gone.
 - `first_light` is a pads room (D233, step 5.17), cells unchanged: its pit
   bars never needed the jump.
 - `zap_port` is a pads room (D232, step 5.17): two stairs replace the block

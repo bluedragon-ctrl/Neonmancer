@@ -2667,3 +2667,20 @@ played with `sim.mjs`: spawn to the fragment in 7.8 s, 2.2 s spare, the
 clock stopping on the pickup. Tight enough to make the watchdog felt, loose
 enough for one wrong turn.
 **Why:** the review's verdict is *keep*; only the ladder's wording was off.
+
+### D234 — 2026-10-15 — The Atrium on pads: one stair to the ledge (5.17)
+`atrium` is a pads room. The east ledge came down from 2 to 1 high
+(x 8–11, z 0–2) and a stair (`stair_x` at [7,0,1]) leads onto it from the
+floor; `crate_ledge` moved down with it ([11,1,1]) and is pushed +z twice
+off the ledge onto the plate at [11,0,3], which the holes still keep floor
+crates off. `crate_step` is gone: in a pads room a crate is no step (D222),
+so the floor crate had no job. The plate, the bridge, the hat, the doors,
+the shrine and `tut_plates` are unchanged; the stair stays off the first
+row inside the north door and off the lane between the doors. The lesson is
+now: a plate behind holes is reached from above, with a crate that falls.
+Fork still skips it for the boost (the hub's rule, D188). Checks:
+`check:reach` with `zap,scan,fork,pause` from every door, mutation test
+(the crate, ledge and stair gate the hat, only Fork replaces them), and
+`sim.mjs`: climb, push, drop at x 9, cross the bridge.
+**Why:** the 2-high ledge needed two stairs; a 1-high one keeps the hub
+light, as its rung asks.
