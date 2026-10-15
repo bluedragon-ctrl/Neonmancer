@@ -1,12 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { validateData } from '../src/data/validate.js';
-import { PLAYER, Player } from '../src/entities/player.js';
 import { Game } from '../src/game.js';
 import { CARD, createCard } from '../src/render/card.js';
 import { createPickupModel } from '../src/render/pickup-model.js';
 import { Progress, pickupBit, saveBit } from '../src/world/progress.js';
-import { BUG, PICKUPS, SPELLS, dataFiles, eventTypes, gameData, grid, idle, roomFile } from './helpers.js';
+import { BUG, PICKUPS, SPELLS, dataFiles, eventTypes, gameData, idle, roomFile } from './helpers.js';
 
 /** A stationary bug firing slow bolts (as in firewall.test.js). */
 const SHOOTER = { extends: 'bug', movement: 'stationary', attack: 'bolt', aggroRange: 6, attackRange: 6, attackCharge: 0.2, attackCooldown: 2, boltSpeed: 6 };
@@ -111,24 +110,6 @@ test('without Shield+ the Shield only absorbs the bolt', () => {
   assert.ok(!eventTypes(events).includes('reflect'));
   assert.ok(eventTypes(events).includes('block'));
   assert.equal(game.enemies[0].integrity, BUG.integrity);
-});
-
-/** Highest his feet get in `ticks` ticks, pressing jump on the ticks in `presses`. */
-function peak(player, room, presses, ticks = 90) {
-  let top = 0;
-  for (let i = 0; i < ticks; i++) {
-    player.update(presses.includes(i) ? press('jump') : idle, room);
-    top = Math.max(top, player.pos[1]);
-  }
-  return top;
-}
-
-test('no jump in mid-air: a second press at the top changes nothing (the double jump is gone, D216)', () => {
-  const room = grid({ size: [8, 6, 8] });
-  const player = new Player([4, 0, 4]);
-  player.update(idle, room); // lands
-  const top = peak(player, room, [0, 20]);
-  assert.ok(Math.abs(top - PLAYER.jumpHeight) < 0.05, `apex ${top}`);
 });
 
 test('upgrade card model: a white card, fingers and lit bit in its color, gray once found; the model of an upgrade pickup', () => {

@@ -175,7 +175,7 @@ test("data: Compile's object must be a pushable type", () => {
   assert.match(errors, /spells\.compile\.object.*no pushable object type/);
 });
 
-test('the look: the crate grows in and blinks at the end (the bits: stream.test.js)', () => {
+test('the look: the crate grows in and blinks at the end (the bits: fx.test.js)', () => {
   const growing = compileLook(0, LIFETIME);
   assert.ok(growing.scale < 1);
   assert.deepEqual(compileLook(COMPILE_FX.growTicks, LIFETIME - COMPILE_FX.growTicks), { visible: true, scale: 1 });

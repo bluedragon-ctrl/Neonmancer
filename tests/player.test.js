@@ -150,6 +150,18 @@ test('a jump peaks at jumpHeight: clears one block, never two (D3)', () => {
   assert.equal(player.grounded, true);
 });
 
+test('no jump in mid-air: a second press at the top changes nothing (the double jump is gone, D216)', () => {
+  const g = grid();
+  const player = standing(g, [4, 0, 4]);
+  let apex = 0;
+  for (let i = 0; i < 90; i++) {
+    const tap = i === 0 || i === 20 ? (a) => a === 'jump' : () => false;
+    player.update({ down: tap, pressed: tap }, g);
+    apex = Math.max(apex, player.pos[1]);
+  }
+  assert.ok(Math.abs(apex - PLAYER.jumpHeight) < 0.05, `apex ${apex}`);
+});
+
 test('the player jumps onto a 1-high block but not onto a 2-high one', () => {
   // A wide step, so the wizard doesn't walk off the far side.
   const low = grid({ cells: [3, 4, 5, 6].flatMap((x) => [[x, 0, 1], [x, 0, 2], [x, 0, 3]]) });
