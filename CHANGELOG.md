@@ -28,6 +28,8 @@ docs/decisions.md).
   cross at floor level, and it is a hole again once it goes; it grows out of
   its middle as it comes. Validation wants a hole under a floor-level bridge;
   the checker and the showcase know the sheet.
+- `first_steps` is a pads room (D231, step 5.17): its hole is 2 wide, not 3,
+  so its two crates cross it without the jump; the trick is unchanged.
 - `boot_up` is a pads room (D225, step 5.17): a stair beside the spawn and a
   pad on the step throw him over the gap to the east door; its screen no
   longer names a jump key. The checker lets a pad or bounce land a block up

@@ -2625,3 +2625,18 @@ the checker is unchanged.
 crates; one rule for everything a cell wide keeps stairs readable, and
 pads stay the wizard's own way up. Crates pushed up stairs would undo the
 ledge as a one-way drop for the push puzzle, so they only come down.
+
+### D231 — 2026-10-15 — First Steps on pads: the hole is 2 wide (5.17)
+`first_steps` is a pads room. Its hole was 3 wide (`"to"` is inclusive:
+x 3–5) although the ladder always said 2-wide: two crates filled two tiles
+and the free jump crossed the last. Without the jump the crossing was lost
+(the checker: east door needs Compile, Blink or Warp). The hole is now 2
+wide (x 3–4), so the two crates are exactly enough and the trick stands
+unchanged: crate A fills one cell; crate B is pushed -z from (2,7) onto
+the row, then +x twice from (1,5). Pushing B straight in first is the one
+dead end; the west door resets it. No pad: `boot_up` teaches pads one room
+earlier. Checks: `check:reach` west and east free; mutation test: both
+crates needed; from the east door the west door is out of reach (he came
+that way and leaves it, rule 3); played with `sim.mjs`.
+**Why:** the review's verdict is *keep*; only the hole's width came from
+the jump.
