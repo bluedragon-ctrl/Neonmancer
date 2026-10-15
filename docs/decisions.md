@@ -2681,6 +2681,11 @@ now: a plate behind holes is reached from above, with a crate that falls.
 Fork still skips it for the boost (the hub's rule, D188). Checks:
 `check:reach` with `zap,scan,fork,pause` from every door, mutation test
 (the crate, ledge and stair gate the hat, only Fork replaces them), and
-`sim.mjs`: climb, push, drop at x 9, cross the bridge.
+`sim.mjs`: climb, push, he steps off the ledge at x 9, cross the bridge.
+Two known dead ends, both reset by leaving through a door: pushing the
+ledge crate -z into the corner, or -x down the stair to the floor (the
+holes keep it off the plate). Stepping off the ledge at x 11 puts him in the
+plate's pocket (holes west and south), where only a hole gets him out: a
+voluntary misstep that costs a backup, as before.
 **Why:** the 2-high ledge needed two stairs; a 1-high one keeps the hub
 light, as its rung asks.
