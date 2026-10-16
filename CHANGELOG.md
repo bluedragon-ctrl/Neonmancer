@@ -23,6 +23,13 @@ docs/decisions.md).
   1-tile gap onto a ledge 2 up (a 3-high top from a pad on a 1-high block),
   over 2 tiles 1 up; it counted 1 up over one tile only. No verdict of a
   room changed.
+- Ghost Exit is a pads room (D245): the crate, through the gate the frozen bug
+  holds open, plugs a hole at a stair's foot; the pad at the top throws him
+  onto a 3-high back row with fragment 9 (it lay on the plateau, where the
+  hidden west door put him beside it with Scan alone). Gaps in the pens'
+  fences replace the hops. Cache Miss's door: a pad in the bug pen and Blink
+  onto a 2-high ledge over the plate's pocket, a decoy dropped onto the
+  plate. `check:reach` counts a decoy cast from a ledge into a pocket below.
 - Mirror Stacks is a pads room (D242): all three crates fill one row of the pit;
   the fragment's gate takes a crate and Fork's decoy, since the second crate is
   boxed in under the gate; a pad in the pocket and a one-way stair out; Event
