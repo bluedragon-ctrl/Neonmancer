@@ -23,6 +23,9 @@ docs/decisions.md).
   1-tile gap onto a ledge 2 up (a 3-high top from a pad on a 1-high block),
   over 2 tiles 1 up; it counted 1 up over one tile only. No verdict of a
   room changed.
+- Junction is a pads room (D246): a stair up to a 1-high ledge, a drop onto the
+  patrolling bug, and its bounce lands him on the pillar with fragment 11; the
+  timed plate moved 2 cells clear of the south door (D241).
 - Ghost Exit is a pads room (D245): the crate, through the gate the frozen bug
   holds open, plugs a hole at a stair's foot; the pad at the top throws him
   onto a 3-high back row with fragment 9 (it lay on the plateau, where the
