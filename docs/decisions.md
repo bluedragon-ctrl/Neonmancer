@@ -3182,3 +3182,20 @@ step; the virus was meant as that step.
   only, D217, and is found after the Lattice). Both doors free.
 **Why:** a frozen enemy is the pads game's block; the virus keeps its job as the
 step, now a bridge.
+
+### D248 — 2026-10-16 — Cold Stairs on pads: a pad to the pillar (5.17)
+`cold_stairs` is a pads room, reviewed as *keep* with a small tune. The two
+bugs, the streams, the plates and the bridge (D204) never needed the jump;
+only fragment 6, on the 2-high pillar `(0..1,0..1,7..11)`, did, and its step
+was the spare crate.
+- A `pad` at `(2,0,10)`, flush against the pillar, throws him onto it; the
+  spare crate is gone (a pads crate is no step). The pad lies 3 cells from the
+  south door (D241).
+- **Played** with `sim.mjs`: from the cells east of the pad, holding west, he
+  lands on the pillar and takes the fragment; beside the pad (off it) nothing
+  happens.
+- **Checker:** with `zap,scan,fork,pause` the fragment, the refill and the
+  south and east doors need Pause; the mutation test says every helper and
+  gate matters (bugs, bridge, pillar, pad).
+**Why:** the jump carried the pillar; a pad is the pads game's lift, and the
+puzzle keeps its place before it.

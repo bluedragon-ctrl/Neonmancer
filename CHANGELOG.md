@@ -23,6 +23,9 @@ docs/decisions.md).
   1-tile gap onto a ledge 2 up (a 3-high top from a pad on a 1-high block),
   over 2 tiles 1 up; it counted 1 up over one tile only. No verdict of a
   room changed.
+- Cold Stairs is a pads room (D248): a pad flush against the 2-high pillar throws
+  him to fragment 6 once the bridge is down; the spare crate (the jump's step)
+  is gone.
 - Drift Bay is a pads room (D247): stairs on and off the ferry, a 3-high pillar
   with fragment 10 and a pad on a ledge beside it; the frozen virus, pushed
   into the gap, is the bridge to that pad.

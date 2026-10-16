@@ -5,6 +5,7 @@
   "name": "Cold Stairs",
   "biome": "home_lattice",
   "size": [10, 5, 12],
+  "jump": "pads",
   "spawn": [8.5, 0, 1.5],
   "exits": [
     { "id": "north", "side": "-z", "at": 7 },
@@ -26,7 +27,7 @@
     { "id": "screen_stairs", "type": "screen", "at": [9, 0, 3], "text": "tut_stairs", "overrides": { "face": "+x" } },
     { "id": "plate_a", "type": "plate", "at": [2, 0, 0] },
     { "id": "plate_b", "type": "plate", "at": [2, 0, 3] },
-    { "id": "crate_spare", "type": "crate", "at": [4, 0, 9] }
+    { "id": "pad_pillar", "type": "pad", "at": [2, 0, 10] }
   ],
   "enemies": [
     { "id": "bug_a", "template": "bug", "at": [4, 0, 0], "path": { "points": [[4, 0, 1]] } },
