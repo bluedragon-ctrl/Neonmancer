@@ -26,6 +26,8 @@ docs/decisions.md).
 - Cold Stairs is a pads room (D248): a pad flush against the 2-high pillar throws
   him to fragment 6 once the bridge is down; the spare crate (the jump's step)
   is gone.
+- Warden Pit is a pads room (D249): the west door to Stray Byte is two pads and a
+  Blink across a 2-tile gap; the double jump's steps are gone, the fight unchanged.
 - Drift Bay is a pads room (D247): stairs on and off the ferry, a 3-high pillar
   with fragment 10 and a pad on a ledge beside it; the frozen virus, pushed
   into the gap, is the bridge to that pad.

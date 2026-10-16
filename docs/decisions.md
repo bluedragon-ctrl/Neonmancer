@@ -3199,3 +3199,28 @@ was the spare crate.
   gate matters (bugs, bridge, pillar, pad).
 **Why:** the jump carried the pillar; a pad is the pads game's lift, and the
 puzzle keeps its place before it.
+
+### D249 — 2026-10-16 — Warden Pit on pads: two pads and a Blink to Stray Byte (5.17)
+`warden_pit` is a pads room, reviewed as *keep* for the fight. Null Pointer,
+the 2-high cover bars and the refills never needed the jump (the boss teleports
+only to floor cells, so its rhythm is unchanged); only the west door did, and
+its scrap of steps was built for the double jump.
+- **Cleared:** the low wall at x = 1, the bits at (0,9), (2,8–10), (3,8),
+  (3,9–10), and `crate_step`.
+- **Stray Byte's door** (y 4, on the 4-high pillar at (0..1,2)): `pad_ledge` at
+  (1,0,9), flush against the south end of a 2-high ledge (1,0..1,5..8); he
+  walks north along it to `pad_door` at (1,2,5), which throws him 4.2 up over
+  the 2-tile gap (z 3–4) and Blink, cast 14–22 ticks later, lands him on the
+  pillar's top. Same build as scan_lab's door (D240). All of it lies in the west
+  strip, away from the door lanes (x 6–7) and over 2 cells from every door.
+- **Played** (`sim.mjs`): Blink 14–22 ticks after the throw lands on the sill
+  (y 4) with no damage; earlier hits the wall (1 damage), later falls short.
+  Without Blink he falls to the floor at z 3.3 and walks back.
+- **Checker:** with `zap,scan,fork,pause` `west` is `never`; with `blink` it
+  is reached; the fragment and both doors are free. The mutation test: every
+  piece of the route matters.
+- The integrity refill moved from (0,0,7) to (0,0,10): the ledge hid it from the camera.
+- The 2-high ledge is above the boss's level bolts: a perch, a rest, no shots
+  from it.
+**Why:** the jump carried the door; a pad and a Blink is the pads game's lock
+for the Outer Buffer (D217).
