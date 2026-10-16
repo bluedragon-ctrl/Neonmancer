@@ -2887,3 +2887,50 @@ push it sideways from the dock's sides); filling the sockets before the
 rider crate is on the ferry drops a late crate into the pit (the solve
 order is ferry first); the pad is partly hidden behind the rider crate
 once it is loaded, and shows as an amber tile beside the pen before.
+
+### D240 — 2026-10-16 — Scan Lab on pads: a stair and a pad to the disk, a narrower pit, a pad and Blink to Dead Pixel (5.17)
+`scan_lab` is a pads room. Its trick holds (Scan opens a wall that is not
+there and drops a crate that hid on a fake pillar; both crates then fill one
+row of the pit) and the jump's parts are rebuilt:
+- **The disk.** A crate was his step onto the 2-high plinth; it no longer
+  is. A `stair_nz` at (3,0,2) climbs to a 1-high step at (3,0,1) with a pad
+  on it, which throws him west over the floor cell (2,1) onto the plinth
+  (the way boot_up crosses its gap, D225). A pad flush against the plinth's
+  foot did not work in the sim: the ledge top (2) is only 0.2 under the
+  apex, and the side pushed him back down.
+- **The pit.** 3 wide with a one-tile hop became 2 wide (x 7–8, as
+  first_steps, D231): two crates fill one row. The wall moved to x = 4 and
+  the strip east of the pit is 3 wide (x 9–11): with the wall at x = 5 and a
+  1-wide lane at x = 6, a crate on the way north cut him off from the lane's
+  south end. `crate_2` still starts on a fake pillar at (6,0,9); a crate
+  pushed along row 5 or 6 first and the second after it goes over the filled
+  cell.
+- **Dead Pixel's door (D218, D219).** The Blink walk over the decor pillars
+  needed jumps. Now: a stair at (10,0,4) up to a 1-high block at (11,0,4)
+  with a pad on it throws him 3.2 up; Blink cast near the apex crosses the
+  2-tile gap (z 1–2) onto the memory stack's top at (11,2,0), the sill
+  (the door is hidden: Scan). Without Blink the pad drops him at z 1.3 on
+  the floor. Played (`sim.mjs`): landing on the sill with no damage when
+  Blink is cast 14–22 ticks after the throw (0.15 s of margin); earlier
+  hits the wall (1 damage), later falls short. `data_pillar_2` moved from
+  (6,0,0) to (10,0,0), off the lane the bridge ends in. The pad sits on the
+  block, off the walking lines. The level review found the disk pad's
+  throw (3.2 up) reached the 3-high wall's top and the pillar's, walking
+  him to the east strip before any Scan (a soft-lock): the wall is 4 high
+  (a fence, still see-through), and sweeps of the throw in every held
+  direction reach nothing east of it.
+- **Named traps:** `crate_1` pushed north to (3,3) shuts the stair's foot, and
+  into a corner it is lost: leaving and re-entering resets the room. The
+  scan needs him within 6 of the fake pillar (about (2.5,7.5)).
+- **The way home** is as before: the timed plate (11,0,11), 5 s, then the
+  bridge along z = 0 (now at x 7–8). Played: 3.4 s of the 5.
+- **Checker.** Two changes: a crate lying on a fake block is dropped onto
+  what is under it once Scan is in the set (it hung in the air, so a crate
+  hidden on a pillar could never be pushed: the checker's "never" for the
+  east door); and Blink from a pad's or a bounce's launch sweeps at the
+  launch height (`up`), not one block up (the free jump's `up` is 1, so
+  nothing changes there). A test covers both. The world check is green:
+  `north_2` is `scan + blink`, `east` is `scan`, `disk_scan` is free.
+- **Fork** skips the way-home race only (a decoy on the plate, as D212).
+Played end to end (`sim.mjs`): the disk by the stair and pad, Scan, both
+crates, the row crossed, the plate and bridge home.

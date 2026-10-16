@@ -272,6 +272,13 @@ Lessons for pads rooms (D222 on):
   pad in a doorway, a 1-wide lane or behind a crate he must push throws
   him about; put it at the foot of what it climbs, off the walking lines.
   A crate pushed onto it covers it until the room resets.
+- **A pad never sits flush against its ledge** (D240). A floor pad beside a
+  2-high ledge only bumps the side (the top is 0.2 under the apex): put a
+  floor cell between, or build it as boot_up does, a stair to a 1-high step
+  with the pad on it, a gap, the ledge. A pad on a step plus Blink cast
+  14–22 ticks after the throw crosses 2 tiles onto a 3-high sill (the
+  checker models Blink at the launch height); a hidden pad+Blink door
+  needs that sim window checked.
 - **A bug is a moving pad** (D223). He can't get on top of a bouncy enemy
   from its level; dropped onto it from a ledge, a stair's top or a pad's
   launch, it throws him 2.8 up: a 2-high ledge, never 3. The way up walks

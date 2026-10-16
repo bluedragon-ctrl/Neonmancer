@@ -72,7 +72,7 @@ Rules for the lines (D186, D187):
 
 | # | Room | Type | Rung | Trick to aim for | Now |
 |---|---|---|---|---|---|
-| 11 | `scan_lab` | puzzle | teach: Scan, fake blocks | The crate that lifts him to the disk is needed again past the fake wall: pushed into the plinth's corner, it is lost. Past the wall a scan drops a second crate off a fake pillar, and both fill one row of the pit. | Holds. The disk's pocket (gate and fences) could be a `cage`. |
+| 11 | `scan_lab` | puzzle | teach: Scan, fake blocks | The way east is a wall that isn't there until a scan: the crate he pushes through the gap and a second one that a scan drops off a fake pillar fill one row of the pit, in order. | Holds, on pads (D240): a stair and a pad to the disk, a 2-wide pit for the two crates, a pad and Blink to Dead Pixel's door. |
 | 12 | `mirror_stacks` | puzzle | develop: Scan's range | Where he casts: the far cage's target hides behind a fake column beyond a scan's 6 units from the near side, so the second scan is cast after crossing. The fragment also needs Fork (the author's move): a revisit. | Holds with Scan and Fork; every crate shows NO EFFECT and the search truncates: check by hand. |
 | 13 | `ghost_exit` | puzzle | twist: Scan hides the way out | The way on is hidden: a frozen bug on the plate opens the crate's pen, the crate holds the gate open as it passes and is the step to the plateau, where a scan shows the fragment and the exit. | Reworked (D206): the stair blocks `[2,0,6]` and `[3,0,6]` were a free route and are gone, so the chain is the lock; Fork can hold the plate instead of the bug. |
 | 14 | `junction` | hybrid | develop: Pause on a moving enemy, timed plates | The shot's timing: the bug must be frozen two cells before the pillar while it walks towards him, then pushed twice. The fence gate is a one-way shortcut home. | Holds (Pause). |
@@ -113,8 +113,8 @@ stay look-only and outside the ladder (D186).
   first arrival. They were built round the double jump (D212–D215); with it
   gone (D216) each is redone in its own PR, round Blink (D217; the checker
   already finds `guard_loop` east with `scan + blink`, not yet played; the
-  other three are `never`): `scan_lab` north_2 (`buffer_1`, done: a Blink walk
-  along the back wall, D218), `warden_pit` west (`buffer_2`),
+  other three are `never`): `scan_lab` north_2 (`buffer_1`, done: a pad and
+  Blink onto the memory stack's sill, D240; was a Blink walk, D218), `warden_pit` west (`buffer_2`),
   `guard_loop` east (`buffer_3`), `mirror_stacks` east_2 (`buffer_4`),
   `ghost_exit` east (`buffer_5`).
 - Shortcuts: `junction`'s fence gate home, and the Gatekeeper once beaten.
@@ -309,7 +309,7 @@ moves it to `"jump": "pads"` and ticks it off here.
 | 8 | `bolt_gallery` | crossings south↔north | fence | Done (D237): a firing platform and a 2-deep pit. |
 | 9 | `relay_loft` | `fragment_4`; crossings to and from east | | Done (D238): a pad onto the rider crate, stairs onto the ferry and up to the fragment; widened to 15. |
 | 10 | `ledger_cell` | `fragment_5` | fence | Done (D239): a stair to the ledge, the pocket's row 2 open, a gap in the lane's fence. |
-| 11 | `scan_lab` | `disk_scan`; crossings west/south→east | fence | Host of Dead Pixel's door (Blink walk, D218). |
+| 11 | `scan_lab` | `disk_scan`; crossings west/south→east | fence | Done (D240): a stair and pad to the disk, a 2-wide pit; the door is a pad and Blink. |
 | 12 | `mirror_stacks` | crossings west↔south | fence | Host of Event Horizon's door (D215). |
 | 13 | `ghost_exit` | crossings north/east→west | fence, bouncy | Host of Cache Miss's door. |
 | 14 | `junction` | `fragment_11` | fence, bouncy | |
