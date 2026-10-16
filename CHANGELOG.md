@@ -23,6 +23,9 @@ docs/decisions.md).
   1-tile gap onto a ledge 2 up (a 3-high top from a pad on a 1-high block),
   over 2 tiles 1 up; it counted 1 up over one tile only. No verdict of a
   room changed.
+- Drift Bay is a pads room (D247): stairs on and off the ferry, a 3-high pillar
+  with fragment 10 and a pad on a ledge beside it; the frozen virus, pushed
+  into the gap, is the bridge to that pad.
 - Junction is a pads room (D246): a stair up to a 1-high ledge, a drop onto the
   patrolling bug, and its bounce lands him on the pillar with fragment 11; the
   timed plate moved 2 cells clear of the south door (D241).

@@ -315,7 +315,7 @@ moves it to `"jump": "pads"` and ticks it off here.
 | 12 | `mirror_stacks` | crossings west↔south | fence | Done (D242): three crates for the 3-wide pit, a pad in the fragment's pocket and a one-way stair out; Event Horizon's door is the pad onto the column. |
 | 13 | `ghost_exit` | crossings north/east→west | fence, bouncy | Done (D245): the crate plugs a stair's foot, a pad onto a 3-high back row; gaps in the pens' fences; Cache Miss is a pad, Blink and a dropped decoy. |
 | 14 | `junction` | `fragment_11` | fence, bouncy | Done (D246): a stair, a ledge to drop from, the bug as a moving pad; plate moved off the south door. |
-| 15 | `drift_bay` | `fragment_10`; crossings north↔south | | Enemies as steps. |
+| 15 | `drift_bay` | `fragment_10`; crossings north↔south | | Done (D247): stairs on the ferry, a pad onto the 3-high pillar, the frozen virus bridges the gap. |
 | 16 | `cold_stairs` | `fragment_6`; crossings north↔south, north↔east | fence, bouncy | |
 | 17 | `warden_pit` | play | | Boss: dodging without a jump. Host of Stray Byte's door (D213). |
 | 18 | `idle_cache` | play | bouncy | A frozen enemy at the base of a stack. |
