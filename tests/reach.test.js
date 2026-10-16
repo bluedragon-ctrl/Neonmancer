@@ -174,6 +174,16 @@ test('a locked exit opens by a crate on a plate, or a decoy', () => {
   assert.equal(reach({ ...props, objects: [plate, second, crate] }, ['fork']).exits.east, true);
 });
 
+test('a decoy cast from a ledge falls onto a plate in a walled pocket (D245)', () => {
+  // The plate at (8,0,2) is walled 3 high on three sides; west of it a 1-high block, a stair up to it.
+  const pocket = [{ at: [8, 0, 1], to: [8, 2, 1] }, { at: [8, 0, 3], to: [8, 2, 3] }, { at: [9, 0, 2], to: [9, 2, 2] }, { at: [7, 0, 2] }];
+  const props = { jump: 'pads', exits: [WEST, { ...EAST, requires: [{ switch: '*' }] }], objects: [{ id: 'p', type: 'plate', at: [8, 0, 2] }] };
+  const stair = { type: 'stair_x', at: [6, 0, 2] };
+  assert.equal(reach({ ...props, blocks: pocket }, ['fork']).exits.east, false, 'no way onto the ledge');
+  assert.equal(reach({ ...props, blocks: [...pocket, stair] }).exits.east, false, 'no decoy');
+  assert.equal(reach({ ...props, blocks: [...pocket, stair] }, ['fork']).exits.east, true);
+});
+
 test('a hidden exit needs a scan, and so does a fake block', () => {
   const props = { exits: [WEST, { id: 'north', side: '-z', at: 5, hidden: true }] };
   assert.equal(reach(props).exits.north, false);

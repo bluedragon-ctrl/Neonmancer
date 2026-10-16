@@ -305,6 +305,13 @@ Lessons for pads rooms (D222 on):
 - **Drops are one way.** A ledge he steps off is gone for him unless a
   stair or pad leads back: draw the way back from every door first, then
   the puzzle.
+- **A walk-off carries.** Walking off a 2-high ledge he lands up to 1.4
+  cells out (his middle), about 1 off a 1-high one: a lower top or a pad
+  within that reach is reached from the higher ledge. Keep 2 tiles between
+  them, or a higher block on the corner (`ghost_exit`, D245).
+- **A decoy falls.** Cast from a ledge into the open column over a walled
+  pocket, it drops onto the plate in it: a plate only a decoy holds, from
+  that ledge; the checker counts it (D245).
 - **Check every cell he can drop into** (D242). Off a column or out of a
   pad's throw he lands anywhere near; a floor cell walled by blocks and a
   stair's side is a pit with no way out. Fill it or give it a stair.

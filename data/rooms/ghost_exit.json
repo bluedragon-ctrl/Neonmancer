@@ -5,6 +5,7 @@
   "name": "Ghost Exit",
   "biome": "home_lattice",
   "size": [12, 5, 12],
+  "jump": "pads",
   "spawn": [1.5, 0, 1.5],
   "exits": [
     { "id": "north", "side": "-z", "at": 1 },
@@ -12,28 +13,36 @@
     { "id": "east", "side": "+x", "at": 10, "width": 1, "requires": [{ "switch": "plate_secret" }] }
   ],
   "blocks": [
-    { "at": [0, 0, 8], "to": [3, 1, 11] },
-    { "type": "fake", "at": [3, 2, 11] },
+    { "at": [0, 0, 8], "to": [3, 1, 10] },
+    { "at": [0, 0, 11], "to": [4, 2, 11] },
+    { "type": "fence", "at": [4, 0, 8], "to": [4, 2, 10] },
     { "type": "fence", "at": [4, 0, 0], "to": [4, 0, 3] },
-    { "type": "fence", "at": [7, 0, 0], "to": [7, 0, 4] },
+    { "type": "fence", "at": [7, 0, 1], "to": [7, 0, 4] },
     { "type": "fence", "at": [5, 0, 3] },
     { "type": "gate", "at": [6, 0, 3], "switches": ["plate_ghost"] },
-    { "type": "fence", "at": [8, 0, 4], "to": [11, 0, 4] },
+    { "type": "fence", "at": [9, 0, 4], "to": [11, 0, 4] },
     { "at": [4, 0, 6], "to": [4, 2, 6] },
     { "at": [5, 0, 6], "to": [5, 3, 6] },
-    { "at": [10, 0, 6], "to": [10, 3, 7] },
-    { "at": [11, 0, 6], "to": [11, 4, 7] },
+    { "type": "stair_z", "at": [6, 0, 9] },
+    { "at": [6, 0, 10], "to": [6, 0, 11] },
+    { "at": [10, 0, 6], "to": [10, 1, 7] },
+    { "at": [11, 0, 6], "to": [11, 2, 7] },
     { "type": "fence", "at": [9, 0, 8], "to": [9, 4, 9] },
     { "type": "fence", "at": [11, 0, 8], "to": [11, 4, 9] },
     { "type": "fence", "at": [10, 0, 10], "to": [10, 4, 10] }
   ],
-  "holes": [{ "at": [10, 9] }],
+  "holes": [
+    { "at": [6, 8] },
+    { "at": [10, 9] }
+  ],
   "objects": [
     { "id": "screen_ghost", "type": "screen", "at": [0, 0, 3], "text": "tut_ghost", "overrides": { "face": "+x" } },
     { "id": "crate_1", "type": "crate", "at": [6, 0, 2] },
     { "id": "plate_ghost", "type": "plate", "at": [8, 0, 1] },
-    { "id": "plate_secret", "type": "plate", "at": [10, 0, 8] }
+    { "id": "plate_secret", "type": "plate", "at": [10, 0, 8] },
+    { "id": "pad_back", "type": "pad", "at": [6, 1, 11] },
+    { "id": "pad_ledge", "type": "pad", "at": [10, 0, 3] }
   ],
   "enemies": [{ "id": "bug_ghost", "template": "bug", "at": [9, 0, 1], "path": { "points": [[10, 0, 1]] } }],
-  "pickups": [{ "id": "fragment_9", "type": "fragment_9", "at": [3, 2, 11] }]
+  "pickups": [{ "id": "fragment_9", "type": "fragment_9", "at": [1, 3, 11] }]
 }

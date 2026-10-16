@@ -639,11 +639,23 @@ export class RoomModel {
       if (need <= 0) continue;
       // A frozen enemy on top of the stack: on its path or pushed there (D154, D166); or the decoy; each one weight.
       const holders = [...(this.frozenCells.get(top) ?? [])];
-      if (abilities.has('fork') && beside) holders.push('decoy');
+      // The decoy, cast beside it or from a ledge over its column, where it falls onto the stack (D245).
+      if (abilities.has('fork') && (beside || this.castsDown(x, y + (object.weight ?? 1) - need, z, cfg, stands))) holders.push('decoy');
       if (holders.length < need) return false;
       for (let i = 0; i < need; i++) byFrozen.push(holders);
     }
     return assignable(byFrozen);
+  }
+
+  /**
+   * Can he stand on a ledge beside the open column over cell (x, y, z), so
+   * that what he casts into the cell in front of him falls into it (D245)?
+   */
+  castsDown(x, y, z, cfg, stands) {
+    for (let above = y + 1; above < this.h && !this.blocked(x, above, z, cfg); above++) {
+      if (DIRS.some(([dx, dz]) => stands.has(this.index(x - dx, above, z - dz)))) return true;
+    }
+    return false;
   }
 
   /** Can a crate come down on cell (x, y, z) from a ledge beside it (a 1-high block, a place to push from on top)? */

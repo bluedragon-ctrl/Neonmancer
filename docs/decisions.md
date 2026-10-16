@@ -3078,3 +3078,63 @@ part of the pad. Rooms without stairs never had it.
 **Why:** the step-up is for a slope he walks onto, not for a body flying
 past a ledge; one collision rule for every room keeps play and the
 checker in step.
+
+### D245 — 2026-10-16 — Ghost Exit on pads: the crate plugs a stair's foot, a pad to the fragment, a dropped decoy for Cache Miss (5.17)
+`ghost_exit` is a pads room, reviewed as *tune*. The chain stays the lock
+(D206: a frozen bug or the decoy on `plate_ghost` opens the gate, the crate
+holds it open as it passes); the jump carried two of its links, and the
+review found a pickup hole.
+- **The fragment from the west.** The hidden west door (from `junction`,
+  reached through `scan_lab` before this room) put him on the plateau beside
+  the fake block with fragment 9: Scan alone took it. The fragment now lies
+  on the back row `(0..4,0..2,11)`, 3 high, at `(1,3,11)`; the plateau
+  `(0..3,8..10)` stays 2 high, so from it the back row is 1 up, and the row
+  drops him back onto it. The fake block is gone: Scan reveals the exit only.
+- **The crate's last job.** It was his step onto the plateau. Now it is
+  pushed down the x = 6 lane into the hole `(6,8)`, the foot of a `stair_z`
+  `(6,9)` up to a 1-high step `(6,10..11)` with `pad_back` on its end. He
+  walks onto the pad from the step (from the side), holds −x, and the throw
+  crosses `(5,11)` onto the back row (2 up over one tile, D243). A run-up
+  along the row from behind lands a block short, so the pad sits at the
+  step's end. Every other held direction lands him on the floor or back on
+  the pad (swept in `sim.mjs`).
+- **Walk-offs.** Walking off a 2-high ledge carries him up to 1.4 cells
+  (measured; less off a 1-high one), so a step 1 tile from the plateau would
+  be reached from it. The step is 2 tiles from the plateau and the back row reaches
+  x = 4, so the plateau's corner is walled; every walk-off lands on the floor.
+  The level review found Blink east off the plateau landing on the step (a
+  skip of the chain from the west door): a 3-high fence `(4,0..2,8..10)` on
+  the plateau's east edge cuts it short (1 damage), and he leaves the
+  plateau by its north face.
+- **The pens.** He hopped their 1-high fences. Now the bug pen has a gap at
+  `(8,4)` and the shared fence one at `(7,0)`: he pushes the frozen bug west
+  onto the plate, walks round by row 0 into the crate pen and pushes the crate
+  through the gate. Played: the crate is in the gate 2.7 s after the Pause
+  (frozen 5 s), and north door to west door takes 12.8 s.
+- **Cache Miss** (`east`, `buffer_5`; was Warp plus Compile or Fork, D215).
+  `pad_ledge` `(10,0,3)` in the bug pen throws him +z over the pen's fence;
+  Blink cast 14–24 ticks into the throw lands on the wall `(10,0..1,6..7)`,
+  lowered from 4 high to 2 (earlier, the wall's side cuts it short, 1
+  damage); the block in front of it, `(11,0..2,6..7)`, is 3 high (was 5),
+  so the camera sees him there. From `(10,7)`, facing the pocket, Fork's decoy drops onto
+  `plate_secret`; he drops off and is through the door 2.6 s into the
+  decoy's 10. Without Blink no throw reaches the ledge (swept). A second,
+  harder way in (the mutation test calls `pad_ledge` spare): after the
+  chain, from the back row two Blinks reach the 1-high fence tops by the
+  4-high stub, a Blink off `(7,1,1)` lands on the bug, and its bounce plus a
+  Blink reaches the ledge (sim). It still takes Blink and the decoy, so it
+  stays. Coming
+  back from `buffer_5` he arrives on the floor.
+- **Checker.** A decoy cast from a ledge beside a plate's open column falls
+  onto it (`castsDown` in `src/world/reach.js`, a test); before, it counted
+  a decoy only from beside the plate on its level. The east door is
+  `fork + blink`; no other room's verdict changed.
+- **Checks.** Fragment 9 is `fork or pause` from every door, Blink or not; the west exit `scan + fork or scan + pause`
+  (from the west, `scan`); the east `fork + blink`, `never` without Blink.
+  The mutation test: every helper and gate matters. No D241 warning. Level
+  review: tune; both findings fixed. Played:
+  the solve end to end, the door run, every throw of both pads, walk-offs
+  from the plateau.
+**Why:** the jump carried the step onto the plateau and the hops into the
+pens; the west door skipped the fragment's trick; the Outer Buffer doors
+are redone round Blink (D216, D217).
