@@ -1942,6 +1942,12 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
   move looks wrong until it isn't.
 - Every piece earns its place (the mutation test shows each one matters);
   decoration aside, nothing is there just to fill floor.
+- The puzzle keeps 2 cells from every door (D241): no crate, plate,
+  socket or pad in the 2 rows in front of a doorway or the cell beside
+  either end of it, and no push, crate route or enemy lane he works
+  with there. Busy beside a door, he walks out by accident and the room
+  resets when he comes back. `check:reach` warns of the pieces (where
+  they start); routes and lanes are for the review.
 - A puzzle room keeps threats out of the thinking; a hybrid only presses
   on mechanics taught in earlier rooms; an action room keeps the layout
   simple.

@@ -2934,3 +2934,26 @@ row of the pit) and the jump's parts are rebuilt:
 - **Fork** skips the way-home race only (a decoy on the plate, as D212).
 Played end to end (`sim.mjs`): the disk by the stair and pad, Scan, both
 crates, the row crossed, the plate and bridge home.
+
+### D241 — 2026-10-16 — The puzzle keeps 2 cells from every door
+Playtesting showed that a wizard busy at a piece beside a door (pushing a
+crate, stepping round it, landing off a pad) walks out by accident, and
+coming back resets the room with the puzzle half done. So every piece he
+works with keeps at least 2 cells of floor between it and every doorway:
+no crate, plate, socket or pad in the 2 rows in front of a door or the cell
+beside either end of it, and no push, crate route or enemy lane he works
+with there.
+- **The check.** `src/world/exit-margin.js` measures a piece's distance to
+  each doorway (across the side, or along it past the door's ends, whichever
+  is more; height not counted, so a piece under a raised door is flagged for
+  the review to judge). `check:reach` prints a warning for each piece under
+  2, in the world report and the one-room report. Warnings, not errors:
+  rooms move over in their reviews, as with the pads rule (D222). It sees
+  where pieces start, not where a solution pushes crates; the checklist, the
+  room-design skill and the level review add routes and enemy lanes.
+- **Now listed:** `ledger_cell` crate_3 (east), `scan_lab` pad_door (east),
+  `twin_plates` plate_home (north), `junction` plate_junction (south),
+  `buffer_1` socket_1 and socket_3 (south), and in the dev wing `heavy_lab`
+  crate_2 and four pieces in `spiked_lab`. No authored room is listed. The
+  two pads rooms already reviewed (`ledger_cell`, `scan_lab`) get a small
+  fix of their own; the others in their reviews.

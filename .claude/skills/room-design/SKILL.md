@@ -267,6 +267,13 @@ Lessons from the reviews (D188 on):
   a roof) it says `never` and the mutation test lists every piece as NO EFFECT.
   Prove such a room with `solve.mjs` (it tracks where he stands) and `sim.mjs`.
 
+- **The puzzle keeps 2 cells from every door** (D241). Busy at a piece
+  beside a doorway, he steps out by accident and the room resets when he
+  comes back. No crate, plate, socket or pad in the 2 rows in front of a
+  door or the cell beside either end, and no push, crate route or enemy
+  lane he works with there. `check:reach` warns of the pieces where they
+  start; check the routes by hand.
+
 Lessons for pads rooms (D222 on):
 - **A pad is a one-way lift.** It fires the moment he stands on it, so a
   pad in a doorway, a 1-wide lane or behind a crate he must push throws

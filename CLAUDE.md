@@ -543,7 +543,8 @@ not critical.
   reach; `<room>` checks one room (`--with` abilities, `--from` an exit),
   `--rooms` lists what each exit and pickup needs, `--pads` tries the
   pads-only jump (D221) on every room; it lists the rooms still on the
-  free jump (D223). Used by CI, the
+  free jump (D223) and warns of puzzle pieces within 2 cells of a door
+  (D241). Used by CI, the
   world map tool, and design skills/subagents. Knows nothing of enemies
   or timing.
 - **Claude Code skills and subagents** (D132, `.claude/`): the

@@ -8,6 +8,12 @@ docs/decisions.md).
 
 ## [Unreleased]
 
+### Added
+- `check:reach` warns of a crate, plate, socket or pad within 2 cells of a
+  door (D241): busy beside a door, the wizard walked out by accident and the
+  room reset. The room checklist, the room-design skill and the level review
+  say the same; 11 pieces in 8 rooms are listed for their reviews.
+
 ### Changed
 - Scan Lab is a pads room (D240): a stair and a pad to the disk, the pit 2 wide for
   the two crates, and a pad plus Blink to Dead Pixel's door. The checker drops a

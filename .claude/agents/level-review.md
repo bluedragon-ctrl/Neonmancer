@@ -65,6 +65,10 @@ For each room:
      he came in by. A pad where he must walk across or stand (a doorway,
      a 1-wide lane, a push cell) is a PROBLEM; a crate that can be pushed
      onto a pad or to a stair's foot is a trap to name.
+   - **Doors keep clear** (D241): a crate, plate, socket or pad within
+     2 cells of a doorway (`check:reach` warns of it), or a push, crate
+     route or enemy lane he works with there, is a PROBLEM: he walks out
+     by accident and the room resets.
    - **Reach with the free jump** (rooms not yet moved): every step <= 1
      block, gaps <= 1 tile, a bouncy enemy clears a 2-high ledge (never
      3), a crate or frozen enemy beside a 2-high wall is a way over it.
