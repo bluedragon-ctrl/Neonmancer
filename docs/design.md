@@ -87,7 +87,7 @@ same on QWERTY, QWERTZ and AZERTY keyboards.
   jump pressed up to 6 ticks before landing happens on landing.
 - Pads only (D221; the game's rule since D222, reached room by room): in a
   room with `"jump": "pads"` the jump key does nothing (Space casts). A jump pad throws him up by itself the moment he stands
-  on it (any room; 2.2 above it, over a 1-tile gap). It is a trampoline in
+  on it (any room; 2.2 above it: 2 up over a 1-tile gap, 1 up over 2, D243). It is a trampoline in
   the room's color (D226): a glass rim round a taut mesh that dips and
   rebounds on a launch, light streaking up off it; magenta stays the
   backup shrine's. Stairs take him one
@@ -1599,10 +1599,11 @@ a pads room).
   the rule is the engine's (5.19). Debug J makes every room pads-only.
 - **Jump pad** (`defs.json` `pad`, object kind `pad`, D221): a tile on the
   floor or on top of a block (validation), no body. The moment he stands
-  on it, it throws him `launch` (2.2) above it, in any room: 2 blocks up,
-  over a 1-tile gap from anywhere on it, or a block short across the gap
-  (D225); he steers in the air, and standing still he bounces on the
-  spot. A crate pushed onto it covers it. Look (D226): a trampoline in
+  on it, it throws him `launch` (2.2) above it, in any room: 2 blocks up;
+  over a 1-tile gap onto a ledge up to 2 higher, over 2 tiles up to 1
+  higher, never over 3 (D243; from its middle or beyond, a run-up from
+  behind lands a block lower, and 1 up over 2 tiles needs its far edge);
+  he steers in the air, and standing still he bounces on the spot. A crate pushed onto it covers it. Look (D226): a trampoline in
   the room's color (`render/pad-view.js`); sound `bounce:pad` (D223).
 - **Stair** (look `stair`, types `stair_x`, `stair_nx`, `stair_z`,
   `stair_nz` by their `rise`, D221): from the cell at its foot he walks up
@@ -1629,7 +1630,8 @@ a pads room).
   over a hole, floor while powered (`Grid.coverHole()`); see Gate blocks.
 - **Bouncy enemy** (D223): falling onto one throws him 2.2 above its top;
   in a pads room it is a moving pad.
-- **Checker:** a pad's cell climbs 2 and crosses a 1-tile gap; a stair
+- **Checker:** a pad's cell climbs 2, lands 2 up over a 1-tile gap and 1
+  up over 2 tiles (D243, the best launch point); a stair
   links its foot to its top; he walks under a slab; a bouncy enemy's lane
   counts as pads. `check:reach -- --pads` tries the rule on every room;
   the report lists the rooms still on the free jump.
@@ -1956,8 +1958,10 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
 it, and every new room)
 - No jump. A pad (`pad`, on the floor or on top of a block) throws him
   2.2 above it the moment he stands on it: from the floor onto a 2-high
-  ledge, never 3; from a pad on a 1-high block onto a 3-high one; and
-  over a 1-tile gap from anywhere on it (he steers in the air). Keep the
+  ledge, never 3; from a pad on a 1-high block onto a 3-high one; over a
+  1-tile gap onto a ledge up to 2 higher, over 2 tiles 1 higher, never
+  over 3 (D243; he steers in the air, and a run-up from behind lands a
+  block lower). Keep the
   pad's cell and the three above it free, or the launch hits a ceiling.
 - A pad fires whenever he stands on it, so never put one where he must
   walk across or stand still: a doorway, a 1-wide lane, the cell he

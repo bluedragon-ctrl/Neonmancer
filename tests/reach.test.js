@@ -399,3 +399,22 @@ test('a pad on a block carries a Blink up with it; a crate on a fake block drops
   const sc = { blocks: [{ type: 'fake', at: [5, 0, 1] }], objects: [{ id: 'c', type: 'crate', at: [5, 1, 1] }], pickups: [pickup('far', [7, 0, 1])] };
   assert.equal(reached(reach({ ...sc, jump: 'pads', holes: [{ at: [6, 0], to: [6, 7] }] }, ['scan'])), true, 'the dropped crate plugs the hole');
 });
+
+test('a pad throw lands its whole launch up over a 1-tile gap, a block less over 2, never over 3 (D243)', () => {
+  // A pad at x 4 (on the floor, or on a 1-high block with a stair up to it); holes from x 5, `gap` wide;
+  // beyond, a ledge `high` blocks high (0: the floor) with the pickup on it.
+  const throwTo = (gap, high, { base = 0, blocks = [] } = {}) => {
+    const step = base > 0 ? [{ at: [4, 0, 2] }, { type: 'stair_x', at: [3, 0, 2] }] : [];
+    const ledge = high > 0 ? [{ at: [5 + gap, 0, 0], to: [11, high - 1, 7] }] : [];
+    const props = { jump: 'pads', holes: [{ at: [5, 0], to: [4 + gap, 7] }], blocks: [...step, ...ledge, ...blocks], objects: [{ id: 'p', type: 'pad', at: [4, base, 2] }], pickups: [pickup('far', [5 + gap, high, 2])] };
+    return reached(reach(props));
+  };
+  assert.equal(throwTo(1, 2), true, 'a floor pad, a 2-high ledge over 1 tile');
+  assert.equal(throwTo(1, 3), false, 'never 3 up');
+  assert.equal(throwTo(1, 3, { base: 1 }), true, 'a pad on a 1-high block: a 3-high top over 1 tile');
+  assert.equal(throwTo(1, 2, { blocks: [{ at: [4, 3, 0], to: [5, 3, 7] }] }), false, 'a ceiling over the throw stops it');
+  assert.equal(throwTo(2, 1), true, '1 up over 2 tiles');
+  assert.equal(throwTo(2, 2), false, 'never 2 up over 2 tiles');
+  assert.equal(throwTo(2, 2, { base: 1 }), true, 'from a pad on a block, a 2-high top over 2 tiles');
+  assert.equal(throwTo(3, 0), false, 'never over 3 tiles');
+});
