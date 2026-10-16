@@ -19,6 +19,11 @@ docs/decisions.md).
   1-tile gap onto a ledge 2 up (a 3-high top from a pad on a 1-high block),
   over 2 tiles 1 up; it counted 1 up over one tile only. No verdict of a
   room changed.
+- Mirror Stacks is a pads room (D242): all three crates fill one row of the pit;
+  the fragment's gate takes a crate and Fork's decoy, since the second crate is
+  boxed in under the gate; a pad in the pocket and a one-way stair out; Event
+  Horizon's door is the pad onto the column and a diagonal Zap at the moved
+  target. The west door moved one cell north.
 - Scan Lab is a pads room (D240): a stair and a pad to the disk, the pit 2 wide for
   the two crates, and a pad plus Blink to Dead Pixel's door. The checker drops a
   crate lying on a fake block once Scan is in the set, and Blink from a pad's
