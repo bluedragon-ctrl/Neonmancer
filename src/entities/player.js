@@ -39,7 +39,9 @@ export const PLAYER = {
   /**
    * How far a stair's slope may rise above his feet within one tick's walk
    * and still be walked onto (D221): more than a tick's climb, even with
-   * Overdrive, far less than a block.
+   * Overdrive, far less than a block. Only on the ground (D244): in the air
+   * a block's side is a wall, or a throw rising past a ledge would slip
+   * into it and be pushed back down.
    */
   stepUp: 0.2,
   /** How far below his feet he keeps to the ground walking down a stair, instead of falling off it every tick (D221). */
@@ -500,8 +502,9 @@ export class Player {
       // Overdrive (D152) speeds him up on the ground only, so a jump never carries further.
       const speed = this.grounded ? PLAYER.speed * (this.boosts.overdrive > 0 ? BOOST.overdriveSpeed : 1) : PLAYER.speed * PLAYER.airSpeed;
       const step = (speed * DT) / Math.hypot(dx, dz);
-      const hitX = moveAxis(this.pos, this.size, 0, dx * step, grid, bodies, this, PLAYER.stepUp);
-      const hitZ = moveAxis(this.pos, this.size, 2, dz * step, grid, bodies, this, PLAYER.stepUp);
+      const stepUp = this.grounded ? PLAYER.stepUp : 0;
+      const hitX = moveAxis(this.pos, this.size, 0, dx * step, grid, bodies, this, stepUp);
+      const hitZ = moveAxis(this.pos, this.size, 2, dz * step, grid, bodies, this, stepUp);
       this.targetFacing = Math.atan2(dx, dz);
       this.trackPush(dx === 0 ? hitZ : dz === 0 ? hitX : null, [dx, dz]);
     } else {

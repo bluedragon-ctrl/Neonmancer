@@ -3030,7 +3030,7 @@ whole block from up to 0.2 under its top (meant for a stair's slope,
 near the apex and is shoved back down (even a flush 1-high step works
 only from the pad's near part there). That is a game bug, not a rule;
 the checker counts the flush throw, and the skill keeps "never flush" as
-advice until it is fixed.
+advice until it is fixed. (Fixed in D244.)
 
 **Verdicts.** `check:reach` and `--rooms` print the same before and after.
 Every pads room (atrium, bolt_gallery, boot_up, first_light, first_steps,
@@ -3049,3 +3049,32 @@ fragment's needs are unchanged.
 **Why:** "never" verdicts guard pickups, so the checker must not undercount
 what a pad does; the measured table lets designers build a guarded ledge
 (3 up over one tile, 2 over two, or a 3-tile gap) instead of guessing.
+
+### D244 — 2026-10-16 — A stair's step-up only on the ground
+In a room with a stair or a slab (`grid.shaped`), `moveAxis()` let a level
+move into any solid cell whose top was within the wizard's `stepUp` (0.2)
+above his feet: the next vertical move lifts him onto it, which is how he
+walks up a stair's slope and off its top onto the ledge beside it. It
+asked nothing of whether he was on the ground, so a throw rising past a
+ledge slipped into the block's side in the last 0.2 under its top, and the
+upward move then shoved him back down to the floor: a pad flush against a
+2-high ledge failed (D240, D243), a flush 1-high step worked only from
+part of the pad. Rooms without stairs never had it.
+- **The fix.** The wizard passes `stepUp` only while grounded
+  (`entities/player.js`); in the air a block's side is a wall in every
+  room, as it always was without stairs. Walking up and down stairs, onto
+  slabs and off a stair's top is unchanged (he is grounded there), and
+  crates and enemies never had a step-up.
+- **Rule.** "A pad never sits flush against its ledge" (D240) was this bug,
+  not a design rule: flush, a floor pad lands him up to 2 up from anywhere
+  on the pad, in any room (`tests/stairs.test.js`). A gap stays the more
+  forgiving build where a throw must not miss.
+- **Rooms.** The checker already counted the flush throw, so no verdict
+  changes. Rooms with stairs (atrium, bolt_gallery, boot_up, cold_stairs,
+  freeze_hall, ledger_cell, mirror_stacks, relay_loft, scan_lab,
+  shield_hall, zap_port, stair_lab) now play flush throws as the checker
+  counts them; none is authored.
+
+**Why:** the step-up is for a slope he walks onto, not for a body flying
+past a ledge; one collision rule for every room keeps play and the
+checker in step.
