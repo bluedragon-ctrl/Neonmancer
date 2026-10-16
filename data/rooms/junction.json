@@ -5,6 +5,7 @@
   "name": "Junction",
   "biome": "home_lattice",
   "size": [8, 5, 8],
+  "jump": "pads",
   "spawn": [1.5, 0, 0.5],
   "reset": [6.5, 0, 5.5],
   "exits": [
@@ -16,9 +17,11 @@
     { "type": "fence", "at": [0, 0, 2], "to": [5, 2, 2] },
     { "type": "gate", "at": [6, 0, 2], "to": [6, 2, 2], "switches": ["plate_junction"] },
     { "type": "fence", "at": [7, 0, 2], "to": [7, 2, 2] },
-    { "at": [0, 0, 7], "to": [0, 1, 7] }
+    { "at": [0, 0, 6], "to": [2, 1, 7] },
+    { "type": "stair_x", "at": [1, 0, 4] },
+    { "at": [2, 0, 4], "to": [4, 0, 4] }
   ],
-  "objects": [{ "id": "plate_junction", "type": "plate_timed", "at": [7, 0, 7] }],
+  "objects": [{ "id": "plate_junction", "type": "plate_timed", "at": [3, 0, 7] }],
   "enemies": [{ "id": "bug_junction", "template": "bug", "at": [1, 0, 5], "path": { "points": [[4, 0, 5]] } }],
   "pickups": [{ "id": "fragment_11", "type": "fragment_11", "at": [0, 2, 7] }]
 }

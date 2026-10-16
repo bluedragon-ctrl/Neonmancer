@@ -3138,3 +3138,25 @@ review found a pickup hole.
 **Why:** the jump carried the step onto the plateau and the hops into the
 pens; the west door skipped the fragment's trick; the Outer Buffer doors
 are redone round Blink (D216, D217).
+
+### D246 — 2026-10-16 — Junction on pads: the bug is the lift (5.17)
+`junction` is a pads room, reviewed as *tune*. The fragment sat on a 2-high
+pillar and the frozen bug was its 1-high step for a jump; without the jump
+that step is gone (a frozen bug is a step down from, not up to).
+- **The trick** is the bounce (D223): a `stair_x` `(1,0,4)` takes him onto a
+  1-high ledge `(2..4,0,4)` beside the bug's lane (`z = 5`, `x 1..4`); he
+  drops off its edge onto the bug as it walks towards him and the bounce
+  (2.8) carries him, holding towards the pillar, onto the 2-high top
+  `(0..2,6..7)` and the fragment at `(0,2,7)`. A miss lands him on the floor
+  by the bug (a bump, nothing lost). Pause turns the bug into a harmless
+  block: no bounce, a safe room, but no way up either.
+- **Played** with `sim.mjs`: start the drop while the bug walks west at
+  `x ≈ 3.0` from the ledge at `x = 2.45`; he lands at the top 60 ticks later.
+  Dropped while it walks away he misses it.
+- **Checker:** the fragment needs the stair and the bug from every door
+  (`--with zap,scan,fork,pause`); no bypass shows in the mutation test.
+- **D241:** `plate_junction` left the south door's end `(7,7)` for `(3,7)`,
+  beside the pillar. The timed plate (3 s) still opens the fence gate in time
+  to reach the north door (played: through the gate at 2.4 s).
+**Why:** the jump carried the fragment's step; the bug's bounce is the pads
+game's own lift.
