@@ -5,6 +5,7 @@
   "name": "Scan Lab",
   "biome": "home_lattice",
   "size": [12, 6, 12],
+  "jump": "pads",
   "spawn": [1.5, 0, 5.5],
   "exits": [
     { "id": "west", "side": "-x", "at": 5 },
@@ -13,21 +14,27 @@
     { "id": "north_2", "side": "-z", "at": 11, "width": 1, "y": 3, "hidden": true }
   ],
   "blocks": [
-    { "type": "fake", "at": [5, 0, 5], "to": [5, 1, 6] },
-    { "type": "fence", "at": [5, 2, 5], "to": [5, 2, 6] },
-    { "type": "fence", "at": [5, 0, 7], "to": [5, 2, 11] },
-    { "type": "fake", "at": [7, 0, 9] },
-    { "type": "bridge", "at": [8, 0, 0], "to": [10, 0, 0], "switches": ["plate_back"] },
+    { "type": "fake", "at": [4, 0, 5], "to": [4, 1, 6] },
+    { "type": "fence", "at": [4, 2, 5], "to": [4, 3, 6] },
+    { "type": "fence", "at": [4, 0, 7], "to": [4, 3, 11] },
+    { "type": "fake", "at": [6, 0, 9] },
+    { "type": "bridge", "at": [7, 0, 0], "to": [8, 0, 0], "switches": ["plate_back"] },
     { "at": [0, 0, 0], "to": [1, 1, 1] },
-    { "type": "fence", "at": [5, 0, 0], "to": [5, 2, 4] }
+    { "type": "fence", "at": [4, 0, 0], "to": [4, 3, 4] },
+    { "at": [11, 0, 4] },
+    { "at": [3, 0, 1] },
+    { "type": "stair_nz", "at": [3, 0, 2] },
+    { "type": "stair_x", "at": [10, 0, 4] }
   ],
-  "holes": [{ "at": [8, 0], "to": [10, 11] }],
+  "holes": [{ "at": [7, 0], "to": [8, 11] }],
   "objects": [
     { "id": "screen_scan", "type": "screen", "at": [0, 0, 4], "text": "help_scan", "overrides": { "face": "+x" } },
     { "id": "crate_1", "type": "crate", "at": [3, 0, 9] },
-    { "id": "crate_2", "type": "crate", "at": [7, 1, 9] },
+    { "id": "crate_2", "type": "crate", "at": [6, 1, 9] },
     { "id": "plate_back", "type": "plate_timed", "at": [11, 0, 11], "overrides": { "timer": 5 } },
-    { "id": "data_pillar_2", "type": "data_pillar", "at": [6, 0, 0] },
+    { "id": "pad_disk", "type": "pad", "at": [3, 1, 1] },
+    { "id": "pad_door", "type": "pad", "at": [11, 1, 4] },
+    { "id": "data_pillar_2", "type": "data_pillar", "at": [10, 0, 0] },
     { "id": "memory_stack_1", "type": "memory_stack", "at": [11, 2, 0] },
     { "id": "data_pillar_1", "type": "data_pillar", "at": [3, 0, 0] }
   ],

@@ -189,8 +189,12 @@ export class RoomModel {
     for (const object of room.objects) {
       const [x, y, z] = object.at;
       if (object.kind === 'pushable') {
-        this.crates.push(this.index(x, y, z));
-        if (object.topDamage > 0) this.spiked.add(this.index(x, y, z));
+        // A scan derezzes the fake block a crate lies on, and the crate drops onto what is under it.
+        let cy = y;
+        if (abilities.has('scan'))
+          while (cy > 0 && !this.grid.isSolid(x, cy - 1, z) && !room.objects.some((o) => o.kind === 'pushable' && o.at[0] === x && o.at[1] === cy - 1 && o.at[2] === z)) cy--;
+        this.crates.push(this.index(x, cy, z));
+        if (object.topDamage > 0) this.spiked.add(this.index(x, cy, z));
       }
       else if (object.kind === 'platform') {
         const cells = pathCells(object.at, object.path);
@@ -460,9 +464,11 @@ export class RoomModel {
         // Blink from a running jump (D217): cast near the top, he keeps the jump's
         // arc, so it carries two cells further and a block up (sim: a 4-tile pit,
         // onto a 1-high ledge beyond it); he lands anywhere along the way.
-        if (jumps && abilities.has('blink') && !this.blocked(x, y + 2, z, cfg)) {
-          const n = this.sweep(x, y + 1, z, dir, this.blinkRange + 2, cfg);
-          for (let k = 1; k <= n; k++) land(x + dx * k, y + 1, z + dz * k);
+        // A pad's launch (or a bounce) carries it as high as the launch goes (sim: a pad on a
+        // 1-high block, Blink over a 2-tile gap onto a 3-high sill).
+        if (jumps && abilities.has('blink') && !this.blocked(x, y + up + 1, z, cfg)) {
+          const n = this.sweep(x, y + up, z, dir, this.blinkRange + 2, cfg);
+          for (let k = 1; k <= n; k++) land(x + dx * k, y + up, z + dz * k);
         }
         // Compile: a crate in the free cell in front; he steps up on it, or walks over the hole it plugs.
         if (abilities.has('compile') && this.grid.isInside(nx, nz) && !this.blockedCrate(nx, y, nz, cfg)) {

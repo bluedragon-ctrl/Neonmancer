@@ -9,6 +9,10 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Changed
+- Scan Lab is a pads room (D240): a stair and a pad to the disk, the pit 2 wide for
+  the two crates, and a pad plus Blink to Dead Pixel's door. The checker drops a
+  crate lying on a fake block once Scan is in the set, and Blink from a pad's
+  launch goes as high as the launch.
 - Stairs are for everyone, pads only for him (D230). Enemies walk up a
   stair from its foot and down off its top, a chaser that sees the wizard
   on another level finds its way there by stairs, and one off its path or

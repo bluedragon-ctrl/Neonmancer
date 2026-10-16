@@ -8,7 +8,7 @@ import { describeNeeds, formatReach, formatRoom, freeJumpRooms, roomOfReport } f
 import { LIFT, gameData, roomFile } from './helpers.js';
 
 /** Object types the tests use besides the crate. */
-const OBJECTS = { plate: { kind: 'plate', color: '#eef3ff' }, plate_heavy: { kind: 'plate', color: '#eef3ff', weight: 2 }, target: { kind: 'target', color: '#eef3ff' }, platform: LIFT };
+const OBJECTS = { pad: { kind: 'pad', color: '#eef3ff' }, plate: { kind: 'plate', color: '#eef3ff' }, plate_heavy: { kind: 'plate', color: '#eef3ff', weight: 2 }, target: { kind: 'target', color: '#eef3ff' }, platform: LIFT };
 const TUNING = { scanRange: 6, blinkRange: 3 };
 const WEST = { id: 'west', side: '-x', at: 3 };
 const EAST = { id: 'east', side: '+x', at: 3 };
@@ -387,4 +387,15 @@ test('Pause: a frozen enemy pushed onto a heavy plate takes a ledge crate droppe
   assert.equal(locked([], ['pause']), false); // the crate alone is one weight
   assert.equal(locked([patrol], []), false); // a bug not frozen is no weight
   assert.equal(locked([patrol], ['pause']), true); // frozen at [6,0,2], pushed onto the plate, the crate dropped on it
+});
+
+test('a pad on a block carries a Blink up with it; a crate on a fake block drops when scanned', () => {
+  // A pad on a 1-high step (launch 2): Blink at the apex crosses a 2-tile gap onto a 3-high ledge.
+  const base = { jump: 'pads', blocks: [{ at: [4, 0, 2] }, { type: 'stair_x', at: [3, 0, 2] }, { at: [8, 0, 2], to: [8, 2, 2] }], objects: [{ id: 'p', type: 'pad', at: [4, 1, 2] }], pickups: [pickup('far', [8, 3, 2])] };
+  const pad = { ...base, objects: [{ id: 'p', type: 'pad', at: [4, 1, 2], launch: 2.2 }] };
+  assert.equal(reached(reach(pad, ['blink'])), true, 'pad then Blink');
+  assert.equal(reached(reach(pad, [])), false, 'the pad alone does not');
+  // A crate on a fake block lies on the floor once a scan has derezzed it, ready to push.
+  const sc = { blocks: [{ type: 'fake', at: [5, 0, 1] }], objects: [{ id: 'c', type: 'crate', at: [5, 1, 1] }], pickups: [pickup('far', [7, 0, 1])] };
+  assert.equal(reached(reach({ ...sc, jump: 'pads', holes: [{ at: [6, 0], to: [6, 7] }] }, ['scan'])), true, 'the dropped crate plugs the hole');
 });
