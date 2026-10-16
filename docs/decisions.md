@@ -3160,3 +3160,25 @@ that step is gone (a frozen bug is a step down from, not up to).
   to reach the north door (played: through the gate at 2.4 s).
 **Why:** the jump carried the fragment's step; the bug's bounce is the pads
 game's own lift.
+
+### D247 — 2026-10-16 — Drift Bay on pads: the frozen virus is the bridge (5.17)
+`drift_bay` is a pads room, reviewed as *tune*. Without the jump the ferry
+(a 1-high block) could not be boarded and the fragment's 2-high pillar had no
+step; the virus was meant as that step.
+- **Crossing:** a `stair_z` `(3,0,3)` up onto the ferry at its north dock and a
+  `stair_nz` `(3,0,8)` down off it at the south. Played: boarded when docked,
+  rode it, walked off; the sentinel and the virus bite on the stair.
+- **The trick** is the bridge: the pillar is 3 high (fragment at `(0,3,10)`)
+  and a pad on a 1-high ledge `(2,0,11)` beside it throws him onto it (D243),
+  but the ledge is cut off from the stair `(4,0,11)` by the floor cell
+  `(3,0,11)`. He freezes the virus (Pause, 5 s), pushes it west along row 10
+  to `(3,10)` and south into the gap, then climbs stair → virus → ledge → pad.
+  Zapping it leaves no bridge; the virus unfreezes after 5 s (a bite, no loss).
+  The virus starts at `(6,0,10)` and chases, so it comes to him.
+- **Played** with `sim.mjs`: freeze at `(4,10)`, push twice, climb, throw, land
+  on the pillar at tick 361 from the freeze at tick 50, about 4 s of the 5.
+- **Checker:** the fragment needs Pause (`--with zap,scan,fork,pause`); Blink
+  alone also reaches it, which is allowed (Blink counts for exits and secrets
+  only, D217, and is found after the Lattice). Both doors free.
+**Why:** a frozen enemy is the pads game's block; the virus keeps its job as the
+step, now a bridge.

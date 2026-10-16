@@ -5,17 +5,23 @@
   "name": "Drift Bay",
   "biome": "home_lattice",
   "size": [12, 5, 12],
+  "jump": "pads",
   "spawn": [1.5, 0, 1.5],
   "exits": [
     { "id": "north", "side": "-z", "at": 1 },
     { "id": "south", "side": "+z", "at": 10 }
   ],
   "blocks": [
-    { "at": [0, 0, 9], "to": [1, 1, 11] },
+    { "at": [0, 0, 9], "to": [1, 2, 11] },
+    { "at": [2, 0, 11] },
+    { "type": "stair_z", "at": [3, 0, 3] },
+    { "type": "stair_nz", "at": [3, 0, 8] },
+    { "type": "stair_nx", "at": [4, 0, 11] },
     { "at": [9, 0, 9], "to": [11, 0, 9] }
   ],
   "holes": [{ "at": [0, 4], "to": [11, 7] }],
   "objects": [
+    { "id": "pad_pillar", "type": "pad", "at": [2, 1, 11] },
     {
       "id": "ferry",
       "type": "platform",
@@ -24,8 +30,8 @@
     }
   ],
   "enemies": [
-    { "id": "virus_bay", "template": "virus", "at": [4, 0, 10] },
+    { "id": "virus_bay", "template": "virus", "at": [6, 0, 10] },
     { "id": "sentinel_bay", "template": "sentinel", "at": [10, 0, 8] }
   ],
-  "pickups": [{ "id": "fragment_10", "type": "fragment_10", "at": [0, 2, 10] }]
+  "pickups": [{ "id": "fragment_10", "type": "fragment_10", "at": [0, 3, 10] }]
 }
