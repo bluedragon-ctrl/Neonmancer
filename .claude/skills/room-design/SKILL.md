@@ -279,12 +279,13 @@ Lessons for pads rooms (D222 on):
   pad in a doorway, a 1-wide lane or behind a crate he must push throws
   him about; put it at the foot of what it climbs, off the walking lines.
   A crate pushed onto it covers it until the room resets.
-- **A pad never sits flush against its ledge** (D240, D243). In a room with
-  a stair or a slab, a floor pad beside a 2-high ledge only bumps the side
-  and drops back (the top is 0.2 under the apex; a collision quirk of rooms
-  with stairs, the checker still counts it): put a floor cell between, or
-  build it as boot_up does, a stair to a 1-high step with the pad on it, a
-  gap, the ledge.
+- **A pad may sit flush against its ledge** (D243, D244). Flush, a floor
+  pad lands him on a ledge up to 2 up from anywhere on the pad, in any
+  room (until D244 a room with a stair or a slab dropped him back: a
+  collision bug, now fixed). The apex is only 0.2 over a 2-high top, so a
+  gap between pad and ledge (boot_up's stair to a step with the pad on it,
+  a gap, the ledge) is still the more forgiving build where a throw must
+  not miss.
 - **A throw goes 2 up over a 1-tile gap, 1 up over 2** (D243). A pad lands
   him on a ledge up to its whole launch higher across one tile (a 3-high top
   from a pad on a 1-high block), a block less across two, never across

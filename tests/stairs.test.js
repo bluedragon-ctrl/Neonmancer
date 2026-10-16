@@ -183,6 +183,33 @@ test('pads: a throw over a 1-tile pit lands 2 up from the middle, 1 up from a ru
   assert.notEqual(throwOver(2, 'behind'), 2, 'a run-up from behind: never 2 up');
 });
 
+/**
+ * Where a throw from a pad at [5, 0, 3] flush against a ledge `high` blocks high (x 0..4) lands, held
+ * on towards it: walked onto from its side (`side`) or run onto from behind (`behind`); `stair` puts
+ * a stair far off in the room (shaped collision, D221). Returns his height.
+ */
+function throwFlush(high, approach, stair) {
+  const blocks = [{ at: [0, 0, 0], to: [4, high - 1, 7] }];
+  if (stair) blocks.push({ type: 'stair_x', at: [6, 0, 7] });
+  const spawn = approach === 'side' ? [5.5, 0, 5.5] : [7.5, 0, 3.5];
+  const game = new Game(gameData({ rooms: [roomFile('r', { spawn, jump: 'pads', objects: [{ id: 'pad', type: 'pad', at: [5, 0, 3] }], blocks })], objects: OBJECTS }));
+  for (let i = 0; i < 10; i++) game.update(idle);
+  let launched = false;
+  for (let i = 0; i < 150 && !(launched && game.player.grounded); i++) {
+    game.update(hold(launched || approach === 'behind' ? 'up' : 'right'));
+    launched ||= game.player.pos[1] > 0.05;
+  }
+  return game.player.pos[1];
+}
+
+test('pads: a pad flush against a ledge 1 or 2 up lands him on it, a stair in the room or not (D244)', () => {
+  for (const stair of [false, true]) {
+    for (const approach of ['side', 'behind']) {
+      for (const high of [1, 2]) assert.equal(throwFlush(high, approach, stair), high, `${high} up, ${approach}, stair ${stair}`);
+    }
+  }
+});
+
 test('reach: a pad throws him over a 1-tile gap onto a ledge 2 up, never 3 (D243)', () => {
   const pit = { at: [4, 0], to: [4, 7] };
   const reached = (high) => reach({ jump: 'pads', holes: [pit], blocks: [{ at: [5, 0, 0], to: [7, high, 7] }], objects: [{ id: 'pad', type: 'pad', at: [3, 0, 3] }], pickups: [{ ...FAR, at: [6, high + 1, 6] }] }).pickups.has('far');

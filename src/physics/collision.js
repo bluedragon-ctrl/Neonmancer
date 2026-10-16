@@ -13,7 +13,8 @@
  * A stair or a slab fills only part of its cell (D221, Grid.span()): a
  * mover collides with that part. Walking into a stair's slope no higher
  * than `stepUp` above the feet is no collision: the next vertical move
- * lifts him onto it (that is how the wizard climbs a stair).
+ * lifts him onto it (that is how the wizard climbs a stair). The mover
+ * passes a `stepUp` only while it stands on the ground (D244).
  */
 import { DT } from '../core/loop.js';
 import { GRAVITY, MAX_FALL } from '../core/rules.js';
@@ -115,8 +116,9 @@ export function touchedCell(box, grid, test, reach = 0.02) {
  * @param {{ isSolid(x: number, y: number, z: number): boolean }} grid
  * @param {Iterable<{ box(): number[][] }>} [bodies] moving bodies
  * @param {object} [self] the mover itself, skipped among the bodies
- * @param {number} [stepUp] how far below its feet a stair's slope may rise
- *   on a level move and still be walked onto (D221); 0 for all but the wizard
+ * @param {number} [stepUp] how far above its feet a stair's slope may rise
+ *   on a level move and still be walked onto (D221); 0 for all but the
+ *   wizard, and for him in the air (D244)
  */
 export function moveAxis(pos, size, axis, delta, grid, bodies = [], self = null, stepUp = 0) {
   if (delta === 0) return false;

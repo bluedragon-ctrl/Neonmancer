@@ -15,6 +15,10 @@ docs/decisions.md).
   say the same; 11 pieces in 8 rooms are listed for their reviews.
 
 ### Changed
+- In a room with a stair or a slab, a pad flush against a ledge lands the
+  wizard on it, as in any other room (D244): rising past the ledge, he
+  slipped into its side and was shoved back down. The stair's step-up now
+  works only on the ground; walking up and down stairs is unchanged.
 - `check:reach` counts a pad's throw as far as it goes in play (D243): over a
   1-tile gap onto a ledge 2 up (a 3-high top from a pad on a 1-high block),
   over 2 tiles 1 up; it counted 1 up over one tile only. No verdict of a
