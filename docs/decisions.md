@@ -2935,6 +2935,29 @@ row of the pit) and the jump's parts are rebuilt:
 Played end to end (`sim.mjs`): the disk by the stair and pad, Scan, both
 crates, the row crossed, the plate and bridge home.
 
+### D241 — 2026-10-16 — The puzzle keeps 2 cells from every door
+Playtesting showed that a wizard busy at a piece beside a door (pushing a
+crate, stepping round it, landing off a pad) walks out by accident, and
+coming back resets the room with the puzzle half done. So every piece he
+works with keeps at least 2 cells of floor between it and every doorway:
+no crate, plate, socket or pad in the 2 rows in front of a door or the cell
+beside either end of it, and no push, crate route or enemy lane he works
+with there.
+- **The check.** `src/world/exit-margin.js` measures a piece's distance to
+  each doorway (across the side, or along it past the door's ends, whichever
+  is more; height not counted, so a piece under a raised door is flagged for
+  the review to judge). `check:reach` prints a warning for each piece under
+  2, in the world report and the one-room report. Warnings, not errors:
+  rooms move over in their reviews, as with the pads rule (D222). It sees
+  where pieces start, not where a solution pushes crates; the checklist, the
+  room-design skill and the level review add routes and enemy lanes.
+- **Now listed:** `ledger_cell` crate_3 (east), `scan_lab` pad_door (east),
+  `twin_plates` plate_home (north), `junction` plate_junction (south),
+  `buffer_1` socket_1 and socket_3 (south), and in the dev wing `heavy_lab`
+  crate_2 and four pieces in `spiked_lab`. No authored room is listed. The
+  two pads rooms already reviewed (`ledger_cell`, `scan_lab`) get a small
+  fix of their own; the others in their reviews.
+
 ### D242 — 2026-10-16 — Mirror Stacks on pads: three crates for the pit, Fork for the fragment, a pad to Event Horizon (5.17)
 `mirror_stacks` is a pads room, reviewed as *tune*. Without the jump the
 fragment was free: the two east crates held both plates (the old "needs Fork"
@@ -2956,7 +2979,7 @@ was a truncated search).
 - **Event Horizon** (`east_2`, `buffer_4`). The pad throws him east over
   (10,0) onto the column, now (11,0..1) 2 deep (the level review found that
   (11,1) was a pit with no way out). Without Blink: a 1-high pad block reaches
-  a 3-high top across a gap (sim; the checker counts 1 up and says Blink).
+  a 3-high top across a gap (sim; the checker counts it since D243).
   target_1 moved to (0,3,11) on a (0,0..2,11) pillar, on the 45° line from the
   column's front cell: a Zap facing up+left from anywhere on it hits the target
   (swept), and he walks out into `buffer_4`. Coming back puts him on the column;
@@ -2972,3 +2995,57 @@ was a truncated search).
   (11,1) fixed.
 **Why:** the jump carried the crossing's last cell and the door; the fragment
 had no trick on pads.
+
+### D243 — 2026-10-16 — A pad's throw: 2 up over a 1-tile gap, 1 up over 2
+The mirror_stacks review (D242) played a pad on a 1-high block throwing the
+wizard onto a 3-high top across a 1-tile gap, which the checker counted as
+1 up (D225). Measured with `sim.mjs` in test rooms (a pad on the floor or
+on a 1–3-high column, holes between it and a ledge of every height,
+launched from points across the pad, held towards the ledge, diagonally or
+not at all):
+- **The column under the pad doesn't matter**: everything counts from the
+  pad's top (apex 2.2 above it).
+- **Flush** (no gap): up to 2 up, from anywhere on the pad, 3 never.
+- **Over a 1-tile gap**: up to 2 up from anywhere he can launch walking on
+  from the side (hitbox inside the pad), held straight; held diagonally,
+  2 up needs the pad's far half. A run-up from behind (launched at the
+  pad's near edge) lands at most 1 up: the D225 test, which ran on.
+- **Over 2 tiles**: lower or level from the pad's middle on, 1 up from its
+  far edge only (feet 0.7–0.8 or more into the cell, walking along the
+  pit's rim); 2 up never.
+- **Over 3 tiles**: never.
+
+The checker (`src/world/reach.js`, `LAUNCH`) takes the best launch point,
+as it errs towards reachable: a launch (a pad, a bug bounce) crosses up to
+2 tiles and lands up to its whole launch higher over one tile, a block
+less over two. A free jump is unchanged. The bounce off a bug flies higher
+(2.8 over its lane) and is counted the same, not measured. The head-room
+check over the gap no longer asks for a cell above the launch's top.
+
+**Flush in rooms with stairs.** D240 found a floor pad flush against a
+2-high plinth failing in `scan_lab`. In test rooms it works; it fails in
+any room with a stair or a slab: there collision lets a body step onto a
+whole block from up to 0.2 under its top (meant for a stair's slope,
+`physics/collision.js`), the rising wizard slips into the block's side
+near the apex and is shoved back down (even a flush 1-high step works
+only from the pad's near part there). That is a game bug, not a rule;
+the checker counts the flush throw, and the skill keeps "never flush" as
+advice until it is fixed.
+
+**Verdicts.** `check:reach` and `--rooms` print the same before and after.
+Every pads room (atrium, bolt_gallery, boot_up, first_light, first_steps,
+freeze_hall, ledger_cell, relay_loft, scan_lab, shield_hall, zap_port, and
+stair_lab in the dev wing) was also searched alone from its spawn and every
+door, with no spell, each spell alone, the Lattice set and all: no exit or
+pickup changed, and no pickup is now reached by a pad without its trick.
+One search artifact: relay_loft from its east door with Cut & Paste alone
+hits the 2000-configuration cap either way, and the larger reach spends it
+elsewhere and misses fragment_4 (the world report, with more spells, is
+unchanged). mirror_stacks as PR #215 has it (D242): with the Lattice spells
+`east_2` is now reached by the pad throw onto the column, as played; the
+world report lists it as "zap + compile" (before: "several"); the
+fragment's needs are unchanged.
+
+**Why:** "never" verdicts guard pickups, so the checker must not undercount
+what a pad does; the measured table lets designers build a guarded ledge
+(3 up over one tile, 2 over two, or a 3-tile gap) instead of guessing.

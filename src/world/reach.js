@@ -40,8 +40,9 @@
  * one enemy may count in several cells at once (optimistic, like the
  * timing), but it holds one plate at most.
  *
- * Jump rule (D221): a jump pad throws him up its `launch` (2 blocks and
- * a one-tile gap, landing up to a block higher across it) in any room; in a room with `"jump": "pads"`
+ * Jump rule (D221): a jump pad throws him up its `launch` (2 blocks) in any
+ * room; across a gap it lands 2 up over one tile and 1 up over two (D243,
+ * LAUNCH); in a room with `"jump": "pads"`
  * that is his only jump: elsewhere no climb, no gap, no Blink from a jump,
  * no step onto a compiled crate, and a pickup two cells up is out of reach.
  * A stair takes him from the cell at its foot onto its top, one up; down
@@ -49,8 +50,8 @@
  * off a ledge over a stair's top slides down it to its foot (D230,
  * Grid.stairStep()); it never goes up one, nor onto one otherwise. In a pads room a bouncy enemy is a moving
  * pad (D223): where he falls onto a cell of its lane (from a ledge or a
- * launch) he is thrown up as from a pad, BOUNCE_UP blocks and a one-tile
- * gap; any cell of the lane, whenever (optimistic, like Pause). He can't
+ * launch) he is thrown up as from a pad, BOUNCE_UP blocks and the pad's
+ * gaps; any cell of the lane, whenever (optimistic, like Pause). He can't
  * get on top of it from its own level.
  *
  * What it knows nothing about, on purpose: enemies and their fire (combat
@@ -83,6 +84,18 @@ export const JUMP = {
  * 0.6 top, so 2.8 over the floor of its lane): a 2-high ledge, never 3.
  */
 export const BOUNCE_UP = 2;
+
+/**
+ * Gaps a launch (a pad, a bounce: higher than a jump) crosses, D243. Played
+ * with sim.mjs from every point of a pad: over a 1-tile gap it lands up to
+ * its whole launch higher (a 3-high top from a pad on a 1-high block), over
+ * 2 tiles a block less, over 3 never. Optimistic: the best launch point and
+ * a straight hold; a run-up from behind reaches a block less, and over 2
+ * tiles 1 up needs the far edge of the pad (level, its middle).
+ */
+export const LAUNCH = {
+  gap: 2,
+};
 
 /** How far Blink goes, from defs.json; the search takes the spell's `range` from its `spells` when given. */
 const BLINK_RANGE = 3;
@@ -418,7 +431,9 @@ export class RoomModel {
       // A pad (or a bouncy enemy he fell onto, D223) throws him up; without a free jump (D221) nothing else does.
       const up = this.climbFrom(x, y, z, bounced.has(this.index(x, y, z)));
       const jumps = up > 0;
-      const gap = jumps ? this.gap : 0;
+      // A launch (higher than his jump) flies further than a jump (D243).
+      const launch = up > this.up;
+      const gap = jumps ? (launch ? LAUNCH.gap : this.gap) : 0;
       // Riding a lift (D228): standing on its platform he goes to its other stops.
       if (y > 0) for (const [lx, ly, lz] of this.lifts.get(this.index(x, y - 1, z)) ?? []) if (this.landing(lx, ly + 1, lz, cfg) === ly + 1) add(lx, ly + 1, lz);
       for (const dir of DIRS) {
@@ -446,11 +461,12 @@ export class RoomModel {
           const lx = x + dx * (width + 1);
           const lz = z + dz * (width + 1);
           land(lx, y, lz);
-          // A launch higher than one block (a pad, a bounce) also lands up to a block
-          // short of it across the gap (sim: a pad over a 1-tile pit onto a 1-high ledge, never 2).
-          for (let rise = 1; rise < up; rise++) {
+          // A launch also lands higher across the gap (D243): its whole launch up over
+          // one tile, a block less over two (sim: a pad on a 1-high block onto a 3-high
+          // top over a 1-tile pit). His head never gets above the launch's top cell.
+          for (let rise = 1; rise <= (launch ? up + 1 - width : 0); rise++) {
             over &&= !this.blocked(x, y + rise + 1, z, cfg);
-            for (let k = 0; k <= width; k++) over &&= !this.blocked(x + dx * k, y + rise + 2, z + dz * k, cfg);
+            if (rise < up) for (let k = 0; k <= width; k++) over &&= !this.blocked(x + dx * k, y + rise + 2, z + dz * k, cfg);
             if (!over || !this.grid.isInside(lx, lz)) break;
             if (this.landing(lx, y + rise, lz, cfg) === y + rise) add(lx, y + rise, lz);
           }

@@ -36,8 +36,8 @@ worth playing.
   block), Fork (plate holder, lure). Explore: Scan (secrets, hidden
   exits). Action: Shield.
 - **No jump: pads, stairs, slabs** (D222, D223). Every new room and every
-  reviewed room is a pads room (`"jump": "pads"`): a pad throws him 2 up
-  and over a 1-tile gap, a stair takes him 1 up, a slab bridges, a bug he
+  reviewed room is a pads room (`"jump": "pads"`): a pad throws him 2 up,
+  2 up over a 1-tile gap, 1 up over 2 tiles (D243), a stair takes him 1 up, a slab bridges, a bug he
   falls onto bounces him 2 up; nothing else lifts him. A 1-high wall is a
   wall and a crate is a Sokoban box again (he walks round it), every ledge
   is a one-way drop. Every height change is one the room places: that is
@@ -267,15 +267,31 @@ Lessons from the reviews (D188 on):
   a roof) it says `never` and the mutation test lists every piece as NO EFFECT.
   Prove such a room with `solve.mjs` (it tracks where he stands) and `sim.mjs`.
 
+- **The puzzle keeps 2 cells from every door** (D241). Busy at a piece
+  beside a doorway, he steps out by accident and the room resets when he
+  comes back. No crate, plate, socket or pad in the 2 rows in front of a
+  door or the cell beside either end, and no push, crate route or enemy
+  lane he works with there. `check:reach` warns of the pieces where they
+  start; check the routes by hand.
+
 Lessons for pads rooms (D222 on):
 - **A pad is a one-way lift.** It fires the moment he stands on it, so a
   pad in a doorway, a 1-wide lane or behind a crate he must push throws
   him about; put it at the foot of what it climbs, off the walking lines.
   A crate pushed onto it covers it until the room resets.
-- **A pad never sits flush against its ledge** (D240). A floor pad beside a
-  2-high ledge only bumps the side (the top is 0.2 under the apex): put a
-  floor cell between, or build it as boot_up does, a stair to a 1-high step
-  with the pad on it, a gap, the ledge. A pad on a step plus Blink cast
+- **A pad never sits flush against its ledge** (D240, D243). In a room with
+  a stair or a slab, a floor pad beside a 2-high ledge only bumps the side
+  and drops back (the top is 0.2 under the apex; a collision quirk of rooms
+  with stairs, the checker still counts it): put a floor cell between, or
+  build it as boot_up does, a stair to a 1-high step with the pad on it, a
+  gap, the ledge.
+- **A throw goes 2 up over a 1-tile gap, 1 up over 2** (D243). A pad lands
+  him on a ledge up to its whole launch higher across one tile (a 3-high top
+  from a pad on a 1-high block), a block less across two, never across
+  three; the checker counts the same. That is from its middle or beyond,
+  holding towards the ledge: a run-up from behind lands a block lower, and
+  1 up over 2 tiles needs its far edge. So a guarded ledge needs 3 up over
+  one tile, 2 over two, or a 3-tile gap; play every throw with `sim.mjs`. A pad on a step plus Blink cast
   14–22 ticks after the throw crosses 2 tiles onto a 3-high sill (the
   checker models Blink at the launch height); a hidden pad+Blink door
   needs that sim window checked.
@@ -291,9 +307,6 @@ Lessons for pads rooms (D222 on):
 - **Check every cell he can drop into** (D242). Off a column or out of a
   pad's throw he lands anywhere near; a floor cell walled by blocks and a
   stair's side is a pit with no way out. Fill it or give it a stair.
-- **A pad on a 1-high block reaches a 3-high top across a gap** (D242). With
-  a 1-tile gap, the throw lands 2 up (played; the checker counts only 1 up, so
-  it says Blink). Flush against the ledge it fails (D240).
 - **Zap aims in eight directions.** A far target he must hit from one spot sits
   on an axis or a 45° diagonal through that spot's middle; sweep it with
   `sim.mjs` from every point of the spot (D242).
@@ -374,7 +387,7 @@ Edit existing files with small text edits, not a JSON dump.
 - **Objects** (`defs.json` objects): crates `crate crate_plain crate_cross
   crate_dashed crate_spiked`; switches `plate plate_timed plate_heavy target target_timed socket`; `platform
   spiked_platform` (need `path`, may take `switches`: run only while all on);
-  the jump pad `pad` (D221: on the floor or a block's top; standing on it throws him 2.2 up by itself, over a 1-tile gap, in any room; with stairs and bug bounces the only way up in a pads room; never where he must walk across or stand; a crate on it covers it); decorations `screen data_pillar memory_stack` (`overrides: { "face":
+  the jump pad `pad` (D221: on the floor or a block's top; standing on it throws him 2.2 up by itself, over a 1-tile gap 2 up, over 2 tiles 1 up (D243), in any room; with stairs and bug bounces the only way up in a pads room; never where he must walk across or stand; a crate on it covers it); decorations `screen data_pillar memory_stack` (`overrides: { "face":
   "+x"|"+z" }`; a screen may name a `text` in `data/lore.json`: title <= 32,
   lines <= 48 characters, only as help, see Screen texts below); `core`. `overrides` change only existing type
   values (e.g. a timer). Plates and sockets lie at y = 0 (validated): on a
@@ -409,7 +422,7 @@ Edit existing files with small text edits, not a JSON dump.
 | What | Number |
 |---|---|
 | Pads room (D222) | no jump: a 1-high wall is a wall, a crate a box he walks round; every ledge a one-way drop |
-| Pad | 2.2 above it the moment he stands on it: a 2-high ledge from the floor (3-high from a pad on a block), over a 1-tile gap onto a ledge level or 1 higher, never 2 (D225); the pad's cell and three above free; up to a 2-high ledge ~30 ticks (0.5 s), back down to its level ~46 (0.77 s) |
+| Pad | 2.2 above it the moment he stands on it: a 2-high ledge from the floor (3-high from a pad on a block), over a 1-tile gap onto a ledge up to 2 higher, over 2 tiles up to 1 higher, never over 3 (D243; a run-up from behind a block lower); the pad's cell and three above free; up to a 2-high ledge ~30 ticks (0.5 s), back down to its level ~46 (0.77 s) |
 | Stair | 1 up from its foot, the way it rises; walked at walking speed; a crate or frozen enemy is never pushed up it (its foot is a wall to them); pushed off the ledge over its top it slides down to its foot (one push, D230); enemies walk it both ways, at half their cell rate (two cells a step) |
 | Bug bounce in a pads room (D223) | only when he falls onto it: 2.8 over its lane, a 2-high ledge, never 3; the checker counts the whole lane |
 | Free jump (rooms not yet reviewed) | clears 1 block up (apex 1.2), never 2; crosses a 1-tile gap, never 2, but from a 1-high top (crate, frozen enemy) beside a floor pit it crosses 2 (D162) |
