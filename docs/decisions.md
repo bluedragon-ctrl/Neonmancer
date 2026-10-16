@@ -2957,3 +2957,57 @@ with there.
   crate_2 and four pieces in `spiked_lab`. No authored room is listed. The
   two pads rooms already reviewed (`ledger_cell`, `scan_lab`) get a small
   fix of their own; the others in their reviews.
+
+### D243 — 2026-10-16 — A pad's throw: 2 up over a 1-tile gap, 1 up over 2
+The mirror_stacks review (D242) played a pad on a 1-high block throwing the
+wizard onto a 3-high top across a 1-tile gap, which the checker counted as
+1 up (D225). Measured with `sim.mjs` in test rooms (a pad on the floor or
+on a 1–3-high column, holes between it and a ledge of every height,
+launched from points across the pad, held towards the ledge, diagonally or
+not at all):
+- **The column under the pad doesn't matter**: everything counts from the
+  pad's top (apex 2.2 above it).
+- **Flush** (no gap): up to 2 up, from anywhere on the pad, 3 never.
+- **Over a 1-tile gap**: up to 2 up from anywhere he can launch walking on
+  from the side (hitbox inside the pad), held straight; held diagonally,
+  2 up needs the pad's far half. A run-up from behind (launched at the
+  pad's near edge) lands at most 1 up: the D225 test, which ran on.
+- **Over 2 tiles**: lower or level from the pad's middle on, 1 up from its
+  far edge only (feet 0.7–0.8 or more into the cell, walking along the
+  pit's rim); 2 up never.
+- **Over 3 tiles**: never.
+
+The checker (`src/world/reach.js`, `LAUNCH`) takes the best launch point,
+as it errs towards reachable: a launch (a pad, a bug bounce) crosses up to
+2 tiles and lands up to its whole launch higher over one tile, a block
+less over two. A free jump is unchanged. The bounce off a bug flies higher
+(2.8 over its lane) and is counted the same, not measured. The head-room
+check over the gap no longer asks for a cell above the launch's top.
+
+**Flush in rooms with stairs.** D240 found a floor pad flush against a
+2-high plinth failing in `scan_lab`. In test rooms it works; it fails in
+any room with a stair or a slab: there collision lets a body step onto a
+whole block from up to 0.2 under its top (meant for a stair's slope,
+`physics/collision.js`), the rising wizard slips into the block's side
+near the apex and is shoved back down (even a flush 1-high step works
+only from the pad's near part there). That is a game bug, not a rule;
+the checker counts the flush throw, and the skill keeps "never flush" as
+advice until it is fixed.
+
+**Verdicts.** `check:reach` and `--rooms` print the same before and after.
+Every pads room (atrium, bolt_gallery, boot_up, first_light, first_steps,
+freeze_hall, ledger_cell, relay_loft, scan_lab, shield_hall, zap_port, and
+stair_lab in the dev wing) was also searched alone from its spawn and every
+door, with no spell, each spell alone, the Lattice set and all: no exit or
+pickup changed, and no pickup is now reached by a pad without its trick.
+One search artifact: relay_loft from its east door with Cut & Paste alone
+hits the 2000-configuration cap either way, and the larger reach spends it
+elsewhere and misses fragment_4 (the world report, with more spells, is
+unchanged). mirror_stacks as PR #215 has it (D242): with the Lattice spells
+`east_2` is now reached by the pad throw onto the column, as played; the
+world report lists it as "zap + compile" (before: "several"); the
+fragment's needs are unchanged.
+
+**Why:** "never" verdicts guard pickups, so the checker must not undercount
+what a pad does; the measured table lets designers build a guarded ledge
+(3 up over one tile, 2 over two, or a 3-tile gap) instead of guessing.

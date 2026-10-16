@@ -15,6 +15,10 @@ docs/decisions.md).
   say the same; 11 pieces in 8 rooms are listed for their reviews.
 
 ### Changed
+- `check:reach` counts a pad's throw as far as it goes in play (D243): over a
+  1-tile gap onto a ledge 2 up (a 3-high top from a pad on a 1-high block),
+  over 2 tiles 1 up; it counted 1 up over one tile only. No verdict of a
+  room changed.
 - Scan Lab is a pads room (D240): a stair and a pad to the disk, the pit 2 wide for
   the two crates, and a pad plus Blink to Dead Pixel's door. The checker drops a
   crate lying on a fake block once Scan is in the set, and Blink from a pad's
