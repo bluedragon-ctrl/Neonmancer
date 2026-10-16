@@ -288,6 +288,15 @@ Lessons for pads rooms (D222 on):
 - **Drops are one way.** A ledge he steps off is gone for him unless a
   stair or pad leads back: draw the way back from every door first, then
   the puzzle.
+- **Check every cell he can drop into** (D242). Off a column or out of a
+  pad's throw he lands anywhere near; a floor cell walled by blocks and a
+  stair's side is a pit with no way out. Fill it or give it a stair.
+- **A pad on a 1-high block reaches a 3-high top across a gap** (D242). With
+  a 1-tile gap, the throw lands 2 up (played; the checker counts only 1 up, so
+  it says Blink). Flush against the ledge it fails (D240).
+- **Zap aims in eight directions.** A far target he must hit from one spot sits
+  on an axis or a 45° diagonal through that spot's middle; sweep it with
+  `sim.mjs` from every point of the spot (D242).
 
 ## Skeleton
 ```json

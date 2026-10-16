@@ -2934,3 +2934,41 @@ row of the pit) and the jump's parts are rebuilt:
 - **Fork** skips the way-home race only (a decoy on the plate, as D212).
 Played end to end (`sim.mjs`): the disk by the stair and pad, Scan, both
 crates, the row crossed, the plate and bridge home.
+
+### D242 — 2026-10-16 — Mirror Stacks on pads: three crates for the pit, Fork for the fragment, a pad to Event Horizon (5.17)
+`mirror_stacks` is a pads room, reviewed as *tune*. Without the jump the
+fragment was free: the two east crates held both plates (the old "needs Fork"
+was a truncated search).
+- **The crossing.** Scan derezzes the fake row (1..3,3); crate_b, crate_2 and
+  crate_1 fill one row of the 3-wide pit. With no hop all three count (a
+  complete search: two never cross). Rows 3 and 7 both work. The west door moved
+  from z 5–6 to z 4–5 (spawn with it), so the push from (1,7) is 2 cells from
+  the door (D241); arriving from `scan_lab` is clamped into it as usual.
+- **The fragment** (revisit with Fork). crate_3 starts at (9,3), in the row
+  under the gate, and leaves that row only by a push from inside the open gate.
+  So crate_4 holds one plate and a decoy the other; once the gate is open
+  crate_3 may be pushed onto a plate for good. The pocket: 1-high blocks
+  (8,0..1) with the fragment on (8,1,0), a `stair_nz` (9,1) from the gate cell
+  to a block (9,0) with `pad_door`, and a `stair_z` (10,1) onto (10,2), which
+  is now a 1-high block (fence gone): he drops out to (10,3), a one-way exit,
+  so a closing gate never shuts him in. Blink and every Lattice spell stay out
+  (the walls are 4 high, the one-way block is 1 high on the floor side).
+- **Event Horizon** (`east_2`, `buffer_4`). The pad throws him east over
+  (10,0) onto the column, now (11,0..1) 2 deep (the level review found that
+  (11,1) was a pit with no way out). Without Blink: a 1-high pad block reaches
+  a 3-high top across a gap (sim; the checker counts 1 up and says Blink).
+  target_1 moved to (0,3,11) on a (0,0..2,11) pillar, on the 45° line from the
+  column's front cell: a Zap facing up+left from anywhere on it hits the target
+  (swept), and he walks out into `buffer_4`. Coming back puts him on the column;
+  the fragment needs the pad, so it is not a way in.
+- **Checks.** `validate:data`; the world check is green. The full room's crate
+  search stops at 2000 configurations from both doors (five crates), so the
+  verdicts were split: the east alone gives the fragment `fork` (never with
+  zap, scan, pause or Blink; never without crate_4; `fork` without crate_3),
+  the west alone `never` without Scan and with two crates. The mutation test
+  was skipped (it truncates). Played in `sim.mjs`: the crossing (23.5 s), the
+  fragment run and out by the stair, every pad throw (none sticks), the door,
+  the way home over the timed bridge (1.1 s). Level review: tune; its blocker
+  (11,1) fixed.
+**Why:** the jump carried the crossing's last cell and the door; the fragment
+had no trick on pads.

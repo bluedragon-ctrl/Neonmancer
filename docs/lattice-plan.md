@@ -73,7 +73,7 @@ Rules for the lines (D186, D187):
 | # | Room | Type | Rung | Trick to aim for | Now |
 |---|---|---|---|---|---|
 | 11 | `scan_lab` | puzzle | teach: Scan, fake blocks | The way east is a wall that isn't there until a scan: the crate he pushes through the gap and a second one that a scan drops off a fake pillar fill one row of the pit, in order. | Holds, on pads (D240): a stair and a pad to the disk, a 2-wide pit for the two crates, a pad and Blink to Dead Pixel's door. |
-| 12 | `mirror_stacks` | puzzle | develop: Scan's range | Where he casts: the far cage's target hides behind a fake column beyond a scan's 6 units from the near side, so the second scan is cast after crossing. The fragment also needs Fork (the author's move): a revisit. | Holds with Scan and Fork; every crate shows NO EFFECT and the search truncates: check by hand. |
+| 12 | `mirror_stacks` | puzzle | develop: Scan | Scan frees two crates sealed behind a fake row, and all three crates fill one row of the 3-wide pit. On a revisit Fork opens the fragment's gate: one crate can reach a plate, the other is boxed in under the gate, so a decoy holds the second plate. | Reworked on pads (D242): every crate counts for the crossing; the boxed crate, a pad in the pocket, a one-way stair out; Event Horizon is a pad onto the column and a diagonal Zap. The full search truncates (five crates): played in sim. |
 | 13 | `ghost_exit` | puzzle | twist: Scan hides the way out | The way on is hidden: a frozen bug on the plate opens the crate's pen, the crate holds the gate open as it passes and is the step to the plateau, where a scan shows the fragment and the exit. | Reworked (D206): the stair blocks `[2,0,6]` and `[3,0,6]` were a free route and are gone, so the chain is the lock; Fork can hold the plate instead of the bug. |
 | 14 | `junction` | hybrid | develop: Pause on a moving enemy, timed plates | The shot's timing: the bug must be frozen two cells before the pillar while it walks towards him, then pushed twice. The fence gate is a one-way shortcut home. | Holds (Pause). |
 | 15 | `drift_bay` | action | develop: Shield, enemies as steps | The fight leaves him his step: he rides the ferry under the sentinel's fire, and the virus that meets him is the only step to the fragment, so he freezes it instead of killing it. | Holds; the enemies' roles are judged by play. |
@@ -115,7 +115,8 @@ stay look-only and outside the ladder (D186).
   already finds `guard_loop` east with `scan + blink`, not yet played; the
   other three are `never`): `scan_lab` north_2 (`buffer_1`, done: a pad and
   Blink onto the memory stack's sill, D240; was a Blink walk, D218), `warden_pit` west (`buffer_2`),
-  `guard_loop` east (`buffer_3`), `mirror_stacks` east_2 (`buffer_4`),
+  `guard_loop` east (`buffer_3`), `mirror_stacks` east_2 (`buffer_4`, done: the
+  pocket's pad onto the column, then a diagonal Zap at the target, D242),
   `ghost_exit` east (`buffer_5`).
 - Shortcuts: `junction`'s fence gate home, and the Gatekeeper once beaten.
 
@@ -282,7 +283,7 @@ Waits for the core (D186): the secret rooms' contents.
 | `buffer_1` Dead Pixel (5.11) | 8x6 | Secret, a Scan hidden exit in `scan_lab` (Blink walk, D218); done: Microban 86, spiked crates into sockets under a fence roof, `secret_0` in a cage (D219) |
 | `buffer_2` Stray Byte (5.11) | 8x8 | Secret, in `warden_pit` behind a 4-high ledge (D213), no Lattice way in since D216, to redo; entrance built, an extra fragment to come |
 | `buffer_3` Null Orbit (5.11) | 8x8 | Secret, in `guard_loop` on a 4-high sill (D214), no Lattice way in since D216, to redo; entrance built, an extra fragment to come |
-| `buffer_4` Event Horizon (5.11) | 8x8 | Secret, in `mirror_stacks` above the 4-high fragment pocket (D215), no Lattice way in since D216, to redo; entrance built |
+| `buffer_4` Event Horizon (5.11) | 8x8 | Secret, in `mirror_stacks` above the fragment pocket (D215); since D242 the pocket's pad throws him onto the door's column and a diagonal Zap hits the target; entrance built |
 | `buffer_5` Cache Miss (5.11) | 8x8 | Secret, Warp plus Compile or Fork onto a plate in `ghost_exit`; entrance built |
 
 ## Pads-only migration (D222)
@@ -310,7 +311,7 @@ moves it to `"jump": "pads"` and ticks it off here.
 | 9 | `relay_loft` | `fragment_4`; crossings to and from east | | Done (D238): a pad onto the rider crate, stairs onto the ferry and up to the fragment; widened to 15. |
 | 10 | `ledger_cell` | `fragment_5` | fence | Done (D239): a stair to the ledge, the pocket's row 2 open, a gap in the lane's fence. |
 | 11 | `scan_lab` | `disk_scan`; crossings west/south→east | fence | Done (D240): a stair and pad to the disk, a 2-wide pit; the door is a pad and Blink. |
-| 12 | `mirror_stacks` | crossings west↔south | fence | Host of Event Horizon's door (D215). |
+| 12 | `mirror_stacks` | crossings west↔south | fence | Done (D242): three crates for the 3-wide pit, a pad in the fragment's pocket and a one-way stair out; Event Horizon's door is the pad onto the column. |
 | 13 | `ghost_exit` | crossings north/east→west | fence, bouncy | Host of Cache Miss's door. |
 | 14 | `junction` | `fragment_11` | fence, bouncy | |
 | 15 | `drift_bay` | `fragment_10`; crossings north↔south | | Enemies as steps. |
