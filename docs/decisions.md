@@ -3341,3 +3341,11 @@ rule (only the decoy holds the plate).
 - **Checker**: everything free, every exit and the energy buff, as before.
 **Why:** the migration table said "play": a boss arena has no height puzzle,
 and the author tunes the fight by hand.
+
+### D256 — 2026-10-17 — Kernel Core on pads: the flag only (5.17)
+- **Rule**: `core_hall` is a pads room (`"jump": "pads"`). The hall is flat
+  (pillars, two screens, the core, the shrine and the three doors all on the
+  floor), so the jump carried nothing: no cell, object or exit changes.
+- **Checker**: west free, north and east free with access 1, as before.
+**Why:** the migration table said "play"; the room is the goal's beat, with no
+puzzle and no height.
