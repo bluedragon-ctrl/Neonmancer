@@ -99,7 +99,7 @@ Rules for the lines (D186, D187):
 
 | # | Room | Type | Rung | Trick to aim for | Now |
 |---|---|---|---|---|---|
-| 23 | `gatekeeper` | boss | the Gatekeeper | Lure it onto the overload plates, recharge behind cover; as hard as it should be. Drops the energy buff. | Boss. |
+| 23 | `gatekeeper` | boss | the Gatekeeper | Lure it onto the overload plates, recharge behind cover; as hard as it should be. Drops the energy buff. | Boss; a pads room (D255). |
 | 24 | `core_hall` | goal | the core, the Level 1 locks | No puzzle: the core is the beat. | Outside the mix. |
 | 25 | `dj_vault` | reward | teach: Blink | The reward's first use: a 2-tile pit, the room's full depth, between the disk and the east door; a jump crosses one tile, never two. | Reworked (D217). Outside the mix. |
 
@@ -323,7 +323,7 @@ moves it to `"jump": "pads"` and ticks it off here.
 | 20 | `twin_plates` | `fragment_12`; crossings west↔north | fence, bouncy | Done (D252): the fragment block and a pad sit in the target's pen; `plate_home` off the north door. |
 | 21 | `guard_loop` | `fragment_13` | | Done (D253): a lane crate plugs a hole at a stair's foot; a pad on the ledge throws him onto the column. Host of Null Orbit's door (D214). |
 | 22 | `split_vault` | `fragment_15` | fence | Done (D254): one-way stairs over the dividers; a stair to the pocket's fence top for the cast. |
-| 23 | `gatekeeper` | play | | Boss. |
+| 23 | `gatekeeper` | play | | Done (D255): flat hall, only the flag. |
 | 24 | `core_hall` | play | | |
 | 25 | `dj_vault` | play | | Teaches Blink with a Blink from a jump (D217): from a pad now. |
 | – | `buffer_1`–`buffer_5` | play | buffer_1: spiked, fence | The secret rooms (5.11) with their host rooms' doors; Dead Pixel can lose its fence roof (D220). |

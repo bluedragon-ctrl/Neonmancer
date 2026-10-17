@@ -3330,3 +3330,14 @@ replaces the jump.
   test: both crates and the cage matter; sockets and virus NO EFFECT as before.
 **Why:** stairs are the pads game's hops, and a fence top keeps the pocket's
 rule (only the decoy holds the plate).
+
+### D255 — 2026-10-17 — Gatekeeper Hall on pads: the flag only (5.17)
+- **Rule**: `gatekeeper` is a pads room (`"jump": "pads"`). The hall is flat
+  (four 2x2 pillars, four plates, pickups and exits all on the floor), so the jump
+  carried nothing: no cell, block, object, enemy or pickup changes.
+- **The fight** is unchanged: lure the Gatekeeper onto the overload plates,
+  recharge behind the pillars (D137). The pillars are 1-high blocks he
+  walks round, as before; the boss's phases, teleports and armor are data.
+- **Checker**: everything free, every exit and the energy buff, as before.
+**Why:** the migration table said "play": a boss arena has no height puzzle,
+and the author tunes the fight by hand.
