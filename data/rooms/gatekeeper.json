@@ -5,6 +5,7 @@
   "name": "Gatekeeper Hall",
   "biome": "home_lattice",
   "size": [16, 4, 16],
+  "jump": "pads",
   "spawn": [8, 0, 1.5],
   "exits": [
     { "id": "north", "side": "-z", "at": 7 },
