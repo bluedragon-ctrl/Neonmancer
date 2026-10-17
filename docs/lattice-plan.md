@@ -111,11 +111,9 @@ stay look-only and outside the ladder (D186).
 - `mirror_stacks`: fragment 0 needs Fork, from the Fork wing.
 - Outer Buffer doors (D212): each gets a trick of its own, never open on the
   first arrival. They were built round the double jump (D212–D215); with it
-  gone (D216) each is redone in its own PR, round Blink (D217; the checker
-  already finds `guard_loop` east with `scan + blink`, not yet played; the
-  other three are `never`): `scan_lab` north_2 (`buffer_1`, done: a pad and
+  gone (D216) each is redone in its own PR, round Blink (D217): `scan_lab` north_2 (`buffer_1`, done: a pad and
   Blink onto the memory stack's sill, D240; was a Blink walk, D218), `warden_pit` west (`buffer_2`, done: two pads and a Blink onto the 4-high pillar, D249),
-  `guard_loop` east (`buffer_3`), `mirror_stacks` east_2 (`buffer_4`, done: the
+  `guard_loop` east (`buffer_3`, done: a stair, the timed bridge and a pad onto a 3-high sill, D257), `mirror_stacks` east_2 (`buffer_4`, done: the
   pocket's pad onto the column, then a diagonal Zap at the target, D242),
   `ghost_exit` east (`buffer_5`, done: the pen's pad and Blink onto a ledge over
   the plate's pocket, a decoy dropped onto the plate, D245).
@@ -283,7 +281,7 @@ Waits for the core (D186): the secret rooms' contents.
 |---|---|---|
 | `buffer_1` Dead Pixel (5.11) | 8x6 | Secret, a Scan hidden exit in `scan_lab` (Blink walk, D218); done: Microban 86, spiked crates into sockets under a fence roof, `secret_0` in a cage (D219) |
 | `buffer_2` Stray Byte (5.11) | 8x8 | Secret, in `warden_pit` behind a 4-high ledge (D213), two pads and Blink since D249; entrance built, an extra fragment to come |
-| `buffer_3` Null Orbit (5.11) | 8x8 | Secret, in `guard_loop` on a 4-high sill (D214), no Lattice way in since D216, to redo; entrance built, an extra fragment to come |
+| `buffer_3` Null Orbit (5.11) | 8x8 | Secret, in `guard_loop` on a 3-high sill (D214, D257), reached by a stair, the timed bridge and a pad; entrance built, an extra fragment to come |
 | `buffer_4` Event Horizon (5.11) | 8x8 | Secret, in `mirror_stacks` above the fragment pocket (D215); since D242 the pocket's pad throws him onto the door's column and a diagonal Zap hits the target; entrance built |
 | `buffer_5` Cache Miss (5.11) | 8x8 | Secret, in `ghost_exit` behind a plate in a walled pocket (D215); since D245 a pad in the bug pen and Blink reach the 2-high ledge over it, and a decoy cast from there holds the plate; entrance built |
 
