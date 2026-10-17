@@ -3261,3 +3261,24 @@ east door was `never`.
   without the stair); the disk needs the crate; from east every exit is free.
 **Why:** the jump carried the step into the pen; a stair and a fence top are
 the pads game's way to the decoy's cast.
+
+### D252 — 2026-10-17 — Twin Plates on pads: a pad in the pen (5.17)
+- **Rule**: `twin_plates` is a pads room. The jump carried one thing: a crate,
+  freed by the zapped target, as the step onto the 2-high block under
+  `fragment_12`. A crate is no step now.
+- **Change**: the block shrinks to one cell (6,0,0), 2 high, and moves with the
+  fragment into the target's pen; a pad (`pad_pen`, 7,0,0) lies flush against it.
+  The pen's gate, fences and target stay. `crate_1` is gone. `plate_home` moves
+  to (11,0,2), out of the north door's 2 cells (D241).
+- **The trick** is unchanged where it counts: the decoy (10 s) and the frozen bug
+  (5 s) hold the two plates under the west bridge; past it the zapped target opens
+  the gate, and the pen's pad throws him onto the block, holding up (-x).
+- **Played** (`sim.mjs`): from the pen's cell (7,1) onto the pad and up: fragment
+  taken; held straight up he rises 2.18 and falls back, so the throw needs the
+  direction. He leaves over the fence top by (5,0,0), a drop; no way in
+  from outside (fences stand 1 high, no stair or pad outside).
+- **Checker:** from the spawn the north door needs Fork + Pause and the fragment
+  Fork, Pause and Zap; from the north door the fragment needs Zap; mutation: the
+  pad, gate, block, bug and bridge all matter.
+**Why:** the pen kept its job (the zapped gate guards the lift) with a pad for
+the crate's step.
