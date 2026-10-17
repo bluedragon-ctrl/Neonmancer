@@ -92,7 +92,7 @@ Rules for the lines (D186, D187):
 |---|---|---|---|---|---|
 | 19 | `fork_lab` | puzzle | teach: Fork holds a plate | The crate that opens the disk's cage is then his step into a pen only a decoy can hold: one push too many loses it. | Holds; the pocket's gate is a cage (D209); on pads (D251): the crate only opens the disk, a stair puts him on the pen's fence top to cast the decoy. |
 | 20 | `twin_plates` | puzzle | develop: Fork plus Pause, two clocks | The order of clocks: the decoy (10 s) first, the frozen bug (5 s) second, both plates under the bridge; past it a zapped target opens the pen with the fragment. | Holds (Fork, Pause and Zap); reviewed, kept (D210); on pads (D252): a pad in the pen throws him onto the fragment block, the crate is gone. |
-| 21 | `guard_loop` | hybrid | develop: Fork as a lure | The step is two crates high: one is pushed through two guards, the other waits on the ledge and drops on it. The decoy pulls the guards off the lane; cast too early and they are back, too late and they block the crate. | Reworked (D207): the plate, bridge and pocket are gone; a 2-high stack (a crate through the guards' lane, a ledge crate dropped on it) is the lock, Fork is a lure and a frozen virus may be the base. |
+| 21 | `guard_loop` | hybrid | develop: Fork as a lure | The step is two crates high: one is pushed through two guards, the other waits on the ledge and drops on it. The decoy pulls the guards off the lane; cast too early and they are back, too late and they block the crate. | Reworked (D207): the plate, bridge and pocket are gone; a 2-high stack (a crate through the guards' lane, a ledge crate dropped on it) is the lock, Fork is a lure and a frozen virus may be the base. Pads (D253): the lock is a hole under a stair, plugged by the lane crate; a pad throws him up. |
 | 22 | `split_vault` | hybrid | twist: one decoy, two needs | Two crates are handed through a stream wall (he goes round over a divider) into sockets; the cage opens only while a decoy holds a plate in a fenced pocket, with a virus after him as he runs. | Reworked (D208): crates handed through a stream wall into a vault and spent in sockets; a cage on fragment 15 that a decoy keeps open while he runs. |
 
 ### The deep end
@@ -321,7 +321,7 @@ moves it to `"jump": "pads"` and ticks it off here.
 | 18 | `idle_cache` | play | bouncy | Done (D250): a stair onto the ledge; the freeze run has 1.4 s spare. |
 | 19 | `fork_lab` | crossings west↔east | fence | Done (D251): the pen is 1-high fences with a stair on and a stair off; the decoy is cast from its fence top. |
 | 20 | `twin_plates` | `fragment_12`; crossings west↔north | fence, bouncy | Done (D252): the fragment block and a pad sit in the target's pen; `plate_home` off the north door. |
-| 21 | `guard_loop` | `fragment_13` | | Host of Null Orbit's door (D214). |
+| 21 | `guard_loop` | `fragment_13` | | Done (D253): a lane crate plugs a hole at a stair's foot; a pad on the ledge throws him onto the column. Host of Null Orbit's door (D214). |
 | 22 | `split_vault` | `fragment_15` | fence | |
 | 23 | `gatekeeper` | play | | Boss. |
 | 24 | `core_hall` | play | | |

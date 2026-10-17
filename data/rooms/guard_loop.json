@@ -5,6 +5,7 @@
   "name": "Guard Loop",
   "biome": "home_lattice",
   "size": [12, 6, 12],
+  "jump": "pads",
   "spawn": [9.5, 0, 10.5],
   "exits": [
     { "id": "south", "side": "+z", "at": 9 },
@@ -13,8 +14,8 @@
   ],
   "blocks": [
     { "at": [11, 0, 0], "to": [11, 2, 0] },
-    { "at": [8, 0, 0] },
-    { "at": [9, 0, 0] },
+    { "type": "stair_x", "at": [8, 0, 0] },
+    { "at": [9, 0, 0], "to": [10, 0, 0] },
     { "at": [2, 0, 1], "to": [5, 0, 2] },
     { "type": "fake", "at": [11, 0, 3], "to": [11, 0, 4] },
     { "at": [0, 0, 5], "to": [5, 0, 5] },
@@ -27,10 +28,11 @@
     { "type": "bridge", "at": [11, 1, 4], "switches": ["target_door"] }
   ],
   "objects": [
-    { "id": "crate_1", "type": "crate", "at": [9, 0, 6] },
-    { "id": "crate_2", "type": "crate", "at": [9, 1, 0] },
+    { "id": "crate_1", "type": "crate", "at": [6, 0, 6] },
+    { "id": "pad_ledge", "type": "pad", "at": [10, 1, 0] },
     { "id": "target_door", "type": "target_timed", "at": [0, 0, 8], "overrides": { "timer": 5.5 } }
   ],
+  "holes": [{ "at": [7, 0], "to": [7, 0] }],
   "enemies": [
     { "id": "virus_a", "template": "virus", "at": [7, 0, 4], "path": { "points": [[10, 0, 4]], "mode": "loop" } },
     { "id": "virus_b", "template": "virus", "at": [6, 0, 0], "path": { "points": [[6, 0, 3]], "mode": "loop" } }

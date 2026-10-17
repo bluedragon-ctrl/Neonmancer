@@ -26,6 +26,8 @@ docs/decisions.md).
 - Cold Stairs is a pads room (D248): a pad flush against the 2-high pillar throws
   him to fragment 6 once the bridge is down; the spare crate (the jump's step)
   is gone.
+- Guard Loop is a pads room (D253): a crate pushed through the guards' lane plugs a hole
+  at a stair's foot; the stair leads to a pad that throws him onto the fragment's column.
 - Twin Plates is a pads room (D252): the fragment and its 2-high block sit in the
   target's pen with a pad against the block; `plate_home` leaves the north door.
 - Fork Lab is a pads room (D251): the pen round the bridge plate is 1-high fences with a
