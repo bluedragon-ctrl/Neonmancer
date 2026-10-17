@@ -3224,3 +3224,20 @@ its scrap of steps was built for the double jump.
   from it.
 **Why:** the jump carried the door; a pad and a Blink is the pads game's lock
 for the Outer Buffer (D217).
+
+### D250 — 2026-10-17 — Idle Cache on pads: a stair onto the ledge (5.17)
+`idle_cache` is a pads room, reviewed as *keep*: the only thing the jump
+carried was the climb onto the 1-high ledge that holds the crate. A `stair_z`
+at (1,0,2), beside the bug's lane start, takes him up onto the ledge at
+(1,1,3), one cell from the crate he pushes off onto the frozen bug on the
+heavy plate. Nothing else changed.
+- **Played** (`sim.mjs`): freeze the bug mid-lane (z 2, x 3), push it onto the
+  plate, back to the stair, up, push the crate: the cage goes 2.1 s after the
+  freeze and the fragment is taken 3.5 s after it, 1.4 s inside the 5 s
+  freeze (D205's 0.7 s was a slower route). He steps off the ledge's south
+  side to reach the cage.
+- **Checker:** with `zap,scan,fork,pause` fragment 8 needs Fork or Pause; the
+  mutation test says the crate, the bug, the ledge block, the stair and the
+  cage all matter. The stair is a way for enemies too, but the bug's lane is
+  level and stays so.
+**Why:** the jump carried the ledge; a stair is the pads game's step up.

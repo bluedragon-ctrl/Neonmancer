@@ -84,7 +84,7 @@ Rules for the lines (D186, D187):
 |---|---|---|---|---|---|
 | 16 | `cold_stairs` | puzzle | develop: Pause parks a piece behind a barrier, with a clock | Two bugs, two jobs, two casts: each frozen and pushed through a stream (D198) onto its own plate, which a decoy cannot reach; the plates hold the bridge for good. The 5 s freeze is the clock. | Reworked (D204): Fork cannot hold a plate, each bug is needed, `mutate.mjs` says every piece matters. |
 | 17 | `warden_pit` | boss | Null Pointer | Cover bars and refills set the fight's rhythm; its teleports break cover. As hard as it should be. Drops fragment 7. | Boss. |
-| 18 | `idle_cache` | hybrid | twist: a frozen enemy is the base of a stack | The bug is the first weight: frozen in its lane, pushed onto the heavy plate, and the ledge crate dropped on it; the 5 s freeze is the clock for freeze, push, drop and the run to the caged fragment. The crate dropped first is lost. | Reworked (D205): the stack needs both (`mutate.mjs` says every piece matters with Pause); Fork can still be the base (a decoy is no solid body), but the ledge drop stays. |
+| 18 | `idle_cache` | hybrid | twist: a frozen enemy is the base of a stack | The bug is the first weight: frozen in its lane, pushed onto the heavy plate, and the ledge crate dropped on it; the 5 s freeze is the clock for freeze, push, drop and the run to the caged fragment. The crate dropped first is lost. | Reworked (D205), on pads (D250): a stair onto the ledge; the stack needs both (`mutate.mjs` says every piece matters with Pause); Fork can still be the base (a decoy is no solid body), but the ledge drop stays. |
 
 ### Fork wing
 
@@ -318,7 +318,7 @@ moves it to `"jump": "pads"` and ticks it off here.
 | 15 | `drift_bay` | `fragment_10`; crossings north↔south | | Done (D247): stairs on the ferry, a pad onto the 3-high pillar, the frozen virus bridges the gap. |
 | 16 | `cold_stairs` | `fragment_6`; crossings north↔south, north↔east | fence, bouncy | Done (D248): a pad by the pillar, the spare crate gone. |
 | 17 | `warden_pit` | play | | Done (D249): the fight unchanged; Stray Byte's door is two pads and a Blink. |
-| 18 | `idle_cache` | play | bouncy | A frozen enemy at the base of a stack. |
+| 18 | `idle_cache` | play | bouncy | Done (D250): a stair onto the ledge; the freeze run has 1.4 s spare. |
 | 19 | `fork_lab` | crossings west↔east | fence | |
 | 20 | `twin_plates` | `fragment_12`; crossings west↔north | fence, bouncy | |
 | 21 | `guard_loop` | `fragment_13` | | Host of Null Orbit's door (D214). |
