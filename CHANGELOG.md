@@ -26,6 +26,8 @@ docs/decisions.md).
 - Cold Stairs is a pads room (D248): a pad flush against the 2-high pillar throws
   him to fragment 6 once the bridge is down; the spare crate (the jump's step)
   is gone.
+- Split Vault is a pads room (D254): stairs replace the dividers (one up into the lane, one back) and
+  a stair onto the pocket's fence top, from where the decoy is cast; a stair is the pocket's way out.
 - Guard Loop is a pads room (D253): a crate pushed through the guards' lane plugs a hole
   at a stair's foot; the stair leads to a pad that throws him onto the fragment's column.
 - Twin Plates is a pads room (D252): the fragment and its 2-high block sit in the
