@@ -3282,3 +3282,27 @@ the pads game's way to the decoy's cast.
   pad, gate, block, bug and bridge all matter.
 **Why:** the pen kept its job (the zapped gate guards the lift) with a pad for
 the crate's step.
+
+### D253 — 2026-10-17 — Guard Loop on pads: a crate plugs the stair's foot (5.17)
+- **Rule**: `guard_loop` is a pads room. The jump carried the 2-high stack (a
+  lane crate plus a ledge crate) as the step onto the fragment's 3-high column,
+  and the hop over the lane crate to get behind it. A crate is no step now.
+- **Change**: the fragment column stays (3 high). A hole at (7,0,0) cuts the way
+  to a stair (8,0,0) that climbs onto a 1-high ledge (9..10,0,0); a pad
+  (`pad_ledge`, 10,1,0) lies flush against the column. `crate_2` and the
+  ledge-drop are gone; `crate_1` starts in the lane at (6,0,6), where he can
+  get behind it (the old start at (9,0,6) needed the hop).
+- **The trick**: the crate goes through the guards' x=6 column to (6,0,0), he
+  walks round the west block to (5,0,0) and pushes it east into the hole.
+  Then stair, ledge, pad: held +x he lands on the column top and takes the
+  fragment. The guards stay pieces of the lane (Fork lure, Pause, Zap, timing),
+  NO EFFECT in the checker by design.
+- **Played** (`sim.mjs`, enemies removed): push north, west loop, push east
+  (plug), stair, pad, pickup. The pad throw from the stair top works held
+  down (+x); from a gap of one tile it fell short (apex 3.16 over x 10.3), so
+  the pad lies flush. The east door (`buffer_3`, redo pending since D216) is
+  untouched.
+- **Checker**: fragment `free`; the mutation test needs crate, pad, stair,
+  column (never without them); the ledge block falls to Pause (a frozen virus).
+**Why:** the hole under the stair keeps the lane crate's job, and the pad
+replaces the jump.
