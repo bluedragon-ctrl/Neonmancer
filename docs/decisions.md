@@ -3306,3 +3306,27 @@ the crate's step.
   column (never without them); the ledge block falls to Pause (a frozen virus).
 **Why:** the hole under the stair keeps the lane crate's job, and the pad
 replaces the jump.
+
+### D254 — 2026-10-17 — Split Vault on pads: stairs for the hops (5.17)
+- **Rule**: `split_vault` is a pads room. The jump carried three hops: over the
+  1-high dividers (x 4 and 9) between the vault and the crate lane, and into and
+  out of the plate pocket in the NW corner, where he cast Fork.
+- **Change**: the dividers become two one-way stairs: `stair_z` at (4,0,5) up
+  from the vault into the lane, `stair_nz` at (9,0,5) up from the lane back into
+  the vault (a loop). A `stair_nx` at (2,0,0) climbs onto the pocket's fences, a
+  fence top, from where he casts the decoy down onto `plate_w` (cast from a
+  ledge works, as in fork_lab); a `stair_z` at (0,0,2) replaces the pocket's south
+  fence as its way out, in case he steps off the fence top into the pocket.
+  Streams, wall fences, crates, sockets, cage, virus and both fragments stay.
+- **The trick** is unchanged: crates through the streams into the sockets, then
+  Fork on the plate while he runs to the cage (10 s).
+- **The virus** can now follow him over the stairs into the lane and back (the
+  fences used to stop it); it is still pressure: Zap, Pause or the decoy. A virus
+  in the lane can stand in a crate's way; leave and re-enter resets.
+- **Played** (`sim.mjs`, enemies removed): the stairs go one way each (up from
+  their foot only); from the fence top the decoy lands on the plate (`plate_w` on);
+  from inside the pocket he walks out by the stair.
+- **Checker**: fragment 15 `fork` only, fragment 14 and both exits free; mutation
+  test: both crates and the cage matter; sockets and virus NO EFFECT as before.
+**Why:** stairs are the pads game's hops, and a fence top keeps the pocket's
+rule (only the decoy holds the plate).
