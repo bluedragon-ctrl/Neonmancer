@@ -3349,3 +3349,26 @@ and the author tunes the fight by hand.
 - **Checker**: west free, north and east free with access 1, as before.
 **Why:** the migration table said "play"; the room is the goal's beat, with no
 puzzle and no height.
+
+### D257 — 2026-10-17 — Null Orbit's door in Guard Loop on pads (5.17)
+`main`'s CI went red with D253: the world check said `guard_loop` east (`buffer_3`)
+"can't be reached", the door that needed the double jump since D214 (redo
+pending since D216). Redone with the pads (the fix rides in the core_hall PR).
+- **Change**: the hidden door's sill drops from y 4 to y 3 (the column on the
+  wall is `[11,1,5]-[11,2,5]`, top 3: a flush pad lands up to 2 up from a 1-high
+  top). The timed bridge moves from `(11,1,4)` to `(10,1,4)`, level with the lane
+  wall's top; a `stair_z` at `(10,0,3)` leads onto it; a pad at `(10,1,5)` on the
+  wall top, flush against the column, throws him onto the sill.
+- **The trick** is the old one on pads: Scan by the door, Zap the timed target
+  (5.5 s, shielded corner), sprint to the stair, over the bridge, onto the pad and
+  hold +x after the throw (any lag of 0–15 ticks lands on the sill). Without the
+  bridge the stair's top is a drop onto the floor.
+- **Played** (`sim.mjs`, bridge held on): stair, bridge, pad (a throw held +z
+  flies on south; +x in the air lands at (11.7, 3, 5.2–5.9)).
+- **Checker**: east `zap+scan or scan+pause` (a frozen `virus_a` on the bridge's
+  cell is a second way, optimistic), with `blink` as before; the world check is
+  clean again. The mutation test: pad, column, bridge and stair all matter.
+- **D241**: the pad lies flush against the column, 1 cell from the door; the
+  checker warns of it.
+- Not played: the run's timing from the target with the viruses about.
+**Why:** a pad throws 2 up and a 3-high sill is what a 1-high wall top reaches.
