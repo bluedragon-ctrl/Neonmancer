@@ -5,6 +5,7 @@
   "name": "Skip Ahead",
   "biome": "home_lattice",
   "size": [8, 4, 8],
+  "jump": "pads",
   "spawn": [3.5, 0, 6.5],
   "exits": [
     { "id": "south", "side": "+z", "at": 3 },
