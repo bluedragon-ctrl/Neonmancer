@@ -3241,3 +3241,23 @@ heavy plate. Nothing else changed.
   cage all matter. The stair is a way for enemies too, but the bug's lane is
   level and stays so.
 **Why:** the jump carried the ledge; a stair is the pads game's step up.
+
+### D251 — 2026-10-17 — Fork Lab on pads: a stair onto the pen's fence (5.17)
+`fork_lab` is a pads room, reviewed as *tune*. The jump carried the crate's
+hop over the 2-high pen fences, so he could stand in the pen; without it the
+east door was `never`.
+- **The pen** is now 1-high fences (`[0..2,0,8]`, `[2,0,9..11]`), the wall block
+  at (0,9) gone. `plate_bridge` moved to (1,0,10). An outer `stair_nx` at
+  (3,0,10) takes him onto the fence top at (2,1,10); an inner `stair_x` at
+  (1,0,9) lets him out of the pen if he drops in, so no cell is a trap. Fences
+  are see-through, so the plate stays in view; crates can't climb either stair
+  and stop at the fences.
+- **The trick**: from the fence top he casts Fork forward: the decoy falls onto
+  the plate, the z = 1 bridge rises and he runs across. The crate only opens the
+  disk cage (`plate_cage`) now: it is no step.
+- **Played** (`sim.mjs`): up the stair, cast, run to the bridge and the east
+  end in 5.7 s of the decoy's 10 s. East→west is the timed plate as before.
+- **Checker:** with `zap,scan,fork,pause` the east door needs Fork (`never`
+  without the stair); the disk needs the crate; from east every exit is free.
+**Why:** the jump carried the step into the pen; a stair and a fence top are
+the pads game's way to the decoy's cast.
