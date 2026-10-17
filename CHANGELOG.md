@@ -26,6 +26,8 @@ docs/decisions.md).
 - Cold Stairs is a pads room (D248): a pad flush against the 2-high pillar throws
   him to fragment 6 once the bridge is down; the spare crate (the jump's step)
   is gone.
+- Twin Plates is a pads room (D252): the fragment and its 2-high block sit in the
+  target's pen with a pad against the block; `plate_home` leaves the north door.
 - Fork Lab is a pads room (D251): the pen round the bridge plate is 1-high fences with a
   stair up and a stair out; he casts the decoy from the fence top. The crate only opens the disk now.
 - Idle Cache is a pads room (D250): a stair onto the crate's ledge replaces the jump;
