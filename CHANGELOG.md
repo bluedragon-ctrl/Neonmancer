@@ -26,6 +26,7 @@ docs/decisions.md).
 - Cold Stairs is a pads room (D248): a pad flush against the 2-high pillar throws
   him to fragment 6 once the bridge is down; the spare crate (the jump's step)
   is gone.
+- Kernel Core is a pads room (D256): a flat hall, only the flag changes.
 - Gatekeeper Hall is a pads room (D255): the hall is flat, so only the flag changes; the fight is as it was.
 - Split Vault is a pads room (D254): stairs replace the dividers (one up into the lane, one back) and
   a stair onto the pocket's fence top, from where the decoy is cast; a stair is the pocket's way out.
