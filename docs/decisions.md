@@ -3372,3 +3372,15 @@ pending since D216). Redone with the pads (the fix rides in the core_hall PR).
   checker warns of it.
 - Not played: the run's timing from the target with the viruses about.
 **Why:** a pad throws 2 up and a 3-high sill is what a 1-high wall top reaches.
+
+### D258 — 2026-10-17 — Skip Ahead on pads: the flag only (5.17)
+- **Rule**: `dj_vault` is a pads room (`"jump": "pads"`). The room is flat: a
+  2-tile pit across its full depth, the disk, a screen and two doors. The jump
+  carried nothing here, so no cell changes; the ladder's "Blink from a pad now"
+  needs no pad either: a standing Blink crosses the pit.
+- **Played** (`sim.mjs`): Blink east from x 4.3 lands at x 7.5, from 4.6 at 7.7 (the
+  far wall cuts it short, 1 integrity); Blink west from the strip lands at 4.3–4.45,
+  clear of the pit. Nothing but Blink crosses a 2-tile pit now (no jump at all).
+- **Checker**: east `never` with `zap,scan,fork,pause`, `blink` with it; the disk
+  and the south door free, as before.
+**Why:** the pit is the trick (Blink is the way on); a jump was never in it.

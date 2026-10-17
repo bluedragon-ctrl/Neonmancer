@@ -26,6 +26,7 @@ docs/decisions.md).
 - Cold Stairs is a pads room (D248): a pad flush against the 2-high pillar throws
   him to fragment 6 once the bridge is down; the spare crate (the jump's step)
   is gone.
+- Skip Ahead is a pads room (D258): the flag only; Blink crosses the 2-tile pit standing.
 - Null Orbit's door in Guard Loop works on pads again (D257): a stair, the timed bridge and a pad onto a 3-high sill; the world reach check is green.
 - Kernel Core is a pads room (D256): a flat hall, only the flag changes.
 - Gatekeeper Hall is a pads room (D255): the hall is flat, so only the flag changes; the fight is as it was.
