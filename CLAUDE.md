@@ -301,15 +301,19 @@ then a banner and a terminal line (D93).
 Mana recharges slowly. Later spells and upgrades are stronger: they let
 the wizard pass through easier rooms without their puzzles, but never
 reach a pickup without the trick that guards it (D186; in the Lattice
-only its own abilities count, not the later sectors' spells, and a
+only its own abilities count, not the later sectors' spells, which may
+only key a return layer's extra, never a fragment, D260; and a
 pickup's trick holds against every Lattice spell, since the wings open
 in any order, D187; Blink, the Level 1 reward, counts for exits and
 secrets only, D217).
 The world is a
 maze, not a line: a room need not be fully solvable on first arrival,
 and some exits and pickups wait for a spell or buff found later
-(backtracking, D67). He can always leave a room the way he came, or,
-through a one-way exit, another way (D259).
+(backtracking, D67). About two thirds of the rooms carry a return
+layer: something seen closed on the first visit that a later ability
+opens (a shortcut, an exit, a secret, a cache), off the main puzzle and
+never a pickup's bypass (D260). He can always leave a room the way he
+came, or, through a one-way exit, another way (D259).
 
 ### Enemies (corrupted programs; cute but clearly dangerous)
 - **Bugs** — patrol fixed paths
