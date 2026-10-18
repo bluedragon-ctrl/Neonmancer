@@ -22,7 +22,6 @@ import {
   DECO_LOOKS,
   ENEMY_REQUIRED,
   OBJECT_STYLES,
-  OPPOSITE_SIDE,
   blockCells,
   cellKey,
   exitCells,
@@ -40,6 +39,7 @@ import {
 } from './room-data.js';
 import { SWITCH_KINDS, TIMED_SWITCH_KINDS } from '../entities/switch.js';
 import { TEXT_LOOKS } from './lore.js';
+import { deriveConnections } from '../world/links.js';
 import { mapKey } from '../world/map.js';
 import { legAxis, pathCells } from '../world/path.js';
 
@@ -406,6 +406,8 @@ function validateExitBounds({ room, report }, exits) {
     const path = `exits[${i}]`;
     if (ids.has(exit.id)) report(path, `duplicate exit id "${exit.id}"`);
     ids.add(exit.id);
+    // A one-way exit (D259) is only a way in: nothing opens it.
+    if (exit.oneWay && (exit.locked || exit.access || exit.hidden)) report(path, 'a one-way exit is never open from this side, so it takes no "requires" or "hidden"');
     const length = sideLength(exit.side, room.size);
     const fitsSide = exit.at + exit.width <= length;
     const fitsHeight = exit.y + exit.height <= height;
@@ -870,31 +872,9 @@ function validateWorld(world, rooms, report) {
     else if (id === world.start) report(file, `dev[${i}]`, `the start room "${id}" can't be in the dev wing`);
   });
 
-  /** "room.exit" → exit, for every exit in every room */
-  const exits = new Map();
-  for (const [id, room] of rooms) {
-    for (const exit of room?.exits ?? []) exits.set(`${id}.${exit.id}`, withExitDefaults(exit));
-  }
-
-  const used = new Set();
-  world.connections.forEach((pair, i) => {
-    const path = `connections[${i}]`;
-    const [a, b] = pair.map((ref) => {
-      if (!exits.has(ref)) report(file, path, `unknown exit "${ref}"`);
-      else if (used.has(ref)) report(file, path, `exit "${ref}" is already connected`);
-      used.add(ref);
-      return exits.get(ref);
-    });
-    if (!a || !b) return;
-    if (OPPOSITE_SIDE[a.side] !== b.side) {
-      report(file, path, `exits must be on opposite sides (${a.side} and ${b.side})`);
-    }
-    if (a.width !== b.width) report(file, path, `exits must be equally wide (${a.width} and ${b.width})`);
-  });
-
-  for (const ref of exits.keys()) {
-    if (!used.has(ref)) report(file, 'connections', `exit "${ref}" is not connected`);
-  }
+  // Exits lead to the room in the next map cell (D259): what can't be paired is an error of its room.
+  const { problems } = deriveConnections(world.positions ?? {}, rooms);
+  for (const { room, index, message } of problems) report(`rooms/${room}.json`, `exits[${index}]`, message);
 
   // One cell of the world map per room (D66).
   const positions = world.positions ?? {};

@@ -1,11 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { OPPOSITE_SIDE } from '../src/data/room-data.js';
 import { buildRoom } from '../src/world/room.js';
 import { analyzeRoom, arrivalCells } from '../src/world/reach.js';
 import { analyzeRoomAlone, analyzeWorld } from '../src/world/reach-world.js';
 import { describeNeeds, formatReach, formatRoom, freeJumpRooms, roomOfReport } from '../src/world/reach-report.js';
-import { LIFT, gameData, roomFile } from './helpers.js';
+import { LIFT, gameData, roomFile, withNeighbours } from './helpers.js';
 
 /** Object types the tests use besides the crate. */
 const OBJECTS = { pad: { kind: 'pad', color: '#eef3ff' }, plate: { kind: 'plate', color: '#eef3ff' }, plate_heavy: { kind: 'plate', color: '#eef3ff', weight: 2 }, target: { kind: 'target', color: '#eef3ff' }, platform: LIFT };
@@ -15,13 +14,12 @@ const EAST = { id: 'east', side: '+x', at: 3 };
 
 /**
  * Reach of a single room "r" (12×4×8, spawn cell [1, 0, 1]) with some
- * abilities. Its exits (west in the −x wall by default) are connected to
- * a dummy room, which every exit needs.
+ * abilities. Its exits (west in the −x wall by default) lead to dummy
+ * rooms next to it (withNeighbours()).
  */
 function reach(props, abilities = []) {
   const exits = props.exits ?? [WEST];
-  const dummy = roomFile('o', { exits: exits.map((exit) => ({ id: `${exit.id}_o`, side: OPPOSITE_SIDE[exit.side], at: 3 })) });
-  const content = gameData({ rooms: [roomFile('r', { size: [12, 4, 8], ...props, exits }), dummy], connections: exits.map((exit) => [`r.${exit.id}`, `o.${exit.id}_o`]), objects: OBJECTS });
+  const content = gameData({ ...withNeighbours(roomFile('r', { size: [12, 4, 8], ...props, exits })), objects: OBJECTS });
   const room = buildRoom(content.rooms.get('r'), content);
   return analyzeRoom(room, { abilities, starts: [[1, 0, 1]], tuning: TUNING });
 }
@@ -321,6 +319,23 @@ test('world: an access-locked exit waits for the access pass', () => {
   const without = analyzeWorld({ ...content, rooms: new Map([...content.rooms].map(([id, room]) => [id, id === 'a' ? { ...room, pickups: [] } : room])) });
   assert.ok(without.errors.some((e) => e.startsWith('c: no way in')));
   assert.match(formatReach(report, { rooms: true }), /a exit south: free, access 2/);
+});
+
+test('world: a one-way exit (D259) is a way in only; arriving through it he must be able to leave another way', () => {
+  const oneWay = { ...WEST, oneWay: true };
+  // b's only exit is one-way: a dead end, an error.
+  let report = analyzeWorld(row([roomFile('a', { exits: [EAST] }), roomFile('b', { exits: [oneWay] })]));
+  assert.ok(report.errors.includes('b: after arriving through one-way "west" with nothing he can\'t get out of the room'), report.errors.join('\n'));
+  // He never leaves through it: a needs b's east to be entered from c.
+  report = analyzeWorld(row([roomFile('a', { exits: [EAST] }), roomFile('b', { exits: [oneWay, EAST] }), roomFile('c', { exits: [WEST] })]));
+  assert.deepEqual(report.errors, []);
+  assert.ok(!report.targets.some((t) => t.room === 'b' && t.id === 'west'), 'no target: nothing to reach');
+  // The way out is a disk found in the room: Blink over a pit.
+  const pitRoom = (pickups) => roomFile('b', { size: [12, 4, 8], exits: [oneWay, EAST], holes: [{ at: [5, 0], to: [6, 7] }], pickups });
+  report = analyzeWorld(row([roomFile('a', { exits: [EAST] }), pitRoom([]), roomFile('c', { exits: [WEST] })]));
+  assert.ok(report.errors.some((e) => e.startsWith('b: after arriving through one-way "west"')), report.errors.join('\n'));
+  report = analyzeWorld(row([roomFile('a', { exits: [EAST] }), pitRoom([pickup('disk', [2, 0, 2], 'disk_blink')]), roomFile('c', { exits: [WEST] })]));
+  assert.ok(!report.errors.some((e) => e.includes('one-way')), report.errors.join('\n'));
 });
 
 test('world: arriving on a ledge with no way back up is a warning', () => {

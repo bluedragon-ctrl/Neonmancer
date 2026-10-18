@@ -4,6 +4,7 @@
  */
 import { resolveBlockTypes, resolveEnemyTemplates, resolveObjectTypes } from './room-data.js';
 import { validateData } from './validate.js';
+import { deriveConnections } from '../world/links.js';
 
 /** Thrown when the game data is invalid; `errors` lists every problem. */
 export class DataError extends Error {
@@ -37,6 +38,7 @@ export function loadGameData(files, { dev = true } = {}) {
   for (const [file, room] of Object.entries(files)) {
     if (file.startsWith('rooms/')) rooms.set(room.id, room);
   }
+  const { pairs: connections } = deriveConnections(files['world.json'].positions, rooms);
 
   return {
     score: files['defs.json'].score,
@@ -48,20 +50,21 @@ export function loadGameData(files, { dev = true } = {}) {
     spells: files['defs.json'].spells,
     pickupTypes: files['defs.json'].pickups ?? {},
     biomes: files['biomes.json'].biomes,
-    world: files['world.json'],
+    // The exit pairs, worked out from the map (D259): world.connections for the map and the checker.
+    world: { ...files['world.json'], connections },
     strings: files['strings.json'].strings,
     // Screen texts (D118).
     lore: files['lore.json']?.texts ?? {},
     // Music and sound effects (D138); the file is optional.
     audio: { music: files['audio.json']?.music ?? {}, sounds: files['audio.json']?.sounds ?? {}, playlists: files['audio.json']?.playlists ?? {} },
     rooms,
-    links: linkMap(files['world.json'].connections),
+    links: linkMap(connections),
   };
 }
 
 /**
  * Where each exit leads, both ways round.
- * @param {string[][]} connections pairs of "room.exit" (world.json)
+ * @param {string[][]} connections pairs of "room.exit" (world/links.js)
  * @returns {Map<string, { room: string, exit: string }>} "room.exit" → the exit it is connected to
  */
 export function linkMap(connections) {
@@ -91,13 +94,13 @@ export function withoutDevWing(files) {
   if (dev.size === 0) return files;
 
   const roomOf = (ref) => ref.split('.')[0];
-  const leaving = world.connections.filter((pair) => pair.some((ref) => dev.has(roomOf(ref))));
-  // Exits of player rooms that lost their connection.
-  const sealed = new Set(leaving.flat().filter((ref) => !dev.has(roomOf(ref))));
-  const connections = world.connections.filter((pair) => !leaving.includes(pair));
+  const rooms = Object.entries(files).filter(([file]) => file.startsWith('rooms/')).map(([, room]) => [room.id, room]);
+  const { pairs } = deriveConnections(world.positions, rooms);
+  // Exits of player rooms that led into the wing.
+  const sealed = new Set(pairs.filter((pair) => pair.some((ref) => dev.has(roomOf(ref)))).flat().filter((ref) => !dev.has(roomOf(ref))));
   const positions = Object.fromEntries(Object.entries(world.positions ?? {}).filter(([id]) => !dev.has(id)));
 
-  const result = { ...files, 'world.json': { ...world, connections, positions } };
+  const result = { ...files, 'world.json': { ...world, positions } };
   for (const [file, room] of Object.entries(files)) {
     if (!file.startsWith('rooms/')) continue;
     if (dev.has(room.id)) delete result[file];

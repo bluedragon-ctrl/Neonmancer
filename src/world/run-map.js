@@ -71,9 +71,10 @@ export function sidePoint([x, z], side) {
 
 /**
  * What the map screen draws: every room on the run's map with its cell and
- * look, and the connections between them, center to center. A visited
+ * look, and the connections between them, center to center (a one-way
+ * one, D259, from the room he can leave to the one he can't). A visited
  * room shows a stub on each side with an exit that leads somewhere not on
- * the map yet, a gold
+ * the map yet (not a one-way exit: no way on), a gold
  * mark while a fragment he hasn't found lies in it, and whether it has a
  * backup shrine; a revealed one only its outline.
  * @param {object} content loaded game data (data/load.js)
@@ -84,7 +85,7 @@ export function sidePoint([x, z], side) {
  * @returns {{
  *   rooms: { id: string, name: string, cell: number[], color: string, visited: boolean, current: boolean, fragment: boolean, shrine: boolean }[],
  *   stubs: { at: number[], out: number[] }[],
- *   links: { from: number[], to: number[], adjacent: boolean, visited: boolean }[],
+ *   links: { from: number[], to: number[], oneWay: boolean, visited: boolean }[],
  * }} map points are [x, z] in cells
  */
 export function mapModel(content, map, { current, progress }) {
@@ -117,26 +118,31 @@ export function mapModel(content, map, { current, progress }) {
     const sides = new Set();
     for (const exit of data.exits ?? []) {
       const link = content.links.get(`${id}.${exit.id}`);
-      if (link && shown(link.room)) continue;
+      if (exit.oneWay || (link && shown(link.room))) continue;
       sides.add(exit.side);
     }
     for (const side of sides) stubs.push(sidePoint(positions[id], side));
   }
   // Center to center, like a grid; one line for two rooms however many exits join them.
-  const links = [];
-  const pairs = new Set();
+  // It is one-way when every exit between them is one-way in the same room ("to").
+  const isOneWay = (ref) => {
+    const [room, exit] = ref.split('.');
+    return Boolean(roomData.get(room)?.exits?.find((e) => e.id === exit)?.oneWay);
+  };
+  const joins = new Map();
   for (const [a, b] of world.connections) {
     const [ra, rb] = [a.split('.')[0], b.split('.')[0]];
-    const pair = [ra, rb].sort().join('|');
-    if (!shown(ra) || !shown(rb) || ra === rb || pairs.has(pair)) continue;
-    pairs.add(pair);
-    const [pa, pb] = [positions[ra], positions[rb]];
-    links.push({
-      from: pa,
-      to: pb,
-      adjacent: Math.abs(pa[0] - pb[0]) + Math.abs(pa[1] - pb[1]) === 1,
-      visited: map.visited.has(ra) && map.visited.has(rb),
-    });
+    if (!shown(ra) || !shown(rb) || ra === rb) continue;
+    const key = [ra, rb].sort().join('|');
+    if (!joins.has(key)) joins.set(key, { rooms: [ra, rb], into: new Set() });
+    // The room he can't leave through this pair, or '' for a two-way pair.
+    joins.get(key).into.add(isOneWay(a) ? ra : isOneWay(b) ? rb : '');
+  }
+  const links = [];
+  for (const { rooms: [ra, rb], into } of joins.values()) {
+    const oneWay = into.size === 1 && !into.has('');
+    const [from, to] = oneWay && into.has(ra) ? [rb, ra] : [ra, rb];
+    links.push({ from: positions[from], to: positions[to], oneWay, visited: map.visited.has(ra) && map.visited.has(rb) });
   }
   return { rooms, stubs, links };
 }

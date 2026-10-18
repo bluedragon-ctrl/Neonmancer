@@ -2,11 +2,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadGameData } from '../src/data/load.js';
 import { validateData } from '../src/data/validate.js';
-import { OPPOSITE_SIDE } from '../src/data/room-data.js';
 import { Game } from '../src/game.js';
 import { buildRoom } from '../src/world/room.js';
 import { analyzeRoom } from '../src/world/reach.js';
-import { CRATE, dataFiles, gameData, hold, idle, roomFile } from './helpers.js';
+import { CRATE, dataFiles, gameData, hold, idle, roomFile, withNeighbours } from './helpers.js';
 
 /** Object types as in defs.json. */
 const TYPES = {
@@ -77,8 +76,7 @@ test('reach: a socket needs a crate in its hole; a decoy or a frozen enemy is no
   const reach = (objects, abilities = [], enemies = []) => {
     const west = { id: 'west', side: '-x', at: 3 };
     const exits = [west, LOCKED_EAST];
-    const dummy = roomFile('o', { exits: exits.map((exit) => ({ id: `${exit.id}_o`, side: OPPOSITE_SIDE[exit.side], at: 3 })) });
-    const content = gameData({ rooms: [roomFile('r', { size: [12, 4, 8], exits, objects, enemies }), dummy], connections: exits.map((exit) => [`r.${exit.id}`, `o.${exit.id}_o`]), objects: TYPES });
+    const content = gameData({ ...withNeighbours(roomFile('r', { size: [12, 4, 8], exits, objects, enemies })), objects: TYPES });
     return analyzeRoom(buildRoom(content.rooms.get('r'), content), { abilities, starts: [[1, 0, 1]], tuning: { scanRange: 6, blinkRange: 3 } }).exits.east;
   };
   const crate = { id: 'c', type: 'crate', at: [2, 0, 3] };

@@ -11,7 +11,9 @@
  * finished in (D67). The rest follows from the final state: what stays
  * out of reach is a problem, and for what is reachable the report tells
  * which abilities each exit and pickup needs (the smallest sets of one or
- * two; more is reported as "several").
+ * two; more is reported as "several"). A one-way exit (D259) is a way in
+ * only: he never leaves through it, and arriving through it he must be
+ * able to leave the room another way (an error, not a warning).
  */
 import { buildRoom } from './room.js';
 import { ABILITIES, analyzeRoom, arrivalCells } from './reach.js';
@@ -145,7 +147,7 @@ function searchWorld(content, needs, extra) {
         if (level > access) access = level;
       }
       for (const exit of room.exits) {
-        if (!reach.exits[exit.id] || (exit.access ?? 0) > accessBefore) continue;
+        if (exit.oneWay || !reach.exits[exit.id] || (exit.access ?? 0) > accessBefore) continue;
         const other = links.get(`${id}.${exit.id}`);
         if (!other || state.get(other.room).entries.has(other.exit) || pending.some((p) => p.key === `${other.room}.${other.exit}`)) continue;
         pending.push({ key: `${other.room}.${other.exit}`, room: other.room, exit: other.exit, have: [...abilities], access: accessBefore });
@@ -178,19 +180,24 @@ function searchWorld(content, needs, extra) {
       if (!reach.pickups.has(pickup.id)) errors.push(`${id}: pickup "${pickup.id}" at [${pickup.at}] can't be reached`);
     }
     for (const exit of room.exits) {
-      if (reach.exits[exit.id]) continue;
+      if (reach.exits[exit.id] || exit.oneWay) continue;
       if (exit.access && exit.access > access) errors.push(`${id}: exit "${exit.id}" needs access level ${exit.access}, but he only gets ${access}`);
       else errors.push(`${id}: exit "${exit.id}" can't be reached`);
     }
     // The way back: from where he arrived, with what he had then, he must reach the exit he came through.
     for (const [exitId, entry] of entries) {
       if (exitId === 'start') continue;
+      // Behind a one-way exit (D259) the way he came is shut: another must take him out.
+      if (room.exits.find((exit) => exit.id === exitId)?.oneWay) {
+        if (!leaves(room, entry, links.has.bind(links), id, tuning)) errors.push(`${id}: after arriving through one-way "${exitId}" with ${entry.have.join(', ') || 'nothing'} he can't get out of the room`);
+        continue;
+      }
       const back = analyzeRoom(room, { abilities: entry.have, starts: entry.cells, tuning });
       if (!reach.exits[exitId] && !back.stands.size) continue;
       if (!entry.cells.some(([x, y, z]) => back.stands.has(`${x},${y},${z}`))) warnings.push(`${id}: after arriving through "${exitId}" with ${entry.have.join(', ') || 'nothing'} he can't get back out the way he came`);
     }
     for (const pickup of room.pickups) targets.push({ room: id, kind: 'pickup', id: pickup.id, needs: reach.pickups.has(pickup.id) ? [[]] : null });
-    for (const exit of room.exits) targets.push({ room: id, kind: 'exit', id: exit.id, needs: reach.exits[exit.id] ? [[]] : null, ...(exit.access && { access: exit.access }) });
+    for (const exit of room.exits.filter((e) => !e.oneWay)) targets.push({ room: id, kind: 'exit', id: exit.id, needs: reach.exits[exit.id] ? [[]] : null, ...(exit.access && { access: exit.access }) });
   }
   if (needs) {
     for (const id of typeof needs === 'string' ? entered.filter((room) => room === needs) : entered) {
@@ -209,6 +216,23 @@ function searchWorld(content, needs, extra) {
   return { rooms: state, rounds, abilities: [...have], access, fragments, coreReached, targets, errors, warnings };
 }
 
+/**
+ * Can he leave `room` through an exit that isn't one-way, from where he
+ * arrived with what he had then (`entry`)? Pickups he reaches in the room
+ * count: a disk found there may be his way out.
+ * @param {(ref: string) => boolean} connected is the exit "room.exit" connected
+ */
+function leaves(room, entry, connected, id, tuning) {
+  const abilities = new Set(entry.have);
+  for (;;) {
+    const reach = analyzeRoom(room, { abilities, starts: entry.cells, tuning });
+    if (room.exits.some((exit) => !exit.oneWay && reach.exits[exit.id] && (exit.access ?? 0) <= entry.access && connected(`${id}.${exit.id}`))) return true;
+    const gained = room.pickups.filter((pickup) => reach.pickups.has(pickup.id)).map(abilityOf).filter((a) => a && !abilities.has(a));
+    if (gained.length === 0) return false;
+    for (const ability of gained) abilities.add(ability);
+  }
+}
+
 /** Rooms joined to the start by connections alone (no abilities asked), not through the dev wing. */
 function connectedRooms(start, rooms, links, dev) {
   const seen = new Set([start]);
@@ -216,7 +240,7 @@ function connectedRooms(start, rooms, links, dev) {
   while (queue.length > 0) {
     const id = queue.pop();
     for (const exit of rooms.get(id).exits) {
-      const other = links.get(`${id}.${exit.id}`);
+      const other = !exit.oneWay && links.get(`${id}.${exit.id}`);
       if (other && !seen.has(other.room) && !dev.has(other.room)) {
         seen.add(other.room);
         queue.push(other.room);
@@ -234,7 +258,7 @@ function connectedRooms(start, rooms, links, dev) {
  * @returns {Map<string, string[][]>} by "pickup:<id>" or "exit:<id>"
  */
 function findNeeds(room, starts, pool, tuning) {
-  const keys = [...room.pickups.map((p) => `pickup:${p.id}`), ...room.exits.map((e) => `exit:${e.id}`)];
+  const keys = [...room.pickups.map((p) => `pickup:${p.id}`), ...room.exits.filter((e) => !e.oneWay).map((e) => `exit:${e.id}`)];
   const found = new Map(keys.map((key) => [key, []]));
   for (let size = 0; size <= NEEDS_SIZE; size++) {
     for (const set of subsets(pool, size)) {
@@ -279,7 +303,7 @@ export function analyzeRoomAlone(content, id, { abilities = [], needs = true, fr
     if (!ok) errors.push(`${id}: pickup "${pickup.id}" at [${pickup.at}] can't be reached`);
     targets.push({ room: id, kind: 'pickup', id: pickup.id, needs: ok ? found.get(`pickup:${pickup.id}`) ?? [[]] : null });
   }
-  for (const exit of room.exits) {
+  for (const exit of room.exits.filter((e) => !e.oneWay)) {
     const ok = reach.exits[exit.id];
     if (!ok) errors.push(`${id}: exit "${exit.id}" can't be reached`);
     targets.push({ room: id, kind: 'exit', id: exit.id, needs: ok ? found.get(`exit:${exit.id}`) ?? [[]] : null, ...(exit.access && { access: exit.access }) });

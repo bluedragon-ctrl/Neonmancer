@@ -14,8 +14,8 @@ For each room:
 
 1. Read `docs/design.md` sections "Gameplay" and "Room design checklist",
    `.claude/skills/room-design/SKILL.md` and the room's line in the
-   ladder of `docs/lattice-plan.md` once, then the room JSON, its exits
-   in `data/world.json` and the neighbours it connects to.
+   ladder of `docs/lattice-plan.md` once, then the room JSON, its map cell
+   in `data/world.json` and the neighbours its exits lead to (D259).
 2. Run, and quote the relevant output:
    - `npm run validate:data`
    - `npm run check:reach -- <room_id>` (what each exit and pickup needs)
@@ -96,7 +96,8 @@ For each room:
      difficulty is fine (say so as a NOTE); only an easier one that skips
      the room's idea is a bypass (PROBLEM or BLOCKER).
    - **Spells and backtracking** (D67): what each exit/pickup needs, that
-     he can leave the way he came, shortcuts not blocked by accident.
+     he can leave the way he came (or, through a one-way exit, D259,
+     another way), shortcuts not blocked by accident.
    - **No soft-locks**: every one-shot change (collapse, crate in a corner
      or hole, spent Compile/Fork) leaves a way out or a way to reset.
    - **Enemies and levels** (D230): enemies walk stairs both ways and a

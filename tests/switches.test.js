@@ -176,3 +176,17 @@ test("switch looks: the bull's-eye on every face of a target and on a plate's ti
   assert.equal(plate.brackets.length, 8);
   assert.deepEqual(plate.inner[0], [[SWITCH_FX.inner, 0.01, SWITCH_FX.inner], [1 - SWITCH_FX.inner, 0.01, SWITCH_FX.inner]]);
 });
+
+test('a one-way exit (D259) is shut for good: even for him when he came in through it', () => {
+  const game = gameWith({ exit: { id: 'east', side: '+x', at: 3 } }, 'beta');
+  // Beta's west exit is the one-way end: alpha leads in, beta never back.
+  game.content.rooms.set('beta', { ...game.content.rooms.get('beta'), exits: [{ id: 'west', side: '-x', at: 3, oneWay: true }] });
+  game.enterRoom('beta', [0.5, 0, 4], 'west');
+  assert.equal(game.sealedIn, true);
+  assert.equal(lockOf(game).open, false);
+  assert.equal(game.grid.isSolid(-0.5, 0.5, 4.5), true, 'the opening is wall');
+  run(game, idle, 5);
+  assert.equal(lockOf(game).open, false);
+  game.enterRoom('alpha');
+  assert.equal(game.sealedIn, false);
+});

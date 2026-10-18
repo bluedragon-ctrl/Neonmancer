@@ -7,11 +7,11 @@ import { pasteCell } from '../src/entities/clip.js';
 import { Player } from '../src/entities/player.js';
 import { Pushable } from '../src/entities/pushable.js';
 import { pullTarget } from '../src/entities/pull.js';
-import { OPPOSITE_SIDE, resolveBlockTypes } from '../src/data/room-data.js';
+import { resolveBlockTypes } from '../src/data/room-data.js';
 import { blockTypeText } from '../src/editor/panel.js';
 import { buildRoom } from '../src/world/room.js';
 import { analyzeRoom } from '../src/world/reach.js';
-import { BLOCK_TYPES, BUG, CRATE, gameData, grid as makeGrid, hold, idle, input, roomFile } from './helpers.js';
+import { BLOCK_TYPES, BUG, CRATE, gameData, grid as makeGrid, hold, idle, input, roomFile, withNeighbours } from './helpers.js';
 
 /**
  * The crate stream (D198): a fence only crates and frozen enemies cross.
@@ -151,10 +151,8 @@ const WEST = { id: 'west', side: '-x', at: 3 };
 /** Reach of one 12×4×8 room "r" (start cell [1, 0, 1]) with an exit west and some abilities. */
 function reach(props, abilities = []) {
   const exits = props.exits ?? [WEST];
-  const dummy = roomFile('o', { exits: exits.map((exit) => ({ id: `${exit.id}_o`, side: OPPOSITE_SIDE[exit.side], at: 3 })) });
   const content = gameData({
-    rooms: [roomFile('r', { size: [12, 4, 8], ...props, exits }), dummy],
-    connections: exits.map((exit) => [`r.${exit.id}`, `o.${exit.id}_o`]),
+    ...withNeighbours(roomFile('r', { size: [12, 4, 8], ...props, exits })),
     objects: { crate: CRATE, plate: { kind: 'plate', color: '#eef3ff' } },
   });
   const room = buildRoom(content.rooms.get('r'), content);

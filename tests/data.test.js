@@ -187,32 +187,41 @@ test('world: unknown start room', () => {
   assertError(errorsAfter((f) => (f['world.json'].start = 'nowhere')), 'world.json › start');
 });
 
-test('world: connections must name known exits', () => {
-  const errors = errorsAfter((f) => (f['world.json'].connections[0][1] = 'beta.south'));
-  assert.deepEqual(errors, [
-    'world.json › connections[0]: unknown exit "beta.south"',
-    'world.json › connections: exit "beta.west" is not connected',
-  ]);
+test('world: an exit leads to the room in the next map cell in its direction (D259)', () => {
+  // Beta one cell further east: neither exit has a room to lead to.
+  assert.deepEqual(
+    errorsAfter((f) => (f['world.json'].positions.beta = [2, 0])),
+    [
+      'rooms/alpha.json › exits[0]: exit "east" leads nowhere: no room in the next map cell [1,0]',
+      'rooms/beta.json › exits[0]: exit "west" leads nowhere: no room in the next map cell [1,0]',
+    ],
+  );
+  // Facing exits pair up; one too many in a side leads nowhere.
+  let errors = errorsAfter((f) => f['rooms/alpha.json'].exits.push({ id: 'east_2', side: '+x', at: 6 }));
+  assertError(errors, 'rooms/alpha.json › exits[1]', 'exit "east_2" has no exit to lead to in "beta"', '(2 here, 1 there)');
+  errors = errorsAfter((f) => (f['rooms/beta.json'].exits[0].width = 3));
+  assert.equal(errors.length, 2, 'from both ends');
+  assert.ok(errors.every((e) => e.includes('must be as wide')));
+  // Connections are no longer written by hand.
+  assertError(errorsAfter((f) => (f['world.json'].connections = [['alpha.east', 'beta.west']])), 'world.json', 'connections');
 });
 
-test('world: connected exits must be opposite, equally wide and used once', () => {
-  let errors = errorsAfter((f) => (f['rooms/beta.json'].exits[0].side = '+z'));
-  assertError(errors, 'world.json › connections[0]', 'opposite sides');
-
-  errors = errorsAfter((f) => (f['rooms/beta.json'].exits[0].width = 3));
-  assertError(errors, 'equally wide');
-
-  errors = errorsAfter((f) => (f['world.json'].connections = []));
-  assert.equal(errors.length, 2);
-  assert.ok(errors.every((e) => e.includes('is not connected')));
-
-  errors = errorsAfter((f) => f['world.json'].connections.push(['alpha.east', 'beta.west']));
-  assert.ok(errors.some((e) => e.includes('already connected')));
+test('world: a one-way exit (D259) takes no lock and leads back from a two-way one', () => {
+  assert.deepEqual(errorsAfter((f) => (f['rooms/beta.json'].exits[0].oneWay = true)), []);
+  let errors = errorsAfter((f) => {
+    f['rooms/beta.json'].exits[0].oneWay = true;
+    f['rooms/alpha.json'].exits[0].oneWay = true;
+  });
+  assert.equal(errors.length, 2, 'from both ends');
+  assert.ok(errors.every((e) => e.includes('are both one-way')));
+  errors = errorsAfter((f) => Object.assign(f['rooms/beta.json'].exits[0], { oneWay: true, hidden: true }));
+  assertError(errors, 'rooms/beta.json › exits[0]', 'a one-way exit is never open');
 });
 
 test('world: every room has its own cell on the map (D66)', () => {
-  assertError(errorsAfter((f) => delete f['world.json'].positions.beta), 'world.json › positions', 'room "beta" has no position');
-  assertError(errorsAfter((f) => (f['world.json'].positions.beta = [0, 0])), 'world.json › positions.beta', 'cell [0,0] is taken by "alpha"');
+  const hasError = (errors, ...pieces) => assert.ok(errors.some((e) => pieces.every((piece) => e.includes(piece))), `no "${pieces.join('", "')}" in:\n${errors.join('\n')}`);
+  hasError(errorsAfter((f) => delete f['world.json'].positions.beta), 'world.json › positions', 'room "beta" has no position');
+  hasError(errorsAfter((f) => (f['world.json'].positions.beta = [0, 0])), 'world.json › positions.beta', 'cell [0,0] is taken by "alpha"');
   assertError(errorsAfter((f) => (f['world.json'].positions.gamma = [5, -2])), 'world.json › positions.gamma', 'unknown room "gamma"');
   assertError(errorsAfter((f) => (f['world.json'].positions.beta = [1.5, 0])), 'world.json › positions.beta[0]');
   assertError(errorsAfter((f) => delete f['world.json'].positions), 'world.json', 'positions');

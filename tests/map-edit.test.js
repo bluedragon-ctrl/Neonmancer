@@ -36,11 +36,7 @@ const world = () =>
       ]),
       room('dock', [{ id: 'west', side: '-x', at: 5 }]),
     ],
-    connections: [
-      ['hub.east', 'yard.west'],
-      ['hub.south', 'lane.north'],
-      ['lane.east', 'dock.west'],
-    ],
+    // Exits lead to the room next door (D259): hub.east ↔ yard.west, hub.south ↔ lane.north, lane.east ↔ dock.west.
     positions: { hub: [0, 0], yard: [1, 0], lane: [0, 1], dock: [1, 1] },
   });
 
@@ -83,8 +79,14 @@ test('MapEdit adds a room, connects it with exits in the middle of the facing wa
   assert.deepEqual(rooms.map((r) => r.id).sort(), ['annex', 'lane']);
   assert.deepEqual(remove, []);
   assert.deepEqual(positions, { annex: [0, 2] });
-  assert.deepEqual(saved.connections.at(-1), ['lane.south', 'annex.north']);
-  assert.deepEqual(counts, { moved: 0, added: 1, removed: 0, changed: 1, links: true });
+  assert.equal(saved, undefined, 'world.json keeps no connections (D259)');
+  assert.deepEqual(edit.connections.at(-1), ['lane.south', 'annex.north']);
+  assert.deepEqual(counts, { moved: 0, added: 1, removed: 0, changed: 1, links: false });
+
+  // Only neighbours on the map connect.
+  assert.equal(edit.addRoom('far', [3, 3], 'home'), null);
+  assert.match(edit.connect('hub', 'far').problem, /next to each other/);
+  assert.equal(edit.undo(), true);
 
   // Undo takes the connection back, then the room.
   assert.equal(edit.undo(), true);
@@ -101,8 +103,9 @@ test('MapEdit moves an exit off the middle when the middle is taken or blocked',
   edit.rooms.set('annex', { ...edit.rooms.get('annex'), blocks: [{ at: [5, 0, 0] }] });
   assert.equal(edit.connect('lane', 'annex').problem, null);
   assert.equal(edit.rooms.get('annex').exits[0].at, 6, 'the nearest spot clear of the block');
-  // A second connection the same way gets a second exit next to the first.
-  assert.deepEqual(edit.connect('lane', 'annex').ref, ['lane.south_2', 'annex.north_2']);
+  // A second connection the same way gets a second exit next to the first;
+  // the pairs follow the order along the wall (D259): lane's second from the west meets annex's.
+  assert.deepEqual(edit.connect('lane', 'annex').ref, ['lane.south_2', 'annex.north']);
   assert.equal(edit.rooms.get('annex').exits[1].at, 3, 'clear of the first exit and the block');
   assert.deepEqual(validateData(edit.dataFiles()), []);
 });
@@ -209,7 +212,7 @@ test("saveEdits writes the map tool's new, changed and removed rooms with world.
     assert.deepEqual(validateData(readDataFiles(tmp).files), []);
 
     // Removing a room another room still leads into: nothing is written.
-    const linked = saved.connections[0][0].split('.')[0];
+    const linked = edit.connections[0][0].split('.')[0];
     assert.equal(saveEdits(tmp, { remove: [linked] }).ok, false);
     assert.ok(existsSync(join(tmp, `data/rooms/${linked}.json`)));
     assert.equal(saveEdits(tmp, { remove: ['../world'] }).ok, false);

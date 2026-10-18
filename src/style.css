@@ -1255,9 +1255,11 @@ body {
   stroke-opacity: 0.85;
 }
 
-/* A connection across the map (a shortcut, a loop). */
-.map-link.far {
-  stroke-dasharray: calc(8 * var(--u)) calc(7 * var(--u));
+/* The chevron on a one-way connection (D259). */
+.map-link.map-arrow {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .map-link.dim {

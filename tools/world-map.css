@@ -172,10 +172,15 @@ li[data-room]:hover {
   opacity: 0.7;
 }
 
-/* Connected rooms that aren't neighbours that way round on the map. */
-.link.across {
+/* A one-way pair of exits (D259), the chevron pointing the way he can go. */
+.link.one-way {
   stroke-dasharray: 6 5;
-  opacity: 0.45;
+}
+
+.link.one-way-arrow {
+  fill: none;
+  stroke-dasharray: none;
+  stroke-linejoin: round;
 }
 
 /* An exit on its room's edge (D102): cyan connected, magenta loose. */

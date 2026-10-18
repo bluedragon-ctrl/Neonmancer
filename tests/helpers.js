@@ -176,9 +176,10 @@ export function roomFile(id, props = {}) {
  * @param {Record<string, object>} [options.enemies] enemy templates; a bug by default
  * @param {Record<string, object>} [options.blocks] block types; BLOCK_TYPES by default
  * @param {Record<string, object>} [options.pickups] pickup types; PICKUPS by default
- * @param {string[][]} [options.connections] pairs of "room.exit"
+ * @param {string[][]} [options.connections] pairs of "room.exit" the test wants: the rooms are placed
+ *   on the map so that their exits lead there (D259, see placeRooms())
  * @param {string} [options.start] start room; the first room by default
- * @param {Record<string, number[]>} [options.positions] map cells; the rooms in a row by default
+ * @param {Record<string, number[]>} [options.positions] map cells; by default placed for `connections`, or the rooms in a row
  */
 export function dataFiles({
   rooms,
@@ -188,7 +189,7 @@ export function dataFiles({
   pickups = PICKUPS,
   connections = [],
   start = rooms[0].id,
-  positions = Object.fromEntries(rooms.map((room, i) => [room.id, [i, 0]])),
+  positions = connections.length > 0 ? placeRooms(rooms, connections) : Object.fromEntries(rooms.map((room, i) => [room.id, [i, 0]])),
   fragments,
   dev,
   later,
@@ -198,10 +199,75 @@ export function dataFiles({
   return structuredClone({
     'defs.json': { schemaVersion: 1, score: SCORE, objects: { crate: CRATE, ...objects }, enemies: variants.enemies, spells: SPELLS, pickups, blocks },
     'biomes.json': { schemaVersion: 1, biomes: { home: { name: 'Home', color: '#ffb020' } } },
-    'world.json': { schemaVersion: 1, start, ...(dev && { dev }), ...(later && { later }), ...(pending && { pending }),...(fragments && { fragments }), connections, positions },
+    'world.json': { schemaVersion: 1, start, ...(dev && { dev }), ...(later && { later }), ...(pending && { pending }),...(fragments && { fragments }), positions },
     'strings.json': STRINGS,
     ...Object.fromEntries(variants.rooms.map((room) => [`rooms/${room.id}.json`, room])),
   });
+}
+
+/**
+ * A room and a dummy room next to it on the map for each side it has exits
+ * in, with an exit for each of them (D259), so every exit leads somewhere.
+ * @param {object} room room file
+ * @returns {{ rooms: object[], positions: Record<string, number[]> }} for dataFiles() or gameData()
+ */
+export function withNeighbours(room) {
+  const step = { '+x': [1, 0], '-x': [-1, 0], '+z': [0, 1], '-z': [0, -1] };
+  const opposite = { '+x': '-x', '-x': '+x', '+z': '-z', '-z': '+z' };
+  const rooms = [room];
+  const positions = { [room.id]: [0, 0] };
+  for (const side of new Set((room.exits ?? []).map((exit) => exit.side))) {
+    const id = `${room.id}_${{ '+x': 'east', '-x': 'west', '+z': 'south', '-z': 'north' }[side]}`;
+    // In the same order along the side, so they pair up as written.
+    const exits = room.exits
+      .filter((exit) => exit.side === side)
+      .sort((a, b) => a.at - b.at || (a.y ?? 0) - (b.y ?? 0))
+      .map((exit, i) => ({ id: `${exit.id}_o`, side: opposite[side], at: i * 2, ...(exit.width && { width: exit.width }) }));
+    rooms.push(roomFile(id, { exits }));
+    positions[id] = step[side];
+  }
+  return { rooms, positions };
+}
+
+/**
+ * Map cells that make `connections` what the exits lead to (D259): the
+ * first room at [0, 0], each connected room in the next cell in its exit's
+ * direction; rooms no connection reaches go far apart, out of the way.
+ * Throws when the pairs can't all hold (two rooms in one cell, or a room
+ * wanted in two cells).
+ * @param {object[]} rooms room files
+ * @param {string[][]} connections pairs of "room.exit"
+ * @returns {Record<string, number[]>}
+ */
+export function placeRooms(rooms, connections) {
+  const step = { '+x': [1, 0], '-x': [-1, 0], '+z': [0, 1], '-z': [0, -1] };
+  const side = (ref) => {
+    const [id, exit] = ref.split('.');
+    return rooms.find((room) => room.id === id)?.exits?.find((e) => e.id === exit)?.side;
+  };
+  const cells = { [rooms[0].id]: [0, 0] };
+  const place = (id, cell) => {
+    const key = String(cell);
+    const other = Object.keys(cells).find((r) => r !== id && String(cells[r]) === key);
+    if (cells[id] && String(cells[id]) !== key) throw new Error(`placeRooms: ${id} is wanted at [${cells[id]}] and [${cell}]`);
+    if (other) throw new Error(`placeRooms: ${id} and ${other} both want [${cell}]`);
+    cells[id] = cell;
+  };
+  for (let changed = true; changed; ) {
+    changed = false;
+    for (const [a, b] of connections) {
+      for (const [from, to] of [[a, b], [b, a]]) {
+        const [fromRoom, toRoom] = [from.split('.')[0], to.split('.')[0]];
+        const dir = step[side(from)];
+        if (!cells[fromRoom] || !dir) continue;
+        const cell = [cells[fromRoom][0] + dir[0], cells[fromRoom][1] + dir[1]];
+        if (!cells[toRoom]) changed = true;
+        place(toRoom, cell);
+      }
+    }
+  }
+  rooms.forEach((room, i) => (cells[room.id] ??= [100 + 3 * i, 100]));
+  return cells;
 }
 
 /**
@@ -243,9 +309,7 @@ export function withVariants(rooms, enemies) {
 export function testWorld() {
   const connections = [
     ['stack_yard.east', 'fault_line.west'],
-    ['fault_line.east', 'transit_bus.west'],
     ['transit_bus.east', 'volatile_memory.west'],
-    ['volatile_memory.east', 'crawl_space.west'],
     ['boot_sector.south', 'transit_bus.north'],
     ['cache_hall.east', 'relay_station.west'],
     ['relay_station.south', 'stack_yard.north'],
