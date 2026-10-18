@@ -31,7 +31,8 @@ measured against:
    Scan, Fork and Pause, and Blink, the Level 1 reward in `dj_vault`
    (D217), for exits and secrets only. Pull, Compile, Cut & Paste,
    Warp and Firewall belong to later sectors (maybe dropped or kept for
-   development) and are left out of Lattice design and checks. The
+   development) and are left out of Lattice design and checks, except
+   as the key to a return layer's extra, never a fragment (D259). The
    Lattice's wings open in any order, so a pickup's trick holds against
    every Lattice spell (D187). Each room's type
    and trick to aim for: the ladder in docs/lattice-plan.md.
@@ -2076,6 +2077,17 @@ it, and every new room)
   may wait for a spell or buff found later. Know which abilities each
   exit and pickup needs, and make sure the player can always leave the
   way he came with what he has.
+- Most rooms (about two thirds of the mix) carry a return layer (D259):
+  something seen closed on the first visit (a pit too wide, a hollow
+  wall, a lock, a crate out of reach) that an ability found later opens:
+  a shortcut, a new exit, a secret or a cache (a boost, a refill). It is
+  in view from his route, starts off the main puzzle (rooms reset, so a
+  return never costs the whole puzzle again), is a small trick of its
+  own, no red herring on the first visit, and never the way round a
+  pickup's trick; nothing the room needs waits on it. In the Lattice its
+  key may be Blink, another wing's spell, the energy buff, an access
+  level, or a later-sector spell for extras only (never a fragment). Each
+  layer is listed in docs/lattice-plan.md, Return layers.
 - Later abilities may take him through a room (to its exits) without its
   puzzle; that is intended, so don't block them without a reason. They
   never reach a pickup without its trick: with any ability set that

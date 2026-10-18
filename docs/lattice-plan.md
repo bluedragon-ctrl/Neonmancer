@@ -106,18 +106,34 @@ Rules for the lines (D186, D187):
 The teasers (`frost_gate`, `frost_edge`, `glitch_gate`, `glitch_edge`)
 stay look-only and outside the ladder (D186).
 
-### Revisits
+### Return layers (D259)
 
-- `mirror_stacks`: fragment 0 needs Fork, from the Fork wing.
-- Outer Buffer doors (D212): each gets a trick of its own, never open on the
-  first arrival. They were built round the double jump (D212–D215); with it
-  gone (D216) each is redone in its own PR, round Blink (D217): `scan_lab` north_2 (`buffer_1`, done: a pad and
-  Blink onto the memory stack's sill, D240; was a Blink walk, D218), `warden_pit` west (`buffer_2`, done: two pads and a Blink onto the 4-high pillar, D249),
-  `guard_loop` east (`buffer_3`, done: a stair, the timed bridge and a pad onto a 3-high sill, D257), `mirror_stacks` east_2 (`buffer_4`, done: the
-  pocket's pad onto the column, then a diagonal Zap at the target, D242),
-  `ghost_exit` east (`buffer_5`, done: the pen's pad and Blink onto a ledge over
-  the plate's pocket, a decoy dropped onto the plate, D245).
-- Shortcuts: `junction`'s fence gate home, and the Gatekeeper once beaten.
+What opens on a return, room by room (the room-design skill, Return
+layers). The aim is about two thirds of the 21 rooms in the mix; teach
+rungs may skip. Each room's next review proposes a layer where it has
+none, or says why it skips one.
+
+| Room | Key | What opens | Status |
+|---|---|---|---|
+| `mirror_stacks` | Fork | fragment 0's gate: a decoy holds the second plate | Built |
+| `mirror_stacks` | a pad and a diagonal Zap | east_2, Event Horizon (`buffer_4`) | Built (D242) |
+| `scan_lab` | a pad and Blink onto the memory stack's sill | north_2, Dead Pixel (`buffer_1`) | Built (D240) |
+| `guard_loop` | Scan, the timed bridge and a pad onto a 3-high sill | east, Null Orbit (`buffer_3`) | Built (D257) |
+| `ghost_exit` | the pen's pad, Blink onto a ledge, a decoy dropped onto the plate | east (`buffer_5`) | Built (D245) |
+| `junction` | none (from the far side) | the fence gate, a one-way shortcut home | Built |
+| `warden_pit` | two pads and Blink onto the 4-high pillar | west, Stray Byte (`buffer_2`) | Built (D249), a boss room |
+| `gatekeeper` | beaten once | the hall joins the Scan and Fork wings, a shortcut | Built, a boss room |
+| `core_hall` | access level 1 | the doors to Frostbyte and Glitchmire | Built, the goal |
+
+In the mix, 5 of 21 rooms have a layer so far (`mirror_stacks`,
+`scan_lab`, `guard_loop`, `ghost_exit`, `junction`). Still without one:
+`boot_up`, `first_steps`, `zap_port`, `first_light`, `atrium`,
+`shield_hall`, `freeze_hall`, `bolt_gallery`, `relay_loft`,
+`ledger_cell`, `drift_bay`, `cold_stairs`, `idle_cache`, `fork_lab`,
+`twin_plates`, `split_vault`. Blink is the one key every player finds
+later than the wings, so it should open the most; a later-sector key
+(Warp, Pull, Compile, Cut & Paste, Firewall) opens extras only, never a
+fragment.
 
 ### Mix and gaps
 

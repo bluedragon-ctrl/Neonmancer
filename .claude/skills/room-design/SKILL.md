@@ -65,7 +65,13 @@ worth playing.
   on purpose, maybe dropped or kept for development): don't design
   Lattice rooms around them or against them, and run every check below
   with the Lattice abilities (for an exit's first arrival, the subset
-  he has) instead of the default (every ability).
+  he has) instead of the default (every ability). One exception: a
+  later-sector spell may be the key to a return layer's extra (D259,
+  below), never to a fragment.
+- **Rooms grow on return** (D259). About two thirds of the rooms carry a
+  *return layer*: something seen closed on the first visit that a later
+  ability opens (a shortcut, a new exit, a secret, a cache). See
+  "Return layers" below.
 
 ## Workflow
 1. **May you touch it?** A room with `"authored": true` is the author's
@@ -79,8 +85,10 @@ worth playing.
    **trick** in one sentence and the solution as numbered moves, the rung
    (teach/develop/twist/revisit) and its line in the Lattice ladder
    (`docs/lattice-plan.md`), the focal point, what he sees from the
-   entrance, the fair-failure case, and what a later ability skips (exits
-   only, never a pickup's trick). Hard to write → redraw. Read
+   entrance, the fair-failure case, what a later ability skips (exits
+   only, never a pickup's trick), and the **return layer** (its key, what
+   it opens, where he sees it closed; or why the room has none, D259).
+   Hard to write → redraw. Read
    [craft.md](craft.md) when the room is a new idea rather than a fix.
    When the trick is a push puzzle, design it with the `sokoban-design`
    skill (XSB sketch, solver, classic levels) and come back for step 4.
@@ -107,15 +115,16 @@ so draft the idea, not the last cell.
 2. **Say what it is now**: its type, its trick (or "none"), the solution
    as moves, what each piece does, and what the checker and the mutation
    test say (with the Lattice abilities: which later one skips which
-   pickup).
+   pickup), and what opens on a return now (its return layer, or none).
 3. **Verdict**: *keep* (the trick holds), *tune* (the trick is there,
    pieces or numbers are off), *redesign* (no trick, or one a later
    ability skips for a pickup), *cut* (the room adds nothing to the
    wing). Keep what the wing needs from it: exits, pickups, the spell or
    boss it holds, its map position.
 4. **Propose** for tune or redesign: the concept (workflow step 3), with
-   a sketch of the layout (a top-down grid in text is fine), and stop for
-   the author's OK. No JSON before it.
+   a sketch of the layout (a top-down grid in text is fine), with its
+   return layer (D259; a room without one gets one proposed, or the
+   reason it skips), and stop for the author's OK. No JSON before it.
 5. **Draft and check** (workflow steps 4–8) once the author agrees; the
    PR says what changed and why, and what to tune by hand.
 6. A changed trick, rung or type updates the room's ladder line, and
@@ -479,6 +488,57 @@ Edit existing files with small text edits, not a JSON dump.
    today `hidden_layer`); start it with `?room=<id>` on the dev server. Add a
    showcase look and unit tests for the mechanic (D43).
 
+## Return layers (D259)
+A room worth coming back to: on the first visit he sees something he
+can't use yet (a pit too wide, a wall that sounds hollow, a lock, a
+crate out of reach), and an ability found later opens it. The world is a
+maze (D67), so a new spell should send him back through rooms he knows,
+each read anew.
+- **How many.** About two thirds of the rooms in the mix carry one.
+  Teach rungs, bosses, breathers and the goal may skip it; say why. Across
+  the world every new ability opens at least three places it was seen
+  closed (craft.md 7).
+- **What it pays.** A *shortcut* (a one-way gate opened from the far
+  side, a crossing back to a hub the ability shortens), a *new exit* (an
+  optional room, a loop, an Outer Buffer door), a *secret* (a permanent
+  pickup, but there are only 16 secret bits in the whole game, so most
+  layers pay something else), a *fragment* (Lattice keys only), or a
+  *cache* (a boost or a refill: temporary, cheap, the common case).
+- **Keys.** In the Lattice: Blink (the one sure later key, the Level 1
+  reward), another wing's spell (the wings open in any order, so for some
+  players it is open on the first visit: an optional extra then, which
+  is fine), the energy buff (a third Pause), an access level. Later-sector
+  spells (Warp, Pull, Compile, Cut & Paste, Firewall) may key extras
+  only, never a fragment: the room is whole without them, and if such a
+  spell is dropped its layers go or get a new key. Read each key's reach
+  in the tuning table, not from memory.
+- **Seen on the first visit.** The closed thing is in view from his
+  route and looks like a gate (rule 2): a mental to-do, not a find. A
+  secret keeps its hint (craft.md 2), never a screen text.
+- **Off the main puzzle.** Rooms reset, so a return should not cost the
+  whole puzzle again: the layer starts from the room's through-route, or
+  the puzzle before it is short. A chore on every pass is a bad layer.
+- **A small trick of its own.** One or two moves with the new ability,
+  set up by this room, best with its own pieces read anew (the crate
+  that plugged a pit is the step a pad can't give; the bug lane is a
+  bridge once frozen). A shortcut may be the ability alone (Blink over
+  the pit): the payoff is the way home.
+- **No red herring.** On the first visit none of its pieces may look
+  like part of the main trick: put it to one side, in a shape plainly
+  beyond what he has (Sokoban: every tile of the puzzle is used).
+- **Never a bypass.** Its key must not reach the room's own pickups
+  without their tricks, and nothing the room needs (an exit the wing
+  needs, a pickup) waits on it. He can still leave the way he came.
+- **Check it** (both must hold):
+  ```
+  npm run check:reach -- <room> --with <set he has> --from <exit>        # the layer: never
+  npm run check:reach -- <room> --with <set he has,key> --from <exit>    # the layer: reached
+  node .claude/skills/room-design/scripts/mutate.mjs <room> --with <set he has,key>  # pickups still need their tricks
+  ```
+  What the checker can't model (a diagonal Blink, timing) is played with
+  `sim.mjs`. Record the layer in the "Return layers" table of
+  `docs/lattice-plan.md` (room, key, what opens, status).
+
 ## Puzzle checks (lessons from D156 and D157)
 - **Crates.** A crate can only be pushed away from a side he can stand on:
   trace every crate's route. Plates against a wall so nothing overshoots. Do
@@ -559,7 +619,9 @@ Edit existing files with small text edits, not a JSON dump.
   lock: a decoy holds any one plate, a frozen enemy one on or beside its
   lane; lock on a heavy plate (two weights, D200: a stack), on two plates at once, weight that stays longer than 10 s,
   or where a crate ends up (a hole, a step, a stack). Sets that only open
-  exits are fine. The later sectors' spells are left out in the Lattice.
+  exits are fine. The later sectors' spells are left out in the Lattice,
+  except a return layer's key (D259): add it to the set and check the
+  room's fragments again.
 
 ## Mutation test (`scripts/mutate.mjs`)
 Takes each helper away (crate, platform, enemy, bridge, block) and seals each
