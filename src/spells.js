@@ -11,7 +11,8 @@ import { cutTarget, pasteCell } from './entities/clip.js';
 import { Decoy } from './entities/decoy.js';
 import { Enemy } from './entities/enemy.js';
 import { createObject } from './entities/kinds.js';
-import { pullTarget } from './entities/pull.js';
+import { pullTarget, shoveTarget } from './entities/pull.js';
+import { swapTarget } from './entities/swap.js';
 import { warpTarget } from './entities/warp.js';
 
 /**
@@ -41,6 +42,10 @@ const SPELL_EFFECTS = {
   compile: (game, spell) => compile(game, spell),
   /** Pull the first crate or enemy in line one cell towards him (D124). */
   pull: (game, spell) => pull(game, spell),
+  /** Shove the first crate or enemy in line one cell away from him, through fences (D260). */
+  shove: (game, spell) => shove(game, spell),
+  /** Trade places with the first crate or frozen enemy in line (D260). */
+  swap: (game, spell) => swap(game, spell),
   /** A hologram of him in the free cell in front of him, for a while: enemies go for it (D129). */
   fork: (game, spell) => fork(game, spell),
   /** A wave from his feet that reveals fake blocks and hidden exits it reaches (D128). */
@@ -215,6 +220,56 @@ function pull(game, { range }) {
   }
   player.pull = { target: object ?? enemy, tick: 0 };
   game.emit('pull', { ...(object ? { object } : { enemy }), cell });
+  return true;
+}
+
+/**
+ * Shove (D260): Pull's opposite. The first crate or enemy in line the way
+ * he aims, within the spell's `range`, through fences (entities/pull.js
+ * shoveTarget()), slides one cell away from him: a crate as if pushed
+ * from behind (Pushable.push()), an enemy over anything (Enemy.pull()),
+ * so it may drop into a hole and pop. Shoving an enemy provokes it and
+ * alarms it (D81). Nothing in line, or it can't move: it fizzles.
+ * @param {import('./game.js').Game} game
+ * @param {object} spell its tuning from defs.json
+ * @returns {boolean} false if it fizzled
+ */
+function shove(game, { range }) {
+  const { player } = game;
+  const found = shoveTarget(game, range);
+  if (!found) return false;
+  const { object, enemy, dir, cell } = found;
+  if (object && !object.push(dir, game)) return false;
+  if (enemy) {
+    if (!enemy.pull(dir, game)) return false;
+    enemy.provoke();
+    if (enemy.alarm(player)) game.emit('alert', { enemy });
+  }
+  player.shove = { target: object ?? enemy, tick: 0 };
+  game.emit('shove', { ...(object ? { object } : { enemy }), cell });
+  return true;
+}
+
+/**
+ * Swap (D260): he and the first crate or frozen enemy in line the way he
+ * aims trade places (entities/swap.js swapTarget()). It lands in the cell
+ * he stood in and falls from there (into a hole, it plugs it); he stands
+ * where it stood. Both jump at once; pixels stream the way each went
+ * (render/swap-view.js and his afterimage, as Warp's). It can't: it fizzles.
+ * @param {import('./game.js').Game} game
+ * @param {object} spell its tuning from defs.json
+ * @returns {boolean} false if it fizzled
+ */
+function swap(game, { range }) {
+  const { player } = game;
+  const found = swapTarget(game, range);
+  if (!found) return false;
+  const { object, enemy, cell, home, to } = found;
+  const target = object ?? enemy;
+  for (let i = 0; i < 3; i++) target.pos[i] = target.prev[i] = home[i];
+  player.teleport('swap', to);
+  player.swap = { target, from: [...cell], to: [...home], tick: 0 };
+  game.emit('swap', { ...(object ? { object } : { enemy }), cell, to: home });
   return true;
 }
 

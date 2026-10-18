@@ -2,18 +2,25 @@
  * three.js pieces of Pull (D124; timing and shapes in pull-fx.js): the
  * beam of pixel rings flowing from what he pulls into his hands, the
  * marquee riding on it, and the aim marker while the spell is selected.
+ * Shove (D260) uses it too, with the beam flowing out of his hands.
  */
 import { Group } from 'three';
 import { ENEMY, Enemy } from '../entities/enemy.js';
-import { pullTarget } from '../entities/pull.js';
+import { pullTarget, shoveTarget } from '../entities/pull.js';
 import { createMarquee, placeMarquee } from './clip-view.js';
 import { createPixelBurst, placePixels } from './pixels.js';
 import { lerpPosition } from './interp.js';
 import { PULL_FX, PULL_PIXELS, pullMarquee, pullPixels } from './pull-fx.js';
 import { ZAP_FX } from './zap-fx.js';
 
-/** The spell whose aim marker this is. */
-const SPELL = 'pull';
+/**
+ * Per spell: what it would take (its aim marker), the nearest a target
+ * may be for it to move, and whether the beam runs out of his hands.
+ */
+const SPELLS = {
+  pull: { find: pullTarget, nearest: 2, out: false },
+  shove: { find: shoveTarget, nearest: 1, out: true },
+};
 
 /**
  * The middle of a crate or an enemy drawn `alpha` of the way between its
@@ -33,8 +40,10 @@ export function pullBounds(thing, alpha, crateScale) {
 export class PullView {
   /**
    * @param {number|string} color the spell's color
+   * @param {'pull'|'shove'} [spell]
    */
-  constructor(color) {
+  constructor(color, spell = 'pull') {
+    this.spell = spell;
     this.marquee = createMarquee(color, PULL_FX.brightness);
     this.aim = createMarquee(color, PULL_FX.aimBrightness);
     this.pixels = createPixelBurst(PULL_PIXELS, PULL_FX.pixelSize, [color]);
@@ -53,7 +62,7 @@ export class PullView {
   sync(game, pos, alpha, dt) {
     this.time += dt;
     const { player } = game;
-    const { pull } = player;
+    const pull = player[this.spell];
     this.aim.visible = false;
     this.marquee.visible = false;
     const tick = pull ? pull.tick + alpha : 0;
@@ -67,21 +76,22 @@ export class PullView {
     placeMarquee(this.marquee, center, size * scale, this.time);
     const [dx, dz] = player.aim();
     const hands = [pos[0] + dx * ZAP_FX.reach, pos[1] + ZAP_FX.height, pos[2] + dz * ZAP_FX.reach];
-    placePixels(this.pixels, pullPixels(tick, center, hands), [0, 0, 0]);
+    placePixels(this.pixels, pullPixels(tick, center, hands, SPELLS[this.spell].out), [0, 0, 0]);
   }
 
   /**
-   * The aim marker, while Pull is selected and he could cast it: a dim
-   * marquee round the first crate or enemy in line that has somewhere to
-   * go; nothing without one.
+   * The aim marker, while the spell is selected and he could cast it: a
+   * dim marquee round the first crate or enemy in line far enough away to
+   * move; nothing without one.
    * @param {import('../game.js').Game} game
    * @param {number} alpha
    */
   placeAim(game, alpha) {
     const { player } = game;
-    if (player.spell !== SPELL || player.dead || game.transition) return;
-    const found = pullTarget(game, game.content.spells[SPELL].range);
-    if (!found || found.distance < 2) return;
+    if (player.spell !== this.spell || player.dead || game.transition) return;
+    const { find, nearest } = SPELLS[this.spell];
+    const found = find(game, game.content.spells[this.spell].range);
+    if (!found || found.distance < nearest) return;
     const { center, size } = pullBounds(found.object ?? found.enemy, alpha, PULL_FX.aimMarquee);
     placeMarquee(this.aim, center, size, this.time);
   }

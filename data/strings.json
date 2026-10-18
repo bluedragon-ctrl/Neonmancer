@@ -22,6 +22,8 @@
     "spell.fork": "FORK",
     "spell.scan": "SCAN",
     "spell.pull": "PULL",
+    "spell.shove": "SHOVE",
+    "spell.swap": "SWAP",
     "upgrade.zap_plus": "ZAP+",
     "upgrade.shield_plus": "SHIELD+",
     "hud.movementGrid": "GRID MOVE (G)",

@@ -61,6 +61,7 @@ import { warpFlash } from './warp-fx.js';
 import { createWarpTrail, dashPose, placeWarpTrail } from './warp-view.js';
 import { ClipView } from './clip-view.js';
 import { PullView } from './pull-view.js';
+import { SwapView } from './swap-view.js';
 import { arrivalLook, gatherPixels } from './boot-fx.js';
 
 /**
@@ -186,6 +187,10 @@ export class PlayerView {
     this.clip = null;
     /** Pull (D124): its beam and aim marker, made when he first knows the spell. */
     this.pull = null;
+    /** Shove (D260): Pull's beam run outwards, and its aim marker, made when he first knows the spell. */
+    this.shove = null;
+    /** Swap (D260): the swapped thing's stream and the aim marker, made when he first knows the spell. */
+    this.swap = null;
     /** Compile (D125): its bits and aim marker, made when he first knows the spell. */
     this.compile = null;
     /** Fork (D129): its bits and aim marker, made when he first knows the spell. */
@@ -194,7 +199,7 @@ export class PlayerView {
     this.boot = null;
   }
 
-  /** The afterimage of a Blink or Warp `spell`, made on first use. */
+  /** The afterimage of a Blink, Warp or Swap `spell`, made on first use. */
   trailView(spell) {
     let view = this.trails.get(spell);
     if (!view) {
@@ -309,6 +314,20 @@ export class PlayerView {
       this.group.add(this.pull.group);
     }
     this.pull?.sync(this.game, pos, alpha, dt);
+    // Shove: Pull's beam run outwards, and its aim marker (D260).
+    const shoveSpell = this.game.content.spells.shove;
+    if (!this.shove && shoveSpell && player.spells.includes('shove')) {
+      this.shove = new PullView(shoveSpell.color, 'shove');
+      this.group.add(this.shove.group);
+    }
+    this.shove?.sync(this.game, pos, alpha, dt);
+    // Swap: the stream of what he swapped, and its aim marker (D260); his own is the afterimage above.
+    const swapSpell = this.game.content.spells.swap;
+    if (!this.swap && swapSpell && player.spells.includes('swap')) {
+      this.swap = new SwapView(swapSpell.color);
+      this.group.add(this.swap.group);
+    }
+    this.swap?.sync(this.game, alpha, dt);
     // Compile: its bits and its aim marker (D125).
     const compileSpell = this.game.content.spells.compile;
     if (!this.compile && compileSpell && player.spells.includes('compile')) {

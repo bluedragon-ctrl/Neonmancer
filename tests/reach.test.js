@@ -7,7 +7,7 @@ import { describeNeeds, formatReach, formatRoom, freeJumpRooms, roomOfReport } f
 import { LIFT, gameData, roomFile, withNeighbours } from './helpers.js';
 
 /** Object types the tests use besides the crate. */
-const OBJECTS = { pad: { kind: 'pad', color: '#eef3ff' }, plate: { kind: 'plate', color: '#eef3ff' }, plate_heavy: { kind: 'plate', color: '#eef3ff', weight: 2 }, target: { kind: 'target', color: '#eef3ff' }, platform: LIFT };
+const OBJECTS = { crate_spiked: { extends: 'crate', topDamage: 2, vents: 'aurora' }, pad: { kind: 'pad', color: '#eef3ff' }, plate: { kind: 'plate', color: '#eef3ff' }, plate_heavy: { kind: 'plate', color: '#eef3ff', weight: 2 }, target: { kind: 'target', color: '#eef3ff' }, platform: LIFT };
 const TUNING = { scanRange: 6, blinkRange: 3 };
 const WEST = { id: 'west', side: '-x', at: 3 };
 const EAST = { id: 'east', side: '+x', at: 3 };
@@ -141,6 +141,28 @@ test('a crate is a step against a two-high wall, but not when it cannot be pushe
   // crate in a corner it cannot leave
   const stuck = { id: 'c', type: 'crate', at: [0, 0, 0] };
   assert.equal(reached(reach({ blocks: [wall(5, 2)], objects: [stuck], pickups: [far] })), false);
+});
+
+test('Shove pushes a crate behind a fence onto a plate; Pull cannot (D260)', () => {
+  // A fence across the room; the crate and the plate beyond it, the locked exit on his side.
+  const exits = [{ ...WEST, requires: [{ switch: '*' }] }];
+  const fenced = { exits, blocks: [{ type: 'fence', at: [5, 0, 0], to: [5, 3, 7] }], objects: [{ id: 'c', type: 'crate', at: [6, 0, 3] }, { id: 'p', type: 'plate', at: [7, 0, 3] }] };
+  assert.equal(reach(fenced).exits.west, false);
+  assert.equal(reach(fenced, ['pull']).exits.west, false);
+  assert.equal(reach(fenced, ['shove']).exits.west, true);
+  // A plain wall stops the beam.
+  const walled = { ...fenced, blocks: [wall(5, 4)] };
+  assert.equal(reach(walled, ['shove']).exits.west, false);
+});
+
+test('Swap puts him past a crate stream where the crate stood (D260)', () => {
+  const across = { blocks: [{ type: 'stream', at: [5, 0, 0], to: [5, 3, 7] }], objects: [{ id: 'c', type: 'crate', at: [7, 0, 3] }], pickups: [far] };
+  assert.equal(reached(reach(across)), false);
+  assert.equal(reached(reach(across, ['pull'])), false);
+  assert.equal(reached(reach(across, ['swap'])), true);
+  // Never with a spiked crate (D199).
+  const spiked = { ...across, objects: [{ id: 'c', type: 'crate_spiked', at: [7, 0, 3] }] };
+  assert.equal(reached(reach(spiked, ['swap'])), false);
 });
 
 test('Compile makes a step; Pull brings a crate across a pit; Cut & Paste moves one anywhere', () => {
