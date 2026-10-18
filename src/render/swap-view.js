@@ -1,5 +1,5 @@
 /**
- * three.js pieces of Swap (D260): the pixels of what he swapped streaming
+ * three.js pieces of Swap (D261): the pixels of what he swapped streaming
  * from where it stood into the cell he stood in (the shared stream, D127;
  * his own stream is his afterimage, Warp's, render/warp-view.js), and the
  * aim marker while the spell is selected: a dim marquee round what a swap

@@ -1,5 +1,5 @@
 /**
- * What Pull (D124) and Shove (D260) reach (pure, tested): the first crate
+ * What Pull (D124) and Shove (D261) reach (pure, tested): the first crate
  * or enemy in line the way the wizard aims. The line runs along his grid
  * axis (the larger part of his aim, as for Cut & Paste, D87), in his
  * column across it, at the height of his feet, from the cell right in
@@ -79,7 +79,7 @@ export function pullTarget(game, range) {
 }
 
 /**
- * What Shove would push (D260): the first crate or enemy in line
+ * What Shove would push (D261): the first crate or enemy in line
  * (lineTarget(), through fences), with `dir` the way it goes, away from
  * the wizard (his axis).
  * @param {import('../game.js').Game} game

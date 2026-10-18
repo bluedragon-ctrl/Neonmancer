@@ -7,7 +7,7 @@
  * the target and rides along with it. While the spell is selected, a dim
  * marquee marks what a pull would take (the aim marker).
  *
- * Shove (D260) is the same beam run outwards in its own color: rings leave
+ * Shove (D261) is the same beam run outwards in its own color: rings leave
  * his hands small and grow as they flow into what he shoves.
  */
 import { PLAYER } from '../entities/player.js';
@@ -70,7 +70,7 @@ const RING = [
  * @param {number} tick may be fractional
  * @param {number[]} target the middle of the target now
  * @param {number[]} hands where his hands are now
- * @param {boolean} [out] Shove (D260): rings leave his hands and grow towards the target
+ * @param {boolean} [out] Shove (D261): rings leave his hands and grow towards the target
  * @returns {{ offset: number[], scale: number }[]} world positions, always
  *   PULL_PIXELS of them (scale 0: not shown)
  */

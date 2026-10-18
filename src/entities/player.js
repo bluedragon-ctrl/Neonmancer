@@ -84,7 +84,7 @@ export const PLAYER = {
   warpTicks: 24,
   /** Ticks the effect of a cut or a paste lasts (D87, render/clip-fx.js); it doesn't hold him up. */
   clipTicks: 40,
-  /** Ticks the beam of a pull or a shove lasts (D124, D260, render/pull-fx.js): about as long as the target slides. */
+  /** Ticks the beam of a pull or a shove lasts (D124, D261, render/pull-fx.js): about as long as the target slides. */
   pullTicks: 24,
   /** Ticks the bits of a compile fly (D125, render/compile-fx.js). */
   compileTicks: 18,
@@ -201,10 +201,10 @@ export class Player {
     this.clip = null;
     /** The last pull (D124) while its beam lasts, or null: { target, tick }, tick counting up to PLAYER.pullTicks. */
     this.pull = null;
-    /** The last shove (D260) while its beam lasts, or null: { target, tick }, tick counting up to PLAYER.pullTicks. */
+    /** The last shove (D261) while its beam lasts, or null: { target, tick }, tick counting up to PLAYER.pullTicks. */
     this.shove = null;
     /**
-     * The last swap (D260) while the target's pixels stream, or null:
+     * The last swap (D261) while the target's pixels stream, or null:
      * { target, from, to, tick }, its cells before and after, tick counting
      * up to PLAYER.warpTicks (his own afterimage is `warp`, spell 'swap').
      */
@@ -344,7 +344,7 @@ export class Player {
   }
 
   /**
-   * Teleport to `to` with a Blink, Warp (D86) or Swap (D260): he keeps his fall or jump
+   * Teleport to `to` with a Blink, Warp (D86) or Swap (D261): he keeps his fall or jump
    * and facing; drawing doesn't slide him there (his previous position
    * moves along), the afterimage shows where he came from.
    * @param {'blink'|'warp'|'swap'} spell

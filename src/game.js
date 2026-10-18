@@ -54,7 +54,7 @@ export const WATCHDOG = { warnTicks: 5 * 60 };
  * @property {string} [spell] the spell cast, failed, fizzled (nowhere to
  *   go, energy kept) or selected (cast, deny, fizzle, spell); the teleport (warp)
  * @property {number[]} [from] where a Blink or Warp started (warp)
- * @property {number[]} [to] where it ended (warp); the cell a swapped crate or enemy went to (swap, D260)
+ * @property {number[]} [to] where it ended (warp); the cell a swapped crate or enemy went to (swap, D261)
  * @property {number[]} [cell] the cell a crate or enemy was cut from or
  *   pasted into, pulled, shoved or swapped from or compiled into (cut, paste, pull, shove, swap, compile; the enemy's own cell, rounded down, for a
  *   frozen one stopped mid-step); the fake block a scan revealed (reveal, D128)

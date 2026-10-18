@@ -50,7 +50,7 @@ const crate = (at, id = 'box', type = 'crate') => ({ id, type, at });
 /** A wall of `type` blocks across the room at x, the full height. */
 const wall = (x, type) => ({ type, at: [x, 0, 0], to: [x, 3, 7] });
 
-// Shove (D260)
+// Shove (D261)
 
 test('Shove slides the first crate in line one cell away from him for 15 energy', () => {
   const game = gameWith('shove', { objects: [crate([5, 0, 3])] });
@@ -125,7 +125,7 @@ test('the shove beam runs out of his hands and grows into the target', () => {
   assert.ok(late.length > 0 && spread(late) > spread(first), 'bigger near the target');
 });
 
-// Swap (D260)
+// Swap (D261)
 
 test('Swap: he and the first crate in line trade places for 25 energy', () => {
   const game = gameWith('swap', { objects: [crate([5, 0, 3])] });

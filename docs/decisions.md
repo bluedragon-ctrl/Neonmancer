@@ -3413,7 +3413,7 @@ Replaces D6 (connections listed in `world.json`); amends D67 and D75
 could not drift apart from the map), and one-way exits for drops and
 shortcuts home, guarded so they never trap him.
 
-### D260 — 2026-10-18 — Two spells: Shove and Swap
+### D261 — 2026-10-18 — Two spells: Shove and Swap
 Amends D88 (the roster: 13 spells now, 3 slots spare).
 - **Shove** (slot 11, salmon `#ff9e7a`, 15 energy, range 6): Pull's
   opposite. The first crate or enemy in line slides one cell away from

@@ -187,9 +187,9 @@ export class PlayerView {
     this.clip = null;
     /** Pull (D124): its beam and aim marker, made when he first knows the spell. */
     this.pull = null;
-    /** Shove (D260): Pull's beam run outwards, and its aim marker, made when he first knows the spell. */
+    /** Shove (D261): Pull's beam run outwards, and its aim marker, made when he first knows the spell. */
     this.shove = null;
-    /** Swap (D260): the swapped thing's stream and the aim marker, made when he first knows the spell. */
+    /** Swap (D261): the swapped thing's stream and the aim marker, made when he first knows the spell. */
     this.swap = null;
     /** Compile (D125): its bits and aim marker, made when he first knows the spell. */
     this.compile = null;
@@ -314,14 +314,14 @@ export class PlayerView {
       this.group.add(this.pull.group);
     }
     this.pull?.sync(this.game, pos, alpha, dt);
-    // Shove: Pull's beam run outwards, and its aim marker (D260).
+    // Shove: Pull's beam run outwards, and its aim marker (D261).
     const shoveSpell = this.game.content.spells.shove;
     if (!this.shove && shoveSpell && player.spells.includes('shove')) {
       this.shove = new PullView(shoveSpell.color, 'shove');
       this.group.add(this.shove.group);
     }
     this.shove?.sync(this.game, pos, alpha, dt);
-    // Swap: the stream of what he swapped, and its aim marker (D260); his own is the afterimage above.
+    // Swap: the stream of what he swapped, and its aim marker (D261); his own is the afterimage above.
     const swapSpell = this.game.content.spells.swap;
     if (!this.swap && swapSpell && player.spells.includes('swap')) {
       this.swap = new SwapView(swapSpell.color);

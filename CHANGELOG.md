@@ -9,7 +9,7 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
-- Two spells, not placed in any room yet (D260): **Shove** (slot 11)
+- Two spells, not placed in any room yet (D261): **Shove** (slot 11)
   pushes the first crate or enemy in line one cell away, its beam passing
   fences; **Swap** (slot 12) trades places with the first crate or frozen
   enemy in line. Both have data disks, sounds, the reachability checker

@@ -13,7 +13,7 @@
  * Pushable crates are searched as a puzzle: every position the crates can
  * be pushed (or pulled, shoved, swapped, or cut and pasted) into is a
  * configuration, each with its own flood; a configuration is the crates
- * plus the holes they plugged, and after a swap (D260) the cell the swap
+ * plus the holes they plugged, and after a swap (D261) the cell the swap
  * put him in, which his flood starts from too. The search is cut off at MAX_CONFIGS configurations. A room
  * resets on death, so what he can reach in any configuration counts, but
  * what needs two things at once (a locked exit open and the way to it)
@@ -509,7 +509,7 @@ export class RoomModel {
    * @param {number[]} crates cell indices
    * @param {Set<number>} plugged hole tiles
    * @param {Set<number>} [spiked] the cells of the crates with a spiked top, among `crates`
-   * @param {number} [seed] a cell a swap put him in (D260): his flood starts there too
+   * @param {number} [seed] a cell a swap put him in (D261): his flood starts there too
    */
   config(crates, plugged, spiked = new Set(), seed = undefined) {
     const sorted = (set) => [...set].sort((a, b) => a - b);
@@ -520,7 +520,7 @@ export class RoomModel {
 
   /**
    * Can a beam (Pull, Shove, Swap) pass the cell: open for a crate, or with
-   * `sight` (Shove, D260) a see-through block (a fence, D167)?
+   * `sight` (Shove, D261) a see-through block (a fence, D167)?
    */
   beamOpen(x, y, z, cfg, sight = false) {
     if (!this.blockedCrate(x, y, z, cfg)) return true;
@@ -578,12 +578,12 @@ export class RoomModel {
           const pulled = this.crateStep(x, y, z, -dx, -dz, cfg);
           if (pulled && this.beamFrom(x, y, z, dx, dz, 2, cfg, stands)) move(c, ...pulled);
         }
-        // Shove (D260): he stands in line behind it, the beam passing fences, and the cell beyond is free.
+        // Shove (D261): he stands in line behind it, the beam passing fences, and the cell beyond is free.
         if (abilities.has('shove') && !pushed) {
           const shoved = this.crateStep(x, y, z, dx, dz, cfg);
           if (shoved && this.beamFrom(x, y, z, dx, dz, 1, cfg, stands, true)) move(c, ...shoved);
         }
-        // Swap (D260): from any cell he stands on in line (level, the beam open), he and the
+        // Swap (D261): from any cell he stands on in line (level, the beam open), he and the
         // crate trade places: it falls from his cell, he stands in its cell. Never a spiked one.
         if (abilities.has('swap') && !cfg.spiked.has(c)) {
           const probe = this.config(cfg.crates.filter((o) => o !== c), cfg.plugged, cfg.spiked);
@@ -851,7 +851,7 @@ export function standsIn(model, cfg, starts) {
   // Gates follow what he can switch from where he stands, which can open more of the room (D140).
   model.resetFrozen();
   model.setGates(cfg, new Set());
-  // After a swap (D260) he is where it put him, as well as anywhere he could get from the start.
+  // After a swap (D261) he is where it put him, as well as anywhere he could get from the start.
   if (cfg.seed !== undefined) starts = [...starts, model.cell(cfg.seed)];
   let stands = model.flood(starts, cfg);
   // Gates and pushed frozen enemies open more of the room, which may open more again.

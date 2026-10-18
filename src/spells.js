@@ -42,9 +42,9 @@ const SPELL_EFFECTS = {
   compile: (game, spell) => compile(game, spell),
   /** Pull the first crate or enemy in line one cell towards him (D124). */
   pull: (game, spell) => pull(game, spell),
-  /** Shove the first crate or enemy in line one cell away from him, through fences (D260). */
+  /** Shove the first crate or enemy in line one cell away from him, through fences (D261). */
   shove: (game, spell) => shove(game, spell),
-  /** Trade places with the first crate or frozen enemy in line (D260). */
+  /** Trade places with the first crate or frozen enemy in line (D261). */
   swap: (game, spell) => swap(game, spell),
   /** A hologram of him in the free cell in front of him, for a while: enemies go for it (D129). */
   fork: (game, spell) => fork(game, spell),
@@ -224,7 +224,7 @@ function pull(game, { range }) {
 }
 
 /**
- * Shove (D260): Pull's opposite. The first crate or enemy in line the way
+ * Shove (D261): Pull's opposite. The first crate or enemy in line the way
  * he aims, within the spell's `range`, through fences (entities/pull.js
  * shoveTarget()), slides one cell away from him: a crate as if pushed
  * from behind (Pushable.push()), an enemy over anything (Enemy.pull()),
@@ -251,7 +251,7 @@ function shove(game, { range }) {
 }
 
 /**
- * Swap (D260): he and the first crate or frozen enemy in line the way he
+ * Swap (D261): he and the first crate or frozen enemy in line the way he
  * aims trade places (entities/swap.js swapTarget()). It lands in the cell
  * he stood in and falls from there (into a hole, it plugs it); he stands
  * where it stood. Both jump at once; pixels stream the way each went

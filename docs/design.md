@@ -1190,7 +1190,7 @@ and enemies, closer.
 
 ## Shove
 
-Pull's opposite (D260), from a data disk (slot 11); not placed in any
+Pull's opposite (D261), from a data disk (slot 11); not placed in any
 room yet. A push from a distance, and the one way to move a crate he
 can't walk up to.
 
@@ -1220,7 +1220,7 @@ can't walk up to.
 
 ## Swap
 
-He and a crate trade places (D260), from a data disk (slot 12); not
+He and a crate trade places (D261), from a data disk (slot 12); not
 placed in any room yet.
 
 - **The target:** the first crate or frozen enemy in Pull's line (a fence
@@ -1506,8 +1506,8 @@ a need for.
 | Fork | 8 | Hologram decoy for 10 s: holds plates, draws enemies | Phase 4 (D129) |
 | Scan | 9 | A wave that reveals fake blocks (and pickups inside them) and hidden exits | Phase 4 (D128) |
 | Pull | 10 | Pulls the first crate or enemy in line one tile towards the wizard | Phase 4 (D124) |
-| Shove | 11 | Shoves the first crate or enemy in line one tile away, through fences | Phase 5 (D260) |
-| Swap | 12 | Trades places with the first crate or frozen enemy in line | Phase 5 (D260) |
+| Shove | 11 | Shoves the first crate or enemy in line one tile away, through fences | Phase 5 (D261) |
+| Swap | 12 | Trades places with the first crate or frozen enemy in line | Phase 5 (D261) |
 
 - **Upgrades:** Zap+ and Shield+, built in Phase 3 (the double jump
   was removed, D216; see

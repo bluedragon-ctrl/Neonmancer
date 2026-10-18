@@ -2,7 +2,7 @@
  * three.js pieces of Pull (D124; timing and shapes in pull-fx.js): the
  * beam of pixel rings flowing from what he pulls into his hands, the
  * marquee riding on it, and the aim marker while the spell is selected.
- * Shove (D260) uses it too, with the beam flowing out of his hands.
+ * Shove (D261) uses it too, with the beam flowing out of his hands.
  */
 import { Group } from 'three';
 import { ENEMY, Enemy } from '../entities/enemy.js';

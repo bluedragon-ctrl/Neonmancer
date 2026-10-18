@@ -373,12 +373,12 @@ const ALL_ASSETS = [
   // his hands and it slides one cell towards him (its disk: disk-pull).
   { label: 'pull', group: 'pull', span: 5, spin: false, build: () => buildPull('crate') },
   { label: 'pull-enemy', group: 'pull', span: 5, spin: false, build: () => buildPull('bug') },
-  // Shove (D260): Pull run the other way, in its own color: rings of pixels
+  // Shove (D261): Pull run the other way, in its own color: rings of pixels
   // leave his hands small and grow into the crate (or bug), which slides one
   // cell away from him (its disk: disk-shove).
   { label: 'shove', group: 'shove', span: 5, spin: false, build: () => buildPull('crate', 'shove') },
   { label: 'shove-enemy', group: 'shove', span: 5, spin: false, build: () => buildPull('bug', 'shove') },
-  // Swap (D260): the aim marker on the crate three cells ahead; he casts,
+  // Swap (D261): the aim marker on the crate three cells ahead; he casts,
   // he and the crate trade places, each streaming its pixels to where the
   // other stood; he turns and swaps back (its disk: disk-swap).
   { label: 'swap', span: 5, spin: false, build: buildSwap },
@@ -2792,7 +2792,7 @@ function buildCutPaste(kind) {
 
 /**
  * Pull (D124) in a loop: the wizard (left, facing +x) pulls the crate or
- * bug three cells ahead one cell towards him; or Shove (D260): two cells
+ * bug three cells ahead one cell towards him; or Shove (D261): two cells
  * ahead, one cell away from him.
  * @param {'crate'|'bug'} kind
  * @param {'pull'|'shove'} [spell]
@@ -2849,7 +2849,7 @@ function buildPull(kind, spell = 'pull') {
 }
 
 /**
- * Swap (D260) in a loop: the wizard (left, facing +x) and the crate three
+ * Swap (D261) in a loop: the wizard (left, facing +x) and the crate three
  * cells ahead trade places; he turns round and swaps back.
  */
 function buildSwap() {

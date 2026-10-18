@@ -287,7 +287,7 @@ Added in Phase 4 (the roster, D88):
 - **Pull** — pulls the first crate or enemy in line (6 cells) one tile
   towards the wizard, an enemy even into a hole (D89, D124; built)
 
-Added in Phase 5 (D260; built, not placed in any room yet):
+Added in Phase 5 (D261; built, not placed in any room yet):
 - **Shove** — Pull's opposite: the first crate or enemy in line one tile
   away, its beam passing fences (a crate behind a fence onto a plate)
 - **Swap** — the wizard and the first crate or frozen enemy in line

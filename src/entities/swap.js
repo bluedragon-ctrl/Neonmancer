@@ -1,5 +1,5 @@
 /**
- * Where Swap works (D260; pure, tested): the wizard and the first crate or
+ * Where Swap works (D261; pure, tested): the wizard and the first crate or
  * frozen enemy in line the way he aims trade places. The line is Pull's
  * (entities/pull.js lineTarget(): his grid axis, at the height of his
  * feet, up to the spell's range; a crate stream lets it through, a fence

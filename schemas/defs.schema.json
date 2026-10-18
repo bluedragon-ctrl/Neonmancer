@@ -187,7 +187,7 @@
           }
         },
         "shove": {
-          "description": "Shove the first crate or enemy in line the way he aims, at the height of his feet, one cell away from him (D260): Pull's opposite. A crate as if he pushed it from behind, an enemy over anything, so it may drop into a hole and pop; shoving an enemy provokes it. Unlike Pull's, the line passes see-through blocks (fences, D167) as a bolt does, and crate streams as Pull's does. A block, the room's side or another body in the way, or a target that can't move (a load on the crate, something in the cell beyond): it fizzles and costs nothing.",
+          "description": "Shove the first crate or enemy in line the way he aims, at the height of his feet, one cell away from him (D261): Pull's opposite. A crate as if he pushed it from behind, an enemy over anything, so it may drop into a hole and pop; shoving an enemy provokes it. Unlike Pull's, the line passes see-through blocks (fences, D167) as a bolt does, and crate streams as Pull's does. A block, the room's side or another body in the way, or a target that can't move (a load on the crate, something in the cell beyond): it fizzles and costs nothing.",
           "type": "object",
           "required": ["slot", "color", "cost", "cooldown", "range"],
           "additionalProperties": false,
@@ -200,7 +200,7 @@
           }
         },
         "swap": {
-          "description": "Trade places with the first crate or frozen enemy in line the way he aims, at the height of his feet (D260): he stands where it stood, it lies in the cell he stood in and falls from there. Same level only, standing on the ground; never a spiked crate or one with a load. Its cell needs room for his body, his cell room for it (no block, body or pickup). Otherwise it fizzles and costs nothing.",
+          "description": "Trade places with the first crate or frozen enemy in line the way he aims, at the height of his feet (D261): he stands where it stood, it lies in the cell he stood in and falls from there. Same level only, standing on the ground; never a spiked crate or one with a load. Its cell needs room for his body, his cell room for it (no block, body or pickup). Otherwise it fizzles and costs nothing.",
           "type": "object",
           "required": ["slot", "color", "cost", "cooldown", "range"],
           "additionalProperties": false,

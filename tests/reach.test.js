@@ -143,7 +143,7 @@ test('a crate is a step against a two-high wall, but not when it cannot be pushe
   assert.equal(reached(reach({ blocks: [wall(5, 2)], objects: [stuck], pickups: [far] })), false);
 });
 
-test('Shove pushes a crate behind a fence onto a plate; Pull cannot (D260)', () => {
+test('Shove pushes a crate behind a fence onto a plate; Pull cannot (D261)', () => {
   // A fence across the room; the crate and the plate beyond it, the locked exit on his side.
   const exits = [{ ...WEST, requires: [{ switch: '*' }] }];
   const fenced = { exits, blocks: [{ type: 'fence', at: [5, 0, 0], to: [5, 3, 7] }], objects: [{ id: 'c', type: 'crate', at: [6, 0, 3] }, { id: 'p', type: 'plate', at: [7, 0, 3] }] };
@@ -155,7 +155,7 @@ test('Shove pushes a crate behind a fence onto a plate; Pull cannot (D260)', () 
   assert.equal(reach(walled, ['shove']).exits.west, false);
 });
 
-test('Swap puts him past a crate stream where the crate stood (D260)', () => {
+test('Swap puts him past a crate stream where the crate stood (D261)', () => {
   const across = { blocks: [{ type: 'stream', at: [5, 0, 0], to: [5, 3, 7] }], objects: [{ id: 'c', type: 'crate', at: [7, 0, 3] }], pickups: [far] };
   assert.equal(reached(reach(across)), false);
   assert.equal(reached(reach(across, ['pull'])), false);
