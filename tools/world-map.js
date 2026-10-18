@@ -27,6 +27,7 @@ import { validateData } from '../src/data/validate.js';
 import { MapEdit } from '../src/editor/map-edit.js';
 import { DATA_SAVED_EVENT, saveFiles } from '../src/editor/save.js';
 import { BUFF_COLORS, SECRET_COLOR } from '../src/entities/pickup.js';
+import { partnerOf } from '../src/world/links.js';
 import { mapKey, mapWarnings, roomDistances } from '../src/world/map.js';
 import { pickupReport } from '../src/world/pickup-report.js';
 import { analyzeWorld } from '../src/world/reach-world.js';
@@ -103,7 +104,7 @@ function wrap(text, max = 16) {
 
 const biomes = DATA_FILES['biomes.json']?.biomes ?? {};
 /** The world as edited: rooms, positions and connections (null without valid data). */
-const edit = SCHEMA_ERRORS.length === 0 && DATA_FILES['world.json']?.connections ? new MapEdit(DATA_FILES) : null;
+const edit = SCHEMA_ERRORS.length === 0 && DATA_FILES['world.json']?.positions ? new MapEdit(DATA_FILES) : null;
 
 const state = {
   tool: 'move',
@@ -186,7 +187,7 @@ function changesText() {
   if (added > 0) parts.push(`${added} new`);
   if (removed > 0) parts.push(`${removed} removed`);
   if (changed > 0) parts.push(`${changed} changed`);
-  else if (links) parts.push('connections');
+  else if (links) parts.push('start');
   return parts.length > 0 ? `Save: ${parts.join(', ')}` : 'Saved';
 }
 
@@ -215,6 +216,28 @@ function exitAnchor(roomId, exitId, center) {
 }
 
 /** Curve between two exit anchors, leaving each along its side's direction. */
+/** Is the exit a way in only (D259)? */
+function isOneWay(roomId, exitId) {
+  return Boolean(edit.rooms.get(roomId)?.exits?.find((exit) => exit.id === exitId)?.oneWay);
+}
+
+/** SVG points of a chevron halfway along linkPath(a, b), pointing from a to b. */
+function chevron([a, b]) {
+  const reach = Math.max(CELL - NODE, Math.hypot(b.point[0] - a.point[0], b.point[1] - a.point[1]) * 0.35);
+  const c1 = [a.point[0] + a.dir[0] * reach, a.point[1] + a.dir[1] * reach];
+  const c2 = [b.point[0] + b.dir[0] * reach, b.point[1] + b.dir[1] * reach];
+  // The curve's middle, and its direction there.
+  const mid = [0, 1].map((i) => (a.point[i] + 3 * c1[i] + 3 * c2[i] + b.point[i]) / 8);
+  const d = [0, 1].map((i) => b.point[i] + c2[i] - c1[i] - a.point[i]);
+  const length = Math.hypot(d[0], d[1]) || 1;
+  const [ux, uz] = [(d[0] / length) * 7, (d[1] / length) * 7];
+  return [
+    [mid[0] - ux - uz, mid[1] - uz + ux],
+    [mid[0] + ux, mid[1] + uz],
+    [mid[0] - ux + uz, mid[1] - uz - ux],
+  ].map((p) => p.join(',')).join(' ');
+}
+
 function linkPath(a, b) {
   const reach = Math.max(CELL - NODE, Math.hypot(b.point[0] - a.point[0], b.point[1] - a.point[1]) * 0.35);
   const c1 = [a.point[0] + a.dir[0] * reach, a.point[1] + a.dir[1] * reach];
@@ -265,15 +288,16 @@ function draw() {
     if (!edit.positions[roomA] || !edit.positions[roomB]) return;
     const a = exitAnchor(roomA, exitA, centerOf(roomA));
     const b = exitAnchor(roomB, exitB, centerOf(roomB));
-    // Neighbours that way round on the map: a plain line; otherwise dashed.
-    const step = [edit.positions[roomB][0] - edit.positions[roomA][0], edit.positions[roomB][1] - edit.positions[roomA][1]];
-    const across = step[0] !== a.dir[0] || step[1] !== a.dir[1];
+    // A one-way pair (D259): dashed, with a chevron towards the room he can't leave that way.
+    const into = isOneWay(roomA, exitA) ? 'a' : isOneWay(roomB, exitB) ? 'b' : null;
     const d = linkPath(a, b);
     const group = svg('g', { class: 'link-group', 'data-link': index });
     // A wide invisible stroke to click (Delete tool).
     const hit = svg('path', { class: 'link-hit', d });
-    hit.append(svg('title', {}, `${refA} ↔ ${refB}`));
-    group.append(svg('path', { class: `link${across ? ' across' : ''}`, d }), hit);
+    hit.append(svg('title', {}, into === null ? `${refA} ↔ ${refB}` : into === 'b' ? `${refA} → ${refB} (one-way)` : `${refB} → ${refA} (one-way)`));
+    group.append(svg('path', { class: `link${into ? ' one-way' : ''}`, d }));
+    if (into) group.append(svg('polyline', { class: 'link one-way-arrow', points: chevron(into === 'b' ? [a, b] : [b, a]) }));
+    group.append(hit);
     links.append(group);
   });
   svgEl.append(links);
@@ -284,7 +308,7 @@ function draw() {
     svgEl.append(svg('line', { class: 'link-draft', x1, y1: z1, x2: state.drag.point[0], y2: state.drag.point[1] }));
   }
 
-  const { unreachable } = mapWarnings(edit.world, edit.rooms.keys());
+  const { unreachable } = mapWarnings({ ...edit.world, connections: edit.connections }, edit.rooms.keys());
   const unsaved = unsavedRooms();
   for (const id of edit.rooms.keys()) svgEl.append(roomNode(id, { unreachable: unreachable.includes(id), moved: unsaved.has(id) }));
 
@@ -347,12 +371,13 @@ function exitMark(roomId, exit) {
   // Long along the side, short across it.
   const [w, h] = dir[0] !== 0 ? [EXIT_MARK[1], EXIT_MARK[0]] : EXIT_MARK;
   const [hw, hh] = dir[0] !== 0 ? [EXIT_HIT[1], EXIT_HIT[0]] : EXIT_HIT;
-  const loose = !edit.connected(ref);
+  const partner = partnerOf(edit.connections, ref);
+  const loose = partner === null;
   const g = svg('g', { class: `exit-mark${loose ? ' loose' : ''}`, 'data-exit': ref });
   g.append(
     svg('rect', { class: 'exit-hit', x: point[0] - hw / 2, y: point[1] - hh / 2, width: hw, height: hh }),
     svg('rect', { class: 'exit', x: point[0] - w / 2, y: point[1] - h / 2, width: w, height: h }),
-    svg('title', {}, `${ref} (${exit.side}, at ${exit.at})${loose ? ' — not connected' : ` ↔ ${edit.connections.find((p) => p.includes(ref)).find((r) => r !== ref)}`}`),
+    svg('title', {}, `${ref} (${exit.side}, at ${exit.at})${loose ? ' — leads nowhere' : ` ↔ ${partner}`}${exit.oneWay ? ' (one-way: a way in only)' : ''}`),
   );
   return g;
 }
@@ -363,7 +388,7 @@ function drawPanel() {
   if (!edit) {
     const list = html('ul');
     for (const error of SCHEMA_ERRORS) list.append(html('li', 'error', error));
-    if (list.children.length === 0) list.append(html('li', 'error', 'world.json has no connections list.'));
+    if (list.children.length === 0) list.append(html('li', 'error', 'world.json has no positions.'));
     panelEl.append(list);
     return;
   }
@@ -398,8 +423,9 @@ function drawPanel() {
 
   const result = currentChecks();
   const rooms = edit.rooms;
-  const distances = roomDistances(world.start, world.connections);
-  const { unreachable } = mapWarnings(world, edit.rooms.keys());
+  const connections = edit.connections;
+  const distances = roomDistances(world.start, connections);
+  const { unreachable } = mapWarnings({ ...world, connections }, edit.rooms.keys());
 
   panelEl.append(html('h2', '', 'CHECKS'));
   const list = html('ul');

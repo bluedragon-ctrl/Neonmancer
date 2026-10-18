@@ -464,7 +464,11 @@ Edit existing files with small text edits, not a JSON dump.
 2. **Gates look like gates** (a too-high ledge, a locked door): he should
    come back later, not think it is broken (D67).
 3. **He can always leave the way he came** with what he has; a room needn't
-   be solvable on first arrival.
+   be solvable on first arrival. Two-way is the default; a one-way exit
+   (`"oneWay": true` on the arriving end, D259) is a way in only, for a
+   drop into a pit room or a one-way shortcut home: then he must be able
+   to leave another way with what he has on arrival or finds in the room
+   (the checker makes it an error).
 4. **No soft-locks.** Every one-shot change (collapse without regrow, crate in
    a corner or hole, spent Compile/Fork) leaves a way to an exit or a way to
    die and reset. `reset` is safe: not on a collapsing block, not under a
@@ -610,11 +614,13 @@ the entrance: is every mechanic and every crate visible, does anything tall
 hide a cell?
 
 ## Wiring
-- A door needs the room's exit, the neighbour's matching exit (check the
-  neighbour is not authored), a `"room.exit"` pair in `world.json`
-  `connections` and the room in `positions` (map cells; neighbours one cell
-  apart, the side matching the direction: -x is west, -z is north).
-  Validation fails until every exit is connected and the room has a position.
+- An exit leads to the room in the next map cell in its direction (D259;
+  `positions` in `world.json`: +x is east, +z is south), into that room's
+  exit in the opposite side, equally wide; several exits in one side pair
+  up in order along it (by `at`, then `y`). A door needs the room's exit,
+  the neighbour's matching exit (check the neighbour is not authored) and
+  the room's map cell; nothing else lists the pair. Validation fails while
+  an exit leads nowhere.
 - Keep exits the author has left free for later wings (decisions name them).
 
 ## Examples (copy their shape, not their cells)

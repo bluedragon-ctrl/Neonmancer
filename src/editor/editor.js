@@ -5,8 +5,9 @@
  * edited room from its start point (unsaved edits included), so editing
  * and testing take turns without a reload. Edits are kept per room until
  * the page is closed; the panel switches between rooms and makes new ones.
- * Exit connections are edited in world.json and screen texts in lore.json
- * (D118); both are saved with the rooms. Enemies are placed from their
+ * An exit leads to the room in the next map cell (D259); a new room's map
+ * cell goes to world.json and screen texts to lore.json (D118), both saved
+ * with the rooms. Enemies are placed from their
  * templates (defs.json, D119), which the room editor doesn't change.
  *
  * The editor reads the mouse and its own keys directly, not through action
@@ -29,7 +30,8 @@ import { isSwitchGate, linksAt, poweredBy, poweredThings, roomSwitches, switchTi
 import { RoomEdit, newRoom, resizeText, roomIdProblem, sizeProblem } from './room-edit.js';
 import { downloadFile, saveFiles } from './save.js';
 import { newText, pickedScreen, setScreenText, textUsers, updateText } from './texts.js';
-import { WorldEdit, linkChoices } from './world-edit.js';
+import { WorldEdit } from './world-edit.js';
+import { deriveConnections, partnerOf } from '../world/links.js';
 import { pickupReport } from '../world/pickup-report.js';
 import { pickupBit } from '../world/progress.js';
 import { SWITCH_KINDS } from '../entities/switch.js';
@@ -77,12 +79,12 @@ export class Editor {
     this.canSave = canSave;
     this.onRoom = onRoom;
     this.active = false;
-    /** world.json being edited: the exits' connections. */
+    /** world.json being edited: a new room's map cell. */
     this.world = new WorldEdit(files['world.json']);
     /** lore.json being edited (screen texts, D118); a new file if there is none yet. */
     this.lore = new LoreEdit(files['lore.json']);
     /** The files rooms share, by name without .json: saved and exported with the rooms. */
-    this.shared = { world: this.world, lore: this.lore };
+    this.shared = { lore: this.lore };
     /** Edited rooms by id, kept while the page is open. */
     this.sessions = new Map();
     /** @type {RoomEdit|null} the room being edited */
@@ -241,7 +243,7 @@ export class Editor {
 
   /** The edit of a room, started the first time it is opened. */
   session(id) {
-    if (!this.sessions.has(id)) this.sessions.set(id, new RoomEdit(this.files[`rooms/${id}.json`], { world: this.world, lore: this.lore }));
+    if (!this.sessions.has(id)) this.sessions.set(id, new RoomEdit(this.files[`rooms/${id}.json`], { lore: this.lore }));
     return this.sessions.get(id);
   }
 
@@ -267,22 +269,21 @@ export class Editor {
     }
     const data = newRoom(id, this.edit.data.biome);
     this.world.place(id, this.edit.id);
-    this.sessions.set(id, new RoomEdit(data, { world: this.world, lore: this.lore, fresh: true }));
+    this.sessions.set(id, new RoomEdit(data, { lore: this.lore, fresh: true }));
     this.game.content.rooms.set(id, data);
     this.openRoom(id);
     this.panel.newRoomInput.value = '';
-    this.status = `New room ${id}: give it an exit (Exit tool, ${toolKey('exit')}) and connect it, then save.`;
+    this.status = `New room ${id}: give it an exit (Exit tool, ${toolKey('exit')}) facing ${this.lastRoom}, then save; move it on the world map if it should sit elsewhere.`;
     this.refresh();
   }
 
-  /** Throw away the new room being edited (never saved), with its connections, and go back. */
+  /** Throw away the new room being edited (never saved), with its map cell, and go back. */
   discardRoom() {
     const { id, fresh } = this.edit;
     if (!fresh) return;
     this.edit.end();
     this.sessions.delete(id);
     this.game.content.rooms.delete(id);
-    this.world.setLinks(id, []);
     this.world.unplace(id);
     const back = this.lastRoom && this.lastRoom !== id && this.roomData(this.lastRoom) ? this.lastRoom : this.game.content.world.start;
     this.edit = null;
@@ -313,6 +314,11 @@ export class Editor {
   /** A room's data as edited so far. */
   roomData(id) {
     return this.sessions.get(id)?.data ?? this.game.content.rooms.get(id);
+  }
+
+  /** The exit pairs as the edited rooms and the map stand now (D259). */
+  connections() {
+    return deriveConnections(this.world.data.positions ?? {}, this.roomIds().map((id) => [id, this.roomData(id) ?? {}])).pairs;
   }
 
   /** Every data file with the edits in: what saving would write. */
@@ -352,7 +358,9 @@ export class Editor {
     this.errors = validateData(this.editedFiles());
     this.game.content.lore = this.lore.texts;
     this.game.content.rooms.set(data.id, data);
-    this.game.content.links = linkMap(this.world.connections);
+    const connections = this.connections();
+    this.game.content.links = linkMap(connections);
+    this.game.content.world = { ...this.game.content.world, positions: this.world.data.positions, connections };
     try {
       this.game.enterRoom(data.id);
       this.onRoom({ cutAbove: this.cutLayer, editing: true });
@@ -489,9 +497,7 @@ export class Editor {
       this.refresh();
       return;
     }
-    if (field === 'link') {
-      this.change(() => this.edit.linkExit(exit.id, value));
-    } else if (field === 'locked' || field === 'hidden' || field === 'switches') {
+    if (field === 'locked' || field === 'hidden' || field === 'switches' || field === 'oneWay') {
       this.change(() => this.edit.updateExit(exit.id, { [field]: value }));
     } else if (field === 'access') {
       this.change(() => this.edit.updateExit(exit.id, { access: Math.min(MAX_ACCESS_LEVEL, Math.max(0, Math.round(value))) }));
@@ -522,7 +528,7 @@ export class Editor {
 
   /** The exit got `width`: the exit it leads to gets it too (an undo step of that room). */
   matchPartnerWidth(exit, width) {
-    const partner = this.world.partner(`${this.edit.id}.${exit.id}`);
+    const partner = partnerOf(this.connections(), `${this.edit.id}.${exit.id}`);
     if (!partner) return;
     const [room, id] = partner.split('.');
     const other = this.session(room);
@@ -589,7 +595,8 @@ export class Editor {
 
   /**
    * Another page (the monster editor, the world map) saved data files: take
-   * the enemy templates, and the rooms this page has no unsaved edits of.
+   * the enemy templates, the map cells (where exits lead, D259; new rooms
+   * here keep theirs), and the rooms this page has no unsaved edits of.
    * @param {Record<string, any>} saved the files as saved, by path relative to data/
    */
   takeSaved(saved) {
@@ -602,6 +609,14 @@ export class Editor {
         this.files[file] = data;
         this.setEnemyTemplates(resolveEnemyTemplates(data.enemies ?? {}));
         taken.push('the enemy templates');
+      } else if (file === 'world.json') {
+        const fresh = [...this.sessions.values()].filter((edit) => edit.fresh).map((edit) => edit.id);
+        const next = { ...data, positions: { ...data.positions, ...Object.fromEntries(fresh.map((id) => [id, this.world.data.positions?.[id]]).filter(([, cell]) => cell)) } };
+        if (formatJson(next) === this.world.text()) continue;
+        this.world.data = next;
+        this.world.markSaved(formatJson(data));
+        this.files[file] = data;
+        taken.push('the world map');
       } else if (file.startsWith('rooms/')) {
         const id = file.slice('rooms/'.length, -'.json'.length);
         const session = this.sessions.get(id);
@@ -680,10 +695,9 @@ export class Editor {
       exit: exit
         ? {
             ...withExitDefaults(exit),
-            link: this.world.partner(`${this.edit.id}.${exit.id}`),
-            links: linkChoices(this.world, this.roomIds(), (id) => this.roomData(id), this.edit.id, exit),
+            link: partnerOf(this.connections(), `${this.edit.id}.${exit.id}`),
           }
-        : { id: null, ...this.exitShape, link: null, links: [] },
+        : { id: null, ...this.exitShape, link: null },
       layer: this.layer,
       cut: this.cut,
       errors: this.errorGroups(),
@@ -809,7 +823,7 @@ export class Editor {
 
   /** Where an error points in the editor, or null (errors.js). */
   errorTarget(error) {
-    return errorTarget(error, { roomData: (id) => this.roomData(id), connections: this.world.connections });
+    return errorTarget(error, { roomData: (id) => this.roomData(id) });
   }
 
   /** The errors by file, each marked if a click can go to it. */

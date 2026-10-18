@@ -5,7 +5,7 @@
  * passes. New rooms get a new file. The world map tool (D66) sends moved
  * rooms' positions, merged into world.json as it is on disk, and (D77) the
  * rooms it added, changed (exits) or removed, with world.json when its
- * connections changed. Screen texts (D118) go to lore.json.
+ * start changed or a room went. Screen texts (D118) go to lore.json.
  */
 import { rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -36,7 +36,7 @@ export function refuseSaveRequest({ method, headers }) {
  * @param {string} root project root
  * @param {{ rooms?: any[], world?: any, defs?: any, lore?: any, positions?: Record<string, number[]>, remove?: string[] }} edits from the editor: whole
  *   room files, and world.json, defs.json and lore.json if they changed; from the world map tool: map positions of the rooms it moved or added,
- *   whole files of rooms it added or changed, ids of rooms to delete, and world.json if its connections changed
+ *   whole files of rooms it added or changed, ids of rooms to delete, and world.json if its start or dev wing changed
  * @returns {{ ok: boolean, errors: string[], files: string[] }} `files`: the paths written or deleted, relative to root
  */
 export function saveEdits(root, { rooms = [], world, defs, lore, positions, remove = [] } = {}) {
@@ -57,7 +57,7 @@ export function saveEdits(root, { rooms = [], world, defs, lore, positions, remo
   }
   const disk = files['world.json'];
   if (disk && (world || positions || removed.length > 0)) {
-    // The world map tool owns where rooms are, the room editor the connections:
+    // The world map tool owns where rooms are (and so where exits lead, D259):
     // the editor's copy may be older than a move saved from the map, so only
     // its new rooms' cells count; the map's moves go into world.json as it is.
     const base = world ?? disk;

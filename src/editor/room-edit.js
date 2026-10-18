@@ -1,9 +1,9 @@
 /**
  * One room being edited (room editor, D56, D57): the room data, the edits
  * the editor's tools make to it, undo and redo, and whether it changed since
- * it was last saved. The room's exit connections live in world.json
- * (WorldEdit); its undo steps take them along, and the screen texts in
- * lore.json (LoreEdit) of the steps that changed them. Plain logic, no
+ * it was last saved. Its exits lead to the rooms next to it on the world
+ * map (D259); its undo steps take along the screen texts in lore.json
+ * (LoreEdit) of the steps that changed them. Plain logic, no
  * browser, so tests can drive it.
  */
 import { MAX_ROOM_FOOTPRINT, ROOM_HEIGHT } from '../core/rules.js';
@@ -44,12 +44,10 @@ export class RoomEdit {
   /**
    * @param {object} data room file contents
    * @param {object} [options]
-   * @param {import('./world-edit.js').WorldEdit} [options.world] world.json being edited (exit connections)
    * @param {import('./lore-edit.js').LoreEdit} [options.lore] lore.json being edited (screen texts, D118)
    * @param {boolean} [options.fresh] a new room, not saved yet
    */
-  constructor(data, { world = null, lore = null, fresh = false } = {}) {
-    this.world = world;
+  constructor(data, { lore = null, fresh = false } = {}) {
     this.lore = lore;
     this.fresh = fresh;
     this.load(data);
@@ -104,18 +102,17 @@ export class RoomEdit {
     this.fresh = false;
   }
 
-  /** The room, its connections and the screen texts, for undo. */
+  /** The room and the screen texts, for undo. */
   snapshot() {
-    return { room: this.text(), links: JSON.stringify(this.world?.linksOf(this.id) ?? []), lore: this.lore?.text() ?? null };
+    return { room: this.text(), lore: this.lore?.text() ?? null };
   }
 
   /**
-   * Go back to an undo or redo step: the room and its connections, and the
-   * text changes of the step if it made any (`lore`, from `loreAfter`).
+   * Go back to an undo or redo step: the room, and the text changes of
+   * the step if it made any (`lore`, from `loreAfter`).
    */
   restore(state) {
     this.load(JSON.parse(state.room));
-    this.world?.setLinks(this.id, JSON.parse(state.links));
     for (const key of SHARED) if (state[key] !== null) this[key]?.applyChange(state[`${key}After`], state[key]);
   }
 
@@ -135,7 +132,7 @@ export class RoomEdit {
     const before = this.pending;
     this.pending = null;
     const now = this.snapshot();
-    if (before.room === now.room && before.links === now.links && SHARED.every((key) => before[key] === now[key])) return;
+    if (before.room === now.room && SHARED.every((key) => before[key] === now[key])) return;
     // Only a step that changed the texts takes those changes back (other rooms' stay).
     for (const key of SHARED) {
       if (before[key] === now[key]) before[key] = null;
@@ -447,18 +444,11 @@ export class RoomEdit {
     return { dropped, moved };
   }
 
-  /** Are the room's connections (world.json) not the ones last saved? */
-  get linksChanged() {
-    if (!this.world) return false;
-    return JSON.stringify(this.world.linksOf(this.id)) !== JSON.stringify(this.world.savedLinksOf(this.id));
-  }
-
-  /** Go back to the room and its connections as last saved (one undo step); a new room starts over. */
+  /** Go back to the room as last saved (one undo step); a new room starts over. */
   revert() {
-    if (this.text() === this.savedText && !this.linksChanged) return false;
+    if (this.text() === this.savedText) return false;
     return this.edit(() => {
       this.load(JSON.parse(this.savedText));
-      this.world?.setLinks(this.id, this.world.savedLinksOf(this.id));
       return true;
     });
   }
@@ -804,10 +794,9 @@ export class RoomEdit {
    * Change an exit's id, position along its side (`at`), width, height,
    * floor level, whether it is locked (D75) and by which switches (D140,
    * none: every switch), the access level it asks for (D101, 0 for none)
-   * or whether it is hidden until a scan (D128); its connection follows a
-   * new id.
+   * whether it is hidden until a scan (D128) or a way in only (D259).
    * @param {string} id
-   * @param {{ id?: string, at?: number, width?: number, height?: number, y?: number, locked?: boolean, switches?: string[], access?: number, hidden?: boolean }} fields
+   * @param {{ id?: string, at?: number, width?: number, height?: number, y?: number, locked?: boolean, switches?: string[], access?: number, hidden?: boolean, oneWay?: boolean }} fields
    * @returns {boolean} whether anything changed
    */
   updateExit(id, fields) {
@@ -817,30 +806,17 @@ export class RoomEdit {
     if (JSON.stringify(next) === JSON.stringify(exit)) return false;
     return this.edit(() => {
       this.data.exits = this.exits.map((e) => (e === exit ? next : e));
-      if (next.id !== id) this.world?.rename(`${this.id}.${id}`, `${this.id}.${next.id}`);
       return true;
     });
   }
 
-  /** Remove an exit and its connection. */
+  /** Remove an exit. */
   removeExit(id) {
     if (!this.exits.some((e) => e.id === id)) return false;
     return this.edit(() => {
       this.data.exits = this.exits.filter((e) => e.id !== id);
-      this.world?.disconnect(`${this.id}.${id}`);
       return true;
     });
-  }
-
-  /**
-   * Connect an exit to another room's exit ("room.exit"), or disconnect it (null).
-   * @returns {boolean} whether anything changed
-   */
-  linkExit(id, to) {
-    if (!this.world) return false;
-    const ref = `${this.id}.${id}`;
-    if (this.world.partner(ref) === to) return false;
-    return this.edit(() => (to ? this.world.connect(ref, to) : this.world.disconnect(ref)));
   }
 
   /** `north`, `north_2`...: the first id for an exit in that side the room doesn't use. */
@@ -918,7 +894,7 @@ function withFields(item, fields) {
 }
 
 /** An exit as written in a room file: the schema's key order, defaults left out. */
-export function exitFields({ id, side, at, width, y, height, locked, switches, access, hidden }) {
+export function exitFields({ id, side, at, width, y, height, locked, switches, access, hidden, oneWay }) {
   const exit = { id, side, at };
   if (width !== EXIT_DEFAULTS.width) exit.width = width;
   if (y !== EXIT_DEFAULTS.y) exit.y = y;
@@ -927,6 +903,7 @@ export function exitFields({ id, side, at, width, y, height, locked, switches, a
   const requires = requiresOf({ locked, switches, access });
   if (requires) exit.requires = requires;
   if (hidden) exit.hidden = true;
+  if (oneWay) exit.oneWay = true;
   return exit;
 }
 

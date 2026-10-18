@@ -45,16 +45,14 @@ export function groupErrors(errors) {
  * @param {string} error
  * @param {object} context
  * @param {(id: string) => object|undefined} context.roomData a room's data as edited
- * @param {string[][]} context.connections world.json's connections
  * @returns {{ room: string, tool?: string, selected?: { kind: 'item'|'exit', id: string } } | null}
  */
-export function errorTarget(error, { roomData, connections }) {
+export function errorTarget(error, { roomData }) {
   const parsed = parseError(error);
   if (!parsed) return null;
   const { file, path, message } = parsed;
   if (file === 'world.json') {
-    const pair = /^connections\[(\d+)\]/.exec(path);
-    const ref = EXIT_REF.exec(message)?.slice(1) ?? connections[pair?.[1]]?.[0]?.split('.');
+    const ref = EXIT_REF.exec(message)?.slice(1);
     if (!ref || !roomData(ref[0])) return null;
     const [room, exit] = ref;
     const found = (roomData(room).exits ?? []).some((e) => e.id === exit);

@@ -66,6 +66,22 @@ function square([x, z]) {
 /** SVG points attribute for map points. */
 const points = (cells) => cells.map((cell) => projectCell(cell).join(',')).join(' ');
 
+/** Size of a one-way link's chevron, in map cells. */
+const CHEVRON = 0.16;
+
+/** A chevron halfway between two cells, pointing from `a` to `b` (map cells). */
+function chevron(a, b) {
+  const d = [b[0] - a[0], b[1] - a[1]];
+  const length = Math.hypot(d[0], d[1]) || 1;
+  const [ux, uz] = [(d[0] / length) * CHEVRON, (d[1] / length) * CHEVRON];
+  const mid = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  return [
+    [mid[0] - ux / 2 - uz, mid[1] - uz / 2 + ux],
+    [mid[0] + ux / 2, mid[1] + uz / 2],
+    [mid[0] - ux / 2 + uz, mid[1] - uz / 2 - ux],
+  ];
+}
+
 /** An SVG element with attributes. */
 function svg(name, attributes = {}) {
   const element = document.createElementNS(SVG, name);
@@ -144,8 +160,10 @@ export class MapScreen {
     const links = svg('g', { class: 'map-links' });
     for (const link of model.links) {
       const [from, to] = [projectCell(link.from), projectCell(link.to)];
-      const classes = ['map-link', link.adjacent ? '' : 'far', link.visited ? '' : 'dim'].filter(Boolean).join(' ');
+      const classes = ['map-link', link.visited ? '' : 'dim'].filter(Boolean).join(' ');
       links.append(svg('line', { class: classes, x1: from[0], y1: from[1], x2: to[0], y2: to[1] }));
+      // A one-way connection (D259): a chevron halfway, pointing the way he can go.
+      if (link.oneWay) links.append(svg('polyline', { class: `${classes} map-arrow`, points: points(chevron(link.from, link.to)) }));
     }
     const stubs = svg('g', { class: 'map-stubs' });
     for (const { at, out } of model.stubs) {

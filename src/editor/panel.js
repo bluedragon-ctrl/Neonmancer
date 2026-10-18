@@ -626,8 +626,8 @@ export class EditorPanel {
     this.exitY.addEventListener('change', () => on.exit('y', numberValue(this.exitY) ?? EXIT_DEFAULTS.y));
     this.exitAtRow = this.row('Position', this.exitAt);
     this.exitYRow = this.row('Floor (y)', this.exitY);
-    this.exitLink = el('select');
-    this.exitLink.addEventListener('change', () => on.exit('link', this.exitLink.value || null));
+    // Where it leads follows from the world map (D259): shown, not picked.
+    this.exitLink = el('span', 'editor-exit-link');
     this.exitIdRow = this.row('Id', this.exitId);
     this.exitLinkRow = this.row('Leads to', this.exitLink);
     // Locked (D75): open only while its switches are on (D140), by default every switch in the room.
@@ -646,6 +646,10 @@ export class EditorPanel {
     this.exitHidden = Object.assign(el('input'), { type: 'checkbox', title: 'Solid wall until a scan reaches it (D128)' });
     this.exitHidden.addEventListener('change', () => on.exit('hidden', this.exitHidden.checked));
     this.exitHiddenRow = this.row('Hidden', this.exitHidden);
+    // One-way (D259): a way in only, shut from this side.
+    this.exitOneWay = Object.assign(el('input'), { type: 'checkbox', title: 'A way in only (D259): he arrives through it, but it never opens from this side' });
+    this.exitOneWay.addEventListener('change', () => on.exit('oneWay', this.exitOneWay.checked));
+    this.exitOneWayRow = this.row('One-way', this.exitOneWay);
     this.exitRows = this.group('exit');
     this.exitRows.append(
       this.exitIdRow,
@@ -658,6 +662,7 @@ export class EditorPanel {
       this.exitSwitchesRow,
       this.exitAccessRow,
       this.exitHiddenRow,
+      this.exitOneWayRow,
     );
     return this.exitRows;
   }
@@ -759,7 +764,7 @@ export class EditorPanel {
    * @param {boolean} state.pathItemIsEnemy it is an enemy (it walks at its template's speed, D119)
    * @param {{ id: string, text: string|null, texts: Record<string, { title?: string, lines: string[] }>, users: string[] }|null} state.screen
    *   the picked screen (D118): its text, every text, and the screens showing its text
-   * @param {{ id: string|null, width: number, height: number, link: string|null, links: string[] }} state.exit
+   * @param {{ id: string|null, width: number, height: number, link: string|null, oneWay?: boolean }} state.exit
    *   the picked exit (id null: the settings for new ones) and the exits it can lead to
    * @param {number} state.layer
    * @param {boolean} state.cut what is above the layer is hidden
@@ -770,7 +775,7 @@ export class EditorPanel {
    */
   show({ edit, rooms, tool, blockType, blockSwitches = null, objectType, objectPlaces = null, switchType, linkList = null, links = null, switchInfo = null, enemy, pathItem, pathItemIsEnemy, screen, exit, layer, cut, errors, status, unsaved }) {
     const data = edit.data;
-    const changed = edit.dirty || edit.linksChanged;
+    const changed = edit.dirty;
     this.roomLabel.textContent = `${data.id}${changed ? ' • unsaved' : unsaved ? ' • other rooms unsaved' : ''}`;
     if (this.roomSelect.options.length !== rooms.length || rooms.some((id, i) => this.roomSelect.options[i].value !== id)) {
       this.roomSelect.replaceChildren(...rooms.map((id) => option(id, id)));
@@ -833,19 +838,19 @@ export class EditorPanel {
     this.setNumber(this.pathSpeed, path?.speed);
     this.setNumber(this.pathPause, path?.pause);
 
-    this.exitIdRow.hidden = this.exitLinkRow.hidden = this.exitAtRow.hidden = this.exitYRow.hidden = this.exitLockedRow.hidden = this.exitAccessRow.hidden = this.exitHiddenRow.hidden = !exit.id;
+    this.exitIdRow.hidden = this.exitLinkRow.hidden = this.exitAtRow.hidden = this.exitYRow.hidden = this.exitLockedRow.hidden = this.exitAccessRow.hidden = this.exitHiddenRow.hidden = this.exitOneWayRow.hidden = !exit.id;
     this.exitLocked.checked = !!exit.locked;
     this.exitSwitchesRow.hidden = !(exit.id && exit.locked);
     if (document.activeElement !== this.exitSwitches) this.exitSwitches.value = (exit.switches ?? []).join(' ');
     this.exitHidden.checked = !!exit.hidden;
+    this.exitOneWay.checked = !!exit.oneWay;
     this.setNumber(this.exitAccess, exit.access ?? 0);
     this.setNumber(this.exitAt, exit.at);
     this.setNumber(this.exitY, exit.y);
     if (document.activeElement !== this.exitId) this.exitId.value = exit.id ?? '';
     this.setNumber(this.exitWidth, exit.width);
     this.setNumber(this.exitHeight, exit.height);
-    this.exitLink.replaceChildren(...['', ...exit.links].map((ref) => option(ref, ref || '— not connected —')));
-    this.exitLink.value = exit.link ?? '';
+    this.exitLink.textContent = exit.link ?? '— nothing: no room or exit there on the map —';
 
     this.layerLabel.textContent = `${layer} / ${data.size[1] - 1}`;
     this.cutInput.checked = cut;

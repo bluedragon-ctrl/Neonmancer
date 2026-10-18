@@ -186,6 +186,12 @@ mobile/touch support, backend or accounts.
   its cell; a platform with switches runs only while powered. An access lock
   opens once his access level is high enough (D101). A hidden exit is
   wall until a scan reveals it (D128).
+- Exits (D259): an exit leads to the room in the next world map cell in
+  its direction, into its exit in the opposite side, equally wide (several
+  in a side pair in order along it); `world.json` lists no connections.
+  Two-way by default; `oneWay` makes the arriving end a way in only, shut
+  for good, and the checker makes sure he can leave such a room another
+  way.
 - Holes: floor tiles (at y = 0) drawn as black pits. The player dies falling
   in (a trap, no way back out); a block pushed into a hole drops in and fills
   it, turning it into walkable floor. Holes never lead to another room.
@@ -208,7 +214,7 @@ mobile/touch support, backend or accounts.
   entrance — quick and non-punishing.
 - Restart room (pause menu, D219): a voluntary death for a stuck puzzle.
   Costs one backup in every room; refused with none left (he leaves the
-  way he came).
+  way he came), except behind a one-way exit: a crash to a shrine (D259).
 - A room may have a watchdog timer (`timer`, seconds, set in the room
   editor, D172): it starts once the room has faded in, stands still
   behind menus, and at zero kills the wizard (a death like any other: a
@@ -302,7 +308,8 @@ secrets only, D217).
 The world is a
 maze, not a line: a room need not be fully solvable on first arrival,
 and some exits and pickups wait for a spell or buff found later
-(backtracking, D67). He can always leave a room the way he came.
+(backtracking, D67). He can always leave a room the way he came, or,
+through a one-way exit, another way (D259).
 
 ### Enemies (corrupted programs; cute but clearly dangerous)
 - **Bugs** — patrol fixed paths
@@ -452,7 +459,8 @@ The engine is generic; all content lives in data.
   objects (switch links, D140), enemies, pickups, a backup shrine tile, a
   watchdog timer (D172); only overrides of type defaults;
   `"authored": true` marks the author's real game rooms (D90, §10)
-- `data/world.json` — room connections, room positions on the world map,
+- `data/world.json` — room positions on the world map (which also say
+  where exits lead, D259),
   the dev wing (`dev`: test rooms only the dev server shows, D147),
   start room, the fragments the core needs and the access thresholds
   (D101); fragments lie in the rooms' pickups, the core is a room object
@@ -526,8 +534,8 @@ not critical.
   box sets the pads rule (new rooms start with it, D223); the stairs are
   one Block tool entry turned with R; pads have their own Object group.
 - **World map tool** (`tools/world-map.html`, D66, D77): every room on a
-  map grid with its connections; move, add and remove rooms and
-  connections; flags rooms out of reach; opens a room in the room editor;
+  map grid with its connections (exits lead to the next map cell, D259);
+  move, add and remove rooms and connections; flags rooms out of reach; opens a room in the room editor;
   F3 lists every permanent item by save bit and where it lies. Dev server
   only, never shown to players: exploring is part of the game (D67).
 - **Monster editor** (`tools/monster-editor.html`, D119, D120): the enemy

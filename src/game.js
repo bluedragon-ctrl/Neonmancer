@@ -381,16 +381,23 @@ export class Game {
     this.emit('die', { cause, ...(this.crashing && { crash: true }) });
   }
 
+  /** Did he come in through a one-way exit (D259), so the way he came is shut? */
+  get sealedIn() {
+    return Boolean(this.entryExit && this.room.exits.find((exit) => exit.id === this.entryExit)?.oneWay);
+  }
+
   /**
    * Restart room (pause menu): a voluntary death for a puzzle he has stuck
    * himself in. It costs one backup like any death, resets the room when
    * he recompiles, and is refused with none left (he can leave the way he
-   * came) or while dead or between rooms. Debug invincibility makes it free.
+   * came) or while dead or between rooms. Behind a one-way exit (D259) the
+   * way he came is shut: with none left it crashes him to a shrine, as a
+   * death with none left does. Debug invincibility makes it free.
    * @returns {boolean} whether it started
    */
   restartRoom() {
     const { player } = this;
-    if (player.dead || this.transition || player.backups < 1) return false;
+    if (player.dead || this.transition || (player.backups < 1 && !this.sealedIn)) return false;
     player.die('restart');
     this.died();
     if (this.invincible) player.backups++;

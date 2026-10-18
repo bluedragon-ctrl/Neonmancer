@@ -39,10 +39,7 @@ Glowing edges over dark solid faces, so hidden edges don't show; edges
 between coplanar neighbours are dropped.
 **Why:** a see-through wireframe is unreadable once blocks stack.
 
-### D6 — 2026-09-25 — Exit connections live only in world.json
-Rooms describe exit geometry with a stable id; `world.json` pairs exits
-(`"room.exit"`), on opposite sides and equally wide.
-**Why:** one source of truth for the room graph; both ends checkable.
+### D6 — replaced by D259 (exits lead to the next map cell)
 
 ### D7 — 2026-09-25 — Tests use Node's built-in runner, not Vitest
 `npm test` runs `node --test`; logic modules stay plain ES modules, with
@@ -359,8 +356,9 @@ wizard, not rooms (no map, no per-room data).
 ### D69 — replaced by D75 and D140 (switches)
 
 ### D70 — 2026-09-27 — World map tool: positions format, who saves what
-`positions`: room id → `[x, z]` (+x east, +z south). The room editor owns
-connections, the map positions (merged on save, disk wins). A new room
+`positions`: room id → `[x, z]` (+x east, +z south). The map owns the
+positions (merged on save, disk wins), and since D259 with them the
+connections; the room editor adds a new room's cell. A new room
 gets the nearest free cell. `?room` and `?edit` work in the dev server
 only.
 **Why:** no stale copy undoes another page's save.
@@ -3384,3 +3382,33 @@ pending since D216). Redone with the pads (the fix rides in the core_hall PR).
 - **Checker**: east `never` with `zap,scan,fork,pause`, `blink` with it; the disk
   and the south door free, as before.
 **Why:** the pit is the trick (Blink is the way on); a jump was never in it.
+
+### D259 — 2026-10-18 — Exits lead to the next map cell; one-way exits
+Replaces D6 (connections listed in `world.json`); amends D67 and D75
+("he can always leave the way he came").
+- **Rule**: an exit leads to the room in the next world map cell in its
+  direction (+x east, +z south), into that room's exit in the opposite
+  side, equally wide. Several exits in one side pair up in order along it
+  (by `at`, then `y`). `world.json` has no `connections` any more: the
+  loader works the pairs out from `positions` (`src/world/links.js`), and
+  an exit with no room or no matching exit there is a data error. All 46
+  connections already followed this, so the derived pairs are the same.
+- **One-way**: `"oneWay": true` on an exit makes it a way in only. He
+  arrives through it, but it is shut from this side for good (a lock's
+  barrier with no lights), even though he came in through it. No
+  `requires` or `hidden` on it; its partner is two-way. Two-way stays the
+  default and the recommendation; a ledge door or a lock whose switch is
+  on the far side are still one-way without the flag.
+- **Guard**: the reachability checker never leaves through a one-way exit,
+  and arriving through one he must reach another exit (with what he had on
+  arrival, plus what he picks up in the room): an error, not a warning.
+  Restart room behind one is allowed with no backups left: a crash to the
+  nearest shrine, since the way he came is shut.
+- **Tools**: the room editor shows where an exit leads (no picking) and
+  has a One-way box; the world map tool connects only map neighbours,
+  rewires a room when it is moved, and draws a one-way pair dashed with a
+  chevron, as the player's map does (and a one-way exit gets no stub).
+  No authored rooms exist yet, so no room file changes.
+**Why:** author's proposal: one rule instead of hand-made pairs (they
+could not drift apart from the map), and one-way exits for drops and
+shortcuts home, guarded so they never trap him.

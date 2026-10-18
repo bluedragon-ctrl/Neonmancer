@@ -62,7 +62,7 @@ test('the map model: visited rooms, dim revealed ones, connections between shown
   // boot–stack (both visited) and relay–stack (one revealed, dim).
   assert.equal(model.links.length, 2);
   assert.deepEqual(model.links.map((link) => link.visited).sort(), [false, true]);
-  assert.ok(model.links.every((link) => link.adjacent));
+  assert.ok(model.links.every((link) => !link.oneWay));
   // boot_sector's north, south and west lead off the map; stack_yard's east too.
   // The revealed relay_station shows no exits of its own.
   assert.equal(model.stubs.length, 4);
@@ -97,6 +97,25 @@ test('a stub sits in the middle of its side of the room square; links run center
   map.visit('stack_yard');
   const [link] = mapModel(world(), map, { current: 'boot_sector', progress: new Progress() }).links;
   assert.deepEqual([link.from, link.to].sort(), [
+    [0, 0],
+    [1, 0],
+  ]);
+});
+
+test('a one-way link points into the room he can not leave that way; its exit has no stub (D259)', () => {
+  const files = testWorld();
+  // stack_yard's west exit is a way in only: boot_sector leads in, not back.
+  files['rooms/stack_yard.json'].exits.find((exit) => exit.id === 'west').oneWay = true;
+  const content = loadGameData(files);
+  const map = new RunMap();
+  map.visit('stack_yard');
+  let model = mapModel(content, map, { current: 'stack_yard', progress: new Progress() });
+  // boot_sector isn't on the map: no stub west, only the other sides' stubs.
+  assert.ok(!model.stubs.some(({ out }) => out[0] === -1), 'no stub west');
+  map.visit('boot_sector');
+  model = mapModel(content, map, { current: 'stack_yard', progress: new Progress() });
+  const link = model.links.find((l) => l.oneWay);
+  assert.deepEqual([link.from, link.to], [
     [0, 0],
     [1, 0],
   ]);

@@ -63,3 +63,25 @@ test('the pause menu asks first; no backups means a notice, not a question', () 
   assert.equal(flow.top.id, 'pause');
   assert.equal(flow.notice, 'menu.noBackups');
 });
+
+test('behind a one-way exit (D259) restart goes with no backups left too: a crash to a shrine', () => {
+  const game = new Game(
+    gameData({
+      rooms: [roomFile('a', { exits: [{ id: 'east', side: '+x', at: 3 }] }), roomFile('b', { exits: [{ id: 'west', side: '-x', at: 3, oneWay: true }] })],
+      connections: [['a.east', 'b.west']],
+    }),
+  );
+  game.enterRoom('b', [0.5, 0, 4], 'west');
+  game.player.backups = 0;
+  assert.equal(game.sealedIn, true);
+  assert.equal(game.restartRoom(), true);
+  assert.equal(game.crashing, true);
+
+  const flow = new MenuFlow('playing');
+  flow.backups = 0;
+  flow.sealed = true;
+  flow.pause();
+  flow.select(MENUS.pause.indexOf('restart'));
+  assert.equal(flow.choose(), null);
+  assert.equal(flow.top.id, 'restart', 'asks, as with backups left');
+});
