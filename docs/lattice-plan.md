@@ -106,7 +106,7 @@ Rules for the lines (D186, D187):
 The teasers (`frost_gate`, `frost_edge`, `glitch_gate`, `glitch_edge`)
 stay look-only and outside the ladder (D186).
 
-### Return layers (D259)
+### Return layers (D260)
 
 What opens on a return, room by room (the room-design skill, Return
 layers). The aim is about two thirds of the 21 rooms in the mix; teach

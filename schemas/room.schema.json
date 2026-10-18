@@ -85,7 +85,7 @@
   },
   "$defs": {
     "exit": {
-      "description": "Opening in one side of the room. Connections live in world.json.",
+      "description": "Opening in one side of the room. It leads to the room in the next world map cell in its direction (D259), into that room's exit in the opposite side; several exits in one side pair up in order along it (by at, then y).",
       "type": "object",
       "required": ["id", "side", "at"],
       "additionalProperties": false,
@@ -125,6 +125,11 @@
               }
             ]
           }
+        },
+        "oneWay": {
+          "type": "boolean",
+          "default": false,
+          "description": "A way in only (D259): the wizard arrives through it, but it is shut from this side, a plain barrier that never opens (no requires or hidden; the exit it pairs with must not be one-way). The reachability checker makes sure he can leave the room another way."
         },
         "hidden": {
           "type": "boolean",

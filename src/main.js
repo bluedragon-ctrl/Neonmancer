@@ -251,6 +251,7 @@ function boot() {
     if (blurred && !hud.winShown) flow.pause();
     blurred = false;
     flow.backups = game.player.backups;
+    flow.sealed = game.sealedIn;
     run(flow.update(input));
     // The shield and firewall hum while they are up and the game is not held.
     const shield = flow.playing && !hud.winShown ? game.player.shield?.spell : null;

@@ -2,8 +2,8 @@
  * Switches and what they power (D69, D75, D140): locked exits, gates and
  * platforms, each powered while every switch linked to it is on (its own
  * `switches` list of ids, or every switch in the room); exits locked
- * behind an access level (D101), and hidden exits a scan reveals (D128),
- * solid wall until then. Functions of the Game (game.js); they change its
+ * behind an access level (D101), hidden exits a scan reveals (D128),
+ * solid wall until then, and one-way exits (D259), shut for good. Functions of the Game (game.js); they change its
  * state and report through game.emit().
  */
 import { say } from './core/messages.js';
@@ -17,7 +17,7 @@ import { cellBox, overlapsBox } from './physics/collision.js';
  * @returns {{ exit: object, open: boolean }[]}
  */
 export function createLocks(game) {
-  const locks = game.room.exits.filter((exit) => exit.locked || exit.access || exit.hidden).map((exit) => ({ exit, open: false }));
+  const locks = game.room.exits.filter((exit) => exit.locked || exit.access || exit.hidden || exit.oneWay).map((exit) => ({ exit, open: false }));
   for (const lock of locks) setLock(game, lock, lockWanted(game, lock));
   return locks;
 }
@@ -98,9 +98,10 @@ export function updateSwitches(game) {
 /**
  * Should a locked exit be open: revealed if hidden (D128), every switch on
  * (a switch lock) and his access level high enough (an access lock), or the wizard came in
- * through it?
+ * through it? A one-way exit (D259) never opens, not even for him.
  */
 function lockWanted(game, { exit }) {
+  if (exit.oneWay) return false;
   if (exit.id === game.entryExit) return true;
   if (game.hidden.exits.includes(exit)) return false;
   const switched = !exit.locked || powered(game, exit.switches);

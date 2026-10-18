@@ -66,9 +66,9 @@ worth playing.
   Lattice rooms around them or against them, and run every check below
   with the Lattice abilities (for an exit's first arrival, the subset
   he has) instead of the default (every ability). One exception: a
-  later-sector spell may be the key to a return layer's extra (D259,
+  later-sector spell may be the key to a return layer's extra (D260,
   below), never to a fragment.
-- **Rooms grow on return** (D259). About two thirds of the rooms carry a
+- **Rooms grow on return** (D260). About two thirds of the rooms carry a
   *return layer*: something seen closed on the first visit that a later
   ability opens (a shortcut, a new exit, a secret, a cache). See
   "Return layers" below.
@@ -87,7 +87,7 @@ worth playing.
    (`docs/lattice-plan.md`), the focal point, what he sees from the
    entrance, the fair-failure case, what a later ability skips (exits
    only, never a pickup's trick), and the **return layer** (its key, what
-   it opens, where he sees it closed; or why the room has none, D259).
+   it opens, where he sees it closed; or why the room has none, D260).
    Hard to write → redraw. Read
    [craft.md](craft.md) when the room is a new idea rather than a fix.
    When the trick is a push puzzle, design it with the `sokoban-design`
@@ -123,7 +123,7 @@ so draft the idea, not the last cell.
    boss it holds, its map position.
 4. **Propose** for tune or redesign: the concept (workflow step 3), with
    a sketch of the layout (a top-down grid in text is fine), with its
-   return layer (D259; a room without one gets one proposed, or the
+   return layer (D260; a room without one gets one proposed, or the
    reason it skips), and stop for the author's OK. No JSON before it.
 5. **Draft and check** (workflow steps 4–8) once the author agrees; the
    PR says what changed and why, and what to tune by hand.
@@ -473,7 +473,11 @@ Edit existing files with small text edits, not a JSON dump.
 2. **Gates look like gates** (a too-high ledge, a locked door): he should
    come back later, not think it is broken (D67).
 3. **He can always leave the way he came** with what he has; a room needn't
-   be solvable on first arrival.
+   be solvable on first arrival. Two-way is the default; a one-way exit
+   (`"oneWay": true` on the arriving end, D259) is a way in only, for a
+   drop into a pit room or a one-way shortcut home: then he must be able
+   to leave another way with what he has on arrival or finds in the room
+   (the checker makes it an error).
 4. **No soft-locks.** Every one-shot change (collapse without regrow, crate in
    a corner or hole, spent Compile/Fork) leaves a way to an exit or a way to
    die and reset. `reset` is safe: not on a collapsing block, not under a
@@ -488,7 +492,7 @@ Edit existing files with small text edits, not a JSON dump.
    today `hidden_layer`); start it with `?room=<id>` on the dev server. Add a
    showcase look and unit tests for the mechanic (D43).
 
-## Return layers (D259)
+## Return layers (D260)
 A room worth coming back to: on the first visit he sees something he
 can't use yet (a pit too wide, a wall that sounds hollow, a lock, a
 crate out of reach), and an ability found later opens it. The world is a
@@ -498,8 +502,8 @@ each read anew.
   Teach rungs, bosses, breathers and the goal may skip it; say why. Across
   the world every new ability opens at least three places it was seen
   closed (craft.md 7).
-- **What it pays.** A *shortcut* (a one-way gate opened from the far
-  side, a crossing back to a hub the ability shortens), a *new exit* (an
+- **What it pays.** A *shortcut* (a one-way exit home, D259; a gate
+  opened from the far side; a crossing back to a hub the ability shortens), a *new exit* (an
   optional room, a loop, an Outer Buffer door), a *secret* (a permanent
   pickup, but there are only 16 secret bits in the whole game, so most
   layers pay something else), a *fragment* (Lattice keys only), or a
@@ -620,7 +624,7 @@ each read anew.
   lane; lock on a heavy plate (two weights, D200: a stack), on two plates at once, weight that stays longer than 10 s,
   or where a crate ends up (a hole, a step, a stack). Sets that only open
   exits are fine. The later sectors' spells are left out in the Lattice,
-  except a return layer's key (D259): add it to the set and check the
+  except a return layer's key (D260): add it to the set and check the
   room's fragments again.
 
 ## Mutation test (`scripts/mutate.mjs`)
@@ -672,11 +676,13 @@ the entrance: is every mechanic and every crate visible, does anything tall
 hide a cell?
 
 ## Wiring
-- A door needs the room's exit, the neighbour's matching exit (check the
-  neighbour is not authored), a `"room.exit"` pair in `world.json`
-  `connections` and the room in `positions` (map cells; neighbours one cell
-  apart, the side matching the direction: -x is west, -z is north).
-  Validation fails until every exit is connected and the room has a position.
+- An exit leads to the room in the next map cell in its direction (D259;
+  `positions` in `world.json`: +x is east, +z is south), into that room's
+  exit in the opposite side, equally wide; several exits in one side pair
+  up in order along it (by `at`, then `y`). A door needs the room's exit,
+  the neighbour's matching exit (check the neighbour is not authored) and
+  the room's map cell; nothing else lists the pair. Validation fails while
+  an exit leads nowhere.
 - Keep exits the author has left free for later wings (decisions name them).
 
 ## Examples (copy their shape, not their cells)

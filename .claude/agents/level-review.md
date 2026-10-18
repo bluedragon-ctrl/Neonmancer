@@ -14,8 +14,8 @@ For each room:
 
 1. Read `docs/design.md` sections "Gameplay" and "Room design checklist",
    `.claude/skills/room-design/SKILL.md` and the room's line in the
-   ladder of `docs/lattice-plan.md` once, then the room JSON, its exits
-   in `data/world.json` and the neighbours it connects to.
+   ladder of `docs/lattice-plan.md` once, then the room JSON, its map cell
+   in `data/world.json` and the neighbours its exits lead to (D259).
 2. Run, and quote the relevant output:
    - `npm run validate:data`
    - `npm run check:reach -- <room_id>` (what each exit and pickup needs)
@@ -40,14 +40,14 @@ For each room:
      in any order) and `--with zap,scan,fork,pause,blink` for exits and
      secrets (Blink is the Level 1 reward, D187, D217), not the default;
      Pull, Compile, Cut & Paste, Warp and Firewall belong to later sectors and are not
-     findings there, unless one is a return layer's key (D259): then add it to
+     findings there, unless one is a return layer's key (D260): then add it to
      the set and check the room's pickups with it too. For each
      pickup, every ability set in the mutation test's first lines that
      is not the room's own: rerun
      with `--with <that set>`; if the trick's key pieces no longer
      matter, that set skips the trick: a BLOCKER for a fragment, a
      PROBLEM for other pickups. The same for exits is fine (a NOTE).
-   - **Return layer** (D259): what opens on a return, with which key? None
+   - **Return layer** (D260): what opens on a return, with which key? None
      in a puzzle or hybrid room that is not a teach rung: a NOTE with an
      idea for one. For a layer: closed with the set he has (`--with`, every
      `--from`), open with the key added; in view from his route and looking
@@ -105,7 +105,8 @@ For each room:
      difficulty is fine (say so as a NOTE); only an easier one that skips
      the room's idea is a bypass (PROBLEM or BLOCKER).
    - **Spells and backtracking** (D67): what each exit/pickup needs, that
-     he can leave the way he came, shortcuts not blocked by accident.
+     he can leave the way he came (or, through a one-way exit, D259,
+     another way), shortcuts not blocked by accident.
    - **No soft-locks**: every one-shot change (collapse, crate in a corner
      or hole, spent Compile/Fork) leaves a way out or a way to reset.
    - **Enemies and levels** (D230): enemies walk stairs both ways and a

@@ -67,6 +67,8 @@ export class MenuFlow {
     this.canContinue = false;
     /** The wizard's backups left, kept by main.js; Restart room needs one. */
     this.backups = 0;
+    /** Did he come in through a one-way exit (D259, kept by main.js)? Then Restart room goes with none left too (a crash). */
+    this.sealed = false;
     /** @type {(name: string) => void} Called with a UI sound name (ui_move, ui_open, ui_back, ui_choose, ui_adjust, ui_deny); main.js plays it (D139). */
     this.onSound = () => {};
     if (screen === 'title') this.open('title');
@@ -200,8 +202,9 @@ export class MenuFlow {
         this.onSound('ui_deny');
         return null;
       case 'restart':
-        // Always costs one backup (no free resets); with none, the way he came is the way out.
-        if (this.backups > 0) this.open('restart');
+        // Always costs one backup (no free resets); with none, the way he came is the way out,
+        // unless it is one-way (D259): then it crashes him to a shrine.
+        if (this.backups > 0 || this.sealed) this.open('restart');
         else {
           this.notice = 'menu.noBackups';
           this.onSound('ui_deny');

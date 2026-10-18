@@ -1,14 +1,17 @@
 /**
  * The world as the world map tool edits it (D66, D77, D102, D103): room
  * positions, rooms added and removed, connections made and broken, exits
- * removed, and rolling back the last save. A connection made on the map
- * opens an exit in the middle of each room's facing wall (or takes a loose
- * exit already there); breaking one closes both exits (every exit must be
- * connected). Fine tuning (where along the wall, height, width) stays with
- * the room editor. Plain logic, no browser, so tests can drive it.
+ * removed, and rolling back the last save. An exit leads to the room in
+ * the next map cell in its direction (D259), so moving a room rewires it
+ * and connections are only ever between neighbours. A connection made on
+ * the map opens an exit in the middle of each room's facing wall (or takes
+ * a loose exit already there); breaking one closes both exits (every exit
+ * must lead somewhere). Fine tuning (where along the wall, height, width,
+ * one-way) stays with the room editor. Plain logic, no browser, so tests can drive it.
  */
 import { OPPOSITE_SIDE, sideLength, withExitDefaults } from '../data/room-data.js';
 import { validateData } from '../data/validate.js';
+import { deriveConnections, partnerOf } from '../world/links.js';
 import { mapKey, nearestFreeCell } from '../world/map.js';
 import { SIDE_NAMES, exitFields, exitsOverlap, newRoom, roomFileData, roomIdProblem } from './room-edit.js';
 
@@ -83,9 +86,9 @@ export class MapEdit {
     return this.world.positions;
   }
 
-  /** @returns {string[][]} pairs of "room.exit" */
+  /** @returns {string[][]} pairs of "room.exit", as the rooms sit on the map now (D259) */
   get connections() {
-    return this.world.connections;
+    return deriveConnections(this.positions, this.rooms).pairs;
   }
 
   /** The room in a map cell, or null. */
@@ -116,7 +119,7 @@ export class MapEdit {
    * What changed since the last save, as the dev server takes it
    * (tools/room-save.js): whole room files of new and changed rooms, the
    * ids of removed ones, the cells of moved and new rooms, and world.json
-   * when its connections or start changed.
+   * when its start changed or a room went.
    * @returns {{ rooms: object[], remove: string[], positions: Record<string, number[]>, world?: object,
    *   counts: { moved: number, added: number, removed: number, changed: number, links: boolean } }}
    */
@@ -126,7 +129,7 @@ export class MapEdit {
     const changed = [...this.rooms.keys()].filter((id) => saved.rooms.has(id) && saved.rooms.get(id) !== JSON.stringify(this.rooms.get(id)));
     const remove = [...saved.rooms.keys()].filter((id) => !this.rooms.has(id));
     const placed = [...this.rooms.keys()].filter((id) => mapKey(this.positions[id]) !== mapKey(saved.world.positions?.[id] ?? [NaN, NaN]));
-    const links = JSON.stringify(this.connections) !== JSON.stringify(saved.world.connections) || this.world.start !== saved.world.start;
+    const links = this.world.start !== saved.world.start;
     const out = {
       rooms: [...added, ...changed].map((id) => structuredClone(this.rooms.get(id))),
       remove,
@@ -286,27 +289,31 @@ export class MapEdit {
   // --- Exits and connections -------------------------------------------------
 
   /**
-   * Connect two rooms: an exit in each one's wall facing the other (as they
-   * sit on the map), in the middle of the wall or as near to it as it fits,
-   * and the connection between them.
+   * Connect two rooms next to each other on the map: an exit in each one's
+   * wall facing the other, in the middle of the wall or as near to it as it
+   * fits (D259: they pair up because they face each other).
    * @returns {{ ref: string[]|null, problem: string|null }} the connected pair, or why not
    */
   connect(a, b) {
     if (a === b) return { ref: null, problem: 'A room connects to another room.' };
     if (!this.rooms.has(a) || !this.rooms.has(b)) return { ref: null, problem: 'Unknown room.' };
-    const side = facingSide(this.positions[a], this.positions[b]);
+    const [pa, pb] = [this.positions[a], this.positions[b]];
+    if (Math.abs(pa[0] - pb[0]) + Math.abs(pa[1] - pb[1]) !== 1) return { ref: null, problem: 'Only rooms next to each other on the map connect: an exit leads to the next cell.' };
+    const side = facingSide(pa, pb);
     let pair = null;
     let problem = null;
     this.edit(() => {
+      // Both loose exits picked before either side gets a new one (which would pair with it).
+      const looseB = this.looseExit(b, OPPOSITE_SIDE[side]);
       const exitA = this.looseExit(a, side) ?? this.addExit(a, side);
-      const exitB = exitA && (this.looseExit(b, OPPOSITE_SIDE[side]) ?? this.addExit(b, OPPOSITE_SIDE[side]));
+      const exitB = exitA && (looseB ?? this.addExit(b, OPPOSITE_SIDE[side]));
       if (!exitA || !exitB) {
         const full = exitA ? b : a;
         problem = `No room for another exit in ${full}'s ${SIDE_NAMES[exitA ? OPPOSITE_SIDE[side] : side]} wall.`;
         return false;
       }
-      pair = [`${a}.${exitA}`, `${b}.${exitB}`];
-      this.connections.push(pair);
+      // What it leads to is worked out from the map (D259): in order along the wall.
+      pair = [`${a}.${exitA}`, partnerOf(this.connections, `${a}.${exitA}`)];
       return true;
     });
     return { ref: pair, problem };
@@ -335,7 +342,8 @@ export class MapEdit {
   removeExit(ref) {
     const [roomId, exitId] = ref.split('.');
     if (!this.rooms.get(roomId)?.exits?.some((e) => e.id === exitId)) return [];
-    const refs = this.connections.find((pair) => pair.includes(ref)) ?? [ref];
+    const partner = partnerOf(this.connections, ref);
+    const refs = partner ? [ref, partner] : [ref];
     this.edit(() => this.disconnectExit(ref));
     return [...refs];
   }
@@ -358,7 +366,7 @@ export class MapEdit {
 
   /** Is the exit "room.exit" connected? */
   connected(ref) {
-    return this.connections.some((pair) => pair.includes(ref));
+    return partnerOf(this.connections, ref) !== null;
   }
 
   /**
@@ -393,18 +401,16 @@ export class MapEdit {
    * @returns {boolean} whether there was one
    */
   disconnectExit(ref) {
-    const pair = this.connections.find((p) => p.includes(ref));
-    const refs = pair ?? [ref];
+    const partner = partnerOf(this.connections, ref);
     let found = false;
-    for (const r of refs) {
+    for (const r of partner ? [ref, partner] : [ref]) {
       const [roomId, exitId] = r.split('.');
       const room = this.rooms.get(roomId);
       if (!room?.exits?.some((e) => e.id === exitId)) continue;
       found = true;
       this.rooms.set(roomId, roomFileData({ ...room, exits: room.exits.filter((e) => e.id !== exitId) }));
     }
-    if (pair) this.world.connections = this.connections.filter((p) => p !== pair);
-    return found || Boolean(pair);
+    return found;
   }
 
   /**
@@ -419,11 +425,12 @@ export class MapEdit {
       'defs.json': this.files['defs.json'],
       'biomes.json': this.files['biomes.json'],
       'strings.json': this.files['strings.json'],
-      'world.json': { ...this.world, connections: [], positions: {} },
+      'world.json': { ...this.world, positions: {} },
       [roomFile(room.id)]: room,
     };
     const prefix = `${roomFile(room.id)} › exits[${index}]`;
-    return validateData(files).filter((error) => error.startsWith(prefix));
+    // Alone and off the map, every exit leads nowhere (D259): that is no problem of the opening.
+    return validateData(files).filter((error) => error.startsWith(prefix) && !error.endsWith('the room has no map cell'));
   }
 }
 

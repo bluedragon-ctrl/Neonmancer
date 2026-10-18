@@ -63,6 +63,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `world/boot-key.js` | The boot key (D101): the 8×8 code whose modules are the 64 fragments (`BOOT_KEY`) |
 | `world/exits.js` | Which exit the wizard left through; where he arrives in the connected room |
 | `world/grid.js` | 3D occupancy grid: a block type code per cell (`typeAt()` gives its properties), room sides with exit openings (a locked exit's opening closes with `setOpening()`), hole tiles (`fillHole()`, `openHole()`; a bridge's sheet covers one while it is there, `coverHole()`, D224); stairs and slabs fill only part of their cell (D221): `span()` is the part a mover meets (a stair's slope, a slab's sheet), while `isSolid()` still says the whole cell, for crates, enemies and the checker; a fake block a scan revealed leaves (`clearCell()`); `forBody(kind)` is the grid as one kind of body sees it (D198: a crate stream is open to crates and frozen enemies, shut to him and active enemies) |
+| `world/links.js` | Exit connections from the world map (D259): `deriveConnections()` pairs each exit with the facing exit of the room in the next map cell (several in one side in order along it) and lists the exits that can't be paired; `partnerOf()` (pure, tested) |
 | `world/map.js` | The world map (D66): `nearestFreeCell()` for new rooms, `roomDistances()` from the start, `mapWarnings()` (rooms the start can't reach, D178) (pure, tested) |
 | `world/path.js` | Shared path format: legs from `at` through `points`, `advance()` / `positionOf()` on a small path state, swept cells |
 | `world/pickup-report.js` | The world map tool's pickup report: every permanent item by save bit, the rooms it lies in, refills per type, unknown types (pure, tested) |
@@ -197,18 +198,18 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `editor/file-edit.js` | `FileEdit`: a data file rooms share (world, lore) being edited: its data, text, dirty state and `markSaved()`; `applyEntryChange()` for undo/redo of its entries among several rooms (pure, tested) |
 | `editor/format-json.js` | JSON in the data files' hand-written style (pure, tested against every data file) |
 | `editor/ids.js` | `ID_PATTERN` and `idProblem()`: why a new room, exit, template or text id won't do (pure, tested) |
-| `editor/map-edit.js` | The world as the world map tool edits it (D77): `MapEdit` moves, adds and removes rooms, connects rooms with an exit in the middle of each facing wall (`addExit()`), removes connections with both exits (`disconnectExit()`), removes one exit (`removeExit()`, D102) and reuses loose ones (`looseExit()`), undo, rolling back the last save (`rollbackPoint()`, `rollBack()`, D103), and what a save sends (`changes()`) (pure, tested) |
+| `editor/map-edit.js` | The world as the world map tool edits it (D77): `MapEdit` moves, adds and removes rooms, derives its connections from the cells (D259), connects neighbouring rooms with an exit in the middle of each facing wall (`addExit()`), removes connections with both exits (`disconnectExit()`), removes one exit (`removeExit()`, D102) and reuses loose ones (`looseExit()`), undo, rolling back the last save (`rollbackPoint()`, `rollBack()`, D103), and what a save sends (`changes()`) (pure, tested) |
 | `editor/overlay.js` | Editor gizmos: layer grid, cursor, spawn and reset markers, paths, the picked thing's box, switch links (`linkSegments()`, D142), `EDITOR_LOOK` |
 | `editor/links.js` | Switch links in edited room data (D142), both ways: `poweredThings()`, `poweredBy()`, `switchesOf()`, `linksAt()` (a cell's links in words and things to draw) (pure, tested) |
 | `editor/switch-tool.js` | The Switch tool (D142): what a click does (`switchClick()`: place, pick, link, unlink or nothing, said before), everything switches can power (`linkables()`), the panel's link checklists from either side (`linkList()`, `setLink()`, `setEvery()`) (pure, tested) |
 | `editor/pick.js` | Mouse picking that hits what is seen: `hitBoxes()` (the drawn blocks and items, cut above the layer), `rayBox()`, `firstHit()`, `pickCell()` (the nearest box before the layer's plane) (pure, tested) |
 | `editor/panel.js` | Editor side panel (DOM): room list, tools and their fields (block and object type lists in groups, saying what each type does and where a permanent pickup lies, D144, D146), layer, room settings, actions, errors |
-| `editor/room-edit.js` | One room being edited: place/erase edits, enemies, paths, exits and their connections, spawn/reset, name, biome, size (with a report), undo/redo (with the step's screen text changes), dirty state, cell descriptions, switch link toggles (`toggleGateLink()`, `togglePlatformLink()`, `toggleExitLink()`, D142) and a switch's timer; `newRoom()`, `roomIdProblem()`, `sizeProblem()` (pure, tested) |
+| `editor/room-edit.js` | One room being edited: place/erase edits, enemies, paths, exits (one-way too, D259), spawn/reset, name, biome, size (with a report), undo/redo (with the step's screen text changes), dirty state, cell descriptions, switch link toggles (`toggleGateLink()`, `togglePlatformLink()`, `toggleExitLink()`, D142) and a switch's timer; `newRoom()`, `roomIdProblem()`, `sizeProblem()` (pure, tested) |
 | `editor/save.js` | Posting edited files to the dev server; downloading them in a build |
 | `editor/lore-edit.js` | `lore.json` being edited (D118): texts added and changed, checked against the limits; a step's text changes applied again for undo/redo (pure, tested) |
 | `editor/texts.js` | The editor's screen text actions (D118): pick the picked screen's text, add a new one for it, change one; which screens show a text |
 | `editor/monster-edit.js` | The enemy templates as the monster editor edits them (D120): where each value comes from (`field()`), setting and clearing fields, a new base without a change in behavior (`setBase()`), variants and copies in a free color (`add()`), renames the rooms follow, deletes, usage, color clashes, undo/redo, what a save sends (pure, tested) |
-| `editor/world-edit.js` | `world.json` being edited: connecting, disconnecting and renaming exits, a room's connections for its undo steps, a new room's map cell (`place()`, `unplace()`); `linkChoices()` (pure, tested) |
+| `editor/world-edit.js` | `world.json` being edited by the room editor: a new room's map cell (`place()`, `unplace()`) (pure, tested) |
 | `debug/overlay.js` | Debug mode's wireframe collision boxes |
 | `debug/readout.js` | Debug mode's stats readout (rates, buffer and quality, GPU resources, actions, position) |
 | `tools/check-data.js` | Dev only: Ajv schema check + semantic checks over `data/` |
@@ -492,8 +493,9 @@ colors; front-exit arrows (one per tile) are drawn twice, moved outwards and
 faded per frame (`glideState`), half a glide apart. They are purely
 visual and never touch the simulation.
 
-`content.links` (built in `data/load.js`) maps every `"room.exit"` to the
-exit it connects to, both ways. The wizard keeps his fall speed and facing
+`content.links` (built in `data/load.js` from the pairs `world/links.js`
+works out of the map, D259) maps every `"room.exit"` to the exit it
+connects to, both ways; a one-way exit (D259) is a lock that never opens. The wizard keeps his fall speed and facing
 through the flip. Dying respawns him at the room's own `reset` point
 (D39; `spawn` when it has none), however he entered, in a fresh copy of
 the room. The fade is timed in ticks, so it is part of the deterministic
@@ -547,8 +549,9 @@ Validation has two layers:
    schemaVersion, room id = file name, width + depth ≤ 32, known biome and
    object types, overrides only of existing type properties, blocks/objects
    inside the room and not overlapping, exits fit their side, the player
-   hitbox fits at the spawn, start room exists, connections join existing
-   exits on opposite sides with equal width, every exit connected once, the
+   hitbox fits at the spawn, start room exists, every exit leads to the
+   room in the next map cell into an exit as wide (`world/links.js`, D259)
+   and a one-way exit has no lock and a two-way partner, the
    first row inside an exit free of blocks, objects and (at floor level) holes,
    every room on the world map in a cell of its own (`positions`).
 
@@ -570,14 +573,17 @@ page ◄── { ok, errors, files } ──────────────�
 open pages ◄── ws custom event neonmancer:data-saved { files }
 ```
 
-`world.json` has two editors (D70): the room editor owns the connections,
-the world map tool the positions. The map sends the positions of the rooms
+`world.json` has two editors (D70): the world map tool owns the
+positions, and with them where every exit leads (D259); the room editor
+only adds a new room's cell. The map sends the positions of the rooms
 it moved, merged into the file on disk; when the room editor sends the
 whole file, the positions on disk win over its copy (only a new room's
-cell is its own), so neither undoes the other's saves. The map also adds
-and removes rooms and connections (D77): then it sends the new and
-changed room files, the removed rooms' ids and the whole `world.json`
-(its connections win; positions still merge, removed rooms' dropped).
+cell is its own), so neither undoes the other's saves, and the room
+editor takes in the map's saved moves. The map also adds and removes
+rooms and the exits that connect them (D77): then it sends the new and
+changed room files, the removed rooms' ids and, when a room went or the
+start changed, the whole `world.json` (positions still merge, removed
+rooms' dropped).
 After every save the dev server sends `neonmancer:data-saved`: the game
 ignores it (it already shows its edits), the map reloads unless it has
 unsaved changes. A room file added or deleted reloads open pages anyway
@@ -586,10 +592,11 @@ unsaved changes. A room file added or deleted reloads open pages anyway
 While editing, the page checks all its edited data (every edited room and
 `world.json`, D57) with `validateData()` against its own copy of the rest
 after every change, and hands the edited data to the game
-(`content.rooms`, `content.links` from `linkMap()`) so `Game.enterRoom()`
+(`content.rooms`, `content.links` from `linkMap()` of the connections
+derived from the edited rooms and map, D259) so `Game.enterRoom()`
 rebuilds it and `RoomScene.show(game, { rebuild: true })` redraws the
 static views too; walking through an exit reaches other edited or new
-rooms. An exit not connected yet streams its own room's color.
+rooms. An exit that leads nowhere yet streams its own room's color.
 Only the dev server writes files; a build downloads the files instead. The
 endpoint takes only a JSON POST whose `Origin` (if any) is the dev server
 itself (`refuseSaveRequest()`), so another site open in the browser can't

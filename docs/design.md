@@ -32,7 +32,7 @@ measured against:
    (D217), for exits and secrets only. Pull, Compile, Cut & Paste,
    Warp and Firewall belong to later sectors (maybe dropped or kept for
    development) and are left out of Lattice design and checks, except
-   as the key to a return layer's extra, never a fragment (D259). The
+   as the key to a return layer's extra, never a fragment (D260). The
    Lattice's wings open in any order, so a pickup's trick holds against
    every Lattice spell (D187). Each room's type
    and trick to aim for: the ladder in docs/lattice-plan.md.
@@ -1805,6 +1805,15 @@ before D140 work as they did). Switch types in `defs.json` are placed in
 - **Hidden exit** (`"hidden": true` on an exit, D128): solid and drawn as
   wall until a scan reaches it (see Scan); with `"requires"`
   it is a lock once revealed.
+- **One-way exit** (`"oneWay": true` on an exit, D259): a way in only. He
+  arrives through it, but it is shut from this side for good: a lock's
+  white glass barrier with no lights, closed even though he came in
+  through it. It takes no `requires` or `hidden`, and the exit it pairs
+  with is two-way. The reachability checker makes sure he can leave the
+  room another way with what he had on arrival or finds in the room (an
+  error, not a warning). Restart room behind one goes with no backups
+  left too: a crash to the nearest shrine, as a death with none left
+  (he can't walk out the way he came).
 - **Look** (D75, after two showcase rounds): white (`#eef3ff`, the
   type's `color`). Both switches carry a square bull's-eye, a small square
   inside a bigger one, so they read as switches by shape, not only by
@@ -1858,6 +1867,14 @@ before D140 work as they did). Switch types in `defs.json` are placed in
 
 - Exits are horizontal: an opening on one side of the room
   (`side`, first cell `at`, `width`, floor level `y`, `height`).
+- An exit leads to the room in the next world map cell in its direction
+  (D259; `positions` in `world.json`, +x east, +z south), into that
+  room's exit in the opposite side, which must be as wide. Several exits
+  in one side pair up in order along it (by `at`, then `y`). Nothing lists
+  the pairs: moving a room on the map rewires it, and an exit with no room
+  or no matching exit there is a data error ("leads nowhere"). Exits are
+  two-way by default; `oneWay` makes the arriving end a way in only
+  (Switches, One-way exit).
 - On the back sides an exit is a doorway in the wall (framed, with a
   threshold line) leading into darkness: a short tunnel fading to black with
   corner lines fading into it, like a hole's pit. On the front sides it is a
@@ -1975,7 +1992,8 @@ it, and every new room)
 - A 1-high wall is a wall: the cheapest one, it hides nothing. Every ledge
   is a one-way drop: he steps off any height, and only a stair or a pad
   takes him back. He can always leave the way he came (rule 3): every drop
-  on the way in from a door has a way back, or another door is his way out.
+  on the way in from a door has a way back, or another door is his way out
+  (behind a one-way exit, D259, another door always is).
 - A crate is no step: he can't get onto it, so it blocks him like a
   Sokoban box, and he gets behind one only by walking round it (spiked
   crates add nothing here). He stands on a crate only by walking onto it
@@ -2077,7 +2095,7 @@ it, and every new room)
   may wait for a spell or buff found later. Know which abilities each
   exit and pickup needs, and make sure the player can always leave the
   way he came with what he has.
-- Most rooms (about two thirds of the mix) carry a return layer (D259):
+- Most rooms (about two thirds of the mix) carry a return layer (D260):
   something seen closed on the first visit (a pit too wide, a hollow
   wall, a lock, a crate out of reach) that an ability found later opens:
   a shortcut, a new exit, a secret or a cache (a boost, a refill). It is
@@ -2424,11 +2442,12 @@ floor.
   wall nearer the mouse), at the layer's height, with the panel's width
   and height, id after the side (`north`, `east_2`...). A click on an exit
   picks it: id, position along its side, floor level (y), width, height
-  and **Leads to** (the exits of other rooms in the opposite side,
-  equally wide and not connected yet); a change that would overlap
+  and **Leads to** (shown, not picked: the exit it pairs with in the room
+  next to it on the map, D259); a change that would overlap
   another exit is refused. A new width goes to the exit it leads to as
   well (an undo step of that room), moving either back to stay within its
-  side. **Locked** makes it a locked exit (D75). Right click removes an exit and its connection. An exit must be connected before
+  side. **Locked** makes it a locked exit (D75), **One-way** a way in only
+  (D259). Right click removes an exit. An exit must lead somewhere before
   the room plays or saves.
 - **Spawn, Reset** put the start or respawn point in the middle of the
   cell, standing on the layer; erasing with Reset removes the reset point
@@ -2445,9 +2464,9 @@ floor.
   outside, listed in the status line, and moves spawn and reset inside),
   its watchdog timer (**Timer (s)**: whole seconds 3–600, blank for none,
   D172) and the layer, and has Undo, Redo, Save or Export, and Revert (back to
-  the last save; undo and Revert take the room's connections along). A new
-  room never saved has **Discard new room**, which drops it and its
-  connections and goes back to the room edited before. Under the layer, a
+  the last save). A new room gets the free map cell nearest the room it
+  was made from; never saved, it has **Discard new room**, which drops it
+  and its map cell and goes back to the room edited before. Under the layer, a
   line says what is in the cell under the mouse (`3, 1, 4: crate_1
   (crate)`, an exit there too). Errors of all the edited data are listed
   live by file, the way the game would report them at load time; a click
@@ -2460,8 +2479,8 @@ floor.
   and hole entries keep their place and shape; edited cells are merged
   into boxes.
 - **Sending the rooms in:** `tools\map-pr.bat ["what changed"]` (Windows)
-  puts only `data/rooms/`, `data/world.json` (connections, and room
-  positions from the world map tool), `data/defs.json` (enemy
+  puts only `data/rooms/`, `data/world.json` (room positions, which also
+  say where exits lead, D259), `data/defs.json` (enemy
   templates) and `data/lore.json` (screen texts, D118) on a new branch, room and map changes in one PR,
   `feat/map-<date>` from `origin/main` (after `npm run validate:data`),
   commits, pushes and opens the PR with the GitHub CLI, or prints a
@@ -2480,17 +2499,17 @@ players never see it (D67).
   size; the start room has a dashed lime frame and `START`.
 - **Connections:** a line joins two connected exits, leaving each node
   from the side its exit is on, as far along it as the exit is along the
-  room's side. Solid when the rooms are neighbours that way round on the
-  map (east exit, room one cell east), dashed when the connection runs
-  across the map (shortcuts, loops).
+  room's side. Exits lead to the room next door (D259), so moving a room
+  rewires it: its exits that face no room any more turn loose. A one-way
+  pair is dashed, with a chevron pointing the way he can go.
 - **Tools** (D77), picked in the panel or with keys 1–4:
   - **Move:** drag a room to a free cell (dropping it on another room
     does nothing); a click opens it (below).
   - **Add:** click a free cell for a new, empty room (12×4×12, no exits);
     its id (a free `room_N` if left empty) and biome are set in the panel.
-  - **Connect:** drag from one room to another, or click one then the
-    other (Esc cancels). Each gets a 2-wide floor-level exit in the wall
-    facing the other on the map (x wall for diagonal neighbours), in the
+  - **Connect:** drag from one room to a room next to it on the map, or
+    click one then the other (Esc cancels). Each gets a 2-wide floor-level
+    exit in the wall facing the other, in the
     middle of the wall, or the nearest spot that is free of other exits
     and passes the room's checks. Fine-tune it in the room editor.
   - **Delete:** click a room to remove it with the exits into it (not the
@@ -2498,13 +2517,13 @@ players never see it (D67).
     exit's mark on a room edge (D102): a connected exit goes with its
     partner, a loose one alone.
 - **Exits** show as marks on the room edges, where they are along the
-  side: cyan when connected, magenta when loose (not connected: a data
-  error, e.g. made by hand). Connect uses a 2-wide loose exit already in
+  side: cyan when connected, magenta when loose (leading nowhere: a data
+  error, e.g. after a move). Connect uses a 2-wide loose exit already in
   the facing wall (the middle-most) before making a new one.
 - **Saving:** rooms with unsaved changes show a lime dot; the Save button
   says what it would send. **Save** (or Ctrl+S) sends the moved rooms'
   positions, the new and changed room files, the removed rooms' ids and,
-  if the connections changed, `world.json`; the dev server merges the
+  if the start changed or a room went, `world.json`; the dev server merges the
   positions into `world.json` as it is on disk, checks everything and
   writes it all or nothing (removed room files are deleted). **Undo**
   (or Ctrl+Z) undoes the last edit; with nothing left to undo it becomes
@@ -2753,7 +2772,7 @@ has `"schemaVersion": 1` and a `"$schema"` link for editor support.
 | `data/rooms/<id>.json` | One room (id = file name) |
 | `data/defs.json` | `objects`: object types and their defaults (crates, platforms, switches, the core); a variant `extend`s a base type and lists only what it changes, one level, keeping its kind (D145, e.g. `target_timed`: `{ "extends": "target", "timer": 5 }`); `enemies`: enemy templates, each complete or `extend`ing another (D58, D79); `spells`: tuning and color per spell; `pickups`: disks, buff chips, upgrade cards, fragments, secrets and refills; `blocks`: block types (D60); `score`: points per kind of pickup (D100). Each is described in its section above. |
 | `data/biomes.json` | Biome name and room color, optional `look` for the surroundings (see Biomes) |
-| `data/world.json` | Start room, exit connections, every room's cell on the world map (`positions`, D66), the dev wing (`dev`, D147) and the key fragments (`fragments`: how many the core needs, the access thresholds, D101) |
+| `data/world.json` | Start room, every room's cell on the world map (`positions`, D66; they also say where exits lead, D259), the dev wing (`dev`, D147) and the key fragments (`fragments`: how many the core needs, the access thresholds, D101) |
 | `data/lore.json` | Screen texts by id (D118) |
 | `data/audio.json` | Named sounds and music (D138) |
 | `data/strings.json` | Every UI text by dotted key (`hud.integrity`, `msg.die`); `{name}` marks a value the game fills in; the schema lists the keys the game uses |
@@ -2818,8 +2837,10 @@ Example room:
   `dark`/`tinted`/`hazard`/`glass`, `shape` `cube`/`spiked` (defaults
   first), `tint` 0–1 (color share of a tinted top face, default 0.1).
   Objects may override them.
-- `world.json` pairs exits: `"connections": [["boot_up.east", "first_steps.west"]]`.
-  Paired exits are on opposite sides and equally wide; every exit is connected.
-  `"positions": { "boot_up": [5, 0] }` places every room on the world
-  map, one room per cell (`[x, z]`, +x east, +z south; map neighbours need
-  not be connected, D66).
+- `"positions": { "boot_up": [5, 0] }` in `world.json` places every room
+  on the world map, one room per cell (`[x, z]`, +x east, +z south, D66).
+  An exit leads to the room in the next cell in its direction, into its
+  exit in the opposite side, equally wide; several in one side pair in
+  order along it (D259). Every exit must lead somewhere; neighbours with
+  no exits between them are not connected. `"oneWay": true` on an exit
+  makes it a way in only.

@@ -143,7 +143,8 @@ export class RoomScene {
     this.scanView = new ScanView(game);
     this.decoyView = new DecoyView(game);
     // A hidden exit (D128) that is only hidden has no barrier: it is wall until revealed.
-    const barred = game.locks.filter(({ exit }) => exit.locked || exit.access);
+    // A one-way exit (D259) is a barrier with no lights, shut for good.
+    const barred = game.locks.filter(({ exit }) => exit.locked || exit.access || exit.oneWay);
     this.lockViews = new Map(barred.map((lock) => [lock.exit.id, new LockView(game, lock)]));
     this.objectGroup = new Group().add(this.zapView.group, this.scanView.group, this.decoyView.group, ...[...this.lockViews.values()].map((view) => view.group));
     // add() with no arguments logs an error (a room without objects).
