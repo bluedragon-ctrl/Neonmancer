@@ -19,6 +19,12 @@ docs/decisions.md).
   such a room another way; Restart room there works with no backups left
   (a crash to a shrine). The room editor has a One-way box; both maps draw
   a one-way link with a chevron.
+- Return layers (D260): about two thirds of the rooms keep something for a
+  return, seen closed on the first visit and opened by a later ability (a
+  shortcut, an exit, a secret, a cache). The room-design skill, craft notes,
+  level review and design checklist say how; later-sector spells may key
+  extras in the Lattice, never a fragment; docs/lattice-plan.md lists the
+  layers built and the rooms still without one.
 - `check:reach` warns of a crate, plate, socket or pad within 2 cells of a
   door (D241): busy beside a door, the wizard walked out by accident and the
   room reset. The room checklist, the room-design skill and the level review

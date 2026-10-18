@@ -39,13 +39,22 @@ For each room:
      `--with zap,scan,fork,pause` for pickups (any route: the wings open
      in any order) and `--with zap,scan,fork,pause,blink` for exits and
      secrets (Blink is the Level 1 reward, D187, D217), not the default;
-     Pull, Compile, Cut & Paste, Warp and Firewall belong to later sectors and are not
-     findings there. For each
+     Pull, Shove, Swap, Compile, Cut & Paste, Warp and Firewall belong to later sectors and are not
+     findings there, unless one is a return layer's key (D260): then add it to
+     the set and check the room's pickups with it too. For each
      pickup, every ability set in the mutation test's first lines that
      is not the room's own: rerun
      with `--with <that set>`; if the trick's key pieces no longer
      matter, that set skips the trick: a BLOCKER for a fragment, a
      PROBLEM for other pickups. The same for exits is fine (a NOTE).
+   - **Return layer** (D260): what opens on a return, with which key? None
+     in a puzzle or hybrid room that is not a teach rung: a NOTE with an
+     idea for one. For a layer: closed with the set he has (`--with`, every
+     `--from`), open with the key added; in view from his route and looking
+     like a gate; reached without re-solving the main puzzle; none of its
+     pieces a red herring for the main trick; its key reaching no pickup
+     without its trick (a fragment behind a later-sector key: a BLOCKER);
+     listed in docs/lattice-plan.md, Return layers.
 4. Walk the checklist against the actual coordinates, not the intent:
    - **Jump rule** (D222): is the room a pads room (`"jump": "pads"`)? A
      room reviewed in step 5.17 or new must be (a PROBLEM if not), and

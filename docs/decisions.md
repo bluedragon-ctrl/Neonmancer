@@ -3413,6 +3413,32 @@ Replaces D6 (connections listed in `world.json`); amends D67 and D75
 could not drift apart from the map), and one-way exits for drops and
 shortcuts home, guarded so they never trap him.
 
+### D260 — 2026-10-18 — Return layers: rooms worth coming back to
+- **Rule**: about two thirds of the rooms in the mix carry a *return layer*:
+  something seen closed on the first visit that an ability found later opens
+  (a shortcut, a new exit, a secret, a cache of boosts or refills). Teach
+  rungs, bosses, breathers and the goal may skip it. Every new ability opens
+  at least three places it was seen closed (was two, craft.md).
+- **Shape**: in view from his route and looking like a gate; reached from the
+  room's through-route, so a return never costs the whole puzzle again; a
+  small trick of its own, best with the room's own pieces read anew; no red
+  herring on the first visit; never the way round a pickup's trick, and
+  nothing the room needs waits on it.
+- **Keys** (amends D187): in the Lattice Blink, another wing's spell, the
+  energy buff and access levels as before; the later sectors' spells (Warp,
+  Pull, Compile, Cut & Paste, Firewall) may now key a layer's extra (a secret,
+  an exit, a shortcut, a cache), never a fragment. A Lattice room stays whole
+  without them; a spell that is dropped takes its layers with it or they get
+  a new key.
+- **Rewards**: secrets have 16 save bits in the whole game, so most layers pay
+  a shortcut, an exit or a cache.
+- **Tools**: the room-design skill (Return layers, with the checks), craft.md,
+  the level-review subagent and the design checklist say it; the layers are
+  listed in docs/lattice-plan.md (Return layers, which replaces Revisits).
+**Why:** author's direction: exploring is the reward (D67), and a new spell
+should send him back through rooms he knows, each read anew; until now only
+a handful of Lattice rooms held anything for a return.
+
 ### D261 — 2026-10-18 — Two spells: Shove and Swap
 Amends D88 (the roster: 13 spells now, 3 slots spare).
 - **Shove** (slot 11, salmon `#ff9e7a`, 15 energy, range 6): Pull's

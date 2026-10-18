@@ -63,7 +63,14 @@ every room earns its place with one trick.
    back to a hub per wing, so backtracking shrinks as the world grows (D67).
 7. **Locks before keys.** A locked thing is seen before its key, ideally in a
    room he passes twice; far enough apart to be a mental to-do, near enough
-   to remember. A new ability opens at least two seen-but-closed places.
+   to remember. A new ability opens at least three seen-but-closed places
+   (D260).
+7a. **Rooms grow on return** (D260). Most rooms keep something for later:
+   a shortcut, an exit, a secret, a cache, opened by an ability he finds
+   elsewhere. The best ones read a known room anew (the pit he plugged
+   with crates is a Blink jump now; the crate out of reach is a Pull
+   away). Small, off the main puzzle, never a red herring on the first
+   visit, never the way to a pickup's trick (SKILL.md, Return layers).
 8. **Composition.** A focal point (the exit ahead, a tall structure, a
    glowing plate) away from the entrance so the eye crosses the room. Height
    for drama, not filler. No dead floor: empty space is a sightline, a safe
