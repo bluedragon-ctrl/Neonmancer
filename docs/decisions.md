@@ -3438,3 +3438,27 @@ shortcuts home, guarded so they never trap him.
 **Why:** author's direction: exploring is the reward (D67), and a new spell
 should send him back through rooms he knows, each read anew; until now only
 a handful of Lattice rooms held anything for a return.
+
+### D261 — 2026-10-18 — Two spells: Shove and Swap
+Amends D88 (the roster: 13 spells now, 3 slots spare).
+- **Shove** (slot 11, salmon `#ff9e7a`, 15 energy, range 6): Pull's
+  opposite. The first crate or enemy in line slides one cell away from
+  him, a crate by the push rules (D4, D230), an enemy over anything (it
+  may drop into a hole and pop; provoked, D81). Unlike Pull's, its line
+  passes see-through blocks (fences, D167), as a bolt does.
+- **Swap** (slot 12, periwinkle `#9fb4ff`, 25 energy, range 6): he and
+  the first crate or frozen enemy in Pull's line trade places, level, he
+  on the ground. Never a spiked crate (D199), one with a load, or where
+  either cell has no room. His stream is Warp's afterimage, the crate's
+  the shared stream (D127).
+- **Checker**: both are abilities (`shove`, `swap`). A swap carries the
+  cell it put him in into the next configurations, and his flood starts
+  there too. Pull's line in the checker now also crosses a crate stream,
+  as the game's always did.
+- **Placement**: no room places their disks yet; where they go (Lattice
+  or a later sector) is the author's call. Like Pull they are left out of
+  Lattice design and checks until then (D186).
+**Why:** the author picked them from five proposals as push-puzzle
+spells: Shove moves crates he can't reach (behind a fence, in a corridor
+he can't enter), Swap gets him behind a box or past his own barrier.
+Both keep the push rules, so a crate in a corner stays stuck.

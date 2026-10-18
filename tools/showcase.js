@@ -270,6 +270,8 @@ const ALL_ASSETS = [
   { label: 'disk-warp', group: 'disks', spin: false, build: () => buildDisk(defs.spells.warp) },
   { label: 'disk-cut-paste', group: 'disks', spin: false, build: () => buildDisk(defs.spells.cut_paste) },
   { label: 'disk-pull', group: 'disks', spin: false, build: () => buildDisk(defs.spells.pull) },
+  { label: 'disk-shove', group: 'disks', spin: false, build: () => buildDisk(defs.spells.shove) },
+  { label: 'disk-swap', group: 'disks', spin: false, build: () => buildDisk(defs.spells.swap) },
   { label: 'disk-compile', group: 'disks', spin: false, build: () => buildDisk(defs.spells.compile) },
   { label: 'disk-fork', group: 'disks', spin: false, build: () => buildDisk(defs.spells.fork) },
   { label: 'disk-scan', group: 'disks', spin: false, build: () => buildDisk(defs.spells.scan) },
@@ -371,6 +373,15 @@ const ALL_ASSETS = [
   // his hands and it slides one cell towards him (its disk: disk-pull).
   { label: 'pull', group: 'pull', span: 5, spin: false, build: () => buildPull('crate') },
   { label: 'pull-enemy', group: 'pull', span: 5, spin: false, build: () => buildPull('bug') },
+  // Shove (D261): Pull run the other way, in its own color: rings of pixels
+  // leave his hands small and grow into the crate (or bug), which slides one
+  // cell away from him (its disk: disk-shove).
+  { label: 'shove', group: 'shove', span: 5, spin: false, build: () => buildPull('crate', 'shove') },
+  { label: 'shove-enemy', group: 'shove', span: 5, spin: false, build: () => buildPull('bug', 'shove') },
+  // Swap (D261): the aim marker on the crate three cells ahead; he casts,
+  // he and the crate trade places, each streaming its pixels to where the
+  // other stood; he turns and swaps back (its disk: disk-swap).
+  { label: 'swap', span: 5, spin: false, build: buildSwap },
   // Compile (D125): the aim marker on the free cell in front of him; he
   // casts, gold bits fly from his hands into it and a dashed crate grows
   // in; it blinks, faster at the end, and derezzes (shortened here from
@@ -2781,11 +2792,14 @@ function buildCutPaste(kind) {
 
 /**
  * Pull (D124) in a loop: the wizard (left, facing +x) pulls the crate or
- * bug three cells ahead one cell towards him.
+ * bug three cells ahead one cell towards him; or Shove (D261): two cells
+ * ahead, one cell away from him.
  * @param {'crate'|'bug'} kind
+ * @param {'pull'|'shove'} [spell]
  */
-function buildPull(kind) {
-  const { color } = defs.spells.pull;
+function buildPull(kind, spell = 'pull') {
+  const { color } = defs.spells[spell];
+  const out = spell === 'shove';
   const at = [-2, 0, 0];
   const wizard = createWizard();
   wizard.position.set(...at);
@@ -2819,7 +2833,8 @@ function buildPull(kind) {
     tick = (tick + dt * 60) % loop;
     const since = tick - castAt;
     placeCastFlare(flare, at, Math.PI / 2, since);
-    const x = 1 - Math.max(0, Math.min(1, since / slideTicks));
+    const slid = Math.max(0, Math.min(1, since / slideTicks));
+    const x = out ? slid : 1 - slid;
     thing.position.set(x, 0, 0);
     if (bug) animateBug(bug, { state: since >= 0 && since < slideTicks ? 'walk' : 'rest', walked: since / slideTicks, time });
     const center = [x, height / 2, 0];
@@ -2828,7 +2843,48 @@ function buildPull(kind) {
     aim.visible = false;
     if (scale !== null) placeMarquee(marquee, center, frame * scale, time);
     else if (since < 0) placeMarquee(aim, center, crate ? PULL_FX.aimMarquee : frame, time);
-    placePixels(pixels, scale !== null ? pullPixels(since, center, hands) : [], [0, 0, 0]);
+    placePixels(pixels, scale !== null ? pullPixels(since, center, hands, out) : [], [0, 0, 0]);
+  };
+  return asset;
+}
+
+/**
+ * Swap (D261) in a loop: the wizard (left, facing +x) and the crate three
+ * cells ahead trade places; he turns round and swaps back.
+ */
+function buildSwap() {
+  const { color } = defs.spells.swap;
+  const left = [-2, 0, 0];
+  const right = [1, 0, 0];
+  const wizard = createWizard();
+  const flare = createCastFlare();
+  const crate = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...OBJECT_TYPES.crate, at: [0, 0, 0] });
+  const aim = createMarquee(color, PULL_FX.aimBrightness);
+  const trail = createWarpTrail(color, 'swap');
+  const end = (at) => ({ at, body: BLOCK_BODY });
+  const stream = createStream(streamCount(end(left), end(right)), [color, 0xffffff]);
+  const asset = new Group().add(wizard, flare, crate, aim, trail, stream);
+  // Swaps at ticks 50 and 170; loop 240.
+  const casts = [50, 170];
+  const loop = 240;
+  let tick = 0;
+  asset.userData.update = (dt, time) => {
+    tick = (tick + dt * 60) % loop;
+    const swapped = tick >= casts[0] && tick < casts[1];
+    const last = tick >= casts[1] ? casts[1] : tick >= casts[0] ? casts[0] : casts[1] - loop;
+    const since = tick - last;
+    const [me, it] = swapped ? [right, left] : [left, right];
+    const facing = swapped ? -Math.PI / 2 : Math.PI / 2;
+    wizard.position.set(...me);
+    wizard.rotation.y = facing;
+    crate.position.set(it[0] - 0.5, 0, it[2] - 0.5);
+    // He casts from where he stood, facing the crate.
+    placeCastFlare(flare, swapped ? left : right, swapped ? Math.PI / 2 : -Math.PI / 2, since);
+    const going = since < PLAYER.warpTicks;
+    placeWarpTrail(trail, going ? { from: it, to: me } : null, since);
+    placeStream(stream, going ? since : null, PLAYER.warpTicks, end(me), end(it));
+    aim.visible = false;
+    if (!going && since > 30) placeMarquee(aim, [it[0], 0.5, it[2]], PULL_FX.aimMarquee, time);
   };
   return asset;
 }

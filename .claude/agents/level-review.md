@@ -39,7 +39,7 @@ For each room:
      `--with zap,scan,fork,pause` for pickups (any route: the wings open
      in any order) and `--with zap,scan,fork,pause,blink` for exits and
      secrets (Blink is the Level 1 reward, D187, D217), not the default;
-     Pull, Compile, Cut & Paste, Warp and Firewall belong to later sectors and are not
+     Pull, Shove, Swap, Compile, Cut & Paste, Warp and Firewall belong to later sectors and are not
      findings there, unless one is a return layer's key (D260): then add it to
      the set and check the room's pickups with it too. For each
      pickup, every ability set in the mutation test's first lines that

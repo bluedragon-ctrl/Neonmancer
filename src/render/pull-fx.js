@@ -6,6 +6,9 @@
  * the wizard's hands, while a marquee (as Cut & Paste's, D87) snaps onto
  * the target and rides along with it. While the spell is selected, a dim
  * marquee marks what a pull would take (the aim marker).
+ *
+ * Shove (D261) is the same beam run outwards in its own color: rings leave
+ * his hands small and grow as they flow into what he shoves.
  */
 import { PLAYER } from '../entities/player.js';
 
@@ -67,13 +70,16 @@ const RING = [
  * @param {number} tick may be fractional
  * @param {number[]} target the middle of the target now
  * @param {number[]} hands where his hands are now
+ * @param {boolean} [out] Shove (D261): rings leave his hands and grow towards the target
  * @returns {{ offset: number[], scale: number }[]} world positions, always
  *   PULL_PIXELS of them (scale 0: not shown)
  */
-export function pullPixels(tick, target, hands) {
-  const { travelTicks, spacing, ringSize, handSize, fade } = PULL_FX;
-  const dx = hands[0] - target[0];
-  const dz = hands[2] - target[2];
+export function pullPixels(tick, target, hands, out = false) {
+  const { travelTicks, spacing, fade } = PULL_FX;
+  const [from, to] = out ? [hands, target] : [target, hands];
+  const [startSize, endSize] = out ? [PULL_FX.handSize, PULL_FX.ringSize] : [PULL_FX.ringSize, PULL_FX.handSize];
+  const dx = to[0] - from[0];
+  const dz = to[2] - from[2];
   const length = Math.hypot(dx, dz) || 1;
   // Level and across the beam.
   const across = [-dz / length, 0, dx / length];
@@ -85,8 +91,8 @@ export function pullPixels(tick, target, hands) {
     const u = (tick - start) / travelTicks;
     const shown = k >= 0 && u >= 0 && u < 1 && start + travelTicks <= PLAYER.pullTicks;
     const along = ease(u);
-    const middle = [0, 1, 2].map((i) => target[i] + (hands[i] - target[i]) * along);
-    const half = ringSize + (handSize - ringSize) * along;
+    const middle = [0, 1, 2].map((i) => from[i] + (to[i] - from[i]) * along);
+    const half = startSize + (endSize - startSize) * along;
     const scale = shown ? Math.min(1, (1 - u) / fade) : 0;
     for (const [a, b] of RING) {
       const offset = [0, 1, 2].map((i) => middle[i] + across[i] * a * half + (i === 1 ? b * half : 0));

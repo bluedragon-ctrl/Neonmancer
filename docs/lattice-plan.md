@@ -132,7 +132,7 @@ In the mix, 5 of 21 rooms have a layer so far (`mirror_stacks`,
 `ledger_cell`, `drift_bay`, `cold_stairs`, `idle_cache`, `fork_lab`,
 `twin_plates`, `split_vault`. Blink is the one key every player finds
 later than the wings, so it should open the most; a later-sector key
-(Warp, Pull, Compile, Cut & Paste, Firewall) opens extras only, never a
+(Warp, Pull, Shove, Swap, Compile, Cut & Paste, Firewall) opens extras only, never a
 fragment.
 
 ### Mix and gaps

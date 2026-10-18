@@ -9,6 +9,11 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
+- Two spells, not placed in any room yet (D261): **Shove** (slot 11)
+  pushes the first crate or enemy in line one cell away, its beam passing
+  fences; **Swap** (slot 12) trades places with the first crate or frozen
+  enemy in line. Both have data disks, sounds, the reachability checker
+  (`shove`, `swap`) and showcase entries (`?asset=shove,swap`).
 - One-way exits (D259): `"oneWay": true` makes an exit a way in only, shut
   from his side for good. The reachability checker makes sure he can leave
   such a room another way; Restart room there works with no backups left

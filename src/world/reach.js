@@ -11,9 +11,10 @@
  * checklist (docs/design.md); keep them in step.
  *
  * Pushable crates are searched as a puzzle: every position the crates can
- * be pushed (or pulled, or cut and pasted) into is a configuration, each
- * with its own flood; a configuration is the crates plus the holes they
- * plugged. The search is cut off at MAX_CONFIGS configurations. A room
+ * be pushed (or pulled, shoved, swapped, or cut and pasted) into is a
+ * configuration, each with its own flood; a configuration is the crates
+ * plus the holes they plugged, and after a swap (D261) the cell the swap
+ * put him in, which his flood starts from too. The search is cut off at MAX_CONFIGS configurations. A room
  * resets on death, so what he can reach in any configuration counts, but
  * what needs two things at once (a locked exit open and the way to it)
  * is judged inside one configuration.
@@ -68,7 +69,7 @@ import { Grid, RISES } from './grid.js';
 import { pathCells } from './path.js';
 
 /** The abilities the search knows how to use, spells by id. */
-export const ABILITIES = ['zap', 'scan', 'pull', 'compile', 'fork', 'cut_paste', 'blink', 'warp', 'pause'];
+export const ABILITIES = ['zap', 'scan', 'pull', 'shove', 'swap', 'compile', 'fork', 'cut_paste', 'blink', 'warp', 'pause'];
 
 /**
  * Jump tuning in cells, from PLAYER (apex 1.2 above take-off, ~1.65 units of
@@ -508,30 +509,56 @@ export class RoomModel {
    * @param {number[]} crates cell indices
    * @param {Set<number>} plugged hole tiles
    * @param {Set<number>} [spiked] the cells of the crates with a spiked top, among `crates`
+   * @param {number} [seed] a cell a swap put him in (D261): his flood starts there too
    */
-  config(crates, plugged, spiked = new Set()) {
+  config(crates, plugged, spiked = new Set(), seed = undefined) {
     const sorted = (set) => [...set].sort((a, b) => a - b);
     const marks = spiked.size > 0 ? `|${sorted(spiked)}` : '';
-    return { crates, plugged, spiked, crateSet: new Set(crates), key: `${sorted(crates)}|${sorted(plugged)}${marks}` };
+    const at = seed === undefined ? '' : `@${seed}`;
+    return { crates, plugged, spiked, seed, crateSet: new Set(crates), key: `${sorted(crates)}|${sorted(plugged)}${marks}${at}` };
   }
 
   /**
-   * Configurations one push, pull or cut and paste away.
+   * Can a beam (Pull, Shove, Swap) pass the cell: open for a crate, or with
+   * `sight` (Shove, D261) a see-through block (a fence, D167)?
+   */
+  beamOpen(x, y, z, cfg, sight = false) {
+    if (!this.blockedCrate(x, y, z, cfg)) return true;
+    return sight && y >= 0 && y < this.h && this.grid.isInside(x, z) && this.grid.isSolid(x, y, z) && !this.grid.blocksSight(x, y, z);
+  }
+
+  /**
+   * Does he stand in line with the crate at (x, y, z), on the side minus
+   * [dx, dz], `nearest` to 6 cells away, level, with the beam open between
+   * (a block or a crate in line stops it; with `sight` a fence doesn't)?
+   */
+  beamFrom(x, y, z, dx, dz, nearest, cfg, stands, sight = false) {
+    for (let k = 1; k <= 6; k++) {
+      const sx = x - dx * k;
+      const sz = z - dz * k;
+      if (k >= nearest && this.grid.isInside(sx, sz) && stands.has(this.index(sx, y, sz))) return true;
+      if (!this.beamOpen(sx, y, sz, cfg, sight)) return false;
+    }
+    return false;
+  }
+
+  /**
+   * Configurations one push, pull, shove, swap or cut and paste away.
    * @param {object} cfg
    * @param {Set<number>} stands what he can stand on in `cfg`
    */
   successors(cfg, stands) {
     const out = [];
     const { abilities } = this;
-    const move = (from, x, y, z) => {
+    const move = (from, x, y, z, seed = cfg.seed) => {
       // The crate `from` leaves; a crate put in (x, y, z) falls from there. A spiked one stays spiked, unless it plugs a hole.
       const crates = cfg.crates.filter((c) => c !== from);
       const spiked = new Set(cfg.spiked);
       const wasSpiked = spiked.delete(from);
       const probe = this.config(crates, cfg.plugged, spiked);
       const rest = this.settle(x, y, z, probe);
-      if (rest.plug !== undefined) out.push(this.config(crates, new Set([...cfg.plugged, rest.plug]), spiked));
-      else out.push(this.config([...crates, rest.cell], cfg.plugged, wasSpiked ? new Set([...spiked, rest.cell]) : spiked));
+      if (rest.plug !== undefined) out.push(this.config(crates, new Set([...cfg.plugged, rest.plug]), spiked, seed));
+      else out.push(this.config([...crates, rest.cell], cfg.plugged, wasSpiked ? new Set([...spiked, rest.cell]) : spiked, seed));
     };
     const loose = (c) => {
       const [x, y, z] = this.cell(c);
@@ -544,23 +571,28 @@ export class RoomModel {
         // Push: he stands behind it, level, and the cell beyond is free.
         const px = x - dx;
         const pz = z - dz;
-        const pushed = this.grid.isInside(px, pz) && stands.has(this.index(px, y, pz)) && this.crateStep(x, y, z, dx, dz, cfg);
+        const pushed = this.grid.isInside(px, pz) && stands.has(this.index(px, y, pz)) ? this.crateStep(x, y, z, dx, dz, cfg) : null;
         if (pushed) move(c, ...pushed);
         // Pull: he stands in line up to `range` cells away, level, and the cell towards him is free.
         if (abilities.has('pull')) {
           const pulled = this.crateStep(x, y, z, -dx, -dz, cfg);
-          if (pulled) {
-            for (let k = 2; k <= 6; k++) {
+          if (pulled && this.beamFrom(x, y, z, dx, dz, 2, cfg, stands)) move(c, ...pulled);
+        }
+        // Shove (D261): he stands in line behind it, the beam passing fences, and the cell beyond is free.
+        if (abilities.has('shove') && !pushed) {
+          const shoved = this.crateStep(x, y, z, dx, dz, cfg);
+          if (shoved && this.beamFrom(x, y, z, dx, dz, 1, cfg, stands, true)) move(c, ...shoved);
+        }
+        // Swap (D261): from any cell he stands on in line (level, the beam open), he and the
+        // crate trade places: it falls from his cell, he stands in its cell. Never a spiked one.
+        if (abilities.has('swap') && !cfg.spiked.has(c)) {
+          const probe = this.config(cfg.crates.filter((o) => o !== c), cfg.plugged, cfg.spiked);
+          if (this.clear(x, y, z, probe)) {
+            for (let k = 1; k <= 6; k++) {
               const sx = x - dx * k;
               const sz = z - dz * k;
-              if (!this.grid.isInside(sx, sz) || this.blocked(sx, y, sz, cfg)) break;
-              if (stands.has(this.index(sx, y, sz))) {
-                // The cells between must be open (a block or crate in line stops the beam).
-                let open = true;
-                for (let j = 1; j < k; j++) open &&= !this.blockedCrate(x - dx * j, y, z - dz * j, cfg);
-                if (open) move(c, ...pulled);
-                break;
-              }
+              if (!this.beamOpen(sx, y, sz, cfg)) break;
+              if (stands.has(this.index(sx, y, sz))) move(c, sx, y, sz, this.index(x, y, z));
             }
           }
         }
@@ -819,6 +851,8 @@ export function standsIn(model, cfg, starts) {
   // Gates follow what he can switch from where he stands, which can open more of the room (D140).
   model.resetFrozen();
   model.setGates(cfg, new Set());
+  // After a swap (D261) he is where it put him, as well as anywhere he could get from the start.
+  if (cfg.seed !== undefined) starts = [...starts, model.cell(cfg.seed)];
   let stands = model.flood(starts, cfg);
   // Gates and pushed frozen enemies open more of the room, which may open more again.
   for (let round = 0; round < 8; round++) {

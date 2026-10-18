@@ -512,7 +512,7 @@ each read anew.
   reward), another wing's spell (the wings open in any order, so for some
   players it is open on the first visit: an optional extra then, which
   is fine), the energy buff (a third Pause), an access level. Later-sector
-  spells (Warp, Pull, Compile, Cut & Paste, Firewall) may key extras
+  spells (Warp, Pull, Shove, Swap, Compile, Cut & Paste, Firewall) may key extras
   only, never a fragment: the room is whole without them, and if such a
   spell is dropped its layers go or get a new key. Read each key's reach
   in the tuning table, not from memory.

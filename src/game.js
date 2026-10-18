@@ -50,25 +50,25 @@ export const WATCHDOG = { warnTicks: 5 * 60 };
  * Something that happened, for views, the HUD and (later) sound. Returned
  * by Game.update() for the tick it happened in.
  * @typedef {object} GameEvent
- * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'tick'|'gate'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'|'warp'|'fizzle'|'cut'|'paste'|'pull'|'compile'|'fork'|'expire'|'scan'|'reveal'|'reflect'|'shrine'|'crash'|'access'|'win'|'read'|'armor'|'exposed'|'armored'|'phase'|'teleport'|'drop'|'pickup'} type
+ * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'tick'|'gate'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'|'warp'|'fizzle'|'cut'|'paste'|'pull'|'shove'|'swap'|'compile'|'fork'|'expire'|'scan'|'reveal'|'reflect'|'shrine'|'crash'|'access'|'win'|'read'|'armor'|'exposed'|'armored'|'phase'|'teleport'|'drop'|'pickup'} type
  * @property {string} [spell] the spell cast, failed, fizzled (nowhere to
  *   go, energy kept) or selected (cast, deny, fizzle, spell); the teleport (warp)
  * @property {number[]} [from] where a Blink or Warp started (warp)
- * @property {number[]} [to] where it ended (warp)
+ * @property {number[]} [to] where it ended (warp); the cell a swapped crate or enemy went to (swap, D261)
  * @property {number[]} [cell] the cell a crate or enemy was cut from or
- *   pasted into, pulled from or compiled into (cut, paste, pull, compile; the enemy's own cell, rounded down, for a
+ *   pasted into, pulled, shoved or swapped from or compiled into (cut, paste, pull, shove, swap, compile; the enemy's own cell, rounded down, for a
  *   frozen one stopped mid-step); the fake block a scan revealed (reveal, D128)
  * @property {object} [decoy] the decoy a Fork cast stands (fork, D129)
  * @property {object} [object] the room object it happened to (push, plug,
  *   land of an object; shake, collapse and regrow of a collapsing block;
  *   hit by a spell, break of a destructible one; a switch going on or off,
  *   a timed one counting down (tick, D140); a gate opening or closing (gate, D140);
- *   a crate cut, pasted, pulled or compiled, a compiled one derezzing: expire (D125);
+ *   a crate cut, pasted, pulled, shoved, swapped or compiled, a compiled one derezzing: expire (D125);
  *   a spiked platform that hurt the wizard: hurt)
  * @property {object} [enemy] the enemy it happened to (pop, land of an
  *   enemy, bounce off it, hit by a spell, a discharge or a bolt; it noticed
  *   the wizard or something hit it: alert; its charged attack: charge,
- *   discharge (a burst, an arc or bolts fired); cut, pasted or pulled) or that
+ *   discharge (a burst, an arc or bolts fired); cut, pasted, pulled, shoved or swapped) or that
  *   hurt the wizard (hurt)
  * @property {Bolt} [bolt] the bolt that stopped (zap: the wizard's or an
  *   enemy's), where it is now, that bounced (ricochet) or that his Shield+

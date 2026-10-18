@@ -287,6 +287,12 @@ Added in Phase 4 (the roster, D88):
 - **Pull** — pulls the first crate or enemy in line (6 cells) one tile
   towards the wizard, an enemy even into a hole (D89, D124; built)
 
+Added in Phase 5 (D261; built, not placed in any room yet):
+- **Shove** — Pull's opposite: the first crate or enemy in line one tile
+  away, its beam passing fences (a crate behind a fence onto a plate)
+- **Swap** — the wizard and the first crate or frozen enemy in line
+  (same level) trade places; never a spiked crate
+
 Upgrades (Zap+, Shield+, D95) have their own save
 bits; a spell upgrade replaces its base spell in the Tab cycle (ZAP
 becomes ZAP+). Up to 16 spells and 16 upgrades; the spare ones wait for

@@ -33,7 +33,7 @@
     },
     "spells": {
       "type": "object",
-      "description": "Spell tuning, by spell id. What each spell does is built into the engine (SPELL_EFFECTS in src/game.js; Zap: src/entities/bolt.js, Shield and Firewall: Player.raiseShield(), Pause: a bolt that freezes, Enemy.freeze(); Blink and Warp: Game.teleport(), src/entities/warp.js; Cut & Paste: Game.cutOrPaste(), src/entities/clip.js; Pull: src/entities/pull.js, Enemy.pull(); Compile: src/spells.js compile(); Fork: src/entities/decoy.js; Scan: src/entities/scan.js).",
+      "description": "Spell tuning, by spell id. What each spell does is built into the engine (SPELL_EFFECTS in src/game.js; Zap: src/entities/bolt.js, Shield and Firewall: Player.raiseShield(), Pause: a bolt that freezes, Enemy.freeze(); Blink and Warp: Game.teleport(), src/entities/warp.js; Cut & Paste: Game.cutOrPaste(), src/entities/clip.js; Pull and Shove: src/entities/pull.js, Enemy.pull(); Swap: src/entities/swap.js; Compile: src/spells.js compile(); Fork: src/entities/decoy.js; Scan: src/entities/scan.js).",
       "required": ["zap"],
       "additionalProperties": false,
       "properties": {
@@ -184,6 +184,32 @@
             "cost": { "$ref": "#/$defs/spellCost" },
             "cooldown": { "$ref": "#/$defs/spellCooldown" },
             "range": { "type": "integer", "minimum": 2, "maximum": 16, "description": "Cells the line reaches, counting the one right in front of him (a target there has nowhere to go)." }
+          }
+        },
+        "shove": {
+          "description": "Shove the first crate or enemy in line the way he aims, at the height of his feet, one cell away from him (D261): Pull's opposite. A crate as if he pushed it from behind, an enemy over anything, so it may drop into a hole and pop; shoving an enemy provokes it. Unlike Pull's, the line passes see-through blocks (fences, D167) as a bolt does, and crate streams as Pull's does. A block, the room's side or another body in the way, or a target that can't move (a load on the crate, something in the cell beyond): it fizzles and costs nothing.",
+          "type": "object",
+          "required": ["slot", "color", "cost", "cooldown", "range"],
+          "additionalProperties": false,
+          "properties": {
+            "slot": { "$ref": "#/$defs/spellSlot" },
+            "color": { "$ref": "#/$defs/spellColor" },
+            "cost": { "$ref": "#/$defs/spellCost" },
+            "cooldown": { "$ref": "#/$defs/spellCooldown" },
+            "range": { "type": "integer", "minimum": 1, "maximum": 16, "description": "Cells the line reaches, counting the one right in front of him." }
+          }
+        },
+        "swap": {
+          "description": "Trade places with the first crate or frozen enemy in line the way he aims, at the height of his feet (D261): he stands where it stood, it lies in the cell he stood in and falls from there. Same level only, standing on the ground; never a spiked crate or one with a load. Its cell needs room for his body, his cell room for it (no block, body or pickup). Otherwise it fizzles and costs nothing.",
+          "type": "object",
+          "required": ["slot", "color", "cost", "cooldown", "range"],
+          "additionalProperties": false,
+          "properties": {
+            "slot": { "$ref": "#/$defs/spellSlot" },
+            "color": { "$ref": "#/$defs/spellColor" },
+            "cost": { "$ref": "#/$defs/spellCost" },
+            "cooldown": { "$ref": "#/$defs/spellCooldown" },
+            "range": { "type": "integer", "minimum": 1, "maximum": 16, "description": "Cells the line reaches, counting the one right in front of him." }
           }
         }
       }

@@ -29,8 +29,8 @@ measured against:
    the trick that guards it. A pickup may need an ability as its gate
    (secrets do). In the Lattice only its own abilities count: Zap,
    Scan, Fork and Pause, and Blink, the Level 1 reward in `dj_vault`
-   (D217), for exits and secrets only. Pull, Compile, Cut & Paste,
-   Warp and Firewall belong to later sectors (maybe dropped or kept for
+   (D217), for exits and secrets only. Pull, Shove, Swap, Compile, Cut
+   & Paste, Warp and Firewall belong to later sectors (maybe dropped or kept for
    development) and are left out of Lattice design and checks, except
    as the key to a return layer's extra, never a fragment (D260). The
    Lattice's wings open in any order, so a pickup's trick holds against
@@ -839,7 +839,8 @@ enemies).
   `#00f0ff`, Shield neon blue `#3b82ff`, Firewall ember `#ff5a14`, Pause
   lavender `#c9a2ff`, Blink pale cyan `#9ef0ff`, Warp pink `#ff6ee8`,
   Cut & Paste white `#f4f6ff`, Compile gold `#ffe45c`, Scan violet
-  `#8f6bff`, Pull pale mint `#a6ffcf`):
+  `#8f6bff`, Pull pale mint `#a6ffcf`, Shove salmon `#ff9e7a`, Swap
+  periwinkle `#9fb4ff`):
   its disk's lit bit, its
   install animation and its banner.
 - **Found before:** a permanent pickup whose bit is set shows as a ghost
@@ -1188,6 +1189,67 @@ and enemies, closer.
   look is `PULL_FX` in `src/render/pull-fx.js` with
   `src/render/pull-view.js`; showcase `?asset=pull,disk-pull`.
 
+## Shove
+
+Pull's opposite (D261), from a data disk (slot 11); not placed in any
+room yet. A push from a distance, and the one way to move a crate he
+can't walk up to.
+
+- **The line:** Pull's (`lineTarget()` in `src/entities/pull.js`), but
+  it also passes see-through blocks (fences, D167), as a bolt does; a
+  crate stream lets it through too. `shoveTarget()`.
+- **Shove** (E; 15 energy): the target slides one cell away from him.
+  - A crate moves as if he pushed it from behind (`Pushable.push()`):
+    nothing on it, supported, into a free cell; it falls or plugs a
+    hole from there. Right in front of him is fine (a push he could
+    make anyway).
+  - An enemy is driven a cell as Pull drags one (`Enemy.pull()`), over
+    anything: over a hole it drops in and pops. Shoving provokes and
+    alarms it (D81).
+  - Nothing in line, or it can't move (the room's side, a load, a body
+    or block beyond): it fizzles (energy back, no cooldown).
+- **What it's for:** a crate behind a fence pushed onto a plate or into
+  a socket on the far side; Sokoban's "can't get behind the box" when
+  the box is in a corridor he can't enter; an enemy knocked into a pit.
+  It keeps the push rules: one cell, only the top of a stack, never up
+  a stair, so a crate in a corner stays in the corner.
+- **Look:** Pull's beam run outwards in its own color: rings of pixels
+  leave his hands small and grow as they flow into the target; the
+  marquee and the aim marker as Pull's (`PullView` with `'shove'`).
+- Tuning: `defs.json` `spells.shove` (cost, cooldown, range, color);
+  showcase `?asset=shove,disk-shove`.
+
+## Swap
+
+He and a crate trade places (D261), from a data disk (slot 12); not
+placed in any room yet.
+
+- **The target:** the first crate or frozen enemy in Pull's line (a fence
+  stops it, a crate stream doesn't), resting on a whole cell, nothing on
+  it; never a spiked crate (D199: it is there to keep him out from behind
+  it). `swapTarget()` in `src/entities/swap.js`.
+- **Swap** (E; 25 energy): he stands on the ground at a whole height (not
+  in the air, not on a stair's slope). The target lands in his cell (the
+  one under his feet center) and falls from there; he stands centered in
+  its cell, on what it stood on. Same level only, so it never lifts him.
+  - His cell must take it: inside the room, no block (a stream is open
+    to it), no other body, no pickup lying there.
+  - Its cell must take him: room for his box (1.5 high, so the cell above
+    it free), no block (a stream is not open to him) and no other body.
+  - Otherwise it fizzles (energy back, no cooldown).
+- **What it's for:** past a crate in a one-wide corridor; past a crate
+  stream (D198) where a crate waits on the far side; into the cell
+  behind a box; a frozen enemy thrown back to where he stood.
+- **Look:** both jump at once. His afterimage is Warp's stream (D127) in
+  the spell's color, from where he was into where he is; the crate's
+  pixels stream the other way (`SwapView`, `render/swap-view.js`). A dim
+  aim marker marks what a swap would take, only when it can.
+- **Checker:** a swap is a crate move that also moves him: a
+  configuration after one carries the cell it put him in, and his flood
+  starts there as well as at the start.
+- Tuning: `defs.json` `spells.swap` (cost, cooldown, range, color);
+  showcase `?asset=swap,disk-swap`.
+
 ## Compile
 
 The second Phase 4 spell (D88, D125), from a data disk (slot 7); not
@@ -1428,7 +1490,7 @@ Collecting the key fragments is the goal of the game (D101).
 ## Spell roster
 
 Up to 16 spells and 16 upgrades (D88, D89), each its own save bit (an
-upgrade in the upgrades block, not spells). Eleven spells and three
+upgrade in the upgrades block, not spells). Thirteen spells and three
 upgrades are set; the rest stay spare for what content production shows
 a need for.
 
@@ -1445,6 +1507,8 @@ a need for.
 | Fork | 8 | Hologram decoy for 10 s: holds plates, draws enemies | Phase 4 (D129) |
 | Scan | 9 | A wave that reveals fake blocks (and pickups inside them) and hidden exits | Phase 4 (D128) |
 | Pull | 10 | Pulls the first crate or enemy in line one tile towards the wizard | Phase 4 (D124) |
+| Shove | 11 | Shoves the first crate or enemy in line one tile away, through fences | Phase 5 (D261) |
+| Swap | 12 | Trades places with the first crate or frozen enemy in line | Phase 5 (D261) |
 
 - **Upgrades:** Zap+ and Shield+, built in Phase 3 (the double jump
   was removed, D216; see
