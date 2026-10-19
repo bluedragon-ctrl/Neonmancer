@@ -270,7 +270,7 @@ Lessons from the reviews (D188 on):
 - **A jump-Blink hops a spiked crate.** He jumps against it and Blinks at the
   top: 1 high is low enough to pass over, so Blink undoes the spiked crate's
   routing. A fence roof at y 2 stops the jump (Blink stays level and stops at
-  crates); a Blink cut short by a fence costs 1 integrity (`buffer_1`, D219).
+  crates); a Blink cut short by a fence costs 1 integrity (the first `buffer_1`, D220).
 - **`check:reach` floods from the door.** It assumes he can walk back to the
   door between pushes; where crates shut him away mid-solution (spiked crates,
   a roof) it says `never` and the mutation test lists every piece as NO EFFECT.
@@ -321,6 +321,10 @@ Lessons for pads rooms (D222 on):
 - **A decoy falls.** Cast from a ledge into the open column over a walled
   pocket, it drops onto the plate in it: a plate only a decoy holds, from
   that ledge; the checker counts it (D245).
+- **He follows a crate into its socket** (D262). Holding the push, he walks
+  after a crate that drops into a socket, and lands in the cell: fence a
+  socket's approach one cell further out, never round the socket itself,
+  or it is a pit. Play the drop with `sim.mjs` holding the key.
 - **Check every cell he can drop into** (D242). Off a column or out of a
   pad's throw he lands anywhere near; a floor cell walled by blocks and a
   stair's side is a pit with no way out. Fill it or give it a stair.

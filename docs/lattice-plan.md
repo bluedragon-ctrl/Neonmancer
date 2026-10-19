@@ -295,7 +295,7 @@ Waits for the core (D186): the secret rooms' contents.
 
 | Room | Size | What it is |
 |---|---|---|
-| `buffer_1` Dead Pixel (5.11) | 8x6 | Secret, a Scan hidden exit in `scan_lab` (Blink walk, D218); done: Microban 86, spiked crates into sockets under a fence roof, `secret_0` in a cage (D219) |
+| `buffer_1` Dead Pixel (5.11) | 8x8 | Secret, a Scan hidden exit in `scan_lab` (a pad and Blink, D240); done, on pads (D262): a loft crate stacked on a ledge crate rides over a 2-high wall into the middle socket, the pier used twice, `secret_0` in a cage |
 | `buffer_2` Stray Byte (5.11) | 8x8 | Secret, in `warden_pit` behind a 4-high ledge (D213), two pads and Blink since D249; entrance built, an extra fragment to come |
 | `buffer_3` Null Orbit (5.11) | 8x8 | Secret, in `guard_loop` on a 3-high sill (D214, D257), reached by a stair, the timed bridge and a pad; entrance built, an extra fragment to come |
 | `buffer_4` Event Horizon (5.11) | 8x8 | Secret, in `mirror_stacks` above the fragment pocket (D215); since D242 the pocket's pad throws him onto the door's column and a diagonal Zap hits the target; entrance built |
@@ -340,5 +340,5 @@ moves it to `"jump": "pads"` and ticks it off here.
 | 23 | `gatekeeper` | play | | Done (D255): flat hall, only the flag. |
 | 24 | `core_hall` | play | | Done (D256): flat hall, only the flag. |
 | 25 | `dj_vault` | play | | Done (D258): flat room, only the flag; a standing Blink crosses the pit. |
-| – | `buffer_1`–`buffer_5` | play | buffer_1: spiked, fence | The secret rooms (5.11) with their host rooms' doors; Dead Pixel can lose its fence roof (D220). |
+| – | `buffer_1`–`buffer_5` | play | | The secret rooms (5.11) with their host rooms' doors. Dead Pixel done (D262): a new puzzle, no roof or spiked crates. |
 | – | teasers (`frost_*`, `glitch_*`) | nothing | glitch_gate: bouncy | Moved over in 5.19 as they are. |

@@ -220,7 +220,13 @@ the author and collection in the room's decision entry. Before use:
   Paste, Compile) a spiked one is a step; two spiked crates cannot be
   stood on at all. Keep a free side around any spiked crate he can fall
   onto.
-- **Sockets as a moat** (`buffer_1`, D219): the goals sit between the door and
+- **Pier** (pads room, `buffer_1`, D262): a crate pushed off a higher ledge
+  onto a crate parked on a lower one stands 2 high, and a 2-high wall's top
+  is its road: pushed on (he stands on the pier's top), it rides over the
+  wall and drops beyond, where no floor push reaches (low fences beside the
+  goal and in front of the cell before it). The pier moves on and serves
+  again. Prove the lock with the wall 3 high: unsolvable.
+- **Sockets as a moat** (the first Dead Pixel, D220): the goals sit between the door and
   the floor; empty, they are pits he Blinks over to get in, and the last crate
   is pushed in from the doorway. Put a fence roof over a spiked-crate level, or
   a jump-Blink hops the crates (room-design).
