@@ -3513,3 +3513,128 @@ pushes) and 4 % of its states shut him away from the door.
 **Why:** the author asked for the secret room to be redone for the pads
 rule with a push puzzle that uses the game's new height (stairs, ledges,
 crates falling and stacking) instead of a flat classic.
+
+### D263 — 2026-10-19 — Stray Byte: a rift, a plug and a stack on the heavy plate (5.11)
+`buffer_2` (Stray Byte), the second Outer Buffer secret room, holds `secret_1`
+in a cage. A pads room (D222), 8×8×4, its door the east side at z 3 (as
+D213's entrance in `warden_pit`, unchanged).
+- **Layout:** a 1-wide rift of holes down the whole room at x 4 shuts him
+  off from the west; the heavy plate (D200) lies against the west wall at
+  x 0 z 5, a 1-high ledge behind it (x 0–1, z 1–4) with a stair at its
+  front (x 2 z 2), and `secret_1` in a cage (D202) in the front corner.
+  Three crates: one on the ledge, two on the east strip.
+- **Trick:** one crate plugs the rift on the plate's row (z 5); the second
+  is brought to that row and pushed over the plug to the plate; the ledge
+  crate is then pushed off onto it, so the plate carries two and the cage
+  opens. Dropping the ledge crate first leaves it alone on the plate (the
+  other can no longer be pushed on); plugging any other row of the rift
+  wastes a crate. The cage closes again if the stack is pushed off.
+- **Solver** (`solve.mjs`): 10 pushes, 2 sharp steps, 79 % of the states
+  traps (a reset, Restart room D219). The mutation test with the Lattice
+  set says every crate, the ledge and the stair matter; Fork can stand in
+  for one weight on the plate (a decoy cast from the ledge), as in
+  `idle_cache` (D250), but the rift still takes two crates. Nothing else
+  is needed: no enemies, so Pause and Zap change nothing.
+- **Played** (`sim.mjs`): the full solution from the door, the cage opens
+  as the ledge crate lands, `secret_1` taken at 19.5 s, no damage. Walking
+  on along the ledge after the drop pushes the top crate off and closes
+  the cage again: he steps off the ledge sideways.
+- **No return layer:** the room is itself the return layer of its host,
+  `warden_pit` (D260).
+**Why:** the author asked for `buffer_2`'s content as a push puzzle with
+`secret_1`; a rift and a stack, not Dead Pixel's pier (D262).
+
+### D264 — 2026-10-19 — Null Orbit: Microban 38 with sockets, fences and two pits (5.11)
+`buffer_3` (Null Orbit), the third Outer Buffer secret room, holds
+`secret_2` in a cage (D202). A pads room (D222), 8×8×4, its door the west
+side at z 3 (D214's entrance in `guard_loop`, unchanged).
+- **The level:** Microban 38 by David W. Skinner (D197), three crates in a
+  tight middle and three goals, 8 wide and 5 deep, set in the room's
+  south five rows so its open top corridor is the door's row (z 3); the
+  empty three back rows hold the cage (`secret_2`, in the back corner,
+  in view from the door). The cage opens when all three goals are on.
+- **Build:** the walls are 1-high fences (a wall in front of a floor
+  socket hides it, so none is a solid block), the goals three sockets
+  (D194: no decoy or frozen enemy can hold one, so Fork skips nothing; as
+  plates Fork took 8 pushes down to 3). Sockets are holes he can't cross,
+  so the level's west wall at x 1 z 5 is open floor (it joins the corridor
+  to the crates), and two wall cells at x 5–6 z 6 are pits: a crate
+  pushed in is spent, so more pushes are traps.
+- **Solver** (`solve.mjs`): 8 pushes, 3 sharp steps, 69 % of the states
+  traps, the same with every Lattice spell and Blink (no plates, enemies
+  or targets). The shortest way into a trap is the south crate pushed east
+  into the pit. The mutation test names every crate, the fences along the
+  corridor and the cage; the sockets show NO EFFECT only because a removed
+  socket is plain floor (as in `buffer_1`, D262).
+- **Played** (`sim.mjs`): the full solution from the door, `secret_2`
+  taken at 21.8 s, no damage.
+- **No return layer:** it is its host's, `guard_loop` (D260).
+**Why:** the author asked for `buffer_3` as the next push puzzle; a classic
+with a Neonmancer build (sockets and pits) rather than a new design, since
+a flat classic costs fewest tuning rounds and the survey (D197) rates 38.
+
+### D265 — 2026-10-19 — Event Horizon: a ledge drop of two crates into three sockets (5.11)
+`buffer_4` (Event Horizon), the fourth Outer Buffer secret room, holds
+`secret_3` in a cage (D202). A pads room (D222), 8×8×4, its door the west
+side at z 3 (D215's entrance in `mirror_stacks`, unchanged).
+- **The trick:** two of the three crates start on a 2-high deck (x 5–7,
+  z 0–2) he reaches only by the pad at (7,3), south of the deck; a crate pushed off
+  the deck falls and can't go back up, so the order of the drops decides
+  which crate meets which socket. Three sockets (D194: nothing fakes one)
+  open the cage once all are filled.
+- **Layout:** the floor crate goes west and south into the socket at
+  (2,6) first; from the deck, one crate is pushed south off the edge to
+  (5,3), the other west to (5,2) and then south; then the two floor crates
+  are walked round each other (west, south, east) into the sockets at
+  (7,4) and (5,6). The pad stands off every crate's route (on the drop column or in
+  the crates' row he stepped on it while pushing and was thrown off) and
+  on the deck's south side: in the first draft it stood west of the deck
+  and the deck's +x face hid it (rule 1; the review caught it). The last
+  socket moved to (7,4) so the cell (6,3) stays reachable round the pad.
+- **Solver:** 15 pushes, 75 % of the states traps, 1 sharp step; the same with
+  every Lattice spell and Blink (no plates). The shortest way into a trap
+  is the floor crate pushed south twice into the corner.
+- **Checker:** the crate search truncates at 2000 configurations (three
+  crates, a deck), so `check:reach <room>` alone says "never"; the world
+  check is green and the solver is exhaustive. The mutation test names the
+  pad, all three crates, the deck block and the cage.
+- **Played** (`sim.mjs`): the full solution from the door, `secret_3`
+  taken at 45.3 s, no damage.
+- **No return layer:** it is its host's, `mirror_stacks` (D260).
+**Why:** the author asked for the next secret room; the Outer Buffer's
+"things that fall" is a two-level drop, unlike the flat Null Orbit (D264)
+and Stray Byte's stack (D263).
+
+### D266 — 2026-10-19 — Cache Miss: Microban 41 on a causeway of pits (5.11)
+`buffer_5` (Cache Miss), the fifth Outer Buffer secret room, holds `secret_4`
+in a cage (D202). A pads room (D222), 8×8×4, its door the west side at z 3
+(D215's entrance in `ghost_exit`, unchanged, D245).
+- **The level:** Microban 41 by David W. Skinner (D197), a row of three
+  crates above three goals, 6 wide and 4 deep, set against the east edge
+  at x 2–7, z 2–5 so its start cell is the doorway's row (z 3). Its walls
+  are **pits**, not blocks: the crates float on a causeway in the void
+  (the Outer Buffer), and a crate pushed into a pit is spent. The goals
+  are three sockets (D194: nothing fakes one, Fork or Pause change
+  nothing), and the cage (`secret_4`, in the back corner, in view from the
+  door) opens when all three are filled.
+- **Build:** the level's outer edge is sealed with 1-high fences (see-through,
+  so the cage and sockets stay in view): the north row at z 1, the south
+  at z 6, and two in the west column at x 1, leaving the start cell open.
+  Pits at (7,2), (7,3), (4,4), (2,5) and (7,5).
+- **Solver** (`solve.mjs`): 11 pushes, 8 sharp steps, 97 % of the states
+  traps; with every Lattice spell and Blink 11 pushes, 4 sharp, 95 %
+  (Blink gets behind a crate, so a few traps are saved). The shortest way
+  into a trap is the first crate pushed north. 42 of the 594 states lose
+  the way out (a crate pushed west through the start cell onto the
+  doorway, as in `buffer_4`): Restart room (D219).
+- **Checker:** the mutation test names all three crates and the cage; the
+  sockets show NO EFFECT only because a removed socket is plain floor (as
+  in `buffer_1`, D262); the crate search is truncated at 2000
+  configurations, which the exhaustive solver covers.
+- **Played** (`sim.mjs`): the full solution from the door, the cage opens
+  at 23.3 s, `secret_4` taken at 27.9 s, no damage.
+- **No return layer:** it is its host's, `ghost_exit` (D260).
+**Why:** the author asked for `buffer_5`, the last secret room; the
+Outer Buffer's void is the level's wall (pits for walls: the same pushes,
+but a stray one loses a crate), unlike Null Orbit's two pits in a fenced
+corridor (D264).

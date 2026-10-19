@@ -5,6 +5,26 @@
   "name": "Null Orbit",
   "biome": "outer_buffer",
   "size": [8, 4, 8],
+  "jump": "pads",
   "spawn": [1.5, 0, 3.5],
-  "exits": [{ "id": "west", "side": "-x", "at": 3, "width": 1 }]
+  "exits": [{ "id": "west", "side": "-x", "at": 3, "width": 1 }],
+  "blocks": [
+    { "at": [1, 0, 4], "to": [2, 0, 4], "type": "fence" },
+    { "at": [4, 0, 4], "to": [6, 0, 4], "type": "fence" },
+    { "at": [0, 0, 7], "to": [3, 0, 7], "type": "fence" },
+    { "type": "cage", "at": [7, 0, 0] }
+  ],
+  "objects": [
+    { "id": "socket_1", "type": "socket", "at": [3, 0, 4] },
+    { "id": "crate_1", "type": "crate", "at": [3, 0, 5] },
+    { "id": "crate_2", "type": "crate", "at": [4, 0, 5] },
+    { "id": "socket_2", "type": "socket", "at": [6, 0, 5] },
+    { "id": "socket_3", "type": "socket", "at": [1, 0, 6] },
+    { "id": "crate_3", "type": "crate", "at": [4, 0, 6] }
+  ],
+  "pickups": [{ "id": "secret_2", "type": "secret_2", "at": [7, 0, 0] }],
+  "holes": [
+    { "at": [5, 6] },
+    { "at": [6, 6] }
+  ]
 }
