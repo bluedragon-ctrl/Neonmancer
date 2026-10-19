@@ -9,6 +9,9 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
+- Stray Byte (`buffer_2`, D263), the second Outer Buffer secret room: a
+  rift to plug, a crate to bring over it and a ledge crate dropped on it
+  to weigh down the heavy plate; `secret_1` in a cage.
 - Two spells, not placed in any room yet (D261): **Shove** (slot 11)
   pushes the first crate or enemy in line one cell away, its beam passing
   fences; **Swap** (slot 12) trades places with the first crate or frozen

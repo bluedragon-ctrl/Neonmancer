@@ -3513,3 +3513,33 @@ pushes) and 4 % of its states shut him away from the door.
 **Why:** the author asked for the secret room to be redone for the pads
 rule with a push puzzle that uses the game's new height (stairs, ledges,
 crates falling and stacking) instead of a flat classic.
+
+### D263 — 2026-10-19 — Stray Byte: a rift, a plug and a stack on the heavy plate (5.11)
+`buffer_2` (Stray Byte), the second Outer Buffer secret room, holds `secret_1`
+in a cage. A pads room (D222), 8×8×4, its door the east side at z 3 (as
+D213's entrance in `warden_pit`, unchanged).
+- **Layout:** a 1-wide rift of holes down the whole room at x 4 shuts him
+  off from the west; the heavy plate (D200) lies against the west wall at
+  x 0 z 5, a 1-high ledge behind it (x 0–1, z 1–4) with a stair at its
+  front (x 2 z 2), and `secret_1` in a cage (D202) in the front corner.
+  Three crates: one on the ledge, two on the east strip.
+- **Trick:** one crate plugs the rift on the plate's row (z 5); the second
+  is brought to that row and pushed over the plug to the plate; the ledge
+  crate is then pushed off onto it, so the plate carries two and the cage
+  opens. Dropping the ledge crate first leaves it alone on the plate (the
+  other can no longer be pushed on); plugging any other row of the rift
+  wastes a crate. The cage closes again if the stack is pushed off.
+- **Solver** (`solve.mjs`): 10 pushes, 2 sharp steps, 79 % of the states
+  traps (a reset, Restart room D219). The mutation test with the Lattice
+  set says every crate, the ledge and the stair matter; Fork can stand in
+  for one weight on the plate (a decoy cast from the ledge), as in
+  `idle_cache` (D250), but the rift still takes two crates. Nothing else
+  is needed: no enemies, so Pause and Zap change nothing.
+- **Played** (`sim.mjs`): the full solution from the door, the cage opens
+  as the ledge crate lands, `secret_1` taken at 19.5 s, no damage. Walking
+  on along the ledge after the drop pushes the top crate off and closes
+  the cage again: he steps off the ledge sideways.
+- **No return layer:** the room is itself the return layer of its host,
+  `warden_pit` (D260).
+**Why:** the author asked for `buffer_2`'s content as a push puzzle with
+`secret_1`; a rift and a stack, not Dead Pixel's pier (D262).
