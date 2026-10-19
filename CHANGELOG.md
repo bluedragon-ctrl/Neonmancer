@@ -31,6 +31,10 @@ docs/decisions.md).
   say the same; 11 pieces in 8 rooms are listed for their reviews.
 
 ### Changed
+- Dead Pixel (`buffer_1`) is a pads room with a new push puzzle (D262,
+  step 5.11): three loft crates and a floor crate; the middle socket lies
+  behind a 2-high wall, so a loft crate stacked on a ledge crate (the pier)
+  rides over it. The fence roof, spiked crates and Microban 86 (D220) go.
 - An exit leads to the room in the next world map cell in its direction
   (D259): `world.json` no longer lists connections, they are worked out
   from the map. Moving a room in the world map tool rewires it; Connect

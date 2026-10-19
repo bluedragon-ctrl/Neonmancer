@@ -3462,3 +3462,54 @@ Amends D88 (the roster: 13 spells now, 3 slots spare).
 spells: Shove moves crates he can't reach (behind a fence, in a corridor
 he can't enter), Swap gets him behind a box or past his own barrier.
 Both keep the push rules, so a crate in a corner stays stuck.
+
+### D262 — 2026-10-19 — Dead Pixel on pads: crates ride a pier over the wall (5.11)
+Replaces D220's puzzle. `buffer_1` (Dead Pixel) is a pads room (D222) with
+a new push puzzle of its own, built on height rather than a flat classic.
+In a pads room D220's fence roof and spiked crates only fought a jump that
+is gone (with plain crates and no roof Microban 86 plays the same 23
+pushes), but the puzzle was flat Sokoban with no third dimension (D186),
+its last push was made from the doorway itself (D241: a step out resets 23
+pushes) and 4 % of its states shut him away from the door.
+- **Layout** (8×8, was 8×6; the door stays at the west end of the south
+  side, `scan_lab` unchanged): a 2-high loft at the back with three
+  crates, a 1-high ledge below it, a 2-high front wall with three sockets
+  at its foot, a floor crate, and `secret_0` in a cage on the sockets
+  (D202) in the front corner. Low fences at x 1 z 7 and x 2 z 6 keep
+  the floor crate off the door cell. Stairs: floor to ledge (west), ledge to loft
+  (west and middle); a notch at x 6 leads from the loft down to the ledge.
+- **Trick:** the middle socket lies behind the 2-high wall, with low
+  fences beside it and in front of the cell before it, so no floor push
+  reaches it: a loft crate pushed onto a crate parked on the ledge (the
+  *pier*) stands 2 high, rides over the wall top and drops in. The pier is
+  then moved one column on and used again for the west socket; the floor
+  crate goes into the east socket. One piece used twice, and the crate he
+  first sees as a goal crate is the one that never reaches a socket.
+- **Solver** (`solve.mjs`): 13 pushes; every crate is needed (each one
+  taken away: unsolvable), and with the front wall 3 high (no ride) it is
+  unsolvable. Fork, Pause, Zap, Scan and Blink change nothing (no plates,
+  enemies or targets; 13 pushes with all of them). Compile fills a socket
+  beside him (5 pushes), as Cut & Paste does with a crate it carries:
+  later-sector spells, as in every socket room; the room check names them
+  (`compile or cut_paste`) because its crate search stops early.
+  95 % of the states are traps; 3 % shut him away from the door (two
+  ledge crates on either side of him on the ledge row, or the floor crate
+  left in the middle of row 5 while he is east of it): Restart room
+  (D219). The level review found the floor crate could first be slid
+  along the front row onto the door cell in four pushes; it now starts at
+  x 3 z 5, and the two door fences stop every such route (the floor
+  crate alone: no trap).
+- **Checker:** `check:reach` from the world and on its own says `free`;
+  with the Lattice set and Blink its crate search stops at 2 000
+  configurations and says `never` (raised to 400 000 for a check: `free`).
+  The mutation test is misleading for the same reason; the solver's
+  per-piece runs above are the proof.
+- **Played** (`sim.mjs`): the full solution, both rides over the wall,
+  the cage opens, `secret_0` taken at 24.8 s and out to `scan_lab` at
+  27.5 s, no damage; the floor crate goes first. Holding the push after a crate drops into the middle socket,
+  he follows it down to the floor: the cell before the socket is open
+  (the blocking fence sits one further south, at x 4 z 6), so that is no
+  pit.
+**Why:** the author asked for the secret room to be redone for the pads
+rule with a push puzzle that uses the game's new height (stairs, ledges,
+crates falling and stacking) instead of a flat classic.
