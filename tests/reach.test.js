@@ -3,12 +3,14 @@ import assert from 'node:assert/strict';
 import { buildRoom } from '../src/world/room.js';
 import { analyzeRoom, arrivalCells } from '../src/world/reach.js';
 import { analyzeRoomAlone, analyzeWorld } from '../src/world/reach-world.js';
-import { describeNeeds, formatReach, formatRoom, freeJumpRooms, roomOfReport } from '../src/world/reach-report.js';
-import { LIFT, gameData, roomFile, withNeighbours } from './helpers.js';
+import { describeNeeds, formatReach, formatRoom, roomOfReport } from '../src/world/reach-report.js';
+import { BUG, LIFT, gameData, roomFile, withNeighbours } from './helpers.js';
 
 /** Object types the tests use besides the crate. */
 const OBJECTS = { crate_spiked: { extends: 'crate', topDamage: 2, vents: 'aurora' }, pad: { kind: 'pad', color: '#eef3ff' }, plate: { kind: 'plate', color: '#eef3ff' }, plate_heavy: { kind: 'plate', color: '#eef3ff', weight: 2 }, target: { kind: 'target', color: '#eef3ff' }, platform: LIFT };
 const TUNING = { scanRange: 6, blinkRange: 3 };
+/** The enemy templates: a worm is the fixture bug without its bounce (a bouncy one is a moving pad, D223). */
+const ENEMIES = { bug: BUG, worm: { ...BUG, bounce: false } };
 const WEST = { id: 'west', side: '-x', at: 3 };
 const EAST = { id: 'east', side: '+x', at: 3 };
 
@@ -19,7 +21,7 @@ const EAST = { id: 'east', side: '+x', at: 3 };
  */
 function reach(props, abilities = []) {
   const exits = props.exits ?? [WEST];
-  const content = gameData({ ...withNeighbours(roomFile('r', { size: [12, 4, 8], ...props, exits })), objects: OBJECTS });
+  const content = gameData({ ...withNeighbours(roomFile('r', { size: [12, 4, 8], ...props, exits })), objects: OBJECTS, enemies: ENEMIES });
   const room = buildRoom(content.rooms.get('r'), content);
   return analyzeRoom(room, { abilities, starts: [[1, 0, 1]], tuning: TUNING });
 }
@@ -38,39 +40,47 @@ test('open floor: every pickup and the exit within reach', () => {
   assert.equal(r.exits.west, true);
 });
 
-test('a pickup high in the air needs a jump; higher is out of reach', () => {
-  assert.equal(reached(reach({ pickups: [pickup('far', [3, 2, 3])] })), true);
-  assert.equal(reached(reach({ pickups: [pickup('far', [3, 3, 3])] })), false);
+/** A jump pad at [x, 0, z] (D221). */
+const padAt = (x, z, id = 'pad') => ({ id, type: 'pad', at: [x, 0, z] });
+
+test('a pickup high in the air needs a pad; higher is out of reach', () => {
+  assert.equal(reached(reach({ pickups: [pickup('far', [3, 1, 3])] })), true, 'one up is within reach');
+  assert.equal(reached(reach({ pickups: [pickup('far', [3, 2, 3])] })), false, 'two up needs a pad');
+  assert.equal(reached(reach({ objects: [padAt(3, 3)], pickups: [pickup('far', [3, 2, 3])] })), true);
+  assert.equal(reached(reach({ size: [12, 5, 8], objects: [padAt(3, 3)], pickups: [pickup('far', [3, 4, 3])] })), false);
 });
 
-test('one block is a step, two a wall', () => {
-  assert.equal(reached(reach({ blocks: [wall(4, 1)], pickups: [far] })), true);
-  assert.equal(reached(reach({ blocks: [wall(4, 2)], pickups: [far] })), false);
+test('a 1-high wall is a wall, a pad clears two blocks, never three', () => {
+  assert.equal(reached(reach({ blocks: [wall(4, 1)], pickups: [far] })), false, 'there is no jump');
+  assert.equal(reached(reach({ blocks: [wall(4, 2)], objects: [padAt(3, 3)], pickups: [far] })), true);
+  assert.equal(reached(reach({ blocks: [wall(4, 3)], objects: [padAt(3, 3)], pickups: [far] })), false);
 });
 
-test('Pause: a frozen enemy on its path is a step up a 2-high wall', () => {
-  const patrol = { id: 'b', template: 'bug', at: [3, 0, 1], path: { points: [[3, 0, 5]] } };
-  const room = (enemies, abilities) => reached(reach({ blocks: [wall(4, 2)], enemies, pickups: [far] }, abilities));
+test('Pause: a frozen enemy on its path is a floor between a stair and a 1-high wall', () => {
+  // The stair's top is level with the wall's; the cell between them is open air unless a frozen enemy lies there.
+  const patrol = { id: 'b', template: 'worm', at: [3, 0, 1], path: { points: [[3, 0, 5]] } };
+  const stair = { type: 'stair_x', at: [2, 0, 3] };
+  const room = (enemies, abilities) => reached(reach({ blocks: [wall(4, 1), stair], enemies, pickups: [far] }, abilities));
   assert.equal(room([patrol], []), false);
-  assert.equal(room([patrol], ['zap']), false); // killing it leaves no step
+  assert.equal(room([patrol], ['zap']), false); // killing it leaves no floor
   assert.equal(room([patrol], ['pause']), true);
-  assert.equal(room([{ ...patrol, at: [8, 0, 1], path: { points: [[8, 0, 5]] } }], ['pause']), false); // not beside the wall
+  assert.equal(room([{ ...patrol, at: [8, 0, 1], path: { points: [[8, 0, 5]] } }], ['pause']), false); // not beside the stair
 });
 
 test('a drop onto a frozen enemy cell may fall past it to the floor', () => {
   // he starts on a 3-high ledge (x 0-1); below it a trench (x = 2) walled at x = 3, a bug's lane all
   // along it: frozen it may lie anywhere there, but it need not, so the trench floor is reached too
-  const patrol = { id: 'b', template: 'bug', at: [2, 0, 0], path: { points: [[2, 0, 7]] } };
+  const patrol = { id: 'b', template: 'worm', at: [2, 0, 0], path: { points: [[2, 0, 7]] } };
   const blocks = [{ at: [0, 0, 0], to: [1, 2, 7] }, { at: [3, 0, 0], to: [3, 2, 7] }];
   const props = { size: [12, 5, 8], spawn: [6.5, 0, 1.5], blocks, enemies: [patrol], pickups: [pickup('low', [2, 0, 4])], exits: [EAST] };
-  const content = gameData({ rooms: [roomFile('r', props), roomFile('o', { exits: [{ id: 'east_o', side: '-x', at: 3 }] })], connections: [['r.east', 'o.east_o']], objects: OBJECTS });
+  const content = gameData({ rooms: [roomFile('r', props), roomFile('o', { exits: [{ id: 'east_o', side: '-x', at: 3 }] })], connections: [['r.east', 'o.east_o']], objects: OBJECTS, enemies: ENEMIES });
   const room = buildRoom(content.rooms.get('r'), content);
   const r = analyzeRoom(room, { abilities: ['pause'], starts: [[0, 3, 1]], tuning: TUNING });
   assert.equal(r.pickups.has('low'), true);
 });
 
 test('Pause: a frozen enemy holds a plate it is pushed onto (D154, D166)', () => {
-  const patrol = { id: 'b', template: 'bug', at: [3, 0, 1], path: { points: [[3, 0, 5]] } };
+  const patrol = { id: 'b', template: 'worm', at: [3, 0, 1], path: { points: [[3, 0, 5]] } };
   const locked = (plateAt, abilities, holes) =>
     reach({ exits: [WEST, { ...EAST, requires: [{ switch: '*' }] }], objects: [{ id: 'p', type: 'plate', at: plateAt }], enemies: [patrol], holes }, abilities).exits.east;
   assert.equal(locked([4, 0, 3], []), false);
@@ -81,36 +91,42 @@ test('Pause: a frozen enemy holds a plate it is pushed onto (D154, D166)', () =>
 });
 
 test('Pause: one frozen enemy holds one plate at a time (D166)', () => {
-  const patrol = (id, z) => ({ id, template: 'bug', at: [3, 0, z], path: { points: [[6, 0, z]] } });
+  const patrol = (id, z) => ({ id, template: 'worm', at: [3, 0, z], path: { points: [[6, 0, z]] } });
   const plates = [{ id: 'p', type: 'plate', at: [4, 0, 2] }, { id: 'q', type: 'plate', at: [5, 0, 2] }];
   const locked = (enemies) => reach({ exits: [WEST, { ...EAST, requires: [{ switch: '*' }] }], objects: plates, enemies }, ['pause']).exits.east;
   assert.equal(locked([patrol('a', 2)]), false); // both plates on its path, but it is one body
   assert.equal(locked([patrol('a', 2), patrol('b', 5)]), true); // the second is pushed to the other plate
 });
 
-test('Pause: a frozen enemy pushed across the floor is a step up a far ledge (D166)', () => {
-  const patrol = { id: 'b', template: 'bug', at: [6, 0, 6], path: { points: [[10, 0, 6]] } };
-  const ledge = { at: [10, 0, 0], to: [11, 1, 1] };
-  const top = pickup('top', [11, 2, 0]);
-  const room = (abilities, holes) => reached(reach({ blocks: [ledge], holes, enemies: [patrol], pickups: [top] }, abilities), 'top');
+test('Pause: a frozen enemy pushed across the floor is a floor beside a far ledge (D166)', () => {
+  // A stair at [9, 0, 2] tops out beside the ledge's corner cell [10, 0, 2], open air unless the enemy was pushed there.
+  const patrol = { id: 'b', template: 'worm', at: [6, 0, 6], path: { points: [[10, 0, 6]] } };
+  const ledge = { at: [10, 0, 0], to: [11, 0, 1] };
+  const stair = { type: 'stair_x', at: [9, 0, 2] };
+  const top = pickup('top', [11, 1, 0]);
+  const room = (abilities, holes) => reached(reach({ blocks: [ledge, stair], holes, enemies: [patrol], pickups: [top] }, abilities), 'top');
   assert.equal(room([]), false);
-  assert.equal(room(['pause']), true); // pushed -z from [10,0,6] to [10,0,2], at the ledge's foot
-  assert.equal(room(['pause'], [{ at: [0, 5], to: [11, 5] }]), false); // he jumps the hole, a pushed enemy pops in it
+  assert.equal(room(['pause']), true); // pushed -z from [10,0,6] to [10,0,2], beside the stair
+  assert.equal(room(['pause'], [{ at: [0, 5], to: [11, 5] }]), false); // a pushed enemy pops in the hole
 });
 
-test('pits: one tile is jumped, up to four need Blink, more Warp or Compile', () => {
-  const room = (width, abilities, blocks = [], target = far) => reached(reach({ holes: [pit(width)], blocks, pickups: [target] }, abilities));
+test('pits: a pad throws him over two tiles, up to five need Blink, more Warp or Compile', () => {
+  const room = (width, abilities, blocks = [], target = far, objects = [padAt(3, 2)]) => reached(reach({ holes: [pit(width)], blocks, objects, pickups: [target] }, abilities));
+  assert.equal(room(1, [], [], far, []), false, 'there is no jump without a pad');
   assert.equal(room(1), true);
-  assert.equal(room(2), false);
-  assert.equal(room(2, ['blink']), true); // 3 cells ahead
-  // A running jump, then Blink near the top (D217): two cells further, even a block up.
+  assert.equal(room(2), true);
+  assert.equal(room(3), false);
+  assert.equal(room(2, ['blink'], [], far, []), true); // 3 cells ahead
+  assert.equal(room(3, ['blink'], [], far, []), false);
+  // A pad's throw, then Blink near the top (D217): two cells further, even as high as the throw.
   assert.equal(room(4, ['blink']), true);
   assert.equal(room(4, ['blink'], [{ at: [8, 0, 0], to: [11, 0, 7] }], pickup('far', [11, 1, 2])), true, 'onto a 1-high ledge beyond the pit');
-  assert.equal(room(4, ['blink'], [{ at: [8, 0, 0], to: [11, 1, 7] }], pickup('far', [11, 2, 2])), false, 'never 2 up');
+  assert.equal(room(4, ['blink'], [{ at: [8, 0, 0], to: [11, 1, 7] }], pickup('far', [11, 2, 2])), true, 'onto a 2-high one');
+  assert.equal(room(4, ['blink'], [{ at: [8, 0, 0], to: [11, 2, 7] }], pickup('far', [11, 3, 2])), false, 'never 3 up');
   assert.equal(room(5, ['blink']), false);
-  assert.equal(room(3, ['blink'], [{ at: [0, 2, 0], to: [3, 2, 7] }]), false, 'a low ceiling over the run-up stops the jump');
-  assert.equal(room(3, ['warp']), true);
-  assert.equal(room(5, ['compile']), true); // plug a cell, step on, again
+  assert.equal(room(3, ['blink'], [{ at: [0, 2, 0], to: [3, 2, 7] }]), false, 'a low ceiling over the pad stops the throw');
+  assert.equal(room(3, ['warp'], [], far, []), true);
+  assert.equal(room(5, ['compile'], [], far, []), true); // plug a cell, step on, again
 });
 
 test('hazard and void are no way across, and stop nothing from being a wall', () => {
@@ -118,29 +134,26 @@ test('hazard and void are no way across, and stop nothing from being a wall', ()
     assert.equal(reached(reach({ blocks: [wall(4, 2, type)], pickups: [far] })), false);
     assert.equal(reached(reach({ blocks: [wall(4, 2, type)], pickups: [far] }, ['warp'])), false);
   }
-  // a hazard floor tile row he can't land on: one tile wide he jumps over
+  // a hazard floor tile row he can't land on, even thrown over it from a pad? (a 1-high one is under the throw)
   assert.equal(reached(reach({ blocks: [wall(4, 1, 'hazard')], pickups: [far] })), false);
 });
 
-test('crates plugging a pit: each fills one tile of the row he crosses', () => {
+test('crates plugging a pit: each fills one tile of the row he crosses, and nothing jumps the rest', () => {
   const crate = (id, at) => ({ id, type: 'crate', at });
   const one = [crate('c', [2, 0, 2])];
   const two = [crate('c', [2, 0, 2]), crate('d', [2, 0, 4])];
   const room = (width, objects) => reached(reach({ holes: [pit(width)], objects, pickups: [far] }));
-  assert.equal(room(2, one), true); // one plugged, one left to jump
-  assert.equal(room(3, one), false);
-  assert.equal(room(3, two), true);
-  assert.equal(room(4, two), false);
+  assert.equal(room(1, one), true);
+  assert.equal(room(2, one), false);
+  assert.equal(room(2, two), true);
+  assert.equal(room(3, two), false);
 });
 
-test('a crate is a step against a two-high wall, but not when it cannot be pushed there', () => {
+test('a crate is no step: not against a two-high wall, with or without room to push it', () => {
   const crate = { id: 'c', type: 'crate', at: [2, 0, 2] };
-  const props = { blocks: [wall(5, 2)], objects: [crate], pickups: [far] };
-  assert.equal(reached(reach(props)), true); // pushed to x 4: a step of one, then the wall is two... from the crate top it is one more
-  assert.equal(reached(reach({ ...props, blocks: [wall(5, 3)] })), false);
-  // crate in a corner it cannot leave
-  const stuck = { id: 'c', type: 'crate', at: [0, 0, 0] };
-  assert.equal(reached(reach({ blocks: [wall(5, 2)], objects: [stuck], pickups: [far] })), false);
+  assert.equal(reached(reach({ blocks: [wall(5, 2)], objects: [crate], pickups: [far] })), false, 'he cannot climb it');
+  assert.equal(reached(reach({ blocks: [wall(4, 1)], objects: [crate], pickups: [far] })), false);
+  assert.equal(reached(reach({ blocks: [wall(5, 2)], objects: [crate, padAt(3, 6)], pickups: [far] })), true, 'a pad clears the wall');
 });
 
 test('Shove pushes a crate behind a fence onto a plate; Pull cannot (D261)', () => {
@@ -165,18 +178,18 @@ test('Swap puts him past a crate stream where the crate stood (D261)', () => {
   assert.equal(reached(reach(spiked, ['swap'])), false);
 });
 
-test('Compile makes a step; Pull brings a crate across a pit; Cut & Paste moves one anywhere', () => {
+test('Compile is no step; Pull brings a crate across a pit; Cut & Paste moves one anywhere', () => {
   const high = { blocks: [wall(5, 2)], pickups: [far] };
   assert.equal(reached(reach(high)), false);
-  assert.equal(reached(reach(high, ['compile'])), true);
+  assert.equal(reached(reach(high, ['compile'])), false, 'a compiled crate is no step');
 
-  // a crate behind a two-tile pit: Pull brings it twice, it plugs the near tile, a gap of one is left
-  const behind = { holes: [pit(2)], objects: [{ id: 'c', type: 'crate', at: [7, 0, 2] }], pickups: [far] };
+  // a crate behind a pit: Pull brings it up to the pit and into it
+  const behind = { holes: [pit(1)], objects: [{ id: 'c', type: 'crate', at: [7, 0, 2] }], pickups: [far] };
   assert.equal(reached(reach(behind)), false);
   assert.equal(reached(reach(behind, ['pull'])), true);
 
-  // a crate stuck in a corner: Cut & Paste puts it against the wall as a step
-  const stuck = { blocks: [wall(5, 2)], objects: [{ id: 'c', type: 'crate', at: [0, 0, 0] }], pickups: [far] };
+  // a crate stuck in a corner: Cut & Paste puts it into the pit
+  const stuck = { holes: [pit(1)], objects: [{ id: 'c', type: 'crate', at: [0, 0, 0] }], pickups: [far] };
   assert.equal(reached(reach(stuck)), false);
   assert.equal(reached(reach(stuck, ['cut_paste'])), true);
 });
@@ -197,7 +210,7 @@ test('a locked exit opens by a crate on a plate, or a decoy', () => {
 test('a decoy cast from a ledge falls onto a plate in a walled pocket (D245)', () => {
   // The plate at (8,0,2) is walled 3 high on three sides; west of it a 1-high block, a stair up to it.
   const pocket = [{ at: [8, 0, 1], to: [8, 2, 1] }, { at: [8, 0, 3], to: [8, 2, 3] }, { at: [9, 0, 2], to: [9, 2, 2] }, { at: [7, 0, 2] }];
-  const props = { jump: 'pads', exits: [WEST, { ...EAST, requires: [{ switch: '*' }] }], objects: [{ id: 'p', type: 'plate', at: [8, 0, 2] }] };
+  const props = { exits: [WEST, { ...EAST, requires: [{ switch: '*' }] }], objects: [{ id: 'p', type: 'plate', at: [8, 0, 2] }] };
   const stair = { type: 'stair_x', at: [6, 0, 2] };
   assert.equal(reach({ ...props, blocks: pocket }, ['fork']).exits.east, false, 'no way onto the ledge');
   assert.equal(reach({ ...props, blocks: [...pocket, stair] }).exits.east, false, 'no decoy');
@@ -221,13 +234,14 @@ test('a target switch needs Zap', () => {
 
 test('a moving platform over a pit is a floor to cross on', () => {
   const lift = { id: 'lift', type: 'platform', at: [4, 0, 2], path: { points: [[6, 0, 2]] } };
-  assert.equal(reached(reach({ holes: [pit(3)], objects: [lift], pickups: [far] })), true);
-  assert.equal(reached(reach({ holes: [pit(5)], objects: [lift], pickups: [far] })), false);
+  // He is thrown onto it from a pad; it is a block in its cell, so the lane is floor one up.
+  assert.equal(reached(reach({ holes: [pit(3)], objects: [lift, padAt(3, 2)], pickups: [far] })), true);
+  assert.equal(reached(reach({ holes: [pit(5)], objects: [lift, padAt(3, 2)], pickups: [far] })), false);
 });
 
 test('a lift carries him from a stair up to a 3-high ledge (D228)', () => {
   const lift = { id: 'lift', type: 'platform', at: [4, 0, 2], path: { points: [[4, 2, 2]] } };
-  const props = { jump: 'pads', blocks: [{ at: [5, 0, 2], to: [5, 2, 2] }], pickups: [pickup('far', [5, 3, 2])] };
+  const props = { blocks: [{ at: [5, 0, 2], to: [5, 2, 2] }], pickups: [pickup('far', [5, 3, 2])] };
   assert.equal(reached(reach({ ...props, objects: [lift] })), false, 'no stair to board it');
   const stair = { type: 'stair_x', at: [3, 0, 2] };
   assert.equal(reached(reach({ ...props, blocks: [...props.blocks, stair] })), false, 'no lift');
@@ -289,16 +303,6 @@ test('world: what he can never reach is an error', () => {
   assert.ok(report.errors.some((e) => e.includes('a: pickup "walled"')));
   assert.ok(report.errors.some((e) => e.startsWith('b: no way in')));
   assert.equal(formatReach(report).split('\n').at(-1), '3 reachability problem(s).');
-});
-
-test('world: the rooms still on the free jump are listed, game and dev wing apart (D222)', () => {
-  const rooms = new Map([['b', {}], ['a', { jump: 'free' }], ['pads', { jump: 'pads' }], ['lab', {}]]);
-  const freeJump = freeJumpRooms({ rooms, world: { dev: ['lab'] } });
-  assert.deepEqual(freeJump, { game: ['a', 'b'], dev: ['lab'] });
-  const report = { rounds: [], targets: [], warnings: [], errors: [] };
-  assert.match(formatReach(report, { freeJump }), /Still on the free jump \(D222\), 3 room\(s\):\n {2}game: a, b\n {2}dev wing: lab\nEverything is reachable\.$/);
-  assert.match(formatReach(report, { freeJump: { game: [], dev: [] } }), /Every room is a pads room/);
-  assert.deepEqual(formatReach(report, { json: true, freeJump }).freeJump, freeJump);
 });
 
 test('world: a room that waits for a spell listed as later is a warning, not an error (D183)', () => {
@@ -427,10 +431,11 @@ test('one room on its own: with the abilities given, from the spawn or an exit',
 });
 
 test('Pause: a frozen enemy pushed onto a heavy plate takes a ledge crate dropped on it (D205)', () => {
-  const patrol = { id: 'b', template: 'bug', at: [3, 0, 2], path: { points: [[9, 0, 2]] } };
+  const patrol = { id: 'b', template: 'worm', at: [3, 0, 2], path: { points: [[9, 0, 2]] } };
   const objects = [{ id: 'p', type: 'plate_heavy', at: [6, 0, 3] }, { id: 'c', type: 'crate', at: [5, 1, 3] }];
   const ledge = { at: [4, 0, 3], to: [5, 0, 4] };
-  const locked = (enemies, abilities) => reach({ exits: [WEST, { ...EAST, requires: [{ switch: '*' }] }], blocks: [ledge], objects, enemies }, abilities).exits.east;
+  const stair = { type: 'stair_x', at: [3, 0, 4] };
+  const locked = (enemies, abilities) => reach({ exits: [WEST, { ...EAST, requires: [{ switch: '*' }] }], blocks: [ledge, stair], objects, enemies }, abilities).exits.east;
   assert.equal(locked([], ['pause']), false); // the crate alone is one weight
   assert.equal(locked([patrol], []), false); // a bug not frozen is no weight
   assert.equal(locked([patrol], ['pause']), true); // frozen at [6,0,2], pushed onto the plate, the crate dropped on it
@@ -438,13 +443,13 @@ test('Pause: a frozen enemy pushed onto a heavy plate takes a ledge crate droppe
 
 test('a pad on a block carries a Blink up with it; a crate on a fake block drops when scanned', () => {
   // A pad on a 1-high step (launch 2): Blink at the apex crosses a 2-tile gap onto a 3-high ledge.
-  const base = { jump: 'pads', blocks: [{ at: [4, 0, 2] }, { type: 'stair_x', at: [3, 0, 2] }, { at: [8, 0, 2], to: [8, 2, 2] }], objects: [{ id: 'p', type: 'pad', at: [4, 1, 2] }], pickups: [pickup('far', [8, 3, 2])] };
+  const base = { blocks: [{ at: [4, 0, 2] }, { type: 'stair_x', at: [3, 0, 2] }, { at: [8, 0, 2], to: [8, 2, 2] }], objects: [{ id: 'p', type: 'pad', at: [4, 1, 2] }], pickups: [pickup('far', [8, 3, 2])] };
   const pad = { ...base, objects: [{ id: 'p', type: 'pad', at: [4, 1, 2], launch: 2.2 }] };
   assert.equal(reached(reach(pad, ['blink'])), true, 'pad then Blink');
   assert.equal(reached(reach(pad, [])), false, 'the pad alone does not');
   // A crate on a fake block lies on the floor once a scan has derezzed it, ready to push.
   const sc = { blocks: [{ type: 'fake', at: [5, 0, 1] }], objects: [{ id: 'c', type: 'crate', at: [5, 1, 1] }], pickups: [pickup('far', [7, 0, 1])] };
-  assert.equal(reached(reach({ ...sc, jump: 'pads', holes: [{ at: [6, 0], to: [6, 7] }] }, ['scan'])), true, 'the dropped crate plugs the hole');
+  assert.equal(reached(reach({ ...sc, holes: [{ at: [6, 0], to: [6, 7] }] }, ['scan'])), true, 'the dropped crate plugs the hole');
 });
 
 test('a pad throw lands its whole launch up over a 1-tile gap, a block less over 2, never over 3 (D243)', () => {
@@ -453,7 +458,7 @@ test('a pad throw lands its whole launch up over a 1-tile gap, a block less over
   const throwTo = (gap, high, { base = 0, blocks = [] } = {}) => {
     const step = base > 0 ? [{ at: [4, 0, 2] }, { type: 'stair_x', at: [3, 0, 2] }] : [];
     const ledge = high > 0 ? [{ at: [5 + gap, 0, 0], to: [11, high - 1, 7] }] : [];
-    const props = { jump: 'pads', holes: [{ at: [5, 0], to: [4 + gap, 7] }], blocks: [...step, ...ledge, ...blocks], objects: [{ id: 'p', type: 'pad', at: [4, base, 2] }], pickups: [pickup('far', [5 + gap, high, 2])] };
+    const props = { holes: [{ at: [5, 0], to: [4 + gap, 7] }], blocks: [...step, ...ledge, ...blocks], objects: [{ id: 'p', type: 'pad', at: [4, base, 2] }], pickups: [pickup('far', [5 + gap, high, 2])] };
     return reached(reach(props));
   };
   assert.equal(throwTo(1, 2), true, 'a floor pad, a 2-high ledge over 1 tile');

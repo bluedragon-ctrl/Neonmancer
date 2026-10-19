@@ -12,7 +12,6 @@ export const ACTIONS = [
   'down',
   'left',
   'right',
-  'jump',
   'cast',
   'spellNext',
   'spellPrev',
@@ -25,7 +24,6 @@ export const ACTIONS = [
   'debugInvincible',
   'debugDamage',
   'debugFragments',
-  'debugJumpRule',
   'fullscreen',
   'editor',
   'confirm',
@@ -37,8 +35,7 @@ export const DEFAULT_BINDINGS = {
   down: ['KeyS', 'ArrowDown'],
   left: ['KeyA', 'ArrowLeft'],
   right: ['KeyD', 'ArrowRight'],
-  jump: ['Space'],
-  cast: ['KeyE', 'Numpad0'],
+  cast: ['KeyE', 'Numpad0', 'Space'],
   spellNext: ['Tab'],
   spellPrev: ['KeyQ'],
   pause: ['Escape', 'KeyP'],
@@ -51,10 +48,9 @@ export const DEFAULT_BINDINGS = {
   debugInvincible: ['KeyI'],
   debugDamage: ['KeyH'],
   debugFragments: ['KeyK'],
-  debugJumpRule: ['KeyJ'],
   fullscreen: ['KeyF'],
   // The room editor (src/editor/); its own keys are in src/editor/editor.js.
   editor: ['F2'],
-  // Closes the end-of-game screen (D101); chooses in menus (D109).
-  confirm: ['Enter', 'NumpadEnter'],
+  // Closes the end-of-game screen (D101); chooses in menus (D109); Space chooses there too.
+  confirm: ['Enter', 'NumpadEnter', 'Space'],
 };

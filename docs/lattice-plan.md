@@ -29,12 +29,9 @@ Rules for the lines (D186, D187):
   Gatekeeper's doors never lock), so a wing room may be met with any of
   Zap, Shield, Pause, Scan and Fork. Every pickup's trick holds against
   all of them; the trick may use them.
-- **No double jump.** It was removed (D216): his jump is 1 up and a
-  one-tile gap everywhere.
-- **Pads only** (D222). Each review moves its room to `"jump": "pads"`:
-  no jump key, pads throw him 2 up and over a 1-tile gap, stairs take him a
-  block up, slabs bridge, a bug he falls onto bounces him 2 up (D223). See
-  Pads-only migration below.
+- **No jump** (D216, D222, D267). He has no jump key: pads throw him 2 up
+  and over a 1-tile gap, stairs take him a block up, slabs bridge, a bug
+  he falls onto bounces him 2 up (D223). See Pads-only migration below.
 - **Blink after Level 1.** The Level 1 reward in `dj_vault` (D217), so it
   never skips a Lattice fragment; it counts for exits and secrets only.
 - **Plates are no lock on their own.** A decoy holds any one plate, a
@@ -303,7 +300,7 @@ Waits for the core (D186): the secret rooms' contents.
 
 ## Pads-only migration (D222)
 
-What each room loses without the free jump, worked out with the checker
+What each room lost when the free jump went (done, D267), worked out with the checker
 (`--with zap,scan,fork,pause`, from every door) on 2026-10-14: a pickup it
 no longer reaches, or a crossing from one door to another. "Play" means the
 checker sees nothing lost, but the trick or the tempo leaned on the jump
@@ -311,7 +308,7 @@ and the review checks it by playing. Tags: rooms with spiked crates or
 fences (often there only to stop hops: candidates to simplify) and bouncy
 enemies (a bounce now needs a fall onto them: a moving pad, D223, which the
 checker counts). Each room's review (5.17)
-moves it to `"jump": "pads"` and ticks it off here.
+moved it to pads and ticked it off here.
 
 | # | Room | Lost without the jump | Tags | Note |
 |---|---|---|---|---|

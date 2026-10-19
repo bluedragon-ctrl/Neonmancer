@@ -5,7 +5,6 @@
   "name": "Junction",
   "biome": "home_lattice",
   "size": [8, 5, 8],
-  "jump": "pads",
   "spawn": [1.5, 0, 0.5],
   "reset": [6.5, 0, 5.5],
   "exits": [

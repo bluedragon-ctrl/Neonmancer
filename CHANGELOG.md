@@ -39,6 +39,7 @@ docs/decisions.md).
   say the same; 11 pieces in 8 rooms are listed for their reviews.
 
 ### Changed
+- The free jump is gone (D267): there is no jump key (Space casts, and chooses in menus), no room `jump` field, no editor box, no debug J and no `check:reach --pads`; pads, stairs and bounces are the only ways up. A pad's throw needs the room above it. `stream_lab` got a stair over its fence.
 - Dead Pixel (`buffer_1`) is a pads room with a new push puzzle (D262,
   step 5.11): three loft crates and a floor crate; the middle socket lies
   behind a 2-high wall, so a loft crate stacked on a ledge crate (the pier)

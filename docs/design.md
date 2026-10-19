@@ -52,8 +52,7 @@ The shares are a guide, tuned in playtests.
 | Action | Keys |
 |---|---|
 | Move | WASD / arrow keys; grid-aligned by default: Right ↗, Up ↖, Left ↙, Down ↘ |
-| Jump | Space (in a pads-only room, D221: casts instead) |
-| Cast (the selected spell) | E / Numpad 0; Space in a pads-only room (D221) |
+| Cast (the selected spell) | E / Numpad 0 / Space (there is no jump key, D267) |
 | Switch spell | Tab (next) / Q (previous) |
 | Pause menu (and back, in a menu) | Esc / P |
 | Map (and back) | M |
@@ -72,7 +71,6 @@ Debug mode only, once toggled on with F3:
 | Toggle invincibility | I |
 | Test damage (−1 integrity) | H |
 | Find the next 8 fragments | K |
-| No jump key, only pads, every room (D221) | J |
 
 Keys are physical positions (`KeyboardEvent.code`), so the layout is the
 same on QWERTY, QWERTZ and AZERTY keyboards.
@@ -82,12 +80,10 @@ same on QWERTY, QWERTZ and AZERTY keyboards.
 - Hitbox 0.6 × 1.5 × 0.6 (hat is visual only) — needs 2 blocks of headroom.
 - Walks at 4.5 units/s along the grid axes (default) or screen-relative
   (G toggles); diagonals are normalised either way.
-- Jump clears exactly one block (`jumpHeight` 1.2). Every jump has the same
-  height (no short hops), so the block rule never depends on timing (D19).
-- Forgiveness: a jump still works 6 ticks after walking off a ledge, and a
-  jump pressed up to 6 ticks before landing happens on landing.
-- Pads only (D221; the game's rule since D222, reached room by room): in a
-  room with `"jump": "pads"` the jump key does nothing (Space casts). A jump pad throws him up by itself the moment he stands
+- No jump (D221, D222; the key and the room rule went in D267): Space casts.
+  Every change of height is one the room places, so the block rule never
+  depends on timing (D19). `jumpHeight` 1.2 and `JUMP_SPEED` only scale his
+  air pose (squash and stretch). A jump pad throws him up by itself the moment he stands
   on it (any room; 2.2 above it: 2 up over a 1-tile gap, 1 up over 2, D243). It is a trampoline in
   the room's color (D226): a glass rim round a taut mesh that dips and
   rebounds on a launch, light streaking up off it; magenta stays the
@@ -278,9 +274,8 @@ the ones it gives:
   but bolts (his Zap and Pause, enemies' shots, Zap+ bounces too) and
   enemies' sight pass through (`seeThrough`, `Grid.blocksSight()`).
   Blink and Warp stop at it as at a block. Height is the
-  design tool: in a pads room any height stops him, and 1 high keeps
-  crates and enemies in too; in a free-jump room he jumps a 1-high one and
-  only 2 high stops him for good (no double jump, D216). A target behind a
+  design tool: any height stops him, and 1 high keeps crates and enemies
+  in too. A target behind a
   fence is switched with a Zap through it; a tower behind one still
   shoots him (no cover). Look: no faces; two beams per unit of height (at
   half and full height) through the middle of the cell, along its run;
@@ -1608,14 +1603,13 @@ usual, so half behind a wall he is half ghost (D55).
 - Others: a frozen enemy resting on a bare top is impaled and pops; the
   Fork decoy derezzes there (like falling into a hole); active enemies
   ignore the spikes (as with hazard blocks) and may cross it.
-- Why: the wizard climbs crates, so the classic Sokoban knot "get behind
-  the box" is gone; in the Microban survey 29 of the 104 levels solved
-  need half the pushes or fewer. With every crate spiked, the levels
-  build in the game play like Classic again (`microban-survey.md`,
-  spiked columns: with 3-high walls all 104 levels solved match their
-  classic push count; 1-high walls don't, he walks over them). A jump in line over a 1-high crate always touches the
-  top (a jump spends 0.23 s above 1.0 and covers 0.67 units sideways,
-  clearing needs 1.6): no bypass, no taller hurt zone.
+- Why: with the old free jump the wizard climbed crates, so the classic
+  Sokoban knot "get behind the box" was gone (in the Microban survey 29 of
+  the 104 levels solved needed half the pushes or fewer) and the spiked
+  crate brought it back (`microban-survey.md`, spiked columns). Since D267
+  there is no jump and no plain crate is a step, so the knot is back with
+  any crate; the spiked crate stays for its own idea: a stack's top he may
+  not stand on, a floor that hurts to cross from a stair or a pad.
 - Checker (`src/world/reach.js`): a configuration knows which crates are
   spiked (`config(crates, plugged, spiked)`); `below()` says `'bad'`
   under a bare spiked top (a crate on it is the surface instead), so he
@@ -1653,15 +1647,13 @@ usual, so half behind a wall he is half ghost (D55).
 
 ## Stairs, slabs and pads
 
-Without the free jump (D221, D222) every change of height is one the room
-places. Three pieces take the wizard up or across; the room rule and how
-to build with them are in Player and the Room design checklist (Reach in
-a pads room).
+With no jump (D221, D222, D267) every change of height is one the room
+places. Three pieces take the wizard up or across; how to build with them
+is in Player and the Room design checklist (Reach).
 
-- **Room rule:** `"jump": "pads"` in a room's data (editor: Jump, "only
-  on pads"). There the jump key does nothing and Space casts. New rooms
-  start with it (D223); old rooms move over in their reviews (5.17), then
-  the rule is the engine's (5.19). Debug J makes every room pads-only.
+- **The rule is the engine's** (D267): there is no jump key, no room
+  `jump` field and no editor box; Space casts. Debug J and
+  `check:reach --pads` went with them.
 - **Jump pad** (`defs.json` `pad`, object kind `pad`, D221): a tile on the
   floor or on top of a block (validation), no body. The moment he stands
   on it, it throws him `launch` (2.2) above it, in any room: 2 blocks up;
@@ -1693,13 +1685,13 @@ a pads room).
   bridge can cross over a path. To crates it is a block.
 - **Bridge** (`bridge`, D224): a white glass sheet at its cell's floor
   over a hole, floor while powered (`Grid.coverHole()`); see Gate blocks.
-- **Bouncy enemy** (D223): falling onto one throws him 2.2 above its top;
-  in a pads room it is a moving pad.
+- **Bouncy enemy** (D223): falling onto one throws him 2.2 above its top:
+  a moving pad.
 - **Checker:** a pad's cell climbs 2, lands 2 up over a 1-tile gap and 1
   up over 2 tiles (D243, the best launch point); a stair
   links its foot to its top; he walks under a slab; a bouncy enemy's lane
-  counts as pads. `check:reach -- --pads` tries the rule on every room;
-  the report lists the rooms still on the free jump.
+  counts as pads. The throw needs headroom: a ceiling over the pad's
+  column stops the launch, a gap crossing and a Blink from it (D267).
 - Showcase `?asset=pad`, `?asset=stairs-in-room`; dev room `stair_lab`.
 
 ## Decorations
@@ -2036,8 +2028,7 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
   on mechanics taught in earlier rooms; an action room keeps the layout
   simple.
 
-**Reach in a pads room** (D222, D223: every room once its review moves
-it, and every new room)
+**Reach** (D222, D223, D267: every room)
 - No jump. A pad (`pad`, on the floor or on top of a block) throws him
   2.2 above it the moment he stands on it: from the floor onto a 2-high
   ledge, never 3; from a pad on a 1-high block onto a 3-high one; over a
@@ -2073,15 +2064,6 @@ it, and every new room)
 - Headroom, frozen enemies pushed, gates in holes, other solutions: as
   below.
 
-**Reach with the free jump** (rooms not yet reviewed, until step 5.19)
-- A jump clears exactly 1 block up, never 2 (apex 1.2). A 2-high step
-  needs a crate, a platform or a step in between.
-- A running jump crosses a 1-tile gap, never a 2-tile one (~1.65 units of
-  air travel); a pit 2 or more wide needs a bridge, a platform or a crate
-  to plug it. Only from the same level: from a 1-high top (a crate, a
-  frozen enemy, a bridge block) beside a floor pit, a late running jump
-  lands up to 2.45 units on, so it crosses 2 tiles (D162). Keep anything
-  pushable or freezable 2+ cells from a 2-wide pit, or make the pit 3 wide.
 - A bouncy enemy launches him 2.2 above its top (0.6): from the floor
   that clears a 2-high ledge, never 3. Where the enemy can walk, the way
   up moves with it.
@@ -2103,13 +2085,13 @@ it, and every new room)
   alcove behind 2-high walls is no gate (`ledger_cell`, D160).
 
 **Timing** (60 ticks per second)
-- Walking (4.5 units/s) crosses one cell in ~13 ticks (0.22 s); a jump
-  lasts ~34 ticks (0.57 s).
+- Walking (4.5 units/s) crosses one cell in ~13 ticks (0.22 s); a pad's
+  throw lasts ~46 ticks (0.77 s) up and down.
 - A push takes ~28 ticks (0.47 s): 8 ticks of walking into the crate, then
   20 ticks of sliding one cell.
 - A collapsing block goes 30 ticks (0.5 s) after he steps on it. Running
   across or hopping off in time is fine; anything that makes him stand
-  still on one (a push, lining up a jump, waiting for a platform) is
+  still on one (a push, lining up a pad, waiting for a platform) is
   almost always fatal. Give such actions solid ground (playtest: pushing a
   crate off a collapsing bridge).
 - Platforms: check the wait at the ends (`pause`) is long enough to get on
@@ -2119,12 +2101,12 @@ it, and every new room)
   goes on (the plate he steps off; for a target, the cell he zaps from,
   the bolt is near instant; for a frozen enemy on a plate, the Pause shot)
   to the far side of what it powers, ~13 ticks
-  a cell plus ~34 per jump and ~28 per push on the way; the timer should
+  a cell plus ~46 per pad throw and ~28 per push on the way; the timer should
   be that plus about a second (60 ticks), not less and not much more.
 - A watchdog timer (room `timer`, D172): the checker knows nothing of it
   either. Count the run from the entrance, and from the `reset` point
   after a death, to the last permanent pickup (it stops the timer), or
-  to the way out in a room without one, the same way: ~13 ticks a cell, ~34 a jump, ~28 a push, plus
+  to the way out in a room without one, the same way: ~13 ticks a cell, ~46 a pad throw, ~28 a push, plus
   waits for platforms and switches. Give it about 2–3 s to spare, more on
   a long run. A timer suits rooms where speed is the idea (a dash, a race
   over collapsing blocks), not a slow puzzle.
@@ -2372,9 +2354,6 @@ F3 toggles debug mode; off by default. While it's on:
   to be touched to raise the level.
 - `H` calls `Game.hurt(1)`, the same path as every damage source: the
   wizard blinks while invulnerable, and at 0 integrity he derezzes.
-- `J` makes every room pads-only (D221): no jump key, Space casts, to play
-  rooms not yet reviewed under the new rule; again, each room's own rule.
-  The readout shows the rule in force.
 
 Rooms fully reset on a debug room jump, same as walking through an exit.
 
@@ -2521,9 +2500,8 @@ floor.
   the mouse, whatever the layer, moving it if there is one; right click
   removes it.
 - The panel, from the top, picks the room (or makes a new one: an id,
-  then New; it starts empty, 12x4x12, in the current biome, a pads room,
-  D223), sets the room's name, **Authored** (D90), **Jump** ("only on
-  pads": the room's `jump` rule, D221), biome and size (applied on Enter or leaving the field; 2–6
+  then New; it starts empty, 12x4x12, in the current biome),
+  sets the room's name, **Authored** (D90), biome and size (applied on Enter or leaving the field; 2–6
   high, width + depth at most 32; a smaller room drops what ends up
   outside, listed in the status line, and moves spawn and reset inside),
   its watchdog timer (**Timer (s)**: whole seconds 3–600, blank for none,
@@ -2699,7 +2677,7 @@ author flags them authored (D90). Room plan: [lattice-plan.md](lattice-plan.md).
 |---|---|---|
 | 5.3 | `feat/music` | The author's tracks trimmed for seamless loops: Lattice, boss, title; room and biome mapping, a boss switch and a crossfade back. |
 | 5.17 | `rooms/<id>` | The room reviews, one room a session and a PR, in play order: the room-design skill's rework workflow against its ladder line, then the author's tuning in the editor. Each review moves its room to `"jump": "pads"` and rebuilds what the jump carried (lattice-plan.md, Pads-only migration), the Outer Buffer doors (5.11) with their host rooms. |
-| 5.19 | `feat/no-jump` | After the last room review (D222): the pads-only rule is the engine's. The room `jump` field (and its editor box), the jump action, the free-jump code in the player (key, coyote time, buffer) and the checker, debug J and `check:reach --pads` go; Space casts; the controls screen and help follow. The spiked crate, fence roofs and hop-proof walls are retired or kept on their own merit; CLAUDE.md, design.md, the ladder rules and the skills lose the free jump. |
+| 5.19 | `feat/no-jump` | Done (D267): the free jump is gone. The room `jump` field and its editor box, the jump action and key (Space casts; menus choose with Enter or Space), the jump code in the player (key, coyote time, buffer, the `jump` event and sound), the checker's free-jump branch, debug J and `check:reach --pads` were removed; the controls screen follows. The dev wing's `stream_lab` got a stair over its fence. The spiked crate, fence roofs and hop-proof walls stay on their own merit. |
 | 5.11 | `feat/outer-buffer-secrets` | In progress: the secret cluster's contents, one room a PR, hard push puzzles (D173, D186). Done: Dead Pixel (D220, on pads D262), Stray Byte (D263), Null Orbit (D264), Event Horizon (D265), Cache Miss (D266): the five secret rooms are all built. |
 | 5.12 | `feat/quality-presets` | Quality presets, auto fallback and render scale wired up (D76), a check on a weaker GPU. |
 | 5.13 | `feat/onboarding-feedback` | The first minute from title to the first disk (stairs and a pad before any spell, D222), the controls screen (Space casts), the pause entry that copies debug info (version, room, key) for feedback. |
@@ -2876,8 +2854,6 @@ Example room:
   however he entered it (D39). Optional, defaults to `spawn`.
 - `authored` — the author's real game room (D90); development steps never
   touch it.
-- `jump` — `"pads"`: no jump key, only pads, stairs and bounces take him up
-  (D221, D222); absent: the free jump, until step 5.19.
 - `timer` — a watchdog timer in whole seconds (D172); absent: none.
 - `exits` — `side` is `-x`, `+x`, `-z` or `+z`; `at` is the first cell along
   that side; `width` (default 2), `y` floor level (default 0), `height`

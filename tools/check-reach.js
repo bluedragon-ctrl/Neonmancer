@@ -11,16 +11,14 @@
 //   --from exit_id: with --with, arrive through that exit instead of at the spawn point
 //   --rooms: all rooms: also list what each exit and pickup needs
 //   --json: print the report as JSON instead
-//   --pads: as if every room had "jump": "pads" (D221): he jumps only on pads
-// The world report ends with the rooms still on the free jump (D222), a
-// one-room report says so on top. Both warn of puzzle pieces near an exit
-// (D241: he walks out by accident and the room resets).
+// Both warn of puzzle pieces near an exit (D241: he walks out by accident and
+// the room resets).
 import { fileURLToPath } from 'node:url';
 import { checkData, readDataFiles } from './check-data.js';
 import { loadGameData } from '../src/data/load.js';
 import { exitMarginWarnings } from '../src/world/exit-margin.js';
 import { analyzeRoomAlone, analyzeWorld } from '../src/world/reach-world.js';
-import { formatReach, formatRoom, freeJumpRooms, roomOfReport } from '../src/world/reach-report.js';
+import { formatReach, formatRoom, roomOfReport } from '../src/world/reach-report.js';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const argv = process.argv.slice(2);
@@ -37,8 +35,6 @@ if (dataErrors.length > 0) {
   process.exit(1);
 }
 const content = loadGameData(readDataFiles(root).files);
-// Try the pads-only jump (D221) on every room as it is.
-if (args.has('--pads')) for (const room of content.rooms.values()) room.jump = 'pads';
 if (roomId && !content.rooms.has(roomId)) {
   console.error(`No room "${roomId}". Rooms: ${[...content.rooms.keys()].join(', ')}`);
   process.exit(1);
@@ -61,19 +57,16 @@ if (roomId) {
   const part = alone ?? roomOfReport(world, roomId);
   part.warnings.push(...exitMarginWarnings(content, [roomId]));
   const note = alone ? `${roomId} on its own with ${abilities?.length ? abilities.join(', ') : 'no abilities'}, from ${from ? `exit ${from}` : 'the spawn point'}:` : undefined;
-  const free = (content.rooms.get(roomId).jump ?? 'free') === 'free';
-  if (free && !args.has('--json')) console.log(`${roomId}: still on the free jump (D222: its review moves it to "jump": "pads").`);
-  console.log(args.has('--json') ? JSON.stringify({ ...part, jump: free ? 'free' : 'pads' }, null, 2) : formatRoom(roomId, part, note));
+  console.log(args.has('--json') ? JSON.stringify(part, null, 2) : formatRoom(roomId, part, note));
   process.exit(part.errors.length > 0 ? 1 : 0);
 }
 
 const report = analyzeWorld(content, { needs: args.has('--rooms') || args.has('--json') });
-const freeJump = freeJumpRooms(content);
 report.warnings.push(...exitMarginWarnings(content));
 
 if (args.has('--json')) {
-  console.log(JSON.stringify(formatReach(report, { json: true, freeJump }), null, 2));
+  console.log(JSON.stringify(formatReach(report, { json: true }), null, 2));
 } else {
-  console.log(formatReach(report, { rooms: args.has('--rooms'), freeJump }));
+  console.log(formatReach(report, { rooms: args.has('--rooms') }));
 }
 process.exit(report.errors.length > 0 ? 1 : 0);

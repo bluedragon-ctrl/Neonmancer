@@ -65,7 +65,7 @@ test('a Zap switches a target on, the next one off again; it stops the bolt and 
   assert.ok(game.player.pos[0] < 3, 'it blocks him like a crate');
 });
 
-test('a plate is on while a crate, an enemy or the wizard stands on it, not while he jumps over it', () => {
+test('a plate is on while a crate, an enemy or the wizard stands on it, not while he is thrown over it', () => {
   const plate = { id: 'p', type: 'plate', at: [5, 0, 5] };
   const withCrate = gameWith({ objects: [plate, { id: 'c', type: 'crate', at: [5, 0, 5] }] });
   withCrate.update(idle);
@@ -88,7 +88,7 @@ test('a plate is on while a crate, an enemy or the wizard stands on it, not whil
   assert.equal(p.on, false);
   game.player.place([5.5, 0, 5.5]);
   game.update(idle);
-  game.update({ down: (a) => a === 'jump', pressed: (a) => a === 'jump' });
+  game.player.bounce(game.player.pos[1], 1.2); // a throw like a pad's
   run(game, idle, 3);
   assert.equal(p.on, false, 'in the air');
 });

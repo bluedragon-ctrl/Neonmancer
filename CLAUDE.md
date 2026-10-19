@@ -82,18 +82,16 @@ mobile/touch support, backend or accounts.
 ### Grid and rooms
 - Coordinates: y is up; room size is [x, y, z] = [width, height, depth];
   the floor is at y = 0; back walls are the x = 0 and z = 0 planes.
-- 1 block = 1 unit (1x1x1). Player jump height: 1 unit (clears exactly one
-  block, never two), everywhere: there is no double jump (removed, D216).
-- Pads only (D221, the game's rule since D222): a room with
-  `"jump": "pads"` has no jump key (Space casts there); jump
+- 1 block = 1 unit (1x1x1). There is no jump (D222, gone from the engine
+  in D267; the double jump went in D216). Pads only: Space casts; jump
   pads (object kind `pad`, a trampoline in the room's color: a rim round a
   mesh with light streaking up, D226) throw him up by themselves (2 blocks,
-  a 1-tile gap); stairs (look `stair`, a `rise`) take him a block up, slabs (look
+  a 1-tile gap, needing headroom over the pad); stairs (look `stair`, a
+  `rise`) take him a block up, slabs (look
   `slab`) are thin glass walkways with headroom under them; a bouncy
-  enemy he falls onto throws him 2 up, a moving pad (D223). New rooms
-  are pads rooms; the default stays `free` while rooms move over one by
-  one in their reviews, then the jump goes for good (D222;
-  lattice-plan.md, Pads-only migration); test room `stair_lab`.
+  enemy he falls onto throws him 2 up, a moving pad (D223). Every room is
+  built for the rule (lattice-plan.md, Pads-only migration); test room
+  `stair_lab`.
 - Player hitbox 0.6 x 1.5 x 0.6 (the hat is visual only), so the wizard
   needs 2 blocks of headroom.
 - Blocks snap to the grid; player and enemies move freely (sub-grid).
@@ -108,7 +106,7 @@ mobile/touch support, backend or accounts.
 ### Engine
 - Fixed-timestep loop: 60 logic updates per second, rendering
   interpolated; identical behavior on any refresh rate.
-- Input via action mapping (move, jump, cast, cycle spell, pause, map);
+- Input via action mapping (move, cast, cycle spell, pause, map);
   game code never reads raw keys. Rebinding and gamepad later.
 - Blocks rendered with instanced or merged geometry for performance.
 
@@ -158,10 +156,9 @@ mobile/touch support, backend or accounts.
   safe to push. A crate on it covers the spikes (a safe 2-high step); a
   spiked crate on a plain one keeps them; plugged into a hole it is
   plain floor. A frozen enemy on a bare top is impaled (pops), the
-  decoy derezzes, active enemies cross it unhurt. A hop over a 1-high
-  crate in line is impossible (D199: always touches the top), so it
-  brings Sokoban's "can't get behind the box" back to free-jump rooms
-  (in a pads room every crate does; kept or retired in 5.19, D222). Look: the glass crate
+  decoy derezzes, active enemies cross it unhurt. With no jump
+  "can't get behind the box" holds for every crate (D267), so the spiked
+  crate is kept for a top he must not stand on. Look: the glass crate
   with square vents in the top, aurora jets and shafts down to the core
   (hidden while covered).
 - Decorations (kind `deco`, D117): fixed bodies that dress a room and do
@@ -251,7 +248,7 @@ mobile/touch support, backend or accounts.
 ## 5. Game systems
 
 ### Player
-Move, jump, gravity, push objects, health ("integrity") and mana ("energy").
+Move, gravity, pad launches, push objects, health ("integrity") and mana ("energy").
 
 ### Spells (programs, unlocked by finding data disks)
 The wizard starts with none; the first data disk (Zap) lies in
@@ -276,8 +273,7 @@ bit on its disk (D71).
 
 Added in Phase 4 (the roster, D88):
 - **Compile** — a crate in the free cell in front of the wizard for 7 s:
-  a hole plugged to walk over, or a step up in a free-jump room (in a
-  pads room he can't climb it) (D125; built)
+  a hole plugged to walk over (he can't climb it, D267) (D125; built)
 - **Fork** — a hologram decoy of the wizard in the free cell in front of
   him for 10 s: it holds floor plates down and draws hostile enemies,
   which go for the nearer of it and him (D129; built)
@@ -434,7 +430,7 @@ they stay for the run.
   glowing eyes (D22). The world stays wireframe.
 - The wizard: cone body, ball head, floating ball hands and a big pointy
   hat, readable at a glance.
-- "Juice": squash-and-stretch on jumps and landings, small screen shake
+- "Juice": squash-and-stretch on launches and landings, small screen shake
   and hit-flash on hits, particle bursts on pickups, anything gone
   (the wizard, enemies, blocks, crates, pickups) derezzes into pixels
   in one shared look (D126), pixels a spell carries (Cut & Paste,
@@ -478,7 +474,7 @@ The engine is generic; all content lives in data.
 - `data/lore.json` — screen texts (hints and lore, D118), by id; a
   screen room object names one
 - `data/audio.json` — named audio events mapped to files
-  (e.g. "jump", "pickup", "music:glitchmire")
+  (e.g. "bounce:pad", "pickup", "music:glitchmire")
 - `schemas/*.json` — JSON Schema for every data format, used both as
   documentation and for validation
 
@@ -528,8 +524,7 @@ not critical.
 ## 9. Tooling
 
 - **Debug mode** (toggle key): collision boxes, FPS, room jump,
-  invincibility, test damage, finding fragments (K), jump only on pads in
-  every room (J, D221).
+  invincibility, test damage, finding fragments (K).
 - **Access pass** (D113): a test pickup (kind `access`) that raises the
   access level at once; one (level 3) lies in `boot_up`, the start, for
   testing. Not for real game content.
@@ -540,8 +535,7 @@ not critical.
   with the mouse, preview in the real neon look, export room JSON. The
   Switch tool places switches (the Object tool does not) and links them
   to gates, platforms and exits, from either side, with checklists in the
-  panel; hovering shows any thing's switch links (D142). The room's Jump
-  box sets the pads rule (new rooms start with it, D223); the stairs are
+  panel; hovering shows any thing's switch links (D142). The stairs are
   one Block tool entry turned with R; pads have their own Object group.
 - **World map tool** (`tools/world-map.html`, D66, D77): every room on a
   map grid with its connections (exits lead to the next map cell, D259);
@@ -554,15 +548,13 @@ not critical.
   game's models, variants in colors of their own, rename (rooms follow),
   delete. Dev server only; the room editor only picks templates.
 - **Reachability checker** (`tools/check-reach.js`, `npm run check:reach`,
-  D131): searches every room's grid with jump height,
+  D131): searches every room's grid with stairs, pads,
   crates (pushed, pulled, pasted), frozen enemies (pushed, D166) and the
   spells found so far, and the
   world as a fixpoint, flagging exits, pickups and rooms that stay out of
   reach; `<room>` checks one room (`--with` abilities, `--from` an exit),
-  `--rooms` lists what each exit and pickup needs, `--pads` tries the
-  pads-only jump (D221) on every room; it lists the rooms still on the
-  free jump (D223) and warns of puzzle pieces within 2 cells of a door
-  (D241). Used by CI, the
+  `--rooms` lists what each exit and pickup needs; it warns of puzzle
+  pieces within 2 cells of a door (D241). Used by CI, the
   world map tool, and design skills/subagents. Knows nothing of enemies
   or timing.
 - **Claude Code skills and subagents** (D132, `.claude/`): the
@@ -670,8 +662,8 @@ sounding Home Lattice and ship it to testers.
   secret rooms (entrances built; their contents wait, D186). The
   Lattice's ambience (data flows, glass panels, D179) and the Outer
   Buffer's look are done.
-- Pads only (D222): prep (5.18), each room review moves its room to
-  pads (5.17), then the jump goes (5.19).
+- Pads only (D222): prep (5.18), each room review moved its room to
+  pads (5.17), and the jump went (5.19, D267).
 - Core first (D186): a Lattice ladder (each room's type, rung and trick
   in docs/lattice-plan.md), then every Lattice room reviewed one by one
   with the room-design skill and the author's tuning.

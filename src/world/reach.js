@@ -5,8 +5,8 @@
  *
  * It works on whole cells, not on physics: a standing cell is a cell with
  * two free cells above it and a solid floor under it; from one the wizard
- * walks to the four neighbours, steps off ledges, jumps up one block or
- * over a one-tile gap, and with abilities does more (see MOVES). The
+ * walks to the four neighbours, steps off ledges, climbs stairs, is thrown up
+ * by pads, and with abilities does more (see MOVES). The
  * numbers come from the tuning tables (`PLAYER`, `WARP`) and the design
  * checklist (docs/design.md); keep them in step.
  *
@@ -41,15 +41,14 @@
  * one enemy may count in several cells at once (optimistic, like the
  * timing), but it holds one plate at most.
  *
- * Jump rule (D221): a jump pad throws him up its `launch` (2 blocks) in any
- * room; across a gap it lands 2 up over one tile and 1 up over two (D243,
- * LAUNCH); in a room with `"jump": "pads"`
- * that is his only jump: elsewhere no climb, no gap, no Blink from a jump,
- * no step onto a compiled crate, and a pickup two cells up is out of reach.
+ * Pads only (D221, D222): a jump pad throws him up its `launch` (2 blocks);
+ * across a gap it lands 2 up over one tile and 1 up over two (D243,
+ * LAUNCH). That is his only jump: no climb, no gap otherwise, no step onto a
+ * compiled crate, and a pickup two cells up is out of reach without one.
  * A stair takes him from the cell at its foot onto its top, one up; down
  * again is a step off a ledge. A crate or a frozen enemy pushed or pulled
  * off a ledge over a stair's top slides down it to its foot (D230,
- * Grid.stairStep()); it never goes up one, nor onto one otherwise. In a pads room a bouncy enemy is a moving
+ * Grid.stairStep()); it never goes up one, nor onto one otherwise. A bouncy enemy is a moving
  * pad (D223): where he falls onto a cell of its lane (from a ledge or a
  * launch) he is thrown up as from a pad, BOUNCE_UP blocks and the pad's
  * gaps; any cell of the lane, whenever (optimistic, like Pause). He can't
@@ -72,22 +71,13 @@ import { pathCells } from './path.js';
 export const ABILITIES = ['zap', 'scan', 'pull', 'shove', 'swap', 'compile', 'fork', 'cut_paste', 'blink', 'warp', 'pause'];
 
 /**
- * Jump tuning in cells, from PLAYER (apex 1.2 above take-off, ~1.65 units of
- * air travel): a jump clears one block and a one-tile gap.
- */
-export const JUMP = {
-  up: 1,
-  gap: 1,
-};
-
-/**
  * Whole blocks a bounce off a bouncy enemy lifts him (D48: 2.2 above its
  * 0.6 top, so 2.8 over the floor of its lane): a 2-high ledge, never 3.
  */
 export const BOUNCE_UP = 2;
 
 /**
- * Gaps a launch (a pad, a bounce: higher than a jump) crosses, D243. Played
+ * Gaps a launch (a pad, a bounce) crosses, D243. Played
  * with sim.mjs from every point of a pad: over a 1-tile gap it lands up to
  * its whole launch higher (a 3-high top from a pad on a 1-high block), over
  * 2 tiles a block less, over 3 never. Optimistic: the best launch point and
@@ -136,17 +126,12 @@ export class RoomModel {
     this.scanRange = scanRange;
     this.blinkRange = blinkRange;
     [this.w, this.h, this.d] = room.size;
-    this.up = JUMP.up;
-    this.gap = JUMP.gap;
-    /** Does he jump anywhere, or only on pads (D221)? */
-    this.freeJump = (room.jump ?? 'free') === 'free';
     /** The jump pads (D221): cell index → the whole blocks a launch lifts him. */
     this.pads = new Map();
-    /** In a pads room, the lane cells of bouncy enemies (D223): falling onto one throws him up. */
+    /** The lane cells of bouncy enemies (D223): falling onto one throws him up. */
     this.bounceLanes = new Set();
-    if (!this.freeJump)
-      for (const enemy of room.enemies ?? [])
-        if (enemy.bounce) for (const [px, py, pz] of enemy.path ? pathCells(enemy.at, enemy.path) : [enemy.at]) this.bounceLanes.add(this.index(px, py, pz));
+    for (const enemy of room.enemies ?? [])
+      if (enemy.bounce) for (const [px, py, pz] of enemy.path ? pathCells(enemy.at, enemy.path) : [enemy.at]) this.bounceLanes.add(this.index(px, py, pz));
 
     // A scan derezzes every fake block (optimistically: wherever he stands).
     const blocks = {};
@@ -285,10 +270,10 @@ export class RoomModel {
 
   /**
    * How many blocks up he gets from the cell he stands in (D221): a pad's
-   * launch, his jump in a room with a free jump, else 0.
+   * launch, else 0.
    */
   climbFrom(x, y, z, bounced = false) {
-    const own = this.pads.get(this.index(x, y, z)) ?? (this.freeJump ? this.up : 0);
+    const own = this.pads.get(this.index(x, y, z)) ?? 0;
     return bounced ? Math.max(own, BOUNCE_UP) : own;
   }
 
@@ -429,12 +414,13 @@ export class RoomModel {
     const { abilities } = this;
     while (queue.length > 0) {
       const [x, y, z] = queue.pop();
-      // A pad (or a bouncy enemy he fell onto, D223) throws him up; without a free jump (D221) nothing else does.
+      // A pad (or a bouncy enemy he fell onto, D223) throws him up; nothing else does (D221).
       const up = this.climbFrom(x, y, z, bounced.has(this.index(x, y, z)));
-      const jumps = up > 0;
-      // A launch (higher than his jump) flies further than a jump (D243).
-      const launch = up > this.up;
-      const gap = jumps ? (launch ? LAUNCH.gap : this.gap) : 0;
+      const launch = up > 0;
+      const gap = launch ? LAUNCH.gap : 0;
+      // The throw needs the room above him: a ceiling over the pad stops it.
+      let headroom = launch;
+      for (let dy = 2; dy <= up + 1; dy++) headroom &&= !this.blocked(x, y + dy, z, cfg);
       // Riding a lift (D228): standing on its platform he goes to its other stops.
       if (y > 0) for (const [lx, ly, lz] of this.lifts.get(this.index(x, y - 1, z)) ?? []) if (this.landing(lx, ly + 1, lz, cfg) === ly + 1) add(lx, ly + 1, lz);
       for (const dir of DIRS) {
@@ -446,7 +432,7 @@ export class RoomModel {
         // Walk up a stair (D221) from its foot onto its top.
         const rise = this.grid.isInside(nx, nz) && y < this.h ? this.stairs.get(this.index(nx, y, nz)) : undefined;
         if (rise && rise[0] === dx && rise[1] === dz && this.landing(nx, y + 1, nz, cfg) === y + 1) add(nx, y + 1, nz);
-        // Jump up: the cell is a block (or a body) he can stand on top of.
+        // Launched up: the cell is a block (or a body) he can stand on top of.
         for (let climb = 1; climb <= up; climb++) {
           // Headroom for the rise, then the landing cell on top of what he climbs.
           let free = true;
@@ -454,8 +440,8 @@ export class RoomModel {
           if (!free) break;
           if (this.grid.isInside(nx, nz) && this.landing(nx, y + climb, nz, cfg) === y + climb) add(nx, y + climb, nz);
         }
-        // Jump a gap: the cells over it are free; he lands level or lower (or higher, below).
-        for (let width = 1; width <= gap; width++) {
+        // Launched over a gap: the cells over it are free; he lands level or lower (or higher, below).
+        for (let width = 1; width <= gap && headroom; width++) {
           let over = true;
           for (let k = 1; k <= width; k++) for (let dy = 0; dy <= 2; dy++) over &&= !this.blocked(x + dx * k, y + dy, z + dz * k, cfg);
           if (!over) break;
@@ -478,12 +464,10 @@ export class RoomModel {
           const n = this.sweep(x, y, z, dir, limit, cfg);
           if (n > 0) land(x + dx * n, y, z + dz * n);
         }
-        // Blink from a running jump (D217): cast near the top, he keeps the jump's
-        // arc, so it carries two cells further and a block up (sim: a 4-tile pit,
-        // onto a 1-high ledge beyond it); he lands anywhere along the way.
-        // A pad's launch (or a bounce) carries it as high as the launch goes (sim: a pad on a
-        // 1-high block, Blink over a 2-tile gap onto a 3-high sill).
-        if (jumps && abilities.has('blink') && !this.blocked(x, y + up + 1, z, cfg)) {
+        // Blink from a launch (D217): cast near the top, he keeps the arc, so it
+        // carries two cells further and as high as the launch goes (sim: a pad on a
+        // 1-high block, Blink over a 2-tile gap onto a 3-high sill); he lands anywhere along the way.
+        if (headroom && abilities.has('blink')) {
           const n = this.sweep(x, y + up, z, dir, this.blinkRange + 2, cfg);
           for (let k = 1; k <= n; k++) land(x + dx * k, y + up, z + dz * k);
         }
@@ -868,7 +852,7 @@ export function standsIn(model, cfg, starts) {
 export function collect(model, cfg, stands, reach) {
   const { room, abilities } = model;
   const standAt = (x, y, z) => stands.has(model.index(x, y, z));
-  // A pickup: in the cell he stands in or the one above, or higher with a jump.
+  // A pickup: in the cell he stands in or the one above, or higher with a launch.
   for (const pickup of room.pickups) {
     if (reach.pickups.has(pickup.id)) continue;
     const [x, y, z] = pickup.at;

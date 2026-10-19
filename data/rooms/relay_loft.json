@@ -5,7 +5,6 @@
   "name": "Relay Loft",
   "biome": "home_lattice",
   "size": [15, 5, 8],
-  "jump": "pads",
   "spawn": [0.5, 0, 6.5],
   "exits": [
     { "id": "south", "side": "+z", "at": 1 },

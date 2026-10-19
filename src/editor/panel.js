@@ -329,7 +329,7 @@ export class EditorPanel {
    *   enemyTemplate(id),
    *   screenText(id|null), newText(id, text), updateText(text),
    *   path(field, value), clearPath(), exit(field, value), layer(step), cut(on), discard(), error(text), name(text),
-   *   authored(on), padJump(on), biome(id), size([x, y, z]), roomTimer(seconds), undo(), redo(), save(), revert()
+   *   authored(on), biome(id), size([x, y, z]), roomTimer(seconds), undo(), redo(), save(), revert()
    */
   constructor(root, { blockTypes, objectTypes, switchTypes, enemyTemplates, biomes, canSave, on }) {
     this.canSave = canSave;
@@ -392,11 +392,6 @@ export class EditorPanel {
     this.authoredInput.addEventListener('change', () => on.authored(this.authoredInput.checked));
     const authored = el('label', 'editor-check');
     authored.append(this.authoredInput, ' real game room');
-    // Jump only on pads (D221); new rooms start so (D222), the rest move in their reviews.
-    this.padJumpInput = Object.assign(el('input'), { type: 'checkbox', title: 'No jump key in this room: only pads, stairs and bounces take him up (D221, D222)' });
-    this.padJumpInput.addEventListener('change', () => on.padJump(this.padJumpInput.checked));
-    const padJump = el('label', 'editor-check');
-    padJump.append(this.padJumpInput, ' only on pads');
     this.biomeSelect = select(Object.entries(biomes).map(([id, biome]) => [id, biome.name]));
     this.biomeSelect.addEventListener('change', () => on.biome(this.biomeSelect.value));
     // A size takes effect as soon as a field is committed (Enter, or leaving it).
@@ -422,7 +417,7 @@ export class EditorPanel {
     this.discardButton = el('button', 'editor-action', 'Discard new room');
     this.discardButton.addEventListener('click', () => on.discard());
     const group = el('div', 'editor-group');
-    group.append(this.row('Room', this.roomSelect), newRoomRow, this.row('Name', this.nameInput), this.row('Authored', authored), this.row('Jump', padJump), this.row('Biome', this.biomeSelect), sizeRow, this.row('Timer (s)', this.roomTimerInput), this.discardButton);
+    group.append(this.row('Room', this.roomSelect), newRoomRow, this.row('Name', this.nameInput), this.row('Authored', authored), this.row('Biome', this.biomeSelect), sizeRow, this.row('Timer (s)', this.roomTimerInput), this.discardButton);
     return group;
   }
 
@@ -858,7 +853,6 @@ export class EditorPanel {
     // Don't overwrite a field while it is being typed in.
     if (document.activeElement !== this.nameInput) this.nameInput.value = data.name;
     this.authoredInput.checked = data.authored === true;
-    this.padJumpInput.checked = data.jump === 'pads';
     this.biomeSelect.value = data.biome;
     this.sizeInputs.forEach((input, axis) => {
       if (document.activeElement !== input) input.value = String(data.size[axis]);

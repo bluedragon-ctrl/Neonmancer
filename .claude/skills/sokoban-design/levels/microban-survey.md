@@ -6,6 +6,15 @@ added the same day, D199). This page is the
 review: what survives the game's rules, and how to build the best levels
 in a room. Re-run the survey after any change to the push rules.
 
+> **Free-jump numbers (D267).** The tables below were computed with the
+> old free jump (he climbed crates and 1-high walls). The game has none
+> now: a level of plain crates and walls of any height plays as its
+> Classic column, and the reading in "What the survey shows" (points 1
+> and 3) and "Spiked crates bring Classic back" is history. Holes and
+> sockets still change a level as described. `scripts/survey.mjs` builds
+> every column for the current rules (a full run takes a long time: split
+> it by `--levels`).
+
 ## How to read the table
 - **Classic**: fewest pushes under Sokoban rules (the player walks
   floor only).

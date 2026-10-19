@@ -4,29 +4,29 @@ import { Input } from '../src/core/input.js';
 
 test('hold: pressed on the first tick only, down while held, released after', () => {
   const input = new Input();
-  input.keyDown('Space');
+  input.keyDown('KeyM');
   input.sample();
-  assert.ok(input.down('jump') && input.pressed('jump'));
+  assert.ok(input.down('map') && input.pressed('map'));
 
   input.sample();
-  assert.ok(input.down('jump') && !input.pressed('jump'));
+  assert.ok(input.down('map') && !input.pressed('map'));
 
-  input.keyUp('Space');
+  input.keyUp('KeyM');
   input.sample();
-  assert.ok(!input.down('jump') && input.released('jump'));
+  assert.ok(!input.down('map') && input.released('map'));
 
   input.sample();
-  assert.ok(!input.released('jump'));
+  assert.ok(!input.released('map'));
 });
 
 test('a tap between two ticks is not lost', () => {
   const input = new Input();
-  input.keyDown('Space');
-  input.keyUp('Space');
+  input.keyDown('KeyM');
+  input.keyUp('KeyM');
   input.sample();
-  assert.ok(input.pressed('jump'));
+  assert.ok(input.pressed('map'));
   input.sample();
-  assert.ok(input.released('jump'));
+  assert.ok(input.released('map'));
 });
 
 test('two keys bound to one action act as one', () => {
@@ -99,12 +99,12 @@ test('unbound keys are ignored', () => {
 });
 
 test('custom bindings replace the defaults', () => {
-  const input = new Input({ jump: ['KeyK'] });
-  input.keyDown('Space');
+  const input = new Input({ map: ['KeyK'] });
+  input.keyDown('KeyM');
   input.keyDown('KeyK');
   input.sample();
-  assert.deepEqual(input.activeActions(), ['jump']);
-  assert.ok(!input.isBound('Space'));
+  assert.deepEqual(input.activeActions(), ['map']);
+  assert.ok(!input.isBound('KeyM'));
 });
 
 test('attach: listens to events and blocks default only for bound keys', () => {
@@ -117,15 +117,15 @@ test('attach: listens to events and blocks default only for bound keys', () => {
     return e;
   };
 
-  assert.ok(key('keydown', 'Space').defaultPrevented);
+  assert.ok(key('keydown', 'KeyM').defaultPrevented);
   assert.ok(!key('keydown', 'KeyZ').defaultPrevented);
   assert.ok(!key('keydown', 'KeyR', { ctrlKey: true }).defaultPrevented);
   input.sample();
-  assert.deepEqual(input.activeActions(), ['jump']);
+  assert.deepEqual(input.activeActions(), ['map']);
 
   target.dispatchEvent(new Event('blur'));
   input.sample();
-  assert.ok(input.released('jump'));
+  assert.ok(input.released('map'));
 
   detach();
   key('keydown', 'KeyW');

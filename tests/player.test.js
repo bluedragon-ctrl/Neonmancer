@@ -20,6 +20,11 @@ function run(player, g, inp, ticks) {
   return events;
 }
 
+/** Throw the player up the reference arc (what a pad does, D221, with a lower height). */
+function throwUp(player, height = PLAYER.jumpHeight) {
+  player.bounce(player.pos[1], height);
+}
+
 /** Let a fresh player settle on the ground. */
 function standing(g, spawn) {
   const player = new Player(spawn);
@@ -134,13 +139,14 @@ test('screen-relative movement: two adjacent screen keys collapse to one grid ax
   assert.ok(Math.abs((8 - player.pos[2]) - PLAYER.speed / 2) < 1e-6, 'full grid-axis speed, not slower');
 });
 
-test('a jump peaks at jumpHeight: clears one block, never two (D3)', () => {
+test('a throw peaks at its height: the reference arc clears one block, never two (D3)', () => {
   assert.ok(Math.abs(JUMP_SPEED ** 2 / (2 * PLAYER.gravity) - PLAYER.jumpHeight) < 1e-9);
 
   const g = grid();
   const player = standing(g, [4, 0, 4]);
   let apex = 0;
-  const inp = input([], ['jump']);
+  const inp = input();
+  throwUp(player);
   for (let i = 0; i < 90; i++) {
     player.update(inp, g);
     inp.next();
@@ -150,38 +156,21 @@ test('a jump peaks at jumpHeight: clears one block, never two (D3)', () => {
   assert.equal(player.grounded, true);
 });
 
-test('no jump in mid-air: a second press at the top changes nothing (the double jump is gone, D216)', () => {
-  const g = grid();
-  const player = standing(g, [4, 0, 4]);
-  let apex = 0;
-  for (let i = 0; i < 90; i++) {
-    const tap = i === 0 || i === 20 ? (a) => a === 'jump' : () => false;
-    player.update({ down: tap, pressed: tap }, g);
-    apex = Math.max(apex, player.pos[1]);
-  }
-  assert.ok(Math.abs(apex - PLAYER.jumpHeight) < 0.05, `apex ${apex}`);
-});
-
-test('the player jumps onto a 1-high block but not onto a 2-high one', () => {
+test('a throw of one block lands on a 1-high block but not on a 2-high one', () => {
   // A wide step, so the wizard doesn't walk off the far side.
   const low = grid({ cells: [3, 4, 5, 6].flatMap((x) => [[x, 0, 1], [x, 0, 2], [x, 0, 3]]) });
   const a = standing(low, [2, 0, 2.5]);
-  run(a, low, input(['down'], ['jump']), 40);
+  throwUp(a);
+  run(a, low, input(['down']), 40);
   assert.equal(a.pos[1], 1);
   assert.ok(a.pos[0] > 3);
 
   const high = grid({ cells: [[3, 0, 2], [3, 1, 2]] });
   const b = standing(high, [2, 0, 2.5]);
-  run(b, high, input(['down'], ['jump']), 60);
+  throwUp(b);
+  run(b, high, input(['down']), 60);
   assert.equal(b.pos[1], 0);
   assert.ok(Math.abs(b.pos[0] - 2.7) < 1e-9);
-});
-
-test('a jump pressed just before landing still happens (buffer)', () => {
-  const g = grid();
-  const player = new Player([4, 0.1, 4]); // spawned just above the floor, falls
-  const events = run(player, g, input([], ['jump']), 30);
-  assert.deepEqual(events.slice(0, 2), ['land', 'jump']);
 });
 
 test('standing on a hole kills the player, who respawns at the spawn', () => {
@@ -232,7 +221,7 @@ test('debug invincibility: standing on a hole never kills', () => {
   assert.ok(player.pos[0] > 5, 'walked straight across the hole');
 });
 
-test('grazing a hole edge is safe, and jumping over one is too', () => {
+test('grazing a hole edge is safe, and a throw over one is too', () => {
   const g = grid({ holes: [[5, 4]] });
   // Center stays on x < 5: the hitbox overlaps the hole but the player lives.
   const edge = standing(g, [4.8, 0, 4.5]);
@@ -240,22 +229,25 @@ test('grazing a hole edge is safe, and jumping over one is too', () => {
   assert.equal(edge.dead, false);
 
   const jumper = standing(g, [4.6, 0, 4.5]);
-  const events = run(jumper, g, input(['down'], ['jump']), 40);
+  throwUp(jumper);
+  const events = run(jumper, g, input(['down']), 40);
   assert.ok(!events.includes('die'), events.join());
   assert.ok(jumper.pos[0] > 6);
 });
 
-test('a jump crosses a 1-tile hole but never a 2-tile one on the same level (D36)', () => {
+test('the reference arc crosses a 1-tile hole but never a 2-tile one on the same level (D36)', () => {
   // Start as close to the edge as possible without dying (center on the last safe tile).
   const wide = grid({ holes: [[5, 4], [6, 4]] });
   const far = standing(wide, [4.99, 0, 4.5]);
-  const events = run(far, wide, input(['down'], ['jump']), 60);
-  assert.ok(events.includes('die'), 'a 2-tile hole is too wide to jump');
+  throwUp(far);
+  const events = run(far, wide, input(['down']), 60);
+  assert.ok(events.includes('die'), 'a 2-tile hole is too wide for it');
 
   // A sloppy take-off half a tile back still clears a 1-tile hole.
   const narrow = grid({ holes: [[5, 4]] });
   const near = standing(narrow, [4.5, 0, 4.5]);
-  assert.ok(!run(near, narrow, input(['down'], ['jump']), 60).includes('die'));
+  throwUp(near);
+  assert.ok(!run(near, narrow, input(['down']), 60).includes('die'));
 });
 
 test('interpolation helpers', () => {

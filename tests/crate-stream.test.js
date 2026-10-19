@@ -153,7 +153,7 @@ function reach(props, abilities = []) {
   const exits = props.exits ?? [WEST];
   const content = gameData({
     ...withNeighbours(roomFile('r', { size: [12, 4, 8], ...props, exits })),
-    objects: { crate: CRATE, plate: { kind: 'plate', color: '#eef3ff' } },
+    objects: { crate: CRATE, plate: { kind: 'plate', color: '#eef3ff' }, pad: { kind: 'pad', color: '#eef3ff' } },
   });
   const room = buildRoom(content.rooms.get('r'), content);
   return analyzeRoom(room, { abilities, starts: [[1, 0, 1]], tuning: { scanRange: 6, blinkRange: 3 } });
@@ -163,15 +163,15 @@ function reach(props, abilities = []) {
 const across = (x, height, type) => ({ type, at: [x, 0, 0], to: [x, height - 1, 7] });
 const far = { id: 'far', type: 'refill_energy', at: [10, 0, 2] };
 
-test('stream: the checker never lets him over it, from a crate or with spells', () => {
+test('stream: the checker never lets him over it, from a pad or with spells', () => {
   const room = (type, abilities, objects = []) => reach({ blocks: [across(6, 2, type)], pickups: [far], objects }, abilities).pickups.has('far');
-  const crate = [{ id: 'c', type: 'crate', at: [5, 0, 2] }];
-  assert.equal(room('block', [], crate), true, 'a crate is a step up it');
+  const pad = [{ id: 'pad', type: 'pad', at: [5, 0, 2] }];
+  assert.equal(room('block', [], pad), true, 'a pad throws him over a wall');
   assert.equal(room('stream', []), false);
-  assert.equal(room('stream', [], crate), false);
-  assert.equal(room('stream', ['compile', 'warp', 'blink'], crate), false, 'nor with spells');
-  const one = reach({ blocks: [{ ...across(6, 1, 'stream') }], pickups: [far] }).pickups.has('far');
-  assert.equal(one, false, 'a 1-high one too: its field reaches the ceiling');
+  assert.equal(room('stream', [], pad), false, 'not over a stream: its field reaches the ceiling');
+  assert.equal(room('stream', ['compile', 'warp', 'blink'], pad), false, 'nor with spells');
+  const one = reach({ blocks: [{ ...across(6, 1, 'stream') }], pickups: [far], objects: pad }).pickups.has('far');
+  assert.equal(one, false, 'a 1-high one too');
 });
 
 test('stream: a crate pushed through it stops one cell beyond, where a plate he cannot reach lies', () => {

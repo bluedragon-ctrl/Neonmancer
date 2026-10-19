@@ -16,15 +16,13 @@ import { bodyBox, moveAxis } from '../physics/collision.js';
 export const PLAYER = {
   /** Walking speed in units per second. */
   speed: 4.5,
-  /**
-   * Share of the walking speed kept in the air. A full jump lasts ~0.57 s, so
-   * it covers ~1.65 units: over a 1-tile gap, never a 2-tile one (D36).
-   */
+  /** Share of the walking speed kept in the air (a launch from a pad or a bounce, D36). */
   airSpeed: 0.65,
   gravity: GRAVITY,
   /**
-   * Apex of every jump above the take-off height: clears 1 block, never 2
-   * (D3). Jumps have a fixed height (no short hops), like the block rule.
+   * Apex of the reference arc above take-off height: only the scale of his
+   * air pose (JUMP_SPEED); he has no jump of his own (D222), pads and
+   * bounces throw him (bounceHeight).
    */
   jumpHeight: 1.2,
   /**
@@ -34,8 +32,6 @@ export const PLAYER = {
   bounceHeight: 2.2,
   /** Fastest fall in units per second (below 1 unit per tick, see collision.js). */
   maxFall: MAX_FALL,
-  /** A jump still works this many ticks after walking off a ledge (where he may jump, D221). */
-  coyoteTicks: 6,
   /**
    * How far a stair's slope may rise above his feet within one tick's walk
    * and still be walked onto (D221): more than a tick's climb, even with
@@ -48,8 +44,6 @@ export const PLAYER = {
   stepDown: 0.25,
   /** Ticks of walking into an object before it moves (a short, deliberate shove). */
   pushDelay: 8,
-  /** A jump pressed this many ticks before landing still happens on landing. */
-  jumpBufferTicks: 6,
   /** Share of the remaining turn done each tick. */
   turnRate: 0.35,
   /** Ticks between dying and respawning. */
@@ -95,7 +89,7 @@ export const PLAYER = {
 };
 
 
-/** Take-off speed that reaches exactly jumpHeight: v = √(2gh). */
+/** Speed that reaches exactly jumpHeight: v = √(2gh), the scale of his air pose. */
 export const JUMP_SPEED = Math.sqrt(2 * PLAYER.gravity * PLAYER.jumpHeight);
 
 /**
@@ -331,7 +325,7 @@ export class Player {
 
   /**
    * Bounce off the top of a bouncy enemy at height `top`, or off a jump pad
-   * (D221): launched up to `height` above it, whatever the jump key does.
+   * (D221): launched up to `height` above it.
    * @param {number} top
    * @param {number} [height] apex above `top`; PLAYER.bounceHeight by default
    */
@@ -339,8 +333,6 @@ export class Player {
     this.pos[1] = top;
     this.vy = Math.sqrt(2 * PLAYER.gravity * height);
     this.grounded = false;
-    this.coyote = 0;
-    this.jumpBuffer = 0;
   }
 
   /**
@@ -431,8 +423,6 @@ export class Player {
     this.dead = false;
     this.deathCause = null;
     this.deathTimer = 0;
-    this.coyote = 0;
-    this.jumpBuffer = 0;
     /** Object being walked into, and for how many ticks. */
     this.pushTarget = null;
     this.pushTicks = 0;
@@ -461,11 +451,9 @@ export class Player {
    * @param {Iterable<{ box(): number[][] }>} [options.bodies] pushable objects
    * @param {boolean} [options.invincible] debug mode: holes and void blocks never kill
    * @param {'grid'|'screen'} [options.movementMode] which key → direction mapping to use (D38)
-   * @param {boolean} [options.canJump] may he jump with the jump key: not in
-   *   a room without a free jump, where only pads throw him up (D221)
-   * @returns {string|null} event: 'jump', 'land', 'die', 'respawn' or null
+   * @returns {string|null} event: 'land', 'die', 'respawn' or null
    */
-  update(input, grid, { bodies = [], invincible = false, movementMode = 'grid', canJump = true } = {}) {
+  update(input, grid, { bodies = [], invincible = false, movementMode = 'grid' } = {}) {
     this.savePrevious();
     this.pushIntent = null;
 
@@ -524,19 +512,7 @@ export class Player {
     const turn = Math.atan2(Math.sin(this.targetFacing - this.facing), Math.cos(this.targetFacing - this.facing));
     this.facing += turn * PLAYER.turnRate;
 
-    // Jump, with a little forgiveness on both sides of the ground contact
-    // (none where he can't jump, D221).
-    this.coyote = this.grounded ? (canJump ? PLAYER.coyoteTicks : 0) : Math.max(0, this.coyote - 1);
-    this.jumpBuffer = input.pressed('jump') ? PLAYER.jumpBufferTicks : Math.max(0, this.jumpBuffer - 1);
-    if (this.jumpBuffer > 0 && this.coyote > 0) {
-      this.vy = JUMP_SPEED;
-      this.jumpBuffer = 0;
-      this.coyote = 0;
-      this.grounded = false;
-      event = 'jump';
-    }
-
-    // Gravity. Integrate the move first so a jump peaks at jumpHeight.
+    // Gravity. Integrate the move first so a throw peaks at its height.
     const vy = this.vy;
     this.vy = Math.max(vy - PLAYER.gravity * DT, -PLAYER.maxFall);
     const wasGrounded = this.grounded;

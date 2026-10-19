@@ -50,8 +50,6 @@ export function buildRoom(data, { objectTypes, blockTypes, enemyTemplates = {}, 
     reset: [...(data.reset ?? data.spawn)],
     /** Seconds on the room's watchdog timer (D172), or null: no timer. */
     timer: data.timer ?? null,
-    /** Where the wizard may jump (D221): 'free' anywhere, 'pads' only on a jump pad. */
-    jump: data.jump ?? 'free',
     exits: (data.exits ?? []).map(withExitDefaults),
     /** Static block cells as [x, y, z], by block type (only types the room uses). */
     blocks: fromBlocks.blocks,

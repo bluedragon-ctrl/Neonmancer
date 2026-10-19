@@ -13,7 +13,8 @@
     { "type": "stream", "at": [2, 0, 2], "to": [3, 1, 2] },
     { "type": "stream", "at": [5, 0, 2], "to": [6, 1, 2] },
     { "at": [7, 0, 2], "to": [8, 2, 2] },
-    { "type": "gate", "at": [1, 0, 3], "to": [1, 2, 6] }
+    { "type": "gate", "at": [1, 0, 3], "to": [1, 2, 6] },
+    { "type": "stair_nz", "at": [4, 0, 3] }
   ],
   "objects": [
     { "id": "plate_1", "type": "plate", "at": [0, 0, 1] },

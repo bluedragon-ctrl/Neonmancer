@@ -68,48 +68,22 @@ test('slab: he walks upright under one a cell up and stands on its top', () => {
   assert.ok(Math.abs(over.pos[1] - 2) < 1e-6, `he lands on its top (y ${over.pos[1]})`);
 });
 
-test('jump: no jump where he may not (D221), a jump where he may', () => {
-  const g = grid();
-  for (const canJump of [false, true]) {
-    const player = new Player([2.5, 0, 2.5]);
-    run(player, g, idle, 5);
-    const controls = input([], ['jump']);
-    const event = player.update(controls, g, { canJump });
-    assert.equal(event === 'jump', canJump);
-  }
-});
-
 /** A game in one 8×4×8 room with a pad at [5, 0, 3] and a pit at x 4 (`props`: more room data). */
-function padGame(spawn, props = { jump: 'pads' }) {
+function padGame(spawn, props = {}) {
   const room = roomFile('r', { spawn, objects: [{ id: 'pad', type: 'pad', at: [5, 0, 3] }], holes: [{ at: [4, 0], to: [4, 7] }], ...props });
   return new Game(gameData({ rooms: [room], objects: OBJECTS }));
 }
 
-/** Does a tap of the jump key make him jump this tick? */
-const jumps = (game) => game.update(input([], ['jump'])).some((event) => event.type === 'jump');
-
-test('pads: in a pads room the jump key casts instead', () => {
-  const game = padGame([6.5, 0, 6.5]);
-  game.player.spells = ['zap'];
-  game.player.spell = 'zap';
-  for (let i = 0; i < 10; i++) game.update(idle);
-  const events = game.update(input([], ['jump'])).map((event) => event.type);
-  assert.equal(events.includes('jump'), false);
-  assert.equal(events.includes('cast'), true);
-});
-
-test('pads: standing on one throws him 2 blocks up, no key needed, in any room', () => {
-  for (const props of [{ jump: 'pads' }, {}]) {
-    const game = padGame([5.5, 0, 3.5], props);
-    let top = 0;
-    let bounces = 0;
-    for (let i = 0; i < 40; i++) {
-      bounces += game.update(idle).filter((event) => event.type === 'bounce').length;
-      top = Math.max(top, game.player.pos[1]);
-    }
-    assert.ok(bounces >= 1 && game.pads[0].launches === bounces, 'a bounce for each launch');
-    assert.ok(top > 2 && top < 2.3, `up to 2.2 (${top})`);
+test('pads: standing on one throws him 2 blocks up, no key needed', () => {
+  const game = padGame([5.5, 0, 3.5]);
+  let top = 0;
+  let bounces = 0;
+  for (let i = 0; i < 40; i++) {
+    bounces += game.update(idle).filter((event) => event.type === 'bounce').length;
+    top = Math.max(top, game.player.pos[1]);
   }
+  assert.ok(bounces >= 1 && game.pads[0].launches === bounces, 'a bounce for each launch');
+  assert.ok(top > 2 && top < 2.3, `up to 2.2 (${top})`);
 });
 
 test('pads: walking onto one from its far edge carries him over a 1-tile pit', () => {
@@ -119,16 +93,6 @@ test('pads: walking onto one from its far edge carries him over a 1-tile pit', (
   for (let i = 0; i < 30; i++) game.update(idle);
   assert.equal(game.player.dead, false);
   assert.ok(game.player.pos[0] < 4, `he landed beyond the pit (x ${game.player.pos[0]})`);
-});
-
-test('pads: the debug rule makes every room pads-only', () => {
-  const room = roomFile('r', {});
-  const game = new Game(gameData({ rooms: [room], objects: OBJECTS }));
-  assert.equal(game.jumpRule(), 'free');
-  game.padJumpOnly = true;
-  assert.equal(game.jumpRule(), 'pads');
-  for (let i = 0; i < 10; i++) game.update(idle);
-  assert.equal(jumps(game), false);
 });
 
 /** Reach of a room "r" (8×4×8) from cell [1, 0, 1], no abilities. */
@@ -141,20 +105,19 @@ function reach(props) {
 const WALL = { at: [4, 0, 0], to: [4, 0, 7] };
 const FAR = { id: 'far', type: 'refill_energy', at: [6, 0, 6] };
 
-test('reach: in a pads room a 1-high wall is a wall, a stair or a pad gets him over', () => {
-  assert.equal(reach({ blocks: [WALL], pickups: [FAR] }).pickups.has('far'), true, 'a free jump clears it');
-  assert.equal(reach({ jump: 'pads', blocks: [WALL], pickups: [FAR] }).pickups.has('far'), false);
+test('reach: a 1-high wall is a wall, a stair or a pad gets him over', () => {
+  assert.equal(reach({ blocks: [WALL], pickups: [FAR] }).pickups.has('far'), false);
   const stair = { type: 'stair_x', at: [3, 0, 3] };
-  assert.equal(reach({ jump: 'pads', blocks: [WALL, stair], pickups: [FAR] }).pickups.has('far'), true);
+  assert.equal(reach({ blocks: [WALL, stair], pickups: [FAR] }).pickups.has('far'), true);
   const backwards = { type: 'stair_nx', at: [3, 0, 3] };
-  assert.equal(reach({ jump: 'pads', blocks: [WALL, backwards], pickups: [FAR] }).pickups.has('far'), false, 'a stair climbs one way');
+  assert.equal(reach({ blocks: [WALL, backwards], pickups: [FAR] }).pickups.has('far'), false, 'a stair climbs one way');
   const pad = { id: 'pad', type: 'pad', at: [3, 0, 3] };
-  assert.equal(reach({ jump: 'pads', blocks: [WALL], objects: [pad], pickups: [FAR] }).pickups.has('far'), true);
+  assert.equal(reach({ blocks: [WALL], objects: [pad], pickups: [FAR] }).pickups.has('far'), true);
 });
 
 test('reach: a pad throws him as high as its launch: 2 blocks by default', () => {
   const wall = { at: [4, 0, 0], to: [4, 1, 7] };
-  const with2 = (type) => reach({ jump: 'pads', blocks: [wall], objects: [{ id: 'pad', type, at: [3, 0, 3] }], pickups: [{ ...FAR, at: [4, 2, 3] }] }).pickups.has('far');
+  const with2 = (type) => reach({ blocks: [wall], objects: [{ id: 'pad', type, at: [3, 0, 3] }], pickups: [{ ...FAR, at: [4, 2, 3] }] }).pickups.has('far');
   assert.equal(with2('pad'), true);
   assert.equal(with2('pad_low'), false);
 });
@@ -166,7 +129,7 @@ test('reach: a pad throws him as high as its launch: 2 blocks by default', () =>
  */
 function throwOver(high, approach) {
   const spawn = approach === 'side' ? [5.5, 0, 5.5] : [7.5, 0, 3.5];
-  const game = padGame(spawn, { jump: 'pads', blocks: [{ at: [0, 0, 0], to: [3, high - 1, 7] }] });
+  const game = padGame(spawn, { blocks: [{ at: [0, 0, 0], to: [3, high - 1, 7] }] });
   for (let i = 0; i < 10; i++) game.update(idle);
   let launched = false;
   for (let i = 0; i < 150 && !game.player.dead && !(launched && game.player.grounded); i++) {
@@ -192,7 +155,7 @@ function throwFlush(high, approach, stair) {
   const blocks = [{ at: [0, 0, 0], to: [4, high - 1, 7] }];
   if (stair) blocks.push({ type: 'stair_x', at: [6, 0, 7] });
   const spawn = approach === 'side' ? [5.5, 0, 5.5] : [7.5, 0, 3.5];
-  const game = new Game(gameData({ rooms: [roomFile('r', { spawn, jump: 'pads', objects: [{ id: 'pad', type: 'pad', at: [5, 0, 3] }], blocks })], objects: OBJECTS }));
+  const game = new Game(gameData({ rooms: [roomFile('r', { spawn, objects: [{ id: 'pad', type: 'pad', at: [5, 0, 3] }], blocks })], objects: OBJECTS }));
   for (let i = 0; i < 10; i++) game.update(idle);
   let launched = false;
   for (let i = 0; i < 150 && !(launched && game.player.grounded); i++) {
@@ -212,26 +175,25 @@ test('pads: a pad flush against a ledge 1 or 2 up lands him on it, a stair in th
 
 test('reach: a pad throws him over a 1-tile gap onto a ledge 2 up, never 3 (D243)', () => {
   const pit = { at: [4, 0], to: [4, 7] };
-  const reached = (high) => reach({ jump: 'pads', holes: [pit], blocks: [{ at: [5, 0, 0], to: [7, high, 7] }], objects: [{ id: 'pad', type: 'pad', at: [3, 0, 3] }], pickups: [{ ...FAR, at: [6, high + 1, 6] }] }).pickups.has('far');
+  const reached = (high) => reach({ holes: [pit], blocks: [{ at: [5, 0, 0], to: [7, high, 7] }], objects: [{ id: 'pad', type: 'pad', at: [3, 0, 3] }], pickups: [{ ...FAR, at: [6, high + 1, 6] }] }).pickups.has('far');
   assert.equal(reached(0), true);
   assert.equal(reached(1), true);
   assert.equal(reached(2), false);
 });
 
-test('reach: in a pads room a pickup two cells up needs a pad', () => {
+test('reach: a pickup two cells up needs a pad', () => {
   const high = { id: 'far', type: 'refill_energy', at: [3, 2, 3] };
-  assert.equal(reach({ pickups: [high] }).pickups.has('far'), true);
-  assert.equal(reach({ jump: 'pads', pickups: [high] }).pickups.has('far'), false);
-  assert.equal(reach({ jump: 'pads', objects: [{ id: 'pad', type: 'pad', at: [3, 0, 3] }], pickups: [high] }).pickups.has('far'), true);
+  assert.equal(reach({ pickups: [high] }).pickups.has('far'), false);
+  assert.equal(reach({ objects: [{ id: 'pad', type: 'pad', at: [3, 0, 3] }], pickups: [high] }).pickups.has('far'), true);
 });
 
-test('reach: in a pads room a bouncy enemy he falls onto is a pad (D223)', () => {
+test('reach: a bouncy enemy he falls onto is a pad (D223)', () => {
   // A 2-high wall at x 5, the bug's lane along x 4; a 1-high ledge at x 3 (z 0..3) with a stair up to it.
   const wall = { at: [5, 0, 0], to: [5, 1, 7] };
   const ledge = { at: [3, 0, 0], to: [3, 0, 3] };
   const stair = { type: 'stair_x', at: [2, 0, 1] };
   const bug = { id: 'bug', template: 'bug', at: [4, 0, 0], path: { points: [[4, 0, 7]] } };
-  const over = (props) => reach({ jump: 'pads', pickups: [FAR], ...props }).pickups.has('far');
+  const over = (props) => reach({ pickups: [FAR], ...props }).pickups.has('far');
   assert.equal(over({ blocks: [wall, ledge, stair], enemies: [bug] }), true, 'off the ledge onto the bug, thrown over the wall');
   assert.equal(over({ blocks: [wall, ledge, stair] }), false, 'no bug, no way over');
   assert.equal(over({ blocks: [wall, ledge], enemies: [bug] }), false, 'from its own level he never gets on top of it');
@@ -242,7 +204,6 @@ test('reach: in a pads room a bouncy enemy he falls onto is a pad (D223)', () =>
 test('reach: a crate pushed down a stair plugs the pit at its foot, never up one (D230)', () => {
   // A 1-high ledge over z 0..4 he starts on, a stair down from it at [4, 0, 5] (rising −z), a pit along z 6, the pickup beyond.
   const room = (crate) => ({
-    jump: 'pads',
     spawn: [1.5, 1, 1.5],
     blocks: [{ at: [0, 0, 0], to: [7, 0, 4] }, { type: 'stair_nz', at: [4, 0, 5] }],
     holes: [{ at: [0, 6], to: [7, 6] }],

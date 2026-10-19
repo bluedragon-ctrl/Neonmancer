@@ -3638,3 +3638,43 @@ in a cage (D202). A pads room (D222), 8×8×4, its door the west side at z 3
 Outer Buffer's void is the level's wall (pits for walls: the same pushes,
 but a stray one loses a crate), unlike Null Orbit's two pits in a fenced
 corridor (D264).
+
+### D267 — 2026-10-19 — The free jump goes: pads only is the engine's rule (5.19)
+Every room is a pads room (the last reviews are in, `buffer_5` done, D266), so
+the jump is removed (D222's last step).
+- **Engine:** the `jump` action and its key go (Space joins `cast`, and
+  `confirm` in menus: it still chooses there); the player has no jump
+  key, coyote time, buffer or `jump` event (and sound); `canJump`,
+  `Game.jumpRule()`, `togglePadJumpOnly()` and debug J are gone. A pad's
+  throw and a bounce are the only ways off the ground. `jumpHeight` and
+  `JUMP_SPEED` stay as the scale of his air pose (`wizard-motion.js`).
+- **Data:** the room `jump` field leaves the schema, the 31 room files,
+  the editor (Jump box, `setPadJump`, the new-room default) and the
+  game's `Room`. Data schema version stays 1: the field was a prototype
+  and no player data carried it.
+- **Checker:** the free-jump branch (`freeJump`, `JUMP`, the climb of 1, the
+  1-tile gap, `canJump`) is gone: a cell's climb is a pad's launch or a
+  bounce, else 0; `--pads` and the "rooms still on the free jump" list go.
+  One real fix: a launch needs its column free overhead (cells y+2 …
+  y+up+1 above the pad). Before, a Blink from a launch ignored a ceiling
+  at the feet cell; now a ceiling stops the launch, the gap crossing and
+  the Blink from it.
+- **Content:** the dev wing's `stream_lab` was the only room that still
+  leaned on a hop (a fence he jumped to get at its plates); a stair
+  (`stair_nz` at [4, 0, 3]) now lifts him onto the fence's top. The other
+  free rooms (the teasers, dev rooms) already passed `--pads`.
+- **Kept on their own merit:** the spiked crate (a top he must not stand
+  on), fences and 3-high walls. Their free-jump reasons (hop proofing)
+  are history; the skills and docs say so.
+- **Tests:** the jump tests became throws (`player.bounce()`); checker tests
+  that leaned on a hop, a crate step or a 1-tile jump now use a stair or a
+  pad; the reach fixtures get a non-bouncy `worm` (the fixture bug bounces,
+  D223, which turned a frozen-enemy floor into a pad).
+- **Docs:** CLAUDE.md, design.md, architecture.md, the ladder rules and
+  Pads-only migration notes, the room-design, sokoban-design skills and the
+  level-review agent lose the free jump. The Microban survey page keeps its
+  free-jump numbers with a note; `survey.mjs` builds every column for the
+  current rules (a full run is long, so it was not repeated).
+**Why:** a half-way rule (the key in rooms not yet moved) made every
+design note, checker branch and test carry two games. All rooms now play
+without it, and the checker proves each one.

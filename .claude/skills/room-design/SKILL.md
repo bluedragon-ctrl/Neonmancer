@@ -35,21 +35,19 @@ worth playing.
 - **Spell roles (Lattice).** Puzzle verbs: Zap (targets), Pause (enemy as
   block), Fork (plate holder, lure). Explore: Scan (secrets, hidden
   exits). Action: Shield.
-- **No jump: pads, stairs, slabs** (D222, D223). Every new room and every
-  reviewed room is a pads room (`"jump": "pads"`): a pad throws him 2 up,
+- **No jump: pads, stairs, slabs** (D222, D223, D267). The jump is gone
+  from the engine, so every room plays by this: a pad throws him 2 up,
   2 up over a 1-tile gap, 1 up over 2 tiles (D243), a stair takes him 1 up, a slab bridges, a bug he
   falls onto bounces him 2 up; nothing else lifts him. A 1-high wall is a
   wall and a crate is a Sokoban box again (he walks round it), every ledge
   is a one-way drop. Every height change is one the room places: that is
-  the puzzle's third dimension now. Rooms not yet reviewed keep the free
-  jump (1 up, a one-tile gap) until step 5.19; `npm run check:reach` lists
-  them.
+  the puzzle's third dimension now.
 - **Later abilities skip rooms, not pickups.** An ability found later may
   take him through the room to its exits without the puzzle (a shortcut
   on revisits); it never reaches a pickup without the trick that guards
   it. A pickup may need an ability as its gate (secrets do); no later
-  ability may make its trick unnecessary. Guard pickups with what jumps
-  and spells can't replace: gates on switches (a `cage` over the pickup is
+  ability may make its trick unnecessary. Guard pickups with what
+  spells can't replace: gates on switches (a `cage` over the pickup is
   one cell of them, D202), 3-high walls, fence roofs,
   pits too wide to cross, ledges with no stair or pad up.
 - **Lattice abilities only.** In Home Lattice only its own abilities
@@ -129,13 +127,12 @@ so draft the idea, not the last cell.
    PR says what changed and why, and what to tune by hand.
 6. A changed trick, rung or type updates the room's ladder line, and
    the "Now" column says it was reworked.
-7. **Move it to pads** (D222): set `"jump": "pads"`, rebuild what its
-   line in `docs/lattice-plan.md` (Pads-only migration) says the jump
-   carried, with stairs, pads, slabs or bug bounces, and tick the line off
-   there. What only fought the jump (spiked crates, fence roofs, 2-high
+7. **Rebuild what the jump carried** (D222, done for every room in D267):
+   a room's line in `docs/lattice-plan.md` (Pads-only migration) says what
+   the old jump carried; rebuild it with stairs, pads, slabs or bug
+   bounces. What only fought the jump (spiked crates, fence roofs, 2-high
    walls against hops) may go: keep a piece only for its own job. Run
-   every check of step 5 on the moved room; `check:reach -- <room>` says
-   "still on the free jump" until it is moved.
+   every check of step 5 on the room.
 8. **Lessons.** The author signs each room off before the next; a rule
    the review found (a trap, a check, a better way to say it) goes into
    this skill or `craft.md` in the same PR.
@@ -172,11 +169,11 @@ Lessons from the reviews (D188 on):
 - **The checker hits every target.** It counts a target as on with
   Zap whatever its line and height. Prove a target's line with
   `sim.mjs`: sweep shots from every cell he can reach on the wrong side
-  (32 directions, floor, crate top, jump; facing can be diagonal), and
-  check the right side hits. A bolt flies at feet + 0.48: a floor jump
-  shot reaches 1.68 and a crate top 1.48, so a target one block up
-  falls to a floor jump shot; two blocks up needs a crate top and a
-  jump (D195). A target by a side wall keeps the crate under it
+  (32 directions, floor, a stair or ledge top, mid-throw from a pad; facing can be diagonal), and
+  check the right side hits. A bolt flies at feet + 0.48: a shot at the
+  apex of a pad's throw reaches higher, so a target one block up
+  falls to a shot from a pad's throw; two blocks up needs a ledge or a
+  stair top and a throw (D195). A target by a side wall keeps the crate under it
   there for good: one cell off, it can be pushed back out.
 - **Stairs are for everyone, pads only for him** (D230). Enemies walk up
   a stair from its foot and down off its top; a chaser that sees him on
@@ -257,9 +254,10 @@ Lessons from the reviews (D188 on):
 - **Fork beats a plate race.** A timed plate is a race only without Fork: a
   decoy holds it for 10 s. Say so in the decision, or use a target or socket
   if the race must hold (`scan_lab`'s secret door, D212).
-- **A block overhead stops a jump.** He can't jump up a step that lies
-  under a ledge (his head hits it); a diagonal jump from beside it works.
-  The checker misses that, so play it (`scan_lab`, D212).
+- **A block overhead stops a throw.** A pad under a ledge throws him into
+  it (his head hits it): the checker refuses a launch, a gap crossing and
+  a Blink from it when its column is not free (D267), but play it
+  (`scan_lab`, D212).
 - **Walls keep the crate search small.** Three or four free crates on
   open floor blow `MAX_CONFIGS` and a truncated search is a false
   "never" (it also hides bypasses: it stops at the first one it finds).
@@ -267,9 +265,9 @@ Lessons from the reviews (D188 on):
   push from a wall top, one level up) keeps it in its lane; ledger_cell
   searches in full with three crates and two lane walls. Check for the
   "search stopped" warning on every run.
-- **A jump-Blink hops a spiked crate.** He jumps against it and Blinks at the
+- **A pad-Blink hops a spiked crate.** A pad throws him and Blinks at the
   top: 1 high is low enough to pass over, so Blink undoes the spiked crate's
-  routing. A fence roof at y 2 stops the jump (Blink stays level and stops at
+  routing. A fence roof at y 2 stops the throw (Blink stays level and stops at
   crates); a Blink cut short by a fence costs 1 integrity (the first `buffer_1`, D220).
 - **`check:reach` floods from the door.** It assumes he can walk back to the
   door between pushes; where crates shut him away mid-solution (spiked crates,
@@ -341,7 +339,6 @@ Lessons for pads rooms (D222 on):
   "name": "Short Funny Name",
   "biome": "home_lattice",
   "size": [10, 4, 10],
-  "jump": "pads",
   "spawn": [8.5, 0, 8.5],
   "exits": [{ "id": "west", "side": "-x", "at": 4 }],
   "blocks": [{ "at": [0, 0, 0], "to": [1, 1, 3] }],
@@ -402,13 +399,10 @@ Edit existing files with small text edits, not a JSON dump.
   cell at its foot onto a ledge one higher; sides and back are walls; a
   block to crates and enemies. `slab`: a thin glass walkway at the top
   of its cell, level with a 1-high ledge; a cell down he walks under it.
-- **Jump rule** (`jump`, D221, D222): `"pads"` in every new and reviewed
-  room (no jump key; Space casts there), `"free"` (the default, going in
-  step 5.19) in rooms not yet reviewed.
 - **Objects** (`defs.json` objects): crates `crate crate_plain crate_cross
   crate_dashed crate_spiked`; switches `plate plate_timed plate_heavy target target_timed socket`; `platform
   spiked_platform` (need `path`, may take `switches`: run only while all on);
-  the jump pad `pad` (D221: on the floor or a block's top; standing on it throws him 2.2 up by itself, over a 1-tile gap 2 up, over 2 tiles 1 up (D243), in any room; with stairs and bug bounces the only way up in a pads room; never where he must walk across or stand; a crate on it covers it); decorations `screen data_pillar memory_stack` (`overrides: { "face":
+  the jump pad `pad` (D221: on the floor or a block's top; standing on it throws him 2.2 up by itself, over a 1-tile gap 2 up, over 2 tiles 1 up (D243), with stairs and bug bounces the only way up; never where he must walk across or stand; a crate on it covers it); decorations `screen data_pillar memory_stack` (`overrides: { "face":
   "+x"|"+z" }`; a screen may name a `text` in `data/lore.json`: title <= 32,
   lines <= 48 characters, only as help, see Screen texts below); `core`. `overrides` change only existing type
   values (e.g. a timer). Plates and sockets lie at y = 0 (validated): on a
@@ -442,18 +436,17 @@ Edit existing files with small text edits, not a JSON dump.
 ## Tuning (from the checklist; 60 ticks a second)
 | What | Number |
 |---|---|
-| Pads room (D222) | no jump: a 1-high wall is a wall, a crate a box he walks round; every ledge a one-way drop |
+| No jump (D222, D267) | a 1-high wall is a wall, a crate a box he walks round; every ledge a one-way drop |
 | Pad | 2.2 above it the moment he stands on it: a 2-high ledge from the floor (3-high from a pad on a block), over a 1-tile gap onto a ledge up to 2 higher, over 2 tiles up to 1 higher, never over 3 (D243; a run-up from behind a block lower); the pad's cell and three above free; up to a 2-high ledge ~30 ticks (0.5 s), back down to its level ~46 (0.77 s) |
 | Stair | 1 up from its foot, the way it rises; walked at walking speed; a crate or frozen enemy is never pushed up it (its foot is a wall to them); pushed off the ledge over its top it slides down to its foot (one push, D230); enemies walk it both ways, at half their cell rate (two cells a step) |
-| Bug bounce in a pads room (D223) | only when he falls onto it: 2.8 over its lane, a 2-high ledge, never 3; the checker counts the whole lane |
-| Free jump (rooms not yet reviewed) | clears 1 block up (apex 1.2), never 2; crosses a 1-tile gap, never 2, but from a 1-high top (crate, frozen enemy) beside a floor pit it crosses 2 (D162) |
+| Bug bounce (D223) | only when he falls onto it: 2.8 over its lane, a 2-high ledge, never 3; the checker counts the whole lane |
 | Headroom | wizard 1.5 high: 2 free cells over every standing surface. A block above is a ceiling, the room's height is not (he stands on top of a 2-high wall in a 3-high room); keep standing surfaces 2 below the room height for the look |
 | Bouncy enemy (bug, glowbug) | launches 2.2 above its top (0.6), so 2.8: clears a 2-high ledge, never 3 |
 | Frozen enemy | a 1-high step (1×1×1), pushed like a crate |
-| Spiked crate (`crate_spiked`, D199) | a crate whose top is no place to stand: his feet on it hurt 2 and shove him off (even while he blinks); a crate on it covers the spikes. A jump in line over a 1-high one always touches it (no hop over). A frozen enemy on a bare top is impaled, the decoy derezzes, active enemies cross unhurt |
-| Zap bolt | flies level, 0.48 above his feet; a bug is 0.6 high. From the floor it hits bugs and 1-high blocks; from a 1-high top it flies over both and hits a target standing a block up; a jump shot near the apex does too (D189) |
-| Blink (Level 1 reward, D217) | 3 units level, through open space; stops at blocks, objects, fences and streams (hurts 1 if cut short). From standing: a 2-tile pit, never 3. Cast near the top of a running jump: a 4-tile pit along an axis (never 5), even onto a 1-high ledge beyond; 2 tiles diagonally. Never higher than his jump. The checker models both (axes only): sweep diagonals with `sim.mjs` |
-| Walk | 4.5 u/s, ~13 ticks (0.22 s) a cell; a jump ~34 ticks (0.57 s) |
+| Spiked crate (`crate_spiked`, D199) | a crate whose top is no place to stand: his feet on it hurt 2 and shove him off (even while he blinks); a crate on it covers the spikes. A frozen enemy on a bare top is impaled, the decoy derezzes, active enemies cross unhurt |
+| Zap bolt | flies level, 0.48 above his feet; a bug is 0.6 high. From the floor it hits bugs and 1-high blocks; from a 1-high top it flies over both and hits a target standing a block up; a shot near the apex of a pad's throw does too (D189) |
+| Blink (Level 1 reward, D217) | 3 units level, through open space; stops at blocks, objects, fences and streams (hurts 1 if cut short). From standing: a 2-tile pit, never 3. Cast near the top of a pad's throw: a 4-tile pit along an axis (never 5), even onto a 2-high ledge beyond; 2 tiles diagonally. Never higher than the throw. The checker models both (axes only): sweep diagonals with `sim.mjs` |
+| Walk | 4.5 u/s, ~13 ticks (0.22 s) a cell; a pad's throw ~46 ticks (0.77 s) |
 | Push | ~28 ticks (0.47 s) a cell |
 | Collapsing block | goes 30 ticks (0.5 s) after a step: never make him stand still on one |
 | Pause | 25 energy of the base 50 (two casts, then slow recharge); 5 s freeze (300 ticks), a recast restarts it |
@@ -553,28 +546,26 @@ each read anew.
   not wall in his own path with crates (a 2-wide island with crates across
   it is a knot). A crate lost in a corner is fine (rooms reset) if you
   checked it.
-- **Spiked crates (D199)** belong to free-jump rooms: in a pads room no
-  crate is a step, so a plain crate does the same job without the hurt.
-  There they take the climb out of a crate: he can't use one as
-  a step, so a push puzzle plays like classic Sokoban (his route around the
-  crates matters again). A plain crate dropped or pasted on one covers it:
-  that is a 2-high step, so check stacks (a spiked crate pushed onto a
-  ledge below a plain one becomes the stack's base). A walled-in top is a
-  trap (he is hurt again after each blink), so keep a free side around any
-  spiked crate he can fall onto. Enemies and plates: a spiked crate on a
-  plate holds it as well as any crate. The checker knows all of it
-  (`below()` is `'bad'` on a bare spiked top).
+- **Spiked crates (D199)** are for a top he must not stand on: no crate is
+  a step now, so a plain crate already plays like classic Sokoban (his
+  route around the crates matters). Use one where a floor must hurt: a
+  stack's top, a landing from a stair or a pad. A plain crate dropped or
+  pasted on one covers it: that is a 2-high floor, so check stacks (a
+  spiked crate pushed onto a ledge below a plain one becomes the stack's
+  base). A walled-in top is a trap (he is hurt again after each blink), so
+  keep a free side around any spiked crate he can fall onto. Enemies and
+  plates: a spiked crate on a plate holds it as well as any crate. The
+  checker knows all of it (`below()` is `'bad'` on a bare spiked top).
 - **Pit width = crates + 1.** A pit N wide needs N-1 crates; count crates that
   can reach it from the *other* side too (the island's, the return trip).
-- **A step at the edge is a springboard.** A crate or frozen enemy pushed to a
-  2-wide pit's edge lets a late running jump cross it (the checker misses
-  it): a 1-high row or the room side must stop pushes 2+ cells short, or the
-  pit is 3 wide (`idle_cache`, `cold_stairs`, D162). A bounce carries him
-  up to ~3 cells sideways, not 2.4.
-- **Walls are steps too.** A crate (or frozen enemy) beside a 2-high wall is
-  a way onto it, and its top is a road: a gated alcove behind 2-high walls
-  is no gate. Walls that guard something are 3 high, and no 2-high top may
-  touch a 3-high one (a 1-block step again). Keep 3-high walls behind what
+- **A step at the edge is a springboard.** A pad at a pit's edge crosses
+  2 tiles (one up, D243) and a bounce carries him up to ~3 cells sideways:
+  keep pushable or freezable things off the lane before a pad, or widen the
+  pit to 3 (`idle_cache`, `cold_stairs`, D162).
+- **Walls and ledges are roads.** A pad or a stair onto a 2-high top makes
+  it a road: a gated alcove behind 2-high walls is no gate. Walls that
+  guard something are 3 high, and no 2-high top may touch a 3-high one
+  (a pad then a stair). Keep 3-high walls behind what
   they guard from the camera (`ledger_cell`, D160).
 - **Both directions.** `--from <exit>` for every exit: coming back must work
   with what lies on that side (the way-in puzzle is reset on re-entry).
@@ -612,7 +603,7 @@ each read anew.
   that keeps crates off it. Cast from a ledge, the decoy falls onto what
   lies below (the checker only counts a cast from beside the plate).
 - **Another way is fine if it is no easier** (D166). A second solution of
-  the same or higher difficulty (a harder jump, a tighter race) is not a
+  the same or higher difficulty (a tighter pad line, a tighter race) is not a
   bypass; one that skips the room's idea for less effort is. Say which in
   the review.
 - **Later abilities and pickups** (D186). A later spell may open the room's exits without its puzzle; it may never reach a
@@ -663,7 +654,7 @@ import { startRoom, pauseEnemy } from '<checkout>/.claude/skills/room-design/scr
 const sim = startRoom('cold_stairs', { abilities: ['zap', 'pause'] }); // or { at: [x, y, z] }
 sim.walkTo([8.5, 0, 3.5]);         // along x, then z, to within 0.1
 sim.cast('pause'); sim.run(30);    // selects via Tab, casts, waits 30 ticks
-sim.step(['up'], ['jump']);        // hold up, tap jump, one tick (in a pads room Space casts: just walk onto a pad)
+sim.step(['up'], ['cast']);        // hold up, tap cast, one tick (there is no jump key: walk onto a pad)
 sim.until(() => sim.game.player.pos[1] >= 2, ['up']);  // throws when stuck
 sim.log('on ledge');               // tick, seconds, pos, integrity, energy, gates, pickups
 ```

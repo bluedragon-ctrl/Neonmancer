@@ -11,7 +11,7 @@ import { BUG, eventTypes, gameData, hold, idle, roomFile } from './helpers.js';
 
 /** The spiked crate (D199) as defs.json has it, without the look: a crate whose top hurts 2. */
 const SPIKED = { extends: 'crate', topDamage: 2, vents: 'aurora' };
-const OBJECTS = { crate_spiked: SPIKED };
+const OBJECTS = { crate_spiked: SPIKED, pad: { kind: 'pad', color: '#eef3ff' } };
 const STILL = { ...BUG, movement: 'stationary' };
 
 const spiked = (id, at) => ({ id, type: 'crate_spiked', at });
@@ -176,12 +176,12 @@ test('a frozen enemy on a spiked top is impaled; an active one crosses it unhurt
 const WEST = { id: 'west', side: '-x', at: 3 };
 
 /** Reach of a 12×4×8 room "r" (spawn cell [1, 0, 1]) with a wall across at x = 4, `height` high, and a pickup behind it. */
-function reachBehindWall(height, objects) {
+function reachBehindWall(height, objects, blocks = []) {
   const dummy = roomFile('o', { exits: [{ id: 'west_o', side: OPPOSITE_SIDE[WEST.side], at: 3 }] });
   const r = roomFile('r', {
     size: [12, 5, 8],
     exits: [WEST],
-    blocks: [{ at: [4, 0, 0], to: [4, height - 1, 7] }],
+    blocks: [{ at: [4, 0, 0], to: [4, height - 1, 7] }, ...blocks],
     objects,
     pickups: [{ id: 'far', type: 'refill_energy', at: [11, 0, 2] }],
   });
@@ -189,17 +189,22 @@ function reachBehindWall(height, objects) {
   return analyzeRoom(buildRoom(content.rooms.get('r'), content), { abilities: [], starts: [[1, 0, 1]], tuning: { scanRange: 6, blinkRange: 3 } }).pickups.has('far');
 }
 
-test('checker: a plain crate is a step up a 2-high wall, a spiked one is not (his feet can not rest on it)', () => {
-  assert.equal(reachBehindWall(2, [plain('c', [3, 0, 3])]), true);
-  assert.equal(reachBehindWall(2, [spiked('c', [3, 0, 3])]), false);
+test('checker: a plain crate is a floor between a stair and a 1-high wall, a spiked one is not (his feet can not rest on it)', () => {
+  const stair = { type: 'stair_x', at: [2, 0, 3] };
+  // Pinned in place by a block either side of it, so it can only be walked over.
+  const pins = [{ at: [3, 0, 2] }, { at: [3, 0, 4] }];
+  assert.equal(reachBehindWall(1, [plain('c', [3, 0, 3])], [stair, ...pins]), true);
+  assert.equal(reachBehindWall(1, [spiked('c', [3, 0, 3])], [stair, ...pins]), false);
 });
 
-test('checker: a plain crate on a spiked one is a step again', () => {
-  const step = plain('step', [2, 0, 3]);
-  // The 3-high wall needs the stack's top (y = 2): the step crate gets him to it only if the top is safe.
-  assert.equal(reachBehindWall(3, [step, spiked('s', [3, 0, 3]), plain('p', [3, 1, 3])]), true);
-  assert.equal(reachBehindWall(3, [step, spiked('s', [3, 0, 3])]), false);
-  assert.equal(reachBehindWall(3, [step, plain('s', [3, 0, 3])]), false, 'one plain crate is too low');
+test('checker: a plain crate on a spiked one is a floor again', () => {
+  // A pad throws him onto a 2-high ledge; the stack beside it is as high, the wall behind it too.
+  const ledge = { at: [2, 0, 3], to: [2, 1, 3] };
+  const pad = { id: 'pad', type: 'pad', at: [1, 0, 3] };
+  const pins = [{ at: [3, 0, 2], to: [3, 1, 2] }, { at: [3, 0, 4], to: [3, 1, 4] }];
+  assert.equal(reachBehindWall(2, [pad, spiked('s', [3, 0, 3]), plain('p', [3, 1, 3])], [ledge, ...pins]), true);
+  assert.equal(reachBehindWall(2, [pad, spiked('s', [3, 0, 3])], [ledge, ...pins]), false);
+  assert.equal(reachBehindWall(2, [pad, plain('s', [3, 0, 3])], [ledge, ...pins]), false, 'one plain crate is too low');
 });
 
 /** Reach of the pickup behind a pit `width` tiles wide (x = 4 on, all along z) with the given crates. */
@@ -218,14 +223,14 @@ function reachBehindPit(width, objects) {
 
 test('checker: spiked crates plug a pit into plain floor he can walk over', () => {
   const crates = [spiked('a', [2, 0, 3]), spiked('b', [3, 0, 3])];
-  assert.equal(reachBehindPit(3, []), false, 'a 3-wide pit is too wide to jump');
-  assert.equal(reachBehindPit(3, crates), true, 'two crates plug two tiles, he jumps the last');
-  assert.equal(reachBehindPit(4, crates), false, 'two tiles stay open');
+  assert.equal(reachBehindPit(2, []), false, 'there is no jump over a pit');
+  assert.equal(reachBehindPit(2, crates), true, 'two crates plug two tiles');
+  assert.equal(reachBehindPit(3, crates), false, 'a tile stays open');
 });
 
 test('checker: a pushed spiked crate keeps its spikes (it is still no step)', () => {
-  // A 2-high wall with a spiked crate that can be pushed anywhere: never a way up.
-  assert.equal(reachBehindWall(2, [spiked('c', [2, 0, 3]), spiked('d', [2, 0, 5])]), false);
+  // A 1-high wall with a stair and spiked crates that can be pushed anywhere: never a floor.
+  assert.equal(reachBehindWall(1, [spiked('c', [2, 0, 3]), spiked('d', [2, 0, 5])], [{ type: 'stair_x', at: [2, 0, 1] }]), false);
 });
 
 // ---- tools and look

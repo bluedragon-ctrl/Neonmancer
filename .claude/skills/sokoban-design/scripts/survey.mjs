@@ -12,9 +12,9 @@
 // "-" is unsolvable, "?" hit --max (default 30000 states), "n/a" can't be
 // built (a socket under the wizard's start). The last columns build every
 // crate as a spiked crate (D199).
-// Every column is built with the free jump (he climbs crates and 1-high
-// walls). In a pads room (D222) he climbs neither, so a level built with
-// plain crates and walls of any height plays as the classic column.
+// Every column is built for the game's rules (D222): he climbs neither a
+// crate nor a 1-high wall, so a level built with plain crates and walls of
+// any height plays as the classic column.
 import fs from 'node:fs';
 import { parseXsb, xsbToRoom } from './xsb.mjs';
 import { loadContent, solve } from './solve.mjs';
@@ -103,7 +103,7 @@ export const VARIANTS = [
 export function surveyCell(level, variant, content, max) {
   let data;
   try {
-    data = xsbToRoom(level, { wall: variant.wall, goal: variant.goal, streams: variant.streams, exits: [], spiked: variant.spiked, jump: 'free' });
+    data = xsbToRoom(level, { wall: variant.wall, goal: variant.goal, streams: variant.streams, exits: [], spiked: variant.spiked });
   } catch {
     return { text: 'n/a' };
   }
@@ -135,7 +135,7 @@ if (process.argv[1]?.endsWith('survey.mjs')) {
   ];
   for (let n = lo; n <= Math.min(hi ?? lo, levels.length); n++) {
     const level = levels[n - 1];
-    const room = xsbToRoom(level, { exits: [], jump: 'free' });
+    const room = xsbToRoom(level, { exits: [] });
     const [w, , d] = room.size;
     const crates = room.objects.filter((o) => o.type === 'crate' || o.type === 'crate_spiked').length;
     const classic = classicPushes(level.rows);

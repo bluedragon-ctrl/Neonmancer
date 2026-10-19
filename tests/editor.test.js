@@ -492,7 +492,6 @@ test('RoomEdit opens, edits and removes exits; they lead to the rooms next to it
 test('newRoom is a valid empty room; roomIdProblem refuses bad and taken ids', () => {
   const room = newRoom('data_vault', 'home');
   assert.equal(room.name, 'Data Vault');
-  assert.equal(room.jump, 'pads', 'new rooms are pads rooms (D222)');
   assert.deepEqual(validateData(dataFiles({ rooms: [room] })), []);
   const edit = new RoomEdit(room, { fresh: true });
   assert.equal(edit.dirty, true, 'a new room is unsaved');

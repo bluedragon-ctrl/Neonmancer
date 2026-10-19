@@ -36,7 +36,7 @@ test('up and down move the selection, wrapping round; Space chooses too', () => 
   flow.update(press('up'));
   assert.equal(flow.top.selected, count - 1);
   flow.select(0);
-  assert.equal(flow.update(press('jump')), 'start');
+  assert.equal(flow.update(press('confirm')), 'start');
 });
 
 test('Esc or P pauses the game and closes the pause menu again', () => {

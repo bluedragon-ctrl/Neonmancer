@@ -209,9 +209,9 @@ test('reach: one crate does not power a heavy plate, a stack of two does', () =>
 });
 
 test('reach: a crate pushed off a ledge onto the crate on the plate builds the stack', () => {
-  // A ledge two blocks wide at x = 3-4; crate B on it at x = 3, he climbs onto x = 4 and pushes it west onto A.
+  // A ledge two blocks wide at x = 3-4; crate B on it at x = 3, he takes the stair onto x = 4 and pushes it west onto A.
   const ledge = { at: [3, 0, 4], to: [4, 0, 4] };
-  const stack = { objects: [heavy, at('a', 2, 0, 4), at('b', 3, 1, 4)], blocks: [ledge] };
+  const stack = { objects: [heavy, at('a', 2, 0, 4), at('b', 3, 1, 4)], blocks: [ledge, { type: 'stair_nz', at: [4, 0, 5] }] };
   assert.equal(reachFar(stack), true);
   assert.equal(reachFar({ ...stack, objects: [heavy, at('a', 2, 0, 4)] }), false, 'without the ledge crate');
 });
@@ -233,7 +233,8 @@ test('reach: a crate placed by Compile is one weight, so it needs a crate under 
 test('reach: the wizard counts only on a timed heavy plate, and then with one more weight', () => {
   const timed = { ...heavy, type: 'plate_heavy_timed' };
   assert.equal(reachFar({ objects: [heavy, at('c1', 2, 0, 4)] }), false, 'he cannot hold a plain one and pass');
-  assert.equal(reachFar({ objects: [timed, at('c1', 2, 0, 4)] }), true, 'a crate and he runs on while it counts down');
+  // He takes a stair onto the crate and stands on it.
+  assert.equal(reachFar({ objects: [timed, at('c1', 2, 0, 4)], blocks: [{ type: 'stair_x', at: [1, 0, 4] }] }), true, 'a crate and he runs on while it counts down');
   assert.equal(reachFar({ objects: [timed] }), false, 'he alone is one');
 });
 

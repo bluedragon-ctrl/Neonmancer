@@ -56,17 +56,15 @@ For each room:
      without its trick (a fragment behind a later-sector key: a BLOCKER);
      listed in docs/lattice-plan.md, Return layers.
 4. Walk the checklist against the actual coordinates, not the intent:
-   - **Jump rule** (D222): is the room a pads room (`"jump": "pads"`)? A
-     room reviewed in step 5.17 or new must be (a PROBLEM if not), and
-     its line in `docs/lattice-plan.md` (Pads-only migration) is ticked
-     off. Pieces that only fought the jump (spiked crates, fence roofs,
-     2-high walls against hops) and do no job of their own: a NOTE.
-   - **Platforms in a pads room** (D228): each stop he boards or leaves
+   - **No jump** (D222, D267): there is no jump key and no room rule. A
+     piece that only fought the old jump (spiked crates, fence roofs,
+     2-high walls against hops) and does no job of its own: a NOTE.
+   - **Platforms** (D228): each stop he boards or leaves
      a platform at is on foot level (floor, stair top, ledge), never a
      jump up; a platform only a pad or bounce reaches is fine in a
      hard or secret room that means it (NOTE), a PROBLEM elsewhere. The
      checker counts platforms as free floor, so verify by hand.
-   - **Reach in a pads room**: every way up is a stair (from its foot,
+   - **Reach**: every way up is a stair (from its foot,
      the way it rises), a pad (2 up; 2 up over a 1-tile gap, 1 up over
      2 tiles, D243; its cell and three above free) or a bouncy enemy he falls onto (2 up from its lane,
      never from its own level, D223); 1-high walls and crates stop him;
@@ -78,9 +76,6 @@ For each room:
      2 cells of a doorway (`check:reach` warns of it), or a push, crate
      route or enemy lane he works with there, is a PROBLEM: he walks out
      by accident and the room resets.
-   - **Reach with the free jump** (rooms not yet moved): every step <= 1
-     block, gaps <= 1 tile, a bouncy enemy clears a 2-high ledge (never
-     3), a crate or frozen enemy beside a 2-high wall is a way over it.
    - **Headroom**: 2 free cells above every standing surface (a slab
      overhead is fine, D221).
    - **Timing**: collapsing blocks never under a stop (push, wait, lining
@@ -90,7 +85,7 @@ For each room:
      race by hand per the checklist (a frozen enemy on a plate is one
      too, a 5 s freeze counted from the shot; cells from the switch to the far
      side of the gate, bridge or exit it powers, ~0.22 s a cell, plus
-     jumps and pushes) and compare it with the timer: shorter is a
+     pad throws and pushes) and compare it with the timer: shorter is a
      BLOCKER, less than ~1 s to spare a PROBLEM. A room `timer`
      (watchdog, D172): count the whole run from the entrance, and from
      `reset` after a death, to the last permanent pickup (taking it
@@ -129,8 +124,7 @@ For each room:
      only way out is an enemy step traps him when it is killed.
    - **Push puzzles** (D197–D202): for a room whose trick is pushing
      crates, run `node .claude/skills/sokoban-design/scripts/solve.mjs
-     <room_id> [--from <exit>] [--with zap,fork,pause]` (it follows the
-     room's jump rule) and quote the
+     <room_id> [--from <exit>] [--with zap,fork,pause]` and quote the
      fewest pushes, the share of traps and the sharp steps (none: only a
      walk; past ~25 pushes: a chore). Know the locks: a plate is faked by
      a decoy or a frozen enemy; a **socket** (only a crate fills it, for
@@ -139,8 +133,8 @@ For each room:
      pickup (switch-locked, see-through: a Zap passes through) and a
      3-high wall are real locks. A **stream** stops him and passes crates
      (no top), a **spiked crate** is no step (its top hurts 2 and shoves
-     him off; a plain crate on it covers it; in a pads room no crate is a
-     step, so it adds nothing there). A classic level is credited
+     him off; a plain crate on it covers it; no crate is a step now, so it
+     adds nothing there). A classic level is credited
      in the room's decision and re-solved under these rules.
    - **Timing by play**: where a race or bounce decides the room, play it
      with `.claude/skills/room-design/scripts/sim.mjs` from a scratch
