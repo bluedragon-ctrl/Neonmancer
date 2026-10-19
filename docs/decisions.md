@@ -3543,3 +3543,32 @@ D213's entrance in `warden_pit`, unchanged).
   `warden_pit` (D260).
 **Why:** the author asked for `buffer_2`'s content as a push puzzle with
 `secret_1`; a rift and a stack, not Dead Pixel's pier (D262).
+
+### D264 — 2026-10-19 — Null Orbit: Microban 38 with sockets, fences and two pits (5.11)
+`buffer_3` (Null Orbit), the third Outer Buffer secret room, holds
+`secret_2` in a cage (D202). A pads room (D222), 8×8×4, its door the west
+side at z 3 (D214's entrance in `guard_loop`, unchanged).
+- **The level:** Microban 38 by David W. Skinner (D197), three crates in a
+  tight middle and three goals, 8 wide and 5 deep, set in the room's
+  south five rows so its open top corridor is the door's row (z 3); the
+  empty three back rows hold the cage (`secret_2`, in the back corner,
+  in view from the door). The cage opens when all three goals are on.
+- **Build:** the walls are 1-high fences (a wall in front of a floor
+  socket hides it, so none is a solid block), the goals three sockets
+  (D194: no decoy or frozen enemy can hold one, so Fork skips nothing; as
+  plates Fork took 8 pushes down to 3). Sockets are holes he can't cross,
+  so the level's west wall at x 1 z 5 is open floor (it joins the corridor
+  to the crates), and two wall cells at x 5–6 z 6 are pits: a crate
+  pushed in is spent, so more pushes are traps.
+- **Solver** (`solve.mjs`): 8 pushes, 3 sharp steps, 69 % of the states
+  traps, the same with every Lattice spell and Blink (no plates, enemies
+  or targets). The shortest way into a trap is the south crate pushed east
+  into the pit. The mutation test names every crate, the fences along the
+  corridor and the cage; the sockets show NO EFFECT only because a removed
+  socket is plain floor (as in `buffer_1`, D262).
+- **Played** (`sim.mjs`): the full solution from the door, `secret_2`
+  taken at 21.8 s, no damage.
+- **No return layer:** it is its host's, `guard_loop` (D260).
+**Why:** the author asked for `buffer_3` as the next push puzzle; a classic
+with a Neonmancer build (sockets and pits) rather than a new design, since
+a flat classic costs fewest tuning rounds and the survey (D197) rates 38.
