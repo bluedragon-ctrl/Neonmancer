@@ -5,6 +5,21 @@
   "name": "Event Horizon",
   "biome": "outer_buffer",
   "size": [8, 4, 8],
+  "jump": "pads",
   "spawn": [1.5, 0, 3.5],
-  "exits": [{ "id": "west", "side": "-x", "at": 3, "width": 1 }]
+  "exits": [{ "id": "west", "side": "-x", "at": 3, "width": 1 }],
+  "blocks": [
+    { "at": [5, 0, 0], "to": [7, 1, 2] },
+    { "type": "cage", "at": [7, 0, 7] }
+  ],
+  "objects": [
+    { "id": "pad_1", "type": "pad", "at": [4, 0, 0] },
+    { "id": "crate_1", "type": "crate", "at": [3, 0, 5] },
+    { "id": "crate_2", "type": "crate", "at": [5, 2, 2] },
+    { "id": "crate_3", "type": "crate", "at": [6, 2, 2] },
+    { "id": "socket_1", "type": "socket", "at": [2, 0, 6] },
+    { "id": "socket_2", "type": "socket", "at": [5, 0, 6] },
+    { "id": "socket_3", "type": "socket", "at": [6, 0, 4] }
+  ],
+  "pickups": [{ "id": "secret_3", "type": "secret_3", "at": [7, 0, 7] }]
 }

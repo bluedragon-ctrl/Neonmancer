@@ -3572,3 +3572,34 @@ side at z 3 (D214's entrance in `guard_loop`, unchanged).
 **Why:** the author asked for `buffer_3` as the next push puzzle; a classic
 with a Neonmancer build (sockets and pits) rather than a new design, since
 a flat classic costs fewest tuning rounds and the survey (D197) rates 38.
+
+### D265 — 2026-10-19 — Event Horizon: a ledge drop of two crates into three sockets (5.11)
+`buffer_4` (Event Horizon), the fourth Outer Buffer secret room, holds
+`secret_3` in a cage (D202). A pads room (D222), 8×8×4, its door the west
+side at z 3 (D215's entrance in `mirror_stacks`, unchanged).
+- **The trick:** two of the three crates start on a 2-high deck (x 5–7,
+  z 0–2) he reaches only by the pad at the corner (4,0); a crate pushed off
+  the deck falls and can't go back up, so the order of the drops decides
+  which crate meets which socket. Three sockets (D194: nothing fakes one)
+  open the cage once all are filled.
+- **Layout:** the floor crate goes west and south into the socket at
+  (2,6) first; from the deck, one crate is pushed south off the edge to
+  (5,3), the other west to (5,2) and then south; then the two floor crates
+  are walked round each other (west, south, east) into the sockets at
+  (6,4) and (5,6). The pad stands in the corner, off every crate's route:
+  with it at the drop column or in the row of the crates, he stepped on it
+  while pushing and was thrown off.
+- **Solver:** 14 pushes, 80 % of the states traps, no step half trap (the
+  trap share lives in the walk-round, not in one move); the same with
+  every Lattice spell and Blink (no plates). The shortest way into a trap
+  is the floor crate pushed south twice into the corner.
+- **Checker:** the crate search truncates at 2000 configurations (three
+  crates, a deck), so `check:reach <room>` alone says "never"; the world
+  check is green and the solver is exhaustive. The mutation test names the
+  pad, all three crates, the deck block and the cage.
+- **Played** (`sim.mjs`): the full solution from the door, `secret_3`
+  taken at 44.4 s, no damage.
+- **No return layer:** it is its host's, `mirror_stacks` (D260).
+**Why:** the author asked for the next secret room; the Outer Buffer's
+"things that fall" is a two-level drop, unlike the flat Null Orbit (D264)
+and Stray Byte's stack (D263).
