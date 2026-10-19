@@ -299,7 +299,7 @@ Waits for the core (D186): the secret rooms' contents.
 | `buffer_2` Stray Byte (5.11) | 8x8 | Secret, in `warden_pit` behind a 4-high ledge (D213), two pads and Blink since D249; done (D263): a rift plugged by one crate, a second pushed over it onto a heavy plate, the ledge crate dropped on it; `secret_1` in a cage |
 | `buffer_3` Null Orbit (5.11) | 8x8 | Secret, in `guard_loop` on a 3-high sill (D214, D257), reached by a stair, the timed bridge and a pad; done (D264): Microban 38 with sockets, fences and two pits; `secret_2` in a cage |
 | `buffer_4` Event Horizon (5.11) | 8x8 | Secret, in `mirror_stacks` above the fragment pocket (D215); since D242 the pocket's pad throws him onto the door's column and a diagonal Zap hits the target; done (D265): two deck crates dropped and walked round a floor crate into three sockets; `secret_3` in a cage |
-| `buffer_5` Cache Miss (5.11) | 8x8 | Secret, in `ghost_exit` behind a plate in a walled pocket (D215); since D245 a pad in the bug pen and Blink reach the 2-high ledge over it, and a decoy cast from there holds the plate; entrance built |
+| `buffer_5` Cache Miss (5.11) | 8x8 | Secret, in `ghost_exit` behind a plate in a walled pocket (D215); since D245 a pad in the bug pen and Blink reach the 2-high ledge over it, and a decoy cast from there holds the plate; done (D266): Microban 41 on a causeway of pits, three crates into three sockets; `secret_4` in a cage |
 
 ## Pads-only migration (D222)
 
@@ -340,5 +340,5 @@ moves it to `"jump": "pads"` and ticks it off here.
 | 23 | `gatekeeper` | play | | Done (D255): flat hall, only the flag. |
 | 24 | `core_hall` | play | | Done (D256): flat hall, only the flag. |
 | 25 | `dj_vault` | play | | Done (D258): flat room, only the flag; a standing Blink crosses the pit. |
-| – | `buffer_1`–`buffer_5` | play | | The secret rooms (5.11) with their host rooms' doors. Dead Pixel done (D262): a new puzzle, no roof or spiked crates; Stray Byte done (D263); Null Orbit done (D264); Event Horizon done (D265). |
+| – | `buffer_1`–`buffer_5` | play | | The secret rooms (5.11) with their host rooms' doors. Dead Pixel done (D262): a new puzzle, no roof or spiked crates; Stray Byte done (D263); Null Orbit done (D264); Event Horizon done (D265); Cache Miss done (D266). |
 | – | teasers (`frost_*`, `glitch_*`) | nothing | glitch_gate: bouncy | Moved over in 5.19 as they are. |

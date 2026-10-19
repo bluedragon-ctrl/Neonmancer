@@ -12,6 +12,7 @@ docs/decisions.md).
 - Null Orbit (`buffer_3`, D264), the third Outer Buffer secret room:
   Microban 38 (David W. Skinner) built with sockets, fences and two pits;
   `secret_2` in a cage.
+- Cache Miss (`buffer_5`, D266), the fifth and last Outer Buffer secret room: Microban 41 on a causeway of pits, three crates into three sockets (11 pushes, a wrong push spends a crate for good); `secret_4` in a cage.
 - Event Horizon (`buffer_4`, D265), the fourth Outer Buffer secret room: two crates on a 2-high deck, reached by a pad, are dropped to the floor and walked round the third into three sockets; `secret_3` in a cage.
 - Stray Byte (`buffer_2`, D263), the second Outer Buffer secret room: a
   rift to plug, a crate to bring over it and a ledge crate dropped on it

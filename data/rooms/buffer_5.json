@@ -5,6 +5,30 @@
   "name": "Cache Miss",
   "biome": "outer_buffer",
   "size": [8, 4, 8],
+  "jump": "pads",
   "spawn": [1.5, 0, 3.5],
-  "exits": [{ "id": "west", "side": "-x", "at": 3, "width": 1 }]
+  "exits": [{ "id": "west", "side": "-x", "at": 3, "width": 1 }],
+  "blocks": [
+    { "type": "fence", "at": [2, 0, 1], "to": [6, 0, 1] },
+    { "type": "fence", "at": [1, 0, 2] },
+    { "type": "fence", "at": [1, 0, 4] },
+    { "type": "fence", "at": [3, 0, 6], "to": [6, 0, 6] },
+    { "type": "cage", "at": [7, 0, 0] }
+  ],
+  "holes": [
+    { "at": [7, 2] },
+    { "at": [7, 3] },
+    { "at": [4, 4] },
+    { "at": [2, 5] },
+    { "at": [7, 5] }
+  ],
+  "objects": [
+    { "id": "crate_1", "type": "crate", "at": [3, 0, 3] },
+    { "id": "crate_2", "type": "crate", "at": [4, 0, 3] },
+    { "id": "crate_3", "type": "crate", "at": [5, 0, 3] },
+    { "id": "socket_1", "type": "socket", "at": [5, 0, 4] },
+    { "id": "socket_2", "type": "socket", "at": [6, 0, 4] },
+    { "id": "socket_3", "type": "socket", "at": [7, 0, 4] }
+  ],
+  "pickups": [{ "id": "secret_4", "type": "secret_4", "at": [7, 0, 0] }]
 }
