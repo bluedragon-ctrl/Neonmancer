@@ -3578,7 +3578,7 @@ a flat classic costs fewest tuning rounds and the survey (D197) rates 38.
 `secret_3` in a cage (D202). A pads room (D222), 8×8×4, its door the west
 side at z 3 (D215's entrance in `mirror_stacks`, unchanged).
 - **The trick:** two of the three crates start on a 2-high deck (x 5–7,
-  z 0–2) he reaches only by the pad at the corner (4,0); a crate pushed off
+  z 0–2) he reaches only by the pad at (7,3), south of the deck; a crate pushed off
   the deck falls and can't go back up, so the order of the drops decides
   which crate meets which socket. Three sockets (D194: nothing fakes one)
   open the cage once all are filled.
@@ -3586,11 +3586,12 @@ side at z 3 (D215's entrance in `mirror_stacks`, unchanged).
   (2,6) first; from the deck, one crate is pushed south off the edge to
   (5,3), the other west to (5,2) and then south; then the two floor crates
   are walked round each other (west, south, east) into the sockets at
-  (6,4) and (5,6). The pad stands in the corner, off every crate's route:
-  with it at the drop column or in the row of the crates, he stepped on it
-  while pushing and was thrown off.
-- **Solver:** 14 pushes, 80 % of the states traps, no step half trap (the
-  trap share lives in the walk-round, not in one move); the same with
+  (7,4) and (5,6). The pad stands off every crate's route (on the drop column or in
+  the crates' row he stepped on it while pushing and was thrown off) and
+  on the deck's south side: in the first draft it stood west of the deck
+  and the deck's +x face hid it (rule 1; the review caught it). The last
+  socket moved to (7,4) so the cell (6,3) stays reachable round the pad.
+- **Solver:** 15 pushes, 75 % of the states traps, 1 sharp step; the same with
   every Lattice spell and Blink (no plates). The shortest way into a trap
   is the floor crate pushed south twice into the corner.
 - **Checker:** the crate search truncates at 2000 configurations (three
@@ -3598,7 +3599,7 @@ side at z 3 (D215's entrance in `mirror_stacks`, unchanged).
   check is green and the solver is exhaustive. The mutation test names the
   pad, all three crates, the deck block and the cage.
 - **Played** (`sim.mjs`): the full solution from the door, `secret_3`
-  taken at 44.4 s, no damage.
+  taken at 45.3 s, no damage.
 - **No return layer:** it is its host's, `mirror_stacks` (D260).
 **Why:** the author asked for the next secret room; the Outer Buffer's
 "things that fall" is a two-level drop, unlike the flat Null Orbit (D264)
