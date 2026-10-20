@@ -16,7 +16,8 @@
     { "at": [4, 0, 4] },
     { "at": [8, 0, 3] },
     { "at": [3, 0, 1] },
-    { "type": "stair_nz", "at": [6, 0, 2] }
+    { "type": "stair_nz", "at": [6, 0, 2] },
+    { "type": "bollard", "at": [8, 0, 6] }
   ],
   "holes": [
     { "at": [9, 0], "to": [11, 0] },
@@ -29,7 +30,7 @@
     { "at": [7, 5] }
   ],
   "objects": [
-    { "id": "screen_1", "type": "screen", "at": [6, 0, 11], "text": "tut_shield" },
+    { "id": "screen_1", "type": "screen", "at": [2, 0, 11], "text": "tut_shield", "overrides": { "face": "+x" } },
     {
       "id": "lift",
       "type": "platform",

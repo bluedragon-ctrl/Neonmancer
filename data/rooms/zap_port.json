@@ -23,6 +23,6 @@
     { "id": "target_door", "type": "target", "at": [4, 1, 0] },
     { "id": "screen_1", "type": "screen", "at": [0, 0, 0], "text": "tut_zap" }
   ],
-  "enemies": [{ "id": "patrol", "template": "bug", "at": [0, 0, 9], "path": { "points": [[5, 0, 9]] } }],
+  "enemies": [{ "id": "patrol", "template": "bug", "at": [0, 0, 9], "path": { "points": [[9, 0, 9]] } }],
   "pickups": [{ "id": "disk_zap_1", "type": "disk_zap", "at": [0, 2, 14] }]
 }
