@@ -543,6 +543,9 @@ not critical.
   panel; hovering shows any thing's switch links (D142). The room's Jump
   box sets the pads rule (new rooms start with it, D223); the stairs are
   one Block tool entry turned with R; pads have their own Object group.
+  Shift+drag fills a rectangle of blocks or holes, `[` / `]` step
+  through types; the panel's head (save, status, errors) stays put and
+  the room settings fold away (D267).
 - **World map tool** (`tools/world-map.html`, D66, D77): every room on a
   map grid with its connections (exits lead to the next map cell, D259);
   move, add and remove rooms and connections; flags rooms out of reach; opens a room in the room editor;

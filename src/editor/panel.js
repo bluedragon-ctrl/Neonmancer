@@ -14,16 +14,16 @@ import { EXIT_DEFAULTS, PATH_DEFAULTS, withEnemyDefaults } from '../data/room-da
  * Left click places, right click erases.
  */
 export const TOOLS = [
-  { id: 'block', label: 'Block', key: '1' },
-  { id: 'hole', label: 'Hole', key: '2' },
-  { id: 'object', label: 'Object', key: '3' },
-  { id: 'enemy', label: 'Enemy', key: '4' },
-  { id: 'path', label: 'Path', key: '5' },
-  { id: 'exit', label: 'Exit', key: '6' },
-  { id: 'spawn', label: 'Spawn', key: '7' },
-  { id: 'reset', label: 'Reset', key: '8' },
-  { id: 'shrine', label: 'Shrine', key: '9' },
-  { id: 'switch', label: 'Switch', key: '0' },
+  { id: 'block', label: 'Block', key: '1', title: 'Blocks, stairs, slabs and gates' },
+  { id: 'hole', label: 'Hole', key: '2', title: 'Holes in the floor' },
+  { id: 'object', label: 'Object', key: '3', title: 'Crates, platforms, pads, decorations and pickups' },
+  { id: 'enemy', label: 'Enemy', key: '4', title: 'Enemies, from their templates' },
+  { id: 'path', label: 'Path', key: '5', title: 'Paths of platforms and enemies' },
+  { id: 'exit', label: 'Exit', key: '6', title: 'Exits in the edge cells' },
+  { id: 'spawn', label: 'Spawn', key: '7', title: 'Where the wizard starts' },
+  { id: 'reset', label: 'Reset', key: '8', title: 'Where he recompiles after a death' },
+  { id: 'shrine', label: 'Shrine', key: '9', title: 'The backup shrine tile' },
+  { id: 'switch', label: 'Switch', key: '0', title: 'Plates, targets and sockets, and what they power' },
 ];
 
 /**
@@ -49,16 +49,34 @@ export function templateText(template) {
     .join(' · ');
 }
 
-const HELP = [
-  'Left click: place / pick · Right click: erase',
-  `Wheel or PgUp/PgDn: layer · ${TOOLS.map((tool) => tool.key).join(' ')}: tool`,
-  'Esc: drop the selection · Del: remove it',
-  'Switch tool: place or pick a switch (or a gate, platform, exit), tick or click its links · Alt+click (Block tool): copy a block',
-  'Hover a switch, gate or locked exit: its links light up',
-  'R (Block tool, a stair): turn it',
-  'Ctrl+Z / Ctrl+Y: undo / redo · Ctrl+S: save',
-  'F2: play the room · F3: debug',
+/** The keys and mouse buttons, [keys, what they do], in the panel's Keys list. */
+export const HELP = [
+  ['Left click', 'place / pick; drag paints'],
+  ['Right click', 'erase'],
+  ['Shift+drag', 'rectangle (Block, Hole); right: clear'],
+  ['Alt+click', 'copy a block (Block)'],
+  ['Wheel, PgUp/PgDn', 'layer'],
+  ['H', 'hide / show above the layer'],
+  ['1–9, 0', 'tool'],
+  ['[ ]', 'previous / next type'],
+  ['R', 'turn a stair (Block)'],
+  ['Esc', 'drop the pick or rectangle'],
+  ['Del', 'remove the picked thing'],
+  ['Ctrl+Z / Ctrl+Y', 'undo / redo'],
+  ['Ctrl+S', 'save'],
+  ['F2', 'play the room'],
+  ['F3', 'debug'],
 ];
+
+/** What a tool does, for the tools without fields of their own to say it (HINTS has the others). */
+const TOOL_HINTS = {
+  block: 'Click a cell to place, drag to paint, Shift+drag for a rectangle. Hover a gate: its switches light up.',
+  hole: 'Click floor tiles to make holes, right click fills them; Shift+drag for a rectangle.',
+  object: 'Click a free cell to place; click a thing to pick it. Pickups go inside a cage.',
+  spawn: 'Click a cell: the wizard starts there (cyan box).',
+  reset: 'Click a cell: he recompiles there after a death (magenta box); right click: at the spawn.',
+  shrine: 'Click a floor tile for the backup shrine (one a room); right click takes it away.',
+};
 
 /** What a tool's fields say while nothing is picked, and while something is. */
 const HINTS = {
@@ -248,6 +266,42 @@ function el(tag, className, text) {
   return node;
 }
 
+/** Read a remembered panel setting (a fold open or shut); null if none or no storage. */
+function remembered(key) {
+  try {
+    return localStorage.getItem(`neonmancer.editor.${key}`);
+  } catch {
+    return null;
+  }
+}
+
+/** Remember a panel setting for the next visit (no storage: forgotten). */
+function remember(key, value) {
+  try {
+    localStorage.setItem(`neonmancer.editor.${key}`, value);
+  } catch {
+    // Private windows and blocked storage: the fold just starts as it does by default.
+  }
+}
+
+/**
+ * A section that folds open and shut (a `<details>`), remembered between visits.
+ * @param {string} label
+ * @param {string} key what it is remembered by
+ * @param {boolean} open open the first time
+ * @returns {{ element: HTMLDetailsElement, summary: HTMLElement, body: HTMLElement }}
+ */
+function foldable(label, key, open) {
+  const element = el('details', 'editor-fold');
+  const was = remembered(`fold.${key}`);
+  element.open = was === null ? open : was === 'open';
+  element.addEventListener('toggle', () => remember(`fold.${key}`, element.open ? 'open' : 'shut'));
+  const summary = el('summary', '', label);
+  const body = el('div', 'editor-fold-body');
+  element.append(summary, body);
+  return { element, summary, body };
+}
+
 /** An option of a select. */
 function option(value, label) {
   return Object.assign(el('option', '', label), { value });
@@ -340,30 +394,32 @@ export class EditorPanel {
     // Keep clicks and the wheel on the panel from reaching the game canvas.
     this.element.addEventListener('contextmenu', (e) => e.preventDefault());
 
-    const title = el('div', 'editor-title', 'ROOM EDITOR');
+    // The head stays put while the rest scrolls: the room, saving, the last action and the errors.
+    const head = el('div', 'editor-head');
+    const titleRow = el('div', 'editor-title-row');
     this.roomLabel = el('div', 'editor-room');
+    titleRow.append(el('div', 'editor-title', 'ROOM EDITOR'), this.roomLabel);
     /** What is in the cell under the mouse. */
     this.hoverLine = el('div', 'editor-hover');
     this.status = el('div', 'editor-status');
+    this.errorCount = el('div', 'editor-error-count');
     this.errors = el('ul', 'editor-errors');
-    const help = el('div', 'editor-help');
-    for (const line of HELP) help.append(el('div', '', line));
+    head.append(titleRow, this.actionRow(canSave), this.status, this.errorCount, this.errors);
+    /** What the tool picked does, for tools without a hint of their own. */
+    this.toolHint = el('div', 'editor-hint');
 
     this.element.append(
-      title,
-      this.roomLabel,
+      head,
       this.roomGroup(biomes),
       this.layerRow(),
       this.hoverLine,
       this.toolRow(),
+      this.toolHint,
       ...this.typeGroups(blockTypes, objectTypes, switchTypes),
       this.enemyGroup(enemyTemplates),
       this.pathGroup(),
       this.exitGroup(),
-      this.actionRow(canSave),
-      this.status,
-      this.errors,
-      help,
+      this.helpList(),
     );
     root.append(this.element);
     this.releaseKeyboard();
@@ -421,9 +477,23 @@ export class EditorPanel {
     // A new room that was never saved can be thrown away.
     this.discardButton = el('button', 'editor-action', 'Discard new room');
     this.discardButton.addEventListener('click', () => on.discard());
+    // The room's settings fold away: they change far less often than the room's contents.
+    this.settings = foldable('Room settings', 'roomSettings', false);
+    this.settingsSummary = el('span', 'editor-fold-note');
+    this.settings.summary.append(this.settingsSummary);
+    this.settings.body.append(newRoomRow, this.row('Name', this.nameInput), this.row('Authored', authored), this.row('Jump', padJump), this.row('Biome', this.biomeSelect), sizeRow, this.row('Timer (s)', this.roomTimerInput));
     const group = el('div', 'editor-group');
-    group.append(this.row('Room', this.roomSelect), newRoomRow, this.row('Name', this.nameInput), this.row('Authored', authored), this.row('Jump', padJump), this.row('Biome', this.biomeSelect), sizeRow, this.row('Timer (s)', this.roomTimerInput), this.discardButton);
+    group.append(this.row('Room', this.roomSelect), this.discardButton, this.settings.element);
     return group;
+  }
+
+  /** The keys and mouse buttons, folded away until wanted. */
+  helpList() {
+    const help = foldable('Keys', 'keys', false);
+    const list = el('dl', 'editor-help');
+    for (const [keys, does] of HELP) list.append(el('dt', '', keys), el('dd', '', does));
+    help.body.append(list);
+    return help.element;
   }
 
   /** The height layer being edited, and hiding what is above it. */
@@ -450,6 +520,7 @@ export class EditorPanel {
     const tools = el('div', 'editor-tools');
     for (const tool of TOOLS) {
       const button = el('button', 'editor-tool');
+      button.title = `${tool.title} (key ${tool.key})`;
       button.append(el('span', 'editor-key', tool.key), ` ${tool.label}`);
       button.addEventListener('click', () => on.tool(tool.id));
       this.toolButtons.set(tool.id, button);
@@ -721,6 +792,17 @@ export class EditorPanel {
     this.enemyTemplate.replaceChildren(...Object.keys(templates).map((id) => option(id, id)));
   }
 
+  /**
+   * The types a tool picks from, in the panel's order (`[` and `]` step
+   * through them); the stairs are one entry.
+   * @param {'block'|'object'|'switch'|'enemy'} tool
+   * @returns {string[]}
+   */
+  typeValues(tool) {
+    const list = { block: this.blockSelect, object: this.objectSelect, switch: this.switchSelect, enemy: this.enemyTemplate }[tool];
+    return list ? [...list.options].map((o) => o.value) : [];
+  }
+
   /** @param {string|null} text what is in the cell under the mouse, or null (none) */
   setHover(text) {
     this.hoverLine.textContent = text ?? '';
@@ -777,6 +859,10 @@ export class EditorPanel {
     const data = edit.data;
     const changed = edit.dirty;
     this.roomLabel.textContent = `${data.id}${changed ? ' • unsaved' : unsaved ? ' • other rooms unsaved' : ''}`;
+    this.roomLabel.classList.toggle('editor-unsaved', unsaved);
+    this.settingsSummary.textContent = [this.biomeSelect.selectedOptions[0]?.textContent, data.size.join('×'), data.jump === 'pads' && 'pads', data.timer && `${data.timer} s`, data.authored && 'authored'].filter(Boolean).join(' · ');
+    this.toolHint.textContent = TOOL_HINTS[tool] ?? '';
+    this.toolHint.hidden = !TOOL_HINTS[tool];
     if (this.roomSelect.options.length !== rooms.length || rooms.some((id, i) => this.roomSelect.options[i].value !== id)) {
       this.roomSelect.replaceChildren(...rooms.map((id) => option(id, id)));
     }
@@ -869,6 +955,8 @@ export class EditorPanel {
     this.buttons.revert.disabled = !changed;
     this.buttons.save.disabled = this.canSave && !unsaved;
     this.status.textContent = status;
+    const count = errors.reduce((sum, group) => sum + group.errors.length, 0);
+    this.errorCount.textContent = count > 0 ? `${count} error${count === 1 ? '' : 's'}: click one to go to it` : '';
     this.errors.replaceChildren(
       ...errors.flatMap(({ file, errors: list }) => [
         ...(file ? [el('li', 'editor-error-file', file)] : []),

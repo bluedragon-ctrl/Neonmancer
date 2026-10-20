@@ -9,6 +9,12 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
+- Room editor (D267): Shift+drag fills a rectangle of blocks or holes in
+  one undo step (right button clears, Esc cancels); `[` / `]` step
+  through the tool's types, H toggles hide-above. The panel keeps its
+  head (room, Undo / Redo / Save / Revert, status, errors) in place while
+  it scrolls, folds the room settings and the key list away, and says
+  what every tool does.
 - Null Orbit (`buffer_3`, D264), the third Outer Buffer secret room:
   Microban 38 (David W. Skinner) built with sockets, fences and two pits;
   `secret_2` in a cage.

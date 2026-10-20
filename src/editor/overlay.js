@@ -136,12 +136,18 @@ export class EditorOverlay {
    * @param {boolean} [options.flat] a floor tile (holes), drawn flat at y
    * @param {boolean} [options.erase] the red erase look
    * @param {'place'|'pick'|'link'|'unlink'|'none'} [options.tone] what a Switch tool click does
+   * @param {number[]|null} [options.to] the other corner of a rectangle (a Shift drag): the cursor spans both cells
    */
-  setCursor(cell, { flat = false, erase = false, tone } = {}) {
+  setCursor(cell, { flat = false, erase = false, tone, to = null } = {}) {
     this.cube.visible = !!cell && !flat;
     this.tile.visible = !!cell && flat;
     if (!cell) return;
-    (flat ? this.tile : this.cube).position.set(cell[0], cell[1] + (flat ? 0.004 : 0), cell[2]);
+    const other = to ?? cell;
+    const lo = cell.map((v, axis) => Math.min(v, other[axis]));
+    const size = cell.map((v, axis) => Math.abs(v - other[axis]) + 1);
+    const shape = flat ? this.tile : this.cube;
+    shape.position.set(lo[0], lo[1] + (flat ? 0.004 : 0), lo[2]);
+    shape.scale.set(size[0], flat ? 1 : size[1], size[2]);
     const { cursor } = EDITOR_LOOK;
     this.cursorMaterial.color.set(erase ? cursor.erase : (cursor[tone] ?? cursor.place)).multiplyScalar(cursor.brightness);
   }
