@@ -152,8 +152,7 @@ the author and collection in the room's decision entry. Before use:
   each.
 - **Spiked crates bring a collapsed classic back (D199).** Build the
   level with `--spiked` (every `$` a spiked crate) and 3-high walls:
-  Microban 8 is 32 pushes again, 19 is 20 and 63 is 50 (`spiked_lab`
-  is 8). The survey's spiked columns list every level; use 3-high walls
+  Microban 8 is 32 pushes again, 19 is 20 and 63 is 50. The survey's spiked columns list every level; use 3-high walls
   or holes there, since he walks over 1-high ledges (the player can't
   climb a spiked crate, but he still climbs walls). A level with a hole row
   should stay solvable: a spiked crate plugs one into plain floor.
@@ -197,7 +196,7 @@ the author and collection in the room's decision entry. Before use:
 - **Heavy plate** (`:`, D200): the floor crate goes onto the plate first,
   then the ledge crate drops on it. The drop first is the trap: that crate
   lies on the plate alone (half-lit flicker), and the other can no longer
-  be pushed onto it. The dev room `heavy_lab` is the minimal case: 6 pushes.
+  be pushed onto it. `ledger_cell` and `buffer_2` build it.
 - **Ledge drop**: a ledge crate pushed off lands where floor pushes
   can't reach (a pocket past a 1-high rim, a plate behind a fence row).
 - **Step, then spend**: a crate is a step to a ledge (or a target
@@ -249,8 +248,10 @@ the author and collection in the room's decision entry. Before use:
 - `levels/motifs.xsb`: original Neonmancer motifs, solved.
 - `levels/microban.xsb`, `levels/microban-survey.md`: Microban (David W.
   Skinner) and its survey with notes on the best candidates.
-- Worked example: the dev room `socket_yard` (D201), Microban 24 taken
+- Worked example: Null Orbit (`buffer_3`, D264), Microban 38 taken
   through the whole workflow (sketch, solve, convert, hand-wire, check, play).
+  In a pads room a classic level's walls are walls for him too, so his
+  region must connect: solve it with `solve.mjs` after every wall change.
 - `levels/sources.md`: classic collections and where to get them.
   Keep the collections in `levels/` as `.xsb` files with their
   author's credit in the header.

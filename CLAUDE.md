@@ -93,7 +93,7 @@ mobile/touch support, backend or accounts.
   enemy he falls onto throws him 2 up, a moving pad (D223). New rooms
   are pads rooms; the default stays `free` while rooms move over one by
   one in their reviews, then the jump goes for good (D222;
-  lattice-plan.md, Pads-only migration); test room `stair_lab`.
+  lattice-plan.md, Pads-only migration).
 - Player hitbox 0.6 x 1.5 x 0.6 (the hat is visual only), so the wizard
   needs 2 blocks of headroom.
 - Blocks snap to the grid; player and enemies move freely (sub-grid).

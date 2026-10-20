@@ -3674,3 +3674,40 @@ as before.
 **Why:** the author often moves a target or plate. Erase and place lost
 the id, the timer and every link, and erasing a locked exit's only
 switch quietly unlocked the exit (`unlinkSwitch`).
+
+### D269 — 2026-10-20 — The last free-jump rooms move to pads (5.19, rooms)
+The rooms still on the free jump are pads rooms (`"jump": "pads"`), so
+every room is one and step 5.19 can take the jump out of the engine: the
+four biome teasers (`frost_edge`, `frost_gate`, `glitch_edge`,
+`glitch_gate`) and the dev room `hidden_layer`. Checked with
+`--with zap,scan,fork,pause` from the spawn and every door, free jump
+against pads: they lose nothing. The other eleven free-jump rooms were dev
+rooms; three of them lost their refill on pads, and all eleven go (D270).
+Authored rooms affected: none (no room is flagged).
+**Why:** the free jump goes in 5.19 (D222); a room that leans on it then
+breaks.
+
+### D270 — 2026-10-20 — The mechanic test rooms go
+The dev wing keeps only `hidden_layer` (the dev entrance next to
+`boot_up`, with every spell's disk and the Scan test). Eleven dev rooms
+are removed: `room_1`, `room_2` (empty hubs), `fence_yard`, `watchdog_run`,
+`socket_lab`, `stream_lab`, `spiked_lab`, `heavy_lab`, `socket_yard`,
+`cage_lab` and `stair_lab`; their map cells are free, and `hidden_layer`
+loses its west door (to `stream_lab`). Each showed one mechanic while it
+was new (D43, D147); real rooms show them all now: fences in 13 rooms,
+stairs in 17, the watchdog in 7, sockets in `relay_loft`, `ledger_cell`,
+`split_vault` and four secret rooms, the heavy plate in `ledger_cell`,
+`idle_cache` and `buffer_2`, cages in eight rooms, streams in
+`cold_stairs` and `split_vault`. No code or test loaded them.
+- **The spiked crate** (D199) has no room now. It stays in the engine
+  until 5.19 decides it (lattice-plan.md, Step 5.19 inventory).
+- **The sokoban-design skill's worked example** is Null Orbit (`buffer_3`,
+  D264) instead of `socket_yard` (D201).
+- Moving these rooms to pads (D269) showed three of them leaning on the
+  free jump: `heavy_lab`'s wall, `socket_yard`'s 1-high Microban walls
+  (the solver found two openings that keep its 9 pushes) and
+  `stream_lab`'s divider. A new test room is a pads room from the start.
+Authored rooms affected: none.
+**Why:** the author: test rooms are only for testing and go when they no
+longer make sense. Kept, each needed its own pads rework and upkeep with
+every rule change, for mechanics the Lattice already shows.

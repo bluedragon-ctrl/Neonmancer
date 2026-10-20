@@ -341,4 +341,68 @@ moves it to `"jump": "pads"` and ticks it off here.
 | 24 | `core_hall` | play | | Done (D256): flat hall, only the flag. |
 | 25 | `dj_vault` | play | | Done (D258): flat room, only the flag; a standing Blink crosses the pit. |
 | – | `buffer_1`–`buffer_5` | play | | The secret rooms (5.11) with their host rooms' doors. Dead Pixel done (D262): a new puzzle, no roof or spiked crates; Stray Byte done (D263); Null Orbit done (D264); Event Horizon done (D265); Cache Miss done (D266). |
-| – | teasers (`frost_*`, `glitch_*`) | nothing | glitch_gate: bouncy | Moved over in 5.19 as they are. |
+| – | teasers (`frost_*`, `glitch_*`) | nothing | glitch_gate: bouncy | Done (D269): moved over as they are. |
+
+### Step 5.19 inventory (2026-10-20)
+
+What is left before the pads-only rule becomes the engine's, worked out
+with the checker: each room was checked with `--with zap,scan,fork,pause`
+from the spawn and from every door, free jump against `--pads`.
+
+**The rooms still on the free jump (15).** Every Lattice and Outer Buffer
+room is done; what was left is the four teasers and the dev wing. **Done:**
+the teasers and `hidden_layer` lose nothing and are pads rooms (D269);
+the other eleven dev rooms, three of which leaned on the jump (`heavy_lab`,
+`socket_yard`, `stream_lab`), are removed (D270).
+
+**For the author to decide** (the step plan says "retired or kept on
+their own merit"):
+- **The spiked crate** (D199). It was there to stop a hop over a crate,
+  which pads rooms can't do anyway (a crate is no step), and it was kept
+  for the secret rooms (Plan review, point 4), but none of the five uses
+  it, and since D270 no room does. What it still adds on pads: no standing
+  on it from above, and touching it hurts. Retire it (block type, view,
+  vents fx, `topDamage`, the checker's and solver's `bad` top, the
+  survey column, showcase, its tests) or keep it for
+  Phase 6.
+- **Fence roofs and hop-proof walls.** Every room that had them is on
+  pads now and was reviewed (5.17), so whatever stayed was kept on its
+  own merit. Nothing to do in 5.19 but drop the reason ("stops a hop")
+  from docs and skills.
+
+**Code that goes** (the rule becomes the engine's):
+- `schemas/room.schema.json` `jump`, `src/world/room.js` (`jump`
+  default), the editor's Jump box (`src/editor/panel.js`,
+  `room-edit.js` `KEY_ORDER` and its setter), and the field in every
+  room file (a migration of all 46 rooms; none is authored).
+- `src/game.js`: `padJumpOnly`, `jumpRule()`, the debug toggle and its
+  strings (`msg.padJumpOn`/`Off`), `canJump`; Space always casts.
+- `src/entities/player.js`: the jump key, coyote time and the jump
+  buffer (`coyoteTicks`, `jumpBufferTicks`, `canJump`); pads, stairs and
+  bounces stay.
+- `src/world/reach.js` `freeJump` (and `JUMP`'s free part), `reach-report.js`
+  `freeJumpRooms()`, `tools/check-reach.js` `--pads` and the "still on
+  the free jump" list; debug J and its readout (`src/debug/readout.js`).
+- The `jump` action (`src/core/bindings.js`): menus and the boot screen
+  read it as confirm (`src/ui/menus.js`, `src/main.js`), so those move to
+  `confirm`/`cast` before it goes. The `jump` sound stays for pads.
+- Controls screen (`CONTROL_ROWS`, `controls.jump` in strings.json) and
+  help texts.
+
+**Tests that change** (they press the jump key): `player.test.js` (the
+jump, coyote and gap cases), `stairs.test.js` (`canJump`, `jumpRule`),
+`fence.test.js`, `crate-stream.test.js`, `spiked-crate.test.js`,
+`push-frozen.test.js`, `switches.test.js`, `menus.test.js`,
+`reach.test.js` (`freeJumpRooms`), `editor.test.js` (new rooms are pads
+rooms); `input.test.js` only uses `jump` as an example action. Each
+either moves to a pad or is dropped with the code it tests.
+
+**Docs and skills:** CLAUDE.md (§4 Grid and rooms, the spiked crate,
+Compile's "step up in a free-jump room", §9 debug J and `--pads`),
+design.md (Reach with the free jump, the checklist), the room-design
+skill (step 7 "Move it to pads", `sim.mjs`'s jump note), the
+sokoban-design skill, the level-review agent's jump rule check, and a
+decision entry replacing D221/D222's prototype wording.
+
+**Order:** the rooms are done (D269, D270); next `feat/no-jump`: the
+code, tests and docs above, once the spiked crate is decided.

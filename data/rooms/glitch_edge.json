@@ -5,6 +5,7 @@
   "name": "Segfault Shore",
   "biome": "glitchmire",
   "size": [8, 4, 8],
+  "jump": "pads",
   "spawn": [1.5, 0, 4],
   "exits": [{ "id": "west", "side": "-x", "at": 3 }],
   "blocks": [
