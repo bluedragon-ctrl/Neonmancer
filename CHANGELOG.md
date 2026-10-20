@@ -50,8 +50,9 @@ docs/decisions.md).
 ### Changed
 - Space casts the selected spell and confirms in menus and on the
   end-of-game screen (D272); the controls screen lists it with E. The
-  Microban survey is re-run under the no-jump rules (its ledge column
-  goes: any wall height plays the same).
+  Microban survey script runs without the jump (its ledge column goes:
+  any wall height plays the same); the survey page's table is marked as
+  the old free-jump run.
 - The four biome teasers and `hidden_layer` are pads rooms (D269): every
   room is one now.
 - Dead Pixel (`buffer_1`) is a pads room with a new push puzzle (D262,

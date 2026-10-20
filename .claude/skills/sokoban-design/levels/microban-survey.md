@@ -5,6 +5,15 @@ Microban by David W. Skinner (`microban.xsb`), surveyed with
 review: what survives the game's rules, and how to build the best levels
 in a room. Re-run the survey after any change to the push rules.
 
+**The table is a free-jump record.** It was made while he could climb
+crates and 1-high walls. The jump is gone (D272) and `survey.mjs` now
+solves without it (its 1-high ledge column is dropped: any wall height
+plays the same). A re-run on 2026-10-20 got through 121 of 155 levels
+cleanly before it was stopped; the script writes the table only at the
+end, so the numbers below are still the old ones. Until a full re-run,
+read the plain-crate columns as **Classic** (below), and holes and
+sockets as they are.
+
 ## How to read the table
 - **Classic**: fewest pushes under Sokoban rules (the player walks
   floor only).
@@ -18,16 +27,16 @@ in a room. Re-run the survey after any change to the push rules.
   solve that level alone with a higher `--max`), `n/a` the wizard
   starts on a goal (no socket under him).
 
-## Pads rooms bring Classic back (D222)
+## Without the jump, Classic is back (D222, D272)
 Every column is built with the free jump, where he climbs crates and
 1-high walls. In a pads room he climbs neither, so a level built with
-plain crates plays as the **Classic** column, whatever its walls' height.
+plain crates plays as the **Classic** column (every room now, D272), whatever its walls' height.
 The spiked crate (D199, retired in D271) did the same in free-jump rooms:
 with 3-high walls all 104 solved levels matched Classic (8: 4 → 32,
 19: 4 → 20, 63: 4 → 50).
 
 ## What the survey shows
-1. **He climbs crates, so the player's route is no longer a puzzle.**
+1. **(Free jump only, history.) He climbed crates, so the player's route was no puzzle.**
    29 of the 104 levels solved need half the pushes or fewer (8: 32 → 4,
    63: 50 → 4, 96: 37 → 7, 19: 20 → 4). Their trick was getting behind a
    box, and in the game he just walks over it. Skip them.
@@ -35,7 +44,7 @@ with 3-high walls all 104 solved levels matched Classic (8: 4 → 32,
    pushes match (3, 6, 22, 24, 25, 38, 41, 45, 49, 71, 73, ...) the
    puzzle is the crates' own corridors and corners, and it plays the same.
    These are the candidates.
-3. **Wall height doesn't matter: build walls as 1-high ledges.** 3-high
+3. **Wall height doesn't matter (it matters even less without the jump): build walls as 1-high ledges.** 3-high
    and 1-high walls gave the same numbers in every level solved. A 1-high
    ledge or fence keeps the puzzle, shows everything to the camera and
    hides nothing (room-design rule 1). Use 3-high walls only where the

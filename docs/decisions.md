@@ -3701,9 +3701,11 @@ engine's, the third stage of D222. What goes:
   pads room. The tests that leaned on the free jump now say the same thing
   with stairs, pads and a frozen enemy in a trench.
 - **Push tools:** `xsb.mjs` and `solve.mjs` lose `--free`; the Microban
-  survey is re-run without the jump (D223 kept it as a free-jump record)
-  and loses its 1-high ledge column, which now plays as the 3-high wall
-  one. The motif "stack stairs" goes: its 2-high step needs a climb, and
+  survey script runs without the jump and loses its 1-high ledge column,
+  which now plays as the 3-high wall one. A re-run got through 121 of 155
+  levels cleanly before it was stopped; the survey page keeps its
+  free-jump table (D223), marked as such, with its plain-crate columns
+  read as Classic until a full re-run. The motif "stack stairs" goes: its 2-high step needs a climb, and
   the heavy plate (D200) and the pier (D262) carry stacking now.
 - **Docs and skills:** CLAUDE.md, design.md (controls, Player, the
   checklist's Reach, timing: a throw ~46 ticks), architecture.md, the

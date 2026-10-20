@@ -133,18 +133,13 @@ a classic level as it is or adapted (the author's call, D197). Credit
 the author and collection in the room's decision entry. Before use:
 - **Read the survey.** `levels/microban-survey.md` (made by
   `scripts/survey.mjs`) lists every level's fewest pushes under classic
-  rules and in each translation, all with the free jump. In a pads room
-  a level of plain crates and walls of any height plays as the classic
-  column; holes and sockets still change it (a crate can be spent). Since he climbs crates, a classic whose
-  difficulty is the player's own route (getting behind a box) collapses:
-  Microban 8 drops from 32 pushes to 4, and 29 of the 104 levels solved
-  need half the pushes or fewer. Pick levels where the game's pushes
-  stay near the classic count: their trick is the crates' routes, and
-  that survives. The survey's picks suggest a rung and a build for
-  each.
-- **A pads room brings a collapsed classic back (D222).** There no crate
-  is a step, so a level keeps its classic count with plain crates
-  (Microban 8 is 32 pushes again, 19 is 20 and 63 is 50).
+  rules and in each translation. Its table is still the free-jump run
+  (a full re-run without the jump is pending, D272): read every
+  plain-crate column as the classic one, since no crate is a step and a
+  wall of any height is a wall, and holes and sockets as they are (a
+  crate can be spent). The levels the jump collapsed are whole again
+  (Microban 8 is 32 pushes, 19 is 20 and 63 is 50). The survey's picks
+  suggest a rung and a build for each.
 - **Re-solve under Neonmancer rules** after any edit (`solve.mjs` on the
   `.xsb` with `--wall`, `--xsb-goal`, or on the room JSON).
 - **Size**: x + z <= 32 and rooms mostly 8×8 to 12×12 (room-design
