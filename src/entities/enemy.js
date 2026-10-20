@@ -898,12 +898,12 @@ export class Enemy {
 
   /**
    * The grid as it sees it: frozen, it is a block like a crate, which a
-   * crate stream lets through (D198); to stand on, stairs and slabs are
+   * crate stream lets through (D198); active, a bollard stops it (D276); to stand on, stairs and slabs are
    * whole blocks (D230): it never rests on a slope (it goes up and down
    * stairs by stairStep()).
    */
   gridView(grid) {
-    return grid.forBody(this.frozen !== null ? 'crate' : 'wizard').asBlocks();
+    return grid.forBody(this.frozen !== null ? 'crate' : 'enemy').asBlocks();
   }
 
   /** Would its box at `pos` run into a block (unless `blocks` is false), a solid object or another enemy (of `bodies`)? */

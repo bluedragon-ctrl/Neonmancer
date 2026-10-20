@@ -254,7 +254,9 @@ export class RoomScene {
     }
     this.shrine?.userData.update(dt);
     this.floor?.userData.update(dt);
-    this.roomView?.userData.update?.(dt);
+    // Bollards fade while he or his decoy passes through them (D276).
+    const passing = this.game ? [this.game.player.pos, this.game.decoy?.pos].filter(Boolean) : [];
+    this.roomView?.userData.update?.(dt, passing);
     if (this.flare) {
       this.flare.time += dt;
       this.flare.apply(this.flare.time);

@@ -1,0 +1,25 @@
+{
+  "$schema": "../../schemas/room.schema.json",
+  "schemaVersion": 1,
+  "id": "bollard_yard",
+  "name": "Bollard Yard",
+  "biome": "home_lattice",
+  "size": [10, 4, 10],
+  "spawn": [8.5, 0, 5.5],
+  "exits": [{ "id": "east", "side": "+x", "at": 5 }],
+  "blocks": [
+    { "type": "bollard", "at": [5, 0, 0], "to": [5, 0, 1] },
+    { "type": "bollard", "at": [5, 0, 3], "to": [5, 0, 9] },
+    { "at": [8, 0, 8], "to": [9, 0, 9] },
+    { "type": "bollard", "at": [7, 0, 9] },
+    { "type": "stair_z", "at": [8, 0, 7] },
+    { "type": "cage", "at": [1, 0, 8], "switches": ["plate_yard"] }
+  ],
+  "objects": [
+    { "id": "plate_yard", "type": "plate", "at": [2, 0, 2] },
+    { "id": "crate_yard", "type": "crate", "at": [7, 0, 4] },
+    { "id": "crate_ledge", "type": "crate", "at": [8, 1, 9] }
+  ],
+  "enemies": [{ "id": "glowbug_yard", "template": "glowbug", "at": [1, 0, 6], "path": { "points": [[4, 0, 6]] } }],
+  "pickups": [{ "id": "refill_yard", "type": "refill_integrity", "at": [1, 0, 8] }]
+}

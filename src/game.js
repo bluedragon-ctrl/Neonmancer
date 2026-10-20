@@ -557,7 +557,7 @@ export class Game {
    * @param {number[]|null} dir
    */
   aimThrow(pad, dir) {
-    const to = dir && throwLanding(wizardCells(this.grid, this.solids), pad.pos, dir, launchBlocks(pad.launch));
+    const to = dir && throwLanding(wizardCells(this.grid.forBody('wizard'), this.solids), pad.pos, dir, launchBlocks(pad.launch));
     this.player.throwTo(to ?? pad.pos, to ? dir : [0, 0]);
     Object.assign(this.player.flight, { pad, held: dir ?? [0, 0] });
   }
@@ -980,7 +980,7 @@ export class Game {
    * @param {number[]} size body size
    */
   shadowHeight(pos, size) {
-    const y = groundBelow(pos, size, this.grid, this.solids);
+    const y = groundBelow(pos, size, this.grid.forBody('wizard'), this.solids);
     if (y === 0 && this.grid.isHole(pos[0], pos[2])) return null;
     return y;
   }

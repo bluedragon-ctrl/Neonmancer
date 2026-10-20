@@ -481,23 +481,19 @@ function buildBollardRow() {
  */
 function buildBollardInRoom() {
   const size = [4, 3, 4];
-  const room = new Group().add(createRoomView({ size, blocks: {}, blockTypes: BLOCK_TYPES, color: PALETTE.amber }));
-  const bollards = [0, 1, 2].map((x) => {
-    const bollard = createBollard({ color: PALETTE.amber, cell: [x, 0, 2] });
-    bollard.position.set(x, 0, 2);
-    return bollard;
-  });
+  const roomView = createRoomView({ size, blocks: { bollard: [0, 1, 2].map((x) => [x, 0, 2]) }, blockTypes: BLOCK_TYPES, color: PALETTE.amber });
+  const room = new Group().add(roomView);
   const crate = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...OBJECT_TYPES.crate, at: [0, 0, 0] });
   const wizard = createWizard();
   addXray(wizard);
-  room.add(...bollards, crate, wizard);
+  room.add(crate, wizard);
   room.position.set(-2, 0, -2);
   const asset = new Group().add(room);
   const loop = 8;
   let time = 0;
   asset.userData.update = (dt) => {
     time = (time + dt) % loop;
-    bollards.forEach((bollard) => bollard.userData.update(dt));
+    roomView.userData.update(dt, [wizard.position.toArray()]);
     // 0–1 s the crate slides from z 0 to z 1 and stops at the row; 4–5 s it slides back.
     const push = Math.min(1, Math.max(0, time - 0.5)) - Math.min(1, Math.max(0, time - 4.5));
     crate.position.set(0, 0, push);

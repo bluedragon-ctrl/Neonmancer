@@ -318,7 +318,8 @@ function validateBlockTypes(blocks, report) {
       if (type.start === 'gone' && trigger !== 'switch') report('defs.json', `${path}.start`, 'only switch gates start gone (a bridge); a step gate starts solid');
       if (type.regrow !== undefined && trigger !== 'step') report('defs.json', `${path}.regrow`, 'only step gates (collapsing blocks) grow back; a switch gate comes back with its switches');
     } else {
-      if (type.passes !== undefined && type.look !== 'fence') report('defs.json', `${path}.passes`, 'only the fence look (see-through) can let bodies pass');
+      if (type.passes !== undefined && !['fence', 'bollard'].includes(type.look)) report('defs.json', `${path}.passes`, 'only the fence and bollard looks can let bodies pass');
+      if (type.look === 'bollard' && !type.passes?.includes('wizard')) report('defs.json', `${path}.passes`, 'a bollard lets the wizard through (D276): "passes": ["wizard"]');
       // A stair climbs one way (D221).
       if (type.look === 'stair' && type.rise === undefined) report('defs.json', path, 'a stair needs a "rise": the way it climbs');
       if (type.rise !== undefined && type.look !== 'stair') report('defs.json', `${path}.rise`, 'only the stair look has a "rise"');

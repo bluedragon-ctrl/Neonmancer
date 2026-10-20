@@ -515,7 +515,8 @@ export class Player {
    * @param {'grid'|'screen'} [options.movementMode] which key → direction mapping to use (D38)
    * @returns {string|null} event: 'land', 'die', 'respawn' or null
    */
-  update(input, grid, { bodies = [], invincible = false, movementMode = 'grid' } = {}) {
+  update(input, whole, { bodies = [], invincible = false, movementMode = 'grid' } = {}) {
+    const grid = whole.forBody('wizard'); // a bollard lets him through (D276)
     this.savePrevious();
     this.pushIntent = null;
 

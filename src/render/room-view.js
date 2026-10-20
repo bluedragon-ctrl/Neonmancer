@@ -8,7 +8,8 @@
  * edge takes the color of a type around it (D64). Fences
  * (D167, fence-view.js) have no faces and draw their own lines, outside the
  * mass: blocks next to them keep their outline; so do stairs and slabs
- * (D221, stair-view.js), which fill only part of their cell. Only
+ * (D221, stair-view.js), which fill only part of their cell, and bollards
+ * (D276, bollard.js), a thin post with a blinking lamp in each cell. Only
  * the back walls (x = 0 and z = 0) are drawn; the front sides stay open
  * (CLAUDE.md §4). Exits are doorways in the back walls and gaps in the
  * front edges (render/walls.js); a biome may set glass panels into the
@@ -17,6 +18,7 @@
 import { BufferGeometry, Color, DoubleSide, Float32BufferAttribute, Group, InstancedMesh, Matrix4, Mesh } from 'three';
 import { STREAM_STYLE, createFenceView } from './fence-view.js';
 import { createSlabView, createStairView } from './stair-view.js';
+import { createBollard } from './bollard.js';
 import { createPanelGlow } from './panel-glow.js';
 import { UNIT_BOX } from './geometry.js';
 import { blockEdges, groupedBlockEdges } from './edges.js';
@@ -45,13 +47,18 @@ import {
  * @param {number|string} [room.color] room color (biome), amber by default
  * @param {object} [room.look] biome look (neon.js roomLook()); the walls use its wall grid brightness
  * @param {{ side: string, u: number, v: number }[]} [room.panels] glass panels in the back walls (walls.js pickPanels())
- * @returns {Group} with `userData.update(dt)` running the glass panels' glow
+ * @returns {Group} with `userData.update(dt, points)` running the glass panels' glow and the bollards'
+ *   lamps, which fade while a body passing them (`points`, feet centers) is in their cell (D276)
  */
 export function createRoomView({ size, blocks, blockTypes, exits = [], color = PALETTE.amber, look = {}, panels = [] }) {
   const group = new Group();
   const walls = createWalls(size, exits, color, roomLook(look).wallGrid, panels);
   group.add(walls);
-  group.userData.update = (dt) => walls.userData.glow?.userData.update(dt);
+  const animated = [];
+  group.userData.update = (dt, points = []) => {
+    walls.userData.glow?.userData.update(dt);
+    for (const view of animated) view.userData.update(dt, points);
+  };
   const types = Object.values(blockTypes).filter((type) => blocks[type.id]?.length > 0);
   // In defs.json order: where plain types meet, the later one's color wins the edge.
   const plain = types.filter((type) => type.look === 'plain');
@@ -60,6 +67,15 @@ export function createRoomView({ size, blocks, blockTypes, exits = [], color = P
   for (const type of types) {
     if (type.look === 'stair') group.add(createStairView(blocks[type.id], type.rise, type.color ?? color));
     if (type.look === 'slab') group.add(createSlabView(blocks[type.id], type.color ?? color));
+    // Bollards (D276): a post in each cell, its lamp timed by the cell.
+    if (type.look === 'bollard') {
+      for (const cell of blocks[type.id]) {
+        const bollard = createBollard({ color: type.color ?? color, cell });
+        bollard.position.set(...cell);
+        animated.push(bollard);
+        group.add(bollard);
+      }
+    }
   }
   // Fences (D167): a run ending at another block or a back wall needs no post.
   const fences = types.filter((type) => type.look === 'fence');

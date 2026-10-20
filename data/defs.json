@@ -416,6 +416,7 @@
     "stair_nx": { "extends": "stair_x", "rise": "-x" },
     "stair_z": { "extends": "stair_x", "rise": "+z" },
     "stair_nz": { "extends": "stair_x", "rise": "-z" },
-    "slab": { "look": "slab" }
+    "slab": { "look": "slab" },
+    "bollard": { "look": "bollard", "seeThrough": true, "passes": ["wizard"] }
   }
 }

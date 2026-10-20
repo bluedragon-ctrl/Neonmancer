@@ -55,7 +55,8 @@ export class Decoy {
    * it), count down, derez when the time is up.
    * @param {import('../game.js').Game} game grid and solids
    */
-  update({ grid, solids }) {
+  update({ grid: whole, solids }) {
+    const grid = whole.forBody('wizard');
     this.prev = [...this.pos];
     if (this.gone !== null) {
       this.gone++;

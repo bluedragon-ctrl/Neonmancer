@@ -62,7 +62,7 @@ export function swapTarget(game, range) {
   // The target's cell takes him.
   const to = [cell[0] + 0.5, cell[1], cell[2] + 0.5];
   const box = bodyBox(to, player.size);
-  if (overlapsSolid(box, grid)) return null;
+  if (overlapsSolid(box, grid.forBody('wizard'))) return null;
   if (bodies.some((body) => body !== player && body !== target && body.solid !== false && overlapsBox(box, body.box()))) return null;
   return { ...(object ? { object } : { enemy }), cell, home, to, distance };
 }

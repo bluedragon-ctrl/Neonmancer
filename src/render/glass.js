@@ -57,6 +57,8 @@ export const GLASS = {
   panel: { alpha: 0.25, tint: 0.06, milk: 0.1, rim: 0.1, frost: 0.1 },
   /** Slabs (D221): a bridge, one sheet of glass in the room color, clear enough to show what passes under it. */
   slab: { alpha: 0.5, tint: 0.3, milk: 0.15, rim: 0.3 },
+  /** Bollards (D276): a hologram post, faint and glowing at its rims, so the wizard shows through it. */
+  bollard: { alpha: 0.2, tint: 0.35, milk: 0.2, rim: 0.45 },
 };
 
 // Local position in the unit cell (the geometry runs 0..1) and the face

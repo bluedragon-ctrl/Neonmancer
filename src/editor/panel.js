@@ -107,6 +107,7 @@ export function blockTypeText(type) {
   }
   if (type.kind) return type.kind;
   if (type.look === 'slab') return 'a walkway at the top of its cell, headroom under it';
+  if (type.look === 'bollard') return 'stops crates and enemies, the wizard walks through';
   const does = [type.fake && 'a scan derezzes it', type.passes && `${type.passes.join(', ')} pass`].filter(Boolean);
   return does.join(', ') || type.look;
 }

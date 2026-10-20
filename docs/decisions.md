@@ -3808,3 +3808,44 @@ Authored rooms affected: none (no room is flagged); no room data changes.
 **Why:** a false "never" sends a designer after a problem that isn't
 there; the search should find a solution early when one exists and be
 honest when it ran out.
+
+### D276 — 2026-10-20 — The bollard: a post crates stop at and he walks through
+A small block for push puzzles: the crate stream's opposite (D198). Where
+a stream lets crates through and stops him, a bollard stops crates and
+lets him through, like a parking bollard stops cars and not people. A row
+of them pens crates while he walks in and out, so a room can keep a crate
+in a yard without walling him off from it.
+- **Block type `bollard`**, look `bollard`, `seeThrough: true`,
+  `passes: ["wizard"]`. Look (chosen in the showcase from three drafts,
+  then shrunk): a thin post a quarter of a block wide and half a block
+  high in the middle of its cell, a hologram of frosted glass
+  (`GLASS.bollard`) with edges in the room color, a faint ring round its
+  foot, and a lamp on top that pulses (about 0.8 a second); bollards side
+  by side pulse out of step by their cell, so a row chases. Room color:
+  it is structure (D99), not a mechanism.
+- **It fades as he passes:** a solid post cut into him as he walked
+  through it (the author's playtest). Shorter would still cut his feet,
+  so instead it is glass that hides nothing, and while he or his decoy is
+  within half a cell of it (on its level) it fades to a faint outline,
+  its lamp dark, and comes back once he is past: it reads as letting him
+  through. The fade is look only (`bollardPresence()`); the room view
+  gets the bodies' points each frame.
+- **Rules:** crates, frozen enemies and active enemies stop at it; he,
+  his Fork decoy, Blink and Warp pass. Nothing stands on it: like a
+  stream's field, for those it stops it reaches up to the ceiling, so a
+  crate pushed off a ledge over one is refused at the edge. Bolts and
+  sight pass. It never moves or switches; its lamp is look only.
+- **In code:** `Grid.forBody()` gets a third kind, `'enemy'` (active
+  enemies), beside `'wizard'` and `'crate'`; the wizard (`Player.update()`),
+  the decoy, Blink and Warp, Swap's landing, a pad's throw and his drop
+  shadow ask for `'wizard'`, active enemies for `'enemy'`. `isSolid()`
+  itself is now the grid with every `passes` type solid. The checker
+  (`RoomModel.blocked()`) sees the wizard's view, so the solver and the
+  XSB tool (`|`) follow.
+- Test room `bollard_yard` in the dev wing, west of `hidden_layer` (which
+  gets a west exit): a row with one gap, a crate routed round through it
+  onto a plate that opens a cage, a crate on a ledge over a bollard.
+Authored rooms affected: none (no room is flagged); no room uses it yet.
+**Why:** the push puzzles had a barrier only crates cross (the stream)
+but none only he crosses; that is the other half of Sokoban's player
+routing, and a post reads as one at a glance.

@@ -361,7 +361,7 @@ Edit existing files with small text edits, not a JSON dump.
   switch in the room), `hidden: true` (wall until Scan). The first row inside
   must be free.
 - **Blocks** (`defs.json` blocks): `block` (default) `fake
-  fence stream collapsing collapsing_regrow gate bridge cage`. A `fence` (D167) is a
+  fence stream bollard collapsing collapsing_regrow gate bridge cage`. A `fence` (D167) is a
   block for bodies (he stands on it, crates and enemies stop) that hides
   nothing and lets bolts and sight through: wall off or raise a wall
   without blocking the view; a target behind it takes a Zap; a tower
@@ -372,7 +372,11 @@ Edit existing files with small text edits, not a JSON dump.
   A crate is pushed into it from the near side only (he cannot stand in
   it): a 1-thick wall hands a crate over, one cell beyond; in a thicker
   one it stops in the last cell. Use it where the trick is routing
-  crates through a field he cannot follow (sokoban-design). A `cage` (D202) is a one-cell gate that looks like a fence, in the room's color:
+  crates through a field he cannot follow (sokoban-design). A `bollard`
+  (D276) is the opposite: a thin post crates and enemies (frozen or not)
+  stop at and he walks through, no top (nothing rests on it or is pushed
+  over it), bolts pass: a row pens crates in a yard he walks in and out
+  of; one gap in a row is the crate's only way through. A `cage` (D202) is a one-cell gate that looks like a fence, in the room's color:
   a pickup lies inside it (the one filled cell a pickup may share, with
   `fake`), it takes `switches` and sinks like a gate; bolts and sight pass,
   so a Zap can't take it and nothing else needs hiding. The mutation test

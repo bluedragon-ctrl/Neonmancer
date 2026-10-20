@@ -248,6 +248,7 @@ the ones it gives:
 | `cage` | kind `gate` (switch trigger), `look: cage`: bars of light round one cell, room color (D202) | `seeThrough: true`: bolts and sight pass; a pickup may lie inside (see Gate blocks) |
 | `stair_x` | stair (room color): four steps rising across the cell (D221) | `rise: "+x"`, the way it climbs; `stair_nx`, `stair_z`, `stair_nz` extend it with `-x`, `+z`, `-z` (see Stairs, slabs and pads) |
 | `slab` | slab (room color): one sheet of glass at the top of its cell (D221) | a walkway level with a 1-high ledge, headroom under it (see Stairs, slabs and pads) |
+| `bollard` | bollard (room color): a thin post with a blinking lamp (D276) | `passes: ["wizard"]`, `seeThrough: true` (see Bollards) |
 
 - **Static types** have a `look` (`plain`, `fence`, `stair`, `slab`) and
   live in the room grid: each cell holds its type's code, and the rules
@@ -322,9 +323,31 @@ the ones it gives:
   - Look: the fence's streams of light in magenta, the top beam like any
     other (its top is no ledge): `STREAM_STYLE` in `fence-view.js`.
     Showcase `?asset=stream-in-room`; in play in `cold_stairs` and `split_vault`.
+- **Bollards (D276):** the crate stream's opposite, a post crates stop at
+  and he walks through (a parking bollard: cars stop, people pass). A row
+  pens crates while he walks in and out. Block type `bollard`, look
+  `bollard`, `passes: ["wizard"]`, `seeThrough: true`. Rules:
+  - **Crates, frozen enemies and active enemies** stop at it, as at a
+    wall: a push into it is refused, Pull and Shove stop there. **He, his
+    decoy, Blink and Warp** pass. Bolts and sight pass.
+  - **No top:** for what it stops it reaches up to the ceiling, as a
+    stream's field does for him, so a crate is never pushed off a ledge
+    onto or over one, and nothing stands on it.
+  - In code: `Grid.forBody()` has three kinds: `'wizard'` (he, the decoy,
+    Blink and Warp, Swap's landing, pad throws, his shadow), `'enemy'`
+    (active enemies) and `'crate'`; `isSolid()` is every `passes` type
+    solid. The checker's `blocked()` is the wizard's view; `xsb.mjs`
+    writes `|` as a bollard.
+  - Look: a post 1/4 wide, 1/2 high, mid-cell, a hologram of frosted glass
+    (`GLASS.bollard`), room-color edges, a faint ring round its foot, a
+    lamp on top pulsing about 0.8 times a second, neighbours out of step
+    by cell. While he or his decoy is within half a cell of it, it fades
+    to a faint outline, lamp dark, so he never shows cut by it
+    (`src/render/bollard.js`, `BOLLARD_FX`, `bollardPresence()`).
+    Showcase `?asset=bollards`; dev room `bollard_yard`.
 - Validation: a base type has a look or a kind, not both; `fake`,
   `seeThrough` and `passes` only on static types (`passes`
-  only with the fence look), `kind` values only on
+  only with the fence or bollard look; a bollard passes the wizard), `kind` values only on
   kinds; a kind needs a color; `block` must be static; room blocks name a
   known type.
 - **Edges (D64):** neighbours of any plain types never get an edge between

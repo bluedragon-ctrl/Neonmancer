@@ -143,6 +143,8 @@ export class RoomModel {
     this.grid = new Grid({ size: room.size, blocks, blockTypes: room.blockTypes, holes: room.holes });
     /** The grid as a crate sees it: a crate stream's cells are open (D198). */
     this.crateGrid = this.grid.forBody('crate');
+    /** The grid as he sees it: a bollard is open to him (D276). */
+    this.wizardGrid = this.grid.forBody('wizard');
 
     /** The way each stair cell climbs (D221), by cell index: [dx, dz]. */
     this.stairs = new Map();
@@ -290,7 +292,7 @@ export class RoomModel {
 
   /** Is the cell blocked for his body: a block, a fixed body or a crate (cells above the room are open). */
   blocked(x, y, z, cfg) {
-    return this.blockedIn(this.grid, x, y, z, cfg);
+    return this.blockedIn(this.wizardGrid, x, y, z, cfg);
   }
 
   /** Is the cell blocked for a crate (or a frozen enemy pushed like one): the same, but a crate stream is open (D198)? */
@@ -322,7 +324,7 @@ export class RoomModel {
    * @param {boolean} [crate] for a crate (or a frozen enemy), which falls through a crate stream (D198)
    */
   below(x, y, z, cfg, crate = false) {
-    const grid = crate ? this.crateGrid : this.grid;
+    const grid = crate ? this.crateGrid : this.wizardGrid;
     if (y === 0) return this.grid.isHole(x, z) && !cfg.plugged.has(z * this.w + x) && !this.covered.has(z * this.w + x) ? 'hole' : 'floor';
     if (y > this.h) return 'air';
     if (grid.isSolid(x, y - 1, z)) return 'solid';
