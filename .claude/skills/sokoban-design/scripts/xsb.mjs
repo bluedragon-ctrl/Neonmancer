@@ -2,27 +2,26 @@
 // sokoban-design skill: sketch a push puzzle as text, convert it, solve it
 // with solve.mjs, then wire it as a real room (room-design skill).
 //   node .claude/skills/sokoban-design/scripts/xsb.mjs <file.xsb> [--level N] [--id x] [--name "X"]
-//        [--wall H|hole] [--goal plate|socket] [--streams thin] [--exit side:at[:y]] [--free] [--out data/rooms/x.json]
-// Without --out it prints the room JSON. The room is a pads room ("jump":
-// "pads", D222: no jump, so a 1-high wall stops him as well as a crate);
-// --free drafts one with the old free jump, for comparing. Text rows are z, columns x: the
+//        [--wall H|hole] [--goal plate|socket] [--streams thin] [--exit side:at[:y]] [--out data/rooms/x.json]
+// Without --out it prints the room JSON. There is no jump (D272), so a
+// 1-high wall stops him as well as a crate. Text rows are z, columns x: the
 // top-left of the text is the back corner (x = 0, z = 0), the bottom-right
 // faces the camera.
 //
 // Characters (standard XSB, then Neonmancer extras):
-//   #  wall, --wall high (default 1, 2 with --free); --wall hole makes walls holes
+//   #  wall, --wall high (default 1); --wall hole makes walls holes
 //   1-5  wall of that height
 //   $  crate        .  goal: a plate, or a socket with --goal socket
 //   *  crate on a goal (with --goal socket: a filled socket, plain floor)
 //   @  wizard spawn +  spawn on a goal (a plate; no socket under him)
 //   space - _  floor
 //   ^  hole (a crate fills it)            o  socket (a goal hole, D194)
-//   %  fence, 1 high (crates stop, bolts pass; he climbs it only with a free jump)
+//   %  fence, 1 high (crates and he stop, bolts pass)
 //   ~  crate stream, 2 high (D198): crates pass, he is stopped, bolts pass
 //   :  heavy plate (plate_heavy, D200): needs a weight of two, a stack of two crates,
 //      or a crate and the wizard on a timed one; always a plate, whatever --goal says
-//   &  crate on a 1-high block (a ledge crate: pushed off, it falls; in a pads
-//      room he needs a stair or a pad up to the ledge: add it by hand)
+//   &  crate on a 1-high block (a ledge crate: pushed off, it falls; he
+//      needs a stair or a pad up to the ledge: add it by hand)
 // Floor outside the outer wall becomes wall too; whole rows and columns
 // of # at the edge are trimmed (the room's sides are walls already).
 // Lines starting with ; are comments; levels are separated by blank lines
@@ -77,16 +76,15 @@ export function parseXsb(text) {
 /**
  * A room (data/rooms JSON shape) from one level.
  * @param {{ rows: string[], title?: string }} level
- * @param {{ id?: string, name?: string, wall?: number|'hole', goal?: 'plate'|'socket', exits?: string[], jump?: 'pads'|'free' }} [options]
- *   wall: the height of # walls (default 1 in a pads room, 2 with the free jump), or 'hole': inside the trimmed
- *     edge they are holes (crates plug them; he jumps one only with the free jump)
- *   jump: the room's jump rule (D222): 'pads' (default) or 'free'
+ * @param {{ id?: string, name?: string, wall?: number|'hole', goal?: 'plate'|'socket', exits?: string[] }} [options]
+ *   wall: the height of # walls (default 1), or 'hole': inside the trimmed
+ *     edge they are holes (crates plug them; he never crosses one open)
  *   goal: what . is: a plate (anything holds it, a crate can leave it) or a socket (a crate fills it for good)
  *   streams: 'thin' makes every # with floor on both sides along x or z (a wall one cell thick between two
  *     floors) a crate stream (~), so crates cross it and he cannot (D198)
  *   exits: "side:at[:y]" (e.g. "-x:3", "-z:4:3" a doorway 3 up); with plates or sockets they are locked on every switch
  */
-export function xsbToRoom(level, { id = 'sokoban_draft', name = 'Sokoban Draft', jump = 'pads', wall = level.wall ?? (jump === 'pads' ? 1 : 2), goal = 'plate', exits = level.exits ?? [], streams = null } = {}) {
+export function xsbToRoom(level, { id = 'sokoban_draft', name = 'Sokoban Draft', wall = level.wall ?? 1, goal = 'plate', exits = level.exits ?? [], streams = null } = {}) {
   let grid = level.rows.map((r) => [...r]);
   const H = grid.length;
   const W = grid[0].length;
@@ -167,7 +165,6 @@ export function xsbToRoom(level, { id = 'sokoban_draft', name = 'Sokoban Draft',
     name,
     biome: 'home_lattice',
     size: [width, Math.min(6, Math.max(4, tallest + 2)), depth],
-    ...(jump === 'pads' && { jump }),
     spawn,
     exits: exits.map((spec, n) => {
       const [side, at, y] = spec.split(':');
@@ -180,7 +177,7 @@ export function xsbToRoom(level, { id = 'sokoban_draft', name = 'Sokoban Draft',
   return room;
 }
 
-/** A --wall value: a height, 'hole', or undefined (the level's own, or 1 in a pads room, 2 with the free jump). */
+/** A --wall value: a height, 'hole', or undefined (the level's own, or 1). */
 export function wallOption(value) {
   if (!value) return undefined;
   return value === 'hole' ? 'hole' : Number(value);
@@ -198,7 +195,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const valued = ['--level', '--id', '--name', '--wall', '--goal', '--exit', '--out', '--streams'];
   const file = argv.find((a, i) => !a.startsWith('--') && !valued.includes(argv[i - 1]));
   if (!file) {
-    console.error('usage: node xsb.mjs <file.xsb> [--level N] [--id x] [--name "X"] [--wall H|hole] [--goal plate|socket] [--streams thin] [--exit side:at[:y]]... [--free] [--out file]');
+    console.error('usage: node xsb.mjs <file.xsb> [--level N] [--id x] [--name "X"] [--wall H|hole] [--goal plate|socket] [--streams thin] [--exit side:at[:y]]... [--out file]');
     process.exit(1);
   }
   const levels = parseXsb(fs.readFileSync(file, 'utf8'));
@@ -216,7 +213,6 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     goal: option('--goal') ?? undefined,
     streams: option('--streams') ?? undefined,
     exits: exits.length ? exits : undefined,
-    jump: argv.includes('--free') ? 'free' : 'pads',
   });
   const [w, , d] = room.size;
   if (w + d > 32) console.error(`warning: ${w}x${d} breaks x + z <= 32`);

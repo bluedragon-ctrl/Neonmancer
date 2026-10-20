@@ -203,7 +203,6 @@ export class Editor {
         error: (error) => this.goTo(error),
         name: (name) => (name ? this.change(() => this.edit.setName(name)) : this.refresh()),
         authored: (on) => this.change(() => this.edit.setAuthored(on)),
-        padJump: (on) => this.change(() => this.edit.setPadJump(on)),
         biome: (biome) => this.change(() => this.edit.setBiome(biome)),
         size: (size) => this.resize(size),
         // A refused or clamped value snaps back to the room's own.

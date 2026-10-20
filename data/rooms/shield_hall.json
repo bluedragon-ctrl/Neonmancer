@@ -5,7 +5,6 @@
   "name": "Shield Hall",
   "biome": "home_lattice",
   "size": [12, 5, 12],
-  "jump": "pads",
   "spawn": [4.5, 0, 10.5],
   "exits": [
     { "id": "south", "side": "+z", "at": 4 },

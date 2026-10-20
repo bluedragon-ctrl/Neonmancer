@@ -262,7 +262,7 @@ test('a platform waits rather than carry a solid bug into the wizard', () => {
   const lift = { id: 'p', type: 'lift', at: [1, 0, 1], path: { points: [[5, 0, 1]] } };
   const plan = (variant) => {
     const game = gameWith({ enemies: [sitter([1, 1, 1], 'b', variant)], objects: [lift] });
-    // Mid-jump beside the bug (not riding), just clear of its box (x up to 1.8).
+    // Mid-air beside the bug (not riding), just clear of its box (x up to 1.8).
     game.player.place([2.12, 1.2, 1.5]);
     return game.objects[0].plan([1.05, 0, 1], [0.05, 0, 0], game);
   };

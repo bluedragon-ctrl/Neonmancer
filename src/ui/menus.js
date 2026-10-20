@@ -268,7 +268,7 @@ export class MenuFlow {
       return null;
     }
     if (this.top.id === 'map') {
-      if (['map', 'pause', 'confirm', 'jump'].some((action) => input.pressed(action))) this.back();
+      if (['map', 'pause', 'confirm'].some((action) => input.pressed(action))) this.back();
       return null;
     }
     if (input.pressed('pause')) {
@@ -279,7 +279,7 @@ export class MenuFlow {
     if (input.pressed('down')) this.move(1);
     if (input.pressed('left')) return this.adjust(-1);
     if (input.pressed('right')) return this.adjust(1);
-    if (input.pressed('confirm') || input.pressed('jump')) return this.choose();
+    if (input.pressed('confirm')) return this.choose();
     return null;
   }
 }

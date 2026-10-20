@@ -12,7 +12,7 @@
  * WizardMotion keeps the few numbers that carry over between frames.
  */
 import { BOLT } from '../entities/bolt.js';
-import { JUMP_SPEED, PLAYER } from '../entities/player.js';
+import { LAUNCH_SPEED, PLAYER } from '../entities/player.js';
 import { hash } from './hash.js';
 import { WIZARD } from './wizard.js';
 
@@ -35,7 +35,7 @@ export const MOTION = {
   float: { rate: 0.6, height: 0.025 },
   /** A blink somewhere in every `every` seconds, closed for `length`. */
   blink: { every: 3.4, length: 0.14 },
-  /** In the air: hands up and out, stretched while fast (at jump speed). */
+  /** In the air: hands up and out, stretched while fast (at a throw's launch speed). */
   air: { handLift: 0.08, handOut: 0.04, stretch: 0.08 },
   /** Landing: squashed flat, springing back through a small stretch. */
   land: { time: 0.22, depth: 0.14 },
@@ -139,7 +139,7 @@ const mix = (a, b, k) => a.map((hand, i) => hand.map((v, j) => v + (b[i][j] - v)
  * @param {number} state.phase walk cycles so far (one cycle: two steps)
  * @param {number} state.walk 0..1, how much he walks
  * @param {number} state.air 0..1, how much he is in the air
- * @param {number} state.speed 0..1, his vertical speed as a share of the jump speed
+ * @param {number} state.speed 0..1, his vertical speed as a share of a throw's launch speed
  * @param {number|null} state.landed seconds since he landed, or null
  * @param {number} state.time seconds, for the idle float and the blink
  * @param {number} [state.push] 0..1, how much he pushes
@@ -286,7 +286,7 @@ export class WizardMotion {
       phase: this.phase,
       walk: this.walk,
       air: this.air,
-      speed: vy / JUMP_SPEED,
+      speed: vy / LAUNCH_SPEED,
       landed: this.landed,
       time,
       push: this.push,

@@ -48,6 +48,10 @@ docs/decisions.md).
   say the same; 11 pieces in 8 rooms are listed for their reviews.
 
 ### Changed
+- Space casts the selected spell and confirms in menus and on the
+  end-of-game screen (D272); the controls screen lists it with E. The
+  Microban survey is re-run under the no-jump rules (its ledge column
+  goes: any wall height plays the same).
 - The four biome teasers and `hidden_layer` are pads rooms (D269): every
   room is one now.
 - Dead Pixel (`buffer_1`) is a pads room with a new push puzzle (D262,
@@ -166,6 +170,14 @@ docs/decisions.md).
   upgrade.
 
 ### Removed
+- The jump (D272, step 5.19): every room was a pads room, so the rule is
+  the engine's. The jump key and action, coyote time and the jump buffer,
+  the room `jump` field (removed from every room file) and the editor's
+  Jump box, debug J, the `jump` sound, the checker's free jump and
+  `check:reach --pads` with its "still on the free jump" list, and the
+  `--free` drafts of `xsb.mjs` and `solve.mjs` go. Pads, stairs, slabs and
+  bounces are his only ways up. The motif "stack stairs" goes with it (a
+  2-high step needs the jump).
 - Hazard blocks, void blocks and the spiked crate (D271): no room used
   them. With them go the block properties `damage` and `lethal`, the
   object values `topDamage` and `vents`, their looks (`block-fx.js`,

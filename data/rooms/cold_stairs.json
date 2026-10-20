@@ -5,7 +5,6 @@
   "name": "Cold Stairs",
   "biome": "home_lattice",
   "size": [10, 5, 12],
-  "jump": "pads",
   "spawn": [8.5, 0, 1.5],
   "exits": [
     { "id": "north", "side": "-z", "at": 7 },

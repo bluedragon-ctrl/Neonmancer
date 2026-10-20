@@ -53,7 +53,7 @@ test('the cell in front is the first whole cell ahead of his box, on his grid ax
   assert.deepEqual(frontCell([1.9, 0, 3.5], PLAYER_HITBOX, [1, 0]), [3, 0, 3], 'his box reaches into cell 2');
   assert.deepEqual(frontCell([1.7, 0, 3.5], PLAYER_HITBOX, [1, 0]), [2, 0, 3], 'flush with cell 2');
   assert.deepEqual(frontCell([1.5, 1, 3.5], PLAYER_HITBOX, [-1, 0]), [0, 1, 3]);
-  assert.deepEqual(frontCell([1.5, 0.6, 3.2], PLAYER_HITBOX, [0, 1]), [1, 1, 4], 'mid-jump: the nearest level');
+  assert.deepEqual(frontCell([1.5, 0.6, 3.2], PLAYER_HITBOX, [0, 1]), [1, 1, 4], 'mid-air: the nearest level');
 });
 
 test('Cut takes the crate in front into his clipboard for 20 energy; Paste puts it back for nothing (D87)', () => {

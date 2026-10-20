@@ -24,7 +24,7 @@ const ITEM_LISTS = [
 const LIST_OF = Object.fromEntries(ITEM_LISTS);
 
 /** Order of a room file's keys when it is written back (as in data/rooms/). */
-const KEY_ORDER = ['$schema', 'schemaVersion', 'id', 'name', 'authored', 'biome', 'size', 'timer', 'jump', 'spawn', 'reset', 'exits', 'blocks', 'holes', 'shrine', 'objects', 'enemies', 'pickups'];
+const KEY_ORDER = ['$schema', 'schemaVersion', 'id', 'name', 'authored', 'biome', 'size', 'timer', 'spawn', 'reset', 'exits', 'blocks', 'holes', 'shrine', 'objects', 'enemies', 'pickups'];
 
 /** Files several rooms share, whose changes a room's undo step takes along: lore.json. */
 const SHARED = ['lore'];
@@ -437,14 +437,6 @@ export class RoomEdit {
    */
   setAuthored(on) {
     return this.setField('authored', on || undefined);
-  }
-
-  /**
-   * Jump only on pads in this room (D221), or anywhere again.
-   * @param {boolean} on
-   */
-  setPadJump(on) {
-    return this.setField('jump', on ? 'pads' : undefined);
   }
 
   /** @param {string} biome biome id */
@@ -1028,8 +1020,7 @@ export function roomFileData(data) {
 }
 
 /**
- * A new, empty room: 12x4x12, the wizard starting in the middle, the jump
- * only on pads (D222).
+ * A new, empty room: 12x4x12, the wizard starting in the middle.
  * @param {string} id
  * @param {string} biome biome id
  */
@@ -1048,8 +1039,6 @@ export function newRoom(id, biome) {
     biome,
     size: [...NEW_ROOM_SIZE],
     spawn: [w / 2 + 0.5, 0, d / 2 + 0.5],
-    // The jump only on pads (D222): new rooms are built for the rule from the start.
-    jump: 'pads',
   };
 }
 

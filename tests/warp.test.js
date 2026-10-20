@@ -79,7 +79,7 @@ test('with no range limit it goes as far as the first stop (Warp)', () => {
   close(target.to[0], 10 - HALF);
 });
 
-test('it keeps his height: from mid-jump it passes over a low block', () => {
+test('it keeps his height: from mid-air it passes over a low block', () => {
   const g = grid({ size: [12, 4, 8], cells: [[3, 0, 3]] });
   const target = warpTarget([1.5, 1.1, 3.5], PLAYER_HITBOX, [1, 0], 3, g, [], []);
   assert.deepEqual(target.to, [4.5, 1.1, 3.5]);

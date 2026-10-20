@@ -5,7 +5,6 @@
   "name": "Scan Lab",
   "biome": "home_lattice",
   "size": [12, 6, 12],
-  "jump": "pads",
   "spawn": [1.5, 0, 5.5],
   "exits": [
     { "id": "west", "side": "-x", "at": 5 },

@@ -164,7 +164,7 @@ export class Pushable {
         const t = this.target[i];
         return Math.abs(t - p) <= step ? t : p + Math.sign(t - p) * step;
       }) : this.stairSlide(step);
-      // Something stepped into the way (the player jumping in): wait.
+      // Something stepped into the way (the player landing in it): wait.
       if (overlapsAny(cellBox(next), bodies, this)) return null;
       this.pos = next;
       if (this.rise !== 0) this.walked = Math.min(1, this.walked + step / 2);
