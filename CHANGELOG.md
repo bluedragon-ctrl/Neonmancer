@@ -52,6 +52,11 @@ docs/decisions.md).
   say the same; 11 pieces in 8 rooms are listed for their reviews.
 
 ### Changed
+- Reachability checker (D275): the crate search goes best first, towards
+  plugged holes and held plates, so a solution turns up before the
+  2000-configuration cap; what a cut-off search didn't reach is reported
+  as "unknown", not "never". `mirror_stacks` with Scan alone: the south
+  exit was a false "never".
 - The puzzle's rules live on whole cells in one module (D274,
   `world/puzzle-rules.js`): where a pushed crate or frozen enemy goes and
   where a crate comes to rest are asked by the game and the reachability

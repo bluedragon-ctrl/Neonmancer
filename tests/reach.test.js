@@ -375,6 +375,28 @@ test('describeNeeds', () => {
   assert.equal(describeNeeds(null), 'never');
   assert.equal(describeNeeds([]), 'several');
   assert.equal(describeNeeds([['warp'], ['blink', 'pull']]), 'warp or blink + pull');
+  assert.equal(describeNeeds(null, true), 'unknown (crate search cut off)');
+});
+
+/** Crates scattered over the open floor of room "r", one cell apart, from x 3 on. */
+const scattered = (n) => Array.from({ length: n }, (_, i) => ({ id: `c${i}`, type: 'crate', at: [3 + 2 * (i % 4), 0, 2 + 2 * Math.floor(i / 4)] }));
+
+test('the crate search goes best first: a crate pushed onto a plate comes before wandering crates (D275)', () => {
+  // The east exit opens to the plate at [4, 0, 6], one push from the crate "key" beside it; six more crates roam.
+  const crates = [...scattered(6), { id: 'key', type: 'crate', at: [4, 0, 5] }];
+  const r = reach({ exits: [WEST, { ...EAST, requires: [{ switch: 'plate' }] }], objects: [...crates, { id: 'plate', type: 'plate', at: [4, 0, 6] }] });
+  assert.equal(r.exits.east, true);
+  assert.equal(r.truncated, false);
+  assert.ok(r.configs <= 3, `found at once, not after wandering (${r.configs} configurations)`);
+});
+
+test('a cut-off crate search reports what it missed as unknown, not out of reach (D275)', () => {
+  // A pickup walled in for good: the search never stops early, and seven roaming crates outgrow MAX_CONFIGS.
+  const box = [{ at: [10, 0, 5], to: [11, 3, 5] }, { at: [9, 0, 5], to: [9, 3, 7] }];
+  const content = gameData({ ...withNeighbours(roomFile('r', { size: [12, 4, 8], exits: [WEST], blocks: box, objects: scattered(7), pickups: [pickup('far', [11, 0, 7])] })), objects: OBJECTS });
+  const alone = analyzeRoomAlone(content, 'r', { needs: false });
+  assert.match(alone.errors[0], /pickup "far" .* wasn't reached before the crate search stopped at \d+ configurations: unknown/);
+  assert.equal(describeNeeds(alone.targets[0].needs, alone.targets[0].unknown), 'unknown (crate search cut off)');
 });
 
 /** a (with Blink) → b (a two-tile pit before its east exit). */

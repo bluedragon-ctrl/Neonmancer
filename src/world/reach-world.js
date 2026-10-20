@@ -47,7 +47,7 @@ function subsets(items, size) {
  * @property {number} access final access level
  * @property {Set<string>} fragments the fragment pickup types found, by id
  * @property {boolean} coreReached
- * @property {{ room: string, kind: 'pickup'|'exit', id: string, needs: string[][]|null, access?: number }[]} targets what the rooms hold in reach: the smallest ability sets each needs ([[]]: nothing); null: never reachable
+ * @property {{ room: string, kind: 'pickup'|'exit', id: string, needs: string[][]|null, unknown?: boolean, access?: number }[]} targets what the rooms hold in reach: the smallest ability sets each needs ([[]]: nothing); null: never reachable, or with `unknown` not reached before the crate search was cut off (D275)
  * @property {string[]} errors problems: rooms, pickups or exits he can never reach
  * @property {string[]} warnings things to look at: rooms not connected, a search cut short, a way back missing
  */
@@ -174,15 +174,16 @@ function searchWorld(content, needs, extra) {
   }
   for (const id of entered) {
     const room = rooms.get(id);
-    const { reach, entries } = state.get(id);
+    const { reach, entries, truncated } = state.get(id);
+    const missed = cantReach(truncated, reach.configs);
     if (reach.deadStart) errors.push(`${id}: every cell he arrives on is a hole`);
     for (const pickup of room.pickups) {
-      if (!reach.pickups.has(pickup.id)) errors.push(`${id}: pickup "${pickup.id}" at [${pickup.at}] can't be reached`);
+      if (!reach.pickups.has(pickup.id)) errors.push(`${id}: pickup "${pickup.id}" at [${pickup.at}] ${missed}`);
     }
     for (const exit of room.exits) {
       if (reach.exits[exit.id] || exit.oneWay) continue;
       if (exit.access && exit.access > access) errors.push(`${id}: exit "${exit.id}" needs access level ${exit.access}, but he only gets ${access}`);
-      else errors.push(`${id}: exit "${exit.id}" can't be reached`);
+      else errors.push(`${id}: exit "${exit.id}" ${missed}`);
     }
     // The way back: from where he arrived, with what he had then, he must reach the exit he came through.
     for (const [exitId, entry] of entries) {
@@ -196,8 +197,9 @@ function searchWorld(content, needs, extra) {
       if (!reach.exits[exitId] && !back.stands.size) continue;
       if (!entry.cells.some(([x, y, z]) => back.stands.has(`${x},${y},${z}`))) warnings.push(`${id}: after arriving through "${exitId}" with ${entry.have.join(', ') || 'nothing'} he can't get back out the way he came`);
     }
-    for (const pickup of room.pickups) targets.push({ room: id, kind: 'pickup', id: pickup.id, needs: reach.pickups.has(pickup.id) ? [[]] : null });
-    for (const exit of room.exits.filter((e) => !e.oneWay)) targets.push({ room: id, kind: 'exit', id: exit.id, needs: reach.exits[exit.id] ? [[]] : null, ...(exit.access && { access: exit.access }) });
+    const unknown = truncated ? { unknown: true } : {};
+    for (const pickup of room.pickups) targets.push({ room: id, kind: 'pickup', id: pickup.id, needs: reach.pickups.has(pickup.id) ? [[]] : null, ...unknown });
+    for (const exit of room.exits.filter((e) => !e.oneWay)) targets.push({ room: id, kind: 'exit', id: exit.id, needs: reach.exits[exit.id] ? [[]] : null, ...unknown, ...(exit.access && { access: exit.access }) });
   }
   if (needs) {
     for (const id of typeof needs === 'string' ? entered.filter((room) => room === needs) : entered) {
@@ -214,6 +216,16 @@ function searchWorld(content, needs, extra) {
   else if (!coreReached) errors.push('the core can\'t be reached');
 
   return { rooms: state, rounds, abilities: [...have], access, fragments, coreReached, targets, errors, warnings };
+}
+
+/**
+ * The end of an error for a target the search didn't reach (D275): a full
+ * search proves it out of reach; one cut off at MAX_CONFIGS proves nothing.
+ * @param {boolean} truncated
+ * @param {number} configs configurations searched
+ */
+function cantReach(truncated, configs) {
+  return truncated ? `wasn't reached before the crate search stopped at ${configs} configurations: unknown, not proven out of reach` : "can't be reached";
 }
 
 /**
@@ -297,16 +309,18 @@ export function analyzeRoomAlone(content, id, { abilities = [], needs = true, fr
   const warnings = [];
   if (reach.truncated) warnings.push(`${id}: crate search stopped at ${reach.configs} configurations; the verdict may miss a solution`);
   const found = needs ? findNeeds(room, starts, abilities.filter((a) => ABILITIES.includes(a)), tuning) : new Map();
+  const missed = cantReach(reach.truncated, reach.configs);
+  const unknown = reach.truncated ? { unknown: true } : {};
   const targets = [];
   for (const pickup of room.pickups) {
     const ok = reach.pickups.has(pickup.id);
-    if (!ok) errors.push(`${id}: pickup "${pickup.id}" at [${pickup.at}] can't be reached`);
-    targets.push({ room: id, kind: 'pickup', id: pickup.id, needs: ok ? found.get(`pickup:${pickup.id}`) ?? [[]] : null });
+    if (!ok) errors.push(`${id}: pickup "${pickup.id}" at [${pickup.at}] ${missed}`);
+    targets.push({ room: id, kind: 'pickup', id: pickup.id, needs: ok ? found.get(`pickup:${pickup.id}`) ?? [[]] : null, ...unknown });
   }
   for (const exit of room.exits.filter((e) => !e.oneWay)) {
     const ok = reach.exits[exit.id];
-    if (!ok) errors.push(`${id}: exit "${exit.id}" can't be reached`);
-    targets.push({ room: id, kind: 'exit', id: exit.id, needs: ok ? found.get(`exit:${exit.id}`) ?? [[]] : null, ...(exit.access && { access: exit.access }) });
+    if (!ok) errors.push(`${id}: exit "${exit.id}" ${missed}`);
+    targets.push({ room: id, kind: 'exit', id: exit.id, needs: ok ? found.get(`exit:${exit.id}`) ?? [[]] : null, ...unknown, ...(exit.access && { access: exit.access }) });
   }
   return { errors, warnings, targets };
 }

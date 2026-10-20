@@ -3782,3 +3782,29 @@ Authored rooms affected: none (no room is flagged).
 **Why:** one rule the game, the checker and the solver share can't drift,
 and a pad throw that lands on a known cell makes the checker's verdict
 exact instead of measured.
+
+### D275 — 2026-10-20 — The crate search goes best first; a cut-off search says "unknown"
+Rooms with roaming crates blow the checker's `MAX_CONFIGS` (2000), and its
+depth-first search then said "never" for things a solution reaches
+(`check:reach <room>` alone, e.g. `mirror_stacks` with Scan alone said the
+south exit was "never", while the world check
+and the solver were green).
+- **Best first** (`analyzeRoom`, a small heap): a configuration's priority
+  is its progress (holes plugged, sockets too, and the weight on plates,
+  each up to its weight; `RoomModel.progress()`) times 1000, plus the cells
+  its parent let him stand on; ties go in the order found. The order only
+  decides what comes first: a full search finds exactly what it found
+  before, and the early stop (everything reached) comes sooner.
+- **Unknown, not never:** a target a cut-off search didn't reach is still
+  an error, but it says so: "wasn't reached before the crate search stopped
+  at N configurations: unknown, not proven out of reach"; `--rooms` and the
+  room report print "unknown (crate search cut off)" instead of "never".
+  What a cut-off search did reach stays proven.
+- Not done, on purpose: pruning dead squares or frozen crates. In this game
+  a crate in a corner is still floor to drop onto, a step down or a
+  blocker, and pushing it there frees the cell it left, so cutting such
+  configurations could hide a real solution.
+Authored rooms affected: none (no room is flagged); no room data changes.
+**Why:** a false "never" sends a designer after a problem that isn't
+there; the search should find a solution early when one exists and be
+honest when it ran out.
