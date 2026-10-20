@@ -5,7 +5,6 @@
   "name": "Guard Loop",
   "biome": "home_lattice",
   "size": [12, 6, 12],
-  "jump": "pads",
   "spawn": [9.5, 0, 10.5],
   "exits": [
     { "id": "south", "side": "+z", "at": 9 },

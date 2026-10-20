@@ -3679,3 +3679,41 @@ danger; a block that kills or hurts on touch added rules and looks no
 room used. The spiked crate only fought the free jump (D199): in a pads
 room (D222) no crate is a step, so a plain crate keeps a classic's
 player route.
+### D272 — 2026-10-20 — The jump is gone: pads, stairs, slabs and bounces only (5.19)
+Every room is a pads room (D269, D270), so the rule of D222 becomes the
+engine's, the third stage of D222. What goes:
+- **Engine:** the jump key and the `jump` action, coyote time and the jump
+  buffer (`jumpHeight`, `coyoteTicks`, `jumpBufferTicks`, `canJump`), the
+  `jump` event and sound; `Game.jumpRule()`, the debug toggle (J,
+  `padJumpOnly`, `msg.padJumpOn`/`Off`) and the readout's rule. The stretch
+  of the wizard in the air is measured against a throw's launch speed
+  (`LAUNCH_SPEED`, a bounce's 2.2) instead of the jump's.
+- **Keys:** Space is a cast key (with E and Numpad 0) and a confirm key
+  (with Enter): menus, the boot screen, the map and the end-of-game
+  screen take it as before. The controls screen drops the JUMP row.
+- **Data:** the room `jump` field goes from the schema, the runtime room
+  and all 35 room files (none authored); the editor's Jump box and new
+  rooms' `"jump": "pads"` go. The data schema version stays 1, as for the
+  double jump (D216): old files only lose a field.
+- **Checker:** `freeJump`, `JUMP`, `freeJumpRooms()`, `--pads` and the
+  "still on the free jump" lists; a bouncy enemy's lane is a moving pad
+  in every room. Its verdicts are unchanged, since every room was already a
+  pads room. The tests that leaned on the free jump now say the same thing
+  with stairs, pads and a frozen enemy in a trench.
+- **Push tools:** `xsb.mjs` and `solve.mjs` lose `--free`; the Microban
+  survey script runs without the jump and loses its 1-high ledge column,
+  which now plays as the 3-high wall one. A re-run got through 121 of 155
+  levels cleanly before it was stopped; the survey page keeps its
+  free-jump table (D223), marked as such, with its plain-crate columns
+  read as Classic until a full re-run. The motif "stack stairs" goes: its 2-high step needs a climb, and
+  the heavy plate (D200) and the pier (D262) carry stacking now.
+- **Docs and skills:** CLAUDE.md, design.md (controls, Player, the
+  checklist's Reach, timing: a throw ~46 ticks), architecture.md, the
+  room-design, sokoban-design and enemy-design skills (lessons that only
+  held with the jump go: the springboard of D162, the overhead block of
+  D212) and the level-review agent.
+Authored rooms affected: none (no room is flagged); every room file loses
+its `"jump": "pads"` line and nothing else.
+**Why:** D222 planned it once every room was moved; the author asked for
+`feat/no-jump` after D271. One rule for the whole game keeps the engine,
+the tools and the skills free of a second set of numbers.

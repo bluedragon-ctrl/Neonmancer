@@ -2,18 +2,13 @@
 // every level under classic Sokoban rules and under Neonmancer's, in each
 // way a level can be built in the game, and print a Markdown table.
 //   node .claude/skills/sokoban-design/scripts/survey.mjs <file.xsb> [--levels 1-40] [--max N] [--out file.md]
-// Translations (columns): walls as 3-high blocks (he can't climb them),
-// 1-high ledges (he walks over, crates stop) or holes (he jumps one, a
-// crate plugs it); goals as plates (a crate can leave one) or sockets (a
-// crate is spent in one, for good). 2-high walls are left out: in the
-// first ten Microban levels they solved exactly like 3-high ones (the
-// crates already let him climb); check one with solve.mjs --wall 2.
+// Translations (columns): walls as blocks (any height: with no jump, D272,
+// he climbs none, so a 1-high ledge plays as a 3-high wall) or holes (a
+// crate plugs one, and only then can he cross); goals as plates (a crate
+// can leave one) or sockets (a crate is spent in one, for good).
 // A cell reads "pushes/sharp steps/trap %" (see solve.mjs): "free" needs no push,
 // "-" is unsolvable, "?" hit --max (default 30000 states), "n/a" can't be
 // built (a socket under the wizard's start).
-// Every column is built with the free jump (he climbs crates and 1-high
-// walls). In a pads room (D222) he climbs neither, so a level built with
-// plain crates and walls of any height plays as the classic column.
 import fs from 'node:fs';
 import { parseXsb, xsbToRoom } from './xsb.mjs';
 import { loadContent, solve } from './solve.mjs';
@@ -86,7 +81,6 @@ export function classicPushes(rows, max = 200000) {
 
 export const VARIANTS = [
   { label: 'wall 3, plate', wall: 3, goal: 'plate' },
-  { label: 'ledge 1, plate', wall: 1, goal: 'plate' },
   { label: 'holes, plate', wall: 'hole', goal: 'plate' },
   { label: 'wall 3, socket', wall: 3, goal: 'socket' },
   { label: 'holes, socket', wall: 'hole', goal: 'socket' },
@@ -98,7 +92,7 @@ export const VARIANTS = [
 export function surveyCell(level, variant, content, max) {
   let data;
   try {
-    data = xsbToRoom(level, { wall: variant.wall, goal: variant.goal, streams: variant.streams, exits: [], jump: 'free' });
+    data = xsbToRoom(level, { wall: variant.wall, goal: variant.goal, streams: variant.streams, exits: [] });
   } catch {
     return { text: 'n/a' };
   }
@@ -129,7 +123,7 @@ if (process.argv[1]?.endsWith('survey.mjs')) {
   ];
   for (let n = lo; n <= Math.min(hi ?? lo, levels.length); n++) {
     const level = levels[n - 1];
-    const room = xsbToRoom(level, { exits: [], jump: 'free' });
+    const room = xsbToRoom(level, { exits: [] });
     const [w, , d] = room.size;
     const crates = room.objects.filter((o) => o.type === 'crate').length;
     const classic = classicPushes(level.rows);

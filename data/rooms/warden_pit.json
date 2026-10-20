@@ -32,6 +32,5 @@
     { "id": "refill_energy_west", "type": "refill_energy", "at": [0, 0, 13] },
     { "id": "refill_energy_east", "type": "refill_energy", "at": [13, 0, 13] },
     { "id": "refill_integrity_pit", "type": "refill_integrity", "at": [0, 0, 10] }
-  ],
-  "jump": "pads"
+  ]
 }

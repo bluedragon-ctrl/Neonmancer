@@ -163,7 +163,7 @@ export class PlayerView {
     this.game = game;
     this.group = new Group();
     this.wizard = createWizard({ bands: game.fragmentRules.access.length });
-    /** His walk, idle float, jump squash and floppy hat (wizard-motion.js). */
+    /** His walk, idle float, landing squash and floppy hat (wizard-motion.js). */
     this.motion = new WizardMotion(this.wizard);
     /** Seconds of play drawn so far, for the idle float and the blink. */
     this.time = 0;

@@ -44,11 +44,6 @@
       "maximum": 600,
       "description": "Seconds on the room's watchdog timer (D172): it starts once the room has faded in and runs while the wizard is in the room (menus hold it); at zero he dies and the room resets. Omitted: no timer."
     },
-    "jump": {
-      "enum": ["free", "pads"],
-      "default": "free",
-      "description": "Where the wizard may jump (D221): free, anywhere with the jump key; pads, never: only a jump pad (an object of kind pad) throws him up. A prototype: rooms try the rule out one by one."
-    },
     "exits": {
       "type": "array",
       "items": { "$ref": "#/$defs/exit" }

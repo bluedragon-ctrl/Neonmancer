@@ -5,7 +5,7 @@
  * Solid are static block cells and everything outside the room's side
  * walls and below the floor, except the openings of exits (the row of
  * cells just beyond the side, so the wizard can walk through). Above the
- * room height is open (a jump at the top of a 6-high room must not bump
+ * room height is open (a throw at the top of a 6-high room must not bump
  * into nothing).
  * Only blocks that never move or change live in the grid (static block
  * types, D60). Pushables, moving platforms and collapsing blocks are room

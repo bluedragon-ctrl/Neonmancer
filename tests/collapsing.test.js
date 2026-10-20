@@ -61,7 +61,7 @@ test('once shaking, it vanishes even when the wizard steps off', () => {
   assert.ok(eventTypes(run(game, idle, GATE.shakeTicks)).includes('collapse'));
 });
 
-test('walking into its side or jumping over it does not trigger it', () => {
+test('walking into its side or rising past it does not trigger it', () => {
   const game = gameWith({ blocks: [block()], pos: [2.5, 0, 3.5] });
   run(game, hold('down'), 60); // Down = +x, into its -x face
   assert.equal(game.player.pos[0], 2.7);

@@ -13,7 +13,7 @@ import { SETTINGS } from './settings.js';
 import { formatText, scrambleText } from './text.js';
 
 /** The controls panel's rows: `controls.<id>` names the action, `controls.<id>Keys` its keys. */
-export const CONTROL_ROWS = ['move', 'jump', 'cast', 'spell', 'pause', 'map', 'movementMode', 'fullscreen'];
+export const CONTROL_ROWS = ['move', 'cast', 'spell', 'pause', 'map', 'movementMode', 'fullscreen'];
 
 /** Menus with text under the heading: `menu.<id>Text`, the controls table, the key field, or the pause menu's key. */
 const BODIES = ['controls', 'quit', 'restart', 'options', 'visuals', 'enterKey', 'pause'];

@@ -77,11 +77,11 @@ test('fence: solid to bodies, but bolts and sight pass through', () => {
   assert.ok(Math.abs(pos[0] - 2.7) < 1e-9);
 });
 
-test('fence: a 2-high fence stops a jump, and he can stand on a 1-high one', () => {
-  const high = grid({ blocks: { fence: [[3, 0, 2], [3, 1, 2]] } });
+test('fence: a 1-high fence stops him walking, and he can stand on one', () => {
+  const high = grid({ blocks: { fence: [[3, 0, 2]] } });
   const a = new Player([2, 0, 2.5]);
   a.update(input(), high);
-  for (let i = 0; i < 60; i++) a.update(i === 0 ? input(['down'], ['jump']) : input(['down']), high);
+  for (let i = 0; i < 60; i++) a.update(input(['down']), high);
   assert.equal(a.pos[1], 0);
   assert.ok(a.pos[0] < 3);
 

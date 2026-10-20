@@ -244,7 +244,7 @@
       "type": "object",
       "required": ["kind"],
       "properties": {
-        "kind": { "enum": ["disk", "refill", "boost", "access", "buff", "upgrade", "secret", "fragment"], "description": "disk: teaches a spell (permanent); refill: restores integrity or energy (temporary); boost: a small reward for a simple secret (temporary, D152): a functional one lasts until the room resets, a cosmetic one until his next death or a reload; access: a test pass that raises the access level at once, as the core would (temporary, for testing access locks); buff: makes the wizard stronger for good (permanent); upgrade: improves a spell or his jump for good (permanent, D95); secret: a hidden gem worth extra score (permanent, D100); fragment: a key fragment, counted by the core for access levels and the end of the game (permanent, D101)." }
+        "kind": { "enum": ["disk", "refill", "boost", "access", "buff", "upgrade", "secret", "fragment"], "description": "disk: teaches a spell (permanent); refill: restores integrity or energy (temporary); boost: a small reward for a simple secret (temporary, D152): a functional one lasts until the room resets, a cosmetic one until his next death or a reload; access: a test pass that raises the access level at once, as the core would (temporary, for testing access locks); buff: makes the wizard stronger for good (permanent); upgrade: improves a spell for good (permanent, D95); secret: a hidden gem worth extra score (permanent, D100); fragment: a key fragment, counted by the core for access levels and the end of the game (permanent, D101)." }
       },
       "allOf": [
         {
@@ -383,7 +383,7 @@
           "items": { "enum": ["crate"] },
           "uniqueItems": true,
           "minItems": 1,
-          "description": "Static blocks (the crate stream, D198): the kinds of body that pass through it as through air: crate (crates and frozen enemies, which push like crates). The wizard and active enemies are stopped, and the field has no top: for them it reaches up to the ceiling, so no jump or crate gets him over it. Pushes, falls, Pull and a paste treat its cells as open for a crate; Fork's decoy does not. Goes with the fence look and \"seeThrough\"." },
+          "description": "Static blocks (the crate stream, D198): the kinds of body that pass through it as through air: crate (crates and frozen enemies, which push like crates). The wizard and active enemies are stopped, and the field has no top: for them it reaches up to the ceiling, so no throw or crate gets him over it. Pushes, falls, Pull and a paste treat its cells as open for a crate; Fork's decoy does not. Goes with the fence look and \"seeThrough\"." },
         "fake": { "type": "boolean", "description": "Static blocks: solid like any other until a scan reaches it (D128), then it derezzes and stays gone until the room resets. With the plain look and no color it can't be told from a plain block. A pickup may lie inside one (a hidden pickup)." },
         "regrow": {
           "type": "number",
@@ -477,7 +477,7 @@
           "minimum": 0.3,
           "maximum": 1.9,
           "default": 0.6,
-          "description": "Height of its hitbox in units, on a 0.6 × 0.6 footprint in its one cell; its model is drawn as much bigger. Above 1 it stands two cubes high: it needs the cell above it free, and the wizard can't jump over it (D134, D135)."
+          "description": "Height of its hitbox in units, on a 0.6 × 0.6 footprint in its one cell; its model is drawn as much bigger. Above 1 it stands two cubes high: it needs the cell above it free (D134, D135)."
         },
         "boss": {
           "type": "object",
@@ -547,7 +547,7 @@
         },
         "kind": {
           "enum": ["pushable", "platform", "target", "plate", "socket", "core", "deco", "pad"],
-          "description": "Which engine behavior the object uses. pushable: the wizard pushes it; platform: follows its path (room data \"path\") carrying the wizard and pushables (with \"damage\" it hurts him instead, a spiked platform, D82); target: a fixed block a Zap switches on and off; plate: a floor tile (y 0) that is on while a crate, an enemy or the wizard stands on it. Targets and plates are switches: they power the room's locked exits, gate blocks and platforms that link them (room data \"switches\", by default every switch in the room), each powered while all its switches are on (D75, D140); their look is fixed (render/switch-view.js), only the color comes from here. Gates are block types (\"blocks\", D141). core: the central core (D101), a fixed block that takes the key fragments: touching it raises the wizard's access level to what his fragments earn (world.json \"fragments\"), and with all of them the Grid reboots; at most one in the world. deco: a decoration (D117), a fixed body as big as its \"look\" that does nothing; it has no color of its own and takes the room's. pad: a jump pad (D221), a tile on the floor or on top of a block, no body: it throws the wizard into the air (\"launch\") the moment he stands on it, in any room; in a room without a free jump (room \"jump\": \"pads\") it is his only way up. Collapsing blocks are block types (\"blocks\", D60)."
+          "description": "Which engine behavior the object uses. pushable: the wizard pushes it; platform: follows its path (room data \"path\") carrying the wizard and pushables (with \"damage\" it hurts him instead, a spiked platform, D82); target: a fixed block a Zap switches on and off; plate: a floor tile (y 0) that is on while a crate, an enemy or the wizard stands on it. Targets and plates are switches: they power the room's locked exits, gate blocks and platforms that link them (room data \"switches\", by default every switch in the room), each powered while all its switches are on (D75, D140); their look is fixed (render/switch-view.js), only the color comes from here. Gates are block types (\"blocks\", D141). core: the central core (D101), a fixed block that takes the key fragments: touching it raises the wizard's access level to what his fragments earn (world.json \"fragments\"), and with all of them the Grid reboots; at most one in the world. deco: a decoration (D117), a fixed body as big as its \"look\" that does nothing; it has no color of its own and takes the room's. pad: a jump pad (D221), a tile on the floor or on top of a block, no body: it throws the wizard into the air (\"launch\") the moment he stands on it, with stairs and bounces it is his only way up (there is no jump, D272). Collapsing blocks are block types (\"blocks\", D60)."
         },
         "look": {
           "enum": ["data_pillar", "screen", "memory_stack"],

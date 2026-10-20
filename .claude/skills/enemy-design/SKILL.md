@@ -30,7 +30,7 @@ table, roster, AI rules). Prefer the monster editor
 - `bounce` makes a trampoline top (2 blocks up, harmless); `solid` makes a
   platform (golem). Both change how a room's geometry works: say so.
 - `height` (default 0.6, up to 1.9) makes a taller body in one cell; above
-  1 it can't be jumped over and needs the cell above it free.
+  1 it stands in two cells and needs the cell above it free.
 
 ## Bosses (D104, D134, D135)
 - A `boss` block makes a template a boss: hostile, never paused or
@@ -82,7 +82,7 @@ table, roster, AI rules). Prefer the monster editor
 - Frozen enemies can be stood on or cut (Cut & Paste); a plate counts an
   enemy standing on it. Check these don't break a room's puzzle.
 - Enemies are not covered by `check:reach`: judge their timing by the
-  numbers in the checklist (walk 13 ticks/cell, jump 34 ticks).
+  numbers in the checklist (walk 13 ticks/cell, a pad's throw 46 ticks).
 
 ## After a change
 1. `npm run validate:data`, `npm test` (colors, enemies, monster-edit).

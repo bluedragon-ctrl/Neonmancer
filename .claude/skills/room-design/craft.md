@@ -41,7 +41,7 @@ every room earns its place with one trick.
    crate in a corner is lost, so walls and corners are what he reads.
    Here holes, steps and stacks are the goals, a frozen enemy can be the
    last crate, and enemies can press on a small push puzzle (hybrid).
-4. **Failure is visible and cheap.** Wrong push, wrong jump: the cause is
+4. **Failure is visible and cheap.** Wrong push, wrong drop: the cause is
    obvious and re-entering costs seconds. No failures he can't explain
    (hidden hitbox edges, unseen platform timing).
 5. **Pick a type on purpose** (D186; roughly 60/25/15 %):
@@ -68,7 +68,7 @@ every room earns its place with one trick.
 7a. **Rooms grow on return** (D260). Most rooms keep something for later:
    a shortcut, an exit, a secret, a cache, opened by an ability he finds
    elsewhere. The best ones read a known room anew (the pit he plugged
-   with crates is a Blink jump now; the crate out of reach is a Pull
+   with crates is a Blink across now; the crate out of reach is a Pull
    away). Small, off the main puzzle, never a red herring on the first
    visit, never the way to a pickup's trick (SKILL.md, Return layers).
 8. **Composition.** A focal point (the exit ahead, a tall structure, a

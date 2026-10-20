@@ -5,7 +5,6 @@
   "name": "Idle Cache",
   "biome": "home_lattice",
   "size": [8, 4, 10],
-  "jump": "pads",
   "spawn": [4.5, 0, 1.5],
   "exits": [{ "id": "north", "side": "-z", "at": 4 }],
   "blocks": [

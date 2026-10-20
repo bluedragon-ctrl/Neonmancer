@@ -84,22 +84,30 @@ test('stream: a crate rests inside it and is pushed on from either side', () => 
   assert.ok(back.pushables[0].pos[0] <= 3, 'and from the east');
 });
 
-test('stream: the wizard is stopped, with a jump or a block under him', () => {
+/** Walk +x for 90 ticks, thrown up (as by a pad) every `every` ticks he is on the ground. */
+function throwInto(w, every) {
+  for (let i = 0; i < 90; i++) {
+    if (i % every === 0 && w.player.grounded) w.player.bounce(w.player.pos[1]);
+    w.tick(input(['down']));
+  }
+}
+
+test('stream: the wizard is stopped, thrown up or from a block under him', () => {
   const a = world({ blocks: { stream: wall(4) } });
   a.run(hold('down'), 90);
   assert.ok(a.player.pos[0] < 3.7 + 1e-6, 'walking');
   const b = world({ blocks: { stream: wall(4) } });
-  for (let i = 0; i < 90; i++) b.tick(i % 30 === 0 ? input(['down'], ['jump']) : input(['down']));
-  assert.ok(b.player.pos[0] < 3.7 + 1e-6 && b.player.pos[1] < 2, `jumping: ${b.player.pos}`);
-  // From a 1-high block a jump reaches 2, the top of a 2-high stream: no way on.
+  throwInto(b, 30);
+  assert.ok(b.player.pos[0] < 3.7 + 1e-6, `thrown: ${b.player.pos}`);
+  // From a 1-high block a throw rises past the top of a 2-high stream: its field has no top.
   const c = world({ cells: [[3, 0, 2]], blocks: { stream: wall(4) }, spawn: [3.5, 1, 2.5] });
-  for (let i = 0; i < 90; i++) c.tick(i % 20 === 0 ? input(['down'], ['jump']) : input(['down']));
+  throwInto(c, 20);
   assert.ok(c.player.pos[0] < 3.7 + 1e-6, `from a block: ${c.player.pos}`);
 });
 
 test('stream: a crate inside it is no step for him', () => {
   const w = world({ cells: [[3, 0, 2]], blocks: { stream: wall(4) }, crates: [[4, 0, 2]], spawn: [3.5, 1, 2.5] });
-  for (let i = 0; i < 90; i++) w.tick(i % 20 === 0 ? input(['down'], ['jump']) : input(['down']));
+  throwInto(w, 20);
   assert.ok(w.player.pos[0] < 3.7 + 1e-6, `he is still on the block: ${w.player.pos}`);
   assert.deepEqual(w.pushables[0].pos, [4, 0, 2], 'the crate stays');
 });
@@ -153,7 +161,7 @@ function reach(props, abilities = []) {
   const exits = props.exits ?? [WEST];
   const content = gameData({
     ...withNeighbours(roomFile('r', { size: [12, 4, 8], ...props, exits })),
-    objects: { crate: CRATE, plate: { kind: 'plate', color: '#eef3ff' } },
+    objects: { crate: CRATE, plate: { kind: 'plate', color: '#eef3ff' }, pad: { kind: 'pad', color: '#eef3ff' } },
   });
   const room = buildRoom(content.rooms.get('r'), content);
   return analyzeRoom(room, { abilities, starts: [[1, 0, 1]], tuning: { scanRange: 6, blinkRange: 3 } });
@@ -163,10 +171,12 @@ function reach(props, abilities = []) {
 const across = (x, height, type) => ({ type, at: [x, 0, 0], to: [x, height - 1, 7] });
 const far = { id: 'far', type: 'refill_energy', at: [10, 0, 2] };
 
-test('stream: the checker never lets him over it, from a crate or with spells', () => {
+test('stream: the checker never lets him over it, from a pad, a crate or with spells', () => {
   const room = (type, abilities, objects = []) => reach({ blocks: [across(6, 2, type)], pickups: [far], objects }, abilities).pickups.has('far');
   const crate = [{ id: 'c', type: 'crate', at: [5, 0, 2] }];
-  assert.equal(room('block', [], crate), true, 'a crate is a step up it');
+  const pad = [{ id: 'p', type: 'pad', at: [5, 0, 3] }];
+  assert.equal(room('block', [], pad), true, 'a pad throws him onto a 2-high block');
+  assert.equal(room('stream', [], pad), false, 'but not over a stream');
   assert.equal(room('stream', []), false);
   assert.equal(room('stream', [], crate), false);
   assert.equal(room('stream', ['compile', 'warp', 'blink'], crate), false, 'nor with spells');

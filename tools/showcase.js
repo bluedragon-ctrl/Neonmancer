@@ -15,7 +15,7 @@ import defs from '../data/defs.json';
 import strings from '../data/strings.json';
 import { OBJECT_STYLE_DEFAULTS, resolveBlockTypes, resolveEnemyTemplates, resolveObjectTypes, withEnemyDefaults, withExitDefaults } from '../src/data/room-data.js';
 import { VIEW_HEIGHT, frameRoom } from '../src/render/camera.js';
-import { JUMP_SPEED, PLAYER } from '../src/entities/player.js';
+import { LAUNCH_SPEED, PLAYER } from '../src/entities/player.js';
 import { PLAYER_HITBOX } from '../src/core/rules.js';
 import { GATE } from '../src/entities/gate.js';
 import { PUSHABLE } from '../src/entities/pushable.js';
@@ -127,10 +127,10 @@ const WYRM_COLORS = ['#ffc83a', '#3dff9a', '#4f7dff', '#c05cff'];
  */
 const ALL_ASSETS = [
   // The wizard standing (breathing, hands floating, blinking); walking a
-  // square with stops, so the hat trails and wobbles; jumping in place.
+  // square with stops, so the hat trails and wobbles; thrown up in place.
   { label: 'wizard', build: buildWizardIdle, shadow: PALETTE.magenta },
   { label: 'wizard-walk', span: 4, spin: false, build: buildWizardWalk },
-  { label: 'wizard-jump', build: buildWizardJump, shadow: PALETTE.magenta },
+  { label: 'wizard-throw', build: buildWizardThrow, shadow: PALETTE.magenta },
   // Action poses: pushing a crate a cell (hands on it, leaning in), casting
   // ahead and then to his side, dropping into a hole (flailing).
   { label: 'wizard-push', span: 4, spin: false, build: buildWizardPush },
@@ -2117,18 +2117,18 @@ function buildWizardWalk() {
   return asset;
 }
 
-/** The wizard jumping in place, as high as in the game, every 1.4 s. */
-function buildWizardJump() {
+/** The wizard thrown up in place as by a pad or a bounce, as high as in the game, every 1.8 s. */
+function buildWizardThrow() {
   const wizard = createWizard();
   const motion = new WizardMotion(wizard);
   const asset = new Group().add(wizard);
-  const every = 1.4;
+  const every = 1.8;
   asset.userData.update = (dt, time) => {
     const t = time % every;
-    const y = Math.max(0, JUMP_SPEED * t - (PLAYER.gravity * t * t) / 2);
+    const y = Math.max(0, LAUNCH_SPEED * t - (PLAYER.gravity * t * t) / 2);
     const grounded = y === 0 && t > 0.1;
     wizard.position.y = y;
-    motion.update({ dt, time, pos: [0, y, 0], facing: 0, grounded: grounded || t === 0, moving: false, vy: grounded ? 0 : JUMP_SPEED - PLAYER.gravity * t });
+    motion.update({ dt, time, pos: [0, y, 0], facing: 0, grounded: grounded || t === 0, moving: false, vy: grounded ? 0 : LAUNCH_SPEED - PLAYER.gravity * t });
   };
   return asset;
 }

@@ -29,11 +29,9 @@ Rules for the lines (D186, D187):
   Gatekeeper's doors never lock), so a wing room may be met with any of
   Zap, Shield, Pause, Scan and Fork. Every pickup's trick holds against
   all of them; the trick may use them.
-- **No double jump.** It was removed (D216): his jump is 1 up and a
-  one-tile gap everywhere.
-- **Pads only** (D222). Each review moves its room to `"jump": "pads"`:
-  no jump key, pads throw him 2 up and over a 1-tile gap, stairs take him a
-  block up, slabs bridge, a bug he falls onto bounces him 2 up (D223). See
+- **No jump** (D222, D272; the double jump went first, D216): no jump
+  key, pads throw him 2 up and over a 1-tile gap, stairs take him a block
+  up, slabs bridge, a bug he falls onto bounces him 2 up (D223). See
   Pads-only migration below.
 - **Blink after Level 1.** The Level 1 reward in `dj_vault` (D217), so it
   never skips a Lattice fragment; it counts for exits and secrets only.
@@ -47,7 +45,7 @@ Rules for the lines (D186, D187):
 
 | # | Room | Type | Rung | Trick to aim for | Now |
 |---|---|---|---|---|---|
-| 1 | `boot_up` | action | teach: move, jump | The way to the door is up: a 1-high step, then a 1-tile gap, so he learns the jump's height and reach before anything can hurt him. | Reworked (D193), on pads (D225): the east door sits on a 2-high ledge past a 1-wide gap; a stair beside the spawn onto a 1-high step, a pad on it throws him over the gap; a miss drops him safely into it. Start room and shrine; the access pass is test-only. |
+| 1 | `boot_up` | action | teach: move, stair, pad | The way to the door is up: a stair, then a pad over a 1-tile gap, so he learns how high and far a throw goes before anything can hurt him. | Reworked (D193), on pads (D225): the east door sits on a 2-high ledge past a 1-wide gap; a stair beside the spawn onto a 1-high step, a pad on it throws him over the gap; a miss drops him safely into it. Start room and shrine; the access pass is test-only. |
 | 2 | `first_steps` | puzzle | teach: push, plug a hole | One push fills one cell of the 2-wide hole: the second crate needs a push from a new side, which he reaches across the first. | Holds, on pads (D231): the hole is 2 wide, so two crates cross it; a micro-Sokoban, pushing crate B straight in is the one dead end, and the west door resets it. |
 | 3 | `zap_port` | hybrid | teach: Zap (a target, an enemy, bolts fly level) | The target sits a block up: a floor shot hits the block under it or the bug crossing the line, and the stair he climbed for the disk is his firing step (a jump shot also reaches it). | Reworked (D189), on pads (D232): two stairs to the disk replace the pile; the firing step is on the way; no jump shot. |
 | 4 | `first_light` | action | teach: the watchdog, fragments | The straight line is a pit: a zigzag round the pits' open ends, inside 10 s. | Holds, on pads (D233): 2-deep pits were always walked round; 7.8 s of the 10. |
@@ -101,7 +99,7 @@ Rules for the lines (D186, D187):
 |---|---|---|---|---|---|
 | 23 | `gatekeeper` | boss | the Gatekeeper | Lure it onto the overload plates, recharge behind cover; as hard as it should be. Drops the energy buff. | Boss; a pads room (D255). |
 | 24 | `core_hall` | goal | the core, the Level 1 locks | No puzzle: the core is the beat. | Outside the mix; a pads room (D256). |
-| 25 | `dj_vault` | reward | teach: Blink | The reward's first use: a 2-tile pit, the room's full depth, between the disk and the east door; a jump crosses one tile, never two. | Reworked (D217); a pads room (D258). Outside the mix. |
+| 25 | `dj_vault` | reward | teach: Blink | The reward's first use: a 2-tile pit, the room's full depth, between the disk and the east door; on foot he crosses none. | Reworked (D217); a pads room (D258). Outside the mix. |
 
 The teasers (`frost_gate`, `frost_edge`, `glitch_gate`, `glitch_edge`)
 stay look-only and outside the ladder (D186).
@@ -158,9 +156,9 @@ Ideas from the author for the reviews to come (5.17):
   that finishes the push puzzle.
 - Sokoban under attack: a push puzzle in a hybrid room with enemies after him.
 - Timing: freeze the bug the moment it stands on a plate he can't
-  reach, inside its fenced lane or across a gap too wide to jump (a
+  reach, inside its fenced lane or across a gap he can't cross (a
   bolt passes a fence and flies over a gap; he and a decoy can't, so
-  Fork doesn't skip it); a timed run of jumps (a timed target's
+  Fork doesn't skip it); a timed run of pads and stairs (a timed target's
   bridge, a watchdog).
 - A plate in a moat: holes round the plate make him fill one before he
   (or a crate) can reach it.
@@ -343,7 +341,7 @@ moves it to `"jump": "pads"` and ticks it off here.
 | – | `buffer_1`–`buffer_5` | play | | The secret rooms (5.11) with their host rooms' doors. Dead Pixel done (D262): a new puzzle, no roof or spiked crates; Stray Byte done (D263); Null Orbit done (D264); Event Horizon done (D265); Cache Miss done (D266). |
 | – | teasers (`frost_*`, `glitch_*`) | nothing | glitch_gate: bouncy | Done (D269): moved over as they are. |
 
-### Step 5.19 inventory (2026-10-20)
+### Step 5.19 inventory (2026-10-20; done, D272)
 
 What is left before the pads-only rule becomes the engine's, worked out
 with the checker: each room was checked with `--with zap,scan,fork,pause`
@@ -377,8 +375,9 @@ the other eleven dev rooms, three of which leaned on the jump (`heavy_lab`,
   `freeJumpRooms()`, `tools/check-reach.js` `--pads` and the "still on
   the free jump" list; debug J and its readout (`src/debug/readout.js`).
 - The `jump` action (`src/core/bindings.js`): menus and the boot screen
-  read it as confirm (`src/ui/menus.js`, `src/main.js`), so those move to
-  `confirm`/`cast` before it goes. The `jump` sound stays for pads.
+  read it as confirm (`src/ui/menus.js`, `src/main.js`), so Space joins
+  `confirm` there and `cast` in play. The `jump` sound goes too: a pad
+  has `bounce:pad`.
 - Controls screen (`CONTROL_ROWS`, `controls.jump` in strings.json) and
   help texts.
 
@@ -397,5 +396,5 @@ skill (step 7 "Move it to pads", `sim.mjs`'s jump note), the
 sokoban-design skill, the level-review agent's jump rule check, and a
 decision entry replacing D221/D222's prototype wording.
 
-**Order:** the rooms are done (D269, D270), the spiked crate retired
-(D271); next `feat/no-jump`: the code, tests and docs above.
+**Done:** the rooms (D269, D270), the spiked crate retired (D271), and
+the code, tests and docs above (D272, `feat/no-jump`): the jump is gone.

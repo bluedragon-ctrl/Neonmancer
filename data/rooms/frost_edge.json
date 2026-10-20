@@ -5,7 +5,6 @@
   "name": "Permafrost Edge",
   "biome": "frostbyte_wastes",
   "size": [8, 4, 8],
-  "jump": "pads",
   "spawn": [1.5, 0, 6],
   "exits": [{ "id": "west", "side": "-x", "at": 5 }],
   "blocks": [

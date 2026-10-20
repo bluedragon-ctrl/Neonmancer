@@ -134,7 +134,7 @@ test('an access pass (for testing) raises his level at once and opens access loc
   assert.equal(game.progress.accessLevel, 3);
 });
 
-test('the core blocks him like a 2-high block: he cannot walk through or jump onto it', () => {
+test('the core blocks him like a 2-high block: he cannot walk through or onto it', () => {
   const game = gameWith();
   assert.deepEqual(game.core.box(), [[4, 5], [0, 2], [4, 5]]);
   assert.ok(game.solids.includes(game.core));

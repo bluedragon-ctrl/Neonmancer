@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import STRINGS from '../data/strings.json' with { type: 'json' };
+import { DEFAULT_BINDINGS } from '../src/core/bindings.js';
 import { takeAnnouncements } from '../src/core/messages.js';
 import { Game } from '../src/game.js';
 import { CONTROL_ROWS, settingText } from '../src/ui/menu-screen.js';
@@ -36,7 +37,9 @@ test('up and down move the selection, wrapping round; Space chooses too', () => 
   flow.update(press('up'));
   assert.equal(flow.top.selected, count - 1);
   flow.select(0);
-  assert.equal(flow.update(press('jump')), 'start');
+  // Space confirms in menus (and casts in play, D272).
+  assert.ok(DEFAULT_BINDINGS.confirm.includes('Space'));
+  assert.equal(flow.update(press('confirm')), 'start');
 });
 
 test('Esc or P pauses the game and closes the pause menu again', () => {

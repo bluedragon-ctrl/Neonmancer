@@ -225,7 +225,8 @@ test('reach: a bridge over a pit appears with its switch; a collapsing bridge co
   const bridge = { type: 'bridge', at: [4, 0, 4], to: [6, 0, 4] };
   assert.equal(reachFar({ objects: [target], blocks: [bridge], holes }), false);
   assert.equal(reachFar({ objects: [target], blocks: [bridge], holes }, ['zap']), true);
-  assert.equal(reachFar({ blocks: [{ ...bridge, type: 'collapsing' }], holes }), true, 'no timing: it holds');
+  // A row of collapsing blocks (1 high) with a stair up to it.
+  assert.equal(reachFar({ blocks: [{ ...bridge, type: 'collapsing' }, { type: 'stair_x', at: [3, 0, 4] }], holes }), true, 'no timing: it holds');
 });
 
 test('gate and timed switch looks: lights in a row, a blink that speeds up', () => {

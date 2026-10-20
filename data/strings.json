@@ -160,10 +160,8 @@
     "menu.helpBack": "↑ ↓ CHOOSE    ENTER SELECT    ESC BACK",
     "controls.move": "MOVE",
     "controls.moveKeys": "WASD / ARROWS",
-    "controls.jump": "JUMP",
-    "controls.jumpKeys": "SPACE",
     "controls.cast": "CAST SPELL",
-    "controls.castKeys": "E",
+    "controls.castKeys": "SPACE / E",
     "controls.spell": "SWITCH SPELL",
     "controls.spellKeys": "TAB / Q",
     "controls.pause": "PAUSE",
@@ -182,8 +180,6 @@
     "controls.fullscreen": "FULLSCREEN",
     "controls.fullscreenKeys": "F",
     "msg.movementGrid": "> MOVEMENT: GRID-ALIGNED",
-    "msg.movementScreen": "> MOVEMENT: SCREEN-RELATIVE",
-    "msg.padJumpOn": "> DEBUG: NO JUMP KEY, ONLY PADS, EVERY ROOM",
-    "msg.padJumpOff": "> DEBUG: JUMP AS EACH ROOM SAYS"
+    "msg.movementScreen": "> MOVEMENT: SCREEN-RELATIVE"
   }
 }

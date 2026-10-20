@@ -47,7 +47,7 @@ export const WATCHDOG = { warnTicks: 5 * 60 };
  * Something that happened, for views, the HUD and (later) sound. Returned
  * by Game.update() for the tick it happened in.
  * @typedef {object} GameEvent
- * @property {'jump'|'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'tick'|'gate'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'|'warp'|'fizzle'|'cut'|'paste'|'pull'|'shove'|'swap'|'compile'|'fork'|'expire'|'scan'|'reveal'|'reflect'|'shrine'|'crash'|'access'|'win'|'read'|'armor'|'exposed'|'armored'|'phase'|'teleport'|'drop'|'pickup'} type
+ * @property {'land'|'die'|'respawn'|'push'|'plug'|'shake'|'collapse'|'regrow'|'pop'|'bounce'|'hurt'|'cast'|'deny'|'spell'|'zap'|'hit'|'break'|'switch'|'tick'|'gate'|'unlock'|'lock'|'exit'|'room'|'alert'|'charge'|'discharge'|'ricochet'|'block'|'freeze'|'thaw'|'warp'|'fizzle'|'cut'|'paste'|'pull'|'shove'|'swap'|'compile'|'fork'|'expire'|'scan'|'reveal'|'reflect'|'shrine'|'crash'|'access'|'win'|'read'|'armor'|'exposed'|'armored'|'phase'|'teleport'|'drop'|'pickup'} type
  * @property {string} [spell] the spell cast, failed, fizzled (nowhere to
  *   go, energy kept) or selected (cast, deny, fizzle, spell); the teleport (warp)
  * @property {number[]} [from] where a Blink or Warp started (warp)
@@ -100,11 +100,6 @@ export class Game {
     this.invincible = false;
     /** 'grid' (default, D23) or 'screen' (D38); toggled with G, not saved. */
     this.movementMode = 'grid';
-    /**
-     * Debug (D221): no jump key, only pads, in every room, not just in rooms with
-     * `"jump": "pads"`, to try the rule out on the rooms as they are.
-     */
-    this.padJumpOnly = false;
     this.reset(options);
   }
 
@@ -162,7 +157,7 @@ export class Game {
    * (D39), wherever he entered.
    * @param {string} id room id
    * @param {number[]} [pos] feet center to appear at (e.g. arriving through an
-   *   exit, mid-jump); the room's own spawn by default
+   *   exit, mid-air); the room's own spawn by default
    * @param {string|null} [entry] id of the exit he came in through, open for
    *   him even if locked (D75); kept on a respawn in the same room
    */
@@ -538,22 +533,6 @@ export class Game {
   }
 
   /**
-   * The room's jump rule (D221): 'free' (the jump key, anywhere) or 'pads'
-   * (no jump key: only jump pads throw him up); debug can make it 'pads'
-   * everywhere (padJumpOnly).
-   * @returns {'free'|'pads'}
-   */
-  jumpRule() {
-    return this.padJumpOnly ? 'pads' : this.room.jump;
-  }
-
-  /** Debug (D221): toggle the pads-only rule (no jump key) in every room, announced in the terminal. */
-  togglePadJumpOnly() {
-    this.padJumpOnly = !this.padJumpOnly;
-    say(this.padJumpOnly ? 'msg.padJumpOn' : 'msg.padJumpOff');
-  }
-
-  /**
    * Debug mode: jump straight to another room, skipping the exit transition.
    * Ignored mid-transition, so it never interrupts a fade.
    * @param {1|-1} direction next or previous room, in load order
@@ -592,7 +571,6 @@ export class Game {
       bodies: this.solids,
       invincible: this.invincible,
       movementMode: this.movementMode,
-      canJump: this.jumpRule() === 'free',
     });
 
     // Dying drained his integrity (Player). Respawning restores it and
@@ -627,9 +605,7 @@ export class Game {
     for (const [action, step] of [['spellNext', 1], ['spellPrev', -1]]) {
       if (input.pressed(action) && player.selectSpell(step)) this.emit('spell', { spell: player.spell });
     }
-    // Without the jump key (D221) Space casts too.
-    const cast = input.pressed('cast') || (this.jumpRule() === 'pads' && input.pressed('jump'));
-    if (!player.dead && cast) castSpell(this);
+    if (!player.dead && input.pressed('cast')) castSpell(this);
     updateScan(this);
 
     // (Not an object he has just cut away.)
@@ -726,7 +702,7 @@ export class Game {
    * The wizard takes the pickups he touches (D71), if they are any use: a
    * data disk installs its spell for good (with an install animation
    * on him, D73); a buff chip makes him stronger for good (D93), an
-   * upgrade card improves a spell or his jump (D95); a refill restores integrity or
+   * upgrade card improves a spell (D95); a refill restores integrity or
    * energy, and is left lying while that is full; an access pass raises his
    * access level (for testing). Reported as 'pickup'.
    */

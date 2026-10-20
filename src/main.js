@@ -241,7 +241,7 @@ function boot() {
     if (boot !== null) {
       boot += DT;
       blurred = false;
-      if (bootState(boot).done || ['confirm', 'jump', 'pause'].some((action) => input.pressed(action))) finishBoot();
+      if (bootState(boot).done || ['confirm', 'pause'].some((action) => input.pressed(action))) finishBoot();
       readout.countTick();
       return;
     }
@@ -276,7 +276,6 @@ function boot() {
       if (input.pressed('debugInvincible')) game.invincible = !game.invincible;
       if (input.pressed('debugDamage')) game.hurt(1);
       if (input.pressed('debugFragments')) game.debugGrantFragments();
-      if (input.pressed('debugJumpRule')) game.togglePadJumpOnly();
     }
     const events = game.update(input);
     if (events.some((event) => event.type === 'room')) showRoom();
