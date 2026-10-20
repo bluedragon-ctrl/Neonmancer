@@ -1998,12 +1998,12 @@ rooms, never to a Lattice or authored room.
 | `room_1`, `room_2` | 12×12 | empty hubs joining the dev rooms |
 | `hidden_layer` | 12×12 | Scan: a fake gap, a hidden exit, a refill in a fake block; the Scan disk |
 | `fence_yard` | 10×10 | fences (D167): a target zapped through a 2-high fence raises a bridge; a 1-high pen with a crate |
-| `stream_lab` | 10×9 | the crate stream (D198): Microban 3 rebuilt with streams; he cannot follow the crates through it |
+| `stream_lab` | 10×9 | the crate stream (D198): Microban 3 rebuilt with streams; he cannot follow the crates through it; stairs over the divider (D269) |
 | `watchdog_run` | 12×8 | a watchdog timer (D172), 25 s: a 1-wide path through a pit to a refill and back |
 | `socket_lab` | 9×8 | the socket (D194): a hole that is a switch once a crate fills it |
 | `spiked_lab` | 6×10 | the spiked crate (D199): Microban 8 (David W. Skinner) with spiked crates and two plates, 32 pushes |
-| `heavy_lab` | 10×8 | the heavy plate (D200): a ledge crate dropped on a crate on the plate, 6 pushes |
-| `socket_yard` | 9×8 | a classic level end to end with the `sokoban-design` skill (D201): Microban 24, two sockets opening a cage |
+| `heavy_lab` | 10×8 | the heavy plate (D200): a ledge crate dropped on a crate on the plate, 5 pushes; a stair onto the wall (D269) |
+| `socket_yard` | 9×8 | a classic level end to end with the `sokoban-design` skill (D201): Microban 24, two sockets opening a cage; two openings in the yard for the pads rule (D269) |
 | `cage_lab` | 8×10 | the cage (D202): a pickup behind a crate plate's cage and behind a Zap target's cage |
 
 ### Room design checklist
@@ -2704,7 +2704,7 @@ Done: 5.1 audio engine (D138), 5.2 sound effects (D139), 5.4 dev wing
 (D151, D156–D173), 5.7 the Gatekeeper's hall (D174), 5.8 the core hall, the Level 1 locks and the teasers (D177), 5.9 the
 Lattice's ambience (D179), 5.10 the Outer Buffer look (D182, D183), 5.11a
 the secret rooms' entrances (D184), the gameplay direction (D186), 5.18
-the pads-rule prep (D223). The Lattice steps are two or three rooms each, the hub
+the pads-rule prep (D223), the last free-jump rooms on pads (D269). The Lattice steps are two or three rooms each, the hub
 before the wings (D149); every batch goes through the reachability
 checker and the review subagent; rooms are drafted unflagged and the
 author flags them authored (D90). Room plan: [lattice-plan.md](lattice-plan.md).

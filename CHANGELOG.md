@@ -48,6 +48,10 @@ docs/decisions.md).
   say the same; 11 pieces in 8 rooms are listed for their reviews.
 
 ### Changed
+- The last 15 free-jump rooms (the four biome teasers and the dev wing) are
+  pads rooms (D269): every room is one now. `heavy_lab` gets a stair onto
+  its wall, `socket_yard` two openings in its yard and `stream_lab` stairs
+  over its divider, each with the same push solution as before.
 - Dead Pixel (`buffer_1`) is a pads room with a new push puzzle (D262,
   step 5.11): three loft crates and a floor crate; the middle socket lies
   behind a 2-high wall, so a loft crate stacked on a ledge crate (the pier)

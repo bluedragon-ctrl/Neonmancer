@@ -5,6 +5,7 @@
   "name": "Socket Lab",
   "biome": "home_lattice",
   "size": [9, 4, 8],
+  "jump": "pads",
   "spawn": [0.5, 0, 4.5],
   "exits": [
     { "id": "west", "side": "-x", "at": 4 },

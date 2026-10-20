@@ -5,6 +5,7 @@
   "name": "Fence Yard",
   "biome": "home_lattice",
   "size": [10, 4, 10],
+  "jump": "pads",
   "spawn": [8.5, 0, 5.5],
   "exits": [
     { "id": "east", "side": "+x", "at": 4 },

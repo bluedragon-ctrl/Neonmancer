@@ -5,6 +5,7 @@
   "name": "Spiked Lab",
   "biome": "home_lattice",
   "size": [6, 5, 10],
+  "jump": "pads",
   "spawn": [0.5, 0, 9.5],
   "exits": [{ "id": "south", "side": "+z", "at": 0, "requires": [{ "switch": "*" }] }],
   "blocks": [

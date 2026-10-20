@@ -5,14 +5,18 @@
   "name": "Stream Lab",
   "biome": "home_lattice",
   "size": [9, 4, 7],
+  "jump": "pads",
   "spawn": [7.5, 0, 6.5],
   "exits": [{ "id": "east", "side": "+x", "at": 4 }],
   "blocks": [
-    { "type": "fence", "at": [4, 0, 0], "to": [4, 0, 2] },
-    { "at": [0, 0, 2], "to": [1, 2, 2] },
+    { "type": "fence", "at": [4, 0, 0], "to": [4, 0, 1] },
+    { "type": "stair_nz", "at": [4, 0, 2] },
+    { "type": "stair_x", "at": [3, 0, 0] },
+    { "type": "stair_nx", "at": [5, 0, 0] },
+    { "at": [0, 0, 2], "to": [1, 0, 2] },
     { "type": "stream", "at": [2, 0, 2], "to": [3, 1, 2] },
     { "type": "stream", "at": [5, 0, 2], "to": [6, 1, 2] },
-    { "at": [7, 0, 2], "to": [8, 2, 2] },
+    { "at": [7, 0, 2], "to": [8, 0, 2] },
     { "type": "gate", "at": [1, 0, 3], "to": [1, 2, 6] }
   ],
   "objects": [

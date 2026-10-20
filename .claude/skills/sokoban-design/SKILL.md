@@ -197,7 +197,7 @@ the author and collection in the room's decision entry. Before use:
 - **Heavy plate** (`:`, D200): the floor crate goes onto the plate first,
   then the ledge crate drops on it. The drop first is the trap: that crate
   lies on the plate alone (half-lit flicker), and the other can no longer
-  be pushed onto it. The dev room `heavy_lab` is the minimal case: 6 pushes.
+  be pushed onto it. The dev room `heavy_lab` is the minimal case: 5 pushes.
 - **Ledge drop**: a ledge crate pushed off lands where floor pushes
   can't reach (a pocket past a 1-high rim, a plate behind a fence row).
 - **Step, then spend**: a crate is a step to a ledge (or a target
@@ -251,6 +251,10 @@ the author and collection in the room's decision entry. Before use:
   Skinner) and its survey with notes on the best candidates.
 - Worked example: the dev room `socket_yard` (D201), Microban 24 taken
   through the whole workflow (sketch, solve, convert, hand-wire, check, play).
+  Built for the free jump, its 1-high walls were stepped over; on pads
+  (D269) two wall cells open so he walks round between pushes: a classic
+  level's walls are walls for him too now, so his region must connect
+  (solve it with `solve.mjs` after every wall change).
 - `levels/sources.md`: classic collections and where to get them.
   Keep the collections in `levels/` as `.xsb` files with their
   author's credit in the header.

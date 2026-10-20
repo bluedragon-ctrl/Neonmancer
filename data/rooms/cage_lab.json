@@ -5,6 +5,7 @@
   "name": "Cage Lab",
   "biome": "home_lattice",
   "size": [8, 4, 10],
+  "jump": "pads",
   "spawn": [4.5, 0, 9.5],
   "exits": [
     { "id": "south", "side": "+z", "at": 4 },

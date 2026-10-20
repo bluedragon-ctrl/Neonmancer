@@ -341,7 +341,7 @@ moves it to `"jump": "pads"` and ticks it off here.
 | 24 | `core_hall` | play | | Done (D256): flat hall, only the flag. |
 | 25 | `dj_vault` | play | | Done (D258): flat room, only the flag; a standing Blink crosses the pit. |
 | – | `buffer_1`–`buffer_5` | play | | The secret rooms (5.11) with their host rooms' doors. Dead Pixel done (D262): a new puzzle, no roof or spiked crates; Stray Byte done (D263); Null Orbit done (D264); Event Horizon done (D265); Cache Miss done (D266). |
-| – | teasers (`frost_*`, `glitch_*`) | nothing | glitch_gate: bouncy | Moved over in 5.19 as they are. |
+| – | teasers (`frost_*`, `glitch_*`) | nothing | glitch_gate: bouncy | Done (D269): moved over as they are. |
 
 ### Step 5.19 inventory (2026-10-20)
 
@@ -349,7 +349,8 @@ What is left before the pads-only rule becomes the engine's, worked out
 with the checker: each room was checked with `--with zap,scan,fork,pause`
 from the spawn and from every door, free jump against `--pads`. The
 diffs below are the only ones; every other target comes out the same.
-No test loads any of these rooms.
+No test loads any of these rooms. **Done (D269):** all 15 are pads rooms
+now, the three rebuilds as below (details in D269).
 
 **The rooms still on the free jump (15).** Every Lattice and Outer Buffer
 room is done; what is left is the four teasers and the dev wing.
@@ -364,9 +365,9 @@ room is done; what is left is the four teasers and the dev wing.
 | `socket_lab` | dev | nothing | Set the flag. |
 | `spiked_lab` | dev | nothing | Set the flag; its 32 pushes are a solver result, not a hop. Its future depends on the spiked crate's (below). |
 | `watchdog_run` | dev | nothing | Set the flag; its run was never a jump (play it once). |
-| `heavy_lab` | dev | `energy`: free → `fork` | `crate_2` sits on the 1-high wall (x 6, z 0..3), and he climbed the wall to push it off onto the heavy plate. A stair onto the wall puts the stack of two back; otherwise only a decoy makes the second weight. |
-| `socket_yard` | dev | `energy`: never | The yard's walls are 1-high blocks he stepped over (D201), so on pads he can't get in. A stair onto the wall and one off it (or a gap in the wall, if the solver still gives 9 pushes) brings the yard back; it is the sokoban-design skill's worked example, so its XSB and the skill's notes follow the change. |
-| `stream_lab` | dev | `energy`: never | He stepped over the 1-high fence divider (x 4, z 0..2) into the vault. A stair onto the fence (as in `fork_lab`, D251) and a drop into the vault; check it still takes the 10 pushes (D198). |
+| `heavy_lab` | dev | `energy`: free → `fork` | `crate_2` sits on the 1-high wall (x 6, z 0..3), and he climbed the wall to push it off onto the heavy plate. Done: a `stair_x` at (5,0,1) onto the wall, the crate a cell south. |
+| `socket_yard` | dev | `energy`: never | The yard's walls are 1-high blocks he stepped over (D201), so on pads he can't get in. A stair onto the wall and one off it (or a gap in the wall, if the solver still gives 9 pushes) brings the yard back; it is the sokoban-design skill's worked example, so its XSB and the skill's notes follow the change. Done: openings at (5,0,0) and (4,0,5), the same 9 pushes. |
+| `stream_lab` | dev | `energy`: never | He stepped over the 1-high fence divider (x 4, z 0..2) into the vault. A stair onto the fence (as in `fork_lab`, D251) and a drop into the vault; check it still takes the 10 pushes (D198). Done: the divider's front cell is a stair, a stair up from each half of the vault; 10 pushes. |
 
 **For the author to decide** (the step plan says "retired or kept on
 their own merit"):

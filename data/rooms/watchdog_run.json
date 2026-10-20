@@ -6,6 +6,7 @@
   "biome": "home_lattice",
   "size": [12, 4, 8],
   "timer": 25,
+  "jump": "pads",
   "spawn": [10.5, 0, 4],
   "exits": [{ "id": "east", "side": "+x", "at": 3 }],
   "holes": [
