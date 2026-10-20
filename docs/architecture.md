@@ -186,6 +186,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `ui/menus.js` | Title screen and pause menu logic (D109): the stack of menus, selection, what an item does (pure, tested) |
 | `ui/map-screen.js` | The map screen (D112): the run's map in SVG, isometric like the game, fitted to the rooms shown |
 | `ui/menu-screen.js` | Title screen and pause menu on screen: logo (and its scramble after Start), heading, items with setting values, controls table; mouse hover, click and ◄ ► |
+| `ui/debug-info.js` | Copy debug info's text (D273): versions, room and position, a key of now, his state, settings, render and browser (pure, tested) |
 | `ui/saves.js` | Access keys in the browser (D105): the URL hash, localStorage (the last save, for Continue), the clipboard with a fallback |
 | `ui/settings.js` | Player settings (D109): volumes (read by the audio engine, D138) and visual stubs, steps, localStorage (pure, tested) |
 | `ui/boot-screen.js` | The room compiling after Start (D110): a canvas covering the room, cleared tile by tile along its grid, outlines flashing |

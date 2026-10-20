@@ -3717,3 +3717,24 @@ its `"jump": "pads"` line and nothing else.
 **Why:** D222 planned it once every room was moved; the author asked for
 `feat/no-jump` after D271. One rule for the whole game keeps the engine,
 the tools and the skills free of a second set of numbers.
+
+### D273 — 2026-10-20 — The first minute and Copy debug info (5.13)
+- **Copy debug info** in the pause menu, after Copy link: a few lines for
+  a tester's report, no save needed (`ui/debug-info.js`): the game, data
+  and key-format versions, the room and his position, a key of this
+  moment (made, not stored: Continue and the URL hash are untouched),
+  integrity, energy, backups, access level and pickups found, the
+  settings, the render scale, MSAA and pixel ratio in use, the window
+  size and the browser. No frame rate: behind a menu the last frame is
+  kept (D169), so it would read near zero.
+- **The first minute** from the title to the first disk already teaches
+  the ways up before any spell: `boot_up` a stair and a pad (D225),
+  `first_steps` pushes and a hole (D231), `zap_port` the disk (D232); the
+  controls screen lists Space and E for Cast (D272). Three screen texts
+  still told the jump's rules and are fixed: `tut_push` ("a crate is no
+  step"), `tut_zap` ("invoke: Space or E") and `help_compile` (a plug or
+  a wall, no step up).
+- 5.17 closes: every Lattice room on the ladder is reviewed and on pads;
+  the author's tuning in the editor goes on outside the step table.
+**Why:** testers need one copy that says where they were and on what;
+the first texts a player reads must match the no-jump rules.
