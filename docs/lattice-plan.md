@@ -342,3 +342,81 @@ moves it to `"jump": "pads"` and ticks it off here.
 | 25 | `dj_vault` | play | | Done (D258): flat room, only the flag; a standing Blink crosses the pit. |
 | – | `buffer_1`–`buffer_5` | play | | The secret rooms (5.11) with their host rooms' doors. Dead Pixel done (D262): a new puzzle, no roof or spiked crates; Stray Byte done (D263); Null Orbit done (D264); Event Horizon done (D265); Cache Miss done (D266). |
 | – | teasers (`frost_*`, `glitch_*`) | nothing | glitch_gate: bouncy | Moved over in 5.19 as they are. |
+
+### Step 5.19 inventory (2026-10-20)
+
+What is left before the pads-only rule becomes the engine's, worked out
+with the checker: each room was checked with `--with zap,scan,fork,pause`
+from the spawn and from every door, free jump against `--pads`. The
+diffs below are the only ones; every other target comes out the same.
+No test loads any of these rooms.
+
+**The rooms still on the free jump (15).** Every Lattice and Outer Buffer
+room is done; what is left is the four teasers and the dev wing.
+
+| Room | Wing | Lost on pads | What it needs |
+|---|---|---|---|
+| `frost_edge`, `frost_gate`, `glitch_edge`, `glitch_gate` | teasers | nothing | Set `"jump": "pads"` as they are (look only; `glitch_gate`'s bouncy enemy becomes a moving pad, D223). |
+| `cage_lab` | dev | nothing | Set the flag. |
+| `fence_yard` | dev | nothing | Set the flag. |
+| `hidden_layer` | dev | nothing | Set the flag. It hands out every spell and sits beside `boot_up` on the map, so the world check leans on it; unchanged by this step. |
+| `room_1`, `room_2` | dev | nothing | Set the flag. |
+| `socket_lab` | dev | nothing | Set the flag. |
+| `spiked_lab` | dev | nothing | Set the flag; its 32 pushes are a solver result, not a hop. Its future depends on the spiked crate's (below). |
+| `watchdog_run` | dev | nothing | Set the flag; its run was never a jump (play it once). |
+| `heavy_lab` | dev | `energy`: free → `fork` | `crate_2` sits on the 1-high wall (x 6, z 0..3), and he climbed the wall to push it off onto the heavy plate. A stair onto the wall puts the stack of two back; otherwise only a decoy makes the second weight. |
+| `socket_yard` | dev | `energy`: never | The yard's walls are 1-high blocks he stepped over (D201), so on pads he can't get in. A stair onto the wall and one off it (or a gap in the wall, if the solver still gives 9 pushes) brings the yard back; it is the sokoban-design skill's worked example, so its XSB and the skill's notes follow the change. |
+| `stream_lab` | dev | `energy`: never | He stepped over the 1-high fence divider (x 4, z 0..2) into the vault. A stair onto the fence (as in `fork_lab`, D251) and a drop into the vault; check it still takes the 10 pushes (D198). |
+
+**For the author to decide** (the step plan says "retired or kept on
+their own merit"):
+- **The spiked crate** (D199). It was there to stop a hop over a crate,
+  which pads rooms can't do anyway (a crate is no step), and it was kept
+  for the secret rooms (Plan review, point 4), but none of the five uses
+  it. Only `spiked_lab` does. What it still adds on pads: no standing
+  on it from above, and touching it hurts. Retire it (block type, view,
+  vents fx, `topDamage`, the checker's and solver's `bad` top, the
+  survey column, showcase, `spiked_lab`, its tests) or keep it for
+  Phase 6.
+- **Fence roofs and hop-proof walls.** Every room that had them is on
+  pads now and was reviewed (5.17), so whatever stayed was kept on its
+  own merit. Nothing to do in 5.19 but drop the reason ("stops a hop")
+  from docs and skills.
+
+**Code that goes** (the rule becomes the engine's):
+- `schemas/room.schema.json` `jump`, `src/world/room.js` (`jump`
+  default), the editor's Jump box (`src/editor/panel.js`,
+  `room-edit.js` `KEY_ORDER` and its setter), and the field in every
+  room file (a migration of all 46 rooms; none is authored).
+- `src/game.js`: `padJumpOnly`, `jumpRule()`, the debug toggle and its
+  strings (`msg.padJumpOn`/`Off`), `canJump`; Space always casts.
+- `src/entities/player.js`: the jump key, coyote time and the jump
+  buffer (`coyoteTicks`, `jumpBufferTicks`, `canJump`); pads, stairs and
+  bounces stay.
+- `src/world/reach.js` `freeJump` (and `JUMP`'s free part), `reach-report.js`
+  `freeJumpRooms()`, `tools/check-reach.js` `--pads` and the "still on
+  the free jump" list; debug J and its readout (`src/debug/readout.js`).
+- The `jump` action (`src/core/bindings.js`): menus and the boot screen
+  read it as confirm (`src/ui/menus.js`, `src/main.js`), so those move to
+  `confirm`/`cast` before it goes. The `jump` sound stays for pads.
+- Controls screen (`CONTROL_ROWS`, `controls.jump` in strings.json) and
+  help texts.
+
+**Tests that change** (they press the jump key): `player.test.js` (the
+jump, coyote and gap cases), `stairs.test.js` (`canJump`, `jumpRule`),
+`fence.test.js`, `crate-stream.test.js`, `spiked-crate.test.js`,
+`push-frozen.test.js`, `switches.test.js`, `menus.test.js`,
+`reach.test.js` (`freeJumpRooms`), `editor.test.js` (new rooms are pads
+rooms); `input.test.js` only uses `jump` as an example action. Each
+either moves to a pad or is dropped with the code it tests.
+
+**Docs and skills:** CLAUDE.md (§4 Grid and rooms, the spiked crate,
+Compile's "step up in a free-jump room", §9 debug J and `--pads`),
+design.md (Reach with the free jump, the checklist), the room-design
+skill (step 7 "Move it to pads", `sim.mjs`'s jump note), the
+sokoban-design skill, the level-review agent's jump rule check, and a
+decision entry replacing D221/D222's prototype wording.
+
+**Order:** two PRs. First the rooms: the 11 flag-only rooms plus the
+three fixes above, each checked and played. Then `feat/no-jump`: the
+code, tests and docs above, once the spiked crate is decided.
