@@ -2567,9 +2567,10 @@ decisions before the code lands. Every step also (D43):
 - updates `docs/design.md`, `docs/architecture.md` and CHANGELOG, and
   records new decisions.
 
-**Next: Phase 5, step 5.17, the room reviews against the Lattice ladder,
-each moving its room to the pads-only rule, from `junction` on** (`boot_up`,
-`first_steps`, `zap_port`, `first_light`, `atrium`, `shield_hall`, `freeze_hall`, `bolt_gallery`, `relay_loft`, `ledger_cell`, `scan_lab`, `mirror_stacks`, `ghost_exit`, `junction`, `drift_bay`, `cold_stairs`, `warden_pit`, `idle_cache`, `fork_lab` and `twin_plates` and `guard_loop` and `split_vault` and `gatekeeper` and `core_hall` and `dj_vault` done, D225, D231–D240, D242, D245–D258; D186, D187, D222, D223; 5.3 music waits for the author's tracks).
+**Next: Phase 5, step 5.12, quality presets** (5.13 done, D273; the room
+reviews of 5.17 are done for every Lattice room: `boot_up`,
+`first_steps`, `zap_port`, `first_light`, `atrium`, `shield_hall`, `freeze_hall`, `bolt_gallery`, `relay_loft`, `ledger_cell`, `scan_lab`, `mirror_stacks`, `ghost_exit`, `junction`, `drift_bay`, `cold_stairs`, `warden_pit`, `idle_cache`, `fork_lab` and `twin_plates` and `guard_loop` and `split_vault` and `gatekeeper` and `core_hall` and `dj_vault` done, D225, D231–D240, D242, D245–D258; D186, D187, D222, D223; 5.3 music waits for the author's tracks, and the
+author's tuning of the rooms in the editor goes on).
 
 ### Phase 5 (v0.5) steps: Home Lattice playtest
 
@@ -2579,7 +2580,8 @@ Done: 5.1 audio engine (D138), 5.2 sound effects (D139), 5.4 dev wing
 Lattice's ambience (D179), 5.10 the Outer Buffer look (D182, D183), 5.11a
 the secret rooms' entrances (D184), the gameplay direction (D186), 5.18
 the pads-rule prep (D223), the last free-jump rooms on pads (D269), 5.19
-the jump gone (D270–D272). The Lattice steps are two or three rooms each, the hub
+the jump gone (D270–D272), 5.17 the room reviews (D188–D258), 5.13 the
+first minute and the feedback entry (D273). The Lattice steps are two or three rooms each, the hub
 before the wings (D149); every batch goes through the reachability
 checker and the review subagent; rooms are drafted unflagged and the
 author flags them authored (D90). Room plan: [lattice-plan.md](lattice-plan.md).
@@ -2587,10 +2589,8 @@ author flags them authored (D90). Room plan: [lattice-plan.md](lattice-plan.md).
 | # | Branch | Delivers |
 |---|---|---|
 | 5.3 | `feat/music` | The author's tracks trimmed for seamless loops: Lattice, boss, title; room and biome mapping, a boss switch and a crossfade back. |
-| 5.17 | `rooms/<id>` | The room reviews, one room a session and a PR, in play order: the room-design skill's rework workflow against its ladder line, then the author's tuning in the editor. Each review moves its room to `"jump": "pads"` and rebuilds what the jump carried (lattice-plan.md, Pads-only migration), the Outer Buffer doors (5.11) with their host rooms. |
 | 5.11 | `feat/outer-buffer-secrets` | In progress: the secret cluster's contents, one room a PR, hard push puzzles (D173, D186). Done: Dead Pixel (D220, on pads D262), Stray Byte (D263), Null Orbit (D264), Event Horizon (D265), Cache Miss (D266): the five secret rooms are all built. |
 | 5.12 | `feat/quality-presets` | Quality presets, auto fallback and render scale wired up (D76), a check on a weaker GPU. |
-| 5.13 | `feat/onboarding-feedback` | The first minute from title to the first disk (stairs and a pad before any spell, D222), the controls screen (Space casts), the pause entry that copies debug info (version, room, key) for feedback. |
 | 5.14 | `chore/balance-pass` | Difficulty, energy, backups and shrines across the Lattice from full playthroughs. |
 | 5.15 | `chore/release-0.5.0` | Docs pass, tag `v0.5.0`, the GitHub Release: **Playtest 1**. |
 
@@ -2623,9 +2623,9 @@ room's empty shape (`RoomScene.showShape()`: floor grid and back walls in
 its biome's look, no blocks, holes, exits, objects or wizard), dimmed
 well down, with **Continue** (only with a save stored), **Start**,
 **Enter key**, **Options** and **Controls**. Esc or P in the game, or the
-window losing focus, opens the pause menu: **Resume**, **Save**, **Copy
-key**, **Copy link**, **Options**, **Controls**, **Quit to title** (see
-Saving and loading). Quitting asks first (*Keep playing* is selected),
+window losing focus, opens the pause menu: **Resume**, **Restart room**,
+**Map**, **Save**, **Copy key**, **Copy link**, **Copy debug info**,
+**Options**, **Controls**, **Quit to title** (see Saving and loading). Quitting asks first (*Keep playing* is selected),
 then starts a new game behind the title (the empty shape again); what was
 found since the last save is lost (D105). Menus stack: Options (and its
 Visuals), Controls, Enter key and the quit question open over the menu,
@@ -2672,6 +2672,12 @@ in the browser; `src/main.js` wires them to the menus.
   with it as the hash; before a save they say to save first. Where the
   browser refuses the Clipboard API an old copy command is tried; if that
   fails too, the notice says to select the key by hand.
+- **Copy debug info** (D273) copies a few lines for a tester's report,
+  no save needed: the game, data and key-format versions, the room and
+  where he stands, a key of this moment (nothing is stored), integrity,
+  energy, backups, access level and pickups found, the settings, the
+  render scale, MSAA and pixel ratio in use, the window size and the
+  browser (`ui/debug-info.js`).
 - **A link with a key** (`…/#E907D4-41B4A7-…`) loads it at start, straight
   into the boot sequence in the saved room; an invalid one opens the
   title with a message. A hash changed by hand while the page is open

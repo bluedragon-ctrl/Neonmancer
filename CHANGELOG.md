@@ -9,6 +9,10 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
+- Pause menu: **Copy debug info** (D273) copies the versions, the room
+  and position, a key of this moment, his state, the settings, the
+  render settings in use, the window and the browser, for testers'
+  reports.
 - Room editor (D267): Shift+drag fills a rectangle of blocks or holes in
   one undo step (right button clears, Esc cancels); `[` / `]` step
   through the tool's types, H toggles hide-above. The panel keeps its
@@ -48,6 +52,9 @@ docs/decisions.md).
   say the same; 11 pieces in 8 rooms are listed for their reviews.
 
 ### Changed
+- Tutorial screens (D273): `tut_push` says a crate is no step,
+  `tut_zap` that Space or E casts; Compile's help no longer calls its
+  crate a step up.
 - Space casts the selected spell and confirms in menus and on the
   end-of-game screen (D272); the controls screen lists it with E. The
   Microban survey script runs without the jump (its ledge column goes:

@@ -7,7 +7,10 @@ import { Game } from '../src/game.js';
 import { CONTROL_ROWS, settingText } from '../src/ui/menu-screen.js';
 import { MENUS, MenuFlow, isSetting } from '../src/ui/menus.js';
 import { SETTINGS, SETTINGS_STORAGE_KEY, Settings } from '../src/ui/settings.js';
+import { DATA_SCHEMA_VERSION, GAME_VERSION, SAVE_KEY_VERSION } from '../src/core/version.js';
+import { debugInfo } from '../src/ui/debug-info.js';
 import { Progress, saveBit } from '../src/world/progress.js';
+import { readSave } from '../src/world/save-game.js';
 import { SPELLS, gameData, input, roomFile } from './helpers.js';
 
 /** One tick of menu input: `actions` pressed. */
@@ -284,4 +287,24 @@ test('setting values as shown: a bar of ten cells, a percentage, a choice by nam
   assert.equal(settingText(text, 'sound', 0), '□□□□□□□□□□');
   assert.equal(settingText(text, 'renderScale', 8), '80%');
   assert.equal(settingText(text, 'quality', 'low'), 'setting.quality.low');
+});
+
+test('Copy debug info needs no save; the text names the version, room, a key of now and the browser', () => {
+  const flow = new MenuFlow('playing');
+  flow.pause();
+  flow.select(MENUS.pause.indexOf('copyDebug'));
+  assert.equal(flow.choose(), 'copyDebug');
+  assert.equal(flow.top.id, 'pause', 'the menu stays up for the notice');
+  for (const key of ['menu.copyDebug', 'menu.copiedDebug', 'menu.copyDebugFailed']) assert.ok(STRINGS.strings[key], key);
+
+  const game = new Game(gameData({ rooms: [roomFile('alpha')], spells: SPELLS }));
+  const text = debugInfo(game, { settings: { quality: 'auto' }, renderer: { renderScale: 1, multisampling: 4 }, viewport: [1920, 1080], userAgent: 'TestBrowser/1' });
+  assert.match(text, new RegExp(`^NEONMANCER ${GAME_VERSION} \\(data ${DATA_SCHEMA_VERSION}, key format ${SAVE_KEY_VERSION}\\)`));
+  assert.match(text, /^room: alpha at /m);
+  assert.match(text, /^key now: [0-9A-F]{4}-/m);
+  assert.equal(readSave(game.content, text.match(/^key now: (.*)$/m)[1]).ok, true, 'the key loads');
+  assert.match(text, /settings: quality auto/);
+  assert.match(text, /render: scale 1, msaa 4/);
+  assert.match(text, /window: 1920x1080/);
+  assert.match(text, /browser: TestBrowser\/1/);
 });

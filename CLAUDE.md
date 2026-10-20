@@ -500,7 +500,8 @@ not critical.
   with `history.replaceState` (no reload, no history spam). On load, a
   valid key in the hash loads that state directly; an invalid key shows
   a friendly message and starts normally.
-- UI: "Save", "Copy key" and "Copy link" in the pause menu; hint to
+- UI: "Save", "Copy key" and "Copy link" in the pause menu ("Copy debug
+  info" beside them is for testers' reports, D273); hint to
   bookmark after saving; "Enter key" on the title screen.
 - A save also goes to localStorage (wrapped in try/catch); the title's
   "Continue" loads it (D111). Loading a key never stores it: only Save does.
@@ -658,10 +659,11 @@ sounding Home Lattice and ship it to testers.
   pads (5.17), then the jump goes (5.19, done: D272).
 - Core first (D186): a Lattice ladder (each room's type, rung and trick
   in docs/lattice-plan.md), then every Lattice room reviewed one by one
-  with the room-design skill and the author's tuning.
+  with the room-design skill and the author's tuning (5.17, every
+  Lattice room reviewed).
 - Readiness: quality presets, auto fallback and render scale wired up,
-  a check on a weaker GPU; first-minute onboarding; a "copy debug info"
-  pause entry for feedback; a balance pass.
+  a check on a weaker GPU; first-minute onboarding and a "copy debug
+  info" pause entry for feedback (5.13, done: D273); a balance pass.
 - Rooms: real-content rooms are drafted unflagged; the author refines
   them in the editor and flags them authored. Test rooms live in the
   dev wing (D147).

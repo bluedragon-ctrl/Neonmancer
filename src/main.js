@@ -29,6 +29,7 @@ import { MapScreen } from './ui/map-screen.js';
 import { MenuScreen } from './ui/menu-screen.js';
 import { MenuFlow } from './ui/menus.js';
 import { roomTimerState } from './ui/room-timer.js';
+import { debugInfo } from './ui/debug-info.js';
 import { copyText, hashKey, keyLink, storeKey, storedKey, writeHash } from './ui/saves.js';
 import { Settings } from './ui/settings.js';
 import { readSave, saveGame } from './world/save-game.js';
@@ -127,6 +128,16 @@ function boot() {
       copyText(link ? keyLink(flow.key) : flow.key).then((copied) => {
         flow.notice = copied ? (link ? 'menu.copiedLink' : 'menu.copiedKey') : 'menu.copyFailed';
       });
+    }
+    if (command === 'copyDebug') {
+      const info = debugInfo(game, {
+        settings: settings.values,
+        renderer,
+        pixelRatio: window.devicePixelRatio,
+        viewport: [window.innerWidth, window.innerHeight],
+        userAgent: navigator.userAgent,
+      });
+      copyText(info).then((copied) => (flow.notice = copied ? 'menu.copiedDebug' : 'menu.copyDebugFailed'));
     }
   }
 

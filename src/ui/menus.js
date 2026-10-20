@@ -20,7 +20,7 @@ import { SETTINGS, Settings } from './settings.js';
  */
 export const MENUS = {
   title: ['continue', 'start', 'enterKey', 'options', 'controls'],
-  pause: ['resume', 'restart', 'map', 'save', 'copyKey', 'copyLink', 'options', 'controls', 'quit'],
+  pause: ['resume', 'restart', 'map', 'save', 'copyKey', 'copyLink', 'copyDebug', 'options', 'controls', 'quit'],
   restart: ['restartNo', 'restartYes'],
   enterKey: ['loadKey', 'back'],
   options: ['music', 'sound', 'visuals', 'back'],
@@ -38,11 +38,11 @@ const SUBMENUS = ['options', 'visuals', 'controls', 'quit', 'enterKey', 'map'];
  * title, load the stored save (continue) or the key typed in (loadKey),
  * save the game, copy the save's key or a link with it, quit to the title
  * (the game starts over, D105: nothing saves on its own), or store the
- * settings after a change. main.js answers a save or a load with saved(),
+ * settings after a change, or copy debug info for a tester's report. main.js answers a save or a load with saved(),
  * loaded() or refused().
  * Restart recompiles the room at the cost of one backup (a voluntary
  * death, main.js asks the game).
- * @typedef {'start' | 'continue' | 'loadKey' | 'save' | 'copyKey' | 'copyLink' | 'quit' | 'restart' | 'settings'} MenuCommand
+ * @typedef {'start' | 'continue' | 'loadKey' | 'save' | 'copyKey' | 'copyLink' | 'copyDebug' | 'quit' | 'restart' | 'settings'} MenuCommand
  */
 
 /** @param {string} item @returns {boolean} whether it is a setting */
@@ -194,6 +194,7 @@ export class MenuFlow {
       case 'continue':
       case 'loadKey':
       case 'save':
+      case 'copyDebug':
         return item;
       case 'copyKey':
       case 'copyLink':
