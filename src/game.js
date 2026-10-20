@@ -11,7 +11,8 @@ import { BOOST_EFFECTS, boostTicks } from './entities/boost.js';
 import { Enemy } from './entities/enemy.js';
 import { createObject } from './entities/kinds.js';
 import { BUFF_COLORS, FRAGMENT_COLOR, Pickup, SECRET_COLOR } from './entities/pickup.js';
-import { PLAYER, Player } from './entities/player.js';
+import { PLAYER, Player, heldDirection } from './entities/player.js';
+import { aimAxis } from './entities/clip.js';
 import { PUSHABLE } from './entities/pushable.js';
 import { hiddenThings, updateScan } from './entities/scan.js';
 import { SWITCH_KINDS } from './entities/switch.js';
@@ -19,10 +20,12 @@ import { groundBelow, overlapsBox, surfaceBelow, touchesBox } from './physics/co
 import { castSpell } from './spells.js';
 import { createLocks, updateSwitches } from './switches.js';
 import { arrival, exitAt } from './world/exits.js';
+import { wizardCells } from './world/cell-view.js';
 import { Grid } from './world/grid.js';
 import { nearestShrine } from './world/map.js';
 import { RunMap, roomsAround } from './world/run-map.js';
 import { Progress, SAVE_BLOCKS, pickupBit, saveBit } from './world/progress.js';
+import { launchBlocks, throwLanding } from './world/puzzle-rules.js';
 import { buildRoom } from './world/room.js';
 import { completion, placedBits, scoreOf } from './world/score.js';
 
@@ -547,6 +550,19 @@ export class Game {
   }
 
   /**
+   * Point a pad's throw (D274) the way `dir` (a grid axis, or null: straight
+   * up): onto the cell the puzzle's rule picks (world/puzzle-rules.js
+   * throwLanding(), the checker's too), or back onto the pad.
+   * @param {object} pad the pad that threw him
+   * @param {number[]|null} dir
+   */
+  aimThrow(pad, dir) {
+    const to = dir && throwLanding(wizardCells(this.grid, this.solids), pad.pos, dir, launchBlocks(pad.launch));
+    this.player.throwTo(to ?? pad.pos, to ? dir : [0, 0]);
+    Object.assign(this.player.flight, { pad, held: dir ?? [0, 0] });
+  }
+
+  /**
    * One fixed tick: player → exits → his cast → his push → objects →
    * enemies (seeing, moving) → boss armor → bolts → enemy attacks →
    * bouncing off enemies → enemy contact → a beaten boss's drop → events.
@@ -560,12 +576,18 @@ export class Game {
     if (this.transition && ++this.transition.tick >= TRANSITION.inTicks) this.transition = null;
 
     const { player } = this;
-    // A jump pad (D221) throws him up the moment he stands on it.
+    // A jump pad (D221) throws him up the moment he stands on it, onto the
+    // cell it picks the way he holds (D274, the puzzle's rule, shared with the checker).
     const pad = player.grounded && !player.dead ? this.pads.find((object) => object.under(player.pos)) : null;
     if (pad) {
       player.bounce(pad.pos[1], pad.launch);
+      this.aimThrow(pad, throwAxis(heldDirection(input, this.movementMode), player.aim()));
       pad.launches++;
       this.emit('bounce', { pad });
+    } else if (player.flight?.pad && player.vy > 0) {
+      // While he still rises he may turn the throw another way (he came onto the pad from its side).
+      const dir = throwAxis(heldDirection(input, this.movementMode), player.aim());
+      if (dir && (dir[0] !== player.flight.held[0] || dir[1] !== player.flight.held[1])) this.aimThrow(player.flight.pad, dir);
     }
     const playerEvent = player.update(input, this.grid, {
       bodies: this.solids,
@@ -976,4 +998,18 @@ export class Game {
     if (y === 0 && this.grid.isHole(pos[0] + x / 2, pos[2] + z / 2)) return null;
     return y;
   }
+}
+
+/**
+ * The grid axis a pad throws him along (D274): the way he holds, or with
+ * two keys at once the larger part of it, a tie going the way he faces;
+ * null with nothing held (straight up).
+ * @param {number[]} held [dx, dz] of the held keys (heldDirection())
+ * @param {number[]} aim the way he faces (Player.aim())
+ * @returns {number[]|null}
+ */
+function throwAxis(held, aim) {
+  const [dx, dz] = held;
+  if (dx === 0 && dz === 0) return null;
+  return aimAxis(Math.abs(dx) === Math.abs(dz) ? aim : held);
 }

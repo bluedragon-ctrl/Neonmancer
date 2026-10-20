@@ -1571,9 +1571,13 @@ them is in Player and the Room design checklist (Reach).
   floor or on top of a block (validation), no body. The moment he stands
   on it, it throws him `launch` (2.2) above it: 2 blocks up;
   over a 1-tile gap onto a ledge up to 2 higher, over 2 tiles up to 1
-  higher, never over 3 (D243; from its middle or beyond, a run-up from
-  behind lands a block lower, and 1 up over 2 tiles needs its far edge);
-  he steers in the air, and standing still he bounces on the spot. A crate pushed onto it covers it. Look (D226): a trampoline in
+  higher, never over 3 (D243). Where it lands him is a rule on whole
+  cells (D274, `world/puzzle-rules.js` `throwLanding()`): the way he holds
+  as it throws him (he may turn it while he rises), onto the first column
+  ahead he can stand on at his level or higher; with none, the farthest
+  one lower down; with nothing held, or a wall too high, straight up, and
+  he comes down on the pad again. However he came onto the pad, the
+  throw is the same, and the checker counts exactly that. A crate pushed onto it covers it. Look (D226): a trampoline in
   the room's color (`render/pad-view.js`); sound `bounce:pad` (D223).
 - **Stair** (look `stair`, types `stair_x`, `stair_nx`, `stair_z`,
   `stair_nz` by their `rise`, D221): from the cell at its foot he walks up
@@ -1936,8 +1940,9 @@ come from the tuning tables (`PLAYER`, `PUSHABLE`, `PLATFORM`,
   2.2 above it the moment he stands on it: from the floor onto a 2-high
   ledge, never 3; from a pad on a 1-high block onto a 3-high one; over a
   1-tile gap onto a ledge up to 2 higher, over 2 tiles 1 higher, never
-  over 3 (D243; he steers in the air, and a run-up from behind lands a
-  block lower). Keep the
+  over 3 (D243), onto the first column ahead he can stand on at his level
+  or higher, whatever his run-up (D274): a pad never throws him over flat
+  floor to a ledge further on. Keep the
   pad's cell and the three above it free, or the launch hits a ceiling.
 - A pad fires whenever he stands on it, so never put one where he must
   walk across or stand still: a doorway, a 1-wide lane, the cell he

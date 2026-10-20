@@ -282,10 +282,13 @@ Lessons for pads (D222 on):
 - **A throw goes 2 up over a 1-tile gap, 1 up over 2** (D243). A pad lands
   him on a ledge up to its whole launch higher across one tile (a 3-high top
   from a pad on a 1-high block), a block less across two, never across
-  three; the checker counts the same. That is from its middle or beyond,
-  holding towards the ledge: a run-up from behind lands a block lower, and
-  1 up over 2 tiles needs its far edge. So a guarded ledge needs 3 up over
-  one tile, 2 over two, or a 3-tile gap; play every throw with `sim.mjs`. A pad on a step plus Blink cast
+  three; the checker counts the same. Since D274 the landing is a rule
+  (`src/world/puzzle-rules.js` `throwLanding()`, which the game and the
+  checker both ask): the first column ahead in the held direction he can
+  stand on at his level or higher, whatever his run-up; a pad never throws
+  him over flat floor to something further on. So a guarded ledge needs 3
+  up over one tile, 2 over two, or a 3-tile gap; the checker's verdict on a
+  throw is exact, `sim.mjs` is for timing. A pad on a step plus Blink cast
   14–22 ticks after the throw crosses 2 tiles onto a 3-high sill (the
   checker models Blink at the launch height); a hidden pad+Blink door
   needs that sim window checked.
@@ -423,7 +426,7 @@ Edit existing files with small text edits, not a JSON dump.
 | What | Number |
 |---|---|
 | No jump (D222, D272) | a 1-high wall is a wall, a crate a box he walks round; every ledge a one-way drop |
-| Pad | 2.2 above it the moment he stands on it: a 2-high ledge from the floor (3-high from a pad on a block), over a 1-tile gap onto a ledge up to 2 higher, over 2 tiles up to 1 higher, never over 3 (D243; a run-up from behind a block lower); the pad's cell and three above free; up to a 2-high ledge ~30 ticks (0.5 s), back down to its level ~46 (0.77 s) |
+| Pad | 2.2 above it the moment he stands on it: a 2-high ledge from the floor (3-high from a pad on a block), over a 1-tile gap onto a ledge up to 2 higher, over 2 tiles up to 1 higher, never over 3 (D243); onto the first column ahead he can stand on at his level or higher (D274); the pad's cell and three above free; up to a 2-high ledge ~30 ticks (0.5 s), back down to its level ~46 (0.77 s) |
 | Stair | 1 up from its foot, the way it rises; walked at walking speed; a crate or frozen enemy is never pushed up it (its foot is a wall to them); pushed off the ledge over its top it slides down to its foot (one push, D230); enemies walk it both ways, at half their cell rate (two cells a step) |
 | Bug bounce (D223) | only when he falls onto it: 2.8 over its lane, a 2-high ledge, never 3; the checker counts the whole lane |
 | Headroom | wizard 1.5 high: 2 free cells over every standing surface. A block above is a ceiling, the room's height is not (he stands on top of a 2-high wall in a 3-high room); keep standing surfaces 2 below the room height for the look |

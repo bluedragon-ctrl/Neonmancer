@@ -3738,3 +3738,47 @@ the tools and the skills free of a second set of numbers.
   the author's tuning in the editor goes on outside the step table.
 **Why:** testers need one copy that says where they were and on what;
 the first texts a player reads must match the no-jump rules.
+
+### D274 — 2026-10-20 — The puzzle's rules on whole cells: pushes and pad throws
+A design review found the puzzle written twice: the game's continuous
+physics and the reachability checker's cells, kept in step by hand, with
+`sim.mjs` sweeps to learn what a throw really reaches. The wizard and
+enemies keep moving freely; what the puzzle state becomes is now one rule
+on whole cells that both ask.
+- **`src/world/puzzle-rules.js`** (pure): `pushStep()` (a pushed, pulled or
+  shoved crate or frozen enemy: the next free cell, or down a stair,
+  D230; never up one or out of the room), `settle()` (where a crate comes
+  to rest, or the hole it plugs), `throwLanding()` and `LAUNCH` (below).
+  `Pushable.push()`, `Enemy.pull()` (frozen pushes, Pull, Shove) and the
+  checker's `crateStep()`, `settle()` and frozen-enemy pushes call them.
+  The game reads its bodies as cells with `world/cell-view.js`
+  (`wizardCells()`), the way the checker does.
+- **A pad's throw is a rule** (D221, D243): the way he holds as it throws
+  him (two keys: the larger part, a tie the way he faces) picks the first
+  column ahead he can stand on at his level or higher: next to the pad up
+  to its launch higher; over a gap (a hole or a drop, the cells over it
+  free) 2 up over one tile, 1 over two, never three; with none the
+  farthest landing lower down; with nothing held or a wall too high,
+  straight up, back onto the pad. Gravity lifts and drops him as before;
+  across, the throw carries him to the middle of that cell by the time he
+  comes down (`Player.throwTo()`, at most `flightSpeed` 12 u/s), a wall in
+  the way holding him until he rises over it. While he still rises he may
+  turn it another way (he came onto the pad from its side). The keys
+  don't steer otherwise; landing, a ceiling, a teleport or death ends it.
+  What goes: the run-up rules (a block lower from behind, the far edge for
+  1 up over two tiles) and throws over flat floor to a ledge further on.
+- **The checker** asks `throwLanding()` for a pad's four ways and no longer
+  walks him off a pad, since one throws him the moment he stands on it.
+  A bouncy enemy's bounce keeps the free envelope (it moves; combat and
+  timing stay out of the checker). Verdicts: every room as before except
+  `ghost_exit`, where Warp alone no longer reaches fragment 9 or the west
+  door (the old envelope threw him from `pad_ledge` over flat floor onto a
+  fence); the intended chain is untouched, and a later-sector spell keying
+  a fragment was against D260 anyway.
+- **Tests:** `tests/puzzle-rules.test.js` plays 160 throws in random rooms
+  and checks the game lands where the rule says and the checker's cells
+  give the same answer.
+Authored rooms affected: none (no room is flagged).
+**Why:** one rule the game, the checker and the solver share can't drift,
+and a pad throw that lands on a known cell makes the checker's verdict
+exact instead of measured.

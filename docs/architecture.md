@@ -69,6 +69,8 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `world/pickup-report.js` | The world map tool's pickup report: every permanent item by save bit, the rooms it lies in, refills per type, unknown types (pure, tested) |
 | `world/progress.js` | What the wizard has for the whole game (D71): save bits in blocks (`SAVE_BLOCKS`, `saveBit()`, `pickupBit()`), `Progress` (bits found, known spells, a block's count); blocks: spells, buffs, upgrades, fragments, secrets (D100) (pure, tested) |
 | `world/room.js` | Runtime room built fresh from data on every entry (type defaults + overrides; static block cells by type; cells of block types with a kind become room objects) |
+| `world/puzzle-rules.js` | The puzzle's rules on whole cells (D274), asked by the game and the checker alike: `pushStep()` (where a pushed or pulled crate or frozen enemy goes), `settle()` (where a crate comes to rest, or the hole it plugs), `throwLanding()` (the cell a pad throws him onto) (pure, tested) |
+| `world/cell-view.js` | The game's bodies read as whole cells for the puzzle's rules (`wizardCells()`: blocked, landing), the way the checker reads them (D274) |
 | `world/reach.js` | The reachability of one room (D131): standing cells, pads, stairs and bug bounces (no jump, D272), gaps, abilities, crates as a bounded puzzle; what he reaches (pure, tested) |
 | `world/reach-world.js` | The reachability of the world (D131): the fixpoint of abilities, access and rooms, the order it opens in, what each exit and pickup needs (pure, tested) |
 | `world/reach-report.js` | The reachability report as text and as plain data (pure, tested) |

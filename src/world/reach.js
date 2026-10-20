@@ -10,6 +10,9 @@
  * numbers come from the tuning tables (`PLAYER`, `WARP`) and the design
  * checklist (docs/design.md); keep them in step.
  *
+ * Where a crate goes when pushed and where it comes to rest are the
+ * puzzle's rules (puzzle-rules.js pushStep(), settle()), the game's too.
+ *
  * Pushable crates are searched as a puzzle: every position the crates can
  * be pushed (or pulled, shoved, swapped, or cut and pasted) into is a
  * configuration, each with its own flood; a configuration is the crates
@@ -41,8 +44,11 @@
  * one enemy may count in several cells at once (optimistic, like the
  * timing), but it holds one plate at most.
  *
- * No jump (D272): a jump pad throws him up its `launch` (2 blocks); across a
- * gap it lands 2 up over one tile and 1 up over two (D243, LAUNCH). That is
+ * No jump (D272): a jump pad throws him up its `launch` (2 blocks) the way
+ * he holds, onto the cell the puzzle's rule picks (D274, puzzle-rules.js
+ * throwLanding(), which the game asks too): the first column ahead he can
+ * stand on at his level or higher, across a gap 2 up over one tile and 1 up
+ * over two (D243, LAUNCH). That is
  * his only way up besides stairs and bounces: elsewhere no climb, no gap,
  * no Blink from a throw, no step onto a compiled crate, and a pickup two
  * cells up is out of reach.
@@ -67,6 +73,7 @@
 import { DECO_LOOKS, exitCells } from '../data/room-data.js';
 import { Grid, RISES } from './grid.js';
 import { pathCells } from './path.js';
+import { LAUNCH, launchBlocks, pushStep, settle as settleRule, throwLanding } from './puzzle-rules.js';
 
 /** The abilities the search knows how to use, spells by id. */
 export const ABILITIES = ['zap', 'scan', 'pull', 'shove', 'swap', 'compile', 'fork', 'cut_paste', 'blink', 'warp', 'pause'];
@@ -76,18 +83,6 @@ export const ABILITIES = ['zap', 'scan', 'pull', 'shove', 'swap', 'compile', 'fo
  * 0.6 top, so 2.8 over the floor of its lane): a 2-high ledge, never 3.
  */
 export const BOUNCE_UP = 2;
-
-/**
- * Gaps a launch (a pad, a bounce) crosses, D243. Played
- * with sim.mjs from every point of a pad: over a 1-tile gap it lands up to
- * its whole launch higher (a 3-high top from a pad on a 1-high block), over
- * 2 tiles a block less, over 3 never. Optimistic: the best launch point and
- * a straight hold; a run-up from behind reaches a block less, and over 2
- * tiles 1 up needs the far edge of the pad (level, its middle).
- */
-export const LAUNCH = {
-  gap: 2,
-};
 
 /** How far Blink goes, from defs.json; the search takes the spell's `range` from its `spells` when given. */
 const BLINK_RANGE = 3;
@@ -201,7 +196,7 @@ export class RoomModel {
           for (const [px, py, pz] of cells) this.lifts.set(this.index(px, py, pz), cells.filter(([, qy]) => qy !== py));
       }
       else if (object.kind === 'plate' || object.kind === 'socket') this.switches.push(object);
-      else if (object.kind === 'pad') this.pads.set(this.index(x, y, z), Math.floor((object.launch ?? 2.2) + 1e-9));
+      else if (object.kind === 'pad') this.pads.set(this.index(x, y, z), launchBlocks(object.launch ?? 2.2));
       else if (object.kind === 'gate' && (object.trigger ?? 'switch') === 'switch') {
         // A sheet (D224) is the top of the cell under it, or the cover of the hole tile it lies on.
         const sheet = object.look === 'sheet';
@@ -247,12 +242,9 @@ export class RoomModel {
         if (!this.grid.isInside(x - dx, z - dz) || !stands.has(this.index(x - dx, y, z - dz))) continue;
         const to = this.crateStep(x, y, z, dx, dz, cfg);
         if (!to) continue;
-        const [tx, , tz] = to;
-        let ty = to[1];
-        let under = this.below(tx, ty, tz, cfg, true);
-        while (under === 'air') under = this.below(tx, --ty, tz, cfg, true);
-        if (under === 'hole') continue;
-        const i = this.index(tx, ty, tz);
+        const rest = settleRule(to, (cx, cy, cz) => this.below(cx, cy, cz, cfg, true));
+        if (rest.hole) continue; // it pops
+        const i = this.index(...rest.cell);
         if (!this.frozenCells.has(i)) this.frozenCells.set(i, new Set());
         const there = this.frozenCells.get(i);
         const before = there.size;
@@ -306,10 +298,7 @@ export class RoomModel {
    * @returns {number[]|null} [x, y, z]
    */
   crateStep(x, y, z, dx, dz, cfg) {
-    const step = this.grid.stairStep(x, y, z, dx, dz, false);
-    if (!step) return null;
-    if (step.via && this.blockedCrate(...step.via, cfg)) return null;
-    return this.blockedCrate(...step.to, cfg) ? null : step.to;
+    return pushStep(this.grid, [x, y, z], [dx, dz], (cell) => this.blockedCrate(...cell, cfg))?.to ?? null;
   }
 
   blockedIn(grid, x, y, z, cfg) {
@@ -360,12 +349,8 @@ export class RoomModel {
    * @returns {{ cell: number } | { plug: number }}
    */
   settle(x, y, z, cfg) {
-    for (;;) {
-      const under = this.below(x, y, z, cfg, true);
-      if (under === 'hole') return { plug: z * this.w + x };
-      if (under !== 'air') return { cell: this.index(x, y, z) };
-      y--;
-    }
+    const rest = settleRule([x, y, z], (cx, cy, cz) => this.below(cx, cy, cz, cfg, true));
+    return rest.hole ? { plug: rest.hole[1] * this.w + rest.hole[0] } : { cell: this.index(...rest.cell) };
   }
 
   /** How many cells ahead the box moves level through open space, at most `limit`. */
@@ -404,11 +389,17 @@ export class RoomModel {
     for (const [x, y, z] of starts) land(x, y, z);
 
     const { abilities } = this;
+    /** His cells in this configuration, as the puzzle's rules read them (puzzle-rules.js). */
+    const cells = { blocked: (x, y, z) => this.blocked(x, y, z, cfg), landing: (x, y, z) => this.landing(x, y, z, cfg) };
     while (queue.length > 0) {
       const [x, y, z] = queue.pop();
       // A pad (or a bouncy enemy he fell onto, D223) throws him up; nothing else does (D272).
       const up = this.climbFrom(x, y, z, bounced.has(this.index(x, y, z)));
       const thrown = up > 0;
+      // A pad (D274) throws him the moment he stands on it, onto the cell the
+      // puzzle's rule picks the way he holds (straight up he comes down on it
+      // again): he never walks off one. A bounce stays free (below).
+      const pad = this.pads.has(this.index(x, y, z)) && !bounced.has(this.index(x, y, z));
       // A launch of 2 blocks or more flies further than a low one (D243).
       const launch = up > 1;
       const gap = launch ? LAUNCH.gap : up;
@@ -418,13 +409,18 @@ export class RoomModel {
         const [dx, dz] = dir;
         const nx = x + dx;
         const nz = z + dz;
+        if (pad) {
+          const to = throwLanding(cells, [x, y, z], dir, up);
+          if (to && to[1] >= y) add(...to);
+          else if (to) land(to[0], y, to[2]);
+        }
         // Walk on or step off a ledge.
-        land(nx, y, nz);
+        if (!pad) land(nx, y, nz);
         // Walk up a stair (D221) from its foot onto its top.
         const rise = this.grid.isInside(nx, nz) && y < this.h ? this.stairs.get(this.index(nx, y, nz)) : undefined;
-        if (rise && rise[0] === dx && rise[1] === dz && this.landing(nx, y + 1, nz, cfg) === y + 1) add(nx, y + 1, nz);
-        // Thrown up: the cell is a block (or a body) he can stand on top of.
-        for (let climb = 1; climb <= up; climb++) {
+        if (!pad && rise && rise[0] === dx && rise[1] === dz && this.landing(nx, y + 1, nz, cfg) === y + 1) add(nx, y + 1, nz);
+        // Thrown up by a bounce: the cell is a block (or a body) he can stand on top of.
+        for (let climb = 1; climb <= (pad ? 0 : up); climb++) {
           // Headroom for the rise, then the landing cell on top of what he climbs.
           let free = true;
           for (let dy = 2; dy <= climb + 1; dy++) free &&= !this.blocked(x, y + dy, z, cfg);
@@ -432,7 +428,7 @@ export class RoomModel {
           if (this.grid.isInside(nx, nz) && this.landing(nx, y + climb, nz, cfg) === y + climb) add(nx, y + climb, nz);
         }
         // Thrown over a gap: the cells over it are free; he lands level or lower (or higher, below).
-        for (let width = 1; width <= gap; width++) {
+        for (let width = 1; width <= (pad ? 0 : gap); width++) {
           let over = true;
           for (let k = 1; k <= width; k++) for (let dy = 0; dy <= 2; dy++) over &&= !this.blocked(x + dx * k, y + dy, z + dz * k, cfg);
           if (!over) break;
