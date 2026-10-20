@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Boxes } from '../src/editor/boxes.js';
 import { formatJson } from '../src/editor/format-json.js';
-import { RoomEdit, newRoom, resizeText, roomIdProblem, sizeProblem } from '../src/editor/room-edit.js';
+import { RoomEdit, newRoom, resizeText, roomIdProblem, sizeProblem, spanCells } from '../src/editor/room-edit.js';
 import { WorldEdit } from '../src/editor/world-edit.js';
 import { idProblem } from '../src/editor/ids.js';
 import { MAX_ACCESS_LEVEL, ROOM_HEIGHT } from '../src/core/rules.js';
@@ -142,6 +142,69 @@ test('RoomEdit places and erases blocks, objects and holes', () => {
   assert.equal(edit.dirty, true);
   edit.markSaved();
   assert.equal(edit.dirty, false);
+});
+
+test('spanCells: the cells between two corners in any order, both included', () => {
+  assert.deepEqual(spanCells([1, 0, 2], [0, 0, 3]), [
+    [0, 0, 2],
+    [0, 0, 3],
+    [1, 0, 2],
+    [1, 0, 3],
+  ]);
+  assert.deepEqual(spanCells([2, 1, 2], [2, 1, 2]), [[2, 1, 2]]);
+});
+
+test('RoomEdit fills and clears a rectangle as one undo step, leaving things and holes alone', () => {
+  const edit = new RoomEdit(sampleRoom());
+  // From [2, 0, 2] to [4, 0, 4]: the crate at [3, 0, 3] and the hole at [4, 4] stay.
+  assert.equal(edit.fillBlocks([4, 0, 4], [2, 0, 2], 'hazard'), true);
+  assert.equal(edit.undoStack.length, 1, 'one step');
+  assert.equal(edit.at([3, 0, 3]).kind, 'object');
+  assert.equal(edit.at([4, 0, 4]), null);
+  assert.equal(edit.isHole([4, 4]), true);
+  assert.deepEqual(edit.at([2, 0, 2]), { kind: 'block', type: 'hazard' });
+  assert.deepEqual(edit.at([4, 0, 3]), { kind: 'block', type: 'hazard' });
+  assert.equal(edit.fillBlocks([2, 0, 2], [4, 0, 4], 'hazard'), false, 'nothing left to change');
+
+  // Clearing takes blocks only, the crate stays.
+  assert.equal(edit.clearBlocks([0, 0, 0], [3, 0, 3]), true);
+  assert.equal(edit.at([0, 0, 0]), null, 'part of a block entry');
+  assert.equal(edit.at([2, 0, 2]), null);
+  assert.equal(edit.at([3, 0, 3]).kind, 'object');
+  assert.deepEqual(edit.at([4, 0, 3]), { kind: 'block', type: 'hazard' }, 'outside the rectangle');
+  assert.equal(edit.undoStack.length, 2);
+
+  // Holes: a rectangle of tiles, and floor again.
+  assert.equal(edit.fillHoles([0, 5], [1, 6], true), true);
+  assert.deepEqual([[0, 5], [1, 5], [0, 6], [1, 6]].map((tile) => edit.isHole(tile)), [true, true, true, true]);
+  assert.equal(edit.fillHoles([0, 5], [1, 6], false), true);
+  assert.equal(edit.isHole([1, 6]), false);
+  assert.equal(edit.undo(), true);
+  assert.equal(edit.isHole([1, 6]), true, 'one undo brings the whole rectangle back');
+});
+
+test('RoomEdit moves a thing with its id, fields and path; only to a free cell', () => {
+  const edit = new RoomEdit(sampleRoom());
+  assert.equal(edit.placeObject([2, 0, 5], 'platform'), true);
+  const platform = edit.at([2, 0, 5]).item;
+  edit.updateItem(platform.id, { switches: ['plate_9'], path: { points: [[2, 0, 6]] } });
+
+  assert.match(edit.moveProblem('crate_1', [6, 0, 6]), /taken \(hazard block\)/);
+  assert.match(edit.moveProblem('crate_1', [5, 0, 1]), /taken \(sentry\)/);
+  assert.match(edit.moveProblem('crate_1', [3, 9, 3]), /outside/);
+  assert.match(edit.moveProblem(platform.id, [2, 0, 7]), /path would leave/);
+  assert.equal(edit.moveItem('crate_1', [6, 0, 6]), false);
+  assert.equal(edit.moveItem('crate_1', [3, 0, 3]), false, 'already there');
+
+  const steps = edit.undoStack.length;
+  assert.equal(edit.moveItem(platform.id, [1, 1, 2]), true);
+  assert.equal(edit.undoStack.length, steps + 1, 'one step');
+  assert.deepEqual(edit.item(platform.id), { id: platform.id, type: 'platform', at: [1, 1, 2], switches: ['plate_9'], path: { points: [[1, 1, 3]] } });
+  assert.equal(edit.at([2, 0, 5]), null);
+  assert.equal(edit.moveItem('sentry', [5, 0, 2]), true);
+  assert.equal(edit.at([5, 0, 2]).item.id, 'sentry');
+  assert.equal(edit.undo(), true);
+  assert.equal(edit.at([5, 0, 1]).item.id, 'sentry');
 });
 
 test('RoomEdit.placeObject on the same object keeps it; another type replaces it', () => {

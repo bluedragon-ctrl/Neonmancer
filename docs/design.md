@@ -2389,15 +2389,29 @@ has no validation errors; otherwise the panel says so and the editor stays
 open. Edits are kept per room until the page is closed. The panel's room
 list switches to another room; New room makes an empty one (D57).
 
+The panel (D267): a head that stays put while the rest scrolls (the room
+id, amber while anything is unsaved; Undo, Redo, Save, Revert; the last
+action; the errors with their count, a long list scrolling in place),
+then the room list with **Room settings** folded under it (new room,
+name, authored, jump, biome, size, timer; its header line sums them up:
+`Home Lattice · 12×5×12 · pads`), the layer, the hover line, the tools
+with a line on what the picked one does, its fields, and **Keys**, folded
+away. Folds remember whether they were open (localStorage, per browser).
+
 | Input | What it does |
 |---|---|
 | Left click / drag | Place or pick with the current tool (a drag paints blocks, holes and objects; one undo step) |
 | Right click / drag | Erase with the current tool |
+| Shift + drag | Block and Hole tools: a rectangle on the layer (holes: the floor), shown as one box, filled when the button is let go, one undo step; the right button clears it. Blocks skip cells holding an object, enemy or pickup and holes; clearing takes blocks only (D267) |
+| [ / ] | Block, Object, Enemy and Switch tools: the previous / next type in the panel's list (D267) |
+| Drag a thing | Object, Enemy and Switch tools: move an object, enemy, pickup or switch to a free cell on its layer, keeping its id (so every switch link holds), overrides, timer, drop and path (moved along); a click without moving picks it as before (D268) |
+| M | Move the picked thing: the next click puts it in a free cell of the edited layer (the wheel changes it meanwhile); Esc or right click cancels (D268) |
+| H | Hide what is above the layer, or show it again |
 | Mouse wheel, PgUp / PgDn | Height layer up / down (a grid shows it; with **hide above**, on by default, blocks, objects and enemies above it aren't drawn) |
 | 1–9, 0 | Tool: Block, Hole, Object, Enemy, Path, Exit, Spawn, Reset, Shrine, Switch |
 | R | Block tool with the stair picked: turn it a quarter (rises +x, +z, −x, −z, D223) |
 | Alt + left click | Block tool: take the type and switches of the block clicked (an eyedropper, D142) |
-| Esc | Drop the picked enemy, platform or exit |
+| Esc | Drop the picked enemy, platform or exit; during a Shift drag, drop the rectangle; during a move, cancel it |
 | Delete, Backspace | Remove the picked object, enemy or exit |
 | Ctrl+Z, Ctrl+Y (Ctrl+Shift+Z) | Undo, redo |
 | Ctrl+S | Save (dev server) / export (build), from a panel field too |

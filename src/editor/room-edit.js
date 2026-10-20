@@ -9,7 +9,7 @@
 import { MAX_ROOM_FOOTPRINT, ROOM_HEIGHT } from '../core/rules.js';
 import { DATA_SCHEMA_VERSION } from '../core/version.js';
 import { DECO_FACES, EXIT_DEFAULTS, requiresOf, sideLength, withExitDefaults } from '../data/room-data.js';
-import { Boxes, boxFields, boxKey } from './boxes.js';
+import { Boxes, boxCells, boxFields, boxKey } from './boxes.js';
 import { formatJson } from './format-json.js';
 import { idProblem } from './ids.js';
 
@@ -36,6 +36,11 @@ const sameCell = (a, b) => a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
 
 /** Exit names by side, as the rooms use them (north is the -z side). */
 export const SIDE_NAMES = { '-z': 'north', '+x': 'east', '+z': 'south', '-x': 'west' };
+
+/** The cells between two corner cells in any order, both included (a Shift drag's rectangle). */
+export function spanCells(a, b) {
+  return boxCells(a.map((v, axis) => Math.min(v, b[axis])), a.map((v, axis) => Math.max(v, b[axis])));
+}
 
 /** Size of a new room. */
 const NEW_ROOM_SIZE = [12, 4, 12];
@@ -261,6 +266,63 @@ export class RoomEdit {
       // A cage (D202) closes round the pickup already there.
       if (!(holdsPickup && here?.kind === 'pickup')) this.remove(cell);
       return this.blocks.set(cell, key);
+    });
+  }
+
+  /**
+   * Fill the box between two cells with blocks of `type` (a Shift drag of
+   * the Block tool), as one undo step. Cells holding an object, enemy or
+   * pickup are left alone (a rectangle never wipes out what was placed one
+   * by one), and so are holes.
+   * @param {number[]} a corner cell
+   * @param {number[]} b corner cell
+   * @param {string} type
+   * @param {string[]} [switches] a switch gate's switches (D141)
+   * @returns {boolean} whether anything changed
+   */
+  fillBlocks(a, b, type, switches = []) {
+    return this.edit(() => {
+      let changed = false;
+      for (const cell of spanCells(a, b)) {
+        const here = this.at(cell);
+        // A hole stays a hole: a block can't stand over one.
+        if ((here && here.kind !== 'block') || (cell[1] === 0 && this.isHole([cell[0], cell[2]]))) continue;
+        if (this.placeBlock(cell, type, switches)) changed = true;
+      }
+      return changed;
+    });
+  }
+
+  /**
+   * Take the blocks out of the box between two cells (a Shift drag with the
+   * right button), as one undo step; objects, enemies and pickups stay.
+   * @param {number[]} a corner cell
+   * @param {number[]} b corner cell
+   * @returns {boolean} whether anything changed
+   */
+  clearBlocks(a, b) {
+    return this.edit(() => {
+      let changed = false;
+      for (const cell of spanCells(a, b)) {
+        if (this.inside(cell) && this.at(cell)?.kind === 'block' && this.blocks.set(cell, null)) changed = true;
+      }
+      return changed;
+    });
+  }
+
+  /**
+   * Make the floor tiles of the rectangle between two tiles holes (true) or
+   * floor (false), as one undo step.
+   * @param {number[]} a tile [x, z]
+   * @param {number[]} b tile [x, z]
+   * @param {boolean} hole
+   * @returns {boolean} whether anything changed
+   */
+  fillHoles(a, b, hole) {
+    return this.edit(() => {
+      let changed = false;
+      for (const [x, , z] of spanCells([a[0], 0, a[1]], [b[0], 0, b[1]])) if (this.setHole([x, z], hole)) changed = true;
+      return changed;
     });
   }
 
@@ -544,6 +606,44 @@ export class RoomEdit {
       }
       return true;
     });
+  }
+
+  /**
+   * Why a thing can't move to `cell`, or null if it can: the cell must be
+   * inside the room and free (a pickup may go into a cage, D202), and a
+   * path, moving along, must stay inside the room.
+   * @param {string} id an object, enemy or pickup
+   * @param {number[]} cell
+   * @param {(blockType: string) => boolean} [intoCage] is this block type a cage?
+   * @returns {string|null}
+   */
+  moveProblem(id, cell, intoCage = () => false) {
+    const item = this.item(id);
+    if (!item) return `${id} is gone.`;
+    if (!this.inside(cell)) return 'That cell is outside the room.';
+    const here = this.at(cell);
+    const caged = here?.kind === 'block' && (this.data.pickups ?? []).includes(item) && intoCage(here.type);
+    if (here && here.item !== item && !caged) return `${cell.join(', ')} is taken (${here.kind === 'block' ? `${here.type} block` : here.item.id}).`;
+    const delta = cell.map((v, axis) => v - item.at[axis]);
+    if (item.path?.points.some((point) => !this.inside(point.map((v, axis) => v + delta[axis])))) return `${id}'s path would leave the room.`;
+    return null;
+  }
+
+  /**
+   * Move an object, enemy or pickup to another cell, keeping everything
+   * else about it: its id (so every switch link holds), overrides, timer,
+   * drop and path (moved along with it).
+   * @param {string} id
+   * @param {number[]} cell
+   * @param {(blockType: string) => boolean} [intoCage]
+   * @returns {boolean} whether it moved
+   */
+  moveItem(id, cell, intoCage = () => false) {
+    const item = this.item(id);
+    if (!item || this.moveProblem(id, cell, intoCage) || item.at.every((v, axis) => v === cell[axis])) return false;
+    const delta = cell.map((v, axis) => v - item.at[axis]);
+    const path = item.path && withFields(item.path, { points: item.path.points.map((point) => point.map((v, axis) => v + delta[axis])) });
+    return this.updateItem(id, { at: [...cell], ...(path && { path }) });
   }
 
   /**

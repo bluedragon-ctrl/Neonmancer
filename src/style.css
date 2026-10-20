@@ -970,8 +970,66 @@ body {
 }
 
 .editor-room {
-  margin: calc(4 * var(--u)) 0 calc(12 * var(--u));
+  color: #cfe9ff;
+  opacity: 0.8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editor-room.editor-unsaved {
   color: var(--amber);
+  opacity: 1;
+}
+
+/* The head stays put at the top while the panel scrolls under it. */
+.editor-head {
+  position: sticky;
+  top: calc(-16 * var(--u));
+  z-index: 1;
+  margin: calc(-16 * var(--u)) calc(-16 * var(--u)) calc(12 * var(--u));
+  padding: calc(16 * var(--u)) calc(16 * var(--u)) calc(8 * var(--u));
+  background: rgb(5, 6, 13);
+  border-bottom: calc(1 * var(--u)) solid rgba(0, 240, 255, 0.25);
+}
+
+.editor-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: calc(10 * var(--u));
+  min-width: 0;
+}
+
+.editor-title-row .editor-room {
+  flex: 1;
+  text-align: right;
+}
+
+/* A section that folds away (room settings, keys); its summary is the header line. */
+.editor-fold {
+  margin-bottom: calc(10 * var(--u));
+}
+
+.editor-fold > summary {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  margin-bottom: calc(6 * var(--u));
+  color: var(--cyan);
+  font-size: calc(13 * var(--u));
+  letter-spacing: 0.05em;
+}
+
+.editor-fold-note {
+  margin-left: calc(8 * var(--u));
+  color: #cfe9ff;
+  opacity: 0.6;
+}
+
+.editor-fold-body {
+  padding-left: calc(10 * var(--u));
+  border-left: calc(1 * var(--u)) solid rgba(0, 240, 255, 0.2);
 }
 
 .editor-tools {
@@ -1096,16 +1154,31 @@ body {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: calc(6 * var(--u));
-  margin: calc(12 * var(--u)) 0 calc(8 * var(--u));
+  margin: calc(10 * var(--u)) 0 calc(6 * var(--u));
 }
 
 .editor-status {
   min-height: 1.2em;
   color: var(--lime);
+  font-size: calc(13 * var(--u));
 }
 
+.editor-error-count {
+  color: #ff6b60;
+  font-size: calc(13 * var(--u));
+}
+
+.editor-error-count:empty,
+.editor-errors:empty,
+.editor-hint[hidden] {
+  display: none;
+}
+
+/* A long list scrolls in the head, so the tools stay in reach. */
 .editor-errors {
-  margin: calc(6 * var(--u)) 0;
+  max-height: calc(160 * var(--u));
+  overflow-y: auto;
+  margin: calc(6 * var(--u)) 0 0;
   padding-left: calc(18 * var(--u));
   color: #ff6b60;
   font-size: calc(13 * var(--u));
@@ -1167,10 +1240,22 @@ body {
 }
 
 .editor-help {
-  margin-top: calc(12 * var(--u));
-  opacity: 0.55;
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: calc(3 * var(--u)) calc(10 * var(--u));
+  margin: 0;
   font-size: calc(13 * var(--u));
-  line-height: 1.5;
+  line-height: 1.35;
+}
+
+.editor-help dt {
+  color: var(--cyan);
+  white-space: nowrap;
+}
+
+.editor-help dd {
+  margin: 0;
+  opacity: 0.75;
 }
 
 /* The map screen (D112): the run's map in SVG over the standing game. */

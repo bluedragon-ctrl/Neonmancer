@@ -40,6 +40,12 @@ import { linkList, linkables, pickedLinkable, setEvery, setLink, switchClick } f
 
 /** Tools a mouse drag paints with; the others act on the cell clicked only. */
 const PAINT_TOOLS = new Set(['block', 'hole', 'object']);
+/** Tools a Shift drag fills (left button) or clears (right button) a rectangle with, as one undo step. */
+const RECT_TOOLS = new Set(['block', 'hole']);
+/** Tools in which dragging a thing (object, enemy, pickup, switch) moves it. */
+const CARRY_TOOLS = new Set(['object', 'enemy', 'switch']);
+/** Tools whose type `[` and `]` step through: the panel list each one picks from. */
+const TYPED_TOOLS = new Set(['block', 'object', 'enemy', 'switch']);
 /** Tools that work on floor tiles (y 0) whatever the layer. */
 const FLOOR_TOOLS = new Set(['hole', 'shrine']);
 /**
@@ -131,6 +137,15 @@ export class Editor {
     /** Mouse stroke in progress: 'place' or 'erase', and the last cell it acted on. */
     this.stroke = null;
     this.strokeCell = '';
+    /** A Shift drag's rectangle (RECT_TOOLS): its first and its current corner cell, or null. */
+    this.rect = null;
+    /**
+     * A thing being moved, or null: dragged (`drag`, on its own layer, from
+     * `start`; `moved` once the mouse left that cell) or after M (on the
+     * edited layer, placed by the next click); `target` is the cell it would go to.
+     * @type {{ id: string, drag: boolean, start?: number[], moved?: boolean, target: number[]|null }|null}
+     */
+    this.carry = null;
     /** Cell under the mouse, or null; and where the mouse ray met its layer. */
     this.hover = null;
     this.hit = new Vector3();
@@ -858,9 +873,7 @@ export class Editor {
    * @returns {number[]|null} [x, y, z]
    */
   pick(event) {
-    const rect = this.renderer.webgl.domElement.getBoundingClientRect();
-    const ndc = new Vector2(((event.clientX - rect.left) / rect.width) * 2 - 1, -((event.clientY - rect.top) / rect.height) * 2 + 1);
-    this.raycaster.setFromCamera(ndc, this.renderer.camera);
+    this.aim(event);
     const y = FLOOR_TOOLS.has(this.tool) ? 0 : this.layer;
     const [w, , d] = this.edit.size;
     if (this.tool in HIT_TOOLS) {
@@ -874,6 +887,29 @@ export class Editor {
     const x = Math.floor(this.hit.x);
     const z = Math.floor(this.hit.z);
     return x >= 0 && z >= 0 && x < w && z < d ? [x, y, z] : null;
+  }
+
+  /** Point the raycaster through the mouse. */
+  aim(event) {
+    const rect = this.renderer.webgl.domElement.getBoundingClientRect();
+    const ndc = new Vector2(((event.clientX - rect.left) / rect.width) * 2 - 1, -((event.clientY - rect.top) / rect.height) * 2 + 1);
+    this.raycaster.setFromCamera(ndc, this.renderer.camera);
+  }
+
+  /**
+   * The cell of height `y` under the mouse, kept inside the room (a Shift
+   * drag's corner: a rectangle stays on its first cell's layer, and
+   * dragging past the walls stops at them); null if the ray misses the plane.
+   * @param {{ clientX: number, clientY: number }} event
+   * @param {number} y
+   */
+  planeCell(event, y) {
+    this.aim(event);
+    const point = new Vector3();
+    if (!this.raycaster.ray.intersectPlane(new Plane(new Vector3(0, 1, 0), -y), point)) return null;
+    const [w, , d] = this.edit.size;
+    const clamp = (v, size) => Math.max(0, Math.min(size - 1, Math.floor(v)));
+    return [clamp(point.x, w), y, clamp(point.z, d)];
   }
 
   /**
@@ -894,6 +930,19 @@ export class Editor {
     const flat = FLOOR_TOOLS.has(this.tool);
     // The Switch tool says what a click does: its cursor in a color of its own (D142).
     const click = this.hover && this.tool === 'switch' && !this.stroke ? this.switchClick(this.hover) : null;
+    if (this.carry) {
+      // After M the target follows the layer too (the wheel under a still mouse).
+      if (!this.carry.drag && this.pointer) this.carry.target = this.carryTarget(this.pointer);
+      return this.showCarry();
+    }
+    if (this.rect) {
+      // A Shift drag: the cursor spans the rectangle, the hover line says what letting go does.
+      this.overlay.setCursor(this.rect.from, { flat, erase: this.stroke === 'erase', to: this.rect.to });
+      const [w, , d] = this.rect.from.map((v, axis) => Math.abs(v - this.rect.to[axis]) + 1);
+      const what = this.tool === 'hole' ? (this.stroke === 'erase' ? 'floor' : 'holes') : this.stroke === 'erase' ? 'no blocks' : this.blockType;
+      this.panel.setHover(`${w} × ${d} = ${w * d} cells: ${what} · Esc: cancel`);
+      return this.updateLinks();
+    }
     this.overlay.setCursor(this.hover, { flat, erase: this.stroke === 'erase', tone: click?.action });
     const links = this.hover && !flat ? linksAt(this.linkData, this.linkTypes, this.hover) : null;
     const said = click ? ` · click: ${click.text}` : links ? ` · ${links.text}` : '';
@@ -1123,22 +1172,143 @@ export class Editor {
     else this.refresh();
   }
 
+  /**
+   * Fill a Shift drag's rectangle (Block tool: blocks of its type, Hole
+   * tool: holes), or clear it (right button), as one undo step.
+   * @param {{ from: number[], to: number[] }} rect
+   * @param {boolean} place left button
+   */
+  fillRect({ from, to }, place) {
+    const { edit } = this;
+    if (this.tool === 'hole') this.change(() => edit.fillHoles([from[0], from[2]], [to[0], to[2]], place));
+    else if (place) this.change(() => edit.fillBlocks(from, to, this.blockType, this.blockSwitches));
+    else this.change(() => edit.clearBlocks(from, to));
+  }
+
+  /** Esc during a Shift drag: drop the rectangle, nothing changes. */
+  cancelRect() {
+    this.rect = null;
+    this.stroke = null;
+    this.edit.end();
+    this.status = 'Rectangle cancelled.';
+    this.updateCursor();
+    this.refresh();
+  }
+
+  /**
+   * `[` / `]`: the type before or after the current one in the tool's list
+   * (Block, Object, Switch, Enemy), as picking it in the panel would.
+   * @param {number} step -1 or 1
+   */
+  cycleType(step) {
+    if (!TYPED_TOOLS.has(this.tool)) return;
+    const values = this.panel.typeValues(this.tool);
+    const current = { block: this.blockType, object: this.objectType, switch: this.switchType, enemy: this.selectedEnemy?.template ?? this.enemyTemplate }[this.tool];
+    // The stairs are one entry, its value the first stair (D222).
+    const at = Math.max(0, values.indexOf(this.tool === 'block' && this.blockTypes[current]?.look === 'stair' ? values.find((id) => this.blockTypes[id]?.look === 'stair') : current));
+    const next = values[(at + step + values.length) % values.length];
+    if (next === undefined || next === current) return;
+    if (this.tool === 'block') this.blockType = next;
+    else if (this.tool === 'object') this.objectType = next;
+    else if (this.tool === 'switch') this.switchType = next;
+    else return this.setEnemyTemplate(next);
+    this.refresh();
+  }
+
+  /** Is this block type a cage (D202), which a pickup goes into? (For moveProblem() and moveItem().) */
+  get isCage() {
+    return (type) => this.blockTypes[type]?.look === 'cage';
+  }
+
+  /** M: move the picked object, enemy or pickup; the next click on the layer puts it there. */
+  startMove() {
+    const item = this.selectedItem;
+    if (!item) {
+      this.status = 'Pick a thing to move first (click it), then M.';
+      return this.refresh();
+    }
+    this.carry = { id: item.id, drag: false, target: null };
+    this.status = `Moving ${item.id}: click a free cell on the layer (wheel: another layer). Esc or right click: cancel.`;
+    this.updateCursor();
+    this.refresh();
+  }
+
+  /** The cell a carried thing would go to, where the mouse is: its own layer while dragged, the edited one after M. */
+  carryTarget(pointer) {
+    const item = this.edit.item(this.carry.id);
+    if (!item || !pointer) return null;
+    return this.planeCell(pointer, this.carry.drag ? item.at[1] : this.layer);
+  }
+
+  /** The cursor and hover line while a thing is carried: where it goes, or why it can't. */
+  showCarry() {
+    const { id, target, drag, moved } = this.carry;
+    if (drag && !moved) {
+      this.overlay.setCursor(target, { tone: 'pick' });
+      this.panel.setHover(`${id}: drag to move it`);
+      return this.updateLinks();
+    }
+    const problem = target ? this.edit.moveProblem(id, target, this.isCage) : null;
+    this.overlay.setCursor(target, { tone: problem ? 'unlink' : 'link' });
+    this.panel.setHover(target && (problem ? `${id}: ${problem}` : `move ${id} to ${target.join(', ')} · Esc: cancel`));
+    this.updateLinks();
+  }
+
+  /** Put the carried thing in its target cell (it stays picked), or say why not. */
+  finishMove() {
+    const { id, target } = this.carry;
+    this.carry = null;
+    const problem = target ? this.edit.moveProblem(id, target, this.isCage) : 'Not a cell of the room.';
+    if (problem) this.status = `${id} not moved: ${problem}`;
+    else if (this.edit.moveItem(id, target, this.isCage)) {
+      this.change(() => true);
+      this.status = `${id} moved to ${target.join(', ')}, links and settings kept.`;
+    } else this.status = `${id} stays where it is.`;
+    this.select({ kind: 'item', id });
+  }
+
+  /** Esc or right click while moving: the thing stays where it was. */
+  cancelMove() {
+    this.carry = null;
+    this.status = 'Move cancelled.';
+    this.updateCursor();
+    this.refresh();
+  }
+
   /** Mouse on the game canvas: painting, erasing, picking, and the wheel for the layer. */
   listenPointer(canvas) {
     canvas.addEventListener('pointerdown', (e) => {
       if (!this.active || (e.button !== 0 && e.button !== 2)) return;
       // Back from the panel: its fields let go of the keyboard.
       if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+      // After M: a left click puts the thing down, a right click keeps it where it was.
+      if (this.carry && !this.carry.drag) {
+        this.carry.target = this.carryTarget(e);
+        return e.button === 0 ? this.finishMove() : this.cancelMove();
+      }
       const cell = this.pick(e);
       if (!cell) return;
       this.shift = e.shiftKey;
+      // A press on a thing may become a drag that moves it; a plain click picks it as before (on release).
+      const here = this.edit.at(cell);
+      if (CARRY_TOOLS.has(this.tool) && e.button === 0 && !e.shiftKey && !e.altKey && here && here.kind !== 'block') {
+        canvas.setPointerCapture(e.pointerId);
+        this.carry = { id: here.item.id, drag: true, start: cell, moved: false, target: [...here.item.at] };
+        return this.updateCursor();
+      }
       // Alt+click with the Block tool takes a block's type and switches.
       if (this.tool === 'block' && e.altKey && e.button === 0) return this.eyedrop(cell);
       canvas.setPointerCapture(e.pointerId);
       this.stroke = e.button === 0 ? 'place' : 'erase';
       this.strokeCell = cell.join();
       this.edit.begin();
-      this.apply(cell, this.stroke);
+      // Shift with the Block or Hole tool: a rectangle, filled when the button is let go.
+      // It lies on the layer (holes: the floor), whatever block the mouse is over.
+      if (e.shiftKey && RECT_TOOLS.has(this.tool)) {
+        const from = this.planeCell(e, FLOOR_TOOLS.has(this.tool) ? 0 : this.layer) ?? cell;
+        this.rect = { from, to: from };
+      }
+      else this.apply(cell, this.stroke);
       this.updateCursor();
     });
     canvas.addEventListener('pointermove', (e) => {
@@ -1146,15 +1316,33 @@ export class Editor {
       this.pointer = { clientX: e.clientX, clientY: e.clientY };
       this.shift = e.shiftKey;
       this.hover = this.pick(e);
+      if (this.carry) {
+        this.carry.target = this.carryTarget(e) ?? this.carry.target;
+        const item = this.edit.item(this.carry.id);
+        if (this.carry.drag && item && this.carry.target && this.carry.target.join() !== item.at.join()) this.carry.moved = true;
+      }
+      if (this.rect) this.rect.to = this.planeCell(e, this.rect.from[1]) ?? this.rect.to;
       this.updateCursor();
       // Painting: each new cell the stroke crosses.
-      if (this.stroke && PAINT_TOOLS.has(this.tool) && this.hover && this.hover.join() !== this.strokeCell) {
+      if (this.stroke && !this.rect && PAINT_TOOLS.has(this.tool) && this.hover && this.hover.join() !== this.strokeCell) {
         this.strokeCell = this.hover.join();
         this.apply(this.hover, this.stroke);
       }
     });
     const endStroke = () => {
+      if (this.carry?.drag) {
+        const { moved, start } = this.carry;
+        if (moved) return this.finishMove();
+        // Never left its cell: a click, which picks it (or links it, the Switch tool).
+        this.carry = null;
+        this.edit.begin();
+        this.apply(start, 'place');
+        this.edit.end();
+        return this.updateCursor();
+      }
       if (!this.stroke) return;
+      if (this.rect) this.fillRect(this.rect, this.stroke === 'place');
+      this.rect = null;
       this.stroke = null;
       this.edit.end();
       this.updateCursor();
@@ -1212,9 +1400,20 @@ export class Editor {
         else this.change(() => this.edit[action]());
         return;
       }
+      // A thing being moved: Esc drops the move; the wheel and PgUp/PgDn still change the layer (after M).
+      if (this.carry && e.code === 'Escape') return this.cancelMove();
+      if (this.carry?.drag) return;
+      // A rectangle being dragged: Esc drops it, other keys wait for it.
+      if (this.rect) {
+        if (e.code === 'Escape') this.cancelRect();
+        return;
+      }
       const tool = TOOLS.find(({ key }) => e.code === `Digit${key}`);
       if (tool) this.setTool(tool.id);
       if (e.code === 'Escape') this.select(null);
+      if (e.code === 'BracketLeft' || e.code === 'BracketRight') this.cycleType(e.code === 'BracketLeft' ? -1 : 1);
+      if (e.code === 'KeyH') this.setCut(!this.cut);
+      if (e.code === 'KeyM' && !this.stroke) this.startMove();
       if (e.code === 'KeyR') this.turnStair();
       if ((e.code === 'Delete' || e.code === 'Backspace') && !this.stroke) this.removeSelected();
       if (e.code === 'PageUp' || e.code === 'PageDown') {

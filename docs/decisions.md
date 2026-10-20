@@ -3638,3 +3638,39 @@ in a cage (D202). A pads room (D222), 8×8×4, its door the west side at z 3
 Outer Buffer's void is the level's wall (pits for walls: the same pushes,
 but a stray one loses a crate), unlike Null Orbit's two pits in a fenced
 corridor (D264).
+
+### D267 — 2026-10-20 — Room editor: a steady head, folds, rectangles and type keys
+The room editor's panel and keys get a pass for speed of use:
+- **Panel:** a head that stays put while the panel scrolls: the room id
+  (amber while anything is unsaved), Undo / Redo / Save / Revert, the
+  status line and the errors (counted, scrolling in place). Room settings
+  fold under the room list, shut by default, their header line summing
+  them up; the key list folds away at the bottom as a two-column table.
+  Folds remember their state in localStorage (per browser, try/catch). Every tool
+  has a line on what it does; tool buttons have tooltips.
+- **Rectangles:** Shift+drag with the Block or Hole tool spans a box on
+  the layer (holes: the floor), filled on release as one undo step; the
+  right button clears it, Esc drops it. A block rectangle skips cells
+  holding an object, enemy or pickup and holes on the floor; clearing
+  takes blocks only.
+- **Keys:** `[` / `]` step through the current tool's types (Block,
+  Object, Enemy, Switch), H toggles hide-above.
+**Why:** the author asked for a better editor experience. The action bar
+moved with the tool fields' height, the room settings (rarely changed)
+pushed the tools half a screen down, and the help was a wall of text;
+walls, floors and pits were painted cell by cell. Rectangles leave things
+placed one by one alone, so a sweep never wipes out a puzzle piece.
+
+### D268 — 2026-10-20 — Room editor: moving things keeps them whole
+Objects, enemies, pickups and switches move in the room editor: dragged
+with the Object, Enemy or Switch tool to a free cell on their layer, or
+picked and moved with M to a free cell of the edited layer (any height).
+A move changes only `at` (and shifts a path with it), in one undo step:
+the id stays, so every switch link, override, timer and boss drop holds.
+The target must be free (a pickup may go into a cage, D202) and a moved
+path must stay in the room; the cursor shows green where it can go, red
+with the reason where not. A press that never leaves its cell is a click,
+as before.
+**Why:** the author often moves a target or plate. Erase and place lost
+the id, the timer and every link, and erasing a locked exit's only
+switch quietly unlocked the exit (`unlinkSwitch`).
