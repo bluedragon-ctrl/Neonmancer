@@ -24,9 +24,9 @@
   ],
   "shrine": [1, 10],
   "objects": [
-    { "id": "screen_1", "type": "screen", "at": [0, 0, 3], "text": "tut_plates", "overrides": { "face": "+x" } },
     { "id": "crate_ledge", "type": "crate", "at": [11, 1, 1] },
-    { "id": "plate_1", "type": "plate", "at": [11, 0, 3] }
+    { "id": "plate_1", "type": "plate", "at": [11, 0, 3] },
+    { "id": "crate_1", "type": "crate", "at": [8, 0, 3] }
   ],
   "pickups": [{ "id": "boost_rainbow_1", "type": "boost_rainbow", "at": [11, 0, 11] }]
 }

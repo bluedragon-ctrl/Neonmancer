@@ -14,8 +14,14 @@
     { "at": [0, 8], "to": [6, 9] }
   ],
   "objects": [
-    { "id": "screen_1", "type": "screen", "at": [0, 0, 0], "text": "help_fragments" },
-    { "id": "screen_watchdog", "type": "screen", "at": [1, 0, 12], "text": "help_watchdog" }
+    { "id": "screen_1", "type": "screen", "at": [0, 0, 10], "text": "help_fragments", "overrides": { "face": "+x" } },
+    {
+      "id": "screen_watchdog",
+      "type": "screen",
+      "at": [0, 0, 12],
+      "text": "help_watchdog",
+      "overrides": { "face": "+x" }
+    }
   ],
-  "pickups": [{ "id": "fragment_2_1", "type": "fragment_2", "at": [2, 0, 0] }]
+  "pickups": [{ "id": "fragment_0_1", "type": "fragment_0", "at": [0, 0, 0] }]
 }
