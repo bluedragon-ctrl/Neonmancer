@@ -56,6 +56,13 @@ docs/decisions.md).
   say the same; 11 pieces in 8 rooms are listed for their reviews.
 
 ### Changed
+- Quality (D277, step 5.12): the Options' Quality and Render scale now
+  take effect. Low, Medium and High fix the quality (no MSAA at up to
+  75 %, MSAA 2, MSAA 4); Render scale caps every preset, Auto included.
+  Auto no longer judges the first 5 seconds and steps back up once frames
+  have been fast for 10 seconds, so a slow start (a browser or GPU still
+  waking) no longer leaves the game pixelated for good; a level it came
+  up to and found slow is the best it tries again.
 - Reachability checker (D275): the crate search goes best first, towards
   plugged holes and held plates, so a solution turns up before the
   2000-configuration cap; what a cut-off search didn't reach is reported

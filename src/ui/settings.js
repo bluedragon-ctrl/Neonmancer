@@ -1,9 +1,9 @@
 /**
  * Player settings (D109): music and sound volume, visual quality. Plain
  * logic, kept in localStorage apart from the access key (they belong to
- * the browser, not to the wizard). For now they are stubs: the menu sets
- * and stores them, and the audio and quality code will read them once it
- * exists (Phase 5).
+ * the browser, not to the wizard). The volumes drive the audio engine
+ * (D138), Quality and Render scale the renderer (render/quality.js
+ * qualityFromSettings(), D277); Screen effects are stored only for now.
  */
 
 /** localStorage key of the settings. */
@@ -18,9 +18,9 @@ export const SETTINGS = {
   music: { type: 'range', min: 0, max: 10, default: 7 },
   /** Sound effects volume, 0 to 10. */
   sound: { type: 'range', min: 0, max: 10, default: 7 },
-  /** Quality preset; auto steps down on slow frames (D76). */
+  /** Quality preset; auto steps down on slow frames and back up on fast ones (D76, D277). */
   quality: { type: 'choice', values: ['auto', 'low', 'medium', 'high'], default: 'auto' },
-  /** Render scale in tens of percent: 5 (50 %) to 10 (100 %). */
+  /** Render scale in tens of percent: 5 (50 %) to 10 (100 %), the most any preset draws at. */
   renderScale: { type: 'range', min: 5, max: 10, default: 10 },
   /** Screen effects (shake, glitch bursts). */
   effects: { type: 'choice', values: ['on', 'off'], default: 'on' },

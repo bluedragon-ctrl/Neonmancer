@@ -2595,7 +2595,8 @@ decisions before the code lands. Every step also (D43):
 - updates `docs/design.md`, `docs/architecture.md` and CHANGELOG, and
   records new decisions.
 
-**Next: Phase 5, step 5.12, quality presets** (5.13 done, D273; the room
+**Next: Phase 5, step 5.14, the balance pass** (5.12 done, D277: a check
+on a weaker GPU is left to the author's testers; 5.13 done, D273; the room
 reviews of 5.17 are done for every Lattice room: `boot_up`,
 `first_steps`, `zap_port`, `first_light`, `atrium`, `shield_hall`, `freeze_hall`, `bolt_gallery`, `relay_loft`, `ledger_cell`, `scan_lab`, `mirror_stacks`, `ghost_exit`, `junction`, `drift_bay`, `cold_stairs`, `warden_pit`, `idle_cache`, `fork_lab` and `twin_plates` and `guard_loop` and `split_vault` and `gatekeeper` and `core_hall` and `dj_vault` done, D225, D231–D240, D242, D245–D258; D186, D187, D222, D223; 5.3 music waits for the author's tracks, and the
 author's tuning of the rooms in the editor goes on).
@@ -2609,7 +2610,8 @@ Lattice's ambience (D179), 5.10 the Outer Buffer look (D182, D183), 5.11a
 the secret rooms' entrances (D184), the gameplay direction (D186), 5.18
 the pads-rule prep (D223), the last free-jump rooms on pads (D269), 5.19
 the jump gone (D270–D272), 5.17 the room reviews (D188–D258), 5.13 the
-first minute and the feedback entry (D273). The Lattice steps are two or three rooms each, the hub
+first minute and the feedback entry (D273), 5.12 the quality presets
+and an auto fallback that steps back up (D277). The Lattice steps are two or three rooms each, the hub
 before the wings (D149); every batch goes through the reachability
 checker and the review subagent; rooms are drafted unflagged and the
 author flags them authored (D90). Room plan: [lattice-plan.md](lattice-plan.md).
@@ -2618,7 +2620,6 @@ author flags them authored (D90). Room plan: [lattice-plan.md](lattice-plan.md).
 |---|---|---|
 | 5.3 | `feat/music` | The author's tracks trimmed for seamless loops: Lattice, boss, title; room and biome mapping, a boss switch and a crossfade back. |
 | 5.11 | `feat/outer-buffer-secrets` | In progress: the secret cluster's contents, one room a PR, hard push puzzles (D173, D186). Done: Dead Pixel (D220, on pads D262), Stray Byte (D263), Null Orbit (D264), Event Horizon (D265), Cache Miss (D266): the five secret rooms are all built. |
-| 5.12 | `feat/quality-presets` | Quality presets, auto fallback and render scale wired up (D76), a check on a weaker GPU. |
 | 5.14 | `chore/balance-pass` | Difficulty, energy, backups and shrines across the Lattice from full playthroughs. |
 | 5.15 | `chore/release-0.5.0` | Docs pass, tag `v0.5.0`, the GitHub Release: **Playtest 1**. |
 
@@ -2666,7 +2667,11 @@ as a bar of ten cells (0–10, default 7), and **Visuals**: **Quality**
 (On, Off). ◄ ► (or A D, or a click on the arrows) adjust the selected
 one, Enter steps it on and round. They are kept in localStorage
 (`neonmancer.settings`, apart from the access key). The volumes drive
-the audio engine (D138); the visuals wait for the quality presets (5.11).
+the audio engine (D138); Quality and Render scale the renderer (D277):
+**Auto** steps quality down on slow frames and back up on fast ones (D76),
+**Low** draws without MSAA at up to 75 %, **Medium** with MSAA 2, **High**
+with MSAA 4, and Render scale caps every one of them. Screen effects are
+stored only for now.
 
 **Start** plays the boot sequence (D110, `src/render/boot-fx.js`, 2.6 s):
 the logo scrambles and glitches out; the room compiles tile by tile along
