@@ -236,12 +236,6 @@ test('a spiked platform flares when it hurts: its outline brightens, then fades 
   assert.ok(outline.material.color.r > steady);
   view.userData.flare(Infinity);
   assert.ok(Math.abs(outline.material.color.r - steady) < 1e-9);
-  // Hazard faces flare too, on the object's own cell.
-  const hazard = createObjectView({ ...SPIKES, edges: 'solid', mark: 'none', faces: 'hazard', tint: 0.1, at: [2, 0, 3] });
-  hazard.userData.flare(0);
-  const faces = hazard.children.find((child) => child.material?.uniforms?.uFlare).material;
-  assert.equal(faces.uniforms.uFlare.value, 1);
-  assert.deepEqual(faces.uniforms.uFlareCell.value, [2, 0, 3]);
   // A plain platform has no flare.
   assert.equal(createObjectView({ ...LIFT, edges: 'solid', mark: 'none', faces: 'tinted', tint: 0.1, at: [0, 0, 0] }).userData.flare, undefined);
 });

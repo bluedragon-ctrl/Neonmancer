@@ -340,14 +340,13 @@ test('a bouncing bolt glances off a crate (unharmed), then stops at the next wal
 
 // ---- data (D80)
 
-test('data: chasers need an aggro range, peaceful enemies no charged attack, nobody starts on a void block', () => {
+test('data: chasers need an aggro range, peaceful enemies no charged attack', () => {
   const errors = (enemies, blocks = []) =>
     validateData(dataFiles({ rooms: [roomFile('alpha', { enemies, blocks })], enemies: TEMPLATES, objects: { crate: CRATE } })).join('\n');
   assert.equal(errors([shooter([1, 0, 1])]), '');
   assert.match(errors([virus([1, 0, 1], 'v', { aggroRange: 0, attack: 'touch' })]), /virus_v\d+: a chaser needs an aggroRange above 0/);
   assert.match(errors([virus([1, 0, 1], 'v', { hostility: 'peaceful' })]), /a peaceful enemy never fires its burst/);
   assert.equal(errors([virus([1, 0, 1], 'v', { hostility: 'peaceful', attack: 'none' })]), '');
-  assert.match(errors([shooter([1, 1, 1])], [{ at: [1, 0, 1], type: 'void' }]), /starts on a lethal block at \[1,0,1\]/);
   assert.equal(errors([{ ...shooter([1, 0, 1]), variant: { boltPattern: 'cross', boltBounces: 3 } }]), '');
 });
 

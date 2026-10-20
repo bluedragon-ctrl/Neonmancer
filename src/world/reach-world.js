@@ -175,7 +175,7 @@ function searchWorld(content, needs, extra) {
   for (const id of entered) {
     const room = rooms.get(id);
     const { reach, entries } = state.get(id);
-    if (reach.deadStart) errors.push(`${id}: every cell he arrives on is a hole, hazard or void`);
+    if (reach.deadStart) errors.push(`${id}: every cell he arrives on is a hole`);
     for (const pickup of room.pickups) {
       if (!reach.pickups.has(pickup.id)) errors.push(`${id}: pickup "${pickup.id}" at [${pickup.at}] can't be reached`);
     }

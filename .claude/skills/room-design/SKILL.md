@@ -132,8 +132,8 @@ so draft the idea, not the last cell.
 7. **Move it to pads** (D222): set `"jump": "pads"`, rebuild what its
    line in `docs/lattice-plan.md` (Pads-only migration) says the jump
    carried, with stairs, pads, slabs or bug bounces, and tick the line off
-   there. What only fought the jump (spiked crates, fence roofs, 2-high
-   walls against hops) may go: keep a piece only for its own job. Run
+   there. What only fought the jump (fence roofs, 2-high walls against
+   hops) may go: keep a piece only for its own job. Run
    every check of step 5 on the moved room; `check:reach -- <room>` says
    "still on the free jump" until it is moved.
 8. **Lessons.** The author signs each room off before the next; a rule
@@ -267,13 +267,9 @@ Lessons from the reviews (D188 on):
   push from a wall top, one level up) keeps it in its lane; ledger_cell
   searches in full with three crates and two lane walls. Check for the
   "search stopped" warning on every run.
-- **A jump-Blink hops a spiked crate.** He jumps against it and Blinks at the
-  top: 1 high is low enough to pass over, so Blink undoes the spiked crate's
-  routing. A fence roof at y 2 stops the jump (Blink stays level and stops at
-  crates); a Blink cut short by a fence costs 1 integrity (the first `buffer_1`, D220).
 - **`check:reach` floods from the door.** It assumes he can walk back to the
-  door between pushes; where crates shut him away mid-solution (spiked crates,
-  a roof) it says `never` and the mutation test lists every piece as NO EFFECT.
+  door between pushes; where crates shut him away mid-solution (a
+  roof, a socket's approach) it says `never` and the mutation test lists every piece as NO EFFECT.
   Prove such a room with `solve.mjs` (it tracks where he stands) and `sim.mjs`.
 
 - **The puzzle keeps 2 cells from every door** (D241). Busy at a piece
@@ -372,7 +368,7 @@ Edit existing files with small text edits, not a JSON dump.
   him, always open for him if he came in through it; a switch entry needs a
   switch in the room), `hidden: true` (wall until Scan). The first row inside
   must be free.
-- **Blocks** (`defs.json` blocks): `block` (default) `hazard void fake
+- **Blocks** (`defs.json` blocks): `block` (default) `fake
   fence stream collapsing collapsing_regrow gate bridge cage`. A `fence` (D167) is a
   block for bodies (he stands on it, crates and enemies stop) that hides
   nothing and lets bolts and sight through: wall off or raise a wall
@@ -406,7 +402,7 @@ Edit existing files with small text edits, not a JSON dump.
   room (no jump key; Space casts there), `"free"` (the default, going in
   step 5.19) in rooms not yet reviewed.
 - **Objects** (`defs.json` objects): crates `crate crate_plain crate_cross
-  crate_dashed crate_spiked`; switches `plate plate_timed plate_heavy target target_timed socket`; `platform
+  crate_dashed`; switches `plate plate_timed plate_heavy target target_timed socket`; `platform
   spiked_platform` (need `path`, may take `switches`: run only while all on);
   the jump pad `pad` (D221: on the floor or a block's top; standing on it throws him 2.2 up by itself, over a 1-tile gap 2 up, over 2 tiles 1 up (D243), in any room; with stairs and bug bounces the only way up in a pads room; never where he must walk across or stand; a crate on it covers it); decorations `screen data_pillar memory_stack` (`overrides: { "face":
   "+x"|"+z" }`; a screen may name a `text` in `data/lore.json`: title <= 32,
@@ -429,7 +425,7 @@ Edit existing files with small text edits, not a JSON dump.
   block.
 - **Enemies.** `{ id, template, at, path? }` only: no overrides, no speed
   (D119). Patrollers need a level path (legs along x or z), chasers may have
-  one, stationary ones none. Not over a hole or on a lethal block. A boss
+  one, stationary ones none. Not over a hole. A boss
   (template with `boss`) adds `drop`: the id of a permanent pickup of the
   room (D104, D135); one boss a room, no `shrine`, arena exits never locked.
 - **Pickups** by defs id: `disk_*`, `fragment_N`, `secret_N`, `buff_*`,
@@ -450,7 +446,6 @@ Edit existing files with small text edits, not a JSON dump.
 | Headroom | wizard 1.5 high: 2 free cells over every standing surface. A block above is a ceiling, the room's height is not (he stands on top of a 2-high wall in a 3-high room); keep standing surfaces 2 below the room height for the look |
 | Bouncy enemy (bug, glowbug) | launches 2.2 above its top (0.6), so 2.8: clears a 2-high ledge, never 3 |
 | Frozen enemy | a 1-high step (1×1×1), pushed like a crate |
-| Spiked crate (`crate_spiked`, D199) | a crate whose top is no place to stand: his feet on it hurt 2 and shove him off (even while he blinks); a crate on it covers the spikes. A jump in line over a 1-high one always touches it (no hop over). A frozen enemy on a bare top is impaled, the decoy derezzes, active enemies cross unhurt |
 | Zap bolt | flies level, 0.48 above his feet; a bug is 0.6 high. From the floor it hits bugs and 1-high blocks; from a 1-high top it flies over both and hits a target standing a block up; a jump shot near the apex does too (D189) |
 | Blink (Level 1 reward, D217) | 3 units level, through open space; stops at blocks, objects, fences and streams (hurts 1 if cut short). From standing: a 2-tile pit, never 3. Cast near the top of a running jump: a 4-tile pit along an axis (never 5), even onto a 1-high ledge beyond; 2 tiles diagonally. Never higher than his jump. The checker models both (axes only): sweep diagonals with `sim.mjs` |
 | Walk | 4.5 u/s, ~13 ticks (0.22 s) a cell; a jump ~34 ticks (0.57 s) |
@@ -462,8 +457,8 @@ Edit existing files with small text edits, not a JSON dump.
 
 ## Rules
 1. **Readable from the front corner.** Tall blocks against the back walls
-   (x = 0, z = 0), steps on the camera side, every mechanic (pit, hazard,
-   collapsing bridge, plate) in view from the entrance. **Every crate is
+   (x = 0, z = 0), steps on the camera side, every mechanic (pit, spiked
+   platform, collapsing bridge, plate) in view from the entrance. **Every crate is
    visible** (D164): never hidden behind a tall block, a ledge, a pillar or
    a memory wall from the camera (+x +y +z), never inside a fake block or
    walled in where no cell of it shows; one face in view (its top, +x or
@@ -553,17 +548,6 @@ each read anew.
   not wall in his own path with crates (a 2-wide island with crates across
   it is a knot). A crate lost in a corner is fine (rooms reset) if you
   checked it.
-- **Spiked crates (D199)** belong to free-jump rooms: in a pads room no
-  crate is a step, so a plain crate does the same job without the hurt.
-  There they take the climb out of a crate: he can't use one as
-  a step, so a push puzzle plays like classic Sokoban (his route around the
-  crates matters again). A plain crate dropped or pasted on one covers it:
-  that is a 2-high step, so check stacks (a spiked crate pushed onto a
-  ledge below a plain one becomes the stack's base). A walled-in top is a
-  trap (he is hurt again after each blink), so keep a free side around any
-  spiked crate he can fall onto. Enemies and plates: a spiked crate on a
-  plate holds it as well as any crate. The checker knows all of it
-  (`below()` is `'bad'` on a bare spiked top).
 - **Pit width = crates + 1.** A pit N wide needs N-1 crates; count crates that
   can reach it from the *other* side too (the island's, the return trip).
 - **A step at the edge is a springboard.** A crate or frozen enemy pushed to a

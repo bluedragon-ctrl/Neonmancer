@@ -5,8 +5,7 @@
  * feet, up to the spell's range; a crate stream lets it through, a fence
  * doesn't).
  *
- * - The target: a crate (not a spiked one, D199: that one is there to keep
- *   him out from behind it) or a frozen enemy, resting on a whole cell,
+ * - The target: a crate or a frozen enemy, resting on a whole cell,
  *   with nothing on it (like pushing, D4).
  * - He stands on the ground at a whole height (not in the air, not on a
  *   stair's slope); his cell (the one under his feet center) takes the
@@ -48,7 +47,7 @@ export function swapTarget(game, range) {
   if (!found) return null;
   const { object, enemy, cell, distance } = found;
   const target = object ?? enemy;
-  if (object && (object.topDamage > 0 || !object.pos.every(Number.isInteger))) return null;
+  if (object && !object.pos.every(Number.isInteger)) return null;
   if (enemy && (!enemy.pushable || enemy.state !== 'rest' || !enemy.pos.every(Number.isInteger))) return null;
   if (loaded(target, bodies)) return null;
 

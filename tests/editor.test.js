@@ -56,27 +56,27 @@ test('Boxes keep untouched entries and merge loose cells into boxes', () => {
   const boxes = new Boxes(
     [
       { at: [0, 0, 0], to: [2, 0, 0] },
-      { type: 'hazard', at: [5, 0, 5] },
+      { type: 'fence', at: [5, 0, 5] },
     ],
     { dims: 3, defaultType: 'block' },
   );
   assert.equal(boxes.get([1, 0, 0]), 'block');
-  assert.equal(boxes.get([5, 0, 5]), 'hazard');
+  assert.equal(boxes.get([5, 0, 5]), 'fence');
   assert.equal(boxes.get([4, 0, 4]), null);
 
   // Emptying the middle of the first entry breaks it; the second stays as written.
   assert.equal(boxes.set([1, 0, 0], null), true);
   assert.equal(boxes.set([1, 0, 0], null), false);
-  assert.deepEqual(boxes.list(), [{ type: 'hazard', at: [5, 0, 5] }, { at: [0, 0, 0] }, { at: [2, 0, 0] }]);
+  assert.deepEqual(boxes.list(), [{ type: 'fence', at: [5, 0, 5] }, { at: [0, 0, 0] }, { at: [2, 0, 0] }]);
 
   // A 2×2×2 cube of new cells becomes one box; another type stays apart.
-  for (const x of [7, 8]) for (const y of [0, 1]) for (const z of [7, 8]) boxes.set([x, y, z], 'void');
-  boxes.set([1, 0, 0], 'void');
+  for (const x of [7, 8]) for (const y of [0, 1]) for (const z of [7, 8]) boxes.set([x, y, z], 'fake');
+  boxes.set([1, 0, 0], 'fake');
   assert.deepEqual(boxes.list().slice(1), [
     { at: [0, 0, 0] },
-    { type: 'void', at: [1, 0, 0] },
+    { type: 'fake', at: [1, 0, 0] },
     { at: [2, 0, 0] },
-    { type: 'void', at: [7, 0, 7], to: [8, 1, 8] },
+    { type: 'fake', at: [7, 0, 7], to: [8, 1, 8] },
   ]);
 });
 
@@ -98,7 +98,7 @@ test('Boxes.clip drops what is outside and breaks entries that stick out', () =>
 function sampleRoom() {
   return roomFile('lab', {
     $schema: '../../schemas/room.schema.json',
-    blocks: [{ at: [0, 0, 0], to: [1, 0, 0] }, { type: 'hazard', at: [6, 0, 6] }],
+    blocks: [{ at: [0, 0, 0], to: [1, 0, 0] }, { type: 'fence', at: [6, 0, 6] }],
     holes: [{ at: [4, 4] }],
     objects: [{ id: 'crate_1', type: 'crate', at: [3, 0, 3] }],
     enemies: [{ id: 'sentry', template: 'bug', at: [5, 0, 1], variant: { movement: 'stationary' } }],
@@ -117,11 +117,11 @@ test('RoomEdit places and erases blocks, objects and holes', () => {
   const edit = new RoomEdit(sampleRoom());
   assert.deepEqual(edit.at([3, 0, 3]), { kind: 'object', item: { id: 'crate_1', type: 'crate', at: [3, 0, 3] } });
   assert.equal(edit.at([5, 0, 1]).kind, 'enemy');
-  assert.deepEqual(edit.at([6, 0, 6]), { kind: 'block', type: 'hazard' });
+  assert.deepEqual(edit.at([6, 0, 6]), { kind: 'block', type: 'fence' });
 
-  // A block replaces the crate; a crate goes where the hazard was, with the next free id.
-  assert.equal(edit.placeBlock([3, 0, 3], 'void'), true);
-  assert.equal(edit.placeBlock([3, 0, 3], 'void'), false);
+  // A block replaces the crate; a crate goes where the fence was, with the next free id.
+  assert.equal(edit.placeBlock([3, 0, 3], 'fake'), true);
+  assert.equal(edit.placeBlock([3, 0, 3], 'fake'), false);
   assert.equal(edit.placeObject([6, 0, 6], 'crate'), true);
   assert.equal(edit.placeBlock([2, 1, 2], 'collapsing_regrow'), true);
   assert.equal(edit.placeObject([9, 0, 0], 'crate'), false, 'outside the room');
@@ -133,7 +133,7 @@ test('RoomEdit places and erases blocks, objects and holes', () => {
   const data = edit.toData();
   assert.deepEqual(data.blocks, [
     { at: [0, 0, 0], to: [1, 0, 0] },
-    { type: 'void', at: [3, 0, 3] },
+    { type: 'fake', at: [3, 0, 3] },
     { type: 'collapsing_regrow', at: [2, 1, 2] },
   ]);
   assert.deepEqual(data.objects, [{ id: 'crate_1', type: 'crate', at: [6, 0, 6] }]);
@@ -157,21 +157,21 @@ test('spanCells: the cells between two corners in any order, both included', () 
 test('RoomEdit fills and clears a rectangle as one undo step, leaving things and holes alone', () => {
   const edit = new RoomEdit(sampleRoom());
   // From [2, 0, 2] to [4, 0, 4]: the crate at [3, 0, 3] and the hole at [4, 4] stay.
-  assert.equal(edit.fillBlocks([4, 0, 4], [2, 0, 2], 'hazard'), true);
+  assert.equal(edit.fillBlocks([4, 0, 4], [2, 0, 2], 'fence'), true);
   assert.equal(edit.undoStack.length, 1, 'one step');
   assert.equal(edit.at([3, 0, 3]).kind, 'object');
   assert.equal(edit.at([4, 0, 4]), null);
   assert.equal(edit.isHole([4, 4]), true);
-  assert.deepEqual(edit.at([2, 0, 2]), { kind: 'block', type: 'hazard' });
-  assert.deepEqual(edit.at([4, 0, 3]), { kind: 'block', type: 'hazard' });
-  assert.equal(edit.fillBlocks([2, 0, 2], [4, 0, 4], 'hazard'), false, 'nothing left to change');
+  assert.deepEqual(edit.at([2, 0, 2]), { kind: 'block', type: 'fence' });
+  assert.deepEqual(edit.at([4, 0, 3]), { kind: 'block', type: 'fence' });
+  assert.equal(edit.fillBlocks([2, 0, 2], [4, 0, 4], 'fence'), false, 'nothing left to change');
 
   // Clearing takes blocks only, the crate stays.
   assert.equal(edit.clearBlocks([0, 0, 0], [3, 0, 3]), true);
   assert.equal(edit.at([0, 0, 0]), null, 'part of a block entry');
   assert.equal(edit.at([2, 0, 2]), null);
   assert.equal(edit.at([3, 0, 3]).kind, 'object');
-  assert.deepEqual(edit.at([4, 0, 3]), { kind: 'block', type: 'hazard' }, 'outside the rectangle');
+  assert.deepEqual(edit.at([4, 0, 3]), { kind: 'block', type: 'fence' }, 'outside the rectangle');
   assert.equal(edit.undoStack.length, 2);
 
   // Holes: a rectangle of tiles, and floor again.
@@ -189,7 +189,7 @@ test('RoomEdit moves a thing with its id, fields and path; only to a free cell',
   const platform = edit.at([2, 0, 5]).item;
   edit.updateItem(platform.id, { switches: ['plate_9'], path: { points: [[2, 0, 6]] } });
 
-  assert.match(edit.moveProblem('crate_1', [6, 0, 6]), /taken \(hazard block\)/);
+  assert.match(edit.moveProblem('crate_1', [6, 0, 6]), /taken \(fence block\)/);
   assert.match(edit.moveProblem('crate_1', [5, 0, 1]), /taken \(sentry\)/);
   assert.match(edit.moveProblem('crate_1', [3, 9, 3]), /outside/);
   assert.match(edit.moveProblem(platform.id, [2, 0, 7]), /path would leave/);
@@ -636,7 +636,7 @@ test('RoomEdit locks and unlocks an exit (D75); a moved locked exit stays locked
 test('RoomEdit.describe says what is in a cell', () => {
   const edit = new RoomEdit({ ...sampleRoom(), exits: [{ id: 'west', side: '-x', at: 3 }] });
   assert.equal(edit.describe([3, 0, 3]), '3, 0, 3: crate_1 (crate)');
-  assert.equal(edit.describe([6, 0, 6]), '6, 0, 6: hazard block');
+  assert.equal(edit.describe([6, 0, 6]), '6, 0, 6: fence block');
   assert.equal(edit.describe([0, 0, 0]), '0, 0, 0: block');
   assert.equal(edit.describe([0, 1, 4]), '0, 1, 4: exit west');
   assert.equal(edit.describe([2, 2, 2]), '2, 2, 2: empty');
@@ -686,17 +686,16 @@ test('errors are grouped by file and point at what they are about', () => {
 });
 
 test('cutRoom leaves out the blocks above a layer', () => {
-  const room = { size: [4, 4, 4], blocks: { block: [[0, 0, 0], [0, 1, 0], [0, 2, 0]], hazard: [[1, 3, 1]], void: [[2, 0, 2]] } };
+  const room = { size: [4, 4, 4], blocks: { block: [[0, 0, 0], [0, 1, 0], [0, 2, 0]], fence: [[1, 3, 1]], fake: [[2, 0, 2]] } };
   const cut = cutRoom(room, 1);
-  assert.deepEqual(cut.blocks, { block: [[0, 0, 0], [0, 1, 0]], hazard: [], void: [[2, 0, 2]] });
+  assert.deepEqual(cut.blocks, { block: [[0, 0, 0], [0, 1, 0]], fence: [], fake: [[2, 0, 2]] });
   assert.equal(room.blocks.block.length, 3, 'the room itself stays whole');
 });
 
 test('blockTypeText: what a block type does, for the Block tool\'s type list', () => {
-  const types = resolveBlockTypes({ ...BLOCK_TYPES, hot: { extends: 'hazard', damage: 2 } });
+  const types = resolveBlockTypes(BLOCK_TYPES);
   assert.equal(blockTypeText(types.block), 'plain');
-  assert.equal(blockTypeText(types.hot), 'hurts 2');
-  assert.equal(blockTypeText(types.void), 'lethal');
+  assert.equal(blockTypeText(types.fence), 'fence');
   assert.equal(blockTypeText(types.fake), 'a scan derezzes it');
   assert.equal(blockTypeText(types.collapsing), 'collapses');
   assert.equal(blockTypeText(types.collapsing_regrow), 'collapses, back in 3 s');

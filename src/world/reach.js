@@ -36,7 +36,7 @@
  * with the spell every cell a pausable (non-boss) enemy walks counts as
  * floor along its whole path, like a platform's (optimistic). He pushes it
  * like a crate (D154, D166): from where he stands, level, into a free
- * cell; it falls off a ledge and pops on a hole, hazard or void. Every cell
+ * cell; it falls off a ledge and pops on a hole. Every cell
  * it can be pushed to is floor too and weight for a plate there; as a step
  * one enemy may count in several cells at once (optimistic, like the
  * timing), but it holds one plate at most.
@@ -119,7 +119,7 @@ const DIRS = [
  *   (a locked one needs its switches on in some configuration, a hidden one a scan; the access level is the world's business)
  * @property {boolean} core can he touch the core (when the room has one)
  * @property {Set<string>} stands cells he can stand on, "x,y,z" (all configurations)
- * @property {boolean} deadStart no start cell was safe to stand on (all of them hole, hazard or void)
+ * @property {boolean} deadStart no start cell was safe to stand on (all of them holes)
  * @property {number} configs crate configurations searched
  * @property {boolean} truncated the search stopped at MAX_CONFIGS
  */
@@ -185,8 +185,6 @@ export class RoomModel {
     this.covered = new Set();
     this.core = null;
     this.crates = [];
-    /** The cells of the crates with a spiked top (D199, a topDamage), before any push; a configuration follows them (config()). */
-    this.spiked = new Set();
     /** Cells a pausable enemy can be frozen in (with Pause): steps, and weight for a plate; by cell index, which enemies (by number). */
     this.frozenCells = new Map();
     // Pause: the cells a pausable enemy can be frozen in are steps.
@@ -208,7 +206,6 @@ export class RoomModel {
         if (abilities.has('scan'))
           while (cy > 0 && !this.grid.isSolid(x, cy - 1, z) && !room.objects.some((o) => o.kind === 'pushable' && o.at[0] === x && o.at[1] === cy - 1 && o.at[2] === z)) cy--;
         this.crates.push(this.index(x, cy, z));
-        if (object.topDamage > 0) this.spiked.add(this.index(x, cy, z));
       }
       else if (object.kind === 'platform') {
         const cells = pathCells(object.at, object.path);
@@ -250,7 +247,7 @@ export class RoomModel {
 
   /**
    * Push frozen enemies (D166): from a cell he stands on, level, into a free
-   * cell beyond; it falls and pops on a hole, hazard or void. Each cell it
+   * cell beyond; it falls and pops on a hole. Each cell it
    * comes to rest in is a frozen cell and floor.
    * @returns {boolean} whether any cell was added
    */
@@ -268,7 +265,7 @@ export class RoomModel {
         let ty = to[1];
         let under = this.below(tx, ty, tz, cfg, true);
         while (under === 'air') under = this.below(tx, --ty, tz, cfg, true);
-        if (under === 'hole' || under === 'bad') continue;
+        if (under === 'hole') continue;
         const i = this.index(tx, ty, tz);
         if (!this.frozenCells.has(i)) this.frozenCells.set(i, new Set());
         const there = this.frozenCells.get(i);
@@ -338,20 +335,15 @@ export class RoomModel {
 
   /**
    * What is under the feet at the cell: 'floor' | 'solid' | 'air' | 'hole'
-   * (a pit: death) | 'bad' (hazard, void or a spiked crate on top: he can't land there).
+   * (a pit: death).
    * @param {boolean} [crate] for a crate (or a frozen enemy), which falls through a crate stream (D198)
    */
   below(x, y, z, cfg, crate = false) {
     const grid = crate ? this.crateGrid : this.grid;
     if (y === 0) return this.grid.isHole(x, z) && !cfg.plugged.has(z * this.w + x) && !this.covered.has(z * this.w + x) ? 'hole' : 'floor';
     if (y > this.h) return 'air';
-    if (grid.isSolid(x, y - 1, z)) {
-      const type = grid.typeAt(x, y - 1, z);
-      return type.damage > 0 || type.lethal ? 'bad' : 'solid';
-    }
+    if (grid.isSolid(x, y - 1, z)) return 'solid';
     const index = this.index(x, y - 1, z);
-    // A spiked crate's top hurts him (D199); a crate on it is what he stands on, and covers it.
-    if (cfg.spiked.has(index)) return 'bad';
     if (this.bodies.has(index) || cfg.crateSet.has(index) || this.floors.has(index) || this.gateSolid.has(index) || this.gateFloor.has(index)) return 'solid';
     return 'air';
   }
@@ -364,8 +356,7 @@ export class RoomModel {
 
   /**
    * Where he stands after being put in the column at height y and falling:
-   * the cell's y, or -1 when there is no room or he would land on a hole,
-   * hazard or void.
+   * the cell's y, or -1 when there is no room or he would land on a hole.
    */
   landing(x, y, z, cfg) {
     if (!this.clear(x, y, z, cfg)) return -1;
@@ -504,18 +495,15 @@ export class RoomModel {
   }
 
   /**
-   * A fresh configuration: the crates, the plugged hole tiles and which of
-   * the crates have a spiked top (D199; a crate on one covers it).
+   * A fresh configuration: the crates and the plugged hole tiles.
    * @param {number[]} crates cell indices
    * @param {Set<number>} plugged hole tiles
-   * @param {Set<number>} [spiked] the cells of the crates with a spiked top, among `crates`
    * @param {number} [seed] a cell a swap put him in (D261): his flood starts there too
    */
-  config(crates, plugged, spiked = new Set(), seed = undefined) {
+  config(crates, plugged, seed = undefined) {
     const sorted = (set) => [...set].sort((a, b) => a - b);
-    const marks = spiked.size > 0 ? `|${sorted(spiked)}` : '';
     const at = seed === undefined ? '' : `@${seed}`;
-    return { crates, plugged, spiked, seed, crateSet: new Set(crates), key: `${sorted(crates)}|${sorted(plugged)}${marks}${at}` };
+    return { crates, plugged, seed, crateSet: new Set(crates), key: `${sorted(crates)}|${sorted(plugged)}${at}` };
   }
 
   /**
@@ -551,14 +539,11 @@ export class RoomModel {
     const out = [];
     const { abilities } = this;
     const move = (from, x, y, z, seed = cfg.seed) => {
-      // The crate `from` leaves; a crate put in (x, y, z) falls from there. A spiked one stays spiked, unless it plugs a hole.
+      // The crate `from` leaves; a crate put in (x, y, z) falls from there.
       const crates = cfg.crates.filter((c) => c !== from);
-      const spiked = new Set(cfg.spiked);
-      const wasSpiked = spiked.delete(from);
-      const probe = this.config(crates, cfg.plugged, spiked);
-      const rest = this.settle(x, y, z, probe);
-      if (rest.plug !== undefined) out.push(this.config(crates, new Set([...cfg.plugged, rest.plug]), spiked, seed));
-      else out.push(this.config([...crates, rest.cell], cfg.plugged, wasSpiked ? new Set([...spiked, rest.cell]) : spiked, seed));
+      const rest = this.settle(x, y, z, this.config(crates, cfg.plugged));
+      if (rest.plug !== undefined) out.push(this.config(crates, new Set([...cfg.plugged, rest.plug]), seed));
+      else out.push(this.config([...crates, rest.cell], cfg.plugged, seed));
     };
     const loose = (c) => {
       const [x, y, z] = this.cell(c);
@@ -584,9 +569,9 @@ export class RoomModel {
           if (shoved && this.beamFrom(x, y, z, dx, dz, 1, cfg, stands, true)) move(c, ...shoved);
         }
         // Swap (D261): from any cell he stands on in line (level, the beam open), he and the
-        // crate trade places: it falls from his cell, he stands in its cell. Never a spiked one.
-        if (abilities.has('swap') && !cfg.spiked.has(c)) {
-          const probe = this.config(cfg.crates.filter((o) => o !== c), cfg.plugged, cfg.spiked);
+        // crate trade places: it falls from his cell, he stands in its cell.
+        if (abilities.has('swap')) {
+          const probe = this.config(cfg.crates.filter((o) => o !== c), cfg.plugged);
           if (this.clear(x, y, z, probe)) {
             for (let k = 1; k <= 6; k++) {
               const sx = x - dx * k;
@@ -602,7 +587,7 @@ export class RoomModel {
         const front = DIRS.some(([dx, dz]) => stands.has(this.index(x - dx, y, z - dz)));
         if (front) {
           const crates = cfg.crates.filter((o) => o !== c);
-          const probe = this.config(crates, cfg.plugged, cfg.spiked);
+          const probe = this.config(crates, cfg.plugged);
           for (const s of stands) {
             const [sx, sy, sz] = this.cell(s);
             for (const [dx, dz] of DIRS) {
@@ -812,7 +797,7 @@ export function analyzeRoom(room, { abilities, starts, tuning }) {
   const reach = { pickups: new Set(), exits: {}, core: false, stands: new Set(), deadStart: false, configs: 0, truncated: false };
   for (const exit of room.exits) reach.exits[exit.id] = false;
 
-  const first = model.config(model.crates, new Set(), model.spiked);
+  const first = model.config(model.crates, new Set());
   const seen = new Set([first.key]);
   const todo = [first];
   const union = new Set();

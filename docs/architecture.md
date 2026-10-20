@@ -84,12 +84,12 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `entities/decoy.js` | Fork's decoy (D129): a non-solid hologram of the wizard: `Decoy` (falls, counts down, derezzes; a plate and enemies read its `box()`), `DECOY` |
 | `entities/scan.js` | Scan (D128): the wave's reach (`scanReach()`, square to a cell or an exit, `cellReach()`, `exitReach()`), what a room hides (`hiddenThings()`: fake block cells, hidden exits) and revealing what the wave reaches each tick (`updateScan(game)`) |
 | `entities/core.js` | The central core (D101): a fixed 1×2×1 body that takes the fragments; touching it is `Game.touchCore()` (pure) |
-| `entities/enemy.js` | Enemy body: steps cell by cell where its movement behavior leads (never into a hole or onto void, never into a cell another enemy is walking into), turns back when blocked, falls (mid-step too), rides platforms, pops in holes and on void; hostility, provoke, bounce state (D48); seeing the wizard, the "!", the charged attack's charge and cooldown (D78); `alarm()` when anything hits it (D81) and `route()`, a shortest walk to a column (D80); `freeze()` by Pause (D85): still, harmless and solid until it thaws; a boss (D135): `height`, phases (`updatePhase()`), waking, teleports (`teleportCell()`, `BOSS`), plate armor (`exposed`), its `dropId` |
+| `entities/enemy.js` | Enemy body: steps cell by cell where its movement behavior leads (never into a hole, never into a cell another enemy is walking into), turns back when blocked, falls (mid-step too), rides platforms, pops in holes; hostility, provoke, bounce state (D48); seeing the wizard, the "!", the charged attack's charge and cooldown (D78); `alarm()` when anything hits it (D81) and `route()`, a shortest walk to a column (D80); `freeze()` by Pause (D85): still, harmless and solid until it thaws; a boss (D135): `height`, phases (`updatePhase()`), waking, teleports (`teleportCell()`, `BOSS`), plate armor (`exposed`), its `dropId` |
 | `entities/kinds.js` | Object kind → logic class (`OBJECT_KINDS`); the room's objects are built from it |
 | `entities/pickup.js` | A pickup in a room: its box, save bit, state (idle, ghost, taken) and pick-up ticks (pure, tested) |
 | `entities/platform.js` | Moving platform: follows its path, carries riders, waits when blocked, shoves or squeezes the wizard (D46); a spiked one hurts on touch (D82) |
 | `entities/player.js` | Movement, jump (only where the room's rule allows, `canJump`, D221), launches off a pad or a bouncy enemy, walking a stair's slope, gravity, turning, pushing, integrity, invulnerability after a hit, death (hole or damage), respawn; one wizard for the whole game |
-| `entities/pushable.js` | Rest → slide → fall → land / plug-a-hole state machine; destructible ones break (`hit()` → `broken`); a compiled crate (D125, `lifetime`) derezzes when its time is up (`expire()`, a plugged hole opens again); a spiked one (`topDamage`, D199) hurts and shoves him off when his feet touch its top, unless something covers it; it sees the grid through `forBody('crate')` |
+| `entities/pushable.js` | Rest → slide → fall → land / plug-a-hole state machine; destructible ones break (`hit()` → `broken`); a compiled crate (D125, `lifetime`) derezzes when its time is up (`expire()`, a plugged hole opens again); it sees the grid through `forBody('crate')` |
 | `entities/switch.js` | Switches (D75): `Target` (a fixed body a bolt switches over) `Plate` (a floor tile, no body, on while something stands on it) and `Socket` (a hole, on while filled, D194); a plate's `weight` (D200, a heavy plate) is the number of bodies in its column it needs, counted up the stack (`load`, `partlyLoaded`); a type's `timer` makes either go off by itself (D140, `countdown`); `SWITCH_KINDS` (pure, tested) |
 | `entities/pad.js` | A jump pad (D221): a floor tile with no body that throws the wizard `launch` up (2.2: two blocks; 2 up over a 1-tile gap, 1 up over 2, D243) the moment he stands on it, in any room (pure) |
 | `entities/gate.js` | Gate blocks (D140, D141): `Gate`, a block that comes and goes by its `trigger`: switch (solid until powered, `power()`; one with `start: "gone"`, a bridge, only while powered; a bridge is a sheet at the floor of its cell that covers a hole, D224) or step (a collapsing block: solid → shake → gone → optional regrow); it never comes back on a body (pure, tested) |
@@ -99,7 +99,6 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `ai/patrol.js` | Patrol: next step towards the next waypoint column, pauses at the ends, turns back; off its path it takes the enemy's route back (pure, tested) |
 | `ai/sight.js` | Rays through the grid and bodies (`castRay()`), `lineOfSight()`, `reach()` from a point to a box (pure, tested) |
 | `render/alert-mark.js` | The red "!" over an enemy that noticed the wizard |
-| `render/block-fx.js` | Animated looks of hazard and void blocks (hazard face shader in room coordinates, steady edges, hazard flare; void via mist.js), `BLOCK_FX` tuning |
 | `render/boot-fx.js` | The boot sequence's timing (D110): logo, the room's reveal tiles and their order, the wizard's gathering pixels and landing (pure, tested) |
 | `render/break-fx.js` | Destructible object's jolt on a hit that doesn't break it, `BREAK_FX` tuning (pure, tested) |
 | `render/bug.js` | Bug model (ball, eyes colored by mood), hop pose, bounce squash, pop pixels, `BUG` tuning (pure parts tested); `BUG_MODEL` for `EnemyView` |
@@ -141,7 +140,6 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/install-fx.js`, `render/install-view.js` | Installing a spell from a data disk (D73): the look (pure, tested) and its meshes, shown by `PlayerView` |
 | `render/interp.js` | Tick interpolation (positions, angles) and drop-shadow sizing (pure, tested) |
 | `render/marks.js` | Face-mark line patterns for object styles, including the data bits, whole (`bits`) or with holes for destructible objects (`bitsBroken`, `bitLayout()`); pure, tested |
-| `render/mist.js` | Void blocks as black mist (D99): opaque black cubes with sinking gray wisps, a patchy fog shell and a dim frame, `MIST` tuning |
 | `render/neon.js` | Palette, line and face materials; line widths scaled by render height; `neonLines()`, `fadingLines()`, `shadedFaces()` builders; `disposeTree()` |
 | `render/overclock.js` | Overclock model (D107): burning CPU chip on its pins, flame crown (`overclockFire()`), sparks, glowing traces, `OVERCLOCK` tuning; `OVERCLOCK_MODEL` |
 | `render/pause-fx.js`, `render/pause-view.js` | A frozen enemy (Pause, D85): tint and blinking (pure, tested) and its cage of corner brackets, shown by `EnemyView` |
@@ -286,10 +284,8 @@ and everything below y = 0 (the grid), plus room objects as moving bodies;
 above the room height is open. Grid cells hold a code (D60): 0 empty, 1
 the room's edge, from 2 on the room's static block types; all but empty
 are solid, and `typeAt()` gives the block type with its properties. What
-a block does is asked of its properties after the move, never its name:
-`touchedCell()` in `physics/collision.js` finds a touched cell with
-`damage` (Game, each tick), and a `lethal` cell under the feet center
-kills (Player on landing, Enemy when it stands or falls). Only blocks that never move or change are grid cells,
+a block does is asked of its properties, never its name (`seeThrough`,
+`passes`, `fake`); no block hurts or kills (D271). Only blocks that never move or change are grid cells,
 everything that moves or disappears is a room object (D40). At an exit the row of cells just
 beyond the side is open (as high as the exit), so the wizard can walk
 through; pushables never move outside the room.
@@ -331,8 +327,7 @@ at most `maxShove` along any axis. If none fits, it calls `Game.hurt()`
 and waits. Carried crates keep whole-cell positions at stops (a tiny
 rounding snap), and `push()` only moves a crate standing on whole cells.
 A spiked platform (D82) is the same class with a `damage` from its type:
-`Game.spiked` lists those objects, and each tick, right after the hazard
-blocks, touching one (`touchesBox()`) calls `Game.hurt()` with the object,
+`Game.spiked` lists those objects, and each tick touching one (`touchesBox()`) calls `Game.hurt()` with the object,
 whose view flares (`RoomScene.flareObject()`).
 
 Gate blocks (D140, D141) are room objects that never move but can go.
@@ -354,7 +349,7 @@ on its floor) and only starts a step from whole cells: it asks its
 movement behavior for the next step and walks one cell, counting the
 distance walked so cells stay exact. A block, solid object, other enemy
 or step up in the way turns it back (`turnBack()`, then `turnTicks` of
-waiting). Unsupported, it falls; landing at −1 (a hole) or on a void cell
+waiting). Unsupported, it falls; landing at −1 (a hole)
 pops it (`dead`, gone until the room resets; `refreshBodies()` drops it).
 Enemies are in `Game.obstacles` (what enemies collide with: solid objects
 and live enemies) and in `Game.bodies` (what objects collide with), so

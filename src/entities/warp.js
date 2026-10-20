@@ -2,7 +2,7 @@
  * Where Blink and Warp take the wizard (D86; pure, tested): straight on
  * the way he aims, level at his height, through open space only. His box
  * sweeps along the line and stops at the first block, room object or room
- * side; holes, hazard and void floors below and enemies pass under or
+ * side; holes below and enemies pass under or
  * through it. He lands at the farthest spot short of that stop (within
  * the spell's range) where his box doesn't overlap a live enemy. It
  * reports the enemies his box passed through on the way (Blink hits them).

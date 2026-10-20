@@ -5,10 +5,7 @@
  * every plain type together, are one instanced mesh of dark cubes (the
  * occluding faces) plus neon edges worked out for them as one mass, so
  * neighbours never get an edge between them, whatever their type; each
- * edge takes the color of a type around it (D64). The hazard and void
- * looks are animated (block-fx.js) and outline themselves; a line they
- * share with plain blocks (or a lethal type with a hurting one) is drawn
- * once, by the more dangerous look, so the seam is theirs alone. Fences
+ * edge takes the color of a type around it (D64). Fences
  * (D167, fence-view.js) have no faces and draw their own lines, outside the
  * mass: blocks next to them keep their outline; so do stairs and slabs
  * (D221, stair-view.js), which fill only part of their cell. Only
@@ -18,15 +15,13 @@
  * back walls, windows onto the grid outside (D179).
  */
 import { BufferGeometry, Color, DoubleSide, Float32BufferAttribute, Group, InstancedMesh, Matrix4, Mesh } from 'three';
-import { BLOCK_FX, createActiveBlockView, flareHazard, hazardFaceMaterial } from './block-fx.js';
 import { STREAM_STYLE, createFenceView } from './fence-view.js';
 import { createSlabView, createStairView } from './stair-view.js';
 import { createPanelGlow } from './panel-glow.js';
 import { UNIT_BOX } from './geometry.js';
-import { blockEdges, edgeUnitKeys, groupedBlockEdges } from './edges.js';
+import { blockEdges, groupedBlockEdges } from './edges.js';
 import { BITS, markSegments } from './marks.js';
 import { GLASS, glassBox, glassBoxes, shrinkSegments } from './glass.js';
-import { createVents } from './vent-fx.js';
 import { spikeSegments, spikeTriangles } from './spikes.js';
 import { doorwayTunnels, wallLayout } from './walls.js';
 import {
@@ -50,34 +45,17 @@ import {
  * @param {number|string} [room.color] room color (biome), amber by default
  * @param {object} [room.look] biome look (neon.js roomLook()); the walls use its wall grid brightness
  * @param {{ side: string, u: number, v: number }[]} [room.panels] glass panels in the back walls (walls.js pickPanels())
- * @returns {Group} with `userData.flares`: "x,y,z" of each hazard-look
- *   block → its face material (for flareHazard()), and
- *   `userData.update(dt)` running the glass panels' glow
+ * @returns {Group} with `userData.update(dt)` running the glass panels' glow
  */
 export function createRoomView({ size, blocks, blockTypes, exits = [], color = PALETTE.amber, look = {}, panels = [] }) {
   const group = new Group();
   const walls = createWalls(size, exits, color, roomLook(look).wallGrid, panels);
   group.add(walls);
-  group.userData.flares = new Map();
   group.userData.update = (dt) => walls.userData.glow?.userData.update(dt);
   const types = Object.values(blockTypes).filter((type) => blocks[type.id]?.length > 0);
-  // A line two looks would both draw is drawn once, by the more dangerous
-  // one (D64): lethal types first, then those that hurt; each leaves out
-  // the lines already claimed, and plain blocks come last.
-  const danger = (type) => (type.lethal ? 2 : type.damage ? 1 : 0);
-  const own = ['plain', 'fence', 'stair', 'slab'];
-  const active = types.filter((type) => !own.includes(type.look)).sort((a, b) => danger(b) - danger(a));
-  const claimed = new Set();
-  for (const type of active) {
-    const cells = blocks[type.id];
-    const view = createActiveBlockView(cells, type.look, type.color ?? color, claimed);
-    if (type.look === 'hazard') for (const cell of cells) group.userData.flares.set(cell.join(), view.userData.faces);
-    group.add(view);
-    for (const key of edgeUnitKeys(cells)) claimed.add(key);
-  }
   // In defs.json order: where plain types meet, the later one's color wins the edge.
   const plain = types.filter((type) => type.look === 'plain');
-  if (plain.length > 0) group.add(createBlockView(plain.map((type) => ({ cells: blocks[type.id], color: type.color ?? color })), claimed));
+  if (plain.length > 0) group.add(createBlockView(plain.map((type) => ({ cells: blocks[type.id], color: type.color ?? color }))));
   // Stairs and slabs (D221) draw themselves.
   for (const type of types) {
     if (type.look === 'stair') group.add(createStairView(blocks[type.id], type.rise, type.color ?? color));
@@ -184,6 +162,8 @@ SPIKED_BODY.computeVertexNormals();
 const SPIKED_EDGE_WIDTH = 2;
 /** How much brighter a spiked shape's outline gets at the peak of its flare. */
 const SPIKED_FLARE = 1.5;
+/** Seconds the flare takes to fade after it hurt the wizard. */
+const SPIKED_FLARE_TIME = 0.4;
 
 /**
  * The core of a glass object: a small dark cube in the middle of its cell
@@ -210,33 +190,20 @@ const EDGE_WIDTH = { gate: 1.5 };
  * (edges, face mark, faces), so types differ by more than color. Kept
  * separate from the static blocks because objects move (D40). A
  * destructible object (with `integrity`) shows its data bits with some
- * missing instead of its mark. Hazard faces (D82) are the hazard block's
- * flickering pixels (block-fx.js). A spiked shape (D82, spikes.js) has
- * dark or hazard faces, its own outline and no mark. An object that hurts
- * (hazard faces or spiked) can flare like a hazard block: its faces light
- * up, or its outline brightens; `userData.flare(since)` sets the flare
- * for `since` seconds after it hurt the wizard. Glass faces (D96,
- * glass.js) are see-through, with the mark on a small dark core inside;
- * a destructible glass object is an empty shell of thinner glass (D99).
- * Vents (`vents`, D199, vent-fx.js) add square holes in the top with
- * aurora jets shooting out of them and shafts down to the core, for a crate whose top hurts.
- * @param {{ at: number[], kind?: string, color: string, edges: string, mark: string, faces: string, shape?: string, tint: number, integrity?: number, vents?: string }} object
+ * missing instead of its mark. A spiked shape (D82, spikes.js) has dark
+ * faces, its own outline and no mark; its outline brightens when it hurts
+ * the wizard: `userData.flare(since)` sets the flare for `since` seconds
+ * after it hurt him. Glass faces (D96, glass.js) are see-through, with the
+ * mark on a small dark core inside; a destructible glass object is an
+ * empty shell of thinner glass (D99).
+ * @param {{ at: number[], kind?: string, color: string, edges: string, mark: string, faces: string, shape?: string, tint: number, integrity?: number }} object
  */
-export function createObjectView({ at, kind, color, edges, mark, faces, shape = 'cube', tint, integrity, vents = 'none' }) {
+export function createObjectView({ at, kind, color, edges, mark, faces, shape = 'cube', tint, integrity }) {
   const group = new Group();
   const spiked = shape === 'spiked';
-  /** What lights up when it hurts the wizard, each set for seconds since. */
-  const flares = [];
   const geometry = spiked ? SPIKED_BODY : UNIT_BOX;
 
-  if (faces === 'hazard') {
-    // The hazard shader places its pixels by instance, so this is a one-instance mesh.
-    const material = hazardFaceMaterial(color);
-    const body = new InstancedMesh(geometry, material, 1);
-    body.setMatrixAt(0, new Matrix4().makeTranslation(...at));
-    group.add(body);
-    flares.push((since) => flareHazard(material, at, since));
-  } else if (faces === 'glass' && !spiked) {
+  if (faces === 'glass' && !spiked) {
     // See-through (D96, glass.js): drawn after everything opaque.
     group.add(glassBox(at, at.map((v) => v + 1), color, integrity !== undefined ? GLASS.hollow : {}));
   } else {
@@ -254,17 +221,11 @@ export function createObjectView({ at, kind, color, edges, mark, faces, shape = 
   group.add(outline);
   if (spiked) {
     const base = outline.material.color.clone();
-    flares.push((since) => {
-      const flare = Math.max(0, 1 - since / BLOCK_FX.hazard.flareTime);
+    group.userData.flare = (since) => {
+      const flare = Math.max(0, 1 - since / SPIKED_FLARE_TIME);
       outline.material.color.copy(base).multiplyScalar(1 + SPIKED_FLARE * flare);
-    });
-  }
-  if (flares.length > 0) group.userData.flare = (since) => flares.forEach((flare) => flare(since));
-  if (spiked) return group;
-  if (vents !== 'none') {
-    // userData.vents: the part a crate on top hides (PushableView).
-    group.userData.vents = createVents(at, faces === 'glass' && mark !== 'none' && integrity === undefined ? GLASS.coreSize : 0);
-    group.add(group.userData.vents);
+    };
+    return group;
   }
 
   // A destructible object shows its data bits with some missing, whatever its mark.

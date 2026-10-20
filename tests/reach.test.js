@@ -7,7 +7,7 @@ import { describeNeeds, formatReach, formatRoom, freeJumpRooms, roomOfReport } f
 import { LIFT, gameData, roomFile, withNeighbours } from './helpers.js';
 
 /** Object types the tests use besides the crate. */
-const OBJECTS = { crate_spiked: { extends: 'crate', topDamage: 2, vents: 'aurora' }, pad: { kind: 'pad', color: '#eef3ff' }, plate: { kind: 'plate', color: '#eef3ff' }, plate_heavy: { kind: 'plate', color: '#eef3ff', weight: 2 }, target: { kind: 'target', color: '#eef3ff' }, platform: LIFT };
+const OBJECTS = { pad: { kind: 'pad', color: '#eef3ff' }, plate: { kind: 'plate', color: '#eef3ff' }, plate_heavy: { kind: 'plate', color: '#eef3ff', weight: 2 }, target: { kind: 'target', color: '#eef3ff' }, platform: LIFT };
 const TUNING = { scanRange: 6, blinkRange: 3 };
 const WEST = { id: 'west', side: '-x', at: 3 };
 const EAST = { id: 'east', side: '+x', at: 3 };
@@ -113,15 +113,6 @@ test('pits: one tile is jumped, up to four need Blink, more Warp or Compile', ()
   assert.equal(room(5, ['compile']), true); // plug a cell, step on, again
 });
 
-test('hazard and void are no way across, and stop nothing from being a wall', () => {
-  for (const type of ['hazard', 'void']) {
-    assert.equal(reached(reach({ blocks: [wall(4, 2, type)], pickups: [far] })), false);
-    assert.equal(reached(reach({ blocks: [wall(4, 2, type)], pickups: [far] }, ['warp'])), false);
-  }
-  // a hazard floor tile row he can't land on: one tile wide he jumps over
-  assert.equal(reached(reach({ blocks: [wall(4, 1, 'hazard')], pickups: [far] })), false);
-});
-
 test('crates plugging a pit: each fills one tile of the row he crosses', () => {
   const crate = (id, at) => ({ id, type: 'crate', at });
   const one = [crate('c', [2, 0, 2])];
@@ -160,9 +151,6 @@ test('Swap puts him past a crate stream where the crate stood (D261)', () => {
   assert.equal(reached(reach(across)), false);
   assert.equal(reached(reach(across, ['pull'])), false);
   assert.equal(reached(reach(across, ['swap'])), true);
-  // Never with a spiked crate (D199).
-  const spiked = { ...across, objects: [{ id: 'c', type: 'crate_spiked', at: [7, 0, 3] }] };
-  assert.equal(reached(reach(spiked, ['swap'])), false);
 });
 
 test('Compile makes a step; Pull brings a crate across a pit; Cut & Paste moves one anywhere', () => {

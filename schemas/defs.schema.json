@@ -94,7 +94,7 @@
           }
         },
         "blink": {
-          "description": "A short teleport the way he aims, level, through open space only (D86): over holes, hazard and void floors and through enemies, hitting each it passes; a block, an object or the room's side stops it, and he lands short of it, hurt. Right against one, it fizzles and costs nothing.",
+          "description": "A short teleport the way he aims, level, through open space only (D86): over holes and through enemies, hitting each it passes; a block, an object or the room's side stops it, and he lands short of it, hurt. Right against one, it fizzles and costs nothing.",
           "type": "object",
           "required": ["slot", "color", "cost", "cooldown", "range", "damage", "hitDamage"],
           "additionalProperties": false,
@@ -200,7 +200,7 @@
           }
         },
         "swap": {
-          "description": "Trade places with the first crate or frozen enemy in line the way he aims, at the height of his feet (D261): he stands where it stood, it lies in the cell he stood in and falls from there. Same level only, standing on the ground; never a spiked crate or one with a load. Its cell needs room for his body, his cell room for it (no block, body or pickup). Otherwise it fizzles and costs nothing.",
+          "description": "Trade places with the first crate or frozen enemy in line the way he aims, at the height of his feet (D261): he stands where it stood, it lies in the cell he stood in and falls from there. Same level only, standing on the ground; never one with a load. Its cell needs room for his body, his cell room for it (no block, body or pickup). Otherwise it fizzles and costs nothing.",
           "type": "object",
           "required": ["slot", "color", "cost", "cooldown", "range"],
           "additionalProperties": false,
@@ -222,7 +222,7 @@
     },
     "blocks": {
       "type": "object",
-      "description": "Block types (D60), by id; room blocks name one in \"type\" (default \"block\"). The engine only knows properties (damage, lethal) and looks; a new type that combines them is data only. Rules the schema can't say (a base type has a look or a kind, not both; which values go with which) are checked by the validator.",
+      "description": "Block types (D60), by id; room blocks name one in \"type\" (default \"block\"). The engine only knows properties (seeThrough, passes, fake...) and looks; a new type that combines them is data only. Rules the schema can't say (a base type has a look or a kind, not both; which values go with which) are checked by the validator.",
       "required": ["block"],
       "properties": { "block": { "$ref": "#/$defs/blockType", "description": "The default type of room blocks; must be static." } },
       "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
@@ -355,8 +355,8 @@
           "description": "Variant: the base block type (one without \"extends\") whose values it takes; its own values replace the base's."
         },
         "look": {
-          "enum": ["plain", "hazard", "void", "fence", "cage", "sheet", "stair", "slab"],
-          "description": "Static blocks: plain (dark faces, neon edges), hazard (red pixels switching on and off, flares when it hurts), void (black mist with gray wisps sinking inside it, D99) or fence (no faces: horizontal data streams through the middle of the cell, linked with the fences next to it, D167; goes with \"seeThrough\"). cage (a switch gate only, D202: a one-cell box of light bars round a pickup, see-through, with \"seeThrough\"). sheet (a switch gate only, the bridge, D224): a single sheet of white glass at the bottom of its cell, a walkway level with the floor under it; in a hole it covers the hole while it is there, so the tile is floor, and a hole again once it goes. stair (D221, with \"rise\"): steps up across the cell; the wizard walks up it from its foot onto a ledge one block higher, and down again; its sides and its back are a wall, and to crates and enemies it is a block. slab (D221): a single sheet of glass at the top of the cell, a walkway level with a ledge one block up, with room under it for the wizard when it is two blocks up; to crates it is a block. Looks are built into the engine (src/render/block-fx.js, src/render/fence.js, src/render/cage-view.js)."
+          "enum": ["plain", "fence", "cage", "sheet", "stair", "slab"],
+          "description": "Static blocks: plain (dark faces, neon edges) or fence (no faces: horizontal data streams through the middle of the cell, linked with the fences next to it, D167; goes with \"seeThrough\"). cage (a switch gate only, D202: a one-cell box of light bars round a pickup, see-through, with \"seeThrough\"). sheet (a switch gate only, the bridge, D224): a single sheet of white glass at the bottom of its cell, a walkway level with the floor under it; in a hole it covers the hole while it is there, so the tile is floor, and a hole again once it goes. stair (D221, with \"rise\"): steps up across the cell; the wizard walks up it from its foot onto a ledge one block higher, and down again; its sides and its back are a wall, and to crates and enemies it is a block. slab (D221): a single sheet of glass at the top of the cell, a walkway level with a ledge one block up, with room under it for the wizard when it is two blocks up; to crates it is a block. Looks are built into the engine (src/render/block-fx.js, src/render/fence.js, src/render/cage-view.js)."
         },
         "kind": {
           "enum": ["gate"],
@@ -377,8 +377,6 @@
           "description": "Edges (and lit pixels or grains). Without a color, plain blocks and gates take the room color (structure, D99); switch gates are white (a mechanism), the cage (D202) the room color."
         },
         "rise": { "enum": ["+x", "-x", "+z", "-z"], "description": "The stair look only (D221): the way it climbs. The wizard walks onto it from the cell on the other side, at its foot." },
-        "damage": { "type": "integer", "minimum": 1, "description": "Static blocks: integrity the wizard loses when he touches it (stands on it or walks into it)." },
-        "lethal": { "type": "boolean", "description": "Static blocks: landing on top kills the wizard and enemies instantly; touching a side is safe." },
         "seeThrough": { "type": "boolean", "description": "Static blocks, and the cage (a gate with the cage look, D202; the pickup in it shows, a bolt passes): solid to bodies (the wizard, enemies, crates; he can stand on top), but bolts (his Zap, enemies' shots) and enemies' sight pass through it (D167). Blink and Warp stop at it as at any block." },
         "passes": {
           "type": "array",
@@ -419,7 +417,7 @@
         },
         "movement": {
           "enum": ["patrol", "stationary", "chase"],
-          "description": "Movement behavior (src/ai/behaviors.js). patrol: walks its path (room data \"path\", required) cell by cell, turning back when blocked; stationary: stays in its cell (still falls and rides platforms); chase: goes after the wizard while it sees him within aggroRange (chaseSpeed; needs an aggroRange), searches where it lost him (or where he stood when his Zap hit it) for memory seconds, then goes back to its post, or walks its path if it has one; searching and going back it finds its way round walls. Enemies never step into a hole or onto a lethal block."
+          "description": "Movement behavior (src/ai/behaviors.js). patrol: walks its path (room data \"path\", required) cell by cell, turning back when blocked; stationary: stays in its cell (still falls and rides platforms); chase: goes after the wizard while it sees him within aggroRange (chaseSpeed; needs an aggroRange), searches where it lost him (or where he stood when his Zap hit it) for memory seconds, then goes back to its post, or walks its path if it has one; searching and going back it finds its way round walls. Enemies never step into a hole."
         },
         "attack": {
           "enum": ["touch", "burst", "arc", "bolt", "none"],
@@ -567,25 +565,14 @@
           "description": "Pattern drawn on every face (on a cube-shaped object)."
         },
         "faces": {
-          "enum": ["dark", "tinted", "hazard", "glass"],
+          "enum": ["dark", "tinted", "glass"],
           "default": "dark",
-          "description": "dark: like static blocks; tinted: faces shaded in the object color (top lighter, cube only); hazard: the hazard block look, pixels flickering in the object color (D82); glass: see-through faces tinted in the object color, the mark on a small dark core inside (cube only, D96)."
+          "description": "dark: like static blocks; tinted: faces shaded in the object color (top lighter, cube only); glass: see-through faces tinted in the object color, the mark on a small dark core inside (cube only, D96)."
         },
         "shape": {
           "enum": ["cube", "spiked"],
           "default": "cube",
           "description": "cube: fills its cell; spiked: a smaller core with four pyramids on each side, their tips reaching the cell's faces (for objects that hurt, D82). Either way it collides as its whole cell."
-        },
-        "vents": {
-          "enum": ["none", "aurora"],
-          "default": "none",
-          "description": "Cube-shaped objects: square bit-like holes in the top face with jets of aurora light (crimson to dark indigo) shooting out of them, and shafts running down through the glass to the core (D199). Look only; what hurts is topDamage."
-        },
-        "topDamage": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 99,
-          "description": "Pushable objects only (D199): touching its top (standing on it, landing on it) hurts the wizard by this much and shoves him off; its sides are safe to push. A plain crate on top covers the spikes. Not for platforms: their \"damage\" hurts on every side."
         },
         "tint": {
           "type": "number",
@@ -604,7 +591,7 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 99,
-          "description": "Platforms only: touching it (its sides, its top, riding it) hurts the wizard by this much, like a hazard block (D82). Without it the object is harmless."
+          "description": "Platforms only: touching it (its sides, its top, riding it) hurts the wizard by this much (D82). Without it the object is harmless."
         },
         "timer": {
           "type": "number",

@@ -89,9 +89,6 @@ export function validateData(files) {
     if (type.damage !== undefined && type.kind !== 'platform') {
       report('defs.json', `objects.${id}.damage`, `only platforms can hurt, not a ${type.kind}`);
     }
-    if (type.topDamage !== undefined && type.kind !== 'pushable') {
-      report('defs.json', `objects.${id}.topDamage`, `only pushable objects have a spiked top, not a ${type.kind}`);
-    }
     // Only switches are timed (D140).
     if (type.timer !== undefined && !TIMED_SWITCH_KINDS.includes(type.kind)) report('defs.json', `objects.${id}.timer`, `only switches (targets and plates) are timed, not a ${type.kind}`);
     // Only plates have a weight (D200).
@@ -359,8 +356,6 @@ function validateRoom(file, room, { objectTypes, pickupTypes, blockTypes, enemyT
     filled: new Map(),
     /** "x,z" → path of the hole entry */
     holes: new Map(),
-    /** "x,y,z" → block type (resolved) filling it, only for types that hurt or kill (damage, lethal) */
-    blockTypes: new Map(),
     /** "x,y,z" → path of the platform whose path sweeps it */
     pathCells: new Map(),
     /** "x,y,z" of every gate block (D140, D141): floor that may go */
@@ -460,7 +455,6 @@ function validateBlocks(checks, blockTypes) {
     // Report only the first bad cell of a block, not one per cell.
     for (const cell of blockCells(block)) {
       if (!fillCell(checks, cell, path)) break;
-      if (type.damage || type.lethal) checks.blockTypes.set(cellKey(cell), type);
       // Gates (collapsing blocks too, D141) go: they don't hold up the player or a hole.
       if (type.kind === 'gate') checks.collapsing.add(cellKey(cell));
       if (type.fake || type.look === 'cage') checks.fake.add(cellKey(cell));
@@ -562,14 +556,14 @@ function validatePathShape(room, report, path, at, points, mode, level = false) 
 
 /**
  * Enemies (D48, D78, D80): unique ids (shared with objects), known
- * templates, each in a free cell of its own, not starting over a hole nor
- * on a lethal block; patrols have a path, level (legs along x or z) and
+ * templates, each in a free cell of its own, not starting over a hole;
+ * patrols have a path, level (legs along x or z) and
  * through no static block; chasers may have one (walked while calm);
  * stationary enemies have none. A path has no speed of its own: an enemy
  * walks at its template's (D119).
  */
 function validateEnemies(checks, enemyTemplates) {
-  const { room, report, ids, filled, holes, blockTypes } = checks;
+  const { room, report, ids, filled, holes } = checks;
   const [w, h, d] = room.size;
   const taken = new Map();
   (room.enemies ?? []).forEach((enemy, i) => {
@@ -599,7 +593,6 @@ function validateEnemies(checks, enemyTemplates) {
       else if (filled.has(cellKey(above))) report(path, `it stands two cubes high: the cell above, ${cellText(above)}, is filled by ${filled.get(cellKey(above))}`);
     }
     if (y === 0 && holes.has(cellKey([x, z]))) report(path, `it starts over ${holes.get(cellKey([x, z]))}`);
-    if (blockTypes.get(cellKey([x, y - 1, z]))?.lethal) report(path, `it starts on a lethal block at ${cellText([x, y - 1, z])}: it would pop at once`);
 
     if (!enemy.path) return;
     if (enemy.path.speed !== undefined) report(`${path}.path.speed`, `an enemy walks at its template's speed (D119): set it in "${enemy.template}"`);
@@ -672,7 +665,6 @@ const OVERRIDE_RANGES = {
   tint: [0, 1, false],
   integrity: [1, 15, true],
   damage: [1, 99, true],
-  topDamage: [1, 99, true],
   timer: [0.5, 30, false],
 };
 
@@ -800,10 +792,9 @@ function validateShrine({ room, report, filled, holes, plates }) {
 
 /**
  * Exits: the first row inside is free, so the wizard can pass and arrive,
- * no platform passes through it, and a raised exit's floor is no void
- * block (he would die on arrival).
+ * no platform passes through it, and no hole is in it.
  */
-function validateExitPassage({ room, report, filled, holes, blockTypes, pathCells }, exits, exitFits) {
+function validateExitPassage({ room, report, filled, holes, pathCells }, exits, exitFits) {
   exits.forEach((exit, i) => {
     if (!exitFits[i]) return; // reported already
     const { inside } = exitCells(exit, room.size);
@@ -819,22 +810,16 @@ function validateExitPassage({ room, report, filled, holes, blockTypes, pathCell
     }
     const pit = exit.y === 0 && inside.find(([x, , z]) => holes.has(cellKey([x, z])));
     if (pit) report(`exits[${i}]`, `tile ${cellText([pit[0], pit[2]])} inside the exit is a hole`);
-    const lethalFloor = inside.find(([x, y, z]) => y === exit.y && blockTypes.get(cellKey([x, y - 1, z]))?.lethal);
-    if (lethalFloor) {
-      const cell = [lethalFloor[0], exit.y - 1, lethalFloor[2]];
-      report(`exits[${i}]`, `the floor inside the exit is a lethal ${blockTypes.get(cellKey(cell)).id} block at ${cellText(cell)}`);
-    }
   });
 }
 
 /**
  * Does the player's hitbox fit at `point`, inside the room, clear of solids,
- * not hovering over an unsupported hole and not above a block that hurts or
- * kills (damage, lethal: he would land on it)? Used for both `spawn` and `reset`.
+ * not hovering over an unsupported hole? Used for both `spawn` and `reset`.
  * @param {string} path 'spawn' or 'reset'
  * @param {number[]} point feet center
  */
-function validatePlayerPoint({ room, report, filled, holes, blockTypes, collapsing }, path, point) {
+function validatePlayerPoint({ room, report, filled, holes, collapsing }, path, point) {
   const [w, h, d] = room.size;
   const [px, py, pz] = point;
   const [hw, hh, hd] = PLAYER_HITBOX;
@@ -858,10 +843,6 @@ function validatePlayerPoint({ room, report, filled, holes, blockTypes, collapsi
   const below = [...Array(Math.floor(py)).keys()].reverse().find(catches);
   const hole = holes.get(cellKey([cx, cz]));
   if (hole && below === undefined) report(path, `the player at ${cellText(point)} would fall into ${hole}`);
-
-  // What he lands on: not a block that hurts or kills.
-  const landing = below !== undefined && blockTypes.get(cellKey([cx, below, cz]));
-  if (landing) report(path, `the player at ${cellText(point)} would land on a ${landing.id} block (${filled.get(cellKey([cx, below, cz]))})`);
 }
 
 function validateWorld(world, rooms, report) {

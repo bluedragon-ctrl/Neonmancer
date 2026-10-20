@@ -46,8 +46,8 @@ function cast(game, spell) {
 
 const close = (actual, expected, message) => assert.ok(Math.abs(actual - expected) < 1e-3, `${message ?? ''} ${actual} ≉ ${expected}`);
 
-test('warpTarget goes its full range through open space, over holes and hazard floors', () => {
-  const g = grid({ size: [12, 4, 8], holes: [[3, 3], [4, 3]], blocks: { hazard: [[3, 0, 2]] } });
+test('warpTarget goes its full range through open space, over holes', () => {
+  const g = grid({ size: [12, 4, 8], holes: [[3, 3], [4, 3]] });
   const target = warpTarget([1.5, 0, 3.5], PLAYER_HITBOX, [1, 0], 3, g, [], []);
   assert.deepEqual(target, { to: [4.5, 0, 3.5], distance: 3, cut: false, passed: [] });
 });

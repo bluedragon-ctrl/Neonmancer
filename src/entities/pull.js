@@ -3,8 +3,7 @@
  * or enemy in line the way the wizard aims. The line runs along his grid
  * axis (the larger part of his aim, as for Cut & Paste, D87), in his
  * column across it, at the height of his feet, from the cell right in
- * front of him up to the spell's range. Holes and hazard or void floors
- * below don't stop it; a block, the room's side or any other body in a
+ * front of him up to the spell's range. Holes below don't stop it; a block, the room's side or any other body in a
  * cell does. Shove's line also passes see-through blocks (fences, D167),
  * as a bolt does.
  *

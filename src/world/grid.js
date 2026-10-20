@@ -15,8 +15,8 @@
  * array covering the room plus a one-cell ring around its sides (where exit
  * openings are), not string-keyed sets. Each cell holds a code: 0 empty,
  * 1 the room's edge (outside the sides, below the floor), from 2 on a
- * static block type; typeAt() gives the type with its properties (damage,
- * lethal), so game rules ask about properties, never type names (D60).
+ * static block type; typeAt() gives the type with its properties (fake,
+ * seeThrough), so game rules ask about properties, never type names (D60).
  * A see-through type (a fence, D167) is solid to bodies but lets bolts
  * and sight through (blocksSight()).
  * A type with `passes` (the crate stream, D198) is solid to every kind of
@@ -139,7 +139,7 @@ export class Grid {
 
   /**
    * The block type filling the cell [x, y, z] (integers), with its
-   * properties (damage, lethal...): EDGE_TYPE outside the room, null if empty.
+   * properties (seeThrough, passes...): EDGE_TYPE outside the room, null if empty.
    */
   typeAt(x, y, z) {
     return this.types[this.cellAt(x, y, z)];

@@ -228,7 +228,7 @@ test('x-ray: ghosts draw after the world and before the wizard', () => {
   for (const ghost of ghosts) assert.equal(ghost.renderOrder, XRAY_ORDER);
   assert.ok(XRAY_ORDER < CHARACTER_ORDER);
   // Every world view that can hide him draws before the ghost.
-  const blocks = { block: [[0, 0, 0]], hazard: [[1, 0, 0]], void: [[2, 0, 0]] };
+  const blocks = { block: [[0, 0, 0]], fence: [[1, 0, 0]], stair_x: [[2, 0, 0]] };
   const room = createRoomView({ size: [4, 3, 4], blocks, blockTypes: resolveBlockTypes(DEFS.blocks), color: '#ffb020' });
   room.traverse((node) => assert.ok(node.renderOrder < XRAY_ORDER, 'room view drawn before the ghost'));
 });
@@ -237,10 +237,8 @@ test('room view: each static block type in its look and color (D60)', () => {
   const blockTypes = resolveBlockTypes({
     block: { look: 'plain' },
     glass: { look: 'plain', color: '#00ffaa' },
-    hazard: { look: 'hazard', color: '#ff3b30', damage: 1 },
-    hot: { extends: 'hazard', damage: 2 },
   });
-  const blocks = { block: [[0, 0, 0]], glass: [[1, 0, 0]], hazard: [[2, 0, 0]], hot: [[3, 0, 0]] };
+  const blocks = { block: [[0, 0, 0]], glass: [[1, 0, 0]] };
   const room = createRoomView({ size: [4, 3, 4], blocks, blockTypes, color: '#ffb020' });
   // Block edges glow at 1.6 times their color (room-view.js createBlockView()).
   const edgeColor = (hex) => new Color(hex).multiplyScalar(1.6);
@@ -248,10 +246,6 @@ test('room view: each static block type in its look and color (D60)', () => {
   room.traverse((node) => node.material?.isLineMaterial && lineColors.push(node.material.color));
   assert.ok(lineColors.some((c) => c.equals(edgeColor('#00ffaa'))), 'a plain type with its own color');
   assert.ok(lineColors.some((c) => c.equals(edgeColor('#ffb020'))), 'a plain type without one takes the room color');
-  // Every hazard-look cell can flare, each with its own type's material.
-  const { flares } = room.userData;
-  assert.deepEqual([...flares.keys()].sort(), ['2,0,0', '3,0,0']);
-  assert.notEqual(flares.get('2,0,0'), flares.get('3,0,0'));
 });
 
 test('x-ray: parts of one color share a ghost material with the wizard flash', () => {

@@ -166,6 +166,12 @@ docs/decisions.md).
   upgrade.
 
 ### Removed
+- Hazard blocks, void blocks and the spiked crate (D271): no room used
+  them. With them go the block properties `damage` and `lethal`, the
+  object values `topDamage` and `vents`, their looks (`block-fx.js`,
+  `mist.js`, `vent-fx.js`), the void death message and sound, the
+  checker's spiked tops and `xsb.mjs`'s `!` and `--spiked`. A hole is the
+  only instant death; spiked platforms still hurt.
 - Eleven dev-wing test rooms (D270): `room_1`, `room_2`, `fence_yard`,
   `watchdog_run`, `socket_lab`, `stream_lab`, `spiked_lab`, `heavy_lab`,
   `socket_yard`, `cage_lab`, `stair_lab`; real rooms show every mechanic

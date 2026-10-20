@@ -33,7 +33,6 @@ import { createFloor } from '../src/render/floor.js';
 import { PALETTE } from '../src/render/neon.js';
 import { Renderer } from '../src/render/renderer.js';
 import { ASPECT } from '../src/render/viewport.js';
-import { createActiveBlockView, flareHazard } from '../src/render/block-fx.js';
 import { createObjectView, createRoomView } from '../src/render/room-view.js';
 import { ExitView } from '../src/render/exit-view.js';
 import { HOLO_TIME } from '../src/render/holo.js';
@@ -159,12 +158,6 @@ const ALL_ASSETS = [
       return new Group().add(view);
     },
   })),
-  // A close-up of the spiked crate (D199): its vents and the shafts down to the core.
-  { label: 'crate_spiked-close', span: 1.7, build: () => { const v = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...OBJECT_TYPES.crate_spiked, at: [0, 0, 0] }); v.position.set(-0.5, 0, -0.5); return new Group().add(v); } },
-  // Animated looks of the damaging block types (block-fx.js); the hazard
-  // flares every 2 s as if it just hurt the wizard.
-  { label: 'block-hazard', build: () => buildActiveBlock('hazard') },
-  { label: 'block-void', build: () => buildActiveBlock('void') },
   { label: 'blocks-in-room', span: 5.5, build: buildBlocksInRoom },
   // Fences (D167): see-through, the wizard walks behind them.
   { label: 'fence-in-room', span: 5.5, build: buildFenceInRoom },
@@ -174,10 +167,8 @@ const ALL_ASSETS = [
   { label: 'stairs-in-room', span: 5.5, build: buildStairsInRoom },
   // A jump pad (D221): it throws him up by itself; it flashes every 2 s as if it just did.
   { label: 'pad', span: 7, spin: false, build: buildPad },
-  // Glass (D96): every crate type is glass (above). Hazard blocks as glass
-  // are an option not used yet; then a room corner with glass crates
-  // stacked beside the old tinted crate, the wizard walking behind them.
-  { label: 'glass-hazard', group: 'glass', build: () => buildActiveBlock('hazard', { glass: true }) },
+  // Glass (D96): every crate type is glass (above); a room corner with glass
+  // crates stacked beside the old tinted crate, the wizard walking behind them.
   { label: 'glass-in-room', group: 'glass', span: 5.5, build: buildGlassInRoom },
   { label: 'exits', span: 5.5, build: buildExits },
   { label: 'platforms', span: 5.5, build: buildPlatforms },
@@ -2310,37 +2301,15 @@ function buildWizardHit() {
 }
 
 /**
- * One block of a damaging type in its animated look.
- * @param {'hazard'|'void'} type
- * @param {{ glass?: boolean }} [options] glass: the see-through prototype (glass.js)
- */
-function buildActiveBlock(type, options) {
-  const view = createActiveBlockView([[0, 0, 0]], BLOCK_TYPES[type].look, BLOCK_TYPES[type].color, null, options);
-  view.position.set(-0.5, 0, -0.5);
-  const asset = new Group().add(view);
-  if (type === 'hazard') {
-    let time = 0;
-    asset.userData.update = (dt) => {
-      time = (time + dt) % 2;
-      flareHazard(view.userData.faces, [0, 0, 0], time);
-    };
-  }
-  return asset;
-}
-
-/**
  * Glass in context: a 4×4 room corner with a stack of two glass crates
- * and a glass crate on the floor beside the old tinted crate, a glass
- * hazard strip and a void (black mist) patch against plain blocks; the wizard
- * walks back and forth behind the crates (with his x-ray ghost, which
+ * and a glass crate on the floor beside the old tinted crate against
+ * plain blocks; the wizard walks back and forth behind the crates (with his x-ray ghost, which
  * glass doesn't trigger).
  */
 function buildGlassInRoom() {
   const size = [4, 3, 4];
   const room = new Group().add(
     createRoomView({ size, blocks: { block: [[0, 0, 0], [0, 1, 0], [1, 0, 0]] }, blockTypes: BLOCK_TYPES, color: PALETTE.amber }),
-    createActiveBlockView([[0, 0, 2], [0, 0, 3]], 'hazard', BLOCK_TYPES.hazard.color, null, { glass: true }),
-    createActiveBlockView([[3, 0, 0], [3, 0, 1]], 'void', BLOCK_TYPES.void.color),
   );
   const glass = { ...OBJECT_STYLE_DEFAULTS, ...OBJECT_TYPES.crate };
   for (const at of [[1, 0, 3], [1, 1, 3], [2, 0, 3]]) room.add(createObjectView({ ...glass, at }));
@@ -2364,8 +2333,7 @@ function buildGlassInRoom() {
 }
 
 /**
- * The animated looks in context: a 4×4 room corner with plain blocks, a
- * hazard wall and a void patch crossed by a plain path; the pillar's top
+ * Blocks in context: a 4×4 room corner with plain blocks; the pillar's top
  * is a second plain type in its own color, joined without a seam (D64).
  */
 function buildBlocksInRoom() {
@@ -2376,8 +2344,6 @@ function buildBlocksInRoom() {
       blocks: {
         block: [[0, 0, 0], [1, 0, 0], [0, 1, 0], [2, 0, 2], [2, 0, 3], [3, 0, 3]],
         silver: [[0, 2, 0]],
-        hazard: [[0, 0, 2], [0, 0, 3], [1, 0, 3]],
-        void: [[2, 0, 1], [3, 0, 1], [3, 0, 2], [2, 0, 0]],
       },
       blockTypes: { ...BLOCK_TYPES, silver: { id: 'silver', static: true, look: 'plain', color: '#e8eaff' } },
       color: PALETTE.amber,
