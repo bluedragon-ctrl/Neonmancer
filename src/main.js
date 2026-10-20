@@ -17,7 +17,7 @@ import { PLAYER } from './entities/player.js';
 import { PlayerView } from './render/entity-view.js';
 import { HOLO_TIME } from './render/holo.js';
 import { bootState } from './render/boot-fx.js';
-import { AutoQuality, qualityLevels } from './render/quality.js';
+import { AutoQuality, qualityFromSettings } from './render/quality.js';
 import { Renderer } from './render/renderer.js';
 import { RoomScene } from './render/room-scene.js';
 import { showErrorScreen } from './ui/error-screen.js';
@@ -54,16 +54,33 @@ function boot() {
   const devRoom = DEV_SERVER && content.rooms.has(params.get('room')) ? params.get('room') : undefined;
   const game = new Game(content, { start: devRoom });
 
-  // Quality steps down by itself when frames run slow (D76); on a high-DPI
-  // screen there is no MSAA to drop, so the render scale goes first (D169).
-  // ?scale=0.5 and ?msaa=0 set it by hand instead, until there is a
-  // settings menu with quality presets.
+  // Quality comes from the Options (D277): a fixed preset, or Auto, which
+  // steps down by itself when frames run slow and back up when they are
+  // fast again (D76); on a high-DPI screen there is no MSAA to drop, so
+  // the render scale goes first (D169). ?scale=0.5 and ?msaa=0 set it by
+  // hand instead, over the Options.
+  const settings = Settings.load();
   const manualQuality = params.has('scale') || params.has('msaa');
-  const autoQuality = manualQuality ? null : new AutoQuality(qualityLevels(window.devicePixelRatio));
+  /** @type {AutoQuality | null} */
+  let autoQuality = null;
+  /** The quality the Options ask for, as renderer settings; Auto starts its fallback afresh. */
+  const chosenQuality = () => {
+    const chosen = qualityFromSettings(settings.values, window.devicePixelRatio);
+    autoQuality = 'levels' in chosen ? new AutoQuality(chosen.levels) : null;
+    return autoQuality?.settings ?? chosen.fixed;
+  };
   const renderer = new Renderer(
     app,
-    autoQuality?.settings ?? { renderScale: Number(params.get('scale') ?? 1), multisampling: Number(params.get('msaa') ?? 4) },
+    manualQuality ? { renderScale: Number(params.get('scale') ?? 1), multisampling: Number(params.get('msaa') ?? 4) } : chosenQuality(),
   );
+  const qualityChoice = () => `${settings.values.quality} ${settings.values.renderScale}`;
+  let appliedQuality = qualityChoice();
+  /** Quality or Render scale changed in the Options: draw at what they ask for now. */
+  function applyQuality() {
+    if (qualityChoice() === appliedQuality) return;
+    appliedQuality = qualityChoice();
+    renderer.setQuality(chosenQuality());
+  }
   const hud = new Hud(renderer.hud, content.strings, { pauseColor: content.spells.pause?.color });
   const debug = new DebugOverlay();
   const readout = new DebugReadout(renderer.hud);
@@ -89,9 +106,9 @@ function boot() {
 
   // The title screen first; the world map tool's links go straight in,
   // and so does a link with an access key (#KEY, D105).
-  // Volumes (D138) drive the audio engine; the visual settings are still
-  // stored only (D109). Browsers start audio only after a key or click.
-  const settings = Settings.load();
+  // Volumes (D138) drive the audio engine, Quality and Render scale the
+  // renderer (D277; Screen effects are still stored only, D109). Browsers
+  // start audio only after a key or click.
   const audio = new AudioEngine(content.audio, { Howl, createContext: () => new AudioContext(), urlOf: audioUrl });
   audio.applySettings(settings);
   for (const type of ['keydown', 'pointerdown']) window.addEventListener(type, () => audio.unlock(), { once: true });
@@ -110,6 +127,7 @@ function boot() {
     if (command === 'settings') {
       settings.save();
       audio.applySettings(settings);
+      if (!manualQuality) applyQuality();
     }
     if (command === 'start') newGame();
     if (command === 'restart') game.restartRoom();
@@ -309,10 +327,10 @@ function boot() {
     if (still !== wasStill) renderer.invalidate();
     wasStill = still;
     // Kept frames are no measure of how fast frames are drawn.
-    const lowered = still ? null : autoQuality?.frame(time - lastFrame);
-    if (lowered) {
-      renderer.setQuality(lowered);
-      console.info(`Frames run slow: quality now MSAA ${renderer.multisampling}, render scale ${renderer.renderScale}`);
+    const changed = still ? null : autoQuality?.frame(time - lastFrame);
+    if (changed) {
+      renderer.setQuality(changed);
+      console.info(`Auto quality: now MSAA ${renderer.multisampling}, render scale ${renderer.renderScale}`);
     }
     const dt = flow.playing ? Math.min(time - lastFrame, 0.1) : 0;
     if (!still) shaderTime += Math.min(time - lastFrame, 0.1);
@@ -332,7 +350,7 @@ function boot() {
     syncHud(hud, game, renderer, dt);
     HOLO_TIME.value = shaderTime;
     renderer.render({ onlyIfChanged: still });
-    readout.update(debug.active, { game, input, renderer, alpha, autoQuality });
+    readout.update(debug.active, { game, input, renderer, alpha, autoQuality, preset: manualQuality ? 'manual' : settings.values.quality });
   }
 
   new FixedLoop({ update, render }).start();

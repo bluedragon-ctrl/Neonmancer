@@ -26,10 +26,11 @@ export class DebugReadout {
    * @param {boolean} shown whether debug mode is on
    * @param {{ game: import('../game.js').Game, input: import('../core/input.js').Input,
    *   renderer: import('../render/renderer.js').Renderer, alpha: number,
-   *   autoQuality?: import('../render/quality.js').AutoQuality | null }} state
-   *   autoQuality: null when quality was set by hand (?msaa, ?scale)
+   *   autoQuality?: import('../render/quality.js').AutoQuality | null, preset?: string }} state
+   *   autoQuality: null for a fixed quality, `preset` (the Options' Low, Medium
+   *   or High, D277) or set by hand (?msaa, ?scale; no preset)
    */
-  update(shown, { game, input, renderer, alpha, autoQuality = null }) {
+  update(shown, { game, input, renderer, alpha, autoQuality = null, preset = 'manual' }) {
     this.frames++;
     const now = performance.now();
     if (now - this.secondStart >= 1000) {
@@ -44,7 +45,7 @@ export class DebugReadout {
     const { info } = renderer.webgl;
     const { player } = game;
     const actions = input.activeActions().join(' ') || '-';
-    const quality = autoQuality === null ? 'MANUAL' : autoQuality.done ? 'AUTO, SETTLED' : 'AUTO';
+    const quality = autoQuality === null ? preset.toUpperCase() : autoQuality.done ? 'AUTO, SETTLED' : 'AUTO';
     this.element.textContent =
       `> ROOM ${game.room.id}${game.invincible ? '  INVINCIBLE' : ''}\n` +
       `> TICK/S ${this.tps}  FPS ${this.fps}  ALPHA ${alpha.toFixed(2)}\n` +

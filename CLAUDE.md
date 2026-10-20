@@ -71,7 +71,10 @@ mobile/touch support, backend or accounts.
   - Render scale setting (50–100%) separate from window size; cap
     devicePixelRatio.
   - Automatic quality fallback: when frames run slow, MSAA and then
-    render scale step down (D76); a high-DPI buffer (1.5+ pixels per
+    render scale step down (D76), and back up once frames have been
+    fast for a while; the first seconds are not judged (D277). The
+    Options' Low / Medium / High presets fix the quality instead, and
+    Render scale caps every preset (D277); a high-DPI buffer (1.5+ pixels per
     CSS pixel) has no MSAA (D169). Behind a menu the last frame is kept,
     not redrawn (D169). Extra full-screen effect passes are
     costly on weak GPUs; add effects to the existing effect pass.

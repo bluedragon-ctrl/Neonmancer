@@ -151,7 +151,7 @@ Paths are under `src/`, except `tools/` (dev tooling at the repo root).
 | `render/pixie.js` | Pixie model (D107): butterfly with pixel wings (`wingPixels()`), shimmer, flapping (`pixieFlap()`), dust, `PIXIE` tuning; `PIXIE_MODEL` |
 | `render/pixels.js` | Pixel bursts (`createPixelBurst()`, `placePixels()`; all share one cube, scaled to their pixel size) every effect places, the derez mesh (`createDerez(body, colors)`, `placeDerez()`, D126) and the stream's (`createStream()`, `placeStream()`, D127) |
 | `render/post.js` | pmndrs postprocessing composer (bloom) |
-| `render/quality.js` | Automatic quality fallback: steps MSAA, then render scale, down when frames run slow (D76); `qualityLevels()` leaves out MSAA steps on a high-DPI screen (D169; pure, tested) |
+| `render/quality.js` | The Options' quality presets (`qualityFromSettings()`, D277) and the automatic fallback: steps MSAA, then render scale, down when frames run slow and back up when they are fast again (D76, D277); `qualityLevels()` leaves out MSAA steps on a high-DPI screen (D169; pure, tested) |
 | `render/rails.js` | Guide line along a platform's path, `RAILS` tuning (pure, tested) |
 | `render/renderer.js` | WebGLRenderer, 16:9 stage + HUD overlay, DPR cap, render scale, MSAA (off on a high-DPI buffer), resize, shader precompile, frames kept while the game stands still (`invalidate()`, D169) |
 | `render/room-scene.js` | The current room's views, object views by kind (`OBJECT_VIEWS`); rebuilds only the objects on a respawn; `showShape()`: the empty room behind the title (D109) |
@@ -450,12 +450,18 @@ shadow plane) are never freed.
   MSAA is off when the buffer has 1.5 or more pixels per CSS pixel
   (`effectiveMultisampling()` in `viewport.js`, D169): a high-DPI buffer is
   smooth enough without it.
-- Auto quality (D76): `AutoQuality` in `main.js` judges frame times in
-  2 s windows and, after two slow ones (below 50 fps), lowers MSAA
+- Quality (D76, D277): `qualityFromSettings()` turns the Options' Quality
+  and Render scale into Auto's levels or one fixed quality (Low: no MSAA,
+  at most 75 %; Medium: MSAA 2; High: MSAA 4; Render scale caps each);
+  `main.js` applies it at start and whenever either setting changes.
+  On Auto, `AutoQuality` judges frame times in 2 s windows, leaving out
+  the first 5 s, and after two slow ones (below 50 fps) lowers MSAA
   (4 → 2 → 0), then the render scale (0.75, 0.5), via
-  `Renderer.setQuality()`; on a high-DPI screen it starts at the render
-  scale (`qualityLevels()`, D169). `?msaa=` / `?scale=` set quality by hand
-  and turn it off. The debug readout shows the current level.
+  `Renderer.setQuality()`; after five fast windows (above ~56 fps) it
+  steps back up one level, and a level it came up to and found slow is
+  the best it tries again (`top`). On a high-DPI screen it starts at the
+  render scale (`qualityLevels()`, D169). `?msaa=` / `?scale=` set quality
+  by hand over the Options. The debug readout shows the level and the preset.
 - Behind a menu (title, pause, map) the game stands still and the frame on
   screen is kept: `Renderer.render({ onlyIfChanged })` draws only after
   `invalidate()` (a room shown, a resize, the debug overlay toggled, the

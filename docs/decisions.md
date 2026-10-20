@@ -390,7 +390,7 @@ timers: D140; look: D143.)
 Two slow 2 s windows (below 50 fps) step MSAA 4 → 2 → 0, then render
 scale 0.75 → 0.5; never back up; `?msaa`/`?scale` turn it off. Shaders
 compile ahead, hidden objects included, for the composer's buffer.
-(High-DPI: D169.)
+(High-DPI: D169. Since D277 it steps back up, and Options presets fix it.)
 **Why:** weak GPUs pay for resolution × MSAA; extra full-screen passes
 are costly, effects in the existing pass nearly free.
 
@@ -3849,3 +3849,26 @@ Authored rooms affected: none (no room is flagged); no room uses it yet.
 **Why:** the push puzzles had a barrier only crates cross (the stream)
 but none only he crosses; that is the other half of Sokoban's player
 routing, and a post reads as one at a glance.
+
+### D277 — 2026-10-20 — Quality presets wired; Auto waits out a slow start and steps back up (5.12)
+The Options' **Quality** and **Render scale** take effect, and the
+automatic fallback (D76) is no longer one-way.
+- **Presets:** Low draws without MSAA at up to 75 % render scale, Medium
+  with MSAA 2, High with MSAA 4 (`QUALITY_PRESETS`). They are fixed: no
+  fallback. **Render scale** (50–100 %) caps every preset, Auto included
+  (`qualityLevels(dpr, maxScale)`). A change in either setting applies at
+  once; Auto starts afresh. `?msaa` / `?scale` still win over the Options.
+- **Auto, start:** the first 5 s are not judged (`startSettle`), not 1 s.
+- **Auto, back up:** after five fast windows in a row (10 s above ~56 fps)
+  it steps up one level. A level it came up to that turns out slow (two
+  slow windows) sends it back down, and that level stays out (`top`), so
+  quality can't flicker. Coming up also lets it step down again after it
+  had settled at the bottom or gone back from steps that helped nothing.
+- The debug readout names the preset (AUTO, LOW, MEDIUM, HIGH, MANUAL).
+- A check on a weaker GPU, part of step 5.12, is left to the testers.
+**Why:** a browser just started or a GPU still waking drew the boot room
+at ~15 fps rising to 60 over 20 s (the author's playtest, on the dev
+server and on Pages alike). Each step down looked like it helped, since
+frames were getting faster anyway, so Auto walked down to 50 % scale, and
+"never back up" left the game pixelated for good. High in the Options
+couldn't restore it, as the presets were stored only.
