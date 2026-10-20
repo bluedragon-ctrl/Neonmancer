@@ -94,6 +94,7 @@ import { PIXIE_MODEL } from '../src/render/pixie.js';
 import { createDataPillar } from '../src/render/data-pillar.js';
 import { createScreen } from '../src/render/screen.js';
 import { createMemoryStack } from '../src/render/memory-stack.js';
+import { createBollard } from '../src/render/bollard.js';
 import biomes from '../data/biomes.json';
 
 /** Block types with variants filled in (D60). */
@@ -413,6 +414,13 @@ const ALL_ASSETS = [
   { label: 'memory-x', group: 'memory', spin: false, build: () => buildDeco(createMemoryStack, { face: '+x' }) },
   { label: 'memory-wall', group: 'memory', span: 4, spin: false, build: buildMemoryWall },
   { label: 'memory-biomes', group: 'memory', span: 7, spin: false, build: () => buildDecoRow(createMemoryStack, {}) },
+  // Bollard: a thin post, ¼ wide and ½ high, its top lamp blinking; a row
+  // of them chases (blinks out of step by cell); in every biome's color; in
+  // a room corner, a crate pushed at a row stops, the wizard walks through it.
+  { label: 'bollard', group: 'bollards', spin: false, build: () => buildDeco(createBollard, {}) },
+  { label: 'bollard-row', group: 'bollards', span: 4, spin: false, build: buildBollardRow },
+  { label: 'bollard-biomes', group: 'bollards', span: 7, spin: false, build: () => buildDecoRow(createBollard, {}) },
+  { label: 'bollard-in-room', group: 'bollards', span: 5.5, spin: false, build: buildBollardInRoom },
 ];
 
 /** A decoration (`create` from its module) in the default room color. */
@@ -451,6 +459,54 @@ function buildMemoryWall() {
   }
   const asset = new Group().add(...stacks);
   asset.userData.update = (dt) => stacks.forEach((stack) => stack.userData.update(dt));
+  return asset;
+}
+
+/** Three bollards in a row along x, each told its cell, so the blink chases. */
+function buildBollardRow() {
+  const bollards = [0, 1, 2].map((x) => {
+    const bollard = createBollard({ color: PALETTE.amber, cell: [x, 0, 0] });
+    bollard.position.set(x - 1.5, 0, -0.5);
+    return bollard;
+  });
+  const asset = new Group().add(...bollards);
+  asset.userData.update = (dt) => bollards.forEach((bollard) => bollard.userData.update(dt));
+  return asset;
+}
+
+/**
+ * Bollards in a 4×4 room corner: a row of three across z = 2; a crate
+ * pushed at it (along +z) stops in the cell before it, and the wizard
+ * walks through the row and back.
+ */
+function buildBollardInRoom() {
+  const size = [4, 3, 4];
+  const room = new Group().add(createRoomView({ size, blocks: {}, blockTypes: BLOCK_TYPES, color: PALETTE.amber }));
+  const bollards = [0, 1, 2].map((x) => {
+    const bollard = createBollard({ color: PALETTE.amber, cell: [x, 0, 2] });
+    bollard.position.set(x, 0, 2);
+    return bollard;
+  });
+  const crate = createObjectView({ ...OBJECT_STYLE_DEFAULTS, ...OBJECT_TYPES.crate, at: [0, 0, 0] });
+  const wizard = createWizard();
+  addXray(wizard);
+  room.add(...bollards, crate, wizard);
+  room.position.set(-2, 0, -2);
+  const asset = new Group().add(room);
+  const loop = 8;
+  let time = 0;
+  asset.userData.update = (dt) => {
+    time = (time + dt) % loop;
+    bollards.forEach((bollard) => bollard.userData.update(dt));
+    // 0–1 s the crate slides from z 0 to z 1 and stops at the row; 4–5 s it slides back.
+    const push = Math.min(1, Math.max(0, time - 0.5)) - Math.min(1, Math.max(0, time - 4.5));
+    crate.position.set(0, 0, push);
+    // The wizard walks along x = 2.5 from z 0.6 through the row to z 3.4 and back.
+    const t = time / loop;
+    const leg = t < 0.5 ? t * 2 : (1 - t) * 2;
+    wizard.position.set(2.5, 0, 0.6 + 2.8 * leg);
+    wizard.rotation.y = t < 0.5 ? 0 : Math.PI;
+  };
   return asset;
 }
 
