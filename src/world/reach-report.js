@@ -5,9 +5,14 @@
 
 const list = (abilities) => (abilities.length === 0 ? 'nothing' : abilities.join(' + '));
 
-/** "needs" of a target as words: "free", "zap", "warp or blink + pull", "several", "never". */
-export function describeNeeds(needs) {
-  if (needs === null) return 'never';
+/**
+ * "needs" of a target as words: "free", "zap", "warp or blink + pull",
+ * "several", "never", or "unknown" when a cut-off crate search didn't reach it (D275).
+ * @param {string[][]|null} needs
+ * @param {boolean} [unknown] the room's crate search was cut off
+ */
+export function describeNeeds(needs, unknown = false) {
+  if (needs === null) return unknown ? 'unknown (crate search cut off)' : 'never';
   if (needs.length === 0) return 'several';
   if (needs.length === 1 && needs[0].length === 0) return 'free';
   return needs.map((set) => set.join(' + ')).join(' or ');
@@ -26,7 +31,7 @@ export function formatReach(report, { rooms = false, json = false } = {}) {
       abilities: report.abilities,
       access: report.access,
       rounds: report.rounds,
-      targets: report.targets.map(({ room, kind, id, needs, access }) => ({ room, kind, id, needs: describeNeeds(needs), ...(access && { access }) })),
+      targets: report.targets.map(({ room, kind, id, needs, unknown, access }) => ({ room, kind, id, needs: describeNeeds(needs, unknown), ...(access && { access }) })),
     };
   }
   const lines = [];
@@ -40,8 +45,8 @@ export function formatReach(report, { rooms = false, json = false } = {}) {
   }
   if (rooms) {
     lines.push('', 'What each exit and pickup needs (beyond nothing):');
-    for (const { room, kind, id, needs, access } of report.targets) {
-      const text = describeNeeds(needs);
+    for (const { room, kind, id, needs, unknown, access } of report.targets) {
+      const text = describeNeeds(needs, unknown);
       if (text !== 'free' || access) lines.push(`  ${room} ${kind} ${id}: ${text}${access ? `, access ${access}` : ''}`);
     }
   }
@@ -77,8 +82,8 @@ export function roomOfReport(report, id) {
  */
 export function formatRoom(id, { round = null, errors, warnings, targets }, note) {
   const lines = [note ?? (round ? `${id}: first entered in round ${round} of the world's order.` : `${id}: never entered.`)];
-  for (const { kind, id: target, needs, access } of targets) {
-    lines.push(`  ${kind} ${target}: ${describeNeeds(needs)}${access ? `, access ${access}` : ''}`);
+  for (const { kind, id: target, needs, unknown, access } of targets) {
+    lines.push(`  ${kind} ${target}: ${describeNeeds(needs, unknown)}${access ? `, access ${access}` : ''}`);
   }
   for (const warning of warnings) lines.push(`warning: ${warning}`);
   for (const error of errors) lines.push(`error: ${error}`);

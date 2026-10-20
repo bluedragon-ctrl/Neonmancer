@@ -249,8 +249,10 @@ Lessons from the reviews (D188 on):
   decoy holds it for 10 s. Say so in the decision, or use a target or socket
   if the race must hold (`scan_lab`'s secret door, D212).
 - **Walls keep the crate search small.** Three or four free crates on
-  open floor blow `MAX_CONFIGS` and a truncated search is a false
-  "never" (it also hides bypasses: it stops at the first one it finds).
+  open floor blow `MAX_CONFIGS`; a truncated search says "unknown" for
+  what it didn't reach (D275) and can hide bypasses (it stops at the first
+  one it finds). It goes best first, towards plugged holes and held plates,
+  so a solution usually turns up before the cap.
   A 1-high wall on the side a crate can only be pushed from (he can't
   push from a wall top, one level up) keeps it in its lane; ledger_cell
   searches in full with three crates and two lane walls. Check for the
@@ -614,8 +616,8 @@ ability (so each target shows its smallest ability sets); `--with a,b` and
 when taken one at a time: `--without crate_a,crate_b` takes all but one out
 first. The checker takes platforms as free floor, so ferry and lift power
 (plates only crates hold) is judged by hand.
-"crate search stopped at 2000 configurations" makes a `never` unreliable (4+
-roaming crates can hide a solution): raise `MAX_CONFIGS`
+"crate search stopped at 2000 configurations" turns what it missed into
+`unknown` (D275; 4+ roaming crates can hide a solution): raise `MAX_CONFIGS`
 (`src/world/reach.js`) temporarily to confirm, or keep fewer free crates.
 
 ## Play it (`scripts/sim.mjs`)

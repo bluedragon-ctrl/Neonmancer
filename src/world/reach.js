@@ -17,7 +17,12 @@
  * be pushed (or pulled, shoved, swapped, or cut and pasted) into is a
  * configuration, each with its own flood; a configuration is the crates
  * plus the holes they plugged, and after a swap (D261) the cell the swap
- * put him in, which his flood starts from too. The search is cut off at MAX_CONFIGS configurations. A room
+ * put him in, which his flood starts from too. The search goes best first
+ * (D275): configurations with more holes plugged and plates held, then
+ * more floor to stand on, come before the rest, so a solution turns up
+ * early; the order never changes what a full search finds. It is cut off
+ * at MAX_CONFIGS configurations; what a cut-off search hasn't reached is
+ * unknown, not unreachable (`truncated`). A room
  * resets on death, so what he can reach in any configuration counts, but
  * what needs two things at once (a locked exit open and the way to it)
  * is judged inside one configuration.
@@ -89,6 +94,9 @@ const BLINK_RANGE = 3;
 
 /** Most crate configurations searched in one room. */
 export const MAX_CONFIGS = 2000;
+
+/** What a hole plugged or a plate weighed down is worth against a cell more to stand on, in the search order (D275). */
+const PROGRESS_WEIGHT = 1000;
 
 /** The four ways along the grid axes: [dx, dz]. */
 const DIRS = [
@@ -681,6 +689,21 @@ export class RoomModel {
     return n;
   }
 
+  /**
+   * How far the crates of a configuration have got (D275): the holes they
+   * plugged (sockets too) and the weight they put on plates, each plate
+   * counted up to its weight. Only the search order asks.
+   */
+  progress(cfg) {
+    let n = cfg.plugged.size;
+    for (const object of this.switches) {
+      if (object.kind !== 'plate') continue;
+      const [x, y, z] = object.at;
+      n += Math.min(this.stacked(x, y, z, cfg), object.weight ?? 1);
+    }
+    return n;
+  }
+
   /** Are the switches `ids` all on whatever he does: plates under crates, filled sockets (targets he can always switch off). */
   forcedOn(ids, cfg) {
     const linked = this.linked(ids);
@@ -780,9 +803,11 @@ export function analyzeRoom(room, { abilities, starts, tuning }) {
 
   const first = model.config(model.crates, new Set());
   const seen = new Set([first.key]);
-  const todo = [first];
+  // Best first (D275): progress, then the floor its parent stood on, then the order they were found.
+  const todo = new Frontier();
+  todo.push(first, 0);
   const union = new Set();
-  while (todo.length > 0) {
+  while (todo.size > 0) {
     const cfg = todo.pop();
     reach.configs++;
     const stands = standsIn(model, cfg, starts);
@@ -798,11 +823,63 @@ export function analyzeRoom(room, { abilities, starts, tuning }) {
         break;
       }
       seen.add(next.key);
-      todo.push(next);
+      todo.push(next, model.progress(next) * PROGRESS_WEIGHT + stands.size);
     }
   }
   reach.stands = new Set([...union].map((i) => model.cell(i).join(',')));
   return reach;
+}
+
+/**
+ * The configurations still to search, highest priority first; among equals
+ * the one found first (a binary heap).
+ */
+class Frontier {
+  constructor() {
+    /** @type {{ item: object, priority: number, order: number }[]} */
+    this.heap = [];
+    this.count = 0;
+  }
+
+  get size() {
+    return this.heap.length;
+  }
+
+  /** Does entry a come before entry b? */
+  before(a, b) {
+    return a.priority > b.priority || (a.priority === b.priority && a.order < b.order);
+  }
+
+  push(item, priority) {
+    const { heap } = this;
+    heap.push({ item, priority, order: this.count++ });
+    for (let i = heap.length - 1; i > 0; ) {
+      const parent = (i - 1) >> 1;
+      if (!this.before(heap[i], heap[parent])) break;
+      [heap[i], heap[parent]] = [heap[parent], heap[i]];
+      i = parent;
+    }
+  }
+
+  pop() {
+    const { heap } = this;
+    const top = heap[0];
+    const last = heap.pop();
+    if (heap.length > 0) {
+      heap[0] = last;
+      for (let i = 0; ; ) {
+        const left = 2 * i + 1;
+        const right = left + 1;
+        let best = i;
+        if (left < heap.length && this.before(heap[left], heap[best])) best = left;
+        if (right < heap.length && this.before(heap[right], heap[best])) best = right;
+        if (best === i) break;
+        [heap[i], heap[best]] = [heap[best], heap[i]];
+        i = best;
+      }
+    }
+    return top.item;
+  }
 }
 
 /**
