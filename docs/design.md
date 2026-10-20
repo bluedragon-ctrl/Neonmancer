@@ -93,7 +93,7 @@ same on QWERTY, QWERTZ and AZERTY keyboards.
   rebounds on a launch, light streaking up off it; magenta stays the
   backup shrine's. Stairs take him one
   block up (he walks their slope; their sides are walls), slabs are thin
-  glass walkways with headroom under them. Test room: `stair_lab` (dev wing).
+  glass walkways with headroom under them.
   See Stairs, slabs and pads.
 - Turns smoothly towards the walking direction; starts facing the camera.
 - Tuning values live in `PLAYER` in `src/entities/player.js`.
@@ -298,7 +298,7 @@ the ones it gives:
   additive light, no depth written: it never hides the wizard or sets
   off his x-ray. Room color (structure, D99). Chosen from three
   showcase variants (ribbon alone, with nodes, with data pixels). Showcase
-  `?asset=fence-in-room`; dev room `fence_yard`.
+  `?asset=fence-in-room`.
 - **Crate streams (D198):** a fence that only crates pass, the push
   puzzle's one barrier: *he* must route crates through a field he cannot
   follow them through, which brings back Sokoban's player routing (he
@@ -329,7 +329,7 @@ the ones it gives:
     (`--streams thin`) follow.
   - Look: the fence's streams of light in magenta, the top beam like any
     other (its top is no ledge): `STREAM_STYLE` in `fence-view.js`.
-    Showcase `?asset=stream-in-room`; dev room `stream_lab`.
+    Showcase `?asset=stream-in-room`; in play in `cold_stairs` and `split_vault`.
 - Validation: a base type has a look or a kind, not both; `damage`,
   `lethal`, `seeThrough` and `passes` only on static types (`passes`
   only with the fence look), `kind` values only on
@@ -502,8 +502,7 @@ The two triggers:
   a caged pickup as reached once the cage's switches can be on; `mutate.mjs`
   lists a sealed cage as `sealed cage`. Room editor: a pickup placed on a
   cage cell lies inside it, a cage placed on a pickup closes round it, the
-  Switch tool links it like any gate. Showcase `?asset=cage`; dev room
-  `cage_lab`.
+  Switch tool links it like any gate. Showcase `?asset=cage`.
 - Validation: `trigger`, `start` and `regrow` only on gate block
   types (`look: cage` and `seeThrough` only on a switch gate, D202); `start: gone` only with the switch trigger, `regrow` only with the
   step trigger; `switches` only on switch gate entries, naming switches
@@ -1629,10 +1628,8 @@ usual, so half behind a wall he is half ghost (D55).
   smaller square on the core. The vents hide while a crate lies on top or
   once it plugs a hole. Review: `?asset=crate,crate_spiked,crate_spiked-close`
   in the showcase.
-- Test room: `spiked_lab` in the dev wing (north of `room_1`): Microban 8
-  by David W. Skinner turned half a circle, 3-high walls, two spiked
-  crates and two plates, the door locked until both are held. 32 pushes
-  (4 with plain crates); played headless in 30 s.
+- No room uses it since its test room `spiked_lab` went (D270); Microban 8
+  with spiked crates and 3-high walls is 32 pushes (4 with plain crates).
 - Tuning: `topDamage` on the type (overridable per object), `KNOCK_OFF`,
   `VENTS`/`AURORA` in `vent-fx.js`.
 
@@ -1700,7 +1697,7 @@ a pads room).
   links its foot to its top; he walks under a slab; a bouncy enemy's lane
   counts as pads. `check:reach -- --pads` tries the rule on every room;
   the report lists the rooms still on the free jump.
-- Showcase `?asset=pad`, `?asset=stairs-in-room`; dev room `stair_lab`.
+- Showcase `?asset=pad`, `?asset=stairs-in-room`.
 
 ## Decorations
 
@@ -1838,8 +1835,7 @@ before D140 work as they did). Switch types in `defs.json` are placed in
   crates stacked in its column; a frozen enemy, the decoy and a
   spell-placed crate add one each (each holder serves one plate, a
   frozen enemy sits on top of the stack); he adds one on a timed plate.
-  Test room `heavy_lab` (dev wing): a floor crate onto the plate, then
-  the ledge crate dropped on it opens the gate.
+  In play in `ledger_cell`, `idle_cache` and `buffer_2`.
 - **Timed switches** (D140; `target_timed` 5 s, `plate_timed` 3 s; a
   type's `timer`, which a room object may override, 0.5–30 s): on for
   that long, then off by themselves. A timed target counts from the bolt
@@ -1991,20 +1987,12 @@ AUTHORED and lets them lie as far from the start as the world needs.
 Rooms that show one mechanic on its own live in the dev wing (D147):
 the dev server, the tools and the tests see them, a player build leaves
 them out. A new mechanic gets one there (D43), joined to the other dev
-rooms, never to a Lattice or authored room.
+rooms, never to a Lattice or authored room. The mechanic rooms of
+Phases 2–4 went once real rooms showed each mechanic (D270).
 
 | Room | Size | Shows |
 |---|---|---|
-| `room_1`, `room_2` | 12×12 | empty hubs joining the dev rooms |
 | `hidden_layer` | 12×12 | Scan: a fake gap, a hidden exit, a refill in a fake block; the Scan disk |
-| `fence_yard` | 10×10 | fences (D167): a target zapped through a 2-high fence raises a bridge; a 1-high pen with a crate |
-| `stream_lab` | 10×9 | the crate stream (D198): Microban 3 rebuilt with streams; he cannot follow the crates through it; stairs over the divider (D269) |
-| `watchdog_run` | 12×8 | a watchdog timer (D172), 25 s: a 1-wide path through a pit to a refill and back |
-| `socket_lab` | 9×8 | the socket (D194): a hole that is a switch once a crate fills it |
-| `spiked_lab` | 6×10 | the spiked crate (D199): Microban 8 (David W. Skinner) with spiked crates and two plates, 32 pushes |
-| `heavy_lab` | 10×8 | the heavy plate (D200): a ledge crate dropped on a crate on the plate, 5 pushes; a stair onto the wall (D269) |
-| `socket_yard` | 9×8 | a classic level end to end with the `sokoban-design` skill (D201): Microban 24, two sockets opening a cage; two openings in the yard for the pads rule (D269) |
-| `cage_lab` | 8×10 | the cage (D202): a pickup behind a crate plate's cage and behind a Zap target's cage |
 
 ### Room design checklist
 
@@ -2456,7 +2444,7 @@ floor.
   Test; each type says what it does (`crate_cross (breaks after 1 hit)`,
   `buff_energy_2 (+10 energy)`), and a permanent pickup where it lies in
   the world, unsaved edits included (`fragment_3 (slot 3 · not placed)`,
-  `disk_zap (spell zap · in room_1)`, `in a ×2` placed twice), like the
+  `disk_zap (spell zap · in zap_port)`, `in a ×2` placed twice), like the
   world map's pickup report (F3).
   Erasing removes an object or enemy standing in the cell.
 - **Enemy** places an enemy of the template picked in the panel (a line

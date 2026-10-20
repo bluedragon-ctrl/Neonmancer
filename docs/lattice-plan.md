@@ -347,37 +347,23 @@ moves it to `"jump": "pads"` and ticks it off here.
 
 What is left before the pads-only rule becomes the engine's, worked out
 with the checker: each room was checked with `--with zap,scan,fork,pause`
-from the spawn and from every door, free jump against `--pads`. The
-diffs below are the only ones; every other target comes out the same.
-No test loads any of these rooms. **Done (D269):** all 15 are pads rooms
-now, the three rebuilds as below (details in D269).
+from the spawn and from every door, free jump against `--pads`.
 
 **The rooms still on the free jump (15).** Every Lattice and Outer Buffer
-room is done; what is left is the four teasers and the dev wing.
-
-| Room | Wing | Lost on pads | What it needs |
-|---|---|---|---|
-| `frost_edge`, `frost_gate`, `glitch_edge`, `glitch_gate` | teasers | nothing | Set `"jump": "pads"` as they are (look only; `glitch_gate`'s bouncy enemy becomes a moving pad, D223). |
-| `cage_lab` | dev | nothing | Set the flag. |
-| `fence_yard` | dev | nothing | Set the flag. |
-| `hidden_layer` | dev | nothing | Set the flag. It hands out every spell and sits beside `boot_up` on the map, so the world check leans on it; unchanged by this step. |
-| `room_1`, `room_2` | dev | nothing | Set the flag. |
-| `socket_lab` | dev | nothing | Set the flag. |
-| `spiked_lab` | dev | nothing | Set the flag; its 32 pushes are a solver result, not a hop. Its future depends on the spiked crate's (below). |
-| `watchdog_run` | dev | nothing | Set the flag; its run was never a jump (play it once). |
-| `heavy_lab` | dev | `energy`: free → `fork` | `crate_2` sits on the 1-high wall (x 6, z 0..3), and he climbed the wall to push it off onto the heavy plate. Done: a `stair_x` at (5,0,1) onto the wall, the crate a cell south. |
-| `socket_yard` | dev | `energy`: never | The yard's walls are 1-high blocks he stepped over (D201), so on pads he can't get in. A stair onto the wall and one off it (or a gap in the wall, if the solver still gives 9 pushes) brings the yard back; it is the sokoban-design skill's worked example, so its XSB and the skill's notes follow the change. Done: openings at (5,0,0) and (4,0,5), the same 9 pushes. |
-| `stream_lab` | dev | `energy`: never | He stepped over the 1-high fence divider (x 4, z 0..2) into the vault. A stair onto the fence (as in `fork_lab`, D251) and a drop into the vault; check it still takes the 10 pushes (D198). Done: the divider's front cell is a stair, a stair up from each half of the vault; 10 pushes. |
+room is done; what was left is the four teasers and the dev wing. **Done:**
+the teasers and `hidden_layer` lose nothing and are pads rooms (D269);
+the other eleven dev rooms, three of which leaned on the jump (`heavy_lab`,
+`socket_yard`, `stream_lab`), are removed (D270).
 
 **For the author to decide** (the step plan says "retired or kept on
 their own merit"):
 - **The spiked crate** (D199). It was there to stop a hop over a crate,
   which pads rooms can't do anyway (a crate is no step), and it was kept
   for the secret rooms (Plan review, point 4), but none of the five uses
-  it. Only `spiked_lab` does. What it still adds on pads: no standing
+  it, and since D270 no room does. What it still adds on pads: no standing
   on it from above, and touching it hurts. Retire it (block type, view,
   vents fx, `topDamage`, the checker's and solver's `bad` top, the
-  survey column, showcase, `spiked_lab`, its tests) or keep it for
+  survey column, showcase, its tests) or keep it for
   Phase 6.
 - **Fence roofs and hop-proof walls.** Every room that had them is on
   pads now and was reviewed (5.17), so whatever stayed was kept on its
@@ -418,6 +404,5 @@ skill (step 7 "Move it to pads", `sim.mjs`'s jump note), the
 sokoban-design skill, the level-review agent's jump rule check, and a
 decision entry replacing D221/D222's prototype wording.
 
-**Order:** two PRs. First the rooms: the 11 flag-only rooms plus the
-three fixes above, each checked and played. Then `feat/no-jump`: the
+**Order:** the rooms are done (D269, D270); next `feat/no-jump`: the
 code, tests and docs above, once the spiked crate is decided.

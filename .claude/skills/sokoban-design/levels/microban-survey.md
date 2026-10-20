@@ -35,8 +35,8 @@ the text):
   steps, not the ledges: build the walls 3 high (or use `--wall hole`
   where a hole row is the point; holes match Classic in 44 of 78).
 - So with spiked crates the whole Microban set is back as candidates:
-  the player's route around the boxes is a puzzle again. `spiked_lab`
-  (dev wing) is Microban 8 built that way: 32 pushes.
+  the player's route around the boxes is a puzzle again. Microban 8
+  built that way is 32 pushes.
 
 ## What the survey shows
 1. **He climbs crates, so the player's route is no longer a puzzle.**
@@ -275,5 +275,5 @@ steps, and none gets its classic push count back. A stream is a shortcut
 for the crate, and the player's detour matters only where the room is
 built round it: build the stream by hand (`~` in the XSB), as a wall
 between a front area and a vault, with the vault's way in for him over a
-fence (`stream_lab`, D198).
+fence (D198; `split_vault` builds one).
 

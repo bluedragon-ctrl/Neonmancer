@@ -48,10 +48,8 @@ docs/decisions.md).
   say the same; 11 pieces in 8 rooms are listed for their reviews.
 
 ### Changed
-- The last 15 free-jump rooms (the four biome teasers and the dev wing) are
-  pads rooms (D269): every room is one now. `heavy_lab` gets a stair onto
-  its wall, `socket_yard` two openings in its yard and `stream_lab` stairs
-  over its divider, each with the same push solution as before.
+- The four biome teasers and `hidden_layer` are pads rooms (D269): every
+  room is one now.
 - Dead Pixel (`buffer_1`) is a pads room with a new push puzzle (D262,
   step 5.11): three loft crates and a floor crate; the middle socket lies
   behind a 2-high wall, so a loft crate stacked on a ledge crate (the pier)
@@ -168,6 +166,10 @@ docs/decisions.md).
   upgrade.
 
 ### Removed
+- Eleven dev-wing test rooms (D270): `room_1`, `room_2`, `fence_yard`,
+  `watchdog_run`, `socket_lab`, `stream_lab`, `spiked_lab`, `heavy_lab`,
+  `socket_yard`, `cage_lab`, `stair_lab`; real rooms show every mechanic
+  they tested. The dev wing keeps `hidden_layer`.
 - The double jump upgrade (D216): the mid-air jump, its rings, sound, help text and
   pickup, and the checker's `double_jump` ability. His jump is 1 up and a one-tile
   gap everywhere. The five Outer Buffer doors and `dj_vault`'s east door, built

@@ -709,4 +709,3 @@ depth a room needs; each is reviewed in step 5.17.
   Sokoban pen of 1-high walls on it (Microban 45) feeds two sockets in the pit and the
   ferry he rides on his crate (D196; power judged with `sim.mjs`).
 - `hidden_layer.json` (dev wing, Scan): `fake` blocks.
-- `fence_yard.json` (dev wing): fences, a target zapped through one.

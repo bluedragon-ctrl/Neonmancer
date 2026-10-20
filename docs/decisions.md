@@ -3676,44 +3676,38 @@ the id, the timer and every link, and erasing a locked exit's only
 switch quietly unlocked the exit (`unlinkSwitch`).
 
 ### D269 — 2026-10-20 — The last free-jump rooms move to pads (5.19, rooms)
-The 15 rooms still on the free jump, the four biome teasers and eleven
-dev rooms, are pads rooms (`"jump": "pads"`), so every room is one and
-step 5.19 can take the jump out of the engine. Checked with
+The rooms still on the free jump are pads rooms (`"jump": "pads"`), so
+every room is one and step 5.19 can take the jump out of the engine: the
+four biome teasers (`frost_edge`, `frost_gate`, `glitch_edge`,
+`glitch_gate`) and the dev room `hidden_layer`. Checked with
 `--with zap,scan,fork,pause` from the spawn and every door, free jump
-against pads: twelve lose nothing and only get the flag (`frost_edge`,
-`frost_gate`, `glitch_edge`, `glitch_gate`, `cage_lab`, `fence_yard`,
-`hidden_layer`, `room_1`, `room_2`, `socket_lab`, `spiked_lab`,
-`watchdog_run`). Three lost their refill and are rebuilt, each still
-showing what it was made for:
-- **`heavy_lab`** (D200): he climbed the 1-high wall to push the ledge
-  crate off. A `stair_x` at `(5,0,1)` takes him onto it (the north door's
-  first row stays free) and the crate moves a cell south to `(6,1,2)`, so
-  he lands behind it; 5 pushes in all (was 6: the wall crate starts a
-  cell nearer its drop onto the floor crate on the heavy plate). The mutation test: every piece matters, the
-  stair too; `crate_2` is no longer by the north door (D241).
-- **`socket_yard`** (D201): Microban 24's walls are 1-high blocks he
-  stepped over, inner walls too, so on pads he could neither get in nor
-  between the yard's halves. Two wall cells open, the corner `(5,0,0)`
-  by the socket row and `(4,0,5)` on the south side, found by trying
-  every one or two cells with the solver: the same 9 pushes in the same
-  order, 63 % traps of 81 states (was 68 % of 91), 2 sharp steps. He
-  walks round outside the yard between pushes, the route the walls
-  stepped over before.
-- **`stream_lab`** (D198): he stepped over the 1-high fence divider into
-  the vault and jumped out again. The divider's front cell `(4,0,2)` is
-  a `stair_nz` up onto it, and a stair in each half of the vault's back
-  row (`stair_x` at `(3,0,0)`, `stair_nx` at `(5,0,0)`) brings him back
-  up; stairs on the front row block the crates' way to the plates. Still
-  10 pushes, no sharp step; 53 % traps of 316 states (was 39 % of 627).
-  The fence top is one cell wide beside the stream: he steps down the
-  divider stair from its middle.
-  The vault's front walls (`x 0..1` and `x 7..8` at `z 2`) are 1 high now
-  (were 3, against a crate-and-jump climb, D198): on pads a 1-high wall
-  stops him as well, and the 3-high ones hid the east stair and both
-  plates from the camera (D227; found by the level review).
-- Played with `sim.mjs`: `heavy_lab` 5.5 s, `socket_yard` 19 s and
-  `stream_lab` 15 s from the door to the refill and out.
+against pads: they lose nothing. The other eleven free-jump rooms were dev
+rooms; three of them lost their refill on pads, and all eleven go (D270).
 Authored rooms affected: none (no room is flagged).
 **Why:** the free jump goes in 5.19 (D222); a room that leans on it then
-breaks, and dev rooms are where mechanics are shown and tested, so they
-must play under the rule the game has.
+breaks.
+
+### D270 — 2026-10-20 — The mechanic test rooms go
+The dev wing keeps only `hidden_layer` (the dev entrance next to
+`boot_up`, with every spell's disk and the Scan test). Eleven dev rooms
+are removed: `room_1`, `room_2` (empty hubs), `fence_yard`, `watchdog_run`,
+`socket_lab`, `stream_lab`, `spiked_lab`, `heavy_lab`, `socket_yard`,
+`cage_lab` and `stair_lab`; their map cells are free, and `hidden_layer`
+loses its west door (to `stream_lab`). Each showed one mechanic while it
+was new (D43, D147); real rooms show them all now: fences in 13 rooms,
+stairs in 17, the watchdog in 7, sockets in `relay_loft`, `ledger_cell`,
+`split_vault` and four secret rooms, the heavy plate in `ledger_cell`,
+`idle_cache` and `buffer_2`, cages in eight rooms, streams in
+`cold_stairs` and `split_vault`. No code or test loaded them.
+- **The spiked crate** (D199) has no room now. It stays in the engine
+  until 5.19 decides it (lattice-plan.md, Step 5.19 inventory).
+- **The sokoban-design skill's worked example** is Null Orbit (`buffer_3`,
+  D264) instead of `socket_yard` (D201).
+- Moving these rooms to pads (D269) showed three of them leaning on the
+  free jump: `heavy_lab`'s wall, `socket_yard`'s 1-high Microban walls
+  (the solver found two openings that keep its 9 pushes) and
+  `stream_lab`'s divider. A new test room is a pads room from the start.
+Authored rooms affected: none.
+**Why:** the author: test rooms are only for testing and go when they no
+longer make sense. Kept, each needed its own pads rework and upkeep with
+every rule change, for mechanics the Lattice already shows.
