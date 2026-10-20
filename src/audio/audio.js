@@ -148,7 +148,7 @@ export class AudioEngine {
    * Play the sound named like each game event (an event "pickup" plays
    * the sound "pickup", if there is one). A sound named "type:detail"
    * wins over the plain one: the detail is the spell ("cast:zap"), the
-   * kind of pickup ("pickup:disk"), the way something died ("die:void")
+   * kind of pickup ("pickup:disk"), the way something died ("die:hole")
    * or a jump pad's launch ("bounce:pad", D222).
    * @param {{ type: string, spell?: string, cause?: string, enemy?: { data?: { attack?: string } }, pickup?: { data?: { kind?: string } }, pad?: object }[]} events
    */

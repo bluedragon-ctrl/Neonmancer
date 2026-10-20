@@ -78,7 +78,7 @@ test('energy recharges one whole unit every energyTicks up to the maximum; respa
   assert.equal(game.player.energy, PLAYER.maxEnergy);
 
   game.player.energy = 0;
-  game.player.die('void');
+  game.player.die('damage');
   run(game, idle, PLAYER.deathTicks);
   assert.equal(game.player.energy, PLAYER.maxEnergy);
 });

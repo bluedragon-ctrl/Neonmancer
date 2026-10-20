@@ -269,8 +269,7 @@ export function bounceOffEnemies(game) {
 
 /**
  * Touching a hostile enemy with a touch attack hurts the wizard (D43):
- * overlapping it, or leaning on or standing on a solid one (the hazard
- * rule, D44). Not the enemy he just bounced off, and nothing while his
+ * overlapping it, or leaning on or standing on a solid one (D44). Not the enemy he just bounced off, and nothing while his
  * Firewall is up (D84).
  * @param {import('./game.js').Game} game
  * @param {Enemy|null} bounced

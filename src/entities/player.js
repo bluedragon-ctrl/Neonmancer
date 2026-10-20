@@ -2,8 +2,8 @@
  * The wizard: movement along the grid axes, jump, gravity, pushing, integrity (health), backups,
  * invulnerability after a hit, energy (mana) for spells, installing a
  * pickup, the Shield and Firewall rings, Blink and Warp (D86), the
- * Cut & Paste clipboard (D87), death (in a hole, on a void block, or with
- * no integrity left) and respawn. Pure logic, one call to update() per fixed tick. One Player lasts
+ * Cut & Paste clipboard (D87), death (in a hole, or with no integrity
+ * left) and respawn. Pure logic, one call to update() per fixed tick. One Player lasts
  * the whole game: entering a room places him (enter()), so integrity and
  * energy carry over.
  */
@@ -304,13 +304,13 @@ export class Player {
 
   /**
    * Die: all integrity gone; he respawns after PLAYER.deathTicks.
-   * @param {'hole'|'void'|'damage'|'timeout'|'restart'} cause a hole drops him into the pit;
+   * @param {'hole'|'damage'|'timeout'|'restart'} cause a hole drops him into the pit;
    *   otherwise he derezzes where he is ('restart': the pause menu's restart room, D219)
    */
   die(cause) {
     this.integrity = 0;
     this.dead = true;
-    /** Why he died, while dead: 'hole', 'void', 'damage', 'timeout' (a room's watchdog, D172) or 'restart' (D219). */
+    /** Why he died, while dead: 'hole', 'damage', 'timeout' (a room's watchdog, D172) or 'restart' (D219). */
     this.deathCause = cause;
     this.deathTimer = PLAYER.deathTicks;
     this.grounded = false;
@@ -459,7 +459,7 @@ export class Player {
    * @param {import('../world/grid.js').Grid} grid
    * @param {object} [options]
    * @param {Iterable<{ box(): number[][] }>} [options.bodies] pushable objects
-   * @param {boolean} [options.invincible] debug mode: holes and void blocks never kill
+   * @param {boolean} [options.invincible] debug mode: holes never kill
    * @param {'grid'|'screen'} [options.movementMode] which key → direction mapping to use (D38)
    * @param {boolean} [options.canJump] may he jump with the jump key: not in
    *   a room without a free jump, where only pads throw him up (D221)
@@ -558,29 +558,14 @@ export class Player {
     }
     if (this.grounded && !wasGrounded) event = 'land';
 
-    // Standing on a hole at floor level: fall in (D18); standing on a lethal
-    // block (void): derez. Both drain all integrity; respawning restores it. Only
-    // the tile under his center counts, so grazing an edge is safe.
-    if (this.grounded && !invincible) {
-      if (this.pos[1] < FLOOR_EPS && grid.isHole(this.pos[0], this.pos[2])) {
-        this.die('hole');
-        return 'die';
-      }
-      if (this.standingOn(grid)?.lethal) {
-        this.die('void');
-        return 'die';
-      }
+    // Standing on a hole at floor level: fall in (D18), which drains all
+    // integrity; respawning restores it. Only the tile under his center
+    // counts, so grazing an edge is safe.
+    if (this.grounded && !invincible && this.pos[1] < FLOOR_EPS && grid.isHole(this.pos[0], this.pos[2])) {
+      this.die('hole');
+      return 'die';
     }
     return event;
-  }
-
-  /**
-   * The block type right under his feet center (world/grid.js typeAt()):
-   * null when he stands on an object, the edge type on the floor.
-   * @param {import('../world/grid.js').Grid} grid
-   */
-  standingOn(grid) {
-    return grid.typeAt(Math.floor(this.pos[0]), Math.round(this.pos[1]) - 1, Math.floor(this.pos[2]));
   }
 
   /**

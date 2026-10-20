@@ -159,7 +159,7 @@ Showcase: `wizard` (idle), `wizard-walk`, `wizard-jump`, `wizard-push`,
 Integrity (health) is 8, 12 with every buff (not saved: a load starts
 full, D106); it carries over between rooms and is full again after a respawn
 (D35). Every damage source calls `Game.hurt(amount)` (D43): enemies,
-hazard blocks, spiked and squeezing platforms, Blink into a wall, the
+spiked and squeezing platforms, Blink into a wall, the
 debug `H` key.
 
 - A hit takes integrity and reports a `hurt` event (`amount` actually
@@ -244,8 +244,6 @@ the ones it gives:
 | Type | Look | Properties |
 |---|---|---|
 | `block` | plain (room color) | none |
-| `hazard` | hazard, danger red | `damage: 1` |
-| `void` | void, black mist with gray wisps (D99) | `lethal: true` |
 | `fake` | plain (room color) | `fake: true`: a scan derezzes it (D128, see Scan) |
 | `fence` | fence (room color): data streams, no faces (D167) | `seeThrough: true`: bolts and sight pass (see Fences) |
 | `stream` | extends `fence`, magenta (the wizard's color, D98): the crate stream (D198) | `passes: ["crate"]` (see Crate streams) |
@@ -257,19 +255,19 @@ the ones it gives:
 | `stair_x` | stair (room color): four steps rising across the cell (D221) | `rise: "+x"`, the way it climbs; `stair_nx`, `stair_z`, `stair_nz` extend it with `-x`, `+z`, `-z` (see Stairs, slabs and pads) |
 | `slab` | slab (room color): one sheet of glass at the top of its cell (D221) | a walkway level with a 1-high ledge, headroom under it (see Stairs, slabs and pads) |
 
-- **Static types** have a `look` (`plain`, `hazard`, `void`, `fence`,
-  `stair`, `slab`) and live in
-  the room grid: each cell holds its type's code, and the rules ask about
-  properties, never names: a cell with `damage` hurts on touch, a
-  `lethal` one kills whoever lands on it. A plain type may have its own
-  `color`; without one it takes the room color.
+- **Static types** have a `look` (`plain`, `fence`, `stair`, `slab`) and
+  live in the room grid: each cell holds its type's code, and the rules
+  ask about properties, never names (`fake`, `seeThrough`, `passes`). No
+  block hurts or kills: the `hazard` and `void` types went in D271. A
+  plain type may have its own `color`; without one it takes the room
+  color.
 - **Types with a `kind`** (`gate`, D141) are written and painted like
   blocks, but each cell becomes a room object of that kind when the room
   is built (id `<type>@x,y,z`, with its entry's `switches`); `trigger`,
   `start`, `regrow`, `color` and the object look (`edges`, `mark`,
   `faces`, `tint`) are on the type.
 - A new type that only combines existing properties and looks is data
-  only (e.g. `"hazard_hot": { "extends": "hazard", "damage": 2 }`); a new
+  only (e.g. `"fence_red": { "extends": "fence", "color": "#ff2a3a" }`); a new
   property (bounce, slippery, conveyor...) or look is code.
 - **Fences (D167):** a see-through barrier, so a room can wall off an
   area or raise a wall without hiding what is behind it from the fixed
@@ -330,58 +328,23 @@ the ones it gives:
   - Look: the fence's streams of light in magenta, the top beam like any
     other (its top is no ledge): `STREAM_STYLE` in `fence-view.js`.
     Showcase `?asset=stream-in-room`; in play in `cold_stairs` and `split_vault`.
-- Validation: a base type has a look or a kind, not both; `damage`,
-  `lethal`, `seeThrough` and `passes` only on static types (`passes`
+- Validation: a base type has a look or a kind, not both; `fake`,
+  `seeThrough` and `passes` only on static types (`passes`
   only with the fence look), `kind` values only on
   kinds; a kind needs a color; `block` must be static; room blocks name a
   known type.
 - **Edges (D64):** neighbours of any plain types never get an edge between
   them: the corner rule (D12) runs over all plain blocks as one mass, and
   each edge takes the color of a type around it (the later one in
-  `defs.json` where types meet). The hazard and void looks outline
-  themselves, and a line they share with plain blocks is drawn once, by
-  them alone (a lethal type also over a hurting one), so there is always a
-  seam in the danger's color where it starts, with no plain edge showing
-  around it. Gate blocks keep an outline around every
+  `defs.json` where types meet). Gate blocks keep an outline around every
   cell, since each one goes on its own.
 
-## Hazard and void blocks
+## Hazard and void blocks (retired)
 
-The `hazard` and `void` types (D40, D44): solid like plain blocks, drawn
-in an animated look of their own (color from their block type, not the
-room color), so they read as active. Their edges stay steady and are
-drawn over plain blocks' edges where they meet. Motion is slow; nothing
-strobes.
-
-- **Hazard look:** dark red faces with red pixels (8 per unit) that
-  switch on and off at random, each on its own timer (about 30% lit,
-  1.5 re-rolls per second). The block that just hurt the wizard flares for
-  0.4 s.
-- **Void look** (D99, `render/mist.js`): black mist, a pit in the
-  world like a floor hole. Opaque black cubes hide the grid behind them;
-  thin gray wisps (ridges of 3D noise, on four layers along the view
-  ray) sink slowly through them; a slightly larger shell of patchy dark
-  fog softens the outline, and a thin dim gray frame keeps the exact
-  extent readable. The noise runs in room coordinates, so a patch of void
-  blocks is one cloud. Cost: two instanced draws per room; the per-pixel
-  noise only runs where void blocks are.
-- **Hazard rules** (any type with `damage`): touching one hurts, standing on
-  it or walking into any side of it (its `damage`, 1 for `hazard`). The body
-  must overlap the block on two axes and lie against or in it (within 0.02),
-  so brushing past a corner diagonally doesn't count. Leaning on or
-  standing on one keeps hurting each time the 1 s invulnerability ends.
-- **Void rules** (any type with `lethal`): landing on top is
-  instant death (`die`, cause `void`), whatever the integrity; he derezzes
-  on the spot like a damage death. Only the block under his feet center
-  counts, like a hole, so an edge under one foot is safe; walking into its
-  sides is safe; a crate or plain block on top of one covers it.
-- Debug invincibility: hazards don't hurt, void blocks don't kill.
-- Validation: `spawn` and `reset` can't be above a block with `damage` or
-  `lethal` (he would land on it), and a raised exit's floor can't be a
-  lethal block.
-- Tuning: color, `damage` and `lethal` in `data/defs.json` `blocks`; the
-  animated looks are `BLOCK_FX` in `src/render/block-fx.js`. Review them
-  in the asset showcase (`/tools/showcase.html?asset=block-hazard,block-void,blocks-in-room`).
+The `hazard` (hurt on touch) and `void` (lethal to land on) block types
+(D40, D44, D99) were retired in D271 with their animated looks
+(`block-fx.js`, `mist.js`): no room used them, and in a push-puzzle game a
+hole already is the pit and an enemy or a spiked platform the danger.
 
 ## Moving platforms
 
@@ -416,14 +379,13 @@ follows a path given on the room object.
   on the path, and no path through the first row inside an exit. Crates on
   the path and holes under it are fine.
 - **Spiked platforms** (D82): a platform type with `damage` hurts the
-  wizard whenever he touches it, its sides, its top or riding it, like a
-  hazard block that moves (then he is invulnerable for a while and
-  blinks). `spiked_platform` in `defs.json`: hazard red, dark faces and
+  wizard whenever he touches it, its sides, its top or riding it (then he
+  is invulnerable for a while and blinks). `spiked_platform` in
+  `defs.json`: danger red, dark faces and
   `shape: "spiked"` (a smaller core cube with four pyramids on each side,
   their tips reaching the faces of its cell, so what shows is what hurts;
   `SPIKES` in `src/render/spikes.js`); its outline flares when it hurts
-  him (hazard faces would flare too, but their pixels are too small to
-  read on the spikes). It moves, waits
+  him. It moves, waits
   and carries crates like any platform; a short up-and-down path makes a
   hopper to time a run past, a long one a sliding trap. Only platforms
   take `damage` (validation).
@@ -617,13 +579,11 @@ own, each in its own color.
   the room.
 - **Physics:** it walks off ledges and falls, rides platforms (which wait
   while it steps on or off, and wait for one in their way), and a crate
-  can rest on it but can't be pushed into it. It never steps into a hole
-  or onto a void block, nor off a ledge onto one (D78): that cell counts
-  as blocked. When the ground goes from under it mid-step (a block
+  can rest on it but can't be pushed into it. It never steps into a hole,
+  nor off a ledge into one (D78): that cell counts as blocked. When the ground goes from under it mid-step (a block
   collapses, a crate breaks), it drops as it walks on (D80). Falling into
-  a hole or onto a void block anyway pops it into pixels; it stays gone
-  until the room resets. Hazard blocks don't hurt it; it never triggers
-  collapsing blocks. **Stairs** (D230): it walks up one from its foot and
+  a hole anyway pops it into pixels; it stays gone until the room resets.
+  It never triggers collapsing blocks. **Stairs** (D230): it walks up one from its foot and
   down one off its top, a two-cell step at half its cell rate, and is
   pushed or pulled down them (never up) like a crate; it never stops on a
   stair, its sides and back are walls, and its slope is never its ground
@@ -638,7 +598,7 @@ own, each in its own color.
   turns back instead. A crate resting on a solid enemy holds it in place.
 - Touching a hostile enemy with a touch attack hurts him (`Game.hurt()`,
   then the usual invulnerability): overlapping it, or for a solid one
-  leaning on it or standing on it (the hazard rule, D44).
+  leaning on it or standing on it (D44).
   Landing on top of a **bouncy** one (every bug by default: a round ball
   reads as bouncy) bounces him up 2.2 above its top (clears 2 blocks)
   without hurting him; its sides still hurt if it is hostile. Enemies with
@@ -751,8 +711,8 @@ own, each in its own color.
   ones too (they stay peaceful). A hit flashes it white, then cyan, with a
   recoil squash; while damaged it glitches every ~0.8 s (a small sideways
   jump and a faint flash).
-- Validation: a known template, a free cell of its own not over a hole
-  nor on a lethal block, ids unique among objects and enemies, a patrol
+- Validation: a known template, a free cell of its own not over a hole,
+  ids unique among objects and enemies, a patrol
   has a level path clear of static blocks (so does a chaser's, if it has
   one), a stationary enemy has none, and a path has no speed (D119). A
   template: a chaser has an `aggroRange`; a charged attack's
@@ -989,7 +949,7 @@ The second spell (D73), from a data disk in `shield_hall` (slot 1).
   (radius `PLAYER.shieldRadius`, 0.55, round his feet) in sparks, and an
   arc or burst that reaches him does nothing. The ring flares for 12
   ticks (brighter, a little bigger) and no invulnerability starts.
-  Touching an enemy, hazard blocks and spiked platforms still hurt.
+  Touching an enemy and spiked platforms still hurt.
   Casting Firewall replaces it.
 - **Look:** a jagged ring of lightning round him at hand height (radius
   0.55), neon blue outside with a thin white core, turning slowly and
@@ -1067,8 +1027,7 @@ disks. Warp is not placed in the Lattice (D133); Blink is its Level 1
 reward, in `dj_vault` (D217).
 
 - Both go the way he aims (the way he last walked), level at his height,
-  through open space only: over holes, hazard and void floors, and
-  through enemies. A block, a room object or the room's side stops them,
+  through open space only: over holes and through enemies. A block, a room object or the room's side stops them,
   however thin; they never leave the room. His box sweeps the line
   (`warpTarget()` in `src/entities/warp.js`) and he lands at the farthest
   free spot short of the stop, backing off an enemy standing there. He
@@ -1153,8 +1112,7 @@ and enemies, closer.
 - **The line:** along the grid axis he aims on (as Cut & Paste: the
   larger part of his aim, x on a tie), in his column across it, at the
   height of his feet (the nearest level mid-jump), from the cell right in
-  front of him up to `range` cells (6). Holes and hazard or void floors
-  below don't stop it; a block, the room's side or any other body in a
+  front of him up to `range` cells (6). Holes below don't stop it; a block, the room's side or any other body in a
   cell does. The first crate or enemy on it is the target.
   `pullTarget()` in `src/entities/pull.js`.
 - **Pull** (E; 15 energy): the target slides one cell towards him.
@@ -1164,8 +1122,7 @@ and enemies, closer.
   - An enemy (any live one, frozen too, walking or standing; not
     falling, not riding a platform between stops) is dragged from its
     cell, or of the two it walks between the one it is nearer, over
-    anything: over a hole it drops in and pops, onto a void block it
-    dies (`Enemy.pull()`). It slides at `ENEMY.pullSpeed` (3 units a
+    anything: over a hole it drops in and pops (`Enemy.pull()`). It slides at `ENEMY.pullSpeed` (3 units a
     second, a pushed crate's speed) and does nothing else until it
     arrives; an attack it was charging is cut off. Something in the way
     on the way drags it back to its cell. Pulling provokes it and
@@ -1225,8 +1182,7 @@ placed in any room yet.
 
 - **The target:** the first crate or frozen enemy in Pull's line (a fence
   stops it, a crate stream doesn't), resting on a whole cell, nothing on
-  it; never a spiked crate (D199: it is there to keep him out from behind
-  it). `swapTarget()` in `src/entities/swap.js`.
+  it. `swapTarget()` in `src/entities/swap.js`.
 - **Swap** (E; 25 energy): he stands on the ground at a whole height (not
   in the air, not on a stair's slope). The target lands in his cell (the
   one under his feet center) and falls from there; he stands centered in
@@ -1519,7 +1475,7 @@ a need for.
 - **Turned down for now:** spells Decrypt (dissolves an encrypted
   wall type), Rollback (back to where he was 3 s ago); upgrades Halt
   (Pause freezing the whole room), Lift (Warp landing on top of what
-  stops it), Firewall+ (hazard immunity) and Cut & Paste+ (a level up or
+  stops it), Cut & Paste+ (a level up or
   down). They remain candidates for the spare bits. (Patch and Overclock
   became boosts, D152.)
 
@@ -1588,50 +1544,13 @@ usual, so half behind a wall he is half ghost (D55).
   `src/render/break-fx.js`; review in the asset showcase
   (`?asset=crate,crate_cross,zap-break`).
 
-## The spiked crate
+## The spiked crate (retired)
 
-- `crate_spiked` (D199) is a `crate` with `topDamage: 2` (pushable types
-  only; `damage` stays the platform's, which hurts on every side). It
-  pushes, falls, stacks and plugs a hole like a crate, and its top is not
-  a place to stand: when his feet rest on it (standing, or landing from a
-  jump) he is hurt for `topDamage`, with the usual invulnerability blink,
-  and shoved off the crate the shortest way that leaves its footprint with
-  room for him, with a small hop (`KNOCK_OFF` in `src/game.js`). The shove
-  also happens while he blinks. Walled in on top, he stays and is hurt
-  again after the blink: there is no safe spot. Pushing it from the side
-  is safe.
-- Stacks: a crate (of any kind) lying on it covers the spikes, so the
-  upper crate's top is a safe 2-high step; a spiked crate on a plain one
-  keeps its spikes on top; a spiked crate pushed into a hole plugs it
-  into plain floor (no spikes any more).
-- Others: a frozen enemy resting on a bare top is impaled and pops; the
-  Fork decoy derezzes there (like falling into a hole); active enemies
-  ignore the spikes (as with hazard blocks) and may cross it.
-- Why: the wizard climbs crates, so the classic Sokoban knot "get behind
-  the box" is gone; in the Microban survey 29 of the 104 levels solved
-  need half the pushes or fewer. With every crate spiked, the levels
-  build in the game play like Classic again (`microban-survey.md`,
-  spiked columns: with 3-high walls all 104 levels solved match their
-  classic push count; 1-high walls don't, he walks over them). A jump in line over a 1-high crate always touches the
-  top (a jump spends 0.23 s above 1.0 and covers 0.67 units sideways,
-  clearing needs 1.6): no bypass, no taller hurt zone.
-- Checker (`src/world/reach.js`): a configuration knows which crates are
-  spiked (`config(crates, plugged, spiked)`); `below()` says `'bad'`
-  under a bare spiked top (a crate on it is the surface instead), so he
-  can't stand, climb or land there; pushed, pulled and pasted crates keep
-  their spikes. The solver and `xsb.mjs` follow (`!` = spiked crate,
-  `--spiked` builds every crate that way).
-- Look (`vents: "aurora"`, `src/render/vent-fx.js`): the glass crate with
-  its data-bits core, five square bit-like holes in the top on the 4×4 bit
-  grid (dark, red edges), an aurora jet out of each (crimson at the foot,
-  dark indigo above, slow rays), and a shaft of light down from each to a
-  smaller square on the core. The vents hide while a crate lies on top or
-  once it plugs a hole. Review: `?asset=crate,crate_spiked,crate_spiked-close`
-  in the showcase.
-- No room uses it since its test room `spiked_lab` went (D270); Microban 8
-  with spiked crates and 3-high walls is 32 pushes (4 with plain crates).
-- Tuning: `topDamage` on the type (overridable per object), `KNOCK_OFF`,
-  `VENTS`/`AURORA` in `vent-fx.js`.
+`crate_spiked` (D199), a crate whose top hurt him and shoved him off, gave
+free-jump rooms back Sokoban's "can't get behind the box". In a pads room
+(D222) no crate is a step, so a plain crate does that; it was retired in
+D271 with its vents look (`vent-fx.js`), `topDamage`, the checker's and
+solver's spiked tops and `xsb.mjs`'s `!` and `--spiked`.
 
 ## Holes
 
@@ -2124,8 +2043,8 @@ it, and every new room)
   camera, not behind a ledge. Where a barrier must stand on the camera
   side, or a wall must rise higher, use a fence (D167): it blocks him
   but hides nothing. It is no cover: bolts and sight pass through it.
-- Each mechanic should be seen before it matters: a pit, a hazard or a
-  collapsing bridge in view from where the wizard enters. Every crate is
+- Each mechanic should be seen before it matters: a pit, a spiked
+  platform or a collapsing bridge in view from where the wizard enters. Every crate is
   visible to the player: never hidden from the camera behind tall blocks,
   ledges or decorations, never inside a fake block (D164). Stairs, plates, sockets
   and targets are in view too: nothing hides them from the camera or from
@@ -2201,14 +2120,14 @@ Phase 7.
 | Phantom Partition (late sector; ghosts, D122, D130) | pale violet `#a98bff` (D99) | sparse dots under low glowing mist | to be settled | edges shimmer slowly through the hues |
 
 Room colors keep clear of the colors objects and blocks carry (the color
-rules, D99): danger red (hazards, spiked platforms), white (plates,
+rules, D99): danger red (spiked platforms, hostile eyes), white (plates,
 targets, locks), cyan (platforms), magenta (the wizard), neon green (crates);
-void blocks are black mist and collapsing blocks take the room color.
+holes are black and collapsing blocks take the room color.
 `tests/colors.test.js` checks every biome against them: a hue gap of at
 least 20° between saturated colors, and no near-white room color.
 Phantom Partition moved from silver-white to pale violet so plates and
-targets stand out in it; violet became free when void blocks turned
-black.
+targets stand out in it; violet became free when void blocks (since
+retired, D271) turned black.
 
 Enemies by biome (D108): Home Lattice's are the default cyberspace four,
 bug, virus, sentinel and cron, plus the peaceful glowbug (D121); they read
@@ -2353,8 +2272,8 @@ F3 toggles debug mode; off by default. While it's on:
   he's grounded, and whether invincibility is on.
 - `]` / `[` jump straight to the next/previous room in load order, skipping
   the exit transition (`Game.debugJumpRoom()`); ignored mid-transition.
-- `I` toggles invincibility (`Game.invincible`): holes and void blocks
-  never kill and `Game.hurt()` does nothing (so hazards don't hurt).
+- `I` toggles invincibility (`Game.invincible`): holes never kill and
+  `Game.hurt()` does nothing.
 - `K` finds the next 8 fragments not found yet (`Game.debugGrantFragments()`),
   to try access levels without walking the world; the core still has
   to be touched to raise the level.
@@ -2418,7 +2337,7 @@ floor.
 
 - **Block** puts a block of the type picked in the panel's type list (every
   block type in `defs.json`, in groups: Static, Switch gates, Collapsing
-  (step) gates (D144), each with what it does: `hazard (hurts 1)`,
+  (step) gates (D144), each with what it does: `fake (a scan derezzes it)`,
   `collapsing_regrow (collapses, back in 3 s)`, `bridge (gone, there
   while powered)`) in the cell clicked (see above), replacing whatever is
   there; erasing empties the cell (D60). The four stairs are one entry,
@@ -2701,7 +2620,7 @@ author flags them authored (D90). Room plan: [lattice-plan.md](lattice-plan.md).
 |---|---|---|
 | 5.3 | `feat/music` | The author's tracks trimmed for seamless loops: Lattice, boss, title; room and biome mapping, a boss switch and a crossfade back. |
 | 5.17 | `rooms/<id>` | The room reviews, one room a session and a PR, in play order: the room-design skill's rework workflow against its ladder line, then the author's tuning in the editor. Each review moves its room to `"jump": "pads"` and rebuilds what the jump carried (lattice-plan.md, Pads-only migration), the Outer Buffer doors (5.11) with their host rooms. |
-| 5.19 | `feat/no-jump` | After the last room review (D222): the pads-only rule is the engine's. The room `jump` field (and its editor box), the jump action, the free-jump code in the player (key, coyote time, buffer) and the checker, debug J and `check:reach --pads` go; Space casts; the controls screen and help follow. The spiked crate, fence roofs and hop-proof walls are retired or kept on their own merit; CLAUDE.md, design.md, the ladder rules and the skills lose the free jump. |
+| 5.19 | `feat/no-jump` | After the last room review (D222): the pads-only rule is the engine's. The room `jump` field (and its editor box), the jump action, the free-jump code in the player (key, coyote time, buffer) and the checker, debug J and `check:reach --pads` go; Space casts; the controls screen and help follow. The spiked crate is retired (D271); fence roofs and hop-proof walls are retired or kept on their own merit; CLAUDE.md, design.md, the ladder rules and the skills lose the free jump. |
 | 5.11 | `feat/outer-buffer-secrets` | In progress: the secret cluster's contents, one room a PR, hard push puzzles (D173, D186). Done: Dead Pixel (D220, on pads D262), Stray Byte (D263), Null Orbit (D264), Event Horizon (D265), Cache Miss (D266): the five secret rooms are all built. |
 | 5.12 | `feat/quality-presets` | Quality presets, auto fallback and render scale wired up (D76), a check on a weaker GPU. |
 | 5.13 | `feat/onboarding-feedback` | The first minute from title to the first disk (stairs and a pad before any spell, D222), the controls screen (Space casts), the pause entry that copies debug info (version, room, key) for feedback. |
@@ -2860,7 +2779,7 @@ Example room:
   ],
   "blocks": [
     { "at": [0, 0, 0], "to": [2, 0, 3] },
-    { "at": [3, 0, 0], "to": [5, 0, 0], "type": "hazard" }
+    { "at": [3, 0, 0], "to": [5, 0, 0], "type": "fence" }
   ],
   "holes": [{ "at": [8, 8], "to": [9, 8] }],
   "shrine": [6, 9],
@@ -2900,7 +2819,7 @@ Example room:
   Ids are unique among objects, enemies and pickups.
 - Object type style (D17): `edges` `solid`/`dashed`, `mark`
   `none`/`inset`/`cross`/`brackets`/`bits`, `faces`
-  `dark`/`tinted`/`hazard`/`glass`, `shape` `cube`/`spiked` (defaults
+  `dark`/`tinted`/`glass`, `shape` `cube`/`spiked` (defaults
   first), `tint` 0–1 (color share of a tinted top face, default 0.1).
   Objects may override them.
 - `"positions": { "boot_up": [5, 0] }` in `world.json` places every room

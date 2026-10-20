@@ -59,8 +59,8 @@ For each room:
    - **Jump rule** (D222): is the room a pads room (`"jump": "pads"`)? A
      room reviewed in step 5.17 or new must be (a PROBLEM if not), and
      its line in `docs/lattice-plan.md` (Pads-only migration) is ticked
-     off. Pieces that only fought the jump (spiked crates, fence roofs,
-     2-high walls against hops) and do no job of their own: a NOTE.
+     off. Pieces that only fought the jump (fence roofs, 2-high walls
+     against hops) and do no job of their own: a NOTE.
    - **Platforms in a pads room** (D228): each stop he boards or leaves
      a platform at is on foot level (floor, stair top, ledge), never a
      jump up; a platform only a pad or bounce reaches is fine in a
@@ -138,9 +138,7 @@ For each room:
      enemy adds one, he counts one while he stands), a **cage** over a
      pickup (switch-locked, see-through: a Zap passes through) and a
      3-high wall are real locks. A **stream** stops him and passes crates
-     (no top), a **spiked crate** is no step (its top hurts 2 and shoves
-     him off; a plain crate on it covers it; in a pads room no crate is a
-     step, so it adds nothing there). A classic level is credited
+     (no top). A classic level is credited
      in the room's decision and re-solved under these rules.
    - **Timing by play**: where a race or bounce decides the room, play it
      with `.claude/skills/room-design/scripts/sim.mjs` from a scratch

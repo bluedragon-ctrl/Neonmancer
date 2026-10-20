@@ -137,15 +137,13 @@ export const PICKUPS = {
 export const SCORE = { bit: 50, secret: 200, accessLevel: 500 };
 
 /**
- * Block types, as in defs.json (D60): plain, hazard, void, fake (D128), fence (D167),
+ * Block types, as in defs.json (D60): plain, fake (D128), fence (D167), the stream (D198),
  * gates (D141): collapsing (a step gate) and a variant that grows back
  * after 3 s, a switch gate and a bridge, the cage (D202), a stair each way
  * and the slab (D221).
  */
 export const BLOCK_TYPES = {
   block: { look: 'plain' },
-  hazard: { look: 'hazard', color: '#ff3b30', damage: 1 },
-  void: { look: 'void', color: '#8a5cff', lethal: true },
   fake: { look: 'plain', fake: true },
   fence: { look: 'fence', seeThrough: true },
   stream: { extends: 'fence', color: '#ff2bd6', passes: ['crate'] },

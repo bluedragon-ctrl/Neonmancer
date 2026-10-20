@@ -335,7 +335,6 @@ function boot() {
  */
 function showEvents(events, { game, roomScene, hud, debug }) {
   for (const event of events) {
-    if (event.type === 'hurt' && event.cell) roomScene.flareHazard(event.cell);
     if (event.type === 'hurt' && event.object) roomScene.flareObject(event.object);
     if (event.type === 'zap') roomScene.sparks(event.bolt);
     if (event.type === 'ricochet') roomScene.sparks(event.bolt, event.pos, event.dir);

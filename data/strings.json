@@ -62,7 +62,6 @@
     "msg.welcome": "> WELCOME, WIZARD. MIND THE GAPS.",
     "msg.restored": "> ACCESS KEY ACCEPTED. WELCOME BACK, WIZARD.",
     "msg.die": "> FATAL: WIZARD FELL OUT OF BOUNDS",
-    "msg.void": "> FATAL: WIZARD DEREFERENCED THE VOID",
     "msg.derez": "> FATAL: INTEGRITY 0. WIZARD DEREZZED",
     "msg.timeout": "> FATAL: WATCHDOG TIMEOUT. PROCESS KILLED",
     "msg.watchdog": "> WATCHDOG ARMED: {seconds} S. GET OUT IN TIME",

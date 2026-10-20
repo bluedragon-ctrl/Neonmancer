@@ -93,9 +93,9 @@ const HINTS = {
 
 /**
  * A block type in a few words for the type list: what it does
- * (`hurts 1`, `lethal`, `collapses, back in 3 s`, `solid, gone while
+ * (`a scan derezzes it`, `collapses, back in 3 s`, `solid, gone while
  * powered`) or its look.
- * @param {{ look?: string, kind?: string, trigger?: string, start?: string, damage?: number, lethal?: boolean, fake?: boolean, regrow?: number }} type
+ * @param {{ look?: string, kind?: string, trigger?: string, start?: string, fake?: boolean, passes?: string[], regrow?: number }} type
  */
 export function blockTypeText(type) {
   if (type.kind === 'gate') {
@@ -107,7 +107,7 @@ export function blockTypeText(type) {
   }
   if (type.kind) return type.kind;
   if (type.look === 'slab') return 'a walkway at the top of its cell, headroom under it';
-  const does = [type.damage && `hurts ${type.damage}`, type.lethal && 'lethal', type.fake && 'a scan derezzes it', type.passes && `${type.passes.join(', ')} pass`].filter(Boolean);
+  const does = [type.fake && 'a scan derezzes it', type.passes && `${type.passes.join(', ')} pass`].filter(Boolean);
   return does.join(', ') || type.look;
 }
 
@@ -187,7 +187,6 @@ export function objectTypeText(type) {
     case 'pushable': {
       const does = [
         type.integrity !== undefined && `breaks after ${plural(type.integrity, 'hit')}`,
-        type.topDamage !== undefined && `spiked top, hurts ${type.topDamage}`,
         type.edges === 'dashed' && 'dashed edges',
         type.mark && type.mark !== 'none' && `${type.mark} mark`,
       ].filter(Boolean);

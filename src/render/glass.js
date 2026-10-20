@@ -1,8 +1,7 @@
 /**
  * Glass look (D96): see-through faces, so a crate reads as a block of
  * material rather than an item. Every crate type is glass (`"faces":
- * "glass"` in defs.json); hazard blocks have a glass option that is not
- * used yet (showcase only). The glass is frosted: what lies behind
+ * "glass"` in defs.json). The glass is frosted: what lies behind
  * shows through dimmed and milky; the faces glow a little towards their
  * borders and carry a fine static frost grain.
  *
@@ -45,8 +44,6 @@ export const GLASS = {
    * fragile. Values replacing the ones above.
    */
   hollow: { alpha: 0.35, tint: 0.08 },
-  /** Hazard blocks as glass: how much of what's behind they hide. */
-  hazardAlpha: 0.5,
   /**
    * Decorations (data pillar, screen) show something inside the glass,
    * so they hide less of what's behind.

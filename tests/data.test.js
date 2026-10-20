@@ -406,71 +406,29 @@ test('buildRoom expands hole rectangles into tiles', () => {
   ]);
 });
 
-test('hazard and void blocks: the player must not spawn or respawn above one', () => {
-  assertError(
-    errorsAfter((f) => {
-      const room = f['rooms/alpha.json'];
-      room.blocks = [{ type: 'hazard', at: [1, 0, 1] }];
-      room.spawn = [1.5, 1, 1.5];
-    }),
-    'rooms/alpha.json › spawn',
-    'would land on a hazard block (blocks[0])',
-  );
-  assertError(
-    errorsAfter((f) => {
-      const room = f['rooms/alpha.json'];
-      room.blocks = [{ type: 'void', at: [4, 0, 4] }];
-      room.reset = [4.5, 2, 4.5];
-    }),
-    'rooms/alpha.json › reset',
-    'would land on a void block',
-  );
-  // A plain block on top of the void block catches him.
-  assert.deepEqual(
-    errorsAfter((f) => {
-      const room = f['rooms/alpha.json'];
-      room.blocks = [{ type: 'void', at: [4, 0, 4] }, { at: [4, 1, 4] }];
-      room.reset = [4.5, 2, 4.5];
-    }),
-    [],
-  );
-});
-
-test('lethal blocks: a raised exit must not stand on one', () => {
-  assertError(
-    errorsAfter((f) => {
-      const room = f['rooms/alpha.json'];
-      room.exits[0].y = 1;
-      room.blocks = [{ type: 'void', at: [7, 0, 3], to: [7, 0, 4] }];
-    }),
-    'rooms/alpha.json › exits[0]',
-    'void block at [7,0,3]',
-  );
-});
-
 test('buildRoom sorts static blocks by type and carries the block types', () => {
   const files = validFiles();
-  files['rooms/alpha.json'].blocks.push({ type: 'hazard', at: [1, 0, 6] }, { type: 'void', at: [6, 0, 1], to: [6, 0, 2] });
+  files['rooms/alpha.json'].blocks.push({ type: 'fence', at: [1, 0, 6] }, { type: 'fake', at: [6, 0, 1], to: [6, 0, 2] });
   const content = loadGameData(files);
   const room = buildRoom(content.rooms.get('alpha'), content);
   assert.equal(room.blocks.block.length, 4);
-  assert.deepEqual(room.blocks.hazard, [[1, 0, 6]]);
-  assert.deepEqual(room.blocks.void, [
+  assert.deepEqual(room.blocks.fence, [[1, 0, 6]]);
+  assert.deepEqual(room.blocks.fake, [
     [6, 0, 1],
     [6, 0, 2],
   ]);
-  assert.equal(room.blockTypes.hazard.damage, 1);
-  assert.equal(room.blockTypes.void.lethal, true);
+  assert.equal(room.blockTypes.fence.seeThrough, true);
+  assert.equal(room.blockTypes.fake.fake, true);
 });
 
 test('block types: a variant takes its base type\'s values and replaces its own (D60)', () => {
   const files = validFiles();
-  files['defs.json'].blocks.hazard_hot = { extends: 'hazard', damage: 2 };
-  files['rooms/alpha.json'].blocks.push({ type: 'hazard_hot', at: [1, 0, 6] });
+  files['defs.json'].blocks.fence_red = { extends: 'fence', color: '#ff3b30' };
+  files['rooms/alpha.json'].blocks.push({ type: 'fence_red', at: [1, 0, 6] });
   assert.deepEqual(checkFiles(files, schemas), []);
   const content = loadGameData(files);
-  assert.deepEqual(content.blockTypes.hazard_hot, { id: 'hazard_hot', static: true, look: 'hazard', color: '#ff3b30', damage: 2 });
-  assert.deepEqual(buildRoom(content.rooms.get('alpha'), content).blocks.hazard_hot, [[1, 0, 6]]);
+  assert.deepEqual(content.blockTypes.fence_red, { id: 'fence_red', static: true, look: 'fence', seeThrough: true, color: '#ff3b30' });
+  assert.deepEqual(buildRoom(content.rooms.get('alpha'), content).blocks.fence_red, [[1, 0, 6]]);
 });
 
 test('object types: a variant takes its base type\'s values and replaces its own (D145)', () => {
@@ -517,7 +475,7 @@ test('block types: a look or a kind, and only the values that go with it', () =>
     );
   blockError({ color: '#ffffff' }, 'needs a "look"');
   blockError({ look: 'plain', kind: 'gate', color: '#ffffff' }, 'both a "look" and a "kind"');
-  blockError({ kind: 'gate', color: '#ffffff', damage: 1 }, 'damage: only for static blocks');
+  blockError({ kind: 'gate', color: '#ffffff', fake: true }, 'fake: only for static blocks');
   blockError({ kind: 'gate', trigger: 'step', start: 'gone' }, 'start: only switch gates start gone');
   blockError({ kind: 'gate', regrow: 2 }, 'regrow: only step gates');
   blockError({ look: 'plain', regrow: 2 }, 'regrow: only for blocks with a "kind"');

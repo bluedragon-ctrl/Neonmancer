@@ -123,8 +123,7 @@ mobile/touch support, backend or accounts.
 
 ### Objects and blocks
 - Types: static, pushable, moving (paths or up/down cycles; player rides
-  them; spiked ones hurt on touch, D82), hazard (deals damage), void
-  (instant death when the player falls onto it), fake (a plain-looking
+  them; spiked ones hurt on touch, D82), fake (a plain-looking
   block that a scan derezzes, D128), fence (see-through: solid to
   bodies, standable, but bolts and sight pass; linked data streams with
   no faces, so a raised wall hides nothing, D167), stream (a fence in the
@@ -151,19 +150,6 @@ mobile/touch support, backend or accounts.
   glass sheet at the floor of its cell over a hole: floor while powered,
   a hole again once it goes (D224). Every ledge is a one-way drop; a
   crate is no step (he can't get onto it from its own level).
-- The spiked crate (`crate_spiked`, D199): a crate that pushes, falls,
-  stacks and plugs a hole like any other, but its top is spiked
-  (`topDamage` 2): touching it hurts him (the usual blink) and shoves him
-  off, even while he blinks, so he can never stand on it; its sides are
-  safe to push. A crate on it covers the spikes (a safe 2-high step); a
-  spiked crate on a plain one keeps them; plugged into a hole it is
-  plain floor. A frozen enemy on a bare top is impaled (pops), the
-  decoy derezzes, active enemies cross it unhurt. A hop over a 1-high
-  crate in line is impossible (D199: always touches the top), so it
-  brings Sokoban's "can't get behind the box" back to free-jump rooms
-  (in a pads room every crate does; kept or retired in 5.19, D222). Look: the glass crate
-  with square vents in the top, aurora jets and shafts down to the core
-  (hidden while covered).
 - Decorations (kind `deco`, D117): fixed bodies that dress a room and do
   nothing, in the room's color, facing +z or +x: the data pillar
   (1×3×1, always 3 high), the screen (1×1×1) and the memory stack
@@ -207,9 +193,10 @@ mobile/touch support, backend or accounts.
   solid ones, which block, carry and shove him like platforms (D51).
 
 ### Damage and death
-- Hazards and enemies deal damage, followed by brief invulnerability with
-  blinking.
-- No fall damage. The only instant death is falling onto void blocks.
+- Enemies and spiked platforms deal damage, followed by brief
+  invulnerability with blinking. No block hurts or kills (hazard and void
+  blocks and the spiked crate were retired, D271).
+- No fall damage. The only instant death is falling into a hole.
 - On death the wizard derezzes into pixels and recompiles at the room
   entrance — quick and non-punishing.
 - Restart room (pause menu, D219): a voluntary death for a stuck puzzle.
@@ -265,7 +252,7 @@ bit on its disk (D71).
 - **Pause** — a bolt that freezes an enemy for a while; frozen enemies
   are harmless solid platforms, still hittable (D85), and can be pushed
 - **Blink** — a super-speed dash up to 3 units forward through open
-  space, over gaps and hazards; it hits enemies it passes through, and
+  space, over gaps; it hits enemies it passes through, and
   hurts the wizard if a wall cuts it short (D86); the Lattice's
   Level 1 reward, in `dj_vault` (D217)
 - **Warp** — a teleport forward as far as the first wall or object, over
@@ -291,7 +278,7 @@ Added in Phase 5 (D261; built, not placed in any room yet):
 - **Shove** — Pull's opposite: the first crate or enemy in line one tile
   away, its beam passing fences (a crate behind a fence onto a plate)
 - **Swap** — the wizard and the first crate or frozen enemy in line
-  (same level) trade places; never a spiked crate
+  (same level) trade places
 
 Upgrades (Zap+, Shield+, D95) have their own save
 bits; a spell upgrade replaces its base spell in the Tab cycle (ZAP
@@ -352,8 +339,8 @@ color of its own, told apart at a glance (D119; docs/design.md,
 Enemies). Movement AI is named behavior modules referenced from data. Any hit alerts an enemy, and
 the wizard gets the blame (D81). Eye color shows hostility (red hostile,
 amber provoked, cyan peaceful); a red "!" pops up over one that notices
-him. Enemies move cell by cell with physics, never step into holes or
-onto void, and pop if the ground goes from under them.
+him. Enemies move cell by cell with physics, never step into holes, and
+pop if the ground goes from under them.
 
 ### Biomes (Grid sectors)
 Each room has a biome defining look and optional environmental effects,
@@ -361,9 +348,9 @@ defined in data and combinable. Health pickups and safe rooms balance
 drain effects. Six biomes (D61): one core, four side sectors, one special (Outer
 Buffer, secrets, D130).
 Color rules (D99), for objects and blocks: red hurts or is about to
-(hazards, spiked platforms, hostile eyes: one red, `#ff2a3a`); the room
-color is structure (plain and collapsing blocks); black is a pit (holes,
-void blocks as black mist); white is a mechanism (plates, targets, locks);
+(spiked platforms, hostile eyes: one red, `#ff2a3a`); the room
+color is structure (plain and collapsing blocks); black is a pit
+(holes); white is a mechanism (plates, targets, locks);
 cyan moves (platforms); magenta is the wizard (D98); neon green is pushable
 (crates). Room colors stay clear of them (`tests/colors.test.js`).
 Monsters and spell effects are not bound by them yet.
@@ -458,7 +445,7 @@ The engine is generic; all content lives in data.
 - `data/defs.json` — object types (kind, style, damage for spiked
   platforms, a decoration's look, a switch's timer; variants `extend` a
   base, D145), block types (look or kind, color, a gate's trigger,
-  properties such as damage and lethal; variants `extend` a base, D60),
+  properties such as fake and seeThrough; variants `extend` a base, D60),
   enemy templates (look, movement, attack,
   hostility, aggro range, integrity, damage, speeds, bounce, solid, color,
   charged attack values, height, a boss block; a template may `extend`

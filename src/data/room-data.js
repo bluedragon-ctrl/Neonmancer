@@ -143,15 +143,13 @@ export function exitCells({ side, at, width, y, height }, size) {
 export const OBJECT_STYLES = {
   edges: ['solid', 'dashed'],
   mark: ['none', 'inset', 'cross', 'brackets', 'bits'],
-  faces: ['dark', 'tinted', 'hazard', 'glass'],
+  faces: ['dark', 'tinted', 'glass'],
   shape: ['cube', 'spiked'],
-  vents: ['none', 'aurora'],
 };
 
 /** Style defaults: the first value of each OBJECT_STYLES list, plus the tint. */
 export const OBJECT_STYLE_DEFAULTS = {
-  // (Vents, D199, are a look only a few objects have: no default, the view reads "none".)
-  ...Object.fromEntries(Object.entries(OBJECT_STYLES).filter(([key]) => key !== 'vents').map(([key, values]) => [key, values[0]])),
+  ...Object.fromEntries(Object.entries(OBJECT_STYLES).map(([key, values]) => [key, values[0]])),
   /** With tinted faces: share of the object color in the top face (0–1); sides get less. */
   tint: 0.1,
 };
@@ -338,7 +336,7 @@ export function templateChain(templates, id) {
  * that live in the room grid (a look) from those that run as room objects
  * (a kind: a gate, collapsing ones too, D141).
  * @param {Record<string, object>} types defs.json `blocks`
- * @returns {Record<string, { id: string, static: boolean, look?: string, kind?: string, color?: string, damage?: number, lethal?: boolean, regrow?: number }>}
+ * @returns {Record<string, { id: string, static: boolean, look?: string, kind?: string, color?: string, regrow?: number }>}
  */
 export function resolveBlockTypes(types) {
   const out = {};
@@ -366,7 +364,7 @@ export function resolveObjectTypes(types) {
 }
 
 /** Values only static block types take, and only object kinds take (D60). */
-export const STATIC_BLOCK_VALUES = ['look', 'damage', 'lethal', 'fake', 'seeThrough', 'passes', 'rise'];
+export const STATIC_BLOCK_VALUES = ['look', 'fake', 'seeThrough', 'passes', 'rise'];
 export const KIND_BLOCK_VALUES = ['kind', 'trigger', 'start', 'regrow', 'edges', 'mark', 'faces', 'tint'];
 
 /**

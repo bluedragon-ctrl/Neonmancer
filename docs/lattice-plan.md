@@ -146,8 +146,8 @@ makes one the puzzle.
 
 No line develops stacking (a crate dropped onto a crate as a 2-high
 step) after the Atrium teaches the drop; a review may add it where it
-fits (`ledger_cell` has it since D203, `idle_cache` since D205). Collapsing and hazard blocks have no
-Lattice room; they wait for the sectors.
+fits (`ledger_cell` has it since D203, `idle_cache` since D205). Collapsing blocks have no
+Lattice room; they wait for the sectors (hazard blocks are retired, D271).
 
 Ideas from the author for the reviews to come (5.17):
 - Sokoban, often (Microban's way: one idea a room, every tile used, no
@@ -175,9 +175,9 @@ Ideas from the author for the reviews to come (5.17):
   behind switches; a Zap passes through the bars. Replaces the pockets
   of gates and fences (`fork_lab`, `twin_plates`, `split_vault`,
   `ledger_cell`).
-- The spiked crate and the crate stream (built, D199, D198): they give a
-  classic level back its player routing (he can't stand on the crate,
-  or can't follow it through the field).
+- The crate stream (built, D198): it gives a classic level back its
+  player routing (he can't follow the crate through the field). The
+  spiked crate (D199) did the same for free-jump rooms; retired (D271).
 
 Reviews needed for the Fork skips above: `ledger_cell`,
 `ghost_exit`, `cold_stairs`, `idle_cache`, `guard_loop`. Proposals
@@ -355,16 +355,9 @@ the teasers and `hidden_layer` lose nothing and are pads rooms (D269);
 the other eleven dev rooms, three of which leaned on the jump (`heavy_lab`,
 `socket_yard`, `stream_lab`), are removed (D270).
 
-**For the author to decide** (the step plan says "retired or kept on
-their own merit"):
-- **The spiked crate** (D199). It was there to stop a hop over a crate,
-  which pads rooms can't do anyway (a crate is no step), and it was kept
-  for the secret rooms (Plan review, point 4), but none of the five uses
-  it, and since D270 no room does. What it still adds on pads: no standing
-  on it from above, and touching it hurts. Retire it (block type, view,
-  vents fx, `topDamage`, the checker's and solver's `bad` top, the
-  survey column, showcase, its tests) or keep it for
-  Phase 6.
+**Decided** (the step plan says "retired or kept on their own merit"):
+- **The spiked crate** (D199) is retired (D271), with the hazard and void
+  blocks: no room used any of them.
 - **Fence roofs and hop-proof walls.** Every room that had them is on
   pads now and was reviewed (5.17), so whatever stayed was kept on its
   own merit. Nothing to do in 5.19 but drop the reason ("stops a hop")
@@ -391,18 +384,18 @@ their own merit"):
 
 **Tests that change** (they press the jump key): `player.test.js` (the
 jump, coyote and gap cases), `stairs.test.js` (`canJump`, `jumpRule`),
-`fence.test.js`, `crate-stream.test.js`, `spiked-crate.test.js`,
+`fence.test.js`, `crate-stream.test.js`,
 `push-frozen.test.js`, `switches.test.js`, `menus.test.js`,
 `reach.test.js` (`freeJumpRooms`), `editor.test.js` (new rooms are pads
 rooms); `input.test.js` only uses `jump` as an example action. Each
 either moves to a pad or is dropped with the code it tests.
 
-**Docs and skills:** CLAUDE.md (§4 Grid and rooms, the spiked crate,
+**Docs and skills:** CLAUDE.md (§4 Grid and rooms,
 Compile's "step up in a free-jump room", §9 debug J and `--pads`),
 design.md (Reach with the free jump, the checklist), the room-design
 skill (step 7 "Move it to pads", `sim.mjs`'s jump note), the
 sokoban-design skill, the level-review agent's jump rule check, and a
 decision entry replacing D221/D222's prototype wording.
 
-**Order:** the rooms are done (D269, D270); next `feat/no-jump`: the
-code, tests and docs above, once the spiked crate is decided.
+**Order:** the rooms are done (D269, D270), the spiked crate retired
+(D271); next `feat/no-jump`: the code, tests and docs above.

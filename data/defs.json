@@ -7,7 +7,6 @@
     "crate_plain": { "extends": "crate", "mark": "none" },
     "crate_cross": { "extends": "crate", "mark": "none", "integrity": 1 },
     "crate_dashed": { "extends": "crate", "mark": "none", "edges": "dashed" },
-    "crate_spiked": { "extends": "crate", "topDamage": 2, "vents": "aurora" },
     "target": { "kind": "target", "color": "#eef3ff" },
     "core": { "kind": "core", "color": "#eef3ff" },
     "plate": { "kind": "plate", "color": "#eef3ff", "edges": "dashed" },
@@ -405,8 +404,6 @@
   },
   "blocks": {
     "block": { "look": "plain" },
-    "hazard": { "look": "hazard", "color": "#ff2a3a", "damage": 1 },
-    "void": { "look": "void", "color": "#9aa0b0", "lethal": true },
     "fake": { "look": "plain", "fake": true },
     "fence": { "look": "fence", "seeThrough": true },
     "stream": { "extends": "fence", "color": "#ff2bd6", "passes": ["crate"] },

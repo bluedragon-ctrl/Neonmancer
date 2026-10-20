@@ -15,16 +15,13 @@ const press = (action) => ({ down: (a) => a === action, pressed: (a) => a === ac
 /** A bug that stays in its cell. */
 const STILL = { ...BUG, movement: 'stationary' };
 
-/** The spiked crate (D199), as in defs.json. */
-const SPIKED = { extends: 'crate', topDamage: 2, vents: 'aurora' };
-
 /**
  * A game in a 12×4×8 room with `props`; the wizard knows Pause, Shove and
  * Swap, has `spell` selected, stands at `pos` and aims along +x.
  */
 function gameWith(spell, props = {}, pos = [1.5, 0, 3.5]) {
   const rooms = [roomFile('alpha', { size: [12, 4, 8], spawn: [0.5, 0, 7.5], ...props })];
-  const game = new Game(gameData({ rooms, objects: { crate: CRATE, crate_spiked: SPIKED }, enemies: { bug: BUG, still: STILL } }), {
+  const game = new Game(gameData({ rooms, objects: { crate: CRATE }, enemies: { bug: BUG, still: STILL } }), {
     progress: new Progress([3, 11, 12].map((slot) => saveBit('spells', slot))),
   });
   game.player.spell = spell;
@@ -164,9 +161,8 @@ test('Swap takes a frozen enemy, which stays frozen; an active one fizzles', () 
   assert.deepEqual(bug.pos, [1, 0, 3]);
 });
 
-test('nothing to swap fizzles and costs nothing: spiked, loaded, no headroom, a pickup or a block in his cell', () => {
+test('nothing to swap fizzles and costs nothing: loaded, no headroom, a pickup or a block in his cell', () => {
   const cases = [
-    { objects: [crate([5, 0, 3], 'box', 'crate_spiked')] },
     { objects: [crate([5, 0, 3]), crate([5, 1, 3], 'top')] },
     { objects: [crate([5, 0, 3])], blocks: [{ at: [5, 1, 3] }] },
     { objects: [crate([5, 0, 3])], pickups: [{ id: 'p', type: 'refill_energy', at: [1, 0, 3] }] },

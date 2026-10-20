@@ -14,8 +14,7 @@
  *   no room for that it hurts him and waits. It never kills outright.
  *
  * A spiked platform (a type with `damage`, D82) moves the same way; the
- * game hurts the wizard whenever he touches it (Game.update()), like a
- * hazard block that moves.
+ * game hurts the wizard whenever he touches it (Game.update()).
  *
  * A platform with `switches` (D140) runs only while those switches are all
  * on and stops where it is when one goes off; the game sets `powered`

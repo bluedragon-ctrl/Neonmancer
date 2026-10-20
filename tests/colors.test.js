@@ -8,7 +8,7 @@ import { PALETTE } from '../src/render/neon.js';
 /**
  * The color rules (D99): room colors (biomes) stay clear of the colors that
  * carry meaning for objects and blocks, so a crate, a platform, a switch or
- * a hazard never blends into its room. Each enemy template has a color of
+ * a spiked platform never blends into its room. Each enemy template has a color of
  * its own (D119); monster colors against the rules and spell effects are
  * not checked yet.
  */

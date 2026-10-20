@@ -28,7 +28,7 @@ export const PALETTE = {
   /** Pushable crates (D99): neon green, so the game reads as neon. */
   neonGreen: 0x39ff14,
   amber: 0xffb020,
-  /** Everything that hurts or is about to: hazards, spikes, hostile eyes, the alert mark. */
+  /** Everything that hurts or is about to: spiked platforms, hostile eyes, the alert mark. */
   danger: 0xff2a3a,
 };
 

@@ -63,7 +63,7 @@ table, roster, AI rules). Prefer the monster editor
 - Patrol paths: level legs along x or z at the height of `at`; give
   `pause` for readable turns. Leave the wizard room to pass or a way to
   freeze (Pause), bounce over or shoot them.
-- Enemies never step into holes or onto void, and pop if ground goes: don't
+- Enemies never step into holes, and pop if ground goes: don't
   put a patrol over a hole it would treat as a wall.
 - Stairs are for everyone, pads only for him (D230): enemies walk up a
   stair from its foot and down off its top (never stopping on it); a

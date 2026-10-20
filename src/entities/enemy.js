@@ -10,15 +10,14 @@
  * fixed tick (Game.update()).
  *
  *   rest ──behavior steps, cell free and safe──► walk ──arrive──► rest
- *     │ └─cell blocked, or a hole or void block there: turn back, wait turnTicks
+ *     │ └─cell blocked, or a hole there: turn back, wait turnTicks
  *     └──no support──► fall ──land──► rest
- *   falls into a hole or onto a void block ──► dead (pops; gone until the room resets)
+ *   falls into a hole ──► dead (pops; gone until the room resets)
  *   hit by a spell, a discharge or a bolt ──► integrity − damage; at 0 ──► dead (pops)
  *   hit by Pause ──► frozen for a while (still falls; hits still hurt it) ──► thaws
  *   pulled (D124) ──► walk a cell towards the wizard, frozen or not (it can't act until there)
  *
- * It never steps into a hole or where it would land on a lethal block
- * (D78); it only ends up in one when the ground goes from under it (while
+ * It never steps into a hole (D78); it only ends up in one when the ground goes from under it (while
  * walking too: it drops as it walks on). It never starts a step into a
  * cell another enemy is walking into, and something in its way mid-step
  * turns it back to the cell it left, where it waits turnTicks (D80).
@@ -188,7 +187,7 @@ export class Enemy {
      * has stepped out of it, so freezing never traps him (updateFrozen() in combat.js).
      */
     this.passable = false;
-    /** How it died: 'hole' | 'void' | 'zap' | 'discharge' | 'bolt' | 'firewall' | 'blink' | 'spikes' (frozen on a spiked crate, D199); null while alive. */
+    /** How it died: 'hole' | 'zap' | 'discharge' | 'bolt' | 'firewall' | 'blink'; null while alive. */
     this.deathCause = null;
     /** Ticks since it died, for the pop. */
     this.timer = 0;
@@ -292,8 +291,8 @@ export class Enemy {
   /**
    * Pull drags it a cell along `dir` towards the wizard (D124), from the
    * cell it stands in, or of the two it is walking between the one it is
-   * nearer: the way it walks, but over anything, so a hole or a lethal
-   * floor there is its end. Frozen or not, it slides there at
+   * nearer: the way it walks, but over anything, so a hole there is
+   * its end. Frozen or not, it slides there at
    * ENEMY.pullSpeed and does nothing else until it arrives; an attack it
    * was charging is cut off. A block, the room's side or a body (the
    * wizard too) in that cell, or another enemy walking into it, holds it;
@@ -328,8 +327,8 @@ export class Enemy {
 
   /**
    * The wizard pushes a frozen enemy a cell along `dir`, like a crate but
-   * slid the way Pull drags it (pull()): over anything, so a hole or a lethal
-   * floor there is its end. It stays frozen on the way.
+   * slid the way Pull drags it (pull()): over anything, so a hole there is
+   * its end. It stays frozen on the way.
    * @param {number[]} dir [dx, dz]
    * @param {import('../game.js').Game} game
    * @returns {boolean} whether it moves
@@ -575,13 +574,12 @@ export class Enemy {
   }
 
   /**
-   * Standing: fall if unsupported, die on void, else take the next step
+   * Standing: fall if unsupported, else take the next step
    * (the first free and safe one its behavior offers). It stands still
    * while it attacks, and when it is about to.
    */
   rest(game) {
     if (this.startFalling(game)) return this.fall(game);
-    if (this.onLethal(game.grid)) return this.die('void');
     if (this.frozen || this.attackTick !== null || this.readyToAttack) return null;
     if (this.teleportDue(game)) return null;
     if (this.wait > 0) {
@@ -721,7 +719,7 @@ export class Enemy {
       this.rise = 0;
       this.pulled = null;
       // Off a ledge or onto a hole: fall right away.
-      if (!this.startFalling(game) && this.onLethal(game.grid)) return this.die('void');
+      this.startFalling(game);
     }
     return null;
   }
@@ -752,13 +750,12 @@ export class Enemy {
     return true;
   }
 
-  /** Falling whole cells straight down; a hole or a void block below is its end. */
+  /** Falling whole cells straight down; a hole below is its end. */
   fall(game) {
     const support = this.support(game);
     if (!this.drop(support)) return null;
     if (support < 0) return this.die('hole');
     this.state = 'rest';
-    if (this.onLethal(game.grid)) return this.die('void');
     return 'land';
   }
 
@@ -771,7 +768,7 @@ export class Enemy {
     return fallStep(this, support);
   }
 
-  /** @param {'hole'|'void'|'zap'|'discharge'|'bolt'|'firewall'|'blink'|'spikes'} cause */
+  /** @param {'hole'|'zap'|'discharge'|'bolt'|'firewall'|'blink'} cause */
   die(cause) {
     this.state = 'dead';
     this.rise = 0;
@@ -848,7 +845,7 @@ export class Enemy {
    * Where it would stand after stepping into the cell `target`: its height
    * there (lower, off a ledge), or null if it can't go there (outside the
    * room, a block or one of `bodies` in the way) or wouldn't be safe (a
-   * hole, or a lethal block to land on).
+   * hole).
    * @param {number[]} target cell [x, y, z]
    * @param {import('../game.js').Game} game
    * @param {object[]} [bodies] what can be in the way; `game.obstacles` by default
@@ -858,16 +855,13 @@ export class Enemy {
     const [x, , z] = target;
     if (!game.grid.isInside(x, z) || this.blockedAt(target, game, bodies)) return null;
     const ground = this.supportAt(target, game, bodies);
-    if (ground < 0) return null;
-    // On a block top (whole heights); objects and platforms are never lethal.
-    if (Number.isInteger(ground) && game.grid.typeAt(x, ground - 1, z)?.lethal) return null;
-    return ground;
+    return ground < 0 ? null : ground;
   }
 
   /**
    * The first step [dx, dz] of a shortest walk from its cell to the column
-   * `[tx, tz]` (at whatever height it ends up), round blocks, holes, lethal
-   * blocks, objects and enemies standing still (walking ones will have
+   * `[tx, tz]` (at whatever height it ends up), round blocks, holes,
+   * objects and enemies standing still (walking ones will have
    * moved on), down ledges and up and down stairs but never up a step
    * (D80, D230). Null when it is
    * there or can't get there. A breadth-first search over the room's
@@ -940,12 +934,6 @@ export class Enemy {
     const [x, , z] = pos;
     if (top === 0 && grid.isHole(x + 0.5, z + 0.5)) return -1;
     return top;
-  }
-
-  /** Is it standing right on a lethal block (void)? */
-  onLethal(grid) {
-    const [x, y, z] = this.pos;
-    return Number.isInteger(y) && Boolean(grid.typeAt(Math.floor(x + 0.5), y - 1, Math.floor(z + 0.5))?.lethal);
   }
 }
 

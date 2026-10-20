@@ -224,13 +224,7 @@ wizard only. Every step adds showcase entries for new looks, a dev room
 for a new mechanic, tests and docs.
 **Why:** author's review; fixed rules keep each step focused.
 
-### D44 — 2026-09-26 — Hazard and void contact rules
-Hazard contact: overlap on two axes and within 0.02 on the third
-(standing or leaning counts, a corner doesn't), through `Game.hurt()`.
-Void kills when grounded with the feet center over it, like a hole.
-Animated shader looks, steady edges, a flare when a hazard hurts (void
-look: D99).
-**Why:** walls hurt on contact without punishing a near miss.
+### D44 — replaced by D271 (hazard and void blocks are retired)
 
 ### D45 — replaced by D147 (the dev wing)
 
@@ -533,9 +527,10 @@ lives death cost nothing.
 
 ### D98 — folded into D99
 
-### D99 — 2026-09-29 — Color rules for objects and blocks; void as black mist
+### D99 — 2026-09-29 — Color rules for objects and blocks
 Red hurts (one `#ff2a3a`); the room color is structure (collapsing
-blocks too); black is a pit (void as black mist); white is a mechanism;
+blocks too); black is a pit (holes; void blocks were black mist until
+D271 retired them); white is a mechanism;
 cyan moves; magenta is the wizard (shrines too); neon green is pushable
 (D150; a destructible crate an empty, thinner shell). Biome colors are
 tested clear of them; Phantom Partition is pale violet.
@@ -1658,68 +1653,7 @@ room, `hidden_layer`, is a dev room gaining a west exit).
 puzzle the one thing climbing crates took away, the player's own route,
 and costs only a block type and a per-body view of the grid.
 
-### D199 — 2026-10-09 — The spiked crate: a crate he can't stand on
-A new pushable, `crate_spiked` (extends `crate`): it pushes, falls,
-stacks and plugs a hole like any crate, but its top is spiked. The
-reason is Sokoban: the wizard climbs 1-high crates, so the classic
-"can I get behind this box?" is gone, and in the Microban survey
-(`.claude/skills/sokoban-design/levels/microban-survey.md`, David W.
-Skinner's Microban set) 29 of the 104 solved levels need half the
-pushes or fewer. A crate he can't stand on brings those puzzles back.
-- **Hurt and knock-off** (the author's choice, damage 2, not a lethal
-  top: that would be a second instant death next to void, §4). The new
-  object property `topDamage` (pushables only; `damage` stays the
-  platform's, which hurts on every side) hurts him when his feet touch
-  the top, with the usual invulnerability blink, and shoves him off
-  towards the nearer free side. The shove also applies while he blinks,
-  so he can never rest on it. Pushing from the side is safe: only the top
-  hurts.
-- **Stacks:** a plain crate on a spiked one covers the spikes (its top is
-  a safe 2-high step); a spiked crate on a plain one keeps them on top; a
-  spiked crate pushed into a hole plugs it into plain floor.
-- **No clean hop over:** tested with the real player (hitbox 0.6, apex
-  1.2): a jump spends 0.23 s above a 1-high top and covers about 0.67
-  units sideways in that time, while clearing the crate in line takes
-  1.6; all 61 take-offs in 0.05 steps either touch the top or stop at the
-  side. A corner skim in the open is just walking around. The double
-  jump clears it, like any 2-high obstacle. No taller hurt zone needed.
-- **Frozen enemies and the decoy** can't stand on it: a frozen enemy
-  resting on a bare top is impaled (it pops, like losing its ground), the
-  decoy derezzes (like falling into a hole). **Active enemies** are not
-  hurt (as with hazard blocks today) and may cross it. A crate (or
-  anything of the objects) on it covers the spikes; a frozen enemy on it
-  does not, it is impaled.
-- **Look:** the plain green glass crate with its data-bits core, with
-  five square, bit-like holes in the top face (scattered on the bit
-  grid) and a jet of polar-aurora light shooting out of each: crimson at
-  the foot, dark indigo above, with slow rays (the author's wish: no
-  natural crack, not classical flames). Red edges mark the holes (red is
-  what hurts, D99); a shaft of light runs from each down through the
-  glass to a smaller square on the core, so the holes clearly go to the
-  core. Look only (`vents: "aurora"`), animated in the shader.
-- **Checker and solver:** a spiked crate's top is no standing surface
-  (`below()` already says `'bad'` for a hazard top), except under a
-  plain crate. The Microban survey gets a column that builds every crate
-  as spiked.
-- Test room `spiked_lab` (dev wing, north of `room_1`): Microban 8 by
-  David W. Skinner (his Microban set), turned half a circle so the door is
-  on the +z side, 3-high walls, two spiked crates and two plates, the door
-  locked until both are held. The solver: 32 pushes, the classic count (4
-  with plain crates); played headless with the room-design skill's sim
-  (the 32 pushes and out through the door in 30 s, no hurt). With 3-high
-  walls and spiked crates Microban 19 is 20 pushes and 63 is 50, their
-  classic counts too.
-- **Survey result:** Microban re-run with every crate spiked (`--max
-  30000`): with 3-high walls and plates all 104 levels solved match their
-  classic push count exactly, including the 28 whose plain-crate count was
-  half the classic or less; 23 more with a known classic count hit the
-  state cap. With 1-high walls they do not (he walks over the walls: 80
-  of 104 stay short), so build walls 3 high. See `microban-survey.md`.
-- **Names:** the property is `topDamage`, not `damage`: an object's
-  `damage` (platforms) hurts on every side. `vents: "aurora"` is the look.
-**Why:** puzzles from the Sokoban canon should not collapse to a walk
-around because the wizard can climb; the spiked crate keeps push count
-and order meaningful without a new rule for walls.
+### D199 — replaced by D271 (the spiked crate is retired)
 
 ### D200 — 2026-10-09 — The heavy plate: a plate that needs a weight of two
 A new switch object, `plate_heavy` (extends `plate`, `weight: 2`). The
@@ -3711,3 +3645,37 @@ Authored rooms affected: none.
 **Why:** the author: test rooms are only for testing and go when they no
 longer make sense. Kept, each needed its own pads rework and upkeep with
 every rule change, for mechanics the Lattice already shows.
+
+### D271 — 2026-10-20 — Hazard and void blocks and the spiked crate are retired
+Three dangers go from the engine: the `hazard` block (hurt on touch,
+D44), the `void` block (death on landing, D44, D99) and the spiked
+crate (`crate_spiked`, a top that hurts and shoves him off, D199). No
+room used any of them. What goes with them:
+- **Data and schema:** the three types in `defs.json`; the block
+  properties `damage` and `lethal` and the looks `hazard` and `void`; the
+  object values `topDamage` and `vents` and the object faces `hazard`;
+  `msg.void` and the `die:void` sound. A spiked platform keeps its
+  `damage` (D82).
+- **Engine:** hurt on touching a block (`touchedCell()`), death on a
+  lethal block for the wizard and enemies (death cause `void`), the
+  spiked top's hurt and shove (`knockOff()`), the impaled frozen enemy
+  (cause `spikes`) and the decoy that derezzed on a spiked top; Swap's
+  "never a spiked crate".
+- **Looks:** `block-fx.js` (the hazard pixels and flare), `mist.js` (the
+  void's black mist), `vent-fx.js` (the spiked crate's aurora vents) and
+  the showcase entries; the room view no longer gives a more dangerous
+  look the shared edges (no block look is dangerous now).
+- **Checks and tools:** the validator's spawn, reset, exit and enemy
+  checks against hurting and lethal blocks; the checker's `'bad'` floor
+  and spiked configurations; `solve.mjs`, `xsb.mjs` (`!`, `--spiked`)
+  and the survey's spiked columns.
+- **Rules now:** the only instant death is a hole; damage comes from
+  enemies, spiked platforms, squeezing platforms and a Blink cut short.
+  Red (D99) is the spiked platform, hostile eyes and enemy attacks.
+Authored rooms affected: none.
+**Why:** the author's call at the start of step 5.19. In a push-puzzle
+game the hole is already the pit and an enemy or a spiked platform the
+danger; a block that kills or hurts on touch added rules and looks no
+room used. The spiked crate only fought the free jump (D199): in a pads
+room (D222) no crate is a step, so a plain crate keeps a classic's
+player route.

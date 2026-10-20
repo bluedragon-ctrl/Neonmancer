@@ -77,35 +77,6 @@ export function overlapsSolid(box, grid, { sight = false } = {}) {
 }
 
 /**
- * The first cell whose block type passes `test` that the box touches:
- * overlaps, or lies against one of its faces (within `reach`). Standing on
- * a block, or walking into its side, counts as touching it.
- * @param {number[][]} box from bodyBox()
- * @param {{ typeAt(x: number, y: number, z: number): object|null }} grid
- * @param {(type: object) => boolean} test asks about the block type's
- *   properties, e.g. `(type) => type.damage > 0` (empty cells never pass)
- * @param {number} [reach] how far beyond the box faces still counts
- * @returns {number[]|null} the cell [x, y, z], or null if none
- */
-export function touchedCell(box, grid, test, reach = 0.02) {
-  const [x0, x1] = cellRange([box[0][0] - reach, box[0][1] + reach]);
-  const [y0, y1] = cellRange([box[1][0] - reach, box[1][1] + reach]);
-  const [z0, z1] = cellRange([box[2][0] - reach, box[2][1] + reach]);
-  for (let x = x0; x <= x1; x++) {
-    for (let y = y0; y <= y1; y++) {
-      for (let z = z0; z <= z1; z++) {
-        const type = grid.typeAt(x, y, z);
-        if (!type || !test(type)) continue;
-        // Reaching past a corner diagonally doesn't count (touchesBox()).
-        const cell = [x, y, z];
-        if (touchesBox(box, cellBox(cell), reach)) return cell;
-      }
-    }
-  }
-  return null;
-}
-
-/**
  * Move a body along one axis, stopping at the first solid cell face or body.
  * Changes `pos` in place. Returns false if the move was free, the body that
  * stopped it, or true for a cell (a body wins if both touch).
@@ -279,7 +250,7 @@ export function shoveClear(pos, size, box, grid, others, self, maxShove) {
 /**
  * Does box `a` touch box `b`: overlap it on at least two axes and lie
  * against or in it on the third (within `reach`)? Grazing a corner
- * diagonally doesn't count (the hazard rule, D44).
+ * diagonally doesn't count (D44).
  * @param {number[][]} a
  * @param {number[][]} b
  * @param {number} [reach]

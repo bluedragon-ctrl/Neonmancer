@@ -14,7 +14,6 @@ import { createFloor } from './floor.js';
 import { createHoleView } from './hole-view.js';
 import { disposeTree, roomLook } from './neon.js';
 import { PickupView } from './pickup-view.js';
-import { flareHazard } from './block-fx.js';
 import { CoreView } from './core-view.js';
 import { DecoView } from './deco-view.js';
 import { GateView } from './gate-view.js';
@@ -98,13 +97,10 @@ export class RoomScene {
     this.roomView = null;
     /** Game.reveals the room view was built for; it is rebuilt when they differ. */
     this.reveals = 0;
-    /** "x,y,z" of each hazard-look block → its face material (room-view.js). */
-    this.flares = new Map();
     /**
-     * The hazard block or spiked platform (D82) that last hurt the wizard,
-     * flaring: { owner, apply, object?, time }: `apply(since)` sets its
-     * look `time` seconds after; `owner` tells flares apart (the face
-     * material of a hazard block type, the object).
+     * The spiked platform (D82) that last hurt the wizard, flaring:
+     * { owner, apply, object, time }: `apply(since)` sets its look `time`
+     * seconds after; `owner` tells flares apart (the object).
      */
     this.flare = null;
     /** Views of things just cut away (D87), kept until the marquee has snapped onto them. */
@@ -161,7 +157,6 @@ export class RoomScene {
       const roomView = createRoomView({ ...cutRoom(shownRoom(game), cutAbove), panels: this.panels });
       this.roomView = roomView;
       this.reveals = game.reveals;
-      this.flares = roomView.userData.flares;
       this.flare = null;
       this.shrine = room.shrine ? createShrine() : null;
       this.shrine?.position.set(room.shrine[0], 0, room.shrine[1]);
@@ -206,7 +201,6 @@ export class RoomScene {
     this.pickupViews = [];
     this.exitViews = [];
     this.lockViews = new Map();
-    this.flares = new Map();
     this.flare = null;
     this.shrine = null;
     this.zapView = new ZapView(game);
@@ -285,7 +279,6 @@ export class RoomScene {
     }
     this.staticGroup.add(view);
     this.roomView = view;
-    this.flares = view.userData.flares;
     this.flare = null;
     this.reveals = this.game.reveals;
   }
@@ -375,16 +368,6 @@ export class RoomScene {
   /** The core took fragments (a level raised, the Grid rebooted, D101): make it flash. */
   flashCore() {
     for (const view of this.objectViews) if (view instanceof CoreView) view.flash();
-  }
-
-  /**
-   * A hazard block just hurt the wizard: make it flare.
-   * @param {number[]} cell [x, y, z]
-   */
-  flareHazard(cell) {
-    const faces = this.flares.get(cell.join());
-    if (!faces) return; // a block that hurts without the hazard look
-    this.startFlare({ owner: faces, apply: (since) => flareHazard(faces, cell, since) });
   }
 
   /**
