@@ -609,6 +609,44 @@ export class RoomEdit {
   }
 
   /**
+   * Why a thing can't move to `cell`, or null if it can: the cell must be
+   * inside the room and free (a pickup may go into a cage, D202), and a
+   * path, moving along, must stay inside the room.
+   * @param {string} id an object, enemy or pickup
+   * @param {number[]} cell
+   * @param {(blockType: string) => boolean} [intoCage] is this block type a cage?
+   * @returns {string|null}
+   */
+  moveProblem(id, cell, intoCage = () => false) {
+    const item = this.item(id);
+    if (!item) return `${id} is gone.`;
+    if (!this.inside(cell)) return 'That cell is outside the room.';
+    const here = this.at(cell);
+    const caged = here?.kind === 'block' && (this.data.pickups ?? []).includes(item) && intoCage(here.type);
+    if (here && here.item !== item && !caged) return `${cell.join(', ')} is taken (${here.kind === 'block' ? `${here.type} block` : here.item.id}).`;
+    const delta = cell.map((v, axis) => v - item.at[axis]);
+    if (item.path?.points.some((point) => !this.inside(point.map((v, axis) => v + delta[axis])))) return `${id}'s path would leave the room.`;
+    return null;
+  }
+
+  /**
+   * Move an object, enemy or pickup to another cell, keeping everything
+   * else about it: its id (so every switch link holds), overrides, timer,
+   * drop and path (moved along with it).
+   * @param {string} id
+   * @param {number[]} cell
+   * @param {(blockType: string) => boolean} [intoCage]
+   * @returns {boolean} whether it moved
+   */
+  moveItem(id, cell, intoCage = () => false) {
+    const item = this.item(id);
+    if (!item || this.moveProblem(id, cell, intoCage) || item.at.every((v, axis) => v === cell[axis])) return false;
+    const delta = cell.map((v, axis) => v - item.at[axis]);
+    const path = item.path && withFields(item.path, { points: item.path.points.map((point) => point.map((v, axis) => v + delta[axis])) });
+    return this.updateItem(id, { at: [...cell], ...(path && { path }) });
+  }
+
+  /**
    * Extend the path of a platform or enemy to `cell`, adding corners so
    * every leg runs along one axis (x first, then z, then y).
    * @param {string} id

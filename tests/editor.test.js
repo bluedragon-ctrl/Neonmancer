@@ -183,6 +183,30 @@ test('RoomEdit fills and clears a rectangle as one undo step, leaving things and
   assert.equal(edit.isHole([1, 6]), true, 'one undo brings the whole rectangle back');
 });
 
+test('RoomEdit moves a thing with its id, fields and path; only to a free cell', () => {
+  const edit = new RoomEdit(sampleRoom());
+  assert.equal(edit.placeObject([2, 0, 5], 'platform'), true);
+  const platform = edit.at([2, 0, 5]).item;
+  edit.updateItem(platform.id, { switches: ['plate_9'], path: { points: [[2, 0, 6]] } });
+
+  assert.match(edit.moveProblem('crate_1', [6, 0, 6]), /taken \(hazard block\)/);
+  assert.match(edit.moveProblem('crate_1', [5, 0, 1]), /taken \(sentry\)/);
+  assert.match(edit.moveProblem('crate_1', [3, 9, 3]), /outside/);
+  assert.match(edit.moveProblem(platform.id, [2, 0, 7]), /path would leave/);
+  assert.equal(edit.moveItem('crate_1', [6, 0, 6]), false);
+  assert.equal(edit.moveItem('crate_1', [3, 0, 3]), false, 'already there');
+
+  const steps = edit.undoStack.length;
+  assert.equal(edit.moveItem(platform.id, [1, 1, 2]), true);
+  assert.equal(edit.undoStack.length, steps + 1, 'one step');
+  assert.deepEqual(edit.item(platform.id), { id: platform.id, type: 'platform', at: [1, 1, 2], switches: ['plate_9'], path: { points: [[1, 1, 3]] } });
+  assert.equal(edit.at([2, 0, 5]), null);
+  assert.equal(edit.moveItem('sentry', [5, 0, 2]), true);
+  assert.equal(edit.at([5, 0, 2]).item.id, 'sentry');
+  assert.equal(edit.undo(), true);
+  assert.equal(edit.at([5, 0, 1]).item.id, 'sentry');
+});
+
 test('RoomEdit.placeObject on the same object keeps it; another type replaces it', () => {
   const edit = new RoomEdit(sampleRoom());
   assert.equal(edit.placeObject([2, 1, 2], 'platform'), true);

@@ -15,6 +15,9 @@ docs/decisions.md).
   head (room, Undo / Redo / Save / Revert, status, errors) in place while
   it scrolls, folds the room settings and the key list away, and says
   what every tool does.
+- Room editor (D268): drag an object, enemy, pickup or switch to move it,
+  or pick it and press M to put it on another layer; its id, links,
+  timer and path go with it.
 - Null Orbit (`buffer_3`, D264), the third Outer Buffer secret room:
   Microban 38 (David W. Skinner) built with sockets, fences and two pits;
   `secret_2` in a cage.
