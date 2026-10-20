@@ -57,6 +57,7 @@ import { seededRandom, stringSeed } from '../core/random.js';
 import { boxCenter, lineOfSight, reach } from '../ai/sight.js';
 import { GRAVITY, MAX_FALL } from '../core/rules.js';
 import { stairHeight } from '../world/grid.js';
+import { pushStep } from '../world/puzzle-rules.js';
 import { REST_EPS, fallStep, moveAxis, overlapsBox, overlapsSolid, restsOn, shoveClear, surfaceBelow } from '../physics/collision.js';
 
 /** Tuning values (units, ticks). */
@@ -308,15 +309,13 @@ export class Enemy {
     const [x, y, z] = [base[0], this.pos[1], base[2]];
     if (!Number.isInteger(y)) return false; // on its way up or down a stair
     // Off a ledge over a stair's top it slides down it (D230), never up one; level anywhere else.
-    const step = game.grid.stairStep(x, y, z, dx, dz, false); // pushed or pulled, down a stair only
-    if (!step) return false;
-    const { to: target, via } = step;
-    if (!game.grid.isInside(target[0], target[2]) || this.claimed(target, game)) return false;
+    // The puzzle's rule, as for a crate (world/puzzle-rules.js); another enemy walking into the cell holds it too.
     const bodies = [...game.obstacles, game.player];
-    if (this.blockedAt(target, game, bodies) || (via && this.blockedAt(via, game, bodies))) return false;
+    const step = pushStep(game.grid, [x, y, z], [dx, dz], (cell) => this.blockedAt(cell, game, bodies));
+    if (!step || this.claimed(step.to, game)) return false;
     if (this.attackTick !== null) this.endAttack();
     this.pulled = [x, y, z];
-    this.pullTo(target, step.rise);
+    this.pullTo(step.to, step.rise);
     return true;
   }
 

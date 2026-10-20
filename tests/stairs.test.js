@@ -152,11 +152,12 @@ function throwOver(high, approach) {
   return game.player.dead ? -1 : game.player.pos[1];
 }
 
-test('pads: a throw over a 1-tile pit lands 2 up from the middle, 1 up from a run-up (D243)', () => {
-  assert.equal(throwOver(2, 'side'), 2, 'a 2-high ledge, launched from the middle');
-  assert.notEqual(throwOver(3, 'side'), 3, 'never 3 up');
-  assert.equal(throwOver(1, 'behind'), 1, 'a run-up from behind: a 1-high ledge');
-  assert.notEqual(throwOver(2, 'behind'), 2, 'a run-up from behind: never 2 up');
+test('pads: a throw over a 1-tile pit lands 2 up, never 3, however he came onto the pad (D243, D274)', () => {
+  for (const approach of ['side', 'behind']) {
+    assert.equal(throwOver(1, approach), 1, `a 1-high ledge, ${approach}`);
+    assert.equal(throwOver(2, approach), 2, `a 2-high ledge, ${approach}`);
+    assert.notEqual(throwOver(3, approach), 3, `never 3 up, ${approach}`);
+  }
 });
 
 /**

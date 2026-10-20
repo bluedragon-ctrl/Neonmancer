@@ -43,7 +43,9 @@ mobile/touch support, backend or accounts.
   with LineSegments2 (block edges computed from the grid, see D12)
 - pmndrs `postprocessing` for effects (bloom, pixelation, noise, scanlines,
   chromatic aberration, glitch), merged into as few passes as possible
-- Custom AABB grid collision — no physics engine
+- Custom AABB grid collision — no physics engine; the puzzle's rules
+  (pushes, where a crate rests, where a pad lands him) live on whole cells
+  in `src/world/puzzle-rules.js`, shared by the game and the checker (D274)
 - Howler.js for music (looping, crossfades); ZzFX for sound effects
 - Ajv (dev-only) for JSON Schema validation in the dev server, build and CI;
   not shipped to players
@@ -86,7 +88,8 @@ mobile/touch support, backend or accounts.
 - No jump (D272; pads only since D221, D222): there is no jump key, Space
   casts. Jump pads (object kind `pad`, a trampoline in the room's color: a
   rim round a mesh with light streaking up, D226) throw him up by
-  themselves (2 blocks, a 1-tile gap); stairs (look `stair`, a `rise`)
+  themselves (2 blocks, a 1-tile gap) onto the cell the puzzle's rule
+  picks the way he holds (D274); stairs (look `stair`, a `rise`)
   take him a block up, slabs (look `slab`) are thin glass walkways with
   headroom under them; a bouncy enemy he falls onto throws him 2 up, a
   moving pad (D223). Nothing else lifts him: a 1-high wall is a wall and

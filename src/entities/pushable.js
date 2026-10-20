@@ -14,6 +14,7 @@ import { DT } from '../core/loop.js';
 import { GRAVITY, MAX_FALL } from '../core/rules.js';
 import { REST_EPS, cellBox, fallStep, overlapsBox, restsOn, surfaceBelow } from '../physics/collision.js';
 import { stairHeight } from '../world/grid.js';
+import { pushStep } from '../world/puzzle-rules.js';
 
 /** Tuning values (units, seconds). */
 export const PUSHABLE = {
@@ -111,11 +112,9 @@ export class Pushable {
 
   /**
    * Try to push the object one cell along [dx, dz]. Only a resting,
-   * supported object with nothing on top moves, into a free cell (D4).
-   * Off a ledge over a stair's top, the way it falls, it slides down it to
-   * the cell at its foot (D230, Grid.stairStep()); never up a stair: into
-   * a stair, or onto its top any other way, it doesn't move. A crate never
-   * rests on a stair.
+   * supported object with nothing on top moves; where to is the puzzle's
+   * rule (world/puzzle-rules.js pushStep(), shared with the checker): a
+   * free cell, or down a stair (D230), never up one or out of the room.
    * @param {number[]} dir [dx, dz], one of them ±1
    * @param {{ grid: import('../world/grid.js').Grid, bodies: Iterable<{ box(): number[][] }> }} world
    * @returns {boolean} whether it started sliding
@@ -127,16 +126,11 @@ export class Pushable {
     // Resting objects sit on whole cells, except on top of the player or
     // on a platform between its stops.
     if (!this.pos.every(Number.isInteger)) return false;
-    const step = grid.stairStep(x, y, z, dx, dz, false);
-    if (!step) return false;
-    const { to: target, via } = step;
-    if (grid.isSolid(...target) || (via && grid.isSolid(...via))) return false;
-    // Objects never leave through an exit: rooms reset, so they would be lost.
-    if (!grid.isInside(target[0], target[2])) return false;
     if (this.support(grid, bodies) < y - REST_EPS) return false; // about to fall
-    if (overlapsAny(cellBox(target), bodies, this) || (via && overlapsAny(cellBox(via), bodies, this))) return false;
+    const step = pushStep(grid, [x, y, z], [dx, dz], (cell) => grid.isSolid(...cell) || overlapsAny(cellBox(cell), bodies, this));
+    if (!step) return false;
     this.state = 'slide';
-    this.target = target;
+    this.target = step.to;
     this.rise = step.rise;
     this.from = [...this.pos];
     this.walked = 0;

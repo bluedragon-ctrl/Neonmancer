@@ -1,5 +1,5 @@
 /**
- * The wizard: movement along the grid axes, gravity, pads' throws, pushing, integrity (health), backups,
+ * The wizard: movement along the grid axes, gravity, pads' throws (a flight to the cell the pad picks), pushing, integrity (health), backups,
  * invulnerability after a hit, energy (mana) for spells, installing a
  * pickup, the Shield and Firewall rings, Blink and Warp (D86), the
  * Cut & Paste clipboard (D87), death (in a hole, or with no integrity
@@ -36,6 +36,13 @@ export const PLAYER = {
   stepUp: 0.2,
   /** How far below his feet he keeps to the ground walking down a stair, instead of falling off it every tick (D221). */
   stepDown: 0.25,
+  /**
+   * A pad's throw (D274): the fastest he crosses to the cell it lands him
+   * in (units per second), and how far above that cell's floor he must be
+   * over it before he comes down.
+   */
+  flightSpeed: 12,
+  flightClear: 0.05,
   /** Ticks of walking into an object before it moves (a short, deliberate shove). */
   pushDelay: 8,
   /** Share of the remaining turn done each tick. */
@@ -100,6 +107,24 @@ const GRID_DIRECTIONS = Object.entries({ up: [-1, 0], down: [1, 0], left: [0, 1]
  * to a single grid axis, as classic isometric controls do.
  */
 const SCREEN_DIRECTIONS = Object.entries({ up: [-1, -1], down: [1, 1], left: [-1, 1], right: [1, -1] });
+
+/**
+ * The way the held keys point, [dx, dz] summed over the movement actions
+ * (grid or screen mapping, D38); [0, 0] with none held.
+ * @param {{ down(a: string): boolean }} input
+ * @param {'grid'|'screen'} movementMode
+ */
+export function heldDirection(input, movementMode = 'grid') {
+  let dx = 0;
+  let dz = 0;
+  for (const [action, [ax, az]] of movementMode === 'screen' ? SCREEN_DIRECTIONS : GRID_DIRECTIONS) {
+    if (input.down(action)) {
+      dx += ax;
+      dz += az;
+    }
+  }
+  return [dx, dz];
+}
 
 /**
  * The effects of what he just did that show for a while and then end, as
@@ -297,6 +322,7 @@ export class Player {
    */
   die(cause) {
     this.integrity = 0;
+    this.flight = null;
     this.dead = true;
     /** Why he died, while dead: 'hole', 'damage', 'timeout' (a room's watchdog, D172) or 'restart' (D219). */
     this.deathCause = cause;
@@ -327,6 +353,45 @@ export class Player {
     this.pos[1] = top;
     this.vy = Math.sqrt(2 * PLAYER.gravity * height);
     this.grounded = false;
+    this.flight = null;
+  }
+
+  /**
+   * A pad's throw (D274): right after bounce(), fly to the cell [x, y, z]
+   * the pad picked (world/puzzle-rules.js throwLanding(); his own cell for
+   * straight up), facing `dir`. Gravity lifts and drops him as for any
+   * throw; across, the throw takes him to the middle of that cell by the
+   * time he comes down to its floor, and the keys don't steer.
+   * @param {number[]} cell [x, y, z] he lands in
+   * @param {number[]} dir [dx, dz] the way he was thrown (for his facing)
+   */
+  throwTo([x, y, z], dir) {
+    // Ticks until he comes down to the landing's floor (plus flightClear), as update() integrates gravity.
+    let height = this.pos[1];
+    let vy = this.vy;
+    let ticks = 0;
+    while (ticks < 600) {
+      const next = Math.max(vy - PLAYER.gravity * DT, -PLAYER.maxFall);
+      height += ((vy + next) / 2) * DT;
+      vy = next;
+      ticks++;
+      if (vy < 0 && height <= y + PLAYER.flightClear) break;
+    }
+    this.flight = { to: [x + 0.5, y, z + 0.5], dir: [...dir], ticks, tick: 0 };
+  }
+
+  /**
+   * This tick's move across in a pad's throw: what is left to the middle of
+   * the landing cell, spread over the ticks left until he comes down,
+   * at most flightSpeed. A wall in the way holds him until he rises over it.
+   * @returns {number[]} [dx, dz] in units
+   */
+  flightStep() {
+    const flight = this.flight;
+    const left = Math.max(1, flight.ticks - flight.tick++);
+    const most = PLAYER.flightSpeed * DT;
+    const step = (axis) => Math.max(-most, Math.min(most, (flight.to[axis] - this.pos[axis]) / left));
+    return [step(0), step(2)];
   }
 
   /**
@@ -338,6 +403,7 @@ export class Player {
    */
   teleport(spell, to) {
     this.warp = { spell, from: [...this.pos], to: [...to], tick: 0 };
+    this.flight = null;
     for (let i = 0; i < 3; i++) this.pos[i] = this.prev[i] = to[i];
     this.pushTarget = null;
     this.pushTicks = 0;
@@ -414,6 +480,8 @@ export class Player {
     /** Angle the wizard turns towards. */
     this.targetFacing = this.facing;
     this.moving = false;
+    /** A pad's throw on its way (throwTo()), or null: { to: feet center, dir, ticks, tick }. */
+    this.flight = null;
     this.dead = false;
     this.deathCause = null;
     this.deathTimer = 0;
@@ -480,17 +548,19 @@ export class Player {
     }
 
     // Walk along the grid axes, or screen-relative (D38); diagonals are normalised.
-    const directions = movementMode === 'screen' ? SCREEN_DIRECTIONS : GRID_DIRECTIONS;
-    let dx = 0;
-    let dz = 0;
-    for (const [action, [ax, az]] of directions) {
-      if (input.down(action)) {
-        dx += ax;
-        dz += az;
-      }
-    }
+    let [dx, dz] = heldDirection(input, movementMode);
+    // In a pad's throw the pad steers (D274): towards the cell it lands him in.
+    if (this.flight) [dx, dz] = this.flightStep();
     this.moving = dx !== 0 || dz !== 0;
-    if (this.moving) {
+    if (this.flight) {
+      moveAxis(this.pos, this.size, 0, dx, grid, bodies, this);
+      moveAxis(this.pos, this.size, 2, dz, grid, bodies, this);
+      // Straight up he only drifts to the pad's middle: no walk, no turn.
+      const [fx, fz] = this.flight.dir;
+      this.moving = fx !== 0 || fz !== 0;
+      if (this.moving) this.targetFacing = Math.atan2(fx, fz);
+      this.trackPush(null);
+    } else if (this.moving) {
       // Overdrive (D152) speeds him up on the ground only, so a throw never carries further.
       const speed = this.grounded ? PLAYER.speed * (this.boosts.overdrive > 0 ? BOOST.overdriveSpeed : 1) : PLAYER.speed * PLAYER.airSpeed;
       const step = (speed * DT) / Math.hypot(dx, dz);
@@ -514,6 +584,8 @@ export class Player {
     if (blocked) {
       this.grounded = this.vy < 0;
       this.vy = 0;
+      // Landed, or a ceiling cut the throw short: he is his own again.
+      this.flight = null;
     } else {
       this.grounded = false;
       // Walking down a stair (D221): keep to its slope.

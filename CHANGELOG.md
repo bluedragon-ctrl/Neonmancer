@@ -52,6 +52,14 @@ docs/decisions.md).
   say the same; 11 pieces in 8 rooms are listed for their reviews.
 
 ### Changed
+- The puzzle's rules live on whole cells in one module (D274,
+  `world/puzzle-rules.js`): where a pushed crate or frozen enemy goes and
+  where a crate comes to rest are asked by the game and the reachability
+  checker alike. A jump pad lands him on the cell its rule picks the way
+  he holds (he may turn it while he rises): the first column ahead he can
+  stand on at his level or higher, whatever his run-up; the checker counts
+  exactly that throw. In `ghost_exit` Warp alone no longer reaches the
+  fragment (an old throw over flat floor onto a fence).
 - Tutorial screens (D273): `tut_push` says a crate is no step,
   `tut_zap` that Space or E casts; Compile's help no longer calls its
   crate a step up.
