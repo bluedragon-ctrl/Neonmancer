@@ -140,7 +140,7 @@ export const SCORE = { bit: 50, secret: 200, accessLevel: 500 };
  * Block types, as in defs.json (D60): plain, fake (D128), fence (D167), the stream (D198),
  * gates (D141): collapsing (a step gate) and a variant that grows back
  * after 3 s, a switch gate and a bridge, the cage (D202), a stair each way
- * and the slab (D221).
+ * and the slab (D221), and the bollard (D276).
  */
 export const BLOCK_TYPES = {
   block: { look: 'plain' },
@@ -157,6 +157,7 @@ export const BLOCK_TYPES = {
   stair_z: { extends: 'stair_x', rise: '+z' },
   stair_nz: { extends: 'stair_x', rise: '-z' },
   slab: { look: 'slab' },
+  bollard: { look: 'bollard', seeThrough: true, passes: ['wizard'] },
 };
 
 /**

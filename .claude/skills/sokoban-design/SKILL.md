@@ -212,7 +212,8 @@ the author and collection in the room's decision entry. Before use:
 
 ## Files
 - `scripts/xsb.mjs`: XSB to room JSON (`--out`, `--wall 1-5|hole`,
-  `--goal plate|socket`, `--streams thin`; `~` is a 2-high crate stream; `:` is a heavy plate,
+  `--goal plate|socket`, `--streams thin`; `~` is a 2-high crate stream; `|` is a bollard (D276: he
+  walks through, crates stop); `:` is a heavy plate,
   D200, always a plate whatever `--goal` says), plus the parser.
 - `scripts/solve.mjs`: the solver (XSB, room id or room `.json`). A state
   is the crates plus where he is: after a push he stands where the crate

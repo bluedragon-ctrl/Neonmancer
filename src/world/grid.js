@@ -19,9 +19,10 @@
  * seeThrough), so game rules ask about properties, never type names (D60).
  * A see-through type (a fence, D167) is solid to bodies but lets bolts
  * and sight through (blocksSight()).
- * A type with `passes` (the crate stream, D198) is solid to every kind of
- * body but those it names: forBody() gives the grid as a kind of body sees
- * it. isSolid() itself is the wizard's and the active enemies' view.
+ * A type with `passes` (the crate stream, D198; the bollard, D276) is solid
+ * to every kind of body but those it names: forBody() gives the grid as a
+ * kind of body sees it. isSolid() itself is the grid with every such type
+ * solid.
  *
  * Two looks fill only part of their cell (D221), for movers that ask
  * span(): a stair is a slope rising across the cell the way of its
@@ -182,11 +183,11 @@ export class Grid {
 
   /**
    * The grid as a kind of body sees it: the same cells, but those of a type
-   * that `passes` the kind are open. Kinds: 'wizard' (also the decoy and
-   * active enemies, who have the grid as it is) and 'crate' (crates and
+   * that `passes` the kind are open. Kinds: 'wizard' (he, his decoy, his
+   * Blink and Warp), 'enemy' (active enemies) and 'crate' (crates and
    * frozen enemies, which push like crates). Pass it where the collision
    * functions take a grid.
-   * @param {'wizard'|'crate'} kind
+   * @param {'wizard'|'enemy'|'crate'} kind
    * @returns {Grid}
    */
   forBody(kind) {

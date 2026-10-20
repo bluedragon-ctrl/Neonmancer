@@ -90,7 +90,7 @@ export function castSpell(game) {
 function teleport(game, id, { range = Infinity, damage = 0, hitDamage = 0 }) {
   const { player } = game;
   const objects = game.solids.filter((body) => !(body instanceof Enemy));
-  const target = warpTarget(player.pos, player.size, player.aim(), range, game.grid, objects, game.liveEnemies);
+  const target = warpTarget(player.pos, player.size, player.aim(), range, game.grid.forBody('wizard'), objects, game.liveEnemies);
   if (!target) return false;
   player.teleport(id, target.to);
   game.emit('warp', { spell: id, from: player.warp.from, to: target.to });

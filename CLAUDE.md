@@ -137,6 +137,11 @@ mobile/touch support, backend or accounts.
   the room's color: structure that opens, the exception to white gates):
   a pickup lies inside it, in plain view, and it goes while the room's
   switches are on; bolts and sight pass, so a Zap can't take it.
+  The bollard (`bollard`, D276) is the stream's opposite: a thin post a
+  quarter block wide and half a block high, glass, its lamp blinking, in
+  the room's color, that crates and enemies (frozen or not) stop at and he
+  walks through (it fades as he does); nothing stands on it, bolts and
+  sight pass.
 - The ways up in a pads room (D221, D224): the stair (types `stair_x`,
   `stair_nx`, `stair_z`, `stair_nz`, look `stair`) he walks up from its
   foot onto a ledge one block higher, its sides and back walls; the slab

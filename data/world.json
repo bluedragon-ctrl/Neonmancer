@@ -2,10 +2,11 @@
   "$schema": "../schemas/world.schema.json",
   "schemaVersion": 1,
   "start": "boot_up",
-  "dev": ["hidden_layer"],
+  "dev": ["hidden_layer", "bollard_yard"],
   "later": ["compile", "warp"],
   "fragments": { "required": 64, "access": [16, 32, 48] },
   "positions": {
+    "bollard_yard": [3, 0],
     "hidden_layer": [4, 0],
     "boot_up": [5, 0],
     "first_steps": [6, 0],

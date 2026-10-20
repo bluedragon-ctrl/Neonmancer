@@ -18,6 +18,7 @@
 //   ^  hole (a crate fills it)            o  socket (a goal hole, D194)
 //   %  fence, 1 high (crates and he stop, bolts pass)
 //   ~  crate stream, 2 high (D198): crates pass, he is stopped, bolts pass
+//   |  bollard (D276): he walks through, crates and enemies are stopped, bolts pass
 //   :  heavy plate (plate_heavy, D200): needs a weight of two, a stack of two crates,
 //      or a crate and the wizard on a timed one; always a plate, whatever --goal says
 //   &  crate on a 1-high block (a ledge crate: pushed off, it falls; he
@@ -64,7 +65,7 @@ export function parseXsb(text) {
       notes.push(line.replace(/^\s*;\s?/, ''));
     } else if (line === '' && rows.length === 0) {
       notes = []; // a blank line ends a comment block that no level follows
-    } else if (line === '' || !/^[#1-5$.*@+ \-_^o%&~!:]+$/.test(line)) {
+    } else if (line === '' || !/^[#1-5$.*@+ \-_^o%&~!:|]+$/.test(line)) {
       flush();
       if (line !== '') notes.push(line.trim());
     } else rows.push(line);
@@ -120,7 +121,7 @@ export function xsbToRoom(level, { id = 'sokoban_draft', name = 'Sokoban Draft',
   const socket = goal === 'socket';
   if (socket && grid.some((r) => r.includes('+'))) throw new Error('--goal socket: the wizard starts on a goal, and a socket is a hole');
 
-  const heightOf = (c) => (c === '#' ? wall : /[1-5]/.test(c) ? Number(c) : c === '%' || c === '&' ? 1 : c === '~' ? 2 : 0);
+  const heightOf = (c) => (c === '#' ? wall : /[1-5]/.test(c) ? Number(c) : c === '%' || c === '&' || c === '|' ? 1 : c === '~' ? 2 : 0);
   const blocks = [];
   let tallest = 0;
   for (let z = 0; z < depth; z++) {
@@ -135,7 +136,7 @@ export function xsbToRoom(level, { id = 'sokoban_draft', name = 'Sokoban Draft',
       let end = x;
       while (end + 1 < width && grid[z][end + 1] === c) end++;
       tallest = Math.max(tallest, h);
-      blocks.push({ ...(c === '%' && { type: 'fence' }), ...(c === '~' && { type: 'stream' }), at: [x, 0, z], ...(end > x || h > 1 ? { to: [end, h - 1, z] } : {}) });
+      blocks.push({ ...(c === '%' && { type: 'fence' }), ...(c === '~' && { type: 'stream' }), ...(c === '|' && { type: 'bollard' }), at: [x, 0, z], ...(end > x || h > 1 ? { to: [end, h - 1, z] } : {}) });
       x = end + 1;
     }
   }

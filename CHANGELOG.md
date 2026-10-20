@@ -9,6 +9,10 @@ docs/decisions.md).
 ## [Unreleased]
 
 ### Added
+- The bollard (D276): a thin post with a blinking lamp that crates and
+  enemies stop at and the wizard walks through; block type `bollard` in
+  the room editor, the checker and the Sokoban tools (`|`), showcase
+  `?asset=bollards`, dev test room Bollard Yard.
 - Pause menu: **Copy debug info** (D273) copies the versions, the room
   and position, a key of this moment, his state, the settings, the
   render settings in use, the window and the browser, for testers'
