@@ -799,8 +799,25 @@ export class Editor {
     this.refresh();
   }
 
-  /** R: the stair the Block tool paints turns a quarter (D222). */
-  turnStair() {
+  /**
+   * R, the one turn key: a placed stair under the cursor turns a quarter
+   * in place (D222), a decoration to face the other seen side (D117);
+   * otherwise the stair the Block tool paints turns.
+   */
+  turn() {
+    const here = this.hover && this.edit.at(this.hover);
+    if (here?.kind === 'object' && this.objectTypes[here.item.type]?.kind === 'deco') {
+      const { id } = here.item;
+      this.change(() => this.edit.turnObject(id));
+      this.status = `${id} faces ${this.edit.item(id)?.overrides?.face ?? '+z'}.`;
+      return this.refresh();
+    }
+    if (here?.kind === 'block' && this.blockTypes[here.type]?.look === 'stair') {
+      const turned = turnStair(this.blockTypes, here.type);
+      this.change(() => this.edit.placeBlock(this.hover, turned, here.switches ?? []));
+      this.status = `Turned the stair to ${turned} (rises ${this.blockTypes[turned].rise}).`;
+      return this.refresh();
+    }
     if (this.tool !== 'block') return;
     const turned = turnStair(this.blockTypes, this.blockType);
     if (turned === this.blockType) return;
@@ -1065,19 +1082,6 @@ export class Editor {
     if (!place) return this.change(() => edit.erase(cell));
     const type = this.objectTypes[this.objectType];
     const before = edit.at(cell);
-    // A decoration of this type there is picked (a screen's text is set in
-    // the panel, D118); clicking the picked one turns it to face the other way (D117).
-    if (type?.kind === 'deco' && before?.kind === 'object' && before.item.type === this.objectType) {
-      const { id } = before.item;
-      if (this.selected?.id !== id) {
-        this.select({ kind: 'item', id });
-        this.status = `${id} picked: click it again to turn it.`;
-        return this.refresh();
-      }
-      this.change(() => edit.turnObject(id));
-      this.status = `${id} faces ${edit.item(id)?.overrides?.face ?? '+z'}.`;
-      return this.refresh();
-    }
     // Nothing is ever overwritten (D142): an object, enemy or pickup there
     // is picked (a switch or a platform shows its links), a block named;
     // erase it (right click) to put something else there.
@@ -1101,7 +1105,7 @@ export class Editor {
     if (here?.kind !== 'object') return;
     if (type?.kind === 'deco') {
       this.select({ kind: 'item', id: here.item.id });
-      this.status = `${here.item.id} faces +z: click it again to turn it to +x.`;
+      this.status = `${here.item.id} faces +z: R turns it to +x.`;
       this.refresh();
     }
     // A new platform is picked, ready for its path.
@@ -1413,7 +1417,7 @@ export class Editor {
       if (e.code === 'BracketLeft' || e.code === 'BracketRight') this.cycleType(e.code === 'BracketLeft' ? -1 : 1);
       if (e.code === 'KeyH') this.setCut(!this.cut);
       if (e.code === 'KeyM' && !this.stroke) this.startMove();
-      if (e.code === 'KeyR') this.turnStair();
+      if (e.code === 'KeyR') this.turn();
       if ((e.code === 'Delete' || e.code === 'Backspace') && !this.stroke) this.removeSelected();
       if (e.code === 'PageUp' || e.code === 'PageDown') {
         e.preventDefault();

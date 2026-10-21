@@ -56,6 +56,10 @@ docs/decisions.md).
   say the same; 11 pieces in 8 rooms are listed for their reviews.
 
 ### Changed
+- Room editor: R is the one turn key. It turns a placed stair or
+  decoration under the cursor in place, with any tool, so a stair no
+  longer has to be erased and painted again; clicking a decoration only
+  picks it now (it no longer turns on a second click).
 - Quality (D277, step 5.12): the Options' Quality and Render scale now
   take effect. Low, Medium and High fix the quality (no MSAA at up to
   75 %, MSAA 2, MSAA 4); Render scale caps every preset, Auto included.

@@ -536,7 +536,8 @@ not critical.
   Switch tool places switches (the Object tool does not) and links them
   to gates, platforms and exits, from either side, with checklists in the
   panel; hovering shows any thing's switch links (D142). The stairs are
-  one Block tool entry turned with R; pads have their own Object group.
+  one Block tool entry turned with R; R also turns a placed stair or
+  decoration under the cursor in place; pads have their own Object group.
   Shift+drag fills a rectangle of blocks or holes, `[` / `]` step
   through types; the panel's head (save, status, errors) stays put and
   the room settings fold away (D267). Dragging a thing (or M) moves it

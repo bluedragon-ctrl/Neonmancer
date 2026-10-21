@@ -1647,9 +1647,8 @@ Room dressing (D117): object types of kind `deco` in `defs.json`
 - It has no color of its own: it takes the room's (biome's) color, like
   structure (D99). The screen's blue is part of its look.
 - It faces `+z` by default; the room object's override `"face": "+x"`
-  turns it. In the editor, clicking a placed decoration with the same
-  type picks it, and clicking the picked one turns it (the override is
-  left out while it faces `+z`).
+  turns it. In the editor, R turns the decoration under the cursor (the
+  override is left out while it faces `+z`).
 - A screen may show a text in the wizard's terminal (D118, Screen texts
   below).
 - In the game: `src/entities/deco.js` (the body) and
@@ -1716,7 +1715,7 @@ Hints and lore (D118). A screen room object may name a text:
   top and its code scrolls faster (showcase `?asset=screen-text`); once
   read it looks like any screen.
 - **Editor:** placing a screen picks it; clicking a placed one picks it,
-  clicking the picked one turns it. With a screen picked, the Object
+  R turns the one under the cursor. With a screen picked, the Object
   tool's fields show its text: pick one of lore.json's texts (or none),
   change the picked text (Update: every screen showing it changes), or
   write a title and lines and add them under a new id (New). Save writes
@@ -2312,7 +2311,7 @@ away. Folds remember whether they were open (localStorage, per browser).
 | H | Hide what is above the layer, or show it again |
 | Mouse wheel, PgUp / PgDn | Height layer up / down (a grid shows it; with **hide above**, on by default, blocks, objects and enemies above it aren't drawn) |
 | 1–9, 0 | Tool: Block, Hole, Object, Enemy, Path, Exit, Spawn, Reset, Shrine, Switch |
-| R | Block tool with the stair picked: turn it a quarter (rises +x, +z, −x, −z, D223) |
+| R | Turn what is under the cursor: a placed stair a quarter (rises +x, +z, −x, −z, D223), a decoration to face +z or +x (D117); otherwise, with the Block tool's stair picked, the stair it paints |
 | Alt + left click | Block tool: take the type and switches of the block clicked (an eyedropper, D142) |
 | Esc | Drop the picked enemy, platform or exit; during a Shift drag, drop the rectangle; during a move, cancel it |
 | Delete, Backspace | Remove the picked object, enemy or exit |
@@ -2337,7 +2336,8 @@ floor.
   `collapsing_regrow (collapses, back in 3 s)`, `bridge (gone, there
   while powered)`) in the cell clicked (see above), replacing whatever is
   there; erasing empties the cell (D60). The four stairs are one entry,
-  `stair`, that names the way the painted one rises; R turns it (D223).
+  `stair`, that names the way the painted one rises; R turns it, or a
+  placed stair (or decoration) under the cursor in place (D223).
   A bridge is a sheet over a hole (D224): make the hole first, or
   validation reports the tile as floor. For a switch gate the panel has
   a **Switches** field: the ids the gates placed take (blank: every
@@ -2348,8 +2348,7 @@ floor.
   while this tool is picked; switches are not in its list, the Switch
   tool places them), with the id `<type>_<n>`, only in a free cell: it
   never overwrites (D142). A click on an object, enemy or pickup picks it
-  (a decoration of the type picked turns to face the other seen side when
-  clicked again, D117); a block or something of another type there says
+  (R turns a decoration under the cursor, D117); a block or something of another type there says
   to erase it first. A new platform is picked, ready for its path. A
   picked platform shows its **Switches** field, a picked switch what it
   powers and, a timed one, its **Timer** (blank: its type's). Its type
