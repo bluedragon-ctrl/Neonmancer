@@ -658,7 +658,7 @@ and the Gatekeeper (D134–D137). Biome rosters move to Phase 6.
 sounding Home Lattice and ship it to testers.
 - Sound: audio engine (Howler music with crossfades, ZzFX effects,
   `audio.json`, the Options sliders wired), an effects pass over existing
-  events, the author's music tracks (Lattice, boss, title).
+  events, the author's music (done: one Lattice track, `underground`).
 - Content: Home Lattice, about 30 rooms (docs/lattice-plan.md): 16
   fragments that give Level 1 plus two in secret rooms, two bosses (one
   drops a fragment, one the energy buff), the tutorial near the core. Two Level 1
