@@ -2337,7 +2337,8 @@ floor.
   `collapsing_regrow (collapses, back in 3 s)`, `bridge (gone, there
   while powered)`) in the cell clicked (see above), replacing whatever is
   there; erasing empties the cell (D60). The four stairs are one entry,
-  `stair`, that names the way the painted one rises; R turns it (D223).
+  `stair`, that names the way the painted one rises; R turns it, or a
+  placed stair under the cursor in place (D223).
   A bridge is a sheet over a hole (D224): make the hole first, or
   validation reports the tile as floor. For a switch gate the panel has
   a **Switches** field: the ids the gates placed take (blank: every

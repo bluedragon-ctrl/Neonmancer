@@ -56,6 +56,8 @@ docs/decisions.md).
   say the same; 11 pieces in 8 rooms are listed for their reviews.
 
 ### Changed
+- Room editor: R turns a placed stair under the cursor in place, so a
+  stair no longer has to be erased and painted again to face another way.
 - Quality (D277, step 5.12): the Options' Quality and Render scale now
   take effect. Low, Medium and High fix the quality (no MSAA at up to
   75 %, MSAA 2, MSAA 4); Render scale caps every preset, Auto included.

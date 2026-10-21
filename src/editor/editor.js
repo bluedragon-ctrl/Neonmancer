@@ -799,8 +799,18 @@ export class Editor {
     this.refresh();
   }
 
-  /** R: the stair the Block tool paints turns a quarter (D222). */
+  /**
+   * R: a placed stair under the cursor turns a quarter in place; otherwise
+   * the stair the Block tool paints does (D222).
+   */
   turnStair() {
+    const here = this.hover && this.edit.at(this.hover);
+    if (here?.kind === 'block' && this.blockTypes[here.type]?.look === 'stair') {
+      const turned = turnStair(this.blockTypes, here.type);
+      this.change(() => this.edit.placeBlock(this.hover, turned, here.switches ?? []));
+      this.status = `Turned the stair to ${turned} (rises ${this.blockTypes[turned].rise}).`;
+      return this.refresh();
+    }
     if (this.tool !== 'block') return;
     const turned = turnStair(this.blockTypes, this.blockType);
     if (turned === this.blockType) return;
